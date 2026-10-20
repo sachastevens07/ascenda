@@ -1,5 +1,6 @@
 import type { Equipment, Muscle } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
+import { heaviestWeight, type LoggedSet } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
 
 /** One exercise slot in a programme day, resolved for the user's equipment. */
@@ -114,39 +115,99 @@ export function formatKg(kg: number): string {
   return `${Number(kg.toFixed(2))} kg`;
 }
 
-/** What the Today card suggests for the weight. */
+/** What to aim for next time on an exercise (double progression). */
 export type WeightSuggestion =
-  | { kind: 'last-weight'; kg: number }
+  /** Every set hit the top of the rep range last time: go up a small step. */
+  | { kind: 'increase'; kg: number; increaseKg: number }
+  /** Keep last time's heaviest weight and aim for more reps. */
+  | { kind: 'same-weight'; kg: number }
   | { kind: 'find-starting-weight' }
-  | { kind: 'bodyweight' }
-  | { kind: 'band' };
+  /** Bodyweight or band, and every set hit the top of the rep range last time. */
+  | { kind: 'harder-variation'; equipment: 'bodyweight' | 'band' }
+  /** Bodyweight or band, done before but not yet at the top of the range. */
+  | { kind: 'more-reps'; equipment: 'bodyweight' | 'band' }
+  /** Bodyweight or band, never done before. */
+  | { kind: 'first-time'; equipment: 'bodyweight' | 'band' };
 
-/** `lastWeightKg` is the heaviest weight she used for this exercise last time, if any. */
-export function getWeightSuggestion(
-  item: ProgrammeExercise,
-  lastWeightKg: number | null = null
-): WeightSuggestion {
-  switch (item.exercise.equipment) {
-    case 'bodyweight':
-      return { kind: 'bodyweight' };
-    case 'band':
-      return { kind: 'band' };
+/** Smallest sensible step up for each kind of equipment, in kg. */
+function weightIncrease(equipment: Equipment, currentKg: number): number {
+  switch (equipment) {
+    case 'dumbbell':
+      return currentKg < 10 ? 1 : 2;
+    case 'machine':
+      return 5;
+    case 'kettlebell':
+      return 2;
     default:
-      return lastWeightKg === null
-        ? { kind: 'find-starting-weight' }
-        : { kind: 'last-weight', kg: lastWeightKg };
+      return 2.5;
   }
 }
 
+/**
+ * True if she completed every prescribed set last time, all at the same weight,
+ * and each reached the top of the rep range.
+ */
+function hitTopOfRange(item: ProgrammeExercise, previousSets: LoggedSet[]): boolean {
+  const prescribed = Array.from({ length: item.sets }, (_, index) =>
+    previousSets.find((set) => set.set_number === index + 1)
+  );
+  if (prescribed.some((set) => !set || (set.reps ?? 0) < item.rep_max)) return false;
+  return new Set(prescribed.map((set) => set?.weight_kg ?? null)).size === 1;
+}
+
+/** `previousSets` are the completed sets from the last session she did this exercise in. */
+export function getWeightSuggestion(
+  item: ProgrammeExercise,
+  previousSets: LoggedSet[] = []
+): WeightSuggestion {
+  const { equipment } = item.exercise;
+  const hitTop = previousSets.length > 0 && hitTopOfRange(item, previousSets);
+
+  if (equipment === 'bodyweight' || equipment === 'band') {
+    if (previousSets.length === 0) return { kind: 'first-time', equipment };
+    return hitTop ? { kind: 'harder-variation', equipment } : { kind: 'more-reps', equipment };
+  }
+
+  const lastKg = heaviestWeight(previousSets);
+  if (lastKg === null) return { kind: 'find-starting-weight' };
+  if (!hitTop) return { kind: 'same-weight', kg: lastKg };
+  const increaseKg = weightIncrease(equipment, lastKg);
+  return { kind: 'increase', kg: Number((lastKg + increaseKg).toFixed(2)), increaseKg };
+}
+
+/** The suggestion line on the Today card. */
 export function describeWeightSuggestion(suggestion: WeightSuggestion): string {
   switch (suggestion.kind) {
-    case 'last-weight':
-      return `Last time: ${formatKg(suggestion.kg)}`;
-    case 'bodyweight':
-      return 'Bodyweight';
-    case 'band':
-      return 'Choose a band that feels challenging';
+    case 'increase':
+      return `Try ${formatKg(suggestion.kg)} (up ${formatKg(suggestion.increaseKg)}). You hit the top of the range last time`;
+    case 'same-weight':
+      return `Last time: ${formatKg(suggestion.kg)}. Stay here and aim for more reps`;
     case 'find-starting-weight':
       return 'Find your starting weight';
+    case 'harder-variation':
+    case 'more-reps':
+      return describeProgressionGoal(suggestion) ?? '';
+    case 'first-time':
+      return suggestion.equipment === 'band' ? 'Choose a band that feels challenging' : 'Bodyweight';
+  }
+}
+
+/** A short goal for the logger, shown under "Last time". Null when there's nothing to add. */
+export function describeProgressionGoal(suggestion: WeightSuggestion): string | null {
+  switch (suggestion.kind) {
+    case 'increase':
+      return `Go up to ${formatKg(suggestion.kg)} today. You hit the top of the range last time`;
+    case 'same-weight':
+      return 'Same weight, aim for more reps';
+    case 'harder-variation':
+      return suggestion.equipment === 'band'
+        ? 'You hit the top of the range. Try a harder band, or add a slow lowering'
+        : 'You hit the top of the range. Try a harder variation, or add a slow lowering';
+    case 'more-reps':
+      return suggestion.equipment === 'band'
+        ? 'Same band, aim for more reps'
+        : 'Bodyweight, aim for more reps';
+    default:
+      return null;
   }
 }

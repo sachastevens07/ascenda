@@ -19,9 +19,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colours } from '@/constants/theme';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
+  describeProgressionGoal,
   fetchProgrammeDay,
   formatKg,
   formatSetsAndReps,
+  getWeightSuggestion,
   usesWeight,
   type ProgrammeDay,
   type ProgrammeExercise,
@@ -68,7 +70,10 @@ function formatWeightInput(kg: number | null): string {
   return kg === null ? '' : String(Number(kg.toFixed(2)));
 }
 
-/** Pre-fills each set: what's already logged this session, else last time, else the bottom of the rep range. */
+/**
+ * Pre-fills each set: what's already logged this session, else the increased weight at the bottom
+ * of the rep range if she earned one, else last time, else the bottom of the rep range.
+ */
 function buildEntries(
   day: ProgrammeDay,
   logged: LoggedSet[],
@@ -78,6 +83,7 @@ function buildEntries(
   for (const item of day.exercises) {
     const exerciseId = item.exercise.id;
     const previousSets = previous[exerciseId] ?? [];
+    const suggestion = getWeightSuggestion(item, previousSets);
     for (const setNumber of setNumbers(item)) {
       const saved = logged.find(
         (set) => set.exercise_id === exerciseId && set.set_number === setNumber
@@ -87,6 +93,14 @@ function buildEntries(
           weight: formatWeightInput(saved.weight_kg),
           reps: saved.reps === null ? '' : String(saved.reps),
           completed: saved.completed,
+        };
+        continue;
+      }
+      if (suggestion.kind === 'increase') {
+        entries[setKey(exerciseId, setNumber)] = {
+          weight: formatWeightInput(suggestion.kg),
+          reps: String(item.rep_min),
+          completed: false,
         };
         continue;
       }
@@ -374,6 +388,9 @@ export default function SessionScreen() {
         {day.exercises.map((item) => {
           const weighted = usesWeight(item.exercise.equipment);
           const previousText = formatPrevious(previous[item.exercise.id]);
+          const goalText = describeProgressionGoal(
+            getWeightSuggestion(item, previous[item.exercise.id])
+          );
           return (
             <View key={item.position} style={styles.card}>
               <Pressable
@@ -387,6 +404,7 @@ export default function SessionScreen() {
                   <Text style={styles.exerciseName}>{item.exercise.name}</Text>
                   <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
                   {previousText && <Text style={styles.previous}>{previousText}</Text>}
+                  {goalText && <Text style={styles.goal}>{goalText}</Text>}
                 </View>
                 <Ionicons name="information-circle-outline" size={24} color={colours.accent} />
               </Pressable>
@@ -568,6 +586,12 @@ const styles = StyleSheet.create({
   },
   previous: {
     fontSize: 14,
+    color: colours.accent,
+    marginTop: 2,
+  },
+  goal: {
+    fontSize: 14,
+    fontWeight: '600',
     color: colours.accent,
     marginTop: 2,
   },

@@ -12,19 +12,17 @@ Handoff notes for the next agent. Read `AGENTS.md` first (project brief + workin
 6. **Today screen**: `src/app/(tabs)/index.tsx` shows the next day's session card (exercises in order, sets × rep range, weight suggestion), a starting-weight tip, and a "Do a different day" picker; reloads on focus.
 7. **Logger**: `sessions` + `sets` tables (`supabase/sessions.sql`); Start / Continue session on Today; logger `src/app/session/[id].tsx` (kg + reps boxes pre-filled from last time, 56px tick saves the set to Supabase immediately, Finish / Discard); rest timer `src/lib/restTimer.ts` (90 s, ±15 s, Skip, vibrates); queries `src/lib/sessions.ts`.
 
-Features 4–7 are code complete but **not yet confirmed by the user on the phone**.
+8. **Progression rule** (double progression): `getWeightSuggestion(item, previousSets)` in `src/lib/programmes.ts`; shown on the Today card (`describeWeightSuggestion`) and as a goal line in the logger (`describeProgressionGoal`); the logger pre-fills the increased weight with reps at `rep_min`.
+
+Features 4–8 are code complete but **not yet confirmed by the user on the phone**.
 
 ## In progress
 
-Nothing half-built. The user has just asked for **Feature 8: Progression rule**; no code for it has been written yet.
+Nothing half-built.
 
 ## Next step
 
-Build **Feature 8: Progression rule** (double progression). First ask the user the increments for machine, cable and kettlebell (the brief only gives +2.5 kg barbell, +1–2 kg dumbbell) and whether bodyweight/band exercises just say "aim for more reps". Where it plugs in:
-- `fetchPreviousSets(exerciseIds)` in `src/lib/sessions.ts` already returns last session's completed sets per exercise.
-- Add the rule next to `WeightSuggestion` / `getWeightSuggestion()` in `src/lib/programmes.ts` (it needs the slot's `sets` and `rep_max`; "every set hit the top" means she completed all prescribed sets and each had reps ≥ `rep_max`).
-- Show it on the Today card (`src/app/(tabs)/index.tsx`, currently "Last time: X kg") and pre-fill the suggested weight in the logger (`buildEntries()` in `src/app/session/[id].tsx`; reps pre-fill should reset to `rep_min` after a weight increase).
-- Keep copy encouraging and increases conservative. Then update this file and commit.
+Wait for the user to test Feature 8 on the phone, then build **Feature 9: Swap button** (2–3 alternatives with the same primary muscle and the user's available equipment). Ask before starting.
 
 ## Known bugs / issues
 
@@ -53,8 +51,9 @@ Build **Feature 8: Progression rule** (double progression). First ask the user t
 - **Programme assignment** (`programme_for_answers()` in SQL is the source of truth; first match wins): 1–2 days → Full body 2; new + 5–6 days → 3-day plan (Lower-body focus 3 for glutes & legs, else Full body 3); glutes & legs → Lower-body focus with chosen days (3–6); new or 3 days → Full body 3; 4 → Upper/lower; 5 → Five-day split; 6 → Push/pull/legs. 5–6 day plans are experienced-only. Confidence doesn't affect it. Programme screen explains when she gets fewer days than chosen.
 - Template ids: `full-body-2`, `full-body-3`, `upper-lower-4`, `lower-body-3`…`lower-body-6`, `split-5`, `ppl-6`. "Beginner full body" is displayed as "Full body". Never rename/delete `programme_days.id` (sessions reference it); `programmes.sql` upserts programmes/days and deletes + re-inserts all `programme_exercises`.
 - Equipment variants are explicit data per slot (user's choice), not automatic substitution; swaps are Feature 9.
-- **Today**: next day = the day after the last finished session's day, wrapping; Day 1 if none. No date logic and never "rest day" (no streak guilt). One session in progress at a time; the day picker is hidden while one is in progress. Weight suggestion: "Last time: X kg" (heaviest weight last time), else "Find your starting weight"; "Bodyweight" / "Choose a band that feels challenging" for those.
-- **Logger**: rest 90 s default, ±15 s. Reps pre-fill = last time's reps for that set number, else the bottom of the rep range (never over-reports). Weight pre-fill = last time's; first time it must be entered before ticking (0 allowed). Ticking carries the weight on to later empty sets. Only ticked sets count; unticking saves `completed = false`. "Previous" = most recent other session containing that exercise. `weight_kg` null for bodyweight/band.
+- **Today**: next day = the day after the last finished session's day, wrapping; Day 1 if none. No date logic and never "rest day" (no streak guilt). One session in progress at a time; the day picker is hidden while one is in progress. Weight suggestion: see Progression below; first time it's "Find your starting weight", or "Bodyweight" / "Choose a band that feels challenging".
+- **Logger**: rest 90 s default, ±15 s. After an earned increase, every set pre-fills the new weight and `rep_min` reps. Otherwise reps pre-fill = last time's reps for that set number, else the bottom of the rep range (never over-reports), and weight pre-fill = last time's; first time it must be entered before ticking (0 allowed). Ticking carries the weight on to later empty sets. Only ticked sets count; unticking saves `completed = false`. "Previous" = most recent other session containing that exercise. `weight_kg` null for bodyweight/band.
+- **Progression** (user's choices): "hit the top" = every prescribed set (1..`sets`) completed last time, all at the same weight, each with reps ≥ `rep_max`; "last time" = the most recent other session containing that exercise, whatever day it was on, judged against the current slot's sets/rep range. Increases: barbell +2.5 kg, dumbbell +1 kg (+2 kg from 10 kg), machine +5 kg, cable +2.5 kg, kettlebell +2 kg, added to last time's heaviest weight. Otherwise keep the heaviest weight and aim for more reps. Bodyweight/band at the top: "Try a harder variation / band, or add a slow lowering"; otherwise "aim for more reps". Today excludes the in-progress session from "last time".
 - No generated Supabase TypeScript types: embedded relations are cast through `unknown` to hand-written types; numerics are converted with `Number()`.
 
 ## Setup notes

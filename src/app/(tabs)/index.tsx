@@ -27,7 +27,6 @@ import {
   fetchActiveSession,
   fetchLastFinishedSession,
   fetchPreviousSets,
-  heaviestWeight,
   startSession,
   type LoggedSet,
   type Session,
@@ -76,7 +75,7 @@ export default function TodayScreen() {
           const exerciseIds = [
             ...new Set(programme.days.flatMap((d) => d.exercises.map((e) => e.exercise.id))),
           ];
-          const previous = await fetchPreviousSets(exerciseIds);
+          const previous = await fetchPreviousSets(exerciseIds, activeSession?.id ?? null);
           if (!isCurrent) return;
           setData({
             programme,
@@ -153,7 +152,7 @@ export default function TodayScreen() {
   const isNextDay = day.id === nextDay?.id;
   const isInProgress = activeDay !== undefined;
   const suggestionFor = (item: (typeof day.exercises)[number]) =>
-    getWeightSuggestion(item, heaviestWeight(data?.previous[item.exercise.id]));
+    getWeightSuggestion(item, data?.previous[item.exercise.id]);
   const needsStartingWeights = day.exercises.some(
     (item) => suggestionFor(item).kind === 'find-starting-weight'
   );
