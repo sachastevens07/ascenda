@@ -14,6 +14,8 @@ export type ProgrammeExercise = {
     name: string;
     primary_muscle: Muscle;
     equipment: Equipment;
+    /** Step to add after an earned increase. Null for bodyweight and band; negative for assisted machines. */
+    weight_increase_kg: number | null;
   };
 };
 
@@ -43,14 +45,23 @@ type ProgrammeRow = Omit<Programme, 'days'> & {
 /** Select string for a day and its exercises, picking each slot's exercise for `equipment`. */
 function daySelect(equipment: EquipmentAccess): string {
   // Each slot links to three exercises; the named foreign key picks the one for this equipment.
-  const exercise = `exercise:exercises!programme_exercises_${equipment}_fkey(id, name, primary_muscle, equipment)`;
+  const exercise = `exercise:exercises!programme_exercises_${equipment}_fkey(id, name, primary_muscle, equipment, weight_increase_kg)`;
   return `id, day_number, name, programme_exercises(position, sets, rep_min, rep_max, ${exercise})`;
 }
 
 function toProgrammeDay({ programme_exercises, ...day }: ProgrammeDayRow): ProgrammeDay {
   return {
     ...day,
-    exercises: [...programme_exercises].sort((a, b) => a.position - b.position),
+    exercises: [...programme_exercises]
+      .map((item) => ({
+        ...item,
+        exercise: {
+          ...item.exercise,
+          weight_increase_kg:
+            item.exercise.weight_increase_kg === null ? null : Number(item.exercise.weight_increase_kg),
+        },
+      }))
+      .sort((a, b) => a.position - b.position),
   };
 }
 
@@ -117,51 +128,29 @@ export function formatKg(kg: number): string {
 
 /** What to aim for next time on an exercise (double progression). */
 export type WeightSuggestion =
-  /** Every set hit the top of the rep range last time: go up a small step. */
-  | { kind: 'increase'; kg: number; increaseKg: number }
+  /**
+   * Set 1 hit the top of the rep range last time: change the weight by the exercise's step.
+   * `changeKg` is negative on assisted machines (less help).
+   */
+  | { kind: 'increase'; kg: number; changeKg: number }
   /** Keep last time's heaviest weight and aim for more reps. */
   | { kind: 'same-weight'; kg: number }
   | { kind: 'find-starting-weight' }
-  /** Bodyweight or band, and every set hit the top of the rep range last time. */
+  /** Bodyweight or band, and set 1 hit the top of the rep range last time. */
   | { kind: 'harder-variation'; equipment: 'bodyweight' | 'band' }
   /** Bodyweight or band, done before but not yet at the top of the range. */
   | { kind: 'more-reps'; equipment: 'bodyweight' | 'band' }
   /** Bodyweight or band, never done before. */
   | { kind: 'first-time'; equipment: 'bodyweight' | 'band' };
 
-/** Smallest sensible step up for each kind of equipment, in kg. */
-function weightIncrease(equipment: Equipment, currentKg: number): number {
-  switch (equipment) {
-    case 'dumbbell':
-      return currentKg < 10 ? 1 : 2;
-    case 'machine':
-      return 5;
-    case 'kettlebell':
-      return 2;
-    default:
-      return 2.5;
-  }
-}
-
-/**
- * True if she completed every prescribed set last time, all at the same weight,
- * and each reached the top of the rep range.
- */
-function hitTopOfRange(item: ProgrammeExercise, previousSets: LoggedSet[]): boolean {
-  const prescribed = Array.from({ length: item.sets }, (_, index) =>
-    previousSets.find((set) => set.set_number === index + 1)
-  );
-  if (prescribed.some((set) => !set || (set.reps ?? 0) < item.rep_max)) return false;
-  return new Set(prescribed.map((set) => set?.weight_kg ?? null)).size === 1;
-}
-
 /** `previousSets` are the completed sets from the last session she did this exercise in. */
 export function getWeightSuggestion(
   item: ProgrammeExercise,
   previousSets: LoggedSet[] = []
 ): WeightSuggestion {
-  const { equipment } = item.exercise;
-  const hitTop = previousSets.length > 0 && hitTopOfRange(item, previousSets);
+  const { equipment, weight_increase_kg } = item.exercise;
+  const firstSet = previousSets.find((set) => set.set_number === 1);
+  const hitTop = firstSet !== undefined && (firstSet.reps ?? 0) >= item.rep_max;
 
   if (equipment === 'bodyweight' || equipment === 'band') {
     if (previousSets.length === 0) return { kind: 'first-time', equipment };
@@ -170,16 +159,23 @@ export function getWeightSuggestion(
 
   const lastKg = heaviestWeight(previousSets);
   if (lastKg === null) return { kind: 'find-starting-weight' };
-  if (!hitTop) return { kind: 'same-weight', kg: lastKg };
-  const increaseKg = weightIncrease(equipment, lastKg);
-  return { kind: 'increase', kg: Number((lastKg + increaseKg).toFixed(2)), increaseKg };
+  const baseKg = firstSet?.weight_kg ?? null;
+  if (!hitTop || baseKg === null || !weight_increase_kg) return { kind: 'same-weight', kg: lastKg };
+  const kg = Math.max(0, Number((baseKg + weight_increase_kg).toFixed(2)));
+  if (kg === baseKg) return { kind: 'same-weight', kg: lastKg };
+  return { kind: 'increase', kg, changeKg: kg - baseKg };
 }
 
 /** The suggestion line on the Today card. */
 export function describeWeightSuggestion(suggestion: WeightSuggestion): string {
   switch (suggestion.kind) {
-    case 'increase':
-      return `Try ${formatKg(suggestion.kg)} (up ${formatKg(suggestion.increaseKg)}). You hit the top of the range last time`;
+    case 'increase': {
+      const change =
+        suggestion.changeKg > 0
+          ? `up ${formatKg(suggestion.changeKg)}`
+          : `${formatKg(-suggestion.changeKg)} less help`;
+      return `Try ${formatKg(suggestion.kg)} (${change}). You hit the top of the range last time`;
+    }
     case 'same-weight':
       return `Last time: ${formatKg(suggestion.kg)}. Stay here and aim for more reps`;
     case 'find-starting-weight':
@@ -196,7 +192,9 @@ export function describeWeightSuggestion(suggestion: WeightSuggestion): string {
 export function describeProgressionGoal(suggestion: WeightSuggestion): string | null {
   switch (suggestion.kind) {
     case 'increase':
-      return `Go up to ${formatKg(suggestion.kg)} today. You hit the top of the range last time`;
+      return suggestion.changeKg > 0
+        ? `Go up to ${formatKg(suggestion.kg)} today. You hit the top of the range last time`
+        : `Try ${formatKg(suggestion.kg)} today, a little less help. You hit the top of the range last time`;
     case 'same-weight':
       return 'Same weight, aim for more reps';
     case 'harder-variation':

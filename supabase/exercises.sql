@@ -16,6 +16,11 @@ create table if not exists public.exercises (
   created_at timestamptz not null default now()
 );
 
+-- How much to add (in kg) when she's earned a heavier weight. Null for bodyweight and band.
+-- Negative for assisted machines, where progress means taking help away.
+alter table public.exercises add column if not exists weight_increase_kg numeric;
+alter table public.exercises drop constraint if exists exercises_weight_increase_check;
+
 -- Allowed values. Keep these lists in step with src/lib/exercises.ts.
 alter table public.exercises drop constraint if exists exercises_primary_muscle_check;
 alter table public.exercises add constraint exercises_primary_muscle_check check (
@@ -660,6 +665,73 @@ on conflict (id) do update set
   equipment = excluded.equipment,
   cues = excluded.cues,
   location_hint = excluded.location_hint;
+
+-- Weight increase per exercise: smaller steps for small muscles and isolation lifts.
+update public.exercises e
+set weight_increase_kg = v.kg
+from (values
+  -- Barbell
+  ('barbell-back-squat', 2.5), ('front-squat', 2.5), ('barbell-box-squat', 2.5),
+  ('barbell-deadlift', 2.5), ('barbell-sumo-deadlift', 2.5), ('trap-bar-deadlift', 2.5),
+  ('barbell-romanian-deadlift', 2.5), ('good-morning', 2.5),
+  ('barbell-hip-thrust', 2.5), ('barbell-glute-bridge', 2.5),
+  ('barbell-bench-press', 2.5), ('incline-barbell-bench-press', 2.5), ('close-grip-bench-press', 2.5),
+  ('barbell-bent-over-row', 2.5), ('t-bar-row', 2.5), ('barbell-overhead-press', 2.5),
+  ('landmine-press', 1.25),
+  ('barbell-biceps-curl', 2.5), ('ez-bar-curl', 2.5), ('ez-bar-skull-crusher', 2.5),
+  -- Dumbbell (per dumbbell)
+  ('goblet-squat', 2), ('heels-elevated-goblet-squat', 2), ('dumbbell-sumo-squat', 2),
+  ('bulgarian-split-squat', 2), ('dumbbell-reverse-lunge', 2), ('dumbbell-walking-lunge', 2),
+  ('dumbbell-lateral-lunge', 2), ('curtsy-lunge', 2), ('deficit-reverse-lunge', 2),
+  ('dumbbell-step-up', 2), ('dumbbell-romanian-deadlift', 2), ('single-leg-romanian-deadlift', 2),
+  ('dumbbell-hip-thrust', 2), ('dumbbell-calf-raise', 2),
+  ('dumbbell-bench-press', 2), ('incline-dumbbell-press', 2), ('dumbbell-floor-press', 2),
+  ('one-arm-dumbbell-row', 2), ('chest-supported-dumbbell-row', 2), ('dumbbell-pullover', 2),
+  ('dumbbell-shrug', 2),
+  ('dumbbell-shoulder-press', 1), ('arnold-press', 1), ('renegade-row', 1),
+  ('dumbbell-fly', 1), ('dumbbell-lateral-raise', 1), ('dumbbell-front-raise', 1),
+  ('rear-delt-fly', 1), ('incline-y-raise', 1),
+  ('dumbbell-biceps-curl', 1), ('dumbbell-hammer-curl', 1), ('incline-dumbbell-curl', 1),
+  ('concentration-curl', 1),
+  ('overhead-triceps-extension', 1), ('dumbbell-lying-triceps-extension', 1),
+  ('dumbbell-triceps-kickback', 1),
+  -- Machine
+  ('leg-press', 5), ('single-leg-leg-press', 5), ('hack-squat', 5), ('hip-thrust-machine', 5),
+  ('standing-calf-raise', 5), ('leg-press-calf-raise', 5),
+  ('leg-extension', 2.5), ('lying-leg-curl', 2.5), ('seated-leg-curl', 2.5),
+  ('hip-abduction-machine', 2.5), ('hip-adduction-machine', 2.5), ('glute-kickback-machine', 2.5),
+  ('seated-calf-raise', 2.5), ('back-extension', 2.5), ('glute-focused-back-extension', 2.5),
+  ('machine-chest-press', 2.5), ('incline-machine-chest-press', 2.5), ('pec-deck', 2.5),
+  ('machine-row', 2.5), ('machine-shoulder-press', 2.5), ('machine-lateral-raise', 2.5),
+  ('reverse-pec-deck', 2.5), ('preacher-curl-machine', 2.5), ('ab-crunch-machine', 2.5),
+  ('assisted-pull-up', -5), ('assisted-dip', -5),
+  -- Cable
+  ('lat-pulldown', 2.5), ('close-grip-lat-pulldown', 2.5), ('seated-cable-row', 2.5),
+  ('cable-squat', 2.5), ('cable-pull-through', 2.5), ('cable-crunch', 2.5),
+  ('single-arm-lat-pulldown', 1.25), ('straight-arm-pulldown', 1.25),
+  ('cable-glute-kickback', 1.25), ('cable-hip-abduction', 1.25), ('cable-hip-adduction', 1.25),
+  ('standing-cable-leg-curl', 1.25),
+  ('cable-chest-fly', 1.25), ('low-to-high-cable-fly', 1.25), ('single-arm-cable-chest-press', 1.25),
+  ('cable-face-pull', 1.25), ('cable-lateral-raise', 1.25), ('cable-rear-delt-fly', 1.25),
+  ('cable-biceps-curl', 1.25), ('cable-hammer-curl', 1.25),
+  ('cable-triceps-pushdown', 1.25), ('cable-overhead-triceps-extension', 1.25),
+  ('cable-pallof-press', 1.25), ('cable-woodchop', 1.25),
+  -- Kettlebell
+  ('kettlebell-swing', 2), ('kettlebell-deadlift', 2), ('kettlebell-sumo-deadlift', 2),
+  ('kettlebell-romanian-deadlift', 2), ('kettlebell-goblet-squat', 2), ('kettlebell-reverse-lunge', 2),
+  ('kettlebell-farmers-carry', 2), ('kettlebell-suitcase-carry', 2),
+  ('kettlebell-floor-press', 2), ('kettlebell-row', 2), ('kettlebell-overhead-press', 2),
+  ('turkish-get-up', 2)
+) as v(id, kg)
+where e.id = v.id;
+
+-- Every weighted exercise needs an increase; bodyweight and band never have one.
+alter table public.exercises add constraint exercises_weight_increase_check check (
+  case when equipment in ('bodyweight', 'band')
+    then weight_increase_kg is null
+    else weight_increase_kg is not null and weight_increase_kg <> 0
+  end
+);
 
 -- Link any photos that were uploaded before the trigger existed.
 update public.exercises e

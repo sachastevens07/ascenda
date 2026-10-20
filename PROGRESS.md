@@ -12,7 +12,7 @@ Handoff notes for the next agent. Read `AGENTS.md` first (project brief + workin
 6. **Today screen**: `src/app/(tabs)/index.tsx` shows the next day's session card (exercises in order, sets × rep range, weight suggestion), a starting-weight tip, and a "Do a different day" picker; reloads on focus.
 7. **Logger**: `sessions` + `sets` tables (`supabase/sessions.sql`); Start / Continue session on Today; logger `src/app/session/[id].tsx` (kg + reps boxes pre-filled from last time, 56px tick saves the set to Supabase immediately, Finish / Discard); rest timer `src/lib/restTimer.ts` (90 s, ±15 s, Skip, vibrates); queries `src/lib/sessions.ts`.
 
-8. **Progression rule** (double progression): `getWeightSuggestion(item, previousSets)` in `src/lib/programmes.ts`; shown on the Today card (`describeWeightSuggestion`) and as a goal line in the logger (`describeProgressionGoal`); the logger pre-fills the increased weight with reps at `rep_min`.
+8. **Progression rule** (double progression, per-exercise steps): `getWeightSuggestion(item, previousSets)` in `src/lib/programmes.ts`; shown on the Today card (`describeWeightSuggestion`) and as a goal line in the logger (`describeProgressionGoal`); the logger pre-fills the increased weight with reps at `rep_min`.
 
 Features 4–8 are code complete but **not yet confirmed by the user on the phone**.
 
@@ -27,7 +27,8 @@ Wait for the user to test Feature 8 on the phone, then build **Feature 9: Swap b
 ## Known bugs / issues
 
 - **Rest-timer notifications don't work in the user's Expo Go (Android)**: `expo-notifications` 57.0.x loads `ExpoTopicSubscriptionModule` on import, which this Expo Go lacks (crashed the logger). `src/lib/restTimer.ts` now requires it inside a `try`; the timer still counts down and vibrates in-app but can't alert with the phone locked. Fix: update Expo Go, or a development build (`eas build --profile development`).
-- Exercise text (cues, location hints) and all programme templates (exercises, sets, rep ranges) were written by the AI and **still need the user's review**.
+- `supabase/exercises.sql` gained `weight_increase_kg`; **the user must re-run it** in the SQL Editor (until then Today and the logger fail to load).
+- Exercise text (cues, location hints), weight increases per exercise, and all programme templates (exercises, sets, rep ranges) were written by the AI and **still need the user's review**.
 - No exercise photos yet (free-exercise-db and wger media rejected for licensing).
 - Email confirmation is **off** in Supabase for testing; no deep-link handling, so confirm-email / forgot-password links won't open the app. Needed before launch.
 - Web shows a blank screen (`react-native-web` not installed; web isn't a target).
@@ -53,7 +54,7 @@ Wait for the user to test Feature 8 on the phone, then build **Feature 9: Swap b
 - Equipment variants are explicit data per slot (user's choice), not automatic substitution; swaps are Feature 9.
 - **Today**: next day = the day after the last finished session's day, wrapping; Day 1 if none. No date logic and never "rest day" (no streak guilt). One session in progress at a time; the day picker is hidden while one is in progress. Weight suggestion: see Progression below; first time it's "Find your starting weight", or "Bodyweight" / "Choose a band that feels challenging".
 - **Logger**: rest 90 s default, ±15 s. After an earned increase, every set pre-fills the new weight and `rep_min` reps. Otherwise reps pre-fill = last time's reps for that set number, else the bottom of the rep range (never over-reports), and weight pre-fill = last time's; first time it must be entered before ticking (0 allowed). Ticking carries the weight on to later empty sets. Only ticked sets count; unticking saves `completed = false`. "Previous" = most recent other session containing that exercise. `weight_kg` null for bodyweight/band.
-- **Progression** (user's choices): "hit the top" = every prescribed set (1..`sets`) completed last time, all at the same weight, each with reps ≥ `rep_max`; "last time" = the most recent other session containing that exercise, whatever day it was on, judged against the current slot's sets/rep range. Increases: barbell +2.5 kg, dumbbell +1 kg (+2 kg from 10 kg), machine +5 kg, cable +2.5 kg, kettlebell +2 kg, added to last time's heaviest weight. Otherwise keep the heaviest weight and aim for more reps. Bodyweight/band at the top: "Try a harder variation / band, or add a slow lowering"; otherwise "aim for more reps". Today excludes the in-progress session from "last time".
+- **Progression** (user's choices): increase when **set 1** last time reached the top of the range (reps ≥ `rep_max`), whatever the other sets did; the new weight = set 1's weight + the exercise's step. "Last time" = the most recent other session containing that exercise, whatever day it was on, judged against the current slot's rep range. Steps are per exercise in `exercises.weight_increase_kg` (set in `exercises.sql`, AI-chosen, **needs the user's review**): null for bodyweight/band (DB-enforced), negative for assisted pull-up/dip (less help, never below 0 kg). Otherwise keep the heaviest weight and aim for more reps. Bodyweight/band at the top: "Try a harder variation / band, or add a slow lowering"; otherwise "aim for more reps". Today excludes the in-progress session from "last time".
 - No generated Supabase TypeScript types: embedded relations are cast through `unknown` to hand-written types; numerics are converted with `Number()`.
 
 ## Setup notes
