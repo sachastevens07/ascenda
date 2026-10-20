@@ -6,6 +6,8 @@ export type ThemeColours = {
   accent: string;
   accentSoft: string;
   border: string;
+  /** Personal-best trophies. */
+  trophy: string;
 };
 
 export const colours: ThemeColours = {
@@ -16,4 +18,5 @@ export const colours: ThemeColours = {
   accent: '#7A3E6B',
   accentSoft: '#F2E6EE',
   border: '#E6E0DA',
+  trophy: '#C8901A',
 };

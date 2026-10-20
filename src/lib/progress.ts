@@ -110,6 +110,52 @@ export async function fetchFinishedSessionDates(): Promise<string[]> {
   return dates;
 }
 
+/** Her all-time bests on one exercise, from finished sessions. */
+export type ExerciseBests = {
+  weightKg: number;
+  /** 0 if no set had 1–12 reps. */
+  estimatedMaxKg: number;
+  /** Heaviest single set's weight × reps. */
+  volumeKg: number;
+};
+
+/** Bests for each exercise she has weighted history for, leaving out `excludeSessionId`. */
+export async function fetchExerciseBests(
+  exerciseIds: string[],
+  excludeSessionId: string
+): Promise<Record<string, ExerciseBests>> {
+  const bests: Record<string, ExerciseBests> = {};
+  if (exerciseIds.length === 0) return bests;
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('sets')
+      .select('id, exercise_id, weight_kg, reps, session:sessions!inner(completed_at)')
+      .in('exercise_id', exerciseIds)
+      .eq('completed', true)
+      .neq('session_id', excludeSessionId)
+      .not('weight_kg', 'is', null)
+      .not('session.completed_at', 'is', null)
+      .order('id')
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    for (const row of data ?? []) {
+      const weightKg = Number(row.weight_kg);
+      const reps = (row.reps as number | null) ?? 0;
+      if (weightKg <= 0 || reps < 1) continue;
+      const current = (bests[row.exercise_id as string] ??= {
+        weightKg: 0,
+        estimatedMaxKg: 0,
+        volumeKg: 0,
+      });
+      current.weightKg = Math.max(current.weightKg, weightKg);
+      current.estimatedMaxKg = Math.max(current.estimatedMaxKg, estimateOneRepMax(weightKg, reps) ?? 0);
+      current.volumeKg = Math.max(current.volumeKg, weightKg * reps);
+    }
+    if (!data || data.length < PAGE_SIZE) break;
+  }
+  return bests;
+}
+
 function isAssisted(set: ProgressSet): boolean {
   return (set.weightIncreaseKg ?? 0) < 0;
 }

@@ -6,13 +6,16 @@ import { colours } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
+import { WorkoutProvider } from '@/lib/workout';
 
 export default function RootLayout() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        <StatusBar style="dark" />
-        <RootNavigator />
+        <WorkoutProvider>
+          <StatusBar style="dark" />
+          <RootNavigator />
+        </WorkoutProvider>
       </ProfileProvider>
     </AuthProvider>
   );

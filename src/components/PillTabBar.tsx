@@ -2,6 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { WorkoutBar } from '@/components/WorkoutBar';
 import { colours } from '@/constants/theme';
 
 const PILL_PADDING = 6;
@@ -43,6 +44,7 @@ export function PillTabBar({ state, descriptors, navigation, position }: PillTab
 
   return (
     <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <WorkoutBar />
       <View
         style={styles.pill}
         onLayout={(event) => setInnerWidth(event.nativeEvent.layout.width - PILL_PADDING * 2)}>

@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,7 +11,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  Vibration,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +20,6 @@ import { colours } from '@/constants/theme';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   describeProgressionGoal,
-  fetchProgrammeDay,
   formatKg,
   formatSetsAndReps,
   getWeightSuggestion,
@@ -30,102 +28,45 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
   DEFAULT_REST_SECONDS,
   REST_ADJUST_SECONDS,
-  cancelRestOver,
   ensureRestTimerPermission,
-  scheduleRestOver,
 } from '@/lib/restTimer';
 import {
   discardSession,
   fetchPreviousSets,
-  fetchSession,
-  fetchSessionSets,
   finishSession,
   saveSessionSwaps,
   saveSet,
   type LoggedSet,
 } from '@/lib/sessions';
+import { deleteUserSwap, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
+import { useNow, useWorkout } from '@/lib/workout';
 import {
-  applySwaps,
-  deleteUserSwap,
-  fetchSessionSwaps,
-  saveUserSwap,
-  swapIds,
-  type SwapScope,
-} from '@/lib/swaps';
+  RECORD_LABELS,
+  buildEntries,
+  formatClock,
+  formatDuration,
+  getNextSet,
+  getSetRecords,
+  loadSessionLog,
+  parseReps,
+  parseWeight,
+  setKey,
+  setNumbers,
+  type RecordKind,
+  type SetEntry,
+} from '@/lib/workoutLog';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
-/** What's in the boxes for one set. Kept as text so she can type freely. */
-type SetEntry = { weight: string; reps: string; completed: boolean };
-
-const setKey = (exerciseId: string, setNumber: number) => `${exerciseId}:${setNumber}`;
-
-function setNumbers(item: ProgrammeExercise): number[] {
-  return Array.from({ length: item.sets }, (_, index) => index + 1);
-}
-
-function parseWeight(text: string): number | null {
-  const value = Number.parseFloat(text.replace(',', '.'));
-  return Number.isFinite(value) && value >= 0 ? value : null;
-}
-
-function parseReps(text: string): number | null {
-  const value = Number.parseInt(text, 10);
-  return Number.isFinite(value) && value >= 0 ? value : null;
-}
-
-function formatWeightInput(kg: number | null): string {
-  return kg === null ? '' : String(Number(kg.toFixed(2)));
-}
-
-/**
- * Pre-fills each set: what's already logged this session, else the increased weight at the bottom
- * of the rep range if she earned one, else last time, else the bottom of the rep range.
- */
-function buildEntries(
-  day: ProgrammeDay,
-  logged: LoggedSet[],
-  previous: Record<string, LoggedSet[]>
-): Record<string, SetEntry> {
-  const entries: Record<string, SetEntry> = {};
-  for (const item of day.exercises) {
-    const exerciseId = item.exercise.id;
-    const previousSets = previous[exerciseId] ?? [];
-    const suggestion = getWeightSuggestion(item, previousSets);
-    for (const setNumber of setNumbers(item)) {
-      const saved = logged.find(
-        (set) => set.exercise_id === exerciseId && set.set_number === setNumber
-      );
-      if (saved) {
-        entries[setKey(exerciseId, setNumber)] = {
-          weight: formatWeightInput(saved.weight_kg),
-          reps: saved.reps === null ? '' : String(saved.reps),
-          completed: saved.completed,
-        };
-        continue;
-      }
-      if (suggestion.kind === 'increase') {
-        entries[setKey(exerciseId, setNumber)] = {
-          weight: formatWeightInput(suggestion.kg),
-          reps: String(item.rep_min),
-          completed: false,
-        };
-        continue;
-      }
-      const last =
-        previousSets.find((set) => set.set_number === setNumber) ??
-        previousSets[previousSets.length - 1];
-      entries[setKey(exerciseId, setNumber)] = {
-        weight: usesWeight(item.exercise.equipment) ? formatWeightInput(last?.weight_kg ?? null) : '',
-        reps: String(last?.reps ?? item.rep_min),
-        completed: false,
-      };
-    }
-  }
-  return entries;
+function showRecords(kinds: RecordKind[]) {
+  Alert.alert(
+    kinds.length === 1 ? 'New personal best' : 'New personal bests',
+    kinds.map((kind) => RECORD_LABELS[kind]).join('\n')
+  );
 }
 
 function formatPrevious(sets: LoggedSet[] | undefined): string | null {
@@ -140,11 +81,6 @@ function formatPrevious(sets: LoggedSet[] | undefined): string | null {
     .join(', ')}`;
 }
 
-function formatClock(totalSeconds: number): string {
-  const seconds = Math.max(0, Math.ceil(totalSeconds));
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-}
-
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
@@ -157,37 +93,31 @@ export default function SessionScreen() {
   const [entries, setEntries] = useState<Record<string, SetEntry>>({});
   const [isFinishing, setIsFinishing] = useState(false);
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [bests, setBests] = useState<Record<string, ExerciseBests>>({});
 
-  const [restEndsAt, setRestEndsAt] = useState<number | null>(null);
-  const [now, setNow] = useState(Date.now());
-  const restNotificationId = useRef<string | null>(null);
+  const workout = useWorkout();
+  const { restEndsAt, publish } = workout;
+  const now = useNow(loadState === 'ready', 500);
 
   useEffect(() => {
     if (!equipment) return;
     let isCurrent = true;
     (async () => {
       try {
-        const session = await fetchSession(id);
-        const [programmeDay, swaps] = session?.programme_day_id
-          ? await Promise.all([
-              fetchProgrammeDay(session.programme_day_id, equipment),
-              fetchSessionSwaps(session),
-            ])
-          : [null, {}];
-        if (!programmeDay) {
+        const log = await loadSessionLog(id, equipment);
+        if (!log) {
           if (isCurrent) setLoadState('not-found');
           return;
         }
-        const sessionDay = applySwaps(programmeDay, swaps);
-        const exerciseIds = sessionDay.exercises.map((item) => item.exercise.id);
-        const [logged, previousSets] = await Promise.all([
-          fetchSessionSets(id),
-          fetchPreviousSets(exerciseIds, id),
-        ]);
+        const exerciseIds = log.day.exercises.map((item) => item.exercise.id);
+        const historyBests = await fetchExerciseBests(exerciseIds, id).catch(() => ({}));
         if (!isCurrent) return;
-        setDay(sessionDay);
-        setPrevious(previousSets);
-        setEntries(buildEntries(sessionDay, logged, previousSets));
+        setDay(log.day);
+        setPrevious(log.previous);
+        setEntries(buildEntries(log.day, log.logged, log.previous));
+        setStartedAt(new Date(log.session.started_at).getTime());
+        setBests(historyBests);
         setLoadState('ready');
       } catch {
         if (isCurrent) setLoadState('error');
@@ -202,38 +132,11 @@ export default function SessionScreen() {
     ensureRestTimerPermission().catch(() => {});
   }, []);
 
+  // Keeps the bar above the tabs up to date with this session's next set.
   useEffect(() => {
-    if (restEndsAt === null) return;
-    const timer = setInterval(() => {
-      const current = Date.now();
-      setNow(current);
-      if (current >= restEndsAt) {
-        Vibration.vibrate([0, 300, 200, 300]);
-        restNotificationId.current = null;
-        setRestEndsAt(null);
-      }
-    }, 250);
-    return () => clearInterval(timer);
-  }, [restEndsAt]);
-
-  async function setRestTimer(endsAt: number | null) {
-    const previousId = restNotificationId.current;
-    restNotificationId.current = null;
-    setNow(Date.now());
-    setRestEndsAt(endsAt);
-    await cancelRestOver(previousId).catch(() => {});
-    if (endsAt !== null) {
-      restNotificationId.current = await scheduleRestOver((endsAt - Date.now()) / 1000).catch(
-        () => null
-      );
-    }
-  }
-
-  function adjustRest(seconds: number) {
-    if (restEndsAt === null) return;
-    const endsAt = restEndsAt + seconds * 1000;
-    setRestTimer(endsAt - Date.now() >= 1000 ? endsAt : null);
-  }
+    if (!day || startedAt === null) return;
+    publish({ sessionId: id, dayName: day.name, startedAt }, getNextSet(day, entries));
+  }, [id, day, entries, startedAt, publish]);
 
   function updateEntry(key: string, change: Partial<SetEntry>) {
     setEntries((current) => ({ ...current, [key]: { ...current[key], ...change } }));
@@ -283,13 +186,13 @@ export default function SessionScreen() {
       }
       return next;
     });
-    if (completing) setRestTimer(Date.now() + DEFAULT_REST_SECONDS * 1000);
+    if (completing) workout.startRest(DEFAULT_REST_SECONDS);
 
     try {
       await saveSet(toLoggedSet(item, setNumber, updated));
     } catch {
       setEntries(before);
-      if (completing) setRestTimer(null);
+      if (completing) workout.stopRest();
       Alert.alert('That set didn’t save', 'Check your connection and try again.');
     }
   }
@@ -337,13 +240,15 @@ export default function SessionScreen() {
     };
     await saveSessionSwaps(id, swapIds(updatedDay));
 
-    const previousSets = previous[exercise.id]
-      ? {}
-      : await fetchPreviousSets([exercise.id], id).catch(() => ({}));
+    const [previousSets, newBests] = await Promise.all([
+      previous[exercise.id] ? {} : fetchPreviousSets([exercise.id], id).catch(() => ({})),
+      bests[exercise.id] ? {} : fetchExerciseBests([exercise.id], id).catch(() => ({})),
+    ]);
     const mergedPrevious = { ...previous, ...previousSets };
     const newEntries = buildEntries({ ...day, exercises: [updatedItem] }, [], mergedPrevious);
     setDay(updatedDay);
     setPrevious(mergedPrevious);
+    setBests((current) => ({ ...current, ...newBests }));
     // Keep anything she already typed for this exercise earlier in the session.
     setEntries((current) => ({ ...newEntries, ...current }));
   }
@@ -364,9 +269,11 @@ export default function SessionScreen() {
     setIsFinishing(true);
     try {
       await finishSession(id);
-      await setRestTimer(null);
+      workout.end();
       router.back();
-      Alert.alert('Session saved', 'Nice work. That’s another one done.');
+      const trained =
+        startedAt === null ? '' : ` You trained for ${formatDuration((Date.now() - startedAt) / 1000)}.`;
+      Alert.alert('Session saved', `Nice work. That’s another one done.${trained}`);
     } catch {
       setIsFinishing(false);
       Alert.alert('Couldn’t finish the session', 'Check your connection and try again.');
@@ -377,7 +284,7 @@ export default function SessionScreen() {
     setIsFinishing(true);
     try {
       await discardSession(id);
-      await setRestTimer(null);
+      workout.end();
       router.back();
     } catch {
       setIsFinishing(false);
@@ -437,7 +344,8 @@ export default function SessionScreen() {
     );
   }
 
-  const restRemaining = restEndsAt === null ? 0 : (restEndsAt - now) / 1000;
+  const restRemaining = restEndsAt === null ? 0 : Math.ceil((restEndsAt - now) / 1000);
+  const records = getSetRecords(day, entries, bests);
 
   return (
     <KeyboardAvoidingView
@@ -451,9 +359,17 @@ export default function SessionScreen() {
         keyboardShouldPersistTaps="handled">
         <View>
           <Text style={styles.title}>{day.name}</Text>
-          <Text style={styles.progress}>
-            {doneSets} of {totalSets} sets done
-          </Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.progress}>
+              {doneSets} of {totalSets} sets done
+            </Text>
+            {startedAt !== null && (
+              <View style={styles.elapsed} accessibilityLabel="Time since you started">
+                <Ionicons name="stopwatch-outline" size={18} color={colours.accent} />
+                <Text style={styles.elapsedText}>{formatClock((now - startedAt) / 1000)}</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {day.exercises.map((item) => {
@@ -502,9 +418,24 @@ export default function SessionScreen() {
               {setNumbers(item).map((setNumber) => {
                 const key = setKey(item.exercise.id, setNumber);
                 const entry = entries[key];
+                const setRecords = records[key];
                 return (
                   <View key={key} style={styles.setRow}>
-                    <Text style={[styles.setNumber, styles.setColumn]}>{setNumber}</Text>
+                    {setRecords ? (
+                      <Pressable
+                        onPress={() => showRecords(setRecords)}
+                        style={styles.setColumn}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Set ${setNumber}: new personal best. ${setRecords
+                          .map((kind) => RECORD_LABELS[kind])
+                          .join(', ')}`}>
+                        <Text style={styles.setNumber}>{setNumber}</Text>
+                        <Ionicons name="trophy" size={18} color={colours.trophy} style={styles.trophy} />
+                      </Pressable>
+                    ) : (
+                      <Text style={[styles.setNumber, styles.setColumn]}>{setNumber}</Text>
+                    )}
                     {weighted ? (
                       <TextInput
                         style={[styles.input, styles.flex, entry.completed && styles.inputDone]}
@@ -600,21 +531,21 @@ export default function SessionScreen() {
           </View>
           <Pressable
             style={({ pressed }) => [styles.restButton, pressed && styles.pressed]}
-            onPress={() => adjustRest(-REST_ADJUST_SECONDS)}
+            onPress={() => workout.adjustRest(-REST_ADJUST_SECONDS)}
             accessibilityRole="button"
             accessibilityLabel={`${REST_ADJUST_SECONDS} seconds less rest`}>
             <Text style={styles.restButtonText}>−{REST_ADJUST_SECONDS}s</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.restButton, pressed && styles.pressed]}
-            onPress={() => adjustRest(REST_ADJUST_SECONDS)}
+            onPress={() => workout.adjustRest(REST_ADJUST_SECONDS)}
             accessibilityRole="button"
             accessibilityLabel={`${REST_ADJUST_SECONDS} seconds more rest`}>
             <Text style={styles.restButtonText}>+{REST_ADJUST_SECONDS}s</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.restButton, styles.skipButton, pressed && styles.pressed]}
-            onPress={() => setRestTimer(null)}
+            onPress={workout.stopRest}
             accessibilityRole="button">
             <Text style={[styles.restButtonText, styles.skipText]}>Skip</Text>
           </Pressable>
@@ -653,11 +584,35 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.text,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
   progress: {
     fontSize: 16,
     fontWeight: '600',
     color: colours.accent,
-    marginTop: 4,
+  },
+  elapsed: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    backgroundColor: colours.accentSoft,
+  },
+  elapsedText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colours.accent,
+    fontVariant: ['tabular-nums'],
+  },
+  trophy: {
+    alignSelf: 'center',
+    marginTop: 2,
   },
   card: {
     padding: 16,
