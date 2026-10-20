@@ -48,6 +48,17 @@ function RootNavigator() {
           }}
         />
         <Stack.Screen
+          name="session/[id]"
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Today',
+            headerTintColor: colours.accent,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.background },
+          }}
+        />
+        <Stack.Screen
           name="programme"
           options={{
             headerShown: true,
