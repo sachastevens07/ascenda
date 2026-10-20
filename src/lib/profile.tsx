@@ -22,8 +22,12 @@ export const EXPERIENCE_LABELS: Record<Experience, string> = {
   confident: 'I know my way around',
 };
 
-export const DAYS_PER_WEEK_OPTIONS = [2, 3, 4] as const;
+export const DAYS_PER_WEEK_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
 export type DaysPerWeek = (typeof DAYS_PER_WEEK_OPTIONS)[number];
+
+export function formatDaysPerWeek(days: DaysPerWeek): string {
+  return days === 1 ? '1 day' : `${days} days`;
+}
 
 /** Where the user trains. Not the same as an exercise's `Equipment`. */
 export const EQUIPMENT_ACCESS = ['full_gym', 'dumbbells', 'home'] as const;

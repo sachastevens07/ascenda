@@ -9,6 +9,7 @@ import {
   EQUIPMENT_ACCESS_LABELS,
   EXPERIENCE_LABELS,
   GOAL_LABELS,
+  formatDaysPerWeek,
   getQuizAnswers,
   useProfile,
 } from '@/lib/profile';
@@ -30,7 +31,7 @@ export default function ProfileScreen() {
     ? [
         { name: 'Goal', value: GOAL_LABELS[answers.goal] },
         { name: 'Experience', value: EXPERIENCE_LABELS[answers.experience] },
-        { name: 'Days per week', value: `${answers.days_per_week} days` },
+        { name: 'Days per week', value: formatDaysPerWeek(answers.days_per_week) },
         { name: 'Where you train', value: EQUIPMENT_ACCESS_LABELS[answers.equipment] },
         { name: 'Gym confidence', value: `${answers.confidence}. ${CONFIDENCE_LABELS[answers.confidence]}` },
       ]

@@ -29,7 +29,7 @@ alter table public.profiles add constraint profiles_experience_check check (
 );
 alter table public.profiles drop constraint if exists profiles_days_per_week_check;
 alter table public.profiles add constraint profiles_days_per_week_check check (
-  days_per_week between 2 and 4
+  days_per_week between 1 and 6
 );
 alter table public.profiles drop constraint if exists profiles_equipment_check;
 alter table public.profiles add constraint profiles_equipment_check check (

@@ -17,7 +17,7 @@ Nothing half-built in code. Waiting on the user to:
 
 ## Next step
 
-Once the quiz is confirmed on the phone, start **Feature 5: Programmes** (three templates stored as data in `programmes` / `programme_days` / `programme_exercises`, assigned from the quiz answers into `profiles.programme_id`).
+Once the quiz is confirmed on the phone, start **Feature 5: Programmes** (three templates stored as data in `programmes` / `programme_days` / `programme_exercises`, assigned from the quiz answers into `profiles.programme_id`). Templates only cover 3 and 4 days, so decide with the user how 1, 2, 5 and 6 days map onto them.
 
 ## Known bugs / issues
 
@@ -39,7 +39,7 @@ Once the quiz is confirmed on the phone, start **Feature 5: Programmes** (three 
 - **Photos**: public Storage bucket `exercise-media`. A trigger on `storage.objects` sets `exercises.media_url` to the file path when a file named `<exercise-id>.<ext>` is uploaded (case, spaces and underscores normalised) and clears it on delete. `media_url` may also be a full https URL. The app resolves it with `getMediaUrl()`. Re-running the SQL never overwrites `media_url`.
 - **Disclaimer** ("General fitness guidance, not medical advice. Stop if anything hurts.") is shown on every exercise detail screen.
 - In dev builds (`__DEV__`), the Library error state shows the real error message, and the photo placeholder shows the file name to upload.
-- **Quiz values** stored in `profiles` (database constraints enforce them; keep `supabase/profiles.sql` and `src/lib/profile.tsx` in step): goal `strength` / `glutes_legs` / `general`; experience `new` / `some` / `confident`; `days_per_week` 2–4; equipment `full_gym` / `dumbbells` / `home`; confidence 1–5. The quiz's "where you train" type is `EquipmentAccess`, separate from an exercise's `Equipment`.
+- **Quiz values** stored in `profiles` (database constraints enforce them; keep `supabase/profiles.sql` and `src/lib/profile.tsx` in step): goal `strength` / `glutes_legs` / `general`; experience `new` / `some` / `confident`; `days_per_week` 1–6 (the user asked for a wider range than the brief's 2–4; 7 is left out so there's always a rest day); equipment `full_gym` / `dumbbells` / `home`; confidence 1–5. The quiz's "where you train" type is `EquipmentAccess`, separate from an exercise's `Equipment`.
 - **"At home"** is described to the user as "little or no kit: bodyweight and maybe a band". Programmes and swaps should treat it as bodyweight + band exercises (assumption, not yet confirmed by the user).
 - **Onboarding is complete** when `profiles.onboarding_completed_at` is set (and all five answers are present). `programme_id` is plain text with no foreign key yet; add one when the `programmes` table exists.
 - If the profile fails to load, the app shows a "We couldn't load your profile" screen with Try again and Sign out, rather than sending the user into the quiz. The first quiz question has a "Not you? Sign out" link.

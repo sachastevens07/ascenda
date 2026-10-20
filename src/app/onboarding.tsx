@@ -14,6 +14,7 @@ import {
   EXPERIENCE_LEVELS,
   GOALS,
   GOAL_LABELS,
+  formatDaysPerWeek,
   getQuizAnswers,
   useProfile,
   type QuizAnswers,
@@ -70,7 +71,7 @@ const QUESTIONS: Question[] = [
     name: 'Days per week',
     title: 'How many days a week can you train?',
     subtitle: 'Pick what feels realistic. Rest days help you get stronger too.',
-    options: DAYS_PER_WEEK_OPTIONS.map((value) => ({ value, label: `${value} days` })),
+    options: DAYS_PER_WEEK_OPTIONS.map((value) => ({ value, label: formatDaysPerWeek(value) })),
   },
   {
     key: 'equipment',
