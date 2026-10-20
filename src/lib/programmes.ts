@@ -70,3 +70,39 @@ export function formatSetsAndReps({ sets, rep_min, rep_max }: ProgrammeExercise)
   const reps = rep_min === rep_max ? `${rep_min}` : `${rep_min}–${rep_max}`;
   return `${sets} sets × ${reps} reps`;
 }
+
+/** The day to train next. Always the first day for now: there's no session history to rotate from yet. */
+export function getNextDay(programme: Programme): ProgrammeDay | null {
+  return programme.days[0] ?? null;
+}
+
+/**
+ * What the Today card suggests for the weight. With no logged sets there's no number to suggest,
+ * so weighted exercises ask her to find a starting weight.
+ */
+export type WeightSuggestion =
+  | { kind: 'find-starting-weight' }
+  | { kind: 'bodyweight' }
+  | { kind: 'band' };
+
+export function getWeightSuggestion(item: ProgrammeExercise): WeightSuggestion {
+  switch (item.exercise.equipment) {
+    case 'bodyweight':
+      return { kind: 'bodyweight' };
+    case 'band':
+      return { kind: 'band' };
+    default:
+      return { kind: 'find-starting-weight' };
+  }
+}
+
+export function describeWeightSuggestion(suggestion: WeightSuggestion): string {
+  switch (suggestion.kind) {
+    case 'bodyweight':
+      return 'Bodyweight';
+    case 'band':
+      return 'Choose a band that feels challenging';
+    case 'find-starting-weight':
+      return 'Find your starting weight';
+  }
+}
