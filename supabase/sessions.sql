@@ -78,3 +78,40 @@ create policy "Users can delete their own sets" on public.sets
   );
 
 grant select, insert, update, delete on public.sessions, public.sets to authenticated;
+
+-- Exercise swaps.
+-- "Just today": stored on the session as {"<slot position>": "<exercise id>"}.
+alter table public.sessions add column if not exists exercise_swaps jsonb not null default '{}'::jsonb;
+alter table public.sessions drop constraint if exists sessions_exercise_swaps_check;
+alter table public.sessions add constraint sessions_exercise_swaps_check
+  check (jsonb_typeof(exercise_swaps) = 'object');
+
+-- "Every time": replaces a slot in her programme until she swaps back.
+-- No foreign key to programme_exercises: programmes.sql re-creates those rows on every run.
+create table if not exists public.user_exercise_swaps (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  programme_day_id text not null references public.programme_days (id) on delete cascade,
+  position smallint not null,
+  exercise_id text not null references public.exercises (id),
+  created_at timestamptz not null default now(),
+  primary key (user_id, programme_day_id, position)
+);
+
+alter table public.user_exercise_swaps enable row level security;
+
+drop policy if exists "Users can read their own swaps" on public.user_exercise_swaps;
+create policy "Users can read their own swaps" on public.user_exercise_swaps
+  for select to authenticated using ((select auth.uid()) = user_id);
+drop policy if exists "Users can create their own swaps" on public.user_exercise_swaps;
+create policy "Users can create their own swaps" on public.user_exercise_swaps
+  for insert to authenticated with check ((select auth.uid()) = user_id);
+drop policy if exists "Users can update their own swaps" on public.user_exercise_swaps;
+create policy "Users can update their own swaps" on public.user_exercise_swaps
+  for update to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+drop policy if exists "Users can delete their own swaps" on public.user_exercise_swaps;
+create policy "Users can delete their own swaps" on public.user_exercise_swaps
+  for delete to authenticated using ((select auth.uid()) = user_id);
+
+grant select, insert, update, delete on public.user_exercise_swaps to authenticated;

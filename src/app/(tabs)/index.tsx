@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import { formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
 import {
@@ -22,6 +23,8 @@ import {
   getNextDay,
   getWeightSuggestion,
   type Programme,
+  type ProgrammeExercise,
+  type SlotExercise,
 } from '@/lib/programmes';
 import {
   fetchActiveSession,
@@ -31,15 +34,43 @@ import {
   type LoggedSet,
   type Session,
 } from '@/lib/sessions';
+import {
+  applySwaps,
+  deleteUserSwap,
+  fetchSessionSwaps,
+  fetchUserSwaps,
+  saveUserSwap,
+  swapIds,
+  type DaySwaps,
+  type SwapScope,
+  type UserSwaps,
+} from '@/lib/swaps';
 
 type LoadState = 'loading' | 'error' | 'no-programme' | 'ready';
 
 type TodayData = {
   programme: Programme;
   activeSession: Session | null;
+  /** Swaps in the session in progress, if any. */
+  sessionSwaps: DaySwaps;
+  /** Her "Every time" swaps. */
+  userSwaps: UserSwaps;
   lastFinishedDayId: string | null;
   previous: Record<string, LoggedSet[]>;
 };
+
+/** Sets or clears (`exercise` null) one slot's swap. */
+function withSwap(
+  swaps: UserSwaps,
+  dayId: string,
+  position: number,
+  exercise: SlotExercise | null
+): UserSwaps {
+  const daySwaps = { ...swaps[dayId] };
+  if (exercise) daySwaps[position] = exercise;
+  else delete daySwaps[position];
+  return { ...swaps, [dayId]: daySwaps };
+}
 
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
@@ -52,6 +83,9 @@ export default function TodayScreen() {
   const [chosenDayId, setChosenDayId] = useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  /** "Just today" swaps chosen before starting; screen state only, like the chosen day. */
+  const [todaySwaps, setTodaySwaps] = useState<UserSwaps>({});
+  const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
 
   // Reloads every time Today comes into view, so it's up to date after a session.
   useFocusEffect(
@@ -63,23 +97,31 @@ export default function TodayScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [programme, activeSession, lastFinished] = await Promise.all([
+          const [programme, activeSession, lastFinished, userSwaps] = await Promise.all([
             fetchProgramme(programmeId, equipment),
             fetchActiveSession(),
             fetchLastFinishedSession(),
+            fetchUserSwaps(equipment),
           ]);
           if (!programme) {
             if (isCurrent) setLoadState('no-programme');
             return;
           }
+          const sessionSwaps = activeSession ? await fetchSessionSwaps(activeSession) : {};
           const exerciseIds = [
-            ...new Set(programme.days.flatMap((d) => d.exercises.map((e) => e.exercise.id))),
+            ...new Set([
+              ...programme.days.flatMap((d) => d.exercises.map((e) => e.exercise.id)),
+              ...Object.values(userSwaps).flatMap((swaps) => Object.values(swaps).map((e) => e.id)),
+              ...Object.values(sessionSwaps).map((e) => e.id),
+            ]),
           ];
           const previous = await fetchPreviousSets(exerciseIds, activeSession?.id ?? null);
           if (!isCurrent) return;
           setData({
             programme,
             activeSession,
+            sessionSwaps,
+            userSwaps,
             lastFinishedDayId: lastFinished?.programme_day_id ?? null,
             previous,
           });
@@ -100,21 +142,55 @@ export default function TodayScreen() {
   const activeDay = activeSession
     ? programme?.days.find((item) => item.id === activeSession.programme_day_id)
     : undefined;
-  const day =
+  const plannedDay =
     activeDay ?? programme?.days.find((item) => item.id === chosenDayId) ?? nextDay;
+  const day =
+    !plannedDay || !data
+      ? plannedDay
+      : activeDay
+        ? applySwaps(plannedDay, data.sessionSwaps)
+        : applySwaps(plannedDay, { ...data.userSwaps[plannedDay.id], ...todaySwaps[plannedDay.id] });
 
   async function handleStart() {
     if (!day) return;
     setIsStarting(true);
     try {
-      const session = await startSession(day.id);
+      const session = await startSession(day.id, swapIds(day));
       setChosenDayId(null);
+      setTodaySwaps({});
       router.push({ pathname: '/session/[id]', params: { id: session.id } });
     } catch {
       Alert.alert('Couldn’t start the session', 'Check your connection and try again.');
     } finally {
       setIsStarting(false);
     }
+  }
+
+  async function handleSwap(exercise: SlotExercise, scope: SwapScope) {
+    if (!day || !swapItem) return;
+    const { position } = swapItem;
+    if (scope === 'always') {
+      await saveUserSwap(day.id, position, exercise.id);
+      setData((current) => current && { ...current, userSwaps: withSwap(current.userSwaps, day.id, position, exercise) });
+      setTodaySwaps((current) => withSwap(current, day.id, position, null));
+    } else {
+      setTodaySwaps((current) => withSwap(current, day.id, position, exercise));
+    }
+    if (!data?.previous[exercise.id]) {
+      fetchPreviousSets([exercise.id], data?.activeSession?.id ?? null)
+        .then((previous) =>
+          setData((current) => current && { ...current, previous: { ...current.previous, ...previous } })
+        )
+        .catch(() => {});
+    }
+  }
+
+  async function handleRestore() {
+    if (!day || !swapItem) return;
+    const { position } = swapItem;
+    await deleteUserSwap(day.id, position);
+    setData((current) => current && { ...current, userSwaps: withSwap(current.userSwaps, day.id, position, null) });
+    setTodaySwaps((current) => withSwap(current, day.id, position, null));
   }
 
   function handleContinue() {
@@ -190,23 +266,35 @@ export default function TodayScreen() {
           <Text style={styles.cardLabel}>{day.exercises.length} exercises</Text>
 
           {day.exercises.map((item, index) => (
-            <Pressable
-              key={item.position}
-              onPress={() =>
-                router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
-              }
-              style={({ pressed }) => [styles.exerciseRow, pressed && styles.pressed]}
-              accessibilityRole="button">
-              <Text style={styles.exerciseNumber}>{index + 1}</Text>
-              <View style={styles.exerciseText}>
-                <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
-                <Text style={styles.suggestion}>
-                  {describeWeightSuggestion(suggestionFor(item))}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
-            </Pressable>
+            <View key={item.position} style={styles.exerciseRow}>
+              <Pressable
+                onPress={() =>
+                  router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
+                }
+                style={({ pressed }) => [styles.exerciseInfo, pressed && styles.pressed]}
+                accessibilityRole="button">
+                <Text style={styles.exerciseNumber}>{index + 1}</Text>
+                <View style={styles.exerciseText}>
+                  <Text style={styles.exerciseName}>{item.exercise.name}</Text>
+                  {item.original && (
+                    <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
+                  )}
+                  <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
+                  <Text style={styles.suggestion}>
+                    {describeWeightSuggestion(suggestionFor(item))}
+                  </Text>
+                </View>
+              </Pressable>
+              {!isInProgress && (
+                <Pressable
+                  onPress={() => setSwapItem(item)}
+                  style={({ pressed }) => [styles.swapButton, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Swap ${item.exercise.name}`}>
+                  <Ionicons name="swap-horizontal" size={24} color={colours.accent} />
+                </Pressable>
+              )}
+            </View>
           ))}
 
           <Pressable
@@ -252,6 +340,19 @@ export default function TodayScreen() {
           General fitness guidance, not medical advice. Stop if anything hurts.
         </Text>
       </ScrollView>
+
+      {equipment && (
+        <SwapSheet
+          item={swapItem}
+          equipment={equipment}
+          excludeIds={day.exercises.flatMap((item) =>
+            item.original ? [item.exercise.id, item.original.id] : [item.exercise.id]
+          )}
+          onClose={() => setSwapItem(null)}
+          onSwap={handleSwap}
+          onRestore={handleRestore}
+        />
+      )}
 
       <Modal
         visible={isPickerOpen}
@@ -357,12 +458,31 @@ const styles = StyleSheet.create({
   exerciseRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    minHeight: 72,
-    paddingVertical: 12,
+    gap: 8,
     marginTop: 4,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colours.border,
+  },
+  exerciseInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 72,
+    paddingVertical: 12,
+  },
+  swappedFrom: {
+    fontSize: 14,
+    color: colours.textMuted,
+    marginTop: 1,
+  },
+  swapButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.accentSoft,
   },
   exerciseNumber: {
     width: 32,

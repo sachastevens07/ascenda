@@ -8,6 +8,8 @@ export type Session = {
   started_at: string;
   /** Null while the session is in progress. */
   completed_at: string | null;
+  /** Swapped slots in this session: slot position (as text) → exercise id. */
+  exercise_swaps: Record<string, string>;
 };
 
 /** One row of the `sets` table. */
@@ -21,7 +23,7 @@ export type LoggedSet = {
   completed: boolean;
 };
 
-const SESSION_COLUMNS = 'id, date, programme_day_id, started_at, completed_at';
+const SESSION_COLUMNS = 'id, date, programme_day_id, started_at, completed_at, exercise_swaps';
 const SET_COLUMNS = 'session_id, exercise_id, set_number, weight_kg, reps, completed';
 
 /** Today's date on the phone, as YYYY-MM-DD. */
@@ -75,14 +77,28 @@ export async function fetchLastFinishedSession(): Promise<Session | null> {
   return data as Session | null;
 }
 
-export async function startSession(programmeDayId: string): Promise<Session> {
+export async function startSession(
+  programmeDayId: string,
+  exerciseSwaps: Record<string, string> = {}
+): Promise<Session> {
   const { data, error } = await supabase
     .from('sessions')
-    .insert({ programme_day_id: programmeDayId, date: localDate() })
+    .insert({ programme_day_id: programmeDayId, date: localDate(), exercise_swaps: exerciseSwaps })
     .select(SESSION_COLUMNS)
     .single();
   if (error) throw error;
   return data as Session;
+}
+
+export async function saveSessionSwaps(
+  id: string,
+  exerciseSwaps: Record<string, string>
+): Promise<void> {
+  const { error } = await supabase
+    .from('sessions')
+    .update({ exercise_swaps: exerciseSwaps })
+    .eq('id', id);
+  if (error) throw error;
 }
 
 export async function finishSession(id: string): Promise<void> {

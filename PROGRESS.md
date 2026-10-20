@@ -14,7 +14,9 @@ Handoff notes for the next agent. Read `AGENTS.md` first (project brief + workin
 
 8. **Progression rule** (double progression, per-exercise steps): `getWeightSuggestion(item, previousSets)` in `src/lib/programmes.ts`; shown on the Today card (`describeWeightSuggestion`) and as a goal line in the logger (`describeProgressionGoal`); the logger pre-fills the increased weight with reps at `rep_min`.
 
-Features 4–8 are code complete but **not yet confirmed by the user on the phone**.
+9. **Swap button**: swap icon on each exercise on the Today card (hidden while that session is in progress) and in the logger; bottom sheet `src/components/SwapSheet.tsx`; data + alternatives `src/lib/swaps.ts`; "Every time" swaps also show on the programme screen. SQL at the end of `supabase/sessions.sql`.
+
+Features 4–9 are code complete but **not yet confirmed by the user on the phone**.
 
 ## In progress
 
@@ -22,12 +24,12 @@ Nothing half-built.
 
 ## Next step
 
-Wait for the user to test Feature 8 on the phone, then build **Feature 9: Swap button** (2–3 alternatives with the same primary muscle and the user's available equipment). Ask before starting.
+Wait for the user to test Features 8 and 9 on the phone, then build **Feature 10: Progress screen** (personal bests, weight over time per lift, sessions per week). A chart library will be needed: ask before adding one.
 
 ## Known bugs / issues
 
 - **Rest-timer notifications don't work in the user's Expo Go (Android)**: `expo-notifications` 57.0.x loads `ExpoTopicSubscriptionModule` on import, which this Expo Go lacks (crashed the logger). `src/lib/restTimer.ts` now requires it inside a `try`; the timer still counts down and vibrates in-app but can't alert with the phone locked. Fix: update Expo Go, or a development build (`eas build --profile development`).
-- `supabase/exercises.sql` gained `weight_increase_kg`; **the user must re-run it** in the SQL Editor (until then Today and the logger fail to load).
+- `supabase/exercises.sql` gained `weight_increase_kg` and `supabase/sessions.sql` gained swaps; **the user must re-run both** in the SQL Editor (until then Today and the logger fail to load).
 - Exercise text (cues, location hints), weight increases per exercise, and all programme templates (exercises, sets, rep ranges) were written by the AI and **still need the user's review**.
 - No exercise photos yet (free-exercise-db and wger media rejected for licensing).
 - Email confirmation is **off** in Supabase for testing; no deep-link handling, so confirm-email / forgot-password links won't open the app. Needed before launch.
@@ -55,6 +57,7 @@ Wait for the user to test Feature 8 on the phone, then build **Feature 9: Swap b
 - **Today**: next day = the day after the last finished session's day, wrapping; Day 1 if none. No date logic and never "rest day" (no streak guilt). One session in progress at a time; the day picker is hidden while one is in progress. Weight suggestion: see Progression below; first time it's "Find your starting weight", or "Bodyweight" / "Choose a band that feels challenging".
 - **Logger**: rest 90 s default, ±15 s. After an earned increase, every set pre-fills the new weight and `rep_min` reps. Otherwise reps pre-fill = last time's reps for that set number, else the bottom of the rep range (never over-reports), and weight pre-fill = last time's; first time it must be entered before ticking (0 allowed). Ticking carries the weight on to later empty sets. Only ticked sets count; unticking saves `completed = false`. "Previous" = most recent other session containing that exercise. `weight_kg` null for bodyweight/band.
 - **Progression** (user's choices): increase when **set 1** last time reached the top of the range (reps ≥ `rep_max`), whatever the other sets did; the new weight = set 1's weight + the exercise's step. "Last time" = the most recent other session containing that exercise, whatever day it was on, judged against the current slot's rep range. Steps are per exercise in `exercises.weight_increase_kg` (set in `exercises.sql`, AI-chosen, **needs the user's review**): null for bodyweight/band (DB-enforced), negative for assisted pull-up/dip (less help, never below 0 kg). Otherwise keep the heaviest weight and aim for more reps. Bodyweight/band at the top: "Try a harder variation / band, or add a slow lowering"; otherwise "aim for more reps". Today excludes the in-progress session from "last time".
+- **Swaps** (user's choices): each swap asks "Just today" or "Every time". Just today = `sessions.exercise_swaps` jsonb (`{"<position>": "<exercise id>"}`); on Today it's screen state until Start, then written to the new session. Every time = `user_exercise_swaps` (user_id, programme_day_id, position → exercise_id; own rows only; no FK to `programme_exercises` because `programmes.sql` re-creates them); ignored if its equipment no longer matches her answers. Precedence: session swap > Every time swap > programme. "Back to <original>" clears both. Alternatives (automatic): same `primary_muscle`, equipment she has (full gym = all; dumbbells = dumbbell + bodyweight; home = bodyweight + band), never anything already in the day (sets are unique per session + exercise), ranked by shared secondary muscles then same equipment, max 3 with at most 2 of one equipment. In the logger, a slot with ticked sets can't be swapped until they're unticked. Progression follows the swapped exercise's own history.
 - No generated Supabase TypeScript types: embedded relations are cast through `unknown` to hand-written types; numerics are converted with `Number()`.
 
 ## Setup notes

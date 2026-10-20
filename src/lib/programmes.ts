@@ -3,20 +3,35 @@ import type { EquipmentAccess } from '@/lib/profile';
 import { heaviestWeight, type LoggedSet } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
 
+/** The exercise in a programme slot. */
+export type SlotExercise = {
+  id: string;
+  name: string;
+  primary_muscle: Muscle;
+  equipment: Equipment;
+  /** Step to add after an earned increase. Null for bodyweight and band; negative for assisted machines. */
+  weight_increase_kg: number | null;
+};
+
+export const SLOT_EXERCISE_COLUMNS = 'id, name, primary_muscle, equipment, weight_increase_kg';
+
+/** Postgres numerics arrive as strings; turn them back into numbers. */
+export function toSlotExercise(row: SlotExercise): SlotExercise {
+  return {
+    ...row,
+    weight_increase_kg: row.weight_increase_kg === null ? null : Number(row.weight_increase_kg),
+  };
+}
+
 /** One exercise slot in a programme day, resolved for the user's equipment. */
 export type ProgrammeExercise = {
   position: number;
   sets: number;
   rep_min: number;
   rep_max: number;
-  exercise: {
-    id: string;
-    name: string;
-    primary_muscle: Muscle;
-    equipment: Equipment;
-    /** Step to add after an earned increase. Null for bodyweight and band; negative for assisted machines. */
-    weight_increase_kg: number | null;
-  };
+  exercise: SlotExercise;
+  /** The programme's own exercise, when she has swapped it for `exercise`. */
+  original?: SlotExercise;
 };
 
 export type ProgrammeDay = {
@@ -45,7 +60,7 @@ type ProgrammeRow = Omit<Programme, 'days'> & {
 /** Select string for a day and its exercises, picking each slot's exercise for `equipment`. */
 function daySelect(equipment: EquipmentAccess): string {
   // Each slot links to three exercises; the named foreign key picks the one for this equipment.
-  const exercise = `exercise:exercises!programme_exercises_${equipment}_fkey(id, name, primary_muscle, equipment, weight_increase_kg)`;
+  const exercise = `exercise:exercises!programme_exercises_${equipment}_fkey(${SLOT_EXERCISE_COLUMNS})`;
   return `id, day_number, name, programme_exercises(position, sets, rep_min, rep_max, ${exercise})`;
 }
 
@@ -53,14 +68,7 @@ function toProgrammeDay({ programme_exercises, ...day }: ProgrammeDayRow): Progr
   return {
     ...day,
     exercises: [...programme_exercises]
-      .map((item) => ({
-        ...item,
-        exercise: {
-          ...item.exercise,
-          weight_increase_kg:
-            item.exercise.weight_increase_kg === null ? null : Number(item.exercise.weight_increase_kg),
-        },
-      }))
+      .map((item) => ({ ...item, exercise: toSlotExercise(item.exercise) }))
       .sort((a, b) => a.position - b.position),
   };
 }

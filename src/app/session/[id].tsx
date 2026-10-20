@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
@@ -27,6 +28,7 @@ import {
   usesWeight,
   type ProgrammeDay,
   type ProgrammeExercise,
+  type SlotExercise,
 } from '@/lib/programmes';
 import {
   DEFAULT_REST_SECONDS,
@@ -41,9 +43,18 @@ import {
   fetchSession,
   fetchSessionSets,
   finishSession,
+  saveSessionSwaps,
   saveSet,
   type LoggedSet,
 } from '@/lib/sessions';
+import {
+  applySwaps,
+  deleteUserSwap,
+  fetchSessionSwaps,
+  saveUserSwap,
+  swapIds,
+  type SwapScope,
+} from '@/lib/swaps';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
@@ -145,6 +156,7 @@ export default function SessionScreen() {
   const [previous, setPrevious] = useState<Record<string, LoggedSet[]>>({});
   const [entries, setEntries] = useState<Record<string, SetEntry>>({});
   const [isFinishing, setIsFinishing] = useState(false);
+  const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
 
   const [restEndsAt, setRestEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -156,13 +168,17 @@ export default function SessionScreen() {
     (async () => {
       try {
         const session = await fetchSession(id);
-        const sessionDay = session?.programme_day_id
-          ? await fetchProgrammeDay(session.programme_day_id, equipment)
-          : null;
-        if (!sessionDay) {
+        const [programmeDay, swaps] = session?.programme_day_id
+          ? await Promise.all([
+              fetchProgrammeDay(session.programme_day_id, equipment),
+              fetchSessionSwaps(session),
+            ])
+          : [null, {}];
+        if (!programmeDay) {
           if (isCurrent) setLoadState('not-found');
           return;
         }
+        const sessionDay = applySwaps(programmeDay, swaps);
         const exerciseIds = sessionDay.exercises.map((item) => item.exercise.id);
         const [logged, previousSets] = await Promise.all([
           fetchSessionSets(id),
@@ -289,6 +305,61 @@ export default function SessionScreen() {
     }
   }
 
+  function openSwap(item: ProgrammeExercise) {
+    const hasTicked = setNumbers(item).some(
+      (setNumber) => entries[setKey(item.exercise.id, setNumber)]?.completed
+    );
+    if (hasTicked) {
+      Alert.alert(
+        'You’ve already ticked sets',
+        `To swap ${item.exercise.name}, untick its sets first.`
+      );
+      return;
+    }
+    setSwapItem(item);
+  }
+
+  /** Puts `exercise` in the slot for this session and pre-fills its sets. */
+  async function replaceSlot(item: ProgrammeExercise, exercise: SlotExercise) {
+    if (!day) return;
+    const original = item.original ?? item.exercise;
+    const updatedItem: ProgrammeExercise = {
+      position: item.position,
+      sets: item.sets,
+      rep_min: item.rep_min,
+      rep_max: item.rep_max,
+      exercise,
+      ...(exercise.id === original.id ? {} : { original }),
+    };
+    const updatedDay = {
+      ...day,
+      exercises: day.exercises.map((slot) => (slot.position === item.position ? updatedItem : slot)),
+    };
+    await saveSessionSwaps(id, swapIds(updatedDay));
+
+    const previousSets = previous[exercise.id]
+      ? {}
+      : await fetchPreviousSets([exercise.id], id).catch(() => ({}));
+    const mergedPrevious = { ...previous, ...previousSets };
+    const newEntries = buildEntries({ ...day, exercises: [updatedItem] }, [], mergedPrevious);
+    setDay(updatedDay);
+    setPrevious(mergedPrevious);
+    // Keep anything she already typed for this exercise earlier in the session.
+    setEntries((current) => ({ ...newEntries, ...current }));
+  }
+
+  async function handleSwap(exercise: SlotExercise, scope: SwapScope) {
+    if (!day || !swapItem) return;
+    if (scope === 'always') await saveUserSwap(day.id, swapItem.position, exercise.id);
+    await replaceSlot(swapItem, exercise);
+  }
+
+  async function handleRestore() {
+    if (!day || !swapItem?.original) return;
+    await deleteUserSwap(day.id, swapItem.position);
+    await replaceSlot(swapItem, swapItem.original);
+  }
+
   async function finish() {
     setIsFinishing(true);
     try {
@@ -393,21 +464,33 @@ export default function SessionScreen() {
           );
           return (
             <View key={item.position} style={styles.card}>
-              <Pressable
-                onPress={() =>
-                  router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
-                }
-                style={({ pressed }) => [styles.exerciseHeader, pressed && styles.pressed]}
-                accessibilityRole="button"
-                accessibilityHint="Shows how to do this exercise">
-                <View style={styles.flex}>
-                  <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                  <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
-                  {previousText && <Text style={styles.previous}>{previousText}</Text>}
-                  {goalText && <Text style={styles.goal}>{goalText}</Text>}
-                </View>
-                <Ionicons name="information-circle-outline" size={24} color={colours.accent} />
-              </Pressable>
+              <View style={styles.cardHeader}>
+                <Pressable
+                  onPress={() =>
+                    router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
+                  }
+                  style={({ pressed }) => [styles.exerciseHeader, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityHint="Shows how to do this exercise">
+                  <View style={styles.flex}>
+                    <Text style={styles.exerciseName}>{item.exercise.name}</Text>
+                    {item.original && (
+                      <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
+                    )}
+                    <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
+                    {previousText && <Text style={styles.previous}>{previousText}</Text>}
+                    {goalText && <Text style={styles.goal}>{goalText}</Text>}
+                  </View>
+                  <Ionicons name="information-circle-outline" size={24} color={colours.accent} />
+                </Pressable>
+                <Pressable
+                  onPress={() => openSwap(item)}
+                  style={({ pressed }) => [styles.swapButton, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Swap ${item.exercise.name}`}>
+                  <Ionicons name="swap-horizontal" size={24} color={colours.accent} />
+                </Pressable>
+              </View>
 
               <View style={styles.columnLabels}>
                 <Text style={[styles.columnLabel, styles.setColumn]}>Set</Text>
@@ -496,6 +579,19 @@ export default function SessionScreen() {
         </Text>
       </ScrollView>
 
+      {equipment && (
+        <SwapSheet
+          item={swapItem}
+          equipment={equipment}
+          excludeIds={day.exercises.flatMap((slot) =>
+            slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
+          )}
+          onClose={() => setSwapItem(null)}
+          onSwap={handleSwap}
+          onRestore={handleRestore}
+        />
+      )}
+
       {restEndsAt !== null && (
         <View style={[styles.restBar, { paddingBottom: insets.bottom + 12 }]}>
           <View style={styles.restClock}>
@@ -568,11 +664,30 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: colours.surface,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 12,
+  },
   exerciseHeader: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    marginBottom: 12,
+  },
+  swappedFrom: {
+    fontSize: 14,
+    color: colours.textMuted,
+    marginTop: 1,
+  },
+  swapButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.accentSoft,
   },
   exerciseName: {
     fontSize: 19,

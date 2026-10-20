@@ -13,6 +13,7 @@ import {
   type QuizAnswers,
 } from '@/lib/profile';
 import { fetchProgramme, formatSetsAndReps, type Programme } from '@/lib/programmes';
+import { applySwaps, fetchUserSwaps } from '@/lib/swaps';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
@@ -46,10 +47,12 @@ export default function ProgrammeScreen() {
     }
     let isCurrent = true;
     setLoadState('loading');
-    fetchProgramme(programmeId, equipment)
-      .then((result) => {
+    Promise.all([fetchProgramme(programmeId, equipment), fetchUserSwaps(equipment)])
+      .then(([result, swaps]) => {
         if (!isCurrent) return;
-        setProgramme(result);
+        setProgramme(
+          result && { ...result, days: result.days.map((day) => applySwaps(day, swaps[day.id])) }
+        );
         setLoadState(result ? 'ready' : 'not-found');
       })
       .catch(() => {
@@ -104,6 +107,9 @@ export default function ProgrammeScreen() {
               accessibilityRole="button">
               <View style={styles.exerciseText}>
                 <Text style={styles.exerciseName}>{item.exercise.name}</Text>
+                {item.original && (
+                  <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
+                )}
                 <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
@@ -205,6 +211,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colours.textMuted,
     marginTop: 2,
+  },
+  swappedFrom: {
+    fontSize: 14,
+    color: colours.accent,
+    marginTop: 1,
   },
   disclaimer: {
     fontSize: 14,
