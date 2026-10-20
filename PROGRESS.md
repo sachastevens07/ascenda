@@ -26,6 +26,8 @@ Once the logger is confirmed on the phone, start **Feature 8: Progression rule**
 
 ## Known bugs / issues
 
+- **Rest-timer notifications don't work in the user's Expo Go (Android).** Importing `expo-notifications` 57.0.x crashed with "Cannot find native module 'ExpoTopicSubscriptionModule'": every SDK 57 version loads that module on import, and this Expo Go build doesn't include it. `src/lib/restTimer.ts` now loads the library inside a `try`, so the app works and the timer still counts down and vibrates in the app; it just can't alert with the phone locked. Fixes to try: update Expo Go from the Play Store, or use a development build (`eas build --profile development`), where the module is included.
+
 - Exercise text (cues and location hints) was written by the AI and **still needs the user's review**.
 - No exercise photos yet: the media from free-exercise-db and wger was rejected for licensing reasons (free-exercise-db images have unknown provenance; wger is patchy CC BY-SA).
 - Email confirmation is **off** in Supabase for testing. There is no deep-link handling, so confirm-email and forgot-password links won't open the app. Both need adding before launch.

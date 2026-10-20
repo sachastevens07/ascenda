@@ -1,4 +1,3 @@
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 export const DEFAULT_REST_SECONDS = 90;
@@ -6,7 +5,19 @@ export const REST_ADJUST_SECONDS = 15;
 
 const CHANNEL_ID = 'rest-timer';
 
-Notifications.setNotificationHandler({
+type NotificationsModule = typeof import('expo-notifications');
+
+// Some Expo Go builds lack native modules that expo-notifications loads on import. Without
+// notifications the timer still runs and vibrates in the app; it just can't alert when locked.
+const Notifications: NotificationsModule | null = (() => {
+  try {
+    return require('expo-notifications') as NotificationsModule;
+  } catch {
+    return null;
+  }
+})();
+
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
     shouldSetBadge: false,
@@ -20,6 +31,7 @@ Notifications.setNotificationHandler({
  * before the system will show the permission prompt.
  */
 export async function ensureRestTimerPermission(): Promise<boolean> {
+  if (!Notifications) return false;
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
       name: 'Rest timer',
@@ -34,8 +46,9 @@ export async function ensureRestTimerPermission(): Promise<boolean> {
   return requested.granted;
 }
 
-/** Schedules the "rest over" alert. Returns its id, or null if notifications aren't allowed. */
+/** Schedules the "rest over" alert. Returns its id, or null if notifications aren't available. */
 export async function scheduleRestOver(seconds: number): Promise<string | null> {
+  if (!Notifications) return null;
   const { granted } = await Notifications.getPermissionsAsync();
   if (!granted || seconds < 1) return null;
   return Notifications.scheduleNotificationAsync({
@@ -52,5 +65,5 @@ export async function scheduleRestOver(seconds: number): Promise<string | null> 
 }
 
 export async function cancelRestOver(id: string | null): Promise<void> {
-  if (id) await Notifications.cancelScheduledNotificationAsync(id);
+  if (id && Notifications) await Notifications.cancelScheduledNotificationAsync(id);
 }
