@@ -16,7 +16,9 @@ Handoff notes for the next agent. Read `AGENTS.md` first (project brief + workin
 
 9. **Swap button**: swap icon on each exercise on the Today card (hidden while that session is in progress) and in the logger; bottom sheet `src/components/SwapSheet.tsx`; data + alternatives `src/lib/swaps.ts`; "Every time" swaps also show on the programme screen. SQL at the end of `supabase/sessions.sql`.
 
-Features 4–9 are code complete but **not yet confirmed by the user on the phone**.
+10. **Progress screen**: `src/app/(tabs)/progress.tsx` (stat tiles, sessions-per-week bars, weight-over-time line chart with a lift picker, personal bests); calculations and paged loading in `src/lib/progress.ts`; line chart `src/components/LineChart.tsx` (react-native-svg). Reloads on focus. No SQL needed.
+
+Features 4–10 are code complete but **not yet confirmed by the user on the phone**.
 
 ## In progress
 
@@ -24,7 +26,7 @@ Nothing half-built.
 
 ## Next step
 
-Wait for the user to test Features 8 and 9 on the phone, then build **Feature 10: Progress screen** (personal bests, weight over time per lift, sessions per week). A chart library will be needed: ask before adding one.
+Wait for the user to test Features 8–10 on the phone, then build **Feature 11: Export** (full workout history as CSV, free for everyone). Ask before adding any library (sharing a file likely needs `expo-file-system` + `expo-sharing`).
 
 ## Known bugs / issues
 
@@ -42,7 +44,7 @@ Wait for the user to test Features 8 and 9 on the phone, then build **Feature 10
 ## Decisions made (not in AGENTS.md)
 
 - **Expo SDK 57** (not 58) because Expo Go on the Play Store only supported 57. `react-dom` pinned to match `react`.
-- **Libraries added (user-approved)**: `@expo/vector-icons`, `expo-font`, `react-native-pager-view`, `react-native-tab-view`, `@supabase/supabase-js`, `@react-native-async-storage/async-storage`, `expo-notifications` (plugin in `app.json`).
+- **Libraries added (user-approved)**: `@expo/vector-icons`, `expo-font`, `react-native-pager-view`, `react-native-tab-view`, `@supabase/supabase-js`, `@react-native-async-storage/async-storage`, `expo-notifications` (plugin in `app.json`), `react-native-svg`.
 - **Design**: background `#F7F4F0`, accent plum `#7A3E6B`, soft accent `#F2E6EE` (`src/constants/theme.ts`); no tab headers (each screen has a big title); tap targets ≥ 48–56px; bottom-sheet modals instead of chip rows (avoid clashing with tab swipes).
 - **Disclaimer** "General fitness guidance, not medical advice. Stop if anything hurts." on exercise detail, quiz review, programme, Today and logger screens.
 - `__DEV__` builds show real error messages (Library, profile load) and the photo file name to upload.
@@ -58,6 +60,7 @@ Wait for the user to test Features 8 and 9 on the phone, then build **Feature 10
 - **Logger**: rest 90 s default, ±15 s. After an earned increase, every set pre-fills the new weight and `rep_min` reps. Otherwise reps pre-fill = last time's reps for that set number, else the bottom of the rep range (never over-reports), and weight pre-fill = last time's; first time it must be entered before ticking (0 allowed). Ticking carries the weight on to later empty sets. Only ticked sets count; unticking saves `completed = false`. "Previous" = most recent other session containing that exercise. `weight_kg` null for bodyweight/band.
 - **Progression** (user's choices): increase when **set 1** last time reached the top of the range (reps ≥ `rep_max`), whatever the other sets did; the new weight = set 1's weight + the exercise's step. "Last time" = the most recent other session containing that exercise, whatever day it was on, judged against the current slot's rep range. Steps are per exercise in `exercises.weight_increase_kg` (set in `exercises.sql`, AI-chosen, **needs the user's review**): null for bodyweight/band (DB-enforced), negative for assisted pull-up/dip (less help, never below 0 kg). Otherwise keep the heaviest weight and aim for more reps. Bodyweight/band at the top: "Try a harder variation / band, or add a slow lowering"; otherwise "aim for more reps". Today excludes the in-progress session from "last time".
 - **Swaps** (user's choices): each swap asks "Just today" or "Every time". Just today = `sessions.exercise_swaps` jsonb (`{"<position>": "<exercise id>"}`); on Today it's screen state until Start, then written to the new session. Every time = `user_exercise_swaps` (user_id, programme_day_id, position → exercise_id; own rows only; no FK to `programme_exercises` because `programmes.sql` re-creates them); ignored if its equipment no longer matches her answers. Precedence: session swap > Every time swap > programme. "Back to <original>" clears both. Alternatives (automatic): same `primary_muscle`, equipment she has (full gym = all; dumbbells = dumbbell + bodyweight; home = bodyweight + band), never anything already in the day (sets are unique per session + exercise), ranked by shared secondary muscles then same equipment, max 3 with at most 2 of one equipment. In the logger, a slot with ticked sets can't be swapped until they're unticked. Progression follows the swapped exercise's own history.
+- **Progress** (user's choices): charts drawn by hand with `react-native-svg`; everything shown, no date-range toggle. Only ticked sets from finished sessions count; queries page through 1000-row Supabase limits. Personal best per exercise = heaviest weight (more reps breaks ties; earliest date it was first done), least help for assisted machines (negative `weight_increase_kg`), most reps for bodyweight/band; plus estimated 1-rep max (Epley, sets of 1–12 reps, rounded to 0.5 kg, weighted lifts only, "no need to test it"). Weight chart = heaviest weight per training date (least help for assisted), x proportional to time; lift picker lists weighted lifts by most sessions. Sessions per week: Monday-start weeks from her first session to now, horizontally scrollable, empty weeks shown as grey stubs; stats tiles are positive-only (sessions, weeks training, lifts tracked). `PlaceholderScreen` is now unused.
 - No generated Supabase TypeScript types: embedded relations are cast through `unknown` to hand-written types; numerics are converted with `Number()`.
 
 ## Setup notes
