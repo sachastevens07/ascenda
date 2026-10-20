@@ -5,14 +5,24 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colours } from '@/constants/theme';
-import { EQUIPMENT_ACCESS_LABELS, formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
+import {
+  EQUIPMENT_ACCESS_LABELS,
+  formatDaysPerWeek,
+  getQuizAnswers,
+  useProfile,
+  type QuizAnswers,
+} from '@/lib/profile';
 import { fetchProgramme, formatSetsAndReps, type Programme } from '@/lib/programmes';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
-function scheduleNote(chosenDays: number, programme: Programme): string | null {
+function scheduleNote(answers: QuizAnswers, programme: Programme): string | null {
+  const chosenDays = answers.days_per_week;
   if (chosenDays === 1) {
     return 'You chose 1 day a week, so do one session each week and alternate between the days below.';
+  }
+  if (chosenDays > programme.days_per_week && answers.experience === 'new') {
+    return `You chose ${chosenDays} days a week. As you're new to lifting, this plan starts you on ${programme.days_per_week} days so your body can adapt. Once you've found your feet, change your experience in Profile to unlock more days.`;
   }
   if (chosenDays > programme.days_per_week) {
     return `You chose ${chosenDays} days a week. This plan has ${programme.days_per_week} training days so your body has time to recover. Rest days help you get stronger too.`;
@@ -66,7 +76,7 @@ export default function ProgrammeScreen() {
     );
   }
 
-  const note = scheduleNote(answers.days_per_week, programme);
+  const note = scheduleNote(answers, programme);
 
   return (
     <ScrollView

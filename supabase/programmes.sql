@@ -62,7 +62,11 @@ insert into public.programmes (id, name, description, days_per_week) values
   ('full-body-3', 'Full body', 'Three full-body sessions a week. Beginner-friendly, and it works at any level.', 3),
   ('upper-lower-4', 'Upper/lower', 'Two upper-body and two lower-body sessions a week, for when you know your way around.', 4),
   ('lower-body-3', 'Lower-body focus', 'Two glute and leg sessions and one upper-body session a week.', 3),
-  ('lower-body-4', 'Lower-body focus', 'Three glute and leg sessions and one upper-body session a week.', 4)
+  ('lower-body-4', 'Lower-body focus', 'Three glute and leg sessions and one upper-body session a week.', 4),
+  ('split-5', 'Five-day split', 'Upper, lower, push, pull and legs days, for experienced lifters who recover well.', 5),
+  ('ppl-6', 'Push/pull/legs', 'Push, pull and legs days, twice a week, for experienced lifters who recover well.', 6),
+  ('lower-body-5', 'Lower-body focus', 'Three glute and leg sessions and two upper-body sessions a week, for experienced lifters.', 5),
+  ('lower-body-6', 'Lower-body focus', 'Four glute and leg sessions and two upper-body sessions a week, for experienced lifters.', 6)
 on conflict (id) do update set
   name = excluded.name,
   description = excluded.description,
@@ -84,7 +88,29 @@ insert into public.programme_days (id, programme_id, day_number, name) values
   ('lower-body-4-glutes', 'lower-body-4', 1, 'Glutes and hamstrings'),
   ('lower-body-4-upper', 'lower-body-4', 2, 'Upper body'),
   ('lower-body-4-quads', 'lower-body-4', 3, 'Quads and glutes'),
-  ('lower-body-4-glute-focus', 'lower-body-4', 4, 'Glute focus')
+  ('lower-body-4-glute-focus', 'lower-body-4', 4, 'Glute focus'),
+  ('split-5-upper', 'split-5', 1, 'Upper'),
+  ('split-5-lower', 'split-5', 2, 'Lower'),
+  ('split-5-push', 'split-5', 3, 'Push'),
+  ('split-5-pull', 'split-5', 4, 'Pull'),
+  ('split-5-legs', 'split-5', 5, 'Legs'),
+  ('ppl-6-push-a', 'ppl-6', 1, 'Push A'),
+  ('ppl-6-pull-a', 'ppl-6', 2, 'Pull A'),
+  ('ppl-6-legs-a', 'ppl-6', 3, 'Legs A'),
+  ('ppl-6-push-b', 'ppl-6', 4, 'Push B'),
+  ('ppl-6-pull-b', 'ppl-6', 5, 'Pull B'),
+  ('ppl-6-legs-b', 'ppl-6', 6, 'Legs B'),
+  ('lower-body-5-glutes', 'lower-body-5', 1, 'Glutes and hamstrings'),
+  ('lower-body-5-upper-a', 'lower-body-5', 2, 'Upper body A'),
+  ('lower-body-5-quads', 'lower-body-5', 3, 'Quads and glutes'),
+  ('lower-body-5-upper-b', 'lower-body-5', 4, 'Upper body B'),
+  ('lower-body-5-glute-focus', 'lower-body-5', 5, 'Glute focus'),
+  ('lower-body-6-glutes', 'lower-body-6', 1, 'Glutes and hamstrings'),
+  ('lower-body-6-quads', 'lower-body-6', 2, 'Quads and glutes'),
+  ('lower-body-6-upper-a', 'lower-body-6', 3, 'Upper body A'),
+  ('lower-body-6-glute-focus', 'lower-body-6', 4, 'Glute focus'),
+  ('lower-body-6-legs', 'lower-body-6', 5, 'Legs and glutes'),
+  ('lower-body-6-upper-b', 'lower-body-6', 6, 'Upper body B')
 on conflict (id) do update set
   programme_id = excluded.programme_id,
   day_number = excluded.day_number,
@@ -186,7 +212,126 @@ values
   ('lower-body-4-glute-focus', 2, 3, 10, 12, 'cable-pull-through', 'dumbbell-romanian-deadlift', 'single-leg-glute-bridge'),
   ('lower-body-4-glute-focus', 3, 3, 10, 12, 'dumbbell-sumo-squat', 'dumbbell-sumo-squat', 'banded-squat'),
   ('lower-body-4-glute-focus', 4, 3, 10, 12, 'seated-cable-row', 'one-arm-dumbbell-row', 'band-row'),
-  ('lower-body-4-glute-focus', 5, 2, 12, 15, 'cable-hip-abduction', 'fire-hydrant', 'banded-lateral-walk');
+  ('lower-body-4-glute-focus', 5, 2, 12, 15, 'cable-hip-abduction', 'fire-hydrant', 'banded-lateral-walk'),
+
+  -- Five-day split (experienced only)
+  ('split-5-upper', 1, 3, 6, 10, 'barbell-bench-press', 'dumbbell-bench-press', 'push-up'),
+  ('split-5-upper', 2, 3, 8, 12, 'lat-pulldown', 'one-arm-dumbbell-row', 'band-lat-pulldown'),
+  ('split-5-upper', 3, 3, 8, 12, 'dumbbell-shoulder-press', 'dumbbell-shoulder-press', 'band-shoulder-press'),
+  ('split-5-upper', 4, 2, 12, 15, 'cable-face-pull', 'rear-delt-fly', 'band-pull-apart'),
+  ('split-5-upper', 5, 2, 10, 15, 'cable-triceps-pushdown', 'overhead-triceps-extension', 'band-triceps-pushdown'),
+  ('split-5-upper', 6, 2, 10, 15, 'cable-biceps-curl', 'dumbbell-biceps-curl', 'band-biceps-curl'),
+  ('split-5-lower', 1, 3, 6, 10, 'barbell-back-squat', 'goblet-squat', 'banded-squat'),
+  ('split-5-lower', 2, 3, 8, 10, 'barbell-romanian-deadlift', 'dumbbell-romanian-deadlift', 'banded-hamstring-curl'),
+  ('split-5-lower', 3, 3, 8, 12, 'leg-press', 'bulgarian-split-squat', 'bodyweight-split-squat'),
+  ('split-5-lower', 4, 3, 10, 12, 'lying-leg-curl', 'single-leg-romanian-deadlift', 'sliding-leg-curl'),
+  ('split-5-lower', 5, 2, 10, 15, 'standing-calf-raise', 'dumbbell-calf-raise', 'single-leg-calf-raise'),
+  ('split-5-push', 1, 3, 8, 12, 'incline-dumbbell-press', 'incline-dumbbell-press', 'push-up'),
+  ('split-5-push', 2, 3, 8, 12, 'machine-shoulder-press', 'dumbbell-shoulder-press', 'band-shoulder-press'),
+  ('split-5-push', 3, 2, 10, 15, 'cable-chest-fly', 'dumbbell-fly', 'band-chest-press'),
+  ('split-5-push', 4, 3, 12, 15, 'dumbbell-lateral-raise', 'dumbbell-lateral-raise', 'band-lateral-raise'),
+  ('split-5-push', 5, 3, 10, 15, 'cable-triceps-pushdown', 'overhead-triceps-extension', 'band-triceps-pushdown'),
+  ('split-5-pull', 1, 3, 6, 10, 'assisted-pull-up', 'one-arm-dumbbell-row', 'band-lat-pulldown'),
+  ('split-5-pull', 2, 3, 8, 12, 'seated-cable-row', 'dumbbell-pullover', 'band-row'),
+  ('split-5-pull', 3, 2, 12, 15, 'cable-face-pull', 'rear-delt-fly', 'band-pull-apart'),
+  ('split-5-pull', 4, 3, 10, 15, 'cable-biceps-curl', 'dumbbell-biceps-curl', 'band-biceps-curl'),
+  ('split-5-pull', 5, 2, 10, 15, 'cable-crunch', 'reverse-crunch', 'reverse-crunch'),
+  ('split-5-legs', 1, 3, 8, 12, 'barbell-hip-thrust', 'dumbbell-hip-thrust', 'banded-hip-thrust'),
+  ('split-5-legs', 2, 3, 10, 12, 'leg-press', 'dumbbell-reverse-lunge', 'bodyweight-reverse-lunge'),
+  ('split-5-legs', 3, 3, 10, 12, 'seated-leg-curl', 'dumbbell-romanian-deadlift', 'banded-hamstring-curl'),
+  ('split-5-legs', 4, 2, 12, 15, 'hip-abduction-machine', 'frog-pump', 'banded-lateral-walk'),
+  ('split-5-legs', 5, 2, 10, 12, 'cable-pallof-press', 'dead-bug', 'dead-bug'),
+
+  -- Push/pull/legs, 6 days (experienced only)
+  ('ppl-6-push-a', 1, 3, 8, 12, 'incline-dumbbell-press', 'incline-dumbbell-press', 'push-up'),
+  ('ppl-6-push-a', 2, 3, 8, 12, 'machine-shoulder-press', 'dumbbell-shoulder-press', 'band-shoulder-press'),
+  ('ppl-6-push-a', 3, 2, 10, 15, 'cable-chest-fly', 'dumbbell-fly', 'band-chest-press'),
+  ('ppl-6-push-a', 4, 3, 12, 15, 'dumbbell-lateral-raise', 'dumbbell-lateral-raise', 'band-lateral-raise'),
+  ('ppl-6-push-a', 5, 3, 10, 15, 'cable-triceps-pushdown', 'overhead-triceps-extension', 'band-triceps-pushdown'),
+  ('ppl-6-pull-a', 1, 3, 6, 10, 'assisted-pull-up', 'one-arm-dumbbell-row', 'band-lat-pulldown'),
+  ('ppl-6-pull-a', 2, 3, 8, 12, 'seated-cable-row', 'dumbbell-pullover', 'band-row'),
+  ('ppl-6-pull-a', 3, 2, 12, 15, 'cable-face-pull', 'rear-delt-fly', 'band-pull-apart'),
+  ('ppl-6-pull-a', 4, 3, 10, 15, 'cable-biceps-curl', 'dumbbell-biceps-curl', 'band-biceps-curl'),
+  ('ppl-6-pull-a', 5, 2, 10, 15, 'cable-crunch', 'reverse-crunch', 'reverse-crunch'),
+  ('ppl-6-legs-a', 1, 3, 6, 10, 'barbell-back-squat', 'goblet-squat', 'banded-squat'),
+  ('ppl-6-legs-a', 2, 3, 8, 10, 'barbell-romanian-deadlift', 'dumbbell-romanian-deadlift', 'banded-hamstring-curl'),
+  ('ppl-6-legs-a', 3, 3, 8, 12, 'leg-press', 'bulgarian-split-squat', 'bodyweight-split-squat'),
+  ('ppl-6-legs-a', 4, 3, 10, 12, 'lying-leg-curl', 'single-leg-romanian-deadlift', 'sliding-leg-curl'),
+  ('ppl-6-legs-a', 5, 2, 10, 15, 'standing-calf-raise', 'dumbbell-calf-raise', 'single-leg-calf-raise'),
+  ('ppl-6-push-b', 1, 3, 6, 10, 'barbell-bench-press', 'dumbbell-bench-press', 'decline-push-up'),
+  ('ppl-6-push-b', 2, 3, 8, 12, 'dumbbell-shoulder-press', 'arnold-press', 'pike-push-up'),
+  ('ppl-6-push-b', 3, 3, 8, 12, 'incline-machine-chest-press', 'incline-dumbbell-press', 'incline-push-up'),
+  ('ppl-6-push-b', 4, 3, 12, 15, 'cable-lateral-raise', 'dumbbell-lateral-raise', 'band-lateral-raise'),
+  ('ppl-6-push-b', 5, 2, 10, 15, 'cable-overhead-triceps-extension', 'dumbbell-lying-triceps-extension', 'close-grip-push-up'),
+  ('ppl-6-pull-b', 1, 3, 8, 12, 'lat-pulldown', 'one-arm-dumbbell-row', 'band-lat-pulldown'),
+  ('ppl-6-pull-b', 2, 3, 6, 10, 'barbell-bent-over-row', 'renegade-row', 'band-row'),
+  ('ppl-6-pull-b', 3, 2, 12, 15, 'reverse-pec-deck', 'rear-delt-fly', 'band-pull-apart'),
+  ('ppl-6-pull-b', 4, 3, 10, 15, 'dumbbell-hammer-curl', 'dumbbell-hammer-curl', 'band-biceps-curl'),
+  ('ppl-6-pull-b', 5, 2, 10, 15, 'back-extension', 'superman', 'superman'),
+  ('ppl-6-legs-b', 1, 3, 8, 12, 'barbell-hip-thrust', 'dumbbell-hip-thrust', 'banded-hip-thrust'),
+  ('ppl-6-legs-b', 2, 3, 10, 12, 'leg-press', 'dumbbell-reverse-lunge', 'bodyweight-reverse-lunge'),
+  ('ppl-6-legs-b', 3, 3, 10, 12, 'seated-leg-curl', 'dumbbell-romanian-deadlift', 'banded-hamstring-curl'),
+  ('ppl-6-legs-b', 4, 2, 12, 15, 'hip-abduction-machine', 'frog-pump', 'banded-lateral-walk'),
+  ('ppl-6-legs-b', 5, 2, 10, 12, 'cable-pallof-press', 'dead-bug', 'dead-bug'),
+
+  -- Lower-body focus, 5 days (experienced only)
+  ('lower-body-5-glutes', 1, 3, 8, 12, 'barbell-hip-thrust', 'dumbbell-hip-thrust', 'banded-hip-thrust'),
+  ('lower-body-5-glutes', 2, 3, 8, 12, 'dumbbell-romanian-deadlift', 'dumbbell-romanian-deadlift', 'banded-hamstring-curl'),
+  ('lower-body-5-glutes', 3, 3, 10, 12, 'lying-leg-curl', 'sliding-leg-curl', 'sliding-leg-curl'),
+  ('lower-body-5-glutes', 4, 2, 12, 15, 'cable-glute-kickback', 'donkey-kick', 'banded-kickback'),
+  ('lower-body-5-glutes', 5, 2, 12, 15, 'hip-abduction-machine', 'fire-hydrant', 'banded-clamshell'),
+  ('lower-body-5-upper-a', 1, 3, 8, 12, 'machine-chest-press', 'dumbbell-bench-press', 'incline-push-up'),
+  ('lower-body-5-upper-a', 2, 3, 10, 12, 'lat-pulldown', 'one-arm-dumbbell-row', 'band-row'),
+  ('lower-body-5-upper-a', 3, 3, 10, 12, 'machine-shoulder-press', 'dumbbell-shoulder-press', 'band-shoulder-press'),
+  ('lower-body-5-upper-a', 4, 3, 10, 12, 'seated-cable-row', 'rear-delt-fly', 'band-pull-apart'),
+  ('lower-body-5-upper-a', 5, 2, 10, 12, 'cable-pallof-press', 'dead-bug', 'dead-bug'),
+  ('lower-body-5-quads', 1, 3, 10, 12, 'leg-press', 'goblet-squat', 'banded-squat'),
+  ('lower-body-5-quads', 2, 3, 8, 12, 'dumbbell-reverse-lunge', 'dumbbell-reverse-lunge', 'bodyweight-reverse-lunge'),
+  ('lower-body-5-quads', 3, 3, 10, 15, 'glute-focused-back-extension', 'dumbbell-sumo-squat', 'frog-pump'),
+  ('lower-body-5-quads', 4, 2, 12, 15, 'hip-adduction-machine', 'side-lying-adduction', 'side-lying-adduction'),
+  ('lower-body-5-quads', 5, 2, 12, 15, 'standing-calf-raise', 'dumbbell-calf-raise', 'single-leg-calf-raise'),
+  ('lower-body-5-upper-b', 1, 3, 8, 12, 'incline-dumbbell-press', 'incline-dumbbell-press', 'push-up'),
+  ('lower-body-5-upper-b', 2, 3, 8, 12, 'assisted-pull-up', 'one-arm-dumbbell-row', 'band-lat-pulldown'),
+  ('lower-body-5-upper-b', 3, 3, 12, 15, 'dumbbell-lateral-raise', 'dumbbell-lateral-raise', 'band-lateral-raise'),
+  ('lower-body-5-upper-b', 4, 2, 12, 15, 'cable-face-pull', 'rear-delt-fly', 'band-pull-apart'),
+  ('lower-body-5-upper-b', 5, 2, 10, 15, 'cable-triceps-pushdown', 'overhead-triceps-extension', 'band-triceps-pushdown'),
+  ('lower-body-5-glute-focus', 1, 3, 10, 12, 'hip-thrust-machine', 'dumbbell-hip-thrust', 'banded-glute-bridge'),
+  ('lower-body-5-glute-focus', 2, 3, 10, 12, 'cable-pull-through', 'dumbbell-romanian-deadlift', 'single-leg-glute-bridge'),
+  ('lower-body-5-glute-focus', 3, 3, 10, 12, 'dumbbell-sumo-squat', 'dumbbell-sumo-squat', 'banded-squat'),
+  ('lower-body-5-glute-focus', 4, 3, 10, 12, 'seated-leg-curl', 'single-leg-romanian-deadlift', 'banded-hamstring-curl'),
+  ('lower-body-5-glute-focus', 5, 2, 12, 15, 'cable-hip-abduction', 'fire-hydrant', 'banded-lateral-walk'),
+
+  -- Lower-body focus, 6 days (experienced only)
+  ('lower-body-6-glutes', 1, 3, 8, 12, 'barbell-hip-thrust', 'dumbbell-hip-thrust', 'banded-hip-thrust'),
+  ('lower-body-6-glutes', 2, 3, 8, 12, 'dumbbell-romanian-deadlift', 'dumbbell-romanian-deadlift', 'banded-hamstring-curl'),
+  ('lower-body-6-glutes', 3, 3, 10, 12, 'lying-leg-curl', 'sliding-leg-curl', 'sliding-leg-curl'),
+  ('lower-body-6-glutes', 4, 2, 12, 15, 'cable-glute-kickback', 'donkey-kick', 'banded-kickback'),
+  ('lower-body-6-glutes', 5, 2, 12, 15, 'hip-abduction-machine', 'fire-hydrant', 'banded-clamshell'),
+  ('lower-body-6-quads', 1, 3, 10, 12, 'leg-press', 'goblet-squat', 'banded-squat'),
+  ('lower-body-6-quads', 2, 3, 8, 12, 'dumbbell-reverse-lunge', 'dumbbell-reverse-lunge', 'bodyweight-reverse-lunge'),
+  ('lower-body-6-quads', 3, 3, 10, 15, 'glute-focused-back-extension', 'dumbbell-sumo-squat', 'frog-pump'),
+  ('lower-body-6-quads', 4, 2, 12, 15, 'hip-adduction-machine', 'side-lying-adduction', 'side-lying-adduction'),
+  ('lower-body-6-quads', 5, 2, 12, 15, 'standing-calf-raise', 'dumbbell-calf-raise', 'single-leg-calf-raise'),
+  ('lower-body-6-upper-a', 1, 3, 8, 12, 'machine-chest-press', 'dumbbell-bench-press', 'incline-push-up'),
+  ('lower-body-6-upper-a', 2, 3, 10, 12, 'lat-pulldown', 'one-arm-dumbbell-row', 'band-row'),
+  ('lower-body-6-upper-a', 3, 3, 10, 12, 'machine-shoulder-press', 'dumbbell-shoulder-press', 'band-shoulder-press'),
+  ('lower-body-6-upper-a', 4, 3, 10, 12, 'seated-cable-row', 'rear-delt-fly', 'band-pull-apart'),
+  ('lower-body-6-upper-a', 5, 2, 10, 12, 'cable-pallof-press', 'dead-bug', 'dead-bug'),
+  ('lower-body-6-glute-focus', 1, 3, 10, 12, 'hip-thrust-machine', 'dumbbell-hip-thrust', 'banded-glute-bridge'),
+  ('lower-body-6-glute-focus', 2, 3, 10, 12, 'cable-pull-through', 'dumbbell-romanian-deadlift', 'single-leg-glute-bridge'),
+  ('lower-body-6-glute-focus', 3, 3, 10, 12, 'dumbbell-sumo-squat', 'dumbbell-sumo-squat', 'banded-squat'),
+  ('lower-body-6-glute-focus', 4, 3, 10, 12, 'seated-leg-curl', 'single-leg-romanian-deadlift', 'banded-hamstring-curl'),
+  ('lower-body-6-glute-focus', 5, 2, 12, 15, 'cable-hip-abduction', 'fire-hydrant', 'banded-lateral-walk'),
+  ('lower-body-6-legs', 1, 3, 8, 12, 'hack-squat', 'bulgarian-split-squat', 'bodyweight-split-squat'),
+  ('lower-body-6-legs', 2, 3, 10, 12, 'barbell-glute-bridge', 'dumbbell-hip-thrust', 'single-leg-hip-thrust'),
+  ('lower-body-6-legs', 3, 3, 8, 12, 'dumbbell-step-up', 'dumbbell-step-up', 'single-leg-box-squat'),
+  ('lower-body-6-legs', 4, 2, 10, 15, 'standing-cable-leg-curl', 'sliding-leg-curl', 'sliding-leg-curl'),
+  ('lower-body-6-legs', 5, 2, 12, 15, 'leg-press-calf-raise', 'single-leg-calf-raise', 'single-leg-calf-raise'),
+  ('lower-body-6-upper-b', 1, 3, 8, 12, 'incline-dumbbell-press', 'incline-dumbbell-press', 'push-up'),
+  ('lower-body-6-upper-b', 2, 3, 8, 12, 'assisted-pull-up', 'one-arm-dumbbell-row', 'band-lat-pulldown'),
+  ('lower-body-6-upper-b', 3, 3, 12, 15, 'dumbbell-lateral-raise', 'dumbbell-lateral-raise', 'band-lateral-raise'),
+  ('lower-body-6-upper-b', 4, 2, 12, 15, 'cable-face-pull', 'rear-delt-fly', 'band-pull-apart'),
+  ('lower-body-6-upper-b', 5, 2, 10, 15, 'cable-triceps-pushdown', 'overhead-triceps-extension', 'band-triceps-pushdown');
 
 -- Assignment ---------------------------------------------------------------
 
@@ -195,11 +340,14 @@ alter table public.profiles add constraint profiles_programme_id_fkey
   foreign key (programme_id) references public.programmes (id) on delete set null;
 
 -- Picks a programme from the quiz answers. Keep in step with the rules listed in PROGRESS.md.
---   1-2 days                      -> Full body, 2 days (1 day: one session a week, alternating)
---   Glutes and legs, 3 days       -> Lower-body focus, 3 days
---   Glutes and legs, 4-6 days     -> Lower-body focus, 4 days
---   New to lifting, or 3 days     -> Full body, 3 days
---   Otherwise (4-6 days)          -> Upper/lower, 4 days
+-- The first matching rule wins:
+--   1-2 days                          -> Full body, 2 days (1 day: one session a week, alternating)
+--   New to lifting, 5-6 days          -> 3-day plan to start (Lower-body focus 3 or Full body 3)
+--   Glutes and legs, 3/4/5/6 days     -> Lower-body focus with that many days
+--   New to lifting, or 3 days         -> Full body, 3 days
+--   4 days                            -> Upper/lower, 4 days
+--   5 days                            -> Five-day split
+--   6 days                            -> Push/pull/legs, 6 days
 create or replace function public.programme_for_answers(goal text, experience text, days_per_week smallint)
 returns text
 language sql
@@ -209,10 +357,13 @@ as $$
   select case
     when goal is null or experience is null or days_per_week is null then null
     when days_per_week <= 2 then 'full-body-2'
-    when goal = 'glutes_legs' and days_per_week = 3 then 'lower-body-3'
-    when goal = 'glutes_legs' then 'lower-body-4'
+    when experience = 'new' and days_per_week >= 5 then
+      case when goal = 'glutes_legs' then 'lower-body-3' else 'full-body-3' end
+    when goal = 'glutes_legs' then 'lower-body-' || days_per_week
     when experience = 'new' or days_per_week = 3 then 'full-body-3'
-    else 'upper-lower-4'
+    when days_per_week = 4 then 'upper-lower-4'
+    when days_per_week = 5 then 'split-5'
+    else 'ppl-6'
   end;
 $$;
 
