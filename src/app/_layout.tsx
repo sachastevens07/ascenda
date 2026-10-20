@@ -47,6 +47,17 @@ function RootNavigator() {
             headerStyle: { backgroundColor: colours.background },
           }}
         />
+        <Stack.Screen
+          name="programme"
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Profile',
+            headerTintColor: colours.accent,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.background },
+          }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="onboarding" />

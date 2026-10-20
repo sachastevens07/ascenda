@@ -43,6 +43,22 @@ export default function ProfileScreen() {
       <Text style={styles.label}>Signed in as</Text>
       <Text style={styles.email}>{session?.user.email}</Text>
 
+      {profile?.programme && (
+        <View style={styles.card}>
+          <Text style={styles.label}>Your programme</Text>
+          <Text style={styles.cardTitle}>{profile.programme.name}</Text>
+          <Text style={styles.label}>
+            {formatDaysPerWeek(profile.programme.days_per_week)} a week
+          </Text>
+          <Pressable
+            style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
+            onPress={() => router.push('/programme')}
+            accessibilityRole="button">
+            <Text style={styles.buttonText}>View programme</Text>
+          </Pressable>
+        </View>
+      )}
+
       {answers && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Your answers</Text>

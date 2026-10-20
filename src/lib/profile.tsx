@@ -25,7 +25,7 @@ export const EXPERIENCE_LABELS: Record<Experience, string> = {
 export const DAYS_PER_WEEK_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
 export type DaysPerWeek = (typeof DAYS_PER_WEEK_OPTIONS)[number];
 
-export function formatDaysPerWeek(days: DaysPerWeek): string {
+export function formatDaysPerWeek(days: number): string {
   return days === 1 ? '1 day' : `${days} days`;
 }
 
@@ -66,13 +66,15 @@ export type Profile = {
   days_per_week: DaysPerWeek | null;
   equipment: EquipmentAccess | null;
   confidence: Confidence | null;
+  /** Assigned by the database from the quiz answers (see supabase/programmes.sql). */
   programme_id: string | null;
+  programme: { name: string; days_per_week: number } | null;
   cycle_tracking_enabled: boolean;
   onboarding_completed_at: string | null;
 };
 
 const PROFILE_COLUMNS =
-  'user_id, goal, experience, days_per_week, equipment, confidence, programme_id, cycle_tracking_enabled, onboarding_completed_at';
+  'user_id, goal, experience, days_per_week, equipment, confidence, programme_id, programme:programmes(name, days_per_week), cycle_tracking_enabled, onboarding_completed_at';
 
 type LoadedProfile = {
   /** The user this result belongs to, so a stale result is never shown for a different account. */
@@ -99,7 +101,7 @@ async function loadProfile(userId: string | null): Promise<LoadedProfile> {
     .eq('user_id', userId)
     .maybeSingle();
   if (error) return { userId, profile: null, error: error.message };
-  return { userId, profile: data as Profile | null, error: null };
+  return { userId, profile: data as unknown as Profile | null, error: null };
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
@@ -133,7 +135,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select(PROFILE_COLUMNS)
         .single();
       if (error) throw error;
-      setLoaded({ userId, profile: data as Profile, error: null });
+      setLoaded({ userId, profile: data as unknown as Profile, error: null });
     },
     [userId]
   );
