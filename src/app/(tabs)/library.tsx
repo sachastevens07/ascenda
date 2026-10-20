@@ -53,6 +53,7 @@ function matchesSearch(exercise: Exercise, query: string): boolean {
 export default function LibraryScreen() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [muscle, setMuscle] = useState<Muscle | null>(null);
@@ -62,7 +63,9 @@ export default function LibraryScreen() {
     try {
       setExercises(await fetchExercises());
       setLoadState('ready');
-    } catch {
+    } catch (error) {
+      console.warn('Failed to load exercises', error);
+      setErrorDetail((error as { message?: string } | null)?.message ?? String(error));
       setLoadState('error');
     }
   }, []);
@@ -147,6 +150,7 @@ export default function LibraryScreen() {
         <View style={styles.centre}>
           <Text style={styles.emptyTitle}>We couldn’t load the library</Text>
           <Text style={styles.emptyText}>Check your connection and try again.</Text>
+          {__DEV__ && errorDetail && <Text style={styles.errorDetail}>{errorDetail}</Text>}
           <Pressable style={styles.retry} onPress={() => { setLoadState('loading'); load(); }}>
             <Text style={styles.retryText}>Try again</Text>
           </Pressable>
@@ -291,6 +295,12 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     textAlign: 'center',
     marginTop: 6,
+  },
+  errorDetail: {
+    fontSize: 13,
+    color: colours.textMuted,
+    textAlign: 'center',
+    marginTop: 12,
   },
   retry: {
     marginTop: 16,
