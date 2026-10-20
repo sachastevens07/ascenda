@@ -1,12 +1,23 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { colours } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import {
+  CONFIDENCE_LABELS,
+  EQUIPMENT_ACCESS_LABELS,
+  EXPERIENCE_LABELS,
+  GOAL_LABELS,
+  getQuizAnswers,
+  useProfile,
+} from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 
 export default function ProfileScreen() {
   const { session } = useAuth();
+  const { profile } = useProfile();
+  const answers = getQuizAnswers(profile);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   async function handleSignOut() {
@@ -15,11 +26,39 @@ export default function ProfileScreen() {
     setIsSigningOut(false);
   }
 
+  const answerRows = answers
+    ? [
+        { name: 'Goal', value: GOAL_LABELS[answers.goal] },
+        { name: 'Experience', value: EXPERIENCE_LABELS[answers.experience] },
+        { name: 'Days per week', value: `${answers.days_per_week} days` },
+        { name: 'Where you train', value: EQUIPMENT_ACCESS_LABELS[answers.equipment] },
+        { name: 'Gym confidence', value: `${answers.confidence}. ${CONFIDENCE_LABELS[answers.confidence]}` },
+      ]
+    : [];
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.label}>Signed in as</Text>
       <Text style={styles.email}>{session?.user.email}</Text>
+
+      {answers && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Your answers</Text>
+          {answerRows.map((row) => (
+            <View key={row.name} style={styles.row}>
+              <Text style={styles.label}>{row.name}</Text>
+              <Text style={styles.rowValue}>{row.value}</Text>
+            </View>
+          ))}
+          <Pressable
+            style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
+            onPress={() => router.push('/onboarding')}
+            accessibilityRole="button">
+            <Text style={styles.buttonText}>Change answers</Text>
+          </Pressable>
+        </View>
+      )}
 
       <Pressable
         style={({ pressed }) => [styles.button, (pressed || isSigningOut) && styles.buttonPressed]}
@@ -28,16 +67,18 @@ export default function ProfileScreen() {
         accessibilityRole="button">
         <Text style={styles.buttonText}>{isSigningOut ? 'Signing out…' : 'Sign out'}</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scroll: {
     flex: 1,
+    backgroundColor: colours.background,
+  },
+  container: {
     padding: 24,
     paddingTop: 32,
-    backgroundColor: colours.background,
   },
   title: {
     fontSize: 32,
@@ -56,6 +97,29 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 32,
   },
+  card: {
+    padding: 20,
+    borderRadius: 18,
+    backgroundColor: colours.surface,
+    marginBottom: 24,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colours.text,
+    marginBottom: 8,
+  },
+  row: {
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colours.border,
+  },
+  rowValue: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colours.text,
+    marginTop: 2,
+  },
   button: {
     minHeight: 56,
     borderRadius: 999,
@@ -64,6 +128,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colours.accent,
     backgroundColor: colours.surface,
+  },
+  cardButton: {
+    marginTop: 20,
   },
   buttonPressed: {
     opacity: 0.7,

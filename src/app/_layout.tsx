@@ -1,29 +1,40 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colours } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
+import { supabase } from '@/lib/supabase';
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <StatusBar style="dark" />
-      <RootNavigator />
+      <ProfileProvider>
+        <StatusBar style="dark" />
+        <RootNavigator />
+      </ProfileProvider>
     </AuthProvider>
   );
 }
 
 function RootNavigator() {
   const { session, isLoading } = useAuth();
+  const profile = useProfile();
 
-  if (isLoading) {
-    return <View style={{ flex: 1, backgroundColor: colours.background }} />;
+  if (isLoading || (session && profile.isLoading)) {
+    return <View style={styles.blank} />;
   }
+
+  if (session && profile.error) {
+    return <ProfileError detail={profile.error} onRetry={profile.reload} />;
+  }
+
+  const isOnboarded = getQuizAnswers(profile.profile) !== null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!!session}>
+      <Stack.Protected guard={!!session && isOnboarded}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="exercise/[id]"
@@ -37,9 +48,88 @@ function RootNavigator() {
           }}
         />
       </Stack.Protected>
+      <Stack.Protected guard={!!session}>
+        <Stack.Screen name="onboarding" />
+      </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="sign-in" />
       </Stack.Protected>
     </Stack>
   );
 }
+
+function ProfileError({ detail, onRetry }: { detail: string; onRetry: () => void }) {
+  return (
+    <View style={styles.error}>
+      <Text style={styles.errorTitle}>We couldn't load your profile</Text>
+      <Text style={styles.errorText}>Check your connection and try again.</Text>
+      {__DEV__ && <Text style={styles.errorDetail}>{detail}</Text>}
+      <Pressable
+        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        onPress={onRetry}
+        accessibilityRole="button">
+        <Text style={styles.buttonText}>Try again</Text>
+      </Pressable>
+      <Pressable
+        style={styles.link}
+        onPress={() => supabase.auth.signOut()}
+        accessibilityRole="button">
+        <Text style={styles.linkText}>Sign out</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  blank: {
+    flex: 1,
+    backgroundColor: colours.background,
+  },
+  error: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: colours.background,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colours.text,
+  },
+  errorText: {
+    fontSize: 17,
+    color: colours.textMuted,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  errorDetail: {
+    fontSize: 13,
+    color: colours.textMuted,
+    marginTop: -12,
+    marginBottom: 24,
+  },
+  button: {
+    minHeight: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.accent,
+  },
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.surface,
+  },
+  link: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  linkText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colours.accent,
+  },
+});
