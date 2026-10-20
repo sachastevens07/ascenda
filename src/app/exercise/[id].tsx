@@ -5,7 +5,14 @@ import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colours } from '@/constants/theme';
-import { EQUIPMENT_LABELS, MUSCLE_LABELS, fetchExercise, type Exercise } from '@/lib/exercises';
+import {
+  EQUIPMENT_LABELS,
+  EXERCISE_MEDIA_BUCKET,
+  MUSCLE_LABELS,
+  fetchExercise,
+  getMediaUrl,
+  type Exercise,
+} from '@/lib/exercises';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
@@ -14,6 +21,7 @@ export default function ExerciseScreen() {
   const insets = useSafeAreaInsets();
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [mediaFailed, setMediaFailed] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -47,21 +55,29 @@ export default function ExerciseScreen() {
     );
   }
 
+  const mediaUrl = mediaFailed ? null : getMediaUrl(exercise);
+
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
-      {exercise.media_url ? (
+      {mediaUrl ? (
         <Image
-          source={{ uri: exercise.media_url }}
+          source={{ uri: mediaUrl }}
           style={styles.media}
           resizeMode="contain"
+          onError={() => setMediaFailed(true)}
           accessibilityLabel={`${exercise.name} demonstration`}
         />
       ) : (
         <View style={[styles.media, styles.mediaPlaceholder]}>
           <Ionicons name="barbell-outline" size={48} color={colours.accent} />
           <Text style={styles.mediaPlaceholderText}>Demo image coming soon</Text>
+          {__DEV__ && (
+            <Text style={styles.mediaDevHint}>
+              Upload {exercise.id}.jpg to the {EXERCISE_MEDIA_BUCKET} bucket
+            </Text>
+          )}
         </View>
       )}
 
@@ -146,6 +162,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: colours.accent,
+  },
+  mediaDevHint: {
+    fontSize: 12,
+    color: colours.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: 16,
   },
   title: {
     fontSize: 28,

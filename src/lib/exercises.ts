@@ -4,6 +4,7 @@ export const MUSCLES = [
   'glutes',
   'quads',
   'hamstrings',
+  'adductors',
   'calves',
   'chest',
   'back',
@@ -18,6 +19,7 @@ export const MUSCLE_LABELS: Record<Muscle, string> = {
   glutes: 'Glutes',
   quads: 'Quads',
   hamstrings: 'Hamstrings',
+  adductors: 'Inner thighs',
   calves: 'Calves',
   chest: 'Chest',
   back: 'Back',
@@ -27,7 +29,15 @@ export const MUSCLE_LABELS: Record<Muscle, string> = {
   core: 'Core',
 };
 
-export const EQUIPMENT = ['barbell', 'dumbbell', 'machine', 'cable', 'kettlebell', 'bodyweight'] as const;
+export const EQUIPMENT = [
+  'barbell',
+  'dumbbell',
+  'machine',
+  'cable',
+  'kettlebell',
+  'band',
+  'bodyweight',
+] as const;
 export type Equipment = (typeof EQUIPMENT)[number];
 
 export const EQUIPMENT_LABELS: Record<Equipment, string> = {
@@ -36,8 +46,12 @@ export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   machine: 'Machine',
   cable: 'Cable',
   kettlebell: 'Kettlebell',
+  band: 'Band',
   bodyweight: 'Bodyweight',
 };
+
+/** Supabase Storage bucket for exercise photos. Files named `<exercise id>.<ext>` link themselves. */
+export const EXERCISE_MEDIA_BUCKET = 'exercise-media';
 
 /** One row of the `exercises` table in Supabase. */
 export type Exercise = {
@@ -46,10 +60,18 @@ export type Exercise = {
   primary_muscle: Muscle;
   secondary_muscles: Muscle[];
   equipment: Equipment;
+  /** A path in the exercise-media bucket, or a full https URL. Use `getMediaUrl` to display it. */
   media_url: string | null;
   cues: string[];
   location_hint: string;
 };
+
+export function getMediaUrl(exercise: Exercise): string | null {
+  const { media_url } = exercise;
+  if (!media_url) return null;
+  if (/^https?:\/\//.test(media_url)) return media_url;
+  return supabase.storage.from(EXERCISE_MEDIA_BUCKET).getPublicUrl(media_url).data.publicUrl;
+}
 
 const EXERCISE_COLUMNS =
   'id, name, primary_muscle, secondary_muscles, equipment, media_url, cues, location_hint';
