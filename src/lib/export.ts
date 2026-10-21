@@ -1,12 +1,18 @@
 import { Directory } from 'expo-file-system';
+import { startActivityAsync } from 'expo-intent-launcher';
+import { Platform } from 'react-native';
 
 import { EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
 import { supabase } from '@/lib/supabase';
+import { buildXlsx, type XlsxCell, type XlsxColumn } from '@/lib/xlsx';
 
 /** Supabase returns at most 1000 rows per request. */
 const PAGE_SIZE = 1000;
 
-const HEADERS = ['Date', 'Start time', 'Session', 'Exercise', 'Equipment', 'Set', 'Weight (kg)', 'Reps'];
+const XLSX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+/** Android's Intent.FLAG_GRANT_READ_URI_PERMISSION, so the spreadsheet app can read the file. */
+const FLAG_GRANT_READ_URI_PERMISSION = 1;
 
 type ExportRow = {
   set_number: number;
@@ -42,39 +48,66 @@ async function fetchExportRows(): Promise<ExportRow[]> {
   );
 }
 
-/** "09:05" in the phone's time zone. */
-function formatTime(timestamp: string): string {
+/** Minutes after midnight in the phone's time zone. */
+function localMinutes(timestamp: string): number {
   const date = new Date(timestamp);
-  const pad = (value: number) => String(value).padStart(2, '0');
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return date.getHours() * 60 + date.getMinutes();
 }
 
-function csvField(value: string | number): string {
-  const text = String(value);
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+const text = (value: string): XlsxCell => ({ kind: 'text', value });
+const number = (value: number | null): XlsxCell => (value === null ? null : { kind: 'number', value });
+
+/** Wide enough for the header and the longest value, within reason. */
+function textWidth(header: string, values: string[]): number {
+  return Math.min(45, Math.max(header.length, ...values.map((value) => value.length)) + 3);
 }
 
-function toCsv(rows: ExportRow[]): string {
-  const lines = [HEADERS, ...rows.map((row) => [
-    row.session.date,
-    formatTime(row.session.started_at),
-    row.session.programme_day?.name ?? '',
-    row.exercise.name,
-    EQUIPMENT_LABELS[row.exercise.equipment],
-    row.set_number,
-    row.weight_kg === null ? '' : Number(row.weight_kg),
-    row.reps ?? '',
-  ])];
-  // The byte-order mark makes Excel read the file as UTF-8.
-  return '\uFEFF' + lines.map((line) => line.map(csvField).join(',')).join('\r\n') + '\r\n';
+function toSpreadsheet(rows: ExportRow[]): Uint8Array {
+  const sessionNames = rows.map((row) => row.session.programme_day?.name ?? '');
+  const exerciseNames = rows.map((row) => row.exercise.name);
+  const columns: XlsxColumn[] = [
+    { header: 'Date', width: 13 },
+    { header: 'Start time', width: 11 },
+    { header: 'Session', width: textWidth('Session', sessionNames) },
+    { header: 'Exercise', width: textWidth('Exercise', exerciseNames) },
+    { header: 'Equipment', width: 12 },
+    { header: 'Set', width: 6 },
+    { header: 'Weight (kg)', width: 12 },
+    { header: 'Reps', width: 7 },
+    { header: 'Set completed', width: 15 },
+  ];
+  const cells = rows.map((row, i): XlsxCell[] => [
+    { kind: 'date', value: row.session.date },
+    { kind: 'time', value: localMinutes(row.session.started_at) },
+    sessionNames[i] ? text(sessionNames[i]) : null,
+    text(exerciseNames[i]),
+    text(EQUIPMENT_LABELS[row.exercise.equipment]),
+    number(row.set_number),
+    number(row.weight_kg === null ? null : Number(row.weight_kg)),
+    number(row.reps),
+    row.completed_at ? { kind: 'time', value: localMinutes(row.completed_at) } : null,
+  ]);
+  return buildXlsx('Workouts', columns, cells);
 }
 
 export type ExportResult =
   | { status: 'empty' }
   | { status: 'cancelled' }
-  | { status: 'saved'; fileName: string; setCount: number };
+  | { status: 'saved'; fileName: string; setCount: number; uri: string };
 
-/** Asks her for a folder (e.g. Downloads) and saves her workout history there as a CSV file. */
+/** Opening needs an Android intent; on iOS she opens the file from the Files app. */
+export const canOpenExportedFile = Platform.OS === 'android';
+
+/** Opens a saved export in her spreadsheet app. Rejects if no installed app can open it. */
+export async function openExportedFile(uri: string): Promise<void> {
+  await startActivityAsync('android.intent.action.VIEW', {
+    data: uri,
+    type: XLSX_MIME_TYPE,
+    flags: FLAG_GRANT_READ_URI_PERMISSION,
+  });
+}
+
+/** Asks her for a folder (e.g. Documents) and saves her workout history there as an Excel file. */
 export async function exportWorkoutHistory(): Promise<ExportResult> {
   const rows = await fetchExportRows();
   if (rows.length === 0) return { status: 'empty' };
@@ -90,7 +123,12 @@ export async function exportWorkoutHistory(): Promise<ExportResult> {
   const today = new Date();
   const pad = (value: number) => String(value).padStart(2, '0');
   const stamp = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
-  const file = folder.createFile(`workout-history-${stamp}.csv`, 'text/csv');
-  file.write(toCsv(rows));
-  return { status: 'saved', fileName: file.name, setCount: rows.length };
+  const file = folder.createFile(`workout-history-${stamp}.xlsx`, XLSX_MIME_TYPE);
+  file.write(toSpreadsheet(rows));
+  return {
+    status: 'saved',
+    fileName: file.name,
+    setCount: rows.length,
+    uri: file.uri.startsWith('content://') ? file.uri : file.contentUri,
+  };
 }

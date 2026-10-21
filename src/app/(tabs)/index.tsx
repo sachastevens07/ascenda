@@ -3,7 +3,6 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
@@ -162,7 +162,7 @@ export default function TodayScreen() {
       setTodaySwaps({});
       router.push({ pathname: '/session/[id]', params: { id: session.id } });
     } catch {
-      Alert.alert('Couldn’t start the session', 'Check your connection and try again.');
+      showDialog('Couldn’t start the session', 'Check your connection and try again.');
     } finally {
       setIsStarting(false);
     }

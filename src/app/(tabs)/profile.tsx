@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
-import { exportWorkoutHistory } from '@/lib/export';
+import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import {
   CONFIDENCE_LABELS,
   EQUIPMENT_ACCESS_LABELS,
@@ -31,20 +32,38 @@ export default function ProfileScreen() {
     setIsSigningOut(false);
   }
 
+  async function openFile(uri: string) {
+    try {
+      await openExportedFile(uri);
+    } catch {
+      showDialog(
+        'No app to open it',
+        'Install Google Sheets or Excel, or open the file from your Files app.'
+      );
+    }
+  }
+
   async function handleExport() {
     setIsExporting(true);
     try {
       const result = await exportWorkoutHistory();
       if (result.status === 'empty') {
-        Alert.alert('Nothing to export yet', 'Finish a session and your sets will be ready to download.');
+        showDialog('Nothing to export yet', 'Finish a session and your sets will be ready to download.');
       } else if (result.status === 'saved') {
-        Alert.alert(
+        const { fileName, setCount, uri } = result;
+        showDialog(
           'Saved',
-          `${result.fileName} (${result.setCount} sets) is in the folder you chose. Open it from your Files app.`
+          `${fileName} (${setCount} sets) is in the folder you chose.`,
+          canOpenExportedFile
+            ? [
+                { text: 'Open', onPress: () => openFile(uri) },
+                { text: 'Done', style: 'cancel' },
+              ]
+            : [{ text: 'Done' }]
         );
       }
     } catch {
-      Alert.alert('Couldn’t export', 'Check your connection and try again.');
+      showDialog('Couldn’t export', 'Check your connection and try again.');
     } finally {
       setIsExporting(false);
     }
@@ -105,8 +124,8 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Your data</Text>
         <Text style={styles.label}>
-          Save every set from your finished sessions as a spreadsheet (CSV) in a folder you choose, such as
-          Documents. It’s yours to keep.
+          Save every set from your finished sessions as a spreadsheet (Excel file) in a folder you choose,
+          such as Documents. It’s yours to keep.
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, (pressed || isExporting) && styles.buttonPressed]}

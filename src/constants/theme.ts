@@ -8,6 +8,8 @@ export type ThemeColours = {
   border: string;
   /** Personal-best trophies. */
   trophy: string;
+  /** Destructive actions such as Discard. */
+  danger: string;
 };
 
 export const colours: ThemeColours = {
@@ -19,4 +21,5 @@ export const colours: ThemeColours = {
   accentSoft: '#F2E6EE',
   border: '#E6E0DA',
   trophy: '#C8901A',
+  danger: '#A8443F',
 };

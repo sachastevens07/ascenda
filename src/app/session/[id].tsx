@@ -3,7 +3,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { showDialog } from '@/components/Dialog';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -63,7 +63,7 @@ import {
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
 function showRecords(kinds: RecordKind[]) {
-  Alert.alert(
+  showDialog(
     kinds.length === 1 ? 'New personal best' : 'New personal bests',
     kinds.map((kind) => RECORD_LABELS[kind]).join('\n')
   );
@@ -162,11 +162,11 @@ export default function SessionScreen() {
     if (completing) {
       const reps = parseReps(entry.reps);
       if (reps === null || reps < 1) {
-        Alert.alert('How many reps?', 'Add the number of reps you did, then tick the set.');
+        showDialog('How many reps?', 'Add the number of reps you did, then tick the set.');
         return;
       }
       if (weighted && parseWeight(entry.weight) === null) {
-        Alert.alert('What weight?', 'Add the weight you used in kg, then tick the set.');
+        showDialog('What weight?', 'Add the weight you used in kg, then tick the set.');
         return;
       }
     }
@@ -193,7 +193,7 @@ export default function SessionScreen() {
     } catch {
       setEntries(before);
       if (completing) workout.stopRest();
-      Alert.alert('That set didn’t save', 'Check your connection and try again.');
+      showDialog('That set didn’t save', 'Check your connection and try again.');
     }
   }
 
@@ -204,7 +204,7 @@ export default function SessionScreen() {
     try {
       await saveSet(toLoggedSet(item, setNumber, entry));
     } catch {
-      Alert.alert('That change didn’t save', 'Check your connection and try again.');
+      showDialog('That change didn’t save', 'Check your connection and try again.');
     }
   }
 
@@ -213,7 +213,7 @@ export default function SessionScreen() {
       (setNumber) => entries[setKey(item.exercise.id, setNumber)]?.completed
     );
     if (hasTicked) {
-      Alert.alert(
+      showDialog(
         'You’ve already ticked sets',
         `To swap ${item.exercise.name}, untick its sets first.`
       );
@@ -273,10 +273,10 @@ export default function SessionScreen() {
       router.back();
       const trained =
         startedAt === null ? '' : ` You trained for ${formatDuration((Date.now() - startedAt) / 1000)}.`;
-      Alert.alert('Session saved', `Nice work. That’s another one done.${trained}`);
+      showDialog('Session saved', `Nice work. That’s another one done.${trained}`);
     } catch {
       setIsFinishing(false);
-      Alert.alert('Couldn’t finish the session', 'Check your connection and try again.');
+      showDialog('Couldn’t finish the session', 'Check your connection and try again.');
     }
   }
 
@@ -288,12 +288,12 @@ export default function SessionScreen() {
       router.back();
     } catch {
       setIsFinishing(false);
-      Alert.alert('Couldn’t discard the session', 'Check your connection and try again.');
+      showDialog('Couldn’t discard the session', 'Check your connection and try again.');
     }
   }
 
   function confirmDiscard() {
-    Alert.alert('Discard this session?', 'Any sets you’ve ticked in it will be deleted.', [
+    showDialog('Discard this session?', 'Any sets you’ve ticked in it will be deleted.', [
       { text: 'Keep it', style: 'cancel' },
       { text: 'Discard', style: 'destructive', onPress: discard },
     ]);
@@ -304,7 +304,7 @@ export default function SessionScreen() {
 
   function confirmFinish() {
     if (doneSets === 0) {
-      Alert.alert(
+      showDialog(
         'No sets ticked yet',
         'Tick off the sets you’ve done, or discard this session if you didn’t train.',
         [
@@ -315,7 +315,7 @@ export default function SessionScreen() {
       return;
     }
     if (doneSets < totalSets) {
-      Alert.alert(
+      showDialog(
         'Finish session?',
         `You’ve done ${doneSets} of ${totalSets} sets. That’s fine: only the sets you ticked are saved.`,
         [

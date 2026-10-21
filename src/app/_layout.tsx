@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { DialogProvider } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
@@ -14,7 +15,9 @@ export default function RootLayout() {
       <ProfileProvider>
         <WorkoutProvider>
           <StatusBar style="dark" />
-          <RootNavigator />
+          <DialogProvider>
+            <RootNavigator />
+          </DialogProvider>
         </WorkoutProvider>
       </ProfileProvider>
     </AuthProvider>

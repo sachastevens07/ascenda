@@ -14,9 +14,10 @@ Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules)
 8. **Progression rule**: `getWeightSuggestion()` in `src/lib/programmes.ts`: if set 1 last time hit `rep_max`, suggest + the exercise's own step (`exercises.weight_increase_kg`), else same weight / more reps; shown on Today and as a goal line in the logger, which pre-fills the new weight at `rep_min`.
 9. **Swap button**: swap icon on Today rows and logger cards → `src/components/SwapSheet.tsx` (up to 3 alternatives) → "Just today" or "Every time"; logic in `src/lib/swaps.ts`; "Every time" swaps also show on the programme screen.
 10. **Progress screen**: `src/app/(tabs)/progress.tsx`: stat tiles, sessions-per-week bars, weight-over-time line chart (`src/components/LineChart.tsx`, react-native-svg) with lift picker, personal bests + estimated 1-rep max; data/calcs in `src/lib/progress.ts`.
-11. **Export**: Profile → "Your data" card → "Export workout history": `src/lib/export.ts` fetches every ticked set from finished sessions (paged), opens the system folder picker (`Directory.pickDirectoryAsync()`, `expo-file-system`) and saves `workout-history-YYYY-MM-DD.csv` there, then shows "Saved" with the file name. Backing out of the picker does nothing; alerts if there's nothing to export or it fails.
+11. **Export**: Profile → "Your data" card → "Export workout history": `src/lib/export.ts` fetches every ticked set from finished sessions (paged), opens the system folder picker (`Directory.pickDirectoryAsync()`, `expo-file-system`) and saves `workout-history-YYYY-MM-DD.xlsx` there (built by `src/lib/xlsx.ts` with `fflate`), then shows "Saved" with **Open** (Android: `expo-intent-launcher` VIEW intent → her spreadsheet app) and Done. Backing out of the picker does nothing; dialogs if there's nothing to export, no app can open it, or it fails.
 
 **Extras the user asked for (not in AGENTS.md):**
+- **Themed dialogs**: every `Alert.alert` replaced by `showDialog(title, message?, buttons?)` from `src/components/Dialog.tsx` (same arguments as `Alert.alert`; `DialogProvider` wraps the navigator in `src/app/_layout.tsx`). White rounded card, full-width pill buttons (plum = action, red `danger` = destructive, outlined = cancel); tapping outside / Back = the cancel button. Inside another `Modal` (e.g. `SwapSheet`) provider dialogs can't appear on top, so render `<DialogCard>` inside that modal instead.
 - **Workout timer**: elapsed time in the logger header; "You trained for X" in the Session saved message.
 - **Workout-in-progress bar** (`src/components/WorkoutBar.tsx`, rendered inside `PillTabBar`): day name, elapsed time, next exercise, set with weight × reps, rest countdown; tap to return to the logger. State in `WorkoutProvider` (`src/lib/workout.tsx`, wraps the app in `src/app/_layout.tsx`), which also owns the rest timer so it keeps running after leaving the logger and restores the active session on app start.
 - **PR trophies**: gold trophy by a ticked set that beats her heaviest weight, estimated 1-rep max or single-set volume; tap for details (`getSetRecords()` in `src/lib/workoutLog.ts`, history from `fetchExerciseBests()` in `src/lib/progress.ts`).
@@ -24,11 +25,11 @@ Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules)
 
 ## In progress
 
-Nothing half-built. Features 4–10 are confirmed on the phone (user, 21 Oct). **Not yet confirmed on the phone**: Feature 11 (export) and the floating tab bar + smaller floating workout bar.
+Nothing half-built. Features 4–10 are confirmed on the phone (user, 21 Oct). **Not yet confirmed on the phone**: Feature 11 (Excel export + Open), the themed dialogs, and the floating tab bar + smaller floating workout bar. The .xlsx was checked in desktop Excel (dates, widths, frozen bold header, no repair prompt), not yet on the phone.
 
 ## Next step
 
-Build **Feature 12: Optional cycle notes** (off by default, explicit consent, deletable; no prescriptions or medical claims). Agree the phases, the consent wording and where tagging happens before building. Decide whether cycle phase should be added to the CSV export.
+Build **Feature 12: Optional cycle notes** (off by default, explicit consent, deletable; no prescriptions or medical claims). Agree the phases, the consent wording and where tagging happens before building. Decide whether cycle phase should be added to the export.
 
 ## Known bugs / issues
 
@@ -40,12 +41,14 @@ Build **Feature 12: Optional cycle notes** (off by default, explicit consent, de
 - "Do a different day" and Today's "Just today" swaps are screen state only (lost on app restart until the session starts).
 - The user often has two dev servers running (ports 8081 and 8082): the phone attaches to the stale one and `.expo/types/router.d.ts` gets corrupted, so `tsc` fails inside it. Delete that file (generated) and run one server.
 - `src/components/PlaceholderScreen.tsx` is unused (left in place).
+- **Export on iOS**: no Open button (no intent launcher; she opens it from Files), and exporting twice on the same day to the same folder is untested (Android adds " (1)" itself).
+- `AGENTS.md` still says CSV export; the user chose .xlsx (see Decisions). Update the brief if she agrees.
 
 ## Decisions made (not in AGENTS.md)
 
 - **Expo SDK 57** (Play Store Expo Go only supports 57). `react-dom` pinned to `react`.
-- **Libraries (user-approved)**: `@expo/vector-icons`, `expo-font`, `react-native-pager-view`, `react-native-tab-view`, `@supabase/supabase-js`, `@react-native-async-storage/async-storage`, `expo-notifications` (plugin in `app.json`), `react-native-svg`, `expo-file-system`. (`expo-sharing` was tried for export and removed: the user wants a saved file, not a share sheet.)
-- **Design**: background `#F7F4F0`, accent plum `#7A3E6B`, soft accent `#F2E6EE`, trophy `#C8901A` (`src/constants/theme.ts`); no tab headers (big screen titles); tap targets ≥ 48–56 px; bottom sheets instead of chip rows; positive-only stats, no streaks.
+- **Libraries (user-approved)**: `@expo/vector-icons`, `expo-font`, `react-native-pager-view`, `react-native-tab-view`, `@supabase/supabase-js`, `@react-native-async-storage/async-storage`, `expo-notifications` (plugin in `app.json`), `react-native-svg`, `expo-file-system`, `expo-intent-launcher` (Android only), `fflate` (zips the .xlsx). Tried and removed: `expo-sharing` (user wants a saved file, not a share sheet); `write-excel-file` (crashes in React Native: it builds a `Blob` from an `ArrayBuffer`, which RN doesn't support).
+- **Design**: background `#F7F4F0`, accent plum `#7A3E6B`, soft accent `#F2E6EE`, trophy `#C8901A`, danger `#A8443F` (`src/constants/theme.ts`); themed dialogs, never system alerts; no tab headers (big screen titles); tap targets ≥ 48–56 px; bottom sheets instead of chip rows; positive-only stats, no streaks.
 - **Disclaimer** "General fitness guidance, not medical advice. Stop if anything hurts." on exercise detail, quiz review, programme, Today, logger and Progress.
 - **Exercises**: text slug ids; muscles glutes, quads, hamstrings, adductors ("Inner thighs"), calves, chest, back, shoulders, biceps, triceps, core; equipment barbell, dumbbell, machine, cable, kettlebell, band, bodyweight; exactly 3 cues; DB constraints enforce these (keep SQL and `src/lib/exercises.ts` in step). Photos: upload `<exercise-id>.<ext>` to public bucket `exercise-media` and a trigger sets `media_url`.
 - **Quiz values** (DB-enforced): goal `strength`/`glutes_legs`/`general`; experience `new`/`some`/`confident`; days 1–6 (user widened from 2–4); equipment `full_gym`/`dumbbells`/`home`; confidence 1–5. "At home" = bodyweight + bands; "dumbbells only" = dumbbell + bodyweight.
@@ -57,7 +60,7 @@ Build **Feature 12: Optional cycle notes** (off by default, explicit consent, de
 - **Progress**: only ticked sets from finished sessions; queries page past Supabase's 1000-row limit; PB = heaviest (least help for assisted, most reps for bodyweight/band); estimated 1RM = Epley on 1–12-rep sets, rounded to 0.5 kg, "no need to test it"; chart = heaviest weight per date, x by time, everything shown (no range toggle); weeks start Monday.
 - **Workout bar / timer**: bar on the four tabs only; elapsed = now − `started_at` (no pause); next set = first unticked set in programme order.
 - **Trophies**: heaviest weight, best estimated 1RM, most single-set volume; must beat finished-session history and earlier sets today; none on an exercise's first session, assisted machines or bodyweight/band.
-- **Export** (user-chosen): one row per set; columns Date, Start time (local HH:MM), Session (programme day name, blank if the day was deleted), Exercise, Equipment, Set, Weight (kg) (blank for bodyweight/band), Reps; ticked sets from finished sessions only (same as Progress); ordered by session start, then tick time; UTF-8 with BOM and CRLF so Excel opens it cleanly. Button on Profile only. Saved to a folder she picks (user chose this over the share sheet or opening in a spreadsheet app). Free for everyone (keep it outside the paywall). On Android, a same-named file gets " (1)" added by the system; on iOS, exporting twice on the same day to the same folder is untested.
+- **Export** (user-chosen): **Excel .xlsx instead of the brief's CSV** (user, 21 Oct: a CSV can't set column widths, so Excel showed dates as `#####`; tested in desktop Excel, even "21 Oct 2026" text only fits for some months). One sheet "Workouts", one row per set; columns Date (real date, `d mmm yyyy`), Start time and Set completed (real times, `hh:mm`, phone's time zone), Session (programme day name, blank if the day was deleted), Exercise, Equipment, Set, Weight (kg) (blank for bodyweight/band), Reps; bold frozen header; widths fit the content (text columns capped at 45). Ticked sets from finished sessions only (same as Progress); ordered by session start, then tick time. Button on Profile only. Saved to a folder she picks, then optional Open. Android won't let apps save into the Downloads root, so the copy suggests Documents. Free for everyone (keep it outside the paywall). On Android, a same-named file gets " (1)" added by the system; on iOS, exporting twice on the same day to the same folder is untested.
 - No generated Supabase types: embedded relations cast through `unknown`; numerics converted with `Number()`.
 
 ## Setup notes

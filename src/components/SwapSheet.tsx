@@ -2,7 +2,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DialogCard, type DialogOptions } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import { EQUIPMENT_LABELS } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
@@ -38,6 +38,7 @@ export function SwapSheet({ item, equipment, excludeIds, onClose, onSwap, onRest
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [chosen, setChosen] = useState<SlotExercise | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<DialogOptions | null>(null);
 
   const current = item?.exercise ?? null;
   const excludeKey = excludeIds.join(',');
@@ -67,14 +68,18 @@ export function SwapSheet({ item, equipment, excludeIds, onClose, onSwap, onRest
       await action();
       onClose();
     } catch {
-      Alert.alert('That swap didn’t save', 'Check your connection and try again.');
+      setSaveError({ title: 'That swap didn’t save', message: 'Check your connection and try again.' });
     } finally {
       setIsSaving(false);
     }
   }
 
   return (
-    <Modal visible={item !== null} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={item !== null}
+      transparent
+      animationType="slide"
+      onRequestClose={saveError ? () => setSaveError(null) : onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
         {chosen ? (
@@ -152,6 +157,7 @@ export function SwapSheet({ item, equipment, excludeIds, onClose, onSwap, onRest
           </>
         )}
       </View>
+      {saveError && <DialogCard dialog={saveError} onClose={() => setSaveError(null)} />}
     </Modal>
   );
 }
