@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import { exportWorkoutHistory } from '@/lib/export';
 import {
   CONFIDENCE_LABELS,
   EQUIPMENT_ACCESS_LABELS,
@@ -21,12 +22,27 @@ export default function ProfileScreen() {
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const tabBarHeight = useTabBarHeight();
 
   async function handleSignOut() {
     setIsSigningOut(true);
     await supabase.auth.signOut();
     setIsSigningOut(false);
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    try {
+      const count = await exportWorkoutHistory();
+      if (count === 0) {
+        Alert.alert('Nothing to export yet', 'Finish a session and your sets will be ready to download.');
+      }
+    } catch {
+      Alert.alert('Couldn’t export', 'Check your connection and try again.');
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   const answerRows = answers
@@ -80,6 +96,20 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
       )}
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Your data</Text>
+        <Text style={styles.label}>
+          Download every set from your finished sessions as a spreadsheet (CSV). It’s yours to keep.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.button, styles.cardButton, (pressed || isExporting) && styles.buttonPressed]}
+          onPress={handleExport}
+          disabled={isExporting}
+          accessibilityRole="button">
+          <Text style={styles.buttonText}>{isExporting ? 'Preparing file…' : 'Export workout history'}</Text>
+        </Pressable>
+      </View>
 
       <Pressable
         style={({ pressed }) => [styles.button, (pressed || isSigningOut) && styles.buttonPressed]}

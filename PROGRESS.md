@@ -14,6 +14,7 @@ Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules)
 8. **Progression rule**: `getWeightSuggestion()` in `src/lib/programmes.ts`: if set 1 last time hit `rep_max`, suggest + the exercise's own step (`exercises.weight_increase_kg`), else same weight / more reps; shown on Today and as a goal line in the logger, which pre-fills the new weight at `rep_min`.
 9. **Swap button**: swap icon on Today rows and logger cards → `src/components/SwapSheet.tsx` (up to 3 alternatives) → "Just today" or "Every time"; logic in `src/lib/swaps.ts`; "Every time" swaps also show on the programme screen.
 10. **Progress screen**: `src/app/(tabs)/progress.tsx`: stat tiles, sessions-per-week bars, weight-over-time line chart (`src/components/LineChart.tsx`, react-native-svg) with lift picker, personal bests + estimated 1-rep max; data/calcs in `src/lib/progress.ts`.
+11. **Export**: Profile → "Your data" card → "Export workout history": `src/lib/export.ts` fetches every ticked set from finished sessions (paged), writes `workout-history-YYYY-MM-DD.csv` to the cache (`expo-file-system`) and opens the share sheet (`expo-sharing`). Alert if there's nothing to export or it fails.
 
 **Extras the user asked for (not in AGENTS.md):**
 - **Workout timer**: elapsed time in the logger header; "You trained for X" in the Session saved message.
@@ -23,15 +24,14 @@ Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules)
 
 ## In progress
 
-Nothing half-built. The last task (floating tab bar + smaller floating workout bar) is committed but **not yet confirmed on the phone**. Features 4–10 and all extras are also unconfirmed on the phone.
+Nothing half-built. Features 4–10 are confirmed on the phone (user, 21 Oct). **Not yet confirmed on the phone**: Feature 11 (export) and the floating tab bar + smaller floating workout bar.
 
 ## Next step
 
-Build **Feature 11: Export** (full workout history as CSV, free for everyone). Ask before adding libraries (likely `expo-file-system` + `expo-sharing`) and agree the CSV columns first.
+Build **Feature 12: Optional cycle notes** (off by default, explicit consent, deletable; no prescriptions or medical claims). Agree the phases, the consent wording and where tagging happens before building. Decide whether cycle phase should be added to the CSV export.
 
 ## Known bugs / issues
 
-- **SQL re-runs pending (unconfirmed)**: `supabase/exercises.sql` (adds `weight_increase_kg`) and then `supabase/sessions.sql` (adds `sessions.exercise_swaps` + `user_exercise_swaps`) must be re-run in the SQL Editor; until then Today and the logger fail to load. Ask the user whether this is done.
 - **Rest notifications don't work in the user's Expo Go (Android)**: `expo-notifications` 57 needs a native module this Expo Go lacks, so `src/lib/restTimer.ts` loads it in a `try`; the timer still counts down and vibrates in-app but can't alert when locked. Fix: newer Expo Go or a development build.
 - AI-written content **needs the user's review**: exercise cues/location hints, per-exercise weight increases, all programme templates.
 - No exercise photos yet (free-exercise-db and wger rejected for licensing).
@@ -44,7 +44,7 @@ Build **Feature 11: Export** (full workout history as CSV, free for everyone). A
 ## Decisions made (not in AGENTS.md)
 
 - **Expo SDK 57** (Play Store Expo Go only supports 57). `react-dom` pinned to `react`.
-- **Libraries (user-approved)**: `@expo/vector-icons`, `expo-font`, `react-native-pager-view`, `react-native-tab-view`, `@supabase/supabase-js`, `@react-native-async-storage/async-storage`, `expo-notifications` (plugin in `app.json`), `react-native-svg`.
+- **Libraries (user-approved)**: `@expo/vector-icons`, `expo-font`, `react-native-pager-view`, `react-native-tab-view`, `@supabase/supabase-js`, `@react-native-async-storage/async-storage`, `expo-notifications` (plugin in `app.json`), `react-native-svg`, `expo-file-system`, `expo-sharing` (plugin in `app.json`, added by `expo install`; share-into-app not enabled).
 - **Design**: background `#F7F4F0`, accent plum `#7A3E6B`, soft accent `#F2E6EE`, trophy `#C8901A` (`src/constants/theme.ts`); no tab headers (big screen titles); tap targets ≥ 48–56 px; bottom sheets instead of chip rows; positive-only stats, no streaks.
 - **Disclaimer** "General fitness guidance, not medical advice. Stop if anything hurts." on exercise detail, quiz review, programme, Today, logger and Progress.
 - **Exercises**: text slug ids; muscles glutes, quads, hamstrings, adductors ("Inner thighs"), calves, chest, back, shoulders, biceps, triceps, core; equipment barbell, dumbbell, machine, cable, kettlebell, band, bodyweight; exactly 3 cues; DB constraints enforce these (keep SQL and `src/lib/exercises.ts` in step). Photos: upload `<exercise-id>.<ext>` to public bucket `exercise-media` and a trigger sets `media_url`.
@@ -57,12 +57,13 @@ Build **Feature 11: Export** (full workout history as CSV, free for everyone). A
 - **Progress**: only ticked sets from finished sessions; queries page past Supabase's 1000-row limit; PB = heaviest (least help for assisted, most reps for bodyweight/band); estimated 1RM = Epley on 1–12-rep sets, rounded to 0.5 kg, "no need to test it"; chart = heaviest weight per date, x by time, everything shown (no range toggle); weeks start Monday.
 - **Workout bar / timer**: bar on the four tabs only; elapsed = now − `started_at` (no pause); next set = first unticked set in programme order.
 - **Trophies**: heaviest weight, best estimated 1RM, most single-set volume; must beat finished-session history and earlier sets today; none on an exercise's first session, assisted machines or bodyweight/band.
+- **Export** (user-chosen): one row per set; columns Date, Start time (local HH:MM), Session (programme day name, blank if the day was deleted), Exercise, Equipment, Set, Weight (kg) (blank for bodyweight/band), Reps; ticked sets from finished sessions only (same as Progress); ordered by session start, then tick time; UTF-8 with BOM and CRLF so Excel opens it cleanly. Button on Profile only. Free for everyone (keep it outside the paywall).
 - No generated Supabase types: embedded relations cast through `unknown`; numerics converted with `Number()`.
 
 ## Setup notes
 
 - **Env vars** (`.env`, git-ignored; template `.env.example`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-- **Supabase**: Email provider on, "Confirm email" off. SQL run in order: `supabase/exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql` (tables `exercises`, `profiles`, `programmes`, `programme_days`, `programme_exercises`, `sessions`, `sets`, plus `user_exercise_swaps` once `sessions.sql` is re-run; see Known issues). All files are idempotent; the editor's "destructive operations" warning is expected. RLS: library/programme tables read-only for signed-in users; profiles, sessions, sets, swaps own-rows only.
+- **Supabase**: Email provider on, "Confirm email" off. SQL run in order: `supabase/exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql` (tables `exercises`, `profiles`, `programmes`, `programme_days`, `programme_exercises`, `sessions`, `sets`, `user_exercise_swaps`; all re-runs done as of 21 Oct). All files are idempotent; the editor's "destructive operations" warning is expected. RLS: library/programme tables read-only for signed-in users; profiles, sessions, sets, swaps own-rows only.
 - **Windows**: use `npx.cmd` / `npm.cmd`; set `NODE_OPTIONS=--use-system-ca`; install packages with `npx.cmd expo install <pkg>`.
 - **Start the app** (one terminal only): `$env:NODE_OPTIONS="--use-system-ca"; npx.cmd expo start --clear`, scan the QR with Expo Go (Android) on the same Wi-Fi (`--tunnel` if needed).
 - **Checks before finishing**: `npx.cmd tsc --noEmit`, `npx.cmd expo-doctor`, `npx.cmd expo export --platform android --output-dir "$env:TEMP\ws-export"`. No ESLint config yet (ask before adding).
