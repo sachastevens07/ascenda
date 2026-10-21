@@ -17,11 +17,36 @@ import {
   getQuizAnswers,
   useProfile,
 } from '@/lib/profile';
+import { formatShortDate } from '@/lib/progress';
+import {
+  DEV_OVERRIDES,
+  DEV_OVERRIDE_LABELS,
+  STORE_NAME,
+  openManageSubscription,
+  useSubscription,
+  type ProStatus,
+} from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
+
+function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
+  if (!isPro) {
+    return 'Logging, your history, the library, export and cycle notes are free. Pro adds your programme, weight suggestions, swaps and charts.';
+  }
+  if (trialEndsAt) {
+    return willRenew
+      ? `Free trial until ${formatShortDate(trialEndsAt)}. Then it becomes a paid plan unless you cancel.`
+      : `Free trial until ${formatShortDate(trialEndsAt)}. It won’t renew.`;
+  }
+  if (!expiresAt) return 'Everything is unlocked.';
+  return willRenew
+    ? `Renews on ${formatShortDate(expiresAt)}.`
+    : `Ends on ${formatShortDate(expiresAt)}. Logging and your history stay free.`;
+}
 
 export default function ProfileScreen() {
   const { session } = useAuth();
   const { profile, setCycleTracking } = useProfile();
+  const subscription = useSubscription();
   const answers = getQuizAnswers(profile);
   const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -33,6 +58,12 @@ export default function ProfileScreen() {
     setIsSigningOut(true);
     await supabase.auth.signOut();
     setIsSigningOut(false);
+  }
+
+  function handleManageSubscription() {
+    openManageSubscription(subscription.managementUrl).catch(() =>
+      showDialog('Couldn’t open your subscription', `Open ${STORE_NAME} and go to Subscriptions.`)
+    );
   }
 
   async function openFile(uri: string) {
@@ -139,6 +170,33 @@ export default function ProfileScreen() {
       <Text style={styles.label}>Signed in as</Text>
       <Text style={styles.email}>{session?.user.email}</Text>
 
+      <View style={styles.card}>
+        <Text style={styles.label}>Your plan</Text>
+        <Text style={styles.cardTitle}>{subscription.isPro ? 'Pro' : 'Free'}</Text>
+        <Text style={styles.label}>{describePlan(subscription)}</Text>
+        <Pressable
+          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
+          onPress={subscription.isPro ? handleManageSubscription : () => router.push('/paywall')}
+          accessibilityRole="button">
+          <Text style={styles.buttonText}>
+            {subscription.isPro ? 'Manage subscription' : 'See Pro'}
+          </Text>
+        </Pressable>
+        {__DEV__ && (
+          <Pressable
+            style={styles.link}
+            onPress={() => {
+              const next = DEV_OVERRIDES[(DEV_OVERRIDES.indexOf(subscription.devOverride) + 1) % DEV_OVERRIDES.length];
+              subscription.setDevOverride(next);
+            }}
+            accessibilityRole="button">
+            <Text style={styles.devText}>
+              Development only. Testing as: {DEV_OVERRIDE_LABELS[subscription.devOverride]} (tap to change)
+            </Text>
+          </Pressable>
+        )}
+      </View>
+
       {profile?.programme && (
         <View style={styles.card}>
           <Text style={styles.label}>Your programme</Text>
@@ -148,9 +206,11 @@ export default function ProfileScreen() {
           </Text>
           <Pressable
             style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-            onPress={() => router.push('/programme')}
+            onPress={() => router.push(subscription.isPro ? '/programme' : '/paywall')}
             accessibilityRole="button">
-            <Text style={styles.buttonText}>View programme</Text>
+            <Text style={styles.buttonText}>
+              {subscription.isPro ? 'View programme' : 'View programme with Pro'}
+            </Text>
           </Pressable>
         </View>
       )}
@@ -294,6 +354,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 16,
     paddingBottom: 4,
+  },
+  devText: {
+    fontSize: 14,
+    color: colours.textMuted,
+    textAlign: 'center',
   },
   dangerLinkText: {
     fontSize: 16,

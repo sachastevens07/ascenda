@@ -9,7 +9,7 @@ type NotificationsModule = typeof import('expo-notifications');
 
 // Some Expo Go builds lack native modules that expo-notifications loads on import. Without
 // notifications the timer still runs and vibrates in the app; it just can't alert when locked.
-const Notifications: NotificationsModule | null = (() => {
+export const Notifications: NotificationsModule | null = (() => {
   try {
     return require('expo-notifications') as NotificationsModule;
   } catch {

@@ -58,12 +58,13 @@ export function formatWeightInput(kg: number | null): string {
 
 /**
  * Pre-fills each set: what's already logged this session, else the increased weight at the bottom
- * of the rep range if she earned one, else last time, else the bottom of the rep range.
+ * of the rep range if she earned one (Pro only), else last time, else the bottom of the rep range.
  */
 export function buildEntries(
   day: ProgrammeDay,
   logged: LoggedSet[],
-  previous: Record<string, LoggedSet[]>
+  previous: Record<string, LoggedSet[]>,
+  withProgression: boolean
 ): Record<string, SetEntry> {
   const entries: Record<string, SetEntry> = {};
   for (const item of day.exercises) {
@@ -82,7 +83,7 @@ export function buildEntries(
         };
         continue;
       }
-      if (suggestion.kind === 'increase') {
+      if (withProgression && suggestion.kind === 'increase') {
         entries[setKey(exerciseId, setNumber)] = {
           weight: formatWeightInput(suggestion.kg),
           reps: String(item.rep_min),

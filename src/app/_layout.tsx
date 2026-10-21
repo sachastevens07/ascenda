@@ -6,20 +6,23 @@ import { DialogProvider } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
+import { SubscriptionProvider } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
 import { WorkoutProvider } from '@/lib/workout';
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <ProfileProvider>
-        <WorkoutProvider>
-          <StatusBar style="dark" />
-          <DialogProvider>
-            <RootNavigator />
-          </DialogProvider>
-        </WorkoutProvider>
-      </ProfileProvider>
+      <SubscriptionProvider>
+        <ProfileProvider>
+          <WorkoutProvider>
+            <StatusBar style="dark" />
+            <DialogProvider>
+              <RootNavigator />
+            </DialogProvider>
+          </WorkoutProvider>
+        </ProfileProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }
@@ -75,6 +78,7 @@ function RootNavigator() {
             headerStyle: { backgroundColor: colours.background },
           }}
         />
+        <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
       </Stack.Protected>
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="onboarding" />

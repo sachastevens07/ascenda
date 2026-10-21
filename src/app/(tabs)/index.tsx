@@ -27,6 +27,7 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import { formatShortDate } from '@/lib/progress';
 import {
   fetchActiveSession,
   fetchLastFinishedSession,
@@ -35,6 +36,12 @@ import {
   type LoggedSet,
   type Session,
 } from '@/lib/sessions';
+import {
+  STORE_NAME,
+  isTrialEndingSoon,
+  openManageSubscription,
+  useSubscription,
+} from '@/lib/subscription';
 import {
   applySwaps,
   deleteUserSwap,
@@ -79,6 +86,8 @@ export default function TodayScreen() {
   const { profile } = useProfile();
   const programmeId = profile?.programme_id ?? null;
   const equipment = getQuizAnswers(profile)?.equipment ?? null;
+  const subscription = useSubscription();
+  const { isPro } = subscription;
   const [data, setData] = useState<TodayData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -195,6 +204,12 @@ export default function TodayScreen() {
     setTodaySwaps((current) => withSwap(current, day.id, position, null));
   }
 
+  function handleManageSubscription() {
+    openManageSubscription(subscription.managementUrl).catch(() =>
+      showDialog('Couldn’t open your subscription', `Open ${STORE_NAME} and go to Subscriptions.`)
+    );
+  }
+
   function handleContinue() {
     if (activeSession) {
       router.push({ pathname: '/session/[id]', params: { id: activeSession.id } });
@@ -243,6 +258,21 @@ export default function TodayScreen() {
           {programme.name} · {formatDaysPerWeek(programme.days_per_week)} a week
         </Text>
 
+        {subscription.trialEndsAt && isTrialEndingSoon(subscription) && (
+          <View style={styles.tip}>
+            <Text style={styles.tipText}>
+              Your free trial ends on {formatShortDate(subscription.trialEndsAt)}. After that, Pro
+              continues as a paid plan unless you cancel.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [styles.outlineButton, styles.tipButton, pressed && styles.pressed]}
+              onPress={handleManageSubscription}
+              accessibilityRole="button">
+              <Text style={styles.outlineButtonText}>Manage subscription</Text>
+            </Pressable>
+          </View>
+        )}
+
         {activeSession && !isInProgress && (
           <View style={styles.tip}>
             <Text style={styles.tipText}>You have a session in progress from an earlier plan.</Text>
@@ -282,12 +312,14 @@ export default function TodayScreen() {
                     <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
                   )}
                   <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
-                  <Text style={styles.suggestion}>
-                    {describeWeightSuggestion(suggestionFor(item))}
-                  </Text>
+                  {isPro && (
+                    <Text style={styles.suggestion}>
+                      {describeWeightSuggestion(suggestionFor(item))}
+                    </Text>
+                  )}
                 </View>
               </Pressable>
-              {!isInProgress && (
+              {!isInProgress && isPro && (
                 <Pressable
                   onPress={() => setSwapItem(item)}
                   style={({ pressed }) => [styles.swapButton, pressed && styles.pressed]}
@@ -321,7 +353,23 @@ export default function TodayScreen() {
           </Text>
         )}
 
-        {programme.days.length > 1 && !isInProgress && (
+        {!isPro && (
+          <View style={styles.tip}>
+            <Text style={styles.tipTitle}>Get more from every session</Text>
+            <Text style={styles.tipText}>
+              Pro suggests your weights, tells you when to go up, and lets you swap exercises or
+              choose a different day.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [styles.outlineButton, styles.tipButton, pressed && styles.pressed]}
+              onPress={() => router.push('/paywall')}
+              accessibilityRole="button">
+              <Text style={styles.outlineButtonText}>See Pro</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {isPro && programme.days.length > 1 && !isInProgress && (
           <Pressable
             style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
             onPress={() => setIsPickerOpen(true)}
@@ -521,6 +569,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     backgroundColor: colours.accentSoft,
+  },
+  tipTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.text,
+    marginBottom: 4,
   },
   tipText: {
     fontSize: 15,

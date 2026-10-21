@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -31,6 +31,7 @@ import {
   type ProgressSet,
   type WeekCount,
 } from '@/lib/progress';
+import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -63,6 +64,7 @@ export default function ProgressScreen() {
   const tabBarHeight = useTabBarHeight();
   const { profile } = useProfile();
   const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
+  const { isPro } = useSubscription();
   const [data, setData] = useState<ProgressData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -147,12 +149,28 @@ export default function ProgressScreen() {
           <Stat value={bests.length} label={bests.length === 1 ? 'lift tracked' : 'lifts tracked'} />
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Sessions per week</Text>
-          <WeeklyBars weeks={weeks} />
-        </View>
+        {isPro ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Sessions per week</Text>
+            <WeeklyBars weeks={weeks} />
+          </View>
+        ) : (
+          <View style={styles.card}>
+            <Ionicons name="stats-chart-outline" size={28} color={colours.accent} />
+            <Text style={styles.cardTitle}>See your progress over time</Text>
+            <Text style={styles.chartNote}>
+              With Pro, chart your sessions each week and the weight on every lift.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+              onPress={() => router.push('/paywall')}
+              accessibilityRole="button">
+              <Text style={styles.outlineButtonText}>See Pro</Text>
+            </Pressable>
+          </View>
+        )}
 
-        {lift && (
+        {isPro && lift && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>{lift.assisted ? 'Help over time' : 'Weight over time'}</Text>
             <Pressable

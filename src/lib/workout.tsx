@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { cancelRestOver, scheduleRestOver } from '@/lib/restTimer';
 import { fetchActiveSession } from '@/lib/sessions';
+import { useSubscription } from '@/lib/subscription';
 import { buildEntries, getNextSet, loadSessionLog, type NextSet } from '@/lib/workoutLog';
 
 /** The session in progress, as shown in the bar above the tabs. */
@@ -46,6 +47,10 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const { profile } = useProfile();
   const userId = session?.user.id ?? null;
   const equipment = getQuizAnswers(profile)?.equipment ?? null;
+  const { isPro } = useSubscription();
+  // Read when restoring, without restarting the restore if Pro status arrives later.
+  const isProRef = useRef(isPro);
+  isProRef.current = isPro;
 
   const [active, setActive] = useState<ActiveWorkout | null>(null);
   const [nextSet, setNextSet] = useState<NextSet | null>(null);
@@ -89,7 +94,9 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         dayName: log.day.name,
         startedAt: new Date(current.started_at).getTime(),
       });
-      setNextSet(getNextSet(log.day, buildEntries(log.day, log.logged, log.previous)));
+      setNextSet(
+        getNextSet(log.day, buildEntries(log.day, log.logged, log.previous, isProRef.current))
+      );
     })().catch(() => {});
     return () => {
       isCurrent = false;

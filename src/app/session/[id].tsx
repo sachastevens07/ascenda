@@ -50,6 +50,7 @@ import {
   saveSet,
   type LoggedSet,
 } from '@/lib/sessions';
+import { useSubscription } from '@/lib/subscription';
 import { deleteUserSwap, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
 import { useNow, useWorkout } from '@/lib/workout';
 import {
@@ -94,6 +95,7 @@ export default function SessionScreen() {
   const insets = useSafeAreaInsets();
   const { profile } = useProfile();
   const equipment = getQuizAnswers(profile)?.equipment ?? null;
+  const { isPro, isLoading: isSubscriptionLoading } = useSubscription();
 
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [day, setDay] = useState<ProgrammeDay | null>(null);
@@ -111,7 +113,7 @@ export default function SessionScreen() {
   const now = useNow(loadState === 'ready', 500);
 
   useEffect(() => {
-    if (!equipment) return;
+    if (!equipment || isSubscriptionLoading) return;
     let isCurrent = true;
     (async () => {
       try {
@@ -125,7 +127,7 @@ export default function SessionScreen() {
         if (!isCurrent) return;
         setDay(log.day);
         setPrevious(log.previous);
-        setEntries(buildEntries(log.day, log.logged, log.previous));
+        setEntries(buildEntries(log.day, log.logged, log.previous, isPro));
         setStartedAt(new Date(log.session.started_at).getTime());
         setBests(historyBests);
         setLoadState('ready');
@@ -136,7 +138,7 @@ export default function SessionScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [id, equipment]);
+  }, [id, equipment, isPro, isSubscriptionLoading]);
 
   useEffect(() => {
     if (!cycleNotesOn) return;
@@ -279,7 +281,7 @@ export default function SessionScreen() {
       bests[exercise.id] ? {} : fetchExerciseBests([exercise.id], id).catch(() => ({})),
     ]);
     const mergedPrevious = { ...previous, ...previousSets };
-    const newEntries = buildEntries({ ...day, exercises: [updatedItem] }, [], mergedPrevious);
+    const newEntries = buildEntries({ ...day, exercises: [updatedItem] }, [], mergedPrevious, isPro);
     setDay(updatedDay);
     setPrevious(mergedPrevious);
     setBests((current) => ({ ...current, ...newBests }));
@@ -420,9 +422,9 @@ export default function SessionScreen() {
         {day.exercises.map((item) => {
           const weighted = usesWeight(item.exercise.equipment);
           const previousText = formatPrevious(previous[item.exercise.id]);
-          const goalText = describeProgressionGoal(
-            getWeightSuggestion(item, previous[item.exercise.id])
-          );
+          const goalText = isPro
+            ? describeProgressionGoal(getWeightSuggestion(item, previous[item.exercise.id]))
+            : null;
           return (
             <View key={item.position} style={styles.card}>
               <View style={styles.cardHeader}>
@@ -444,13 +446,15 @@ export default function SessionScreen() {
                   </View>
                   <Ionicons name="information-circle-outline" size={24} color={colours.accent} />
                 </Pressable>
-                <Pressable
-                  onPress={() => openSwap(item)}
-                  style={({ pressed }) => [styles.swapButton, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Swap ${item.exercise.name}`}>
-                  <Ionicons name="swap-horizontal" size={24} color={colours.accent} />
-                </Pressable>
+                {isPro && (
+                  <Pressable
+                    onPress={() => openSwap(item)}
+                    style={({ pressed }) => [styles.swapButton, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Swap ${item.exercise.name}`}>
+                    <Ionicons name="swap-horizontal" size={24} color={colours.accent} />
+                  </Pressable>
+                )}
               </View>
 
               <View style={styles.columnLabels}>
