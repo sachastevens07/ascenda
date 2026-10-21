@@ -1,5 +1,4 @@
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { Directory } from 'expo-file-system';
 
 import { EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
 import { supabase } from '@/lib/supabase';
@@ -70,28 +69,28 @@ function toCsv(rows: ExportRow[]): string {
   return '\uFEFF' + lines.map((line) => line.map(csvField).join(',')).join('\r\n') + '\r\n';
 }
 
-/**
- * Writes her workout history to a CSV file and opens the share sheet.
- * Returns the number of sets exported; 0 means there was nothing to export and nothing was shared.
- */
-export async function exportWorkoutHistory(): Promise<number> {
+export type ExportResult =
+  | { status: 'empty' }
+  | { status: 'cancelled' }
+  | { status: 'saved'; fileName: string; setCount: number };
+
+/** Asks her for a folder (e.g. Downloads) and saves her workout history there as a CSV file. */
+export async function exportWorkoutHistory(): Promise<ExportResult> {
   const rows = await fetchExportRows();
-  if (rows.length === 0) return 0;
+  if (rows.length === 0) return { status: 'empty' };
+
+  let folder: Directory;
+  try {
+    folder = await Directory.pickDirectoryAsync();
+  } catch {
+    // The picker rejects when she backs out without choosing a folder.
+    return { status: 'cancelled' };
+  }
 
   const today = new Date();
   const pad = (value: number) => String(value).padStart(2, '0');
   const stamp = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
-  const file = new File(Paths.cache, `workout-history-${stamp}.csv`);
-  file.create({ overwrite: true });
+  const file = folder.createFile(`workout-history-${stamp}.csv`, 'text/csv');
   file.write(toCsv(rows));
-
-  if (!(await Sharing.isAvailableAsync())) {
-    throw new Error('Sharing isn’t available on this device.');
-  }
-  await Sharing.shareAsync(file.uri, {
-    mimeType: 'text/csv',
-    UTI: 'public.comma-separated-values-text',
-    dialogTitle: 'Export workout history',
-  });
-  return rows.length;
+  return { status: 'saved', fileName: file.name, setCount: rows.length };
 }

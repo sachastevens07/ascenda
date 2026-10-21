@@ -26,8 +26,7 @@
       "expo-router",
       "expo-status-bar",
       "expo-font",
-      "expo-notifications",
-      "expo-sharing"
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true

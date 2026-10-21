@@ -34,9 +34,14 @@ export default function ProfileScreen() {
   async function handleExport() {
     setIsExporting(true);
     try {
-      const count = await exportWorkoutHistory();
-      if (count === 0) {
+      const result = await exportWorkoutHistory();
+      if (result.status === 'empty') {
         Alert.alert('Nothing to export yet', 'Finish a session and your sets will be ready to download.');
+      } else if (result.status === 'saved') {
+        Alert.alert(
+          'Saved',
+          `${result.fileName} (${result.setCount} sets) is in the folder you chose. Open it from your Files app.`
+        );
       }
     } catch {
       Alert.alert('Couldn’t export', 'Check your connection and try again.');
@@ -100,7 +105,8 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Your data</Text>
         <Text style={styles.label}>
-          Download every set from your finished sessions as a spreadsheet (CSV). It’s yours to keep.
+          Save every set from your finished sessions as a spreadsheet (CSV) in a folder you choose, such as
+          Downloads. It’s yours to keep.
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, (pressed || isExporting) && styles.buttonPressed]}
