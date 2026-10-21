@@ -21,7 +21,7 @@ import { formatShortDate } from '@/lib/progress';
 import { Notifications } from '@/lib/restTimer';
 
 /** The entitlement identifier in the RevenueCat dashboard. */
-export const PRO_ENTITLEMENT = 'pro';
+export const PRO_ENTITLEMENT = 'ascenda_pro';
 export const REMINDER_DAYS_BEFORE = 2;
 export const STORE_NAME = Platform.OS === 'ios' ? 'App Store' : 'Google Play';
 
