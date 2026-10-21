@@ -89,6 +89,8 @@ type ProfileState = {
   error: string | null;
   reload: () => void;
   saveQuizAnswers: (answers: QuizAnswers) => Promise<void>;
+  /** Turning on records her consent (see supabase/cycle.sql). Turning off keeps her notes. */
+  setCycleTracking: (enabled: boolean) => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -140,6 +142,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [userId]
   );
 
+  const setCycleTracking = useCallback(
+    async (enabled: boolean) => {
+      if (!userId) throw new Error('You need to be signed in.');
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ cycle_tracking_enabled: enabled })
+        .eq('user_id', userId)
+        .select(PROFILE_COLUMNS)
+        .single();
+      if (error) throw error;
+      setLoaded({ userId, profile: data as unknown as Profile, error: null });
+    },
+    [userId]
+  );
+
   const isLoading = loaded === null || loaded.userId !== userId;
 
   return (
@@ -150,6 +167,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         error: isLoading ? null : (loaded?.error ?? null),
         reload,
         saveQuizAnswers,
+        setCycleTracking,
       }}>
       {children}
     </ProfileContext.Provider>

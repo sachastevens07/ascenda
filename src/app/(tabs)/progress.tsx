@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
+import { CYCLE_PHASE_LABELS, fetchCyclePatterns, type PhasePattern } from '@/lib/cycle';
+import { useProfile } from '@/lib/profile';
 import { formatKg } from '@/lib/programmes';
 import {
   fetchFinishedSessionDates,
@@ -32,7 +34,12 @@ import {
 
 type LoadState = 'loading' | 'error' | 'ready';
 
-type ProgressData = { sets: ProgressSet[]; sessionDates: string[] };
+type ProgressData = {
+  sets: ProgressSet[];
+  sessionDates: string[];
+  /** Null while cycle notes are off, or if they couldn't be loaded. */
+  cyclePatterns: PhasePattern[] | null;
+};
 
 const BAR_WIDTH = 20;
 const BAR_GAP = 8;
@@ -54,6 +61,8 @@ function describeBest(best: PersonalBest): string {
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
+  const { profile } = useProfile();
+  const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const [data, setData] = useState<ProgressData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -64,10 +73,14 @@ export default function ProgressScreen() {
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
-      Promise.all([fetchProgressSets(), fetchFinishedSessionDates()])
-        .then(([sets, sessionDates]) => {
+      Promise.all([
+        fetchProgressSets(),
+        fetchFinishedSessionDates(),
+        cycleNotesOn ? fetchCyclePatterns().catch(() => null) : null,
+      ])
+        .then(([sets, sessionDates, cyclePatterns]) => {
           if (!isCurrent) return;
-          setData({ sets, sessionDates });
+          setData({ sets, sessionDates, cyclePatterns });
           setLoadState('ready');
         })
         .catch(() => {
@@ -76,7 +89,7 @@ export default function ProgressScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [attempt])
+    }, [attempt, cycleNotesOn])
   );
 
   if (loadState !== 'ready' || !data) {
@@ -183,6 +196,8 @@ export default function ProgressScreen() {
           </Text>
         </View>
 
+        {cycleNotesOn && data.cyclePatterns && <CyclePatterns patterns={data.cyclePatterns} />}
+
         <Text style={styles.disclaimer}>
           General fitness guidance, not medical advice. Stop if anything hurts.
         </Text>
@@ -247,6 +262,53 @@ function describeChange(history: { kg: number }[], assisted: boolean): string {
   return change > 0
     ? `Up from ${formatKg(first)} to ${formatKg(latest)} (+${formatKg(change)}). Great progress.`
     : `Latest: ${formatKg(latest)}. Every session counts.`;
+}
+
+function CyclePatterns({ patterns }: { patterns: PhasePattern[] }) {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Your cycle notes</Text>
+      {patterns.length === 0 ? (
+        <Text style={styles.chartNote}>
+          Add a cycle phase to a session from the workout screen, and your patterns will show here.
+        </Text>
+      ) : (
+        patterns.map((pattern) => {
+          const details = [
+            `${formatOneDecimal(pattern.averageSets)} sets`,
+            pattern.averageMinutes === null ? null : `${Math.round(pattern.averageMinutes)} min`,
+            pattern.averageVolumeKg === null
+              ? null
+              : `${formatThousands(Math.round(pattern.averageVolumeKg))} kg lifted`,
+          ].filter((detail) => detail !== null);
+          return (
+            <View key={pattern.phase} style={styles.bestRow}>
+              <View style={styles.flex}>
+                <Text style={styles.bestName}>{CYCLE_PHASE_LABELS[pattern.phase]}</Text>
+                <Text style={styles.bestDetail}>On average: {details.join(' · ')}</Text>
+              </View>
+              <Text style={styles.bestDate}>
+                {pattern.sessionCount} {pattern.sessionCount === 1 ? 'session' : 'sessions'}
+              </Text>
+            </View>
+          );
+        })
+      )}
+      <Text style={styles.footnote}>
+        From your own finished sessions. Everyone’s cycle is different, so patterns get clearer with a
+        few sessions in each phase. This isn’t advice.
+      </Text>
+    </View>
+  );
+}
+
+/** 12500 → "12,500". */
+function formatThousands(value: number): string {
+  return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function formatOneDecimal(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 function Stat({ value, label }: { value: number; label: string }) {

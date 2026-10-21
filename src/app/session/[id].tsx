@@ -15,8 +15,16 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { FilterSheet } from '@/components/FilterSheet';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
+import {
+  CYCLE_PHASES,
+  CYCLE_PHASE_LABELS,
+  fetchSessionCyclePhase,
+  saveSessionCyclePhase,
+  type CyclePhase,
+} from '@/lib/cycle';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   describeProgressionGoal,
@@ -95,6 +103,8 @@ export default function SessionScreen() {
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [bests, setBests] = useState<Record<string, ExerciseBests>>({});
+  const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
+  const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
 
   const workout = useWorkout();
   const { restEndsAt, publish } = workout;
@@ -129,8 +139,32 @@ export default function SessionScreen() {
   }, [id, equipment]);
 
   useEffect(() => {
+    if (!cycleNotesOn) return;
+    let isCurrent = true;
+    fetchSessionCyclePhase(id)
+      .then((phase) => {
+        if (isCurrent) setCyclePhase(phase);
+      })
+      .catch(() => {});
+    return () => {
+      isCurrent = false;
+    };
+  }, [id, cycleNotesOn]);
+
+  useEffect(() => {
     ensureRestTimerPermission().catch(() => {});
   }, []);
+
+  async function changeCyclePhase(phase: CyclePhase | null) {
+    const before = cyclePhase;
+    setCyclePhase(phase);
+    try {
+      await saveSessionCyclePhase(id, phase);
+    } catch {
+      setCyclePhase(before);
+      showDialog('That note didn’t save', 'Check your connection and try again.');
+    }
+  }
 
   // Keeps the bar above the tabs up to date with this session's next set.
   useEffect(() => {
@@ -370,6 +404,17 @@ export default function SessionScreen() {
               </View>
             )}
           </View>
+          {cycleNotesOn && (
+            <View style={styles.cycleRow}>
+              <FilterSheet
+                label="Cycle phase"
+                allLabel="No note"
+                options={CYCLE_PHASES.map((phase) => ({ value: phase, label: CYCLE_PHASE_LABELS[phase] }))}
+                value={cyclePhase}
+                onChange={changeCyclePhase}
+              />
+            </View>
+          )}
         </View>
 
         {day.exercises.map((item) => {
@@ -609,6 +654,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.accent,
     fontVariant: ['tabular-nums'],
+  },
+  cycleRow: {
+    flexDirection: 'row',
+    marginTop: 12,
   },
   trophy: {
     alignSelf: 'center',
