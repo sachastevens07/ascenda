@@ -76,14 +76,26 @@ export function applySwaps(day: ProgrammeDay, swaps: DaySwaps = {}): ProgrammeDa
   };
 }
 
-/** Drops swaps that are above her zone cap or use kit she doesn't have. */
+/** The next gym zone above her cap, or null if she's already at the racks. */
+export function nextZoneUp(maxZone: Zone): Zone | null {
+  return maxZone < 4 ? ((maxZone + 1) as Zone) : null;
+}
+
+/**
+ * Drops swaps that use kit she doesn't have, or that are more than one zone above her cap.
+ * One zone up is allowed so "Try something new" (and an Every time swap from it) still shows.
+ */
 export function eligibleSwaps(
   swaps: DaySwaps,
   access: EquipmentAccess,
   maxZone: Zone
 ): DaySwaps {
+  const tryZone = nextZoneUp(maxZone);
   return Object.fromEntries(
-    Object.entries(swaps).filter(([, exercise]) => exerciseFits(exercise, access, maxZone))
+    Object.entries(swaps).filter(([, exercise]) => {
+      if (!EQUIPMENT_FOR_ACCESS[access].includes(exercise.equipment)) return false;
+      return exercise.zone <= maxZone || exercise.zone === tryZone;
+    })
   );
 }
 
@@ -161,17 +173,24 @@ export async function fetchSessionSwaps(session: Session): Promise<DaySwaps> {
   return swaps;
 }
 
+export type SwapOptions = {
+  /** Up to 3 alternatives at or below her zone cap. */
+  alternatives: SlotExercise[];
+  /** One same-muscle exercise from the next zone up, if there is one. */
+  trySomethingNew: SlotExercise | null;
+};
+
 /**
- * Up to 3 exercises for the same primary muscle with equipment she has. Most shared secondary
- * muscles first, then the same equipment, with at most 2 of any one kind of equipment.
- * `excludeIds` are the exercises already in the day.
+ * Alternatives for a swap: same primary muscle, equipment she has, ranked by shared secondary
+ * muscles then the same equipment, at most 2 of any one kind. `excludeIds` are already in the day.
+ * Default list is `zone` ≤ `maxZone`. `trySomethingNew` is exactly one from the next zone.
  */
 export async function fetchAlternatives(
   current: SlotExercise,
   access: EquipmentAccess,
   excludeIds: string[],
   maxZone?: Zone
-): Promise<SlotExercise[]> {
+): Promise<SwapOptions> {
   const { data, error } = await supabase
     .from('exercises')
     .select(`${SLOT_EXERCISE_COLUMNS}, secondary_muscles`)
@@ -183,23 +202,42 @@ export async function fetchAlternatives(
   const score = (row: RankedExercise) =>
     row.secondary_muscles.filter((muscle) => currentSecondary.includes(muscle)).length * 2 +
     (row.equipment === current.equipment ? 1 : 0);
+  const rank = (list: RankedExercise[]) =>
+    [...list].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
 
-  const ranked = rows
-    .filter(
+  const ranked = rank(
+    rows.filter(
       (row) =>
         row.id !== current.id &&
         !excludeIds.includes(row.id) &&
         EQUIPMENT_FOR_ACCESS[access].includes(row.equipment) &&
         (maxZone === undefined || row.zone <= maxZone)
     )
-    .sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
+  );
 
-  const chosen: SlotExercise[] = [];
+  const alternatives: SlotExercise[] = [];
   for (const row of ranked) {
-    if (chosen.length === MAX_ALTERNATIVES) break;
-    const sameKit = chosen.filter((item) => item.equipment === row.equipment).length;
+    if (alternatives.length === MAX_ALTERNATIVES) break;
+    const sameKit = alternatives.filter((item) => item.equipment === row.equipment).length;
     if (sameKit >= MAX_ALTERNATIVES_PER_EQUIPMENT) continue;
-    chosen.push(toSlotExercise(row));
+    alternatives.push(toSlotExercise(row));
   }
-  return chosen;
+
+  const tryZone = maxZone === undefined ? null : nextZoneUp(maxZone);
+  const taken = new Set([current.id, ...excludeIds, ...alternatives.map((item) => item.id)]);
+  const trySomethingNew =
+    tryZone === null
+      ? null
+      : (rank(
+          rows.filter(
+            (row) =>
+              !taken.has(row.id) &&
+              row.zone === tryZone &&
+              EQUIPMENT_FOR_ACCESS[access].includes(row.equipment)
+          )
+        )[0] ?? null);
+  return {
+    alternatives,
+    trySomethingNew: trySomethingNew ? toSlotExercise(trySomethingNew) : null,
+  };
 }

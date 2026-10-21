@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DialogCard, type DialogOptions } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
-import { EQUIPMENT_LABELS, type Zone } from '@/lib/exercises';
+import { EQUIPMENT_LABELS, ZONE_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import type { ProgrammeExercise, SlotExercise } from '@/lib/programmes';
 import { exerciseFits, fetchAlternatives, type SwapScope } from '@/lib/swaps';
@@ -45,6 +45,7 @@ export function SwapSheet({
 }: SwapSheetProps) {
   const insets = useSafeAreaInsets();
   const [alternatives, setAlternatives] = useState<SlotExercise[]>([]);
+  const [trySomethingNew, setTrySomethingNew] = useState<SlotExercise | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [chosen, setChosen] = useState<SlotExercise | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -55,13 +56,15 @@ export function SwapSheet({
 
   useEffect(() => {
     setChosen(null);
+    setTrySomethingNew(null);
     if (!current) return;
     let isCurrent = true;
     setLoadState('loading');
     fetchAlternatives(current, equipment, excludeKey.split(','), maxZone)
       .then((result) => {
         if (!isCurrent) return;
-        setAlternatives(result);
+        setAlternatives(result.alternatives);
+        setTrySomethingNew(result.trySomethingNew);
         setLoadState('ready');
       })
       .catch(() => {
@@ -122,7 +125,7 @@ export function SwapSheet({
         ) : (
           <>
             <Text style={styles.title}>Swap {current?.name}</Text>
-            <Text style={styles.subtitle}>These work the same muscle with equipment you have.</Text>
+            <Text style={styles.subtitle}>These stay at your level, with equipment you have.</Text>
             <ScrollView>
               {item?.original && exerciseFits(item.original, equipment, maxZone) && (
                 <Pressable
@@ -143,7 +146,7 @@ export function SwapSheet({
                 <Text style={styles.status}>
                   We couldn’t load alternatives. Check your connection and try again.
                 </Text>
-              ) : alternatives.length === 0 ? (
+              ) : alternatives.length === 0 && !trySomethingNew ? (
                 <Text style={styles.status}>
                   There’s nothing else for this muscle with your equipment.
                 </Text>
@@ -162,6 +165,30 @@ export function SwapSheet({
                     <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
                   </Pressable>
                 ))
+              )}
+              {loadState === 'ready' && trySomethingNew && (
+                <>
+                  <Text style={styles.tryTitle}>Try something new</Text>
+                  <Text style={styles.tryHint}>
+                    One step further — {ZONE_LABELS[trySomethingNew.zone]}. Optional, and you can
+                    always go back.
+                  </Text>
+                  <Pressable
+                    style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                    onPress={() => setChosen(trySomethingNew)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Try something new: ${trySomethingNew.name}`}>
+                    <Ionicons name="sparkles-outline" size={22} color={colours.accent} />
+                    <View style={styles.rowText}>
+                      <Text style={styles.rowTitle}>{trySomethingNew.name}</Text>
+                      <Text style={styles.rowDetail}>
+                        {EQUIPMENT_LABELS[trySomethingNew.equipment]} ·{' '}
+                        {ZONE_LABELS[trySomethingNew.zone]}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
+                  </Pressable>
+                </>
               )}
             </ScrollView>
           </>
@@ -224,6 +251,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colours.textMuted,
     paddingVertical: 20,
+  },
+  tryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colours.text,
+    marginTop: 16,
+  },
+  tryHint: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colours.textMuted,
+    marginTop: 4,
+    marginBottom: 4,
   },
   primaryButton: {
     minHeight: 60,
