@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from 'react-native';
@@ -16,6 +17,7 @@ import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
+import { fetchFillLibrary, resolveDay, sessionMaxZone } from '@/lib/levels';
 import { formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   describeWeightSuggestion,
@@ -45,11 +47,13 @@ import {
 import {
   applySwaps,
   deleteUserSwap,
+  exerciseFits,
   fetchSessionSwaps,
   fetchUserSwaps,
   saveUserSwap,
   swapIds,
   type DaySwaps,
+  type RankedExercise,
   type SwapScope,
   type UserSwaps,
 } from '@/lib/swaps';
@@ -65,6 +69,8 @@ type TodayData = {
   userSwaps: UserSwaps;
   lastFinishedDayId: string | null;
   previous: Record<string, LoggedSet[]>;
+  /** All exercises, used to fill slots above her level. */
+  library: RankedExercise[];
 };
 
 /** Sets or clears (`exercise` null) one slot's swap. */
@@ -83,9 +89,12 @@ function withSwap(
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
-  const { profile } = useProfile();
+  const { profile, setQuietMode } = useProfile();
   const programmeId = profile?.programme_id ?? null;
-  const equipment = getQuizAnswers(profile)?.equipment ?? null;
+  const answers = getQuizAnswers(profile);
+  const equipment = answers?.equipment ?? null;
+  const level = answers?.confidence_level ?? null;
+  const quietMode = profile?.quiet_mode ?? false;
   const subscription = useSubscription();
   const { isPro } = subscription;
   const [data, setData] = useState<TodayData | null>(null);
@@ -108,11 +117,12 @@ export default function TodayScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [programme, activeSession, lastFinished, userSwaps] = await Promise.all([
+          const [programme, activeSession, lastFinished, userSwaps, library] = await Promise.all([
             fetchProgramme(programmeId, equipment),
             fetchActiveSession(),
             fetchLastFinishedSession(),
             fetchUserSwaps(equipment),
+            fetchFillLibrary(),
           ]);
           if (!programme) {
             if (isCurrent) setLoadState('no-programme');
@@ -135,6 +145,7 @@ export default function TodayScreen() {
             userSwaps,
             lastFinishedDayId: lastFinished?.programme_day_id ?? null,
             previous,
+            library,
           });
           setLoadState('ready');
         } catch {
@@ -156,11 +167,19 @@ export default function TodayScreen() {
   const plannedDay =
     activeDay ?? programme?.days.find((item) => item.id === chosenDayId) ?? nextDay;
   const day =
-    !plannedDay || !data
+    !plannedDay || !data || !equipment || !level
       ? plannedDay
       : activeDay
         ? applySwaps(plannedDay, data.sessionSwaps)
-        : applySwaps(plannedDay, { ...data.userSwaps[plannedDay.id], ...todaySwaps[plannedDay.id] });
+        : resolveDay(
+            plannedDay,
+            { ...data.userSwaps[plannedDay.id], ...todaySwaps[plannedDay.id] },
+            equipment,
+            level,
+            quietMode,
+            data.library
+          );
+  const maxZone = level ? sessionMaxZone(level, quietMode) : 1;
 
   async function handleStart() {
     if (!day) return;
@@ -213,6 +232,14 @@ export default function TodayScreen() {
   function handleContinue() {
     if (activeSession) {
       router.push({ pathname: '/session/[id]', params: { id: activeSession.id } });
+    }
+  }
+
+  async function handleQuietMode(enabled: boolean) {
+    try {
+      await setQuietMode(enabled);
+    } catch {
+      showDialog('Couldn’t update Quiet Mode', 'Check your connection and try again.');
     }
   }
 
@@ -297,6 +324,29 @@ export default function TodayScreen() {
           <Text style={styles.dayName}>{day.name}</Text>
           <Text style={styles.cardLabel}>{day.exercises.length} exercises</Text>
 
+          {!isInProgress && (
+            <Pressable
+              onPress={() => handleQuietMode(!quietMode)}
+              style={styles.quietRow}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: quietMode }}
+              accessibilityLabel="Quiet Mode">
+              <View style={styles.exerciseText}>
+                <Text style={styles.quietTitle}>Quiet Mode</Text>
+                <Text style={styles.quietText}>
+                  Stay in one spot — dumbbells, and maybe a mat or bench.
+                </Text>
+              </View>
+              <Switch
+                value={quietMode}
+                pointerEvents="none"
+                trackColor={{ false: colours.border, true: colours.accent }}
+                thumbColor={colours.surface}
+                ios_backgroundColor={colours.border}
+              />
+            </Pressable>
+          )}
+
           {day.exercises.map((item, index) => (
             <View key={item.position} style={styles.exerciseRow}>
               <Pressable
@@ -308,7 +358,7 @@ export default function TodayScreen() {
                 <Text style={styles.exerciseNumber}>{index + 1}</Text>
                 <View style={styles.exerciseText}>
                   <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                  {item.original && (
+                  {item.original && equipment && exerciseFits(item.original, equipment, maxZone) && (
                     <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
                   )}
                   <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
@@ -395,6 +445,7 @@ export default function TodayScreen() {
         <SwapSheet
           item={swapItem}
           equipment={equipment}
+          maxZone={maxZone}
           excludeIds={day.exercises.flatMap((item) =>
             item.original ? [item.exercise.id, item.original.id] : [item.exercise.id]
           )}
@@ -504,6 +555,25 @@ const styles = StyleSheet.create({
     color: colours.text,
     marginTop: 6,
     marginBottom: 2,
+  },
+  quietRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingVertical: 8,
+  },
+  quietTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.text,
+  },
+  quietText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colours.textMuted,
+    marginTop: 2,
   },
   exerciseRow: {
     flexDirection: 'row',

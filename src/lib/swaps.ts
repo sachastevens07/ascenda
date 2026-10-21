@@ -1,4 +1,4 @@
-import { EQUIPMENT, type Equipment, type Muscle } from '@/lib/exercises';
+import { EQUIPMENT, type Equipment, type Muscle, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import {
   SLOT_EXERCISE_COLUMNS,
@@ -22,11 +22,46 @@ const MAX_ALTERNATIVES = 3;
 /** Keeps a mix of kit in the list, in case what she's on is busy. */
 const MAX_ALTERNATIVES_PER_EQUIPMENT = 2;
 
-const EQUIPMENT_FOR_ACCESS: Record<EquipmentAccess, readonly Equipment[]> = {
+export const EQUIPMENT_FOR_ACCESS: Record<EquipmentAccess, readonly Equipment[]> = {
   full_gym: EQUIPMENT,
   dumbbells: ['dumbbell', 'bodyweight'],
   home: ['bodyweight', 'band'],
 };
+
+/** Same muscle / kit rules as swaps, plus her zone cap (confidence level, or zone 1 in Quiet Mode). */
+export function exerciseFits(
+  exercise: SlotExercise,
+  access: EquipmentAccess,
+  maxZone: Zone
+): boolean {
+  return exercise.zone <= maxZone && EQUIPMENT_FOR_ACCESS[access].includes(exercise.equipment);
+}
+
+export type RankedExercise = SlotExercise & { secondary_muscles: Muscle[] };
+
+/** Best same-muscle alternative at or below `maxZone`. Null if there isn't one. */
+export function pickReplacement(
+  current: SlotExercise,
+  pool: RankedExercise[],
+  access: EquipmentAccess,
+  excludeIds: string[],
+  maxZone: Zone
+): SlotExercise | null {
+  const currentSecondary = pool.find((row) => row.id === current.id)?.secondary_muscles ?? [];
+  const score = (row: RankedExercise) =>
+    row.secondary_muscles.filter((muscle) => currentSecondary.includes(muscle)).length * 2 +
+    (row.equipment === current.equipment ? 1 : 0);
+  const ranked = pool
+    .filter(
+      (row) =>
+        row.id !== current.id &&
+        !excludeIds.includes(row.id) &&
+        row.primary_muscle === current.primary_muscle &&
+        exerciseFits(row, access, maxZone)
+    )
+    .sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
+  return ranked[0] ? toSlotExercise(ranked[0]) : null;
+}
 
 /** Replaces swapped slots, keeping the programme's exercise as `original`. */
 export function applySwaps(day: ProgrammeDay, swaps: DaySwaps = {}): ProgrammeDay {
@@ -39,6 +74,17 @@ export function applySwaps(day: ProgrammeDay, swaps: DaySwaps = {}): ProgrammeDa
         : item;
     }),
   };
+}
+
+/** Drops swaps that are above her zone cap or use kit she doesn't have. */
+export function eligibleSwaps(
+  swaps: DaySwaps,
+  access: EquipmentAccess,
+  maxZone: Zone
+): DaySwaps {
+  return Object.fromEntries(
+    Object.entries(swaps).filter(([, exercise]) => exerciseFits(exercise, access, maxZone))
+  );
 }
 
 /** Slot position → exercise id for every swapped slot in a day, as stored on a session. */
@@ -123,7 +169,8 @@ export async function fetchSessionSwaps(session: Session): Promise<DaySwaps> {
 export async function fetchAlternatives(
   current: SlotExercise,
   access: EquipmentAccess,
-  excludeIds: string[]
+  excludeIds: string[],
+  maxZone?: Zone
 ): Promise<SlotExercise[]> {
   const { data, error } = await supabase
     .from('exercises')
@@ -131,9 +178,9 @@ export async function fetchAlternatives(
     .eq('primary_muscle', current.primary_muscle);
   if (error) throw error;
 
-  const rows = (data ?? []) as unknown as (SlotExercise & { secondary_muscles: Muscle[] })[];
+  const rows = (data ?? []) as unknown as RankedExercise[];
   const currentSecondary = rows.find((row) => row.id === current.id)?.secondary_muscles ?? [];
-  const score = (row: (typeof rows)[number]) =>
+  const score = (row: RankedExercise) =>
     row.secondary_muscles.filter((muscle) => currentSecondary.includes(muscle)).length * 2 +
     (row.equipment === current.equipment ? 1 : 0);
 
@@ -142,7 +189,8 @@ export async function fetchAlternatives(
       (row) =>
         row.id !== current.id &&
         !excludeIds.includes(row.id) &&
-        EQUIPMENT_FOR_ACCESS[access].includes(row.equipment)
+        EQUIPMENT_FOR_ACCESS[access].includes(row.equipment) &&
+        (maxZone === undefined || row.zone <= maxZone)
     )
     .sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
 

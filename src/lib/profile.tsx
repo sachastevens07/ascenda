@@ -102,12 +102,14 @@ export type Profile = {
   /** Assigned by the database from the quiz answers (see supabase/programmes.sql). */
   programme_id: string | null;
   programme: { name: string; days_per_week: number } | null;
+  /** When on, Today's session stays in zone 1 (Corner). See supabase/quiet_mode.sql. */
+  quiet_mode: boolean;
   cycle_tracking_enabled: boolean;
   onboarding_completed_at: string | null;
 };
 
 const PROFILE_COLUMNS =
-  'user_id, goal, experience, days_per_week, equipment, confidence, confidence_level, bodyweight_kg, age_confirmed_at, programme_id, programme:programmes(name, days_per_week), cycle_tracking_enabled, onboarding_completed_at';
+  'user_id, goal, experience, days_per_week, equipment, confidence, confidence_level, bodyweight_kg, age_confirmed_at, programme_id, programme:programmes(name, days_per_week), quiet_mode, cycle_tracking_enabled, onboarding_completed_at';
 
 /** numeric columns arrive as strings. */
 function toProfile(row: unknown): Profile {
@@ -115,6 +117,7 @@ function toProfile(row: unknown): Profile {
   return {
     ...profile,
     bodyweight_kg: profile.bodyweight_kg === null ? null : Number(profile.bodyweight_kg),
+    quiet_mode: profile.quiet_mode === true,
   };
 }
 
@@ -136,6 +139,8 @@ type ProfileState = {
   deleteAccount: () => Promise<void>;
   /** Turning on records her consent (see supabase/cycle.sql). Turning off keeps her notes. */
   setCycleTracking: (enabled: boolean) => Promise<void>;
+  /** Quiet Mode keeps Today's session in one gym zone (the Corner). */
+  setQuietMode: (enabled: boolean) => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -224,6 +229,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [userId]
   );
 
+  const setQuietMode = useCallback(
+    async (enabled: boolean) => {
+      if (!userId) throw new Error('You need to be signed in.');
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ quiet_mode: enabled })
+        .eq('user_id', userId)
+        .select(PROFILE_COLUMNS)
+        .single();
+      if (error) throw error;
+      setLoaded({ userId, profile: toProfile(data), error: null });
+    },
+    [userId]
+  );
+
   const isLoading = loaded === null || loaded.userId !== userId;
 
   return (
@@ -237,6 +257,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         confirmAge,
         deleteAccount,
         setCycleTracking,
+        setQuietMode,
       }}>
       {children}
     </ProfileContext.Provider>

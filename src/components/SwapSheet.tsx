@@ -13,15 +13,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DialogCard, type DialogOptions } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
-import { EQUIPMENT_LABELS } from '@/lib/exercises';
+import { EQUIPMENT_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import type { ProgrammeExercise, SlotExercise } from '@/lib/programmes';
-import { fetchAlternatives, type SwapScope } from '@/lib/swaps';
+import { exerciseFits, fetchAlternatives, type SwapScope } from '@/lib/swaps';
 
 type SwapSheetProps = {
   /** The slot being swapped; the sheet is open while this is set. */
   item: ProgrammeExercise | null;
   equipment: EquipmentAccess;
+  /** Highest zone she may swap to (her level, or 1 in Quiet Mode). */
+  maxZone: Zone;
   /** Exercises already in the day, which can't be offered. */
   excludeIds: string[];
   onClose: () => void;
@@ -32,7 +34,15 @@ type SwapSheetProps = {
 
 type LoadState = 'loading' | 'error' | 'ready';
 
-export function SwapSheet({ item, equipment, excludeIds, onClose, onSwap, onRestore }: SwapSheetProps) {
+export function SwapSheet({
+  item,
+  equipment,
+  maxZone,
+  excludeIds,
+  onClose,
+  onSwap,
+  onRestore,
+}: SwapSheetProps) {
   const insets = useSafeAreaInsets();
   const [alternatives, setAlternatives] = useState<SlotExercise[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -48,7 +58,7 @@ export function SwapSheet({ item, equipment, excludeIds, onClose, onSwap, onRest
     if (!current) return;
     let isCurrent = true;
     setLoadState('loading');
-    fetchAlternatives(current, equipment, excludeKey.split(','))
+    fetchAlternatives(current, equipment, excludeKey.split(','), maxZone)
       .then((result) => {
         if (!isCurrent) return;
         setAlternatives(result);
@@ -60,7 +70,7 @@ export function SwapSheet({ item, equipment, excludeIds, onClose, onSwap, onRest
     return () => {
       isCurrent = false;
     };
-  }, [current, equipment, excludeKey]);
+  }, [current, equipment, excludeKey, maxZone]);
 
   async function save(action: () => Promise<void>) {
     setIsSaving(true);
@@ -114,7 +124,7 @@ export function SwapSheet({ item, equipment, excludeIds, onClose, onSwap, onRest
             <Text style={styles.title}>Swap {current?.name}</Text>
             <Text style={styles.subtitle}>These work the same muscle with equipment you have.</Text>
             <ScrollView>
-              {item?.original && (
+              {item?.original && exerciseFits(item.original, equipment, maxZone) && (
                 <Pressable
                   style={({ pressed }) => [styles.row, (pressed || isSaving) && styles.pressed]}
                   onPress={() => save(onRestore)}

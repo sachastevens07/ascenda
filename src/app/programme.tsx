@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colours } from '@/constants/theme';
+import { fetchFillLibrary, resolveDay, sessionMaxZone } from '@/lib/levels';
 import {
   EQUIPMENT_ACCESS_LABELS,
   formatDaysPerWeek,
@@ -13,7 +14,7 @@ import {
   type QuizAnswers,
 } from '@/lib/profile';
 import { fetchProgramme, formatSetsAndReps, type Programme } from '@/lib/programmes';
-import { applySwaps, fetchUserSwaps } from '@/lib/swaps';
+import { exerciseFits, fetchUserSwaps } from '@/lib/swaps';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
@@ -37,21 +38,27 @@ export default function ProgrammeScreen() {
   const answers = getQuizAnswers(profile);
   const programmeId = profile?.programme_id ?? null;
   const equipment = answers?.equipment ?? null;
+  const level = answers?.confidence_level ?? null;
   const [programme, setProgramme] = useState<Programme | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
 
   useEffect(() => {
-    if (!programmeId || !equipment) {
+    if (!programmeId || !equipment || !level) {
       setLoadState('not-found');
       return;
     }
     let isCurrent = true;
     setLoadState('loading');
-    Promise.all([fetchProgramme(programmeId, equipment), fetchUserSwaps(equipment)])
-      .then(([result, swaps]) => {
+    Promise.all([fetchProgramme(programmeId, equipment), fetchUserSwaps(equipment), fetchFillLibrary()])
+      .then(([result, swaps, library]) => {
         if (!isCurrent) return;
         setProgramme(
-          result && { ...result, days: result.days.map((day) => applySwaps(day, swaps[day.id])) }
+          result && {
+            ...result,
+            days: result.days.map((day) =>
+              resolveDay(day, swaps[day.id] ?? {}, equipment, level, false, library)
+            ),
+          }
         );
         setLoadState(result ? 'ready' : 'not-found');
       })
@@ -61,7 +68,7 @@ export default function ProgrammeScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [programmeId, equipment]);
+  }, [programmeId, equipment, level]);
 
   if (loadState !== 'ready' || !programme || !answers) {
     return (
@@ -107,9 +114,10 @@ export default function ProgrammeScreen() {
               accessibilityRole="button">
               <View style={styles.exerciseText}>
                 <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                {item.original && (
-                  <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
-                )}
+                {item.original &&
+                  exerciseFits(item.original, answers.equipment, sessionMaxZone(answers.confidence_level, false)) && (
+                    <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
+                  )}
                 <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />

@@ -1,4 +1,4 @@
-import type { Equipment, Muscle } from '@/lib/exercises';
+import type { Equipment, Muscle, Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import { heaviestWeight, type LoggedSet } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
@@ -9,11 +9,13 @@ export type SlotExercise = {
   name: string;
   primary_muscle: Muscle;
   equipment: Equipment;
+  zone: Zone;
   /** Step to add after an earned increase. Null for bodyweight and band; negative for assisted machines. */
   weight_increase_kg: number | null;
 };
 
-export const SLOT_EXERCISE_COLUMNS = 'id, name, primary_muscle, equipment, weight_increase_kg';
+export const SLOT_EXERCISE_COLUMNS =
+  'id, name, primary_muscle, equipment, zone, weight_increase_kg';
 
 /** Postgres numerics arrive as strings; turn them back into numbers. */
 export function toSlotExercise(row: SlotExercise): SlotExercise {
@@ -32,6 +34,11 @@ export type ProgrammeExercise = {
   exercise: SlotExercise;
   /** The programme's own exercise, when she has swapped it for `exercise`. */
   original?: SlotExercise;
+  /**
+   * This slot's full-gym / dumbbells / home exercises, in preference order for her equipment.
+   * Used to fill a slot when the chosen exercise is above her confidence level.
+   */
+  candidates?: SlotExercise[];
 };
 
 export type ProgrammeDay = {
@@ -49,26 +56,74 @@ export type Programme = {
   days: ProgrammeDay[];
 };
 
+type SlotVariant = 'full_gym' | 'dumbbells' | 'home';
+
+/** Prefer the exercise for where she trains; the others are fallbacks when that one is above her level. */
+const SLOT_VARIANT_ORDER: Record<EquipmentAccess, SlotVariant[]> = {
+  full_gym: ['full_gym', 'dumbbells', 'home'],
+  dumbbells: ['dumbbells', 'home'],
+  home: ['home'],
+};
+
+type ProgrammeExerciseRow = {
+  position: number;
+  sets: number;
+  rep_min: number;
+  rep_max: number;
+  full_gym: SlotExercise;
+  dumbbells: SlotExercise;
+  home: SlotExercise;
+};
+
 type ProgrammeDayRow = Omit<ProgrammeDay, 'exercises'> & {
-  programme_exercises: ProgrammeExercise[];
+  programme_exercises: ProgrammeExerciseRow[];
 };
 
 type ProgrammeRow = Omit<Programme, 'days'> & {
   programme_days: ProgrammeDayRow[];
 };
 
-/** Select string for a day and its exercises, picking each slot's exercise for `equipment`. */
-function daySelect(equipment: EquipmentAccess): string {
-  // Each slot links to three exercises; the named foreign key picks the one for this equipment.
-  const exercise = `exercise:exercises!programme_exercises_${equipment}_fkey(${SLOT_EXERCISE_COLUMNS})`;
-  return `id, day_number, name, programme_exercises(position, sets, rep_min, rep_max, ${exercise})`;
+/** Select string for a day and all three of each slot's exercises. */
+function daySelect(): string {
+  const cols = SLOT_EXERCISE_COLUMNS;
+  return `id, day_number, name, programme_exercises(
+    position, sets, rep_min, rep_max,
+    full_gym:exercises!programme_exercises_full_gym_fkey(${cols}),
+    dumbbells:exercises!programme_exercises_dumbbells_fkey(${cols}),
+    home:exercises!programme_exercises_home_fkey(${cols})
+  )`;
 }
 
-function toProgrammeDay({ programme_exercises, ...day }: ProgrammeDayRow): ProgrammeDay {
+function uniqueCandidates(exercises: SlotExercise[]): SlotExercise[] {
+  const seen = new Set<string>();
+  const list: SlotExercise[] = [];
+  for (const exercise of exercises) {
+    if (seen.has(exercise.id)) continue;
+    seen.add(exercise.id);
+    list.push(toSlotExercise(exercise));
+  }
+  return list;
+}
+
+function toProgrammeDay(row: ProgrammeDayRow, equipment: EquipmentAccess): ProgrammeDay {
   return {
-    ...day,
-    exercises: [...programme_exercises]
-      .map((item) => ({ ...item, exercise: toSlotExercise(item.exercise) }))
+    id: row.id,
+    day_number: row.day_number,
+    name: row.name,
+    exercises: [...row.programme_exercises]
+      .map((item) => {
+        const candidates = uniqueCandidates(
+          SLOT_VARIANT_ORDER[equipment].map((variant) => item[variant])
+        );
+        return {
+          position: item.position,
+          sets: item.sets,
+          rep_min: item.rep_min,
+          rep_max: item.rep_max,
+          exercise: candidates[0] ?? toSlotExercise(item.home),
+          candidates,
+        };
+      })
       .sort((a, b) => a.position - b.position),
   };
 }
@@ -80,7 +135,7 @@ export async function fetchProgramme(
 ): Promise<Programme | null> {
   const { data, error } = await supabase
     .from('programmes')
-    .select(`id, name, description, days_per_week, programme_days(${daySelect(equipment)})`)
+    .select(`id, name, description, days_per_week, programme_days(${daySelect()})`)
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
@@ -89,7 +144,9 @@ export async function fetchProgramme(
   const { programme_days, ...programme } = data as unknown as ProgrammeRow;
   return {
     ...programme,
-    days: programme_days.map(toProgrammeDay).sort((a, b) => a.day_number - b.day_number),
+    days: programme_days
+      .map((day) => toProgrammeDay(day, equipment))
+      .sort((a, b) => a.day_number - b.day_number),
   };
 }
 
@@ -100,11 +157,11 @@ export async function fetchProgrammeDay(
 ): Promise<ProgrammeDay | null> {
   const { data, error } = await supabase
     .from('programme_days')
-    .select(daySelect(equipment))
+    .select(daySelect())
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  return data ? toProgrammeDay(data as unknown as ProgrammeDayRow) : null;
+  return data ? toProgrammeDay(data as unknown as ProgrammeDayRow, equipment) : null;
 }
 
 export function formatSetsAndReps({ sets, rep_min, rep_max }: ProgrammeExercise): string {

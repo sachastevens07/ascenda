@@ -25,6 +25,7 @@ import {
   saveSessionCyclePhase,
   type CyclePhase,
 } from '@/lib/cycle';
+import { sessionMaxZone } from '@/lib/levels';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   describeProgressionGoal,
@@ -51,7 +52,7 @@ import {
   type LoggedSet,
 } from '@/lib/sessions';
 import { useSubscription } from '@/lib/subscription';
-import { deleteUserSwap, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
+import { deleteUserSwap, exerciseFits, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
 import { useNow, useWorkout } from '@/lib/workout';
 import {
   RECORD_LABELS,
@@ -94,7 +95,9 @@ export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { profile } = useProfile();
-  const equipment = getQuizAnswers(profile)?.equipment ?? null;
+  const answers = getQuizAnswers(profile);
+  const equipment = answers?.equipment ?? null;
+  const maxZone = answers ? sessionMaxZone(answers.confidence_level, profile?.quiet_mode ?? false) : 1;
   const { isPro, isLoading: isSubscriptionLoading } = useSubscription();
 
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -437,9 +440,11 @@ export default function SessionScreen() {
                   accessibilityHint="Shows how to do this exercise">
                   <View style={styles.flex}>
                     <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                    {item.original && (
-                      <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
-                    )}
+                    {item.original &&
+                      equipment &&
+                      exerciseFits(item.original, equipment, maxZone) && (
+                        <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
+                      )}
                     <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
                     {previousText && <Text style={styles.previous}>{previousText}</Text>}
                     {goalText && <Text style={styles.goal}>{goalText}</Text>}
@@ -563,6 +568,7 @@ export default function SessionScreen() {
         <SwapSheet
           item={swapItem}
           equipment={equipment}
+          maxZone={maxZone}
           excludeIds={day.exercises.flatMap((slot) =>
             slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
           )}
