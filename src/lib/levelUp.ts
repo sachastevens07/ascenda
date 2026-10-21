@@ -401,3 +401,18 @@ export async function debugResetLevelChallenge(): Promise<void> {
 export function nextLevel(level: Level): Level | null {
   return level < 4 ? ((level + 1) as Level) : null;
 }
+
+/** Oldest first. Empty if she hasn't changed level, or if level_up.sql hasn't been run. */
+export async function fetchConfidenceHistory(): Promise<ConfidenceHistory[]> {
+  try {
+    const { data, error } = await supabase
+      .from('confidence_history')
+      .select('id, date, from_level, to_level, created_at')
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as ConfidenceHistory[];
+  } catch (error) {
+    if (error && typeof error === 'object' && isMissingLevelUpTable(error)) return [];
+    throw error;
+  }
+}

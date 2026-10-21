@@ -1,4 +1,6 @@
-import type { Equipment } from '@/lib/exercises';
+import { ZONES, type Equipment, type Zone } from '@/lib/exercises';
+import type { ConfidenceHistory } from '@/lib/levelUp';
+import type { Level } from '@/lib/profile';
 import { usesWeight } from '@/lib/programmes';
 import { supabase } from '@/lib/supabase';
 
@@ -18,6 +20,7 @@ export type ProgressSet = {
   exerciseId: string;
   exerciseName: string;
   equipment: Equipment;
+  zone: Zone;
   /** Negative for assisted machines, where less weight means less help. */
   weightIncreaseKg: number | null;
   /** Null for bodyweight and band. */
@@ -54,7 +57,12 @@ type SetRow = {
   exercise_id: string;
   weight_kg: number | string | null;
   reps: number | null;
-  exercise: { name: string; equipment: Equipment; weight_increase_kg: number | string | null };
+  exercise: {
+    name: string;
+    equipment: Equipment;
+    zone: Zone;
+    weight_increase_kg: number | string | null;
+  };
   session: { date: string };
 };
 
@@ -65,7 +73,7 @@ export async function fetchProgressSets(): Promise<ProgressSet[]> {
     const { data, error } = await supabase
       .from('sets')
       .select(
-        'id, session_id, exercise_id, weight_kg, reps, exercise:exercises(name, equipment, weight_increase_kg), session:sessions!inner(date, completed_at)'
+        'id, session_id, exercise_id, weight_kg, reps, exercise:exercises(name, equipment, zone, weight_increase_kg), session:sessions!inner(date, completed_at)'
       )
       .eq('completed', true)
       .not('session.completed_at', 'is', null)
@@ -84,6 +92,7 @@ export async function fetchProgressSets(): Promise<ProgressSet[]> {
       exerciseId: row.exercise_id,
       exerciseName: row.exercise.name,
       equipment: row.exercise.equipment,
+      zone: Number(row.exercise.zone) as Zone,
       weightIncreaseKg:
         row.exercise.weight_increase_kg === null ? null : Number(row.exercise.weight_increase_kg),
       weightKg: row.weight_kg === null ? null : Number(row.weight_kg),
@@ -285,4 +294,35 @@ export function getWeeklyCounts(dates: string[], today = new Date()): WeekCount[
 export function formatShortDate(date: Date, today = new Date()): string {
   const label = `${date.getDate()} ${MONTHS[date.getMonth()]}`;
   return date.getFullYear() === today.getFullYear() ? label : `${label} ${date.getFullYear()}`;
+}
+
+/** Zones she has ticked a set in, from finished sessions, lowest first. */
+export function getTrainedZones(sets: ProgressSet[]): Zone[] {
+  const seen = new Set(sets.map((set) => set.zone));
+  return ZONES.filter((zone) => seen.has(zone));
+}
+
+export type ConfidenceEvent = {
+  /** YYYY-MM-DD, or an ISO timestamp from onboarding. Null if we don't have a date. */
+  date: string | null;
+  level: Level;
+  kind: 'started' | 'up' | 'down';
+};
+
+/** Start plus each later change, oldest first. */
+export function getConfidenceTimeline(
+  history: ConfidenceHistory[],
+  currentLevel: Level,
+  startedAt: string | null
+): ConfidenceEvent[] {
+  const startLevel = history[0]?.from_level ?? currentLevel;
+  const events: ConfidenceEvent[] = [{ date: startedAt, level: startLevel, kind: 'started' }];
+  for (const row of history) {
+    events.push({
+      date: row.date,
+      level: row.to_level,
+      kind: row.to_level > row.from_level ? 'up' : 'down',
+    });
+  }
+  return events;
 }

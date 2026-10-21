@@ -16,17 +16,29 @@ import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import { CYCLE_PHASE_LABELS, fetchCyclePatterns, type PhasePattern } from '@/lib/cycle';
-import { useProfile } from '@/lib/profile';
+import { ZONES, ZONE_LABELS, type Zone } from '@/lib/exercises';
+import { fetchConfidenceHistory, type ConfidenceHistory } from '@/lib/levelUp';
+import {
+  LEVELS,
+  LEVEL_DESCRIPTIONS,
+  LEVEL_LABELS,
+  getQuizAnswers,
+  useProfile,
+  type Level,
+} from '@/lib/profile';
 import { formatKg } from '@/lib/programmes';
 import {
   fetchFinishedSessionDates,
   fetchProgressSets,
   formatShortDate,
+  getConfidenceTimeline,
   getLiftHistory,
   getLiftOptions,
   getPersonalBests,
+  getTrainedZones,
   getWeeklyCounts,
   parseDate,
+  type ConfidenceEvent,
   type PersonalBest,
   type ProgressSet,
   type WeekCount,
@@ -40,6 +52,8 @@ type ProgressData = {
   sessionDates: string[];
   /** Null while cycle notes are off, or if they couldn't be loaded. */
   cyclePatterns: PhasePattern[] | null;
+  /** Empty if she hasn't changed level, or if level_up.sql hasn't been run. */
+  confidenceHistory: ConfidenceHistory[];
 };
 
 const BAR_WIDTH = 20;
@@ -63,6 +77,7 @@ export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
   const { profile } = useProfile();
+  const answers = getQuizAnswers(profile);
   const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const { isPro } = useSubscription();
   const [data, setData] = useState<ProgressData | null>(null);
@@ -79,10 +94,11 @@ export default function ProgressScreen() {
         fetchProgressSets(),
         fetchFinishedSessionDates(),
         cycleNotesOn ? fetchCyclePatterns().catch(() => null) : null,
+        fetchConfidenceHistory().catch(() => []),
       ])
-        .then(([sets, sessionDates, cyclePatterns]) => {
+        .then(([sets, sessionDates, cyclePatterns, confidenceHistory]) => {
           if (!isCurrent) return;
-          setData({ sets, sessionDates, cyclePatterns });
+          setData({ sets, sessionDates, cyclePatterns, confidenceHistory });
           setLoadState('ready');
         })
         .catch(() => {
@@ -119,102 +135,114 @@ export default function ProgressScreen() {
     );
   }
 
-  if (data.sessionDates.length === 0) {
-    return (
-      <View style={styles.centre}>
-        <Ionicons name="trending-up" size={40} color={colours.accent} />
-        <Text style={styles.emptyTitle}>Your progress starts here</Text>
-        <Text style={styles.message}>
-          Finish your first session and your personal bests, lifts and weeks will appear here.
-        </Text>
-      </View>
-    );
-  }
-
+  const isEmpty = data.sessionDates.length === 0;
+  const level = answers?.confidence_level ?? null;
   const bests = getPersonalBests(data.sets);
   const liftOptions = getLiftOptions(data.sets);
   const lift = liftOptions.find((option) => option.exerciseId === liftId) ?? liftOptions[0];
   const history = lift ? getLiftHistory(data.sets, lift.exerciseId) : [];
   const weeks = getWeeklyCounts(data.sessionDates);
   const activeWeeks = weeks.filter((week) => week.count > 0).length;
+  const trainedZones = getTrainedZones(data.sets);
+  const timeline = level
+    ? getConfidenceTimeline(data.confidenceHistory, level, profile?.onboarding_completed_at ?? null)
+    : [];
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         <Text style={styles.title}>Progress</Text>
 
-        <View style={styles.stats}>
-          <Stat value={data.sessionDates.length} label={data.sessionDates.length === 1 ? 'session' : 'sessions'} />
-          <Stat value={activeWeeks} label={activeWeeks === 1 ? 'week training' : 'weeks training'} />
-          <Stat value={bests.length} label={bests.length === 1 ? 'lift tracked' : 'lifts tracked'} />
-        </View>
-
-        {isPro ? (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Sessions per week</Text>
-            <WeeklyBars weeks={weeks} />
-          </View>
-        ) : (
-          <View style={styles.card}>
-            <Ionicons name="stats-chart-outline" size={28} color={colours.accent} />
-            <Text style={styles.cardTitle}>See your progress over time</Text>
-            <Text style={styles.chartNote}>
-              With Pro, chart your sessions each week and the weight on every lift.
+        {isEmpty && (
+          <View style={styles.emptyIntro}>
+            <Ionicons name="trending-up" size={36} color={colours.accent} />
+            <Text style={styles.emptyTitle}>Your progress starts here</Text>
+            <Text style={styles.emptyCopy}>
+              Finish your first session and your personal bests, lifts and weeks will appear here.
             </Text>
-            <Pressable
-              style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-              onPress={() => router.push('/paywall')}
-              accessibilityRole="button">
-              <Text style={styles.outlineButtonText}>See Pro</Text>
-            </Pressable>
           </View>
         )}
 
-        {isPro && lift && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{lift.assisted ? 'Help over time' : 'Weight over time'}</Text>
-            <Pressable
-              style={({ pressed }) => [styles.picker, pressed && styles.pressed]}
-              onPress={() => setIsPickerOpen(true)}
-              accessibilityRole="button"
-              accessibilityLabel={`Lift: ${lift.exerciseName}. Change lift`}>
-              <Text style={styles.pickerText} numberOfLines={1}>
-                {lift.exerciseName}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color={colours.accent} />
-            </Pressable>
-            <LineChart
-              points={history.map((point) => ({ x: parseDate(point.date).getTime(), y: point.kg }))}
-              formatX={(x) => formatShortDate(new Date(x))}
-              formatY={(y) => `${Math.round(y)} kg`}
-            />
-            <Text style={styles.chartNote}>{describeChange(history, lift.assisted)}</Text>
-          </View>
+        {level && (
+          <ConfidenceCard level={level} timeline={timeline} trainedZones={trainedZones} />
         )}
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Personal bests</Text>
-          {bests.map((best) => (
-            <View key={best.exerciseId} style={styles.bestRow}>
-              <View style={styles.flex}>
-                <Text style={styles.bestName}>{best.exerciseName}</Text>
-                <Text style={styles.bestValue}>{describeBest(best)}</Text>
-                {best.estimatedMaxKg !== null && (
-                  <Text style={styles.bestDetail}>
-                    Estimated 1-rep max: {formatKg(best.estimatedMaxKg)}
-                  </Text>
-                )}
-              </View>
-              <Text style={styles.bestDate}>{formatShortDate(parseDate(best.date))}</Text>
+        {!isEmpty && (
+          <>
+            <View style={styles.stats}>
+              <Stat value={data.sessionDates.length} label={data.sessionDates.length === 1 ? 'session' : 'sessions'} />
+              <Stat value={activeWeeks} label={activeWeeks === 1 ? 'week training' : 'weeks training'} />
+              <Stat value={bests.length} label={bests.length === 1 ? 'lift tracked' : 'lifts tracked'} />
             </View>
-          ))}
-          <Text style={styles.footnote}>
-            Estimated 1-rep max is worked out from your best set of up to 12 reps. There’s no need
-            to test it.
-          </Text>
-        </View>
 
-        {cycleNotesOn && data.cyclePatterns && <CyclePatterns patterns={data.cyclePatterns} />}
+            {isPro ? (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Sessions per week</Text>
+                <WeeklyBars weeks={weeks} />
+              </View>
+            ) : (
+              <View style={styles.card}>
+                <Ionicons name="stats-chart-outline" size={28} color={colours.accent} />
+                <Text style={styles.cardTitle}>See your progress over time</Text>
+                <Text style={styles.chartNote}>
+                  With Pro, chart your sessions each week and the weight on every lift.
+                </Text>
+                <Pressable
+                  style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+                  onPress={() => router.push('/paywall')}
+                  accessibilityRole="button">
+                  <Text style={styles.outlineButtonText}>See Pro</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {isPro && lift && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>{lift.assisted ? 'Help over time' : 'Weight over time'}</Text>
+                <Pressable
+                  style={({ pressed }) => [styles.picker, pressed && styles.pressed]}
+                  onPress={() => setIsPickerOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Lift: ${lift.exerciseName}. Change lift`}>
+                  <Text style={styles.pickerText} numberOfLines={1}>
+                    {lift.exerciseName}
+                  </Text>
+                  <Ionicons name="chevron-down" size={18} color={colours.accent} />
+                </Pressable>
+                <LineChart
+                  points={history.map((point) => ({ x: parseDate(point.date).getTime(), y: point.kg }))}
+                  formatX={(x) => formatShortDate(new Date(x))}
+                  formatY={(y) => `${Math.round(y)} kg`}
+                />
+                <Text style={styles.chartNote}>{describeChange(history, lift.assisted)}</Text>
+              </View>
+            )}
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Personal bests</Text>
+              {bests.map((best) => (
+                <View key={best.exerciseId} style={styles.bestRow}>
+                  <View style={styles.flex}>
+                    <Text style={styles.bestName}>{best.exerciseName}</Text>
+                    <Text style={styles.bestValue}>{describeBest(best)}</Text>
+                    {best.estimatedMaxKg !== null && (
+                      <Text style={styles.bestDetail}>
+                        Estimated 1-rep max: {formatKg(best.estimatedMaxKg)}
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.bestDate}>{formatShortDate(parseDate(best.date))}</Text>
+                </View>
+              ))}
+              <Text style={styles.footnote}>
+                Estimated 1-rep max is worked out from your best set of up to 12 reps. There’s no need
+                to test it.
+              </Text>
+            </View>
+
+            {cycleNotesOn && data.cyclePatterns && <CyclePatterns patterns={data.cyclePatterns} />}
+          </>
+        )}
 
         <Text style={styles.disclaimer}>
           General fitness guidance, not medical advice. Stop if anything hurts.
@@ -280,6 +308,109 @@ function describeChange(history: { kg: number }[], assisted: boolean): string {
   return change > 0
     ? `Up from ${formatKg(first)} to ${formatKg(latest)} (+${formatKg(change)}). Great progress.`
     : `Latest: ${formatKg(latest)}. Every session counts.`;
+}
+
+const LEVEL_STEP_LABELS: Record<Level, string> = {
+  1: 'Corner',
+  2: 'Area',
+  3: 'Machines',
+  4: 'Gym',
+};
+
+function formatEventDate(value: string): string {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return formatShortDate(parseDate(value));
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : formatShortDate(parsed);
+}
+
+function describeTimelineEvent(event: ConfidenceEvent): string {
+  switch (event.kind) {
+    case 'started':
+      return `Started at ${LEVEL_LABELS[event.level]}`;
+    case 'up':
+      return `Moved up to ${LEVEL_LABELS[event.level]}`;
+    case 'down':
+      return `Moved back to ${LEVEL_LABELS[event.level]}`;
+  }
+}
+
+function ConfidenceCard({
+  level,
+  timeline,
+  trainedZones,
+}: {
+  level: Level;
+  timeline: ConfidenceEvent[];
+  trainedZones: Zone[];
+}) {
+  const trained = new Set(trainedZones);
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Your confidence</Text>
+      <Text style={styles.levelName}>{LEVEL_LABELS[level]}</Text>
+      <Text style={styles.chartNote}>{LEVEL_DESCRIPTIONS[level]}</Text>
+
+      <View style={styles.levelTrack} accessibilityLabel={`Level ${level} of 4`}>
+        {LEVELS.map((step) => {
+          const reached = step <= level;
+          return (
+            <View key={step} style={styles.levelStep}>
+              <View style={[styles.levelDot, reached && styles.levelDotOn]} />
+              <Text style={[styles.levelStepLabel, step === level && styles.levelStepLabelOn]}>
+                {LEVEL_STEP_LABELS[step]}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <Text style={styles.sectionLabel}>Level-ups</Text>
+      {timeline.map((event, index) => (
+        <View key={`${event.kind}-${event.level}-${event.date ?? index}`} style={styles.timelineRow}>
+          <View style={styles.timelineRail}>
+            <View style={[styles.timelineDot, event.kind === 'up' && styles.timelineDotUp]} />
+            {index < timeline.length - 1 && <View style={styles.timelineLine} />}
+          </View>
+          <View style={styles.flex}>
+            <Text style={styles.bestName}>{describeTimelineEvent(event)}</Text>
+            {event.date ? (
+              <Text style={styles.bestDetail}>{formatEventDate(event.date)}</Text>
+            ) : (
+              <Text style={styles.bestDetail}>When you started</Text>
+            )}
+          </View>
+        </View>
+      ))}
+      {timeline.length <= 1 && (
+        <Text style={styles.footnote}>
+          Level-ups will show here as you take up more of the gym. You can also change your level
+          any time from Profile.
+        </Text>
+      )}
+
+      <Text style={styles.sectionLabel}>Zones you’ve trained in</Text>
+      <View style={styles.zoneGrid}>
+        {ZONES.map((zone) => {
+          const done = trained.has(zone);
+          return (
+            <View
+              key={zone}
+              style={[styles.zoneChip, done && styles.zoneChipOn]}
+              accessibilityState={{ selected: done }}>
+              <Text style={[styles.zoneChipText, done && styles.zoneChipTextOn]}>
+                {ZONE_LABELS[zone]}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+      <Text style={styles.footnote}>
+        {trainedZones.length === 0
+          ? 'Finish a session and the parts of the gym you’ve used will show here.'
+          : 'From the sets you’ve ticked in finished sessions.'}
+      </Text>
+    </View>
+  );
 }
 
 function CyclePatterns({ patterns }: { patterns: PhasePattern[] }) {
@@ -403,6 +534,106 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.text,
     textAlign: 'center',
+  },
+  emptyIntro: {
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  emptyCopy: {
+    fontSize: 17,
+    lineHeight: 24,
+    color: colours.textMuted,
+    textAlign: 'center',
+  },
+  levelName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colours.accent,
+  },
+  levelTrack: {
+    flexDirection: 'row',
+    paddingTop: 4,
+  },
+  levelStep: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+  },
+  levelDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colours.border,
+  },
+  levelDotOn: {
+    backgroundColor: colours.accent,
+  },
+  levelStepLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colours.textMuted,
+    textAlign: 'center',
+  },
+  levelStepLabelOn: {
+    color: colours.accent,
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colours.text,
+    marginTop: 8,
+  },
+  timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  timelineRail: {
+    width: 14,
+    alignItems: 'center',
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colours.border,
+    marginTop: 5,
+  },
+  timelineDotUp: {
+    backgroundColor: colours.accent,
+  },
+  timelineLine: {
+    width: 2,
+    flexGrow: 1,
+    minHeight: 16,
+    backgroundColor: colours.border,
+    marginTop: 4,
+  },
+  zoneGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  zoneChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: colours.background,
+    borderWidth: 1,
+    borderColor: colours.border,
+  },
+  zoneChipOn: {
+    backgroundColor: colours.accentSoft,
+    borderColor: colours.accent,
+  },
+  zoneChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colours.textMuted,
+  },
+  zoneChipTextOn: {
+    color: colours.accent,
   },
   retry: {
     alignSelf: 'stretch',
