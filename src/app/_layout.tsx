@@ -39,7 +39,8 @@ function RootNavigator() {
     return <ProfileError detail={profile.error} onRetry={profile.reload} />;
   }
 
-  const isOnboarded = getQuizAnswers(profile.profile) !== null;
+  const isOnboarded =
+    getQuizAnswers(profile.profile) !== null && !!profile.profile?.age_confirmed_at;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

@@ -13,10 +13,12 @@ import {
   EQUIPMENT_ACCESS_LABELS,
   EXPERIENCE_LABELS,
   GOAL_LABELS,
+  LEVEL_LABELS,
   formatDaysPerWeek,
   getQuizAnswers,
   useProfile,
 } from '@/lib/profile';
+import { formatKg } from '@/lib/programmes';
 import { formatShortDate } from '@/lib/progress';
 import {
   DEV_OVERRIDES,
@@ -159,6 +161,11 @@ export default function ProfileScreen() {
         { name: 'Days per week', value: formatDaysPerWeek(answers.days_per_week) },
         { name: 'Where you train', value: EQUIPMENT_ACCESS_LABELS[answers.equipment] },
         { name: 'Gym confidence', value: `${answers.confidence}. ${CONFIDENCE_LABELS[answers.confidence]}` },
+        { name: 'Level', value: LEVEL_LABELS[answers.confidence_level] },
+        {
+          name: 'Bodyweight (optional)',
+          value: profile?.bodyweight_kg ? formatKg(profile.bodyweight_kg) : 'Not added',
+        },
       ]
     : [];
 

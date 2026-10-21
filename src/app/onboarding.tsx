@@ -1,9 +1,18 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colours } from '@/constants/theme';
+import { formatKg } from '@/lib/programmes';
 import {
   CONFIDENCE_LABELS,
   CONFIDENCE_LEVELS,
@@ -14,8 +23,14 @@ import {
   EXPERIENCE_LEVELS,
   GOALS,
   GOAL_LABELS,
+  LEVELS,
+  LEVEL_DESCRIPTIONS,
+  LEVEL_LABELS,
+  MAX_BODYWEIGHT_KG,
+  MIN_BODYWEIGHT_KG,
   formatDaysPerWeek,
   getQuizAnswers,
+  levelForConfidence,
   useProfile,
   type QuizAnswers,
 } from '@/lib/profile';
@@ -97,47 +112,95 @@ const QUESTIONS: Question[] = [
       label: `${value}. ${CONFIDENCE_LABELS[value]}`,
     })),
   },
+  {
+    key: 'confidence_level',
+    name: 'Starting level',
+    title: 'Where would you like to start?',
+    subtitle:
+      'We’ve suggested a level from your last answer, but pick whatever feels right. You’ll level up as you get stronger, and you can change it any time.',
+    options: LEVELS.map((value) => ({
+      value,
+      label: LEVEL_LABELS[value],
+      description: LEVEL_DESCRIPTIONS[value],
+    })),
+  },
 ];
 
-const REVIEW_STEP = QUESTIONS.length;
+const BODYWEIGHT_STEP = QUESTIONS.length;
+const REVIEW_STEP = QUESTIONS.length + 1;
 
-function firstUnanswered(draft: Draft): number {
+/** The first question without an answer, then bodyweight (asked once), then the review. */
+function firstUnanswered(draft: Draft, bodyweightAsked: boolean): number {
   const index = QUESTIONS.findIndex((question) => draft[question.key] === undefined);
-  return index === -1 ? REVIEW_STEP : index;
+  if (index !== -1) return index;
+  return bodyweightAsked ? REVIEW_STEP : BODYWEIGHT_STEP;
 }
 
 function isComplete(draft: Draft): draft is QuizAnswers {
-  return firstUnanswered(draft) === REVIEW_STEP;
+  return QUESTIONS.every((question) => draft[question.key] !== undefined);
 }
 
 function optionLabel(question: Question, value: AnswerValue | undefined): string {
   return question.options.find((option) => option.value === value)?.label ?? '';
 }
 
+/** Empty means skipped (null). Undefined means it isn't a sensible bodyweight. */
+function parseBodyweight(text: string): number | null | undefined {
+  if (text.trim() === '') return null;
+  const value = Number.parseFloat(text.replace(',', '.'));
+  if (!Number.isFinite(value) || value < MIN_BODYWEIGHT_KG || value > MAX_BODYWEIGHT_KG) {
+    return undefined;
+  }
+  return Math.round(value * 10) / 10;
+}
+
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
-  const { profile, saveQuizAnswers } = useProfile();
+  const { profile, saveQuizAnswers, confirmAge, deleteAccount } = useProfile();
   const [savedAnswers] = useState(() => getQuizAnswers(profile));
   const isEditing = savedAnswers !== null;
   const [draft, setDraft] = useState<Draft>(savedAnswers ?? {});
+  const [bodyweight, setBodyweight] = useState(
+    profile?.bodyweight_kg == null ? '' : String(profile.bodyweight_kg)
+  );
+  const [bodyweightAsked, setBodyweightAsked] = useState(isEditing);
   const [step, setStep] = useState(isEditing ? REVIEW_STEP : 0);
+  /** Accounts made before the 18+ question existed are asked once, before anything else. */
+  const [ageStep, setAgeStep] = useState<'ask' | 'under-18' | null>(
+    profile?.age_confirmed_at ? null : 'ask'
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const question = step < REVIEW_STEP ? QUESTIONS[step] : null;
+  const question = step < BODYWEIGHT_STEP ? QUESTIONS[step] : null;
+  const suggestedLevel = draft.confidence ? levelForConfidence(draft.confidence) : null;
 
   function choose(key: AnswerKey, value: AnswerValue) {
     const next = { ...draft, [key]: value } as Draft;
+    // A new confidence answer means a new suggested level, so ask about the level again.
+    if (key === 'confidence' && value !== draft.confidence) delete next.confidence_level;
     setDraft(next);
-    setStep(firstUnanswered(next));
+    setStep(firstUnanswered(next, bodyweightAsked));
+  }
+
+  function finishBodyweight(text: string) {
+    if (parseBodyweight(text) === undefined) {
+      setError(`Enter a bodyweight between ${MIN_BODYWEIGHT_KG} and ${MAX_BODYWEIGHT_KG} kg, or skip it.`);
+      return;
+    }
+    setError(null);
+    setBodyweight(text);
+    setBodyweightAsked(true);
+    setStep(firstUnanswered(draft, true));
   }
 
   async function handleSave() {
-    if (!isComplete(draft)) return;
+    const bodyweightKg = parseBodyweight(bodyweight);
+    if (!isComplete(draft) || bodyweightKg === undefined) return;
     setIsSaving(true);
     setError(null);
     try {
-      await saveQuizAnswers(draft);
+      await saveQuizAnswers(draft, bodyweightKg);
       if (router.canGoBack()) router.back();
       else router.replace('/');
     } catch {
@@ -146,9 +209,100 @@ export default function OnboardingScreen() {
     }
   }
 
+  async function handleConfirmAge() {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await confirmAge();
+      setIsSaving(false);
+      if (savedAnswers) router.replace('/');
+      else setAgeStep(null);
+    } catch {
+      setError("Sorry, that didn't save. Check your connection and try again.");
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await deleteAccount();
+    } catch {
+      setError("Sorry, we couldn't delete your account. Check your connection and try again.");
+      setIsSaving(false);
+    }
+  }
+
+  if (ageStep) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top }]}>
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingTop: 64, paddingBottom: insets.bottom + 24 }]}>
+          {ageStep === 'ask' ? (
+            <>
+              <Text style={styles.title}>Are you 18 or over?</Text>
+              <Text style={styles.subtitle}>Ascenda is for adults aged 18 and over.</Text>
+              {error && <Text style={styles.error}>{error}</Text>}
+              <Pressable
+                style={({ pressed }) => [styles.button, (pressed || isSaving) && styles.buttonPressed]}
+                onPress={handleConfirmAge}
+                disabled={isSaving}
+                accessibilityRole="button">
+                {isSaving ? (
+                  <ActivityIndicator color={colours.surface} />
+                ) : (
+                  <Text style={styles.buttonText}>Yes, I’m 18 or over</Text>
+                )}
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}
+                onPress={() => setAgeStep('under-18')}
+                disabled={isSaving}
+                accessibilityRole="button">
+                <Text style={styles.outlineButtonText}>No, I’m under 18</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text style={styles.title}>Thanks for being honest</Text>
+              <Text style={styles.subtitle}>
+                Ascenda is for adults aged 18 and over, so we need to delete this account and
+                everything saved in it. We’d love to train with you when you’re 18.
+              </Text>
+              {error && <Text style={styles.error}>{error}</Text>}
+              <Pressable
+                style={({ pressed }) => [styles.dangerButton, (pressed || isSaving) && styles.buttonPressed]}
+                onPress={handleDeleteAccount}
+                disabled={isSaving}
+                accessibilityRole="button">
+                {isSaving ? (
+                  <ActivityIndicator color={colours.surface} />
+                ) : (
+                  <Text style={styles.buttonText}>Delete my account</Text>
+                )}
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}
+                onPress={() => {
+                  setError(null);
+                  setAgeStep('ask');
+                }}
+                disabled={isSaving}
+                accessibilityRole="button">
+                <Text style={styles.outlineButtonText}>Go back</Text>
+              </Pressable>
+            </>
+          )}
+        </ScrollView>
+      </View>
+    );
+  }
+
   const showBack = isEditing || step > 0;
-  const closesScreen = isEditing && !question;
+  const closesScreen = isEditing && step === REVIEW_STEP;
   function handleBack() {
+    setError(null);
     if (closesScreen) router.back();
     else if (isEditing) setStep(REVIEW_STEP);
     else setStep(step - 1);
@@ -169,7 +323,7 @@ export default function OnboardingScreen() {
           <View style={styles.backButton} />
         )}
         <Text style={styles.stepCount}>
-          {question ? `${step + 1} of ${QUESTIONS.length}` : ''}
+          {step < REVIEW_STEP ? `${step + 1} of ${REVIEW_STEP}` : ''}
         </Text>
       </View>
       <View style={styles.progressTrack}>
@@ -179,11 +333,12 @@ export default function OnboardingScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
+        keyboardShouldPersistTaps="handled">
         {question ? (
           <>
             {step === 0 && !isEditing && (
-              <Text style={styles.welcome}>Let's get you set up. Five quick questions.</Text>
+              <Text style={styles.welcome}>Let's get you set up. A few quick questions.</Text>
             )}
             <Text style={styles.title}>{question.title}</Text>
             {question.subtitle && <Text style={styles.subtitle}>{question.subtitle}</Text>}
@@ -191,17 +346,21 @@ export default function OnboardingScreen() {
             <View style={styles.options}>
               {question.options.map((option) => {
                 const isSelected = draft[question.key] === option.value;
+                const isSuggested =
+                  question.key === 'confidence_level' && option.value === suggestedLevel;
                 return (
                   <Pressable
                     key={String(option.value)}
                     onPress={() => choose(question.key, option.value)}
                     style={({ pressed }) => [
                       styles.option,
-                      isSelected && styles.optionSelected,
+                      (isSelected || (isSuggested && draft.confidence_level === undefined)) &&
+                        styles.optionSelected,
                       pressed && styles.optionPressed,
                     ]}
                     accessibilityRole="radio"
                     accessibilityState={{ selected: isSelected }}>
+                    {isSuggested && <Text style={styles.suggested}>Suggested for you</Text>}
                     <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
                       {option.label}
                     </Text>
@@ -221,6 +380,42 @@ export default function OnboardingScreen() {
                 <Text style={styles.signOutText}>Not you? Sign out</Text>
               </Pressable>
             )}
+          </>
+        ) : step === BODYWEIGHT_STEP ? (
+          <>
+            <Text style={styles.title}>Your bodyweight</Text>
+            <Text style={styles.subtitle}>
+              Optional. We only use it to show your strength relative to your bodyweight, like
+              squatting your own bodyweight. Never for BMI or any health score, and only you can
+              see it.
+            </Text>
+            <View style={styles.weightRow}>
+              <TextInput
+                style={styles.weightInput}
+                value={bodyweight}
+                onChangeText={setBodyweight}
+                keyboardType="decimal-pad"
+                placeholder="–"
+                placeholderTextColor={colours.textMuted}
+                returnKeyType="done"
+                onSubmitEditing={() => finishBodyweight(bodyweight)}
+                accessibilityLabel="Bodyweight in kilograms"
+              />
+              <Text style={styles.weightUnit}>kg</Text>
+            </View>
+            {error && <Text style={styles.error}>{error}</Text>}
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              onPress={() => finishBodyweight(bodyweight)}
+              accessibilityRole="button">
+              <Text style={styles.buttonText}>Continue</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => finishBodyweight('')}
+              style={styles.signOut}
+              accessibilityRole="button">
+              <Text style={styles.signOutText}>Skip</Text>
+            </Pressable>
           </>
         ) : (
           <>
@@ -243,6 +438,16 @@ export default function OnboardingScreen() {
                   <Text style={styles.reviewValue}>{optionLabel(item, draft[item.key])}</Text>
                 </Pressable>
               ))}
+              <Pressable
+                onPress={() => setStep(BODYWEIGHT_STEP)}
+                style={({ pressed }) => [styles.reviewRow, pressed && styles.optionPressed]}
+                accessibilityRole="button"
+                accessibilityHint="Change your bodyweight">
+                <Text style={styles.reviewName}>Bodyweight (optional)</Text>
+                <Text style={styles.reviewValue}>
+                  {parseBodyweight(bodyweight) ? formatKg(parseBodyweight(bodyweight) ?? 0) : 'Not added'}
+                </Text>
+              </Pressable>
             </View>
 
             <Text style={styles.disclaimer}>
@@ -364,6 +569,35 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     marginTop: 4,
   },
+  suggested: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colours.accent,
+    marginBottom: 4,
+  },
+  weightRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 28,
+  },
+  weightInput: {
+    flex: 1,
+    minHeight: 64,
+    paddingHorizontal: 20,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: colours.border,
+    backgroundColor: colours.surface,
+    fontSize: 24,
+    fontWeight: '600',
+    color: colours.text,
+  },
+  weightUnit: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colours.textMuted,
+  },
   reviewRow: {
     minHeight: 64,
     justifyContent: 'center',
@@ -411,6 +645,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colours.accent,
     marginTop: 24,
+  },
+  dangerButton: {
+    minHeight: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.danger,
+    marginTop: 24,
+  },
+  outlineButton: {
+    minHeight: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colours.accent,
+    backgroundColor: colours.surface,
+    marginTop: 12,
+  },
+  outlineButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.accent,
   },
   buttonPressed: {
     opacity: 0.8,

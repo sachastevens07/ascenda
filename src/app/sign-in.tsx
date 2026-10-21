@@ -28,6 +28,8 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
+  /** Asked before an account exists, so nothing is stored about anyone under 18. */
+  const [ageAnswer, setAgeAnswer] = useState<'adult' | 'under-18' | null>(null);
 
   const isSignUp = mode === 'sign-up';
 
@@ -49,7 +51,11 @@ export default function SignInScreen() {
     setMessage(null);
 
     if (isSignUp) {
-      const { data, error } = await supabase.auth.signUp({ email: trimmedEmail, password });
+      const { data, error } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+        options: { data: { age_confirmed: true } },
+      });
       if (error) {
         setMessage({ kind: 'error', text: error.message });
       } else if (!data.session) {
@@ -78,6 +84,48 @@ export default function SignInScreen() {
   function switchMode() {
     setMode(isSignUp ? 'sign-in' : 'sign-up');
     setMessage(null);
+    if (ageAnswer === 'under-18') setAgeAnswer(null);
+  }
+
+  if (isSignUp && ageAnswer !== 'adult') {
+    return (
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 24 },
+        ]}>
+        {ageAnswer === 'under-18' ? (
+          <>
+            <Text style={styles.title}>Thanks for stopping by</Text>
+            <Text style={styles.subtitle}>
+              Ascenda is for adults aged 18 and over, so we can’t create an account for you yet. We
+              haven’t saved anything about you. We’d love to train with you when you’re 18.
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.title}>Create your account</Text>
+            <Text style={styles.subtitle}>First, are you 18 or over?</Text>
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              onPress={() => setAgeAnswer('adult')}
+              accessibilityRole="button">
+              <Text style={styles.buttonText}>Yes, I’m 18 or over</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}
+              onPress={() => setAgeAnswer('under-18')}
+              accessibilityRole="button">
+              <Text style={styles.outlineButtonText}>No, I’m under 18</Text>
+            </Pressable>
+          </>
+        )}
+        <Pressable onPress={switchMode} style={styles.switch} accessibilityRole="button">
+          <Text style={styles.switchText}>Already have an account? Sign in</Text>
+        </Pressable>
+      </ScrollView>
+    );
   }
 
   return (
@@ -215,6 +263,21 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.8,
+  },
+  outlineButton: {
+    minHeight: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colours.accent,
+    backgroundColor: colours.surface,
+    marginTop: 12,
+  },
+  outlineButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.accent,
   },
   buttonText: {
     fontSize: 17,
