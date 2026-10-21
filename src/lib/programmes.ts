@@ -39,6 +39,8 @@ export type ProgrammeExercise = {
    * Used to fill a slot when the chosen exercise is above her confidence level.
    */
   candidates?: SlotExercise[];
+  /** Extra slot that isn't in the programme (a level-up try added to the session). */
+  added?: boolean;
 };
 
 export type ProgrammeDay = {

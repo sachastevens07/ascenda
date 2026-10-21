@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import { useAuth } from '@/lib/auth';
+import { recordLevelChange } from '@/lib/levelUp';
 import { supabase } from '@/lib/supabase';
 
 // Allowed values. Keep these lists in step with supabase/profiles.sql.
@@ -141,6 +142,8 @@ type ProfileState = {
   setCycleTracking: (enabled: boolean) => Promise<void>;
   /** Quiet Mode keeps Today's session in one gym zone (the Corner). */
   setQuietMode: (enabled: boolean) => Promise<void>;
+  /** Moves her level up or down and records it in confidence_history. */
+  setConfidenceLevel: (level: Level) => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -180,6 +183,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const saveQuizAnswers = useCallback(
     async (answers: QuizAnswers, bodyweightKg: number | null) => {
       if (!userId) throw new Error('You need to be signed in.');
+      const previousLevel = loaded?.userId === userId ? loaded.profile?.confidence_level : null;
       // Upsert so it still works for an account that somehow has no profile row yet.
       const { data, error } = await supabase
         .from('profiles')
@@ -193,8 +197,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .single();
       if (error) throw error;
       setLoaded({ userId, profile: toProfile(data), error: null });
+      if (previousLevel && previousLevel !== answers.confidence_level) {
+        await recordLevelChange(previousLevel, answers.confidence_level).catch(() => {});
+      }
     },
-    [userId]
+    [userId, loaded]
   );
 
   const confirmAge = useCallback(async () => {
@@ -244,6 +251,24 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [userId]
   );
 
+  const setConfidenceLevel = useCallback(
+    async (level: Level) => {
+      if (!userId) throw new Error('You need to be signed in.');
+      const from = loaded?.userId === userId ? loaded.profile?.confidence_level : null;
+      if (!from || from === level) return;
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ confidence_level: level })
+        .eq('user_id', userId)
+        .select(PROFILE_COLUMNS)
+        .single();
+      if (error) throw error;
+      setLoaded({ userId, profile: toProfile(data), error: null });
+      await recordLevelChange(from, level).catch(() => {});
+    },
+    [userId, loaded]
+  );
+
   const isLoading = loaded === null || loaded.userId !== userId;
 
   return (
@@ -258,6 +283,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         deleteAccount,
         setCycleTracking,
         setQuietMode,
+        setConfidenceLevel,
       }}>
       {children}
     </ProfileContext.Provider>

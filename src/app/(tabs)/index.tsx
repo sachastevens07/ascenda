@@ -13,11 +13,21 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { LevelUpCard } from '@/components/LevelUpCard';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import { fetchFillLibrary, resolveDay, sessionMaxZone } from '@/lib/levels';
-import { formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
+import {
+  acceptLevelChallenge,
+  declineLevelChallenge,
+  declineLevelUp,
+  ensureLevelChallenge,
+  includeChallengeExercise,
+  nextLevel,
+  type LevelChallenge,
+} from '@/lib/levelUp';
+import { formatDaysPerWeek, getQuizAnswers, LEVEL_LABELS, useProfile } from '@/lib/profile';
 import {
   describeWeightSuggestion,
   fetchProgramme,
@@ -88,7 +98,7 @@ function withSwap(
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
-  const { profile, setQuietMode } = useProfile();
+  const { profile, setQuietMode, setConfidenceLevel } = useProfile();
   const programmeId = profile?.programme_id ?? null;
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
@@ -108,6 +118,8 @@ export default function TodayScreen() {
   const [quietDraft, setQuietDraft] = useState<boolean | null>(null);
   const [isSavingQuiet, setIsSavingQuiet] = useState(false);
   const quietMode = quietDraft ?? profile?.quiet_mode ?? false;
+  const [challenge, setChallenge] = useState<LevelChallenge | null>(null);
+  const [isSavingChallenge, setIsSavingChallenge] = useState(false);
 
   // Reloads every time Today comes into view, so it's up to date after a session.
   useFocusEffect(
@@ -131,15 +143,26 @@ export default function TodayScreen() {
             return;
           }
           const sessionSwaps = activeSession ? await fetchSessionSwaps(activeSession) : {};
+          const next = getNextDay(programme, lastFinished?.programme_day_id ?? null);
+          let nextChallenge: LevelChallenge | null = null;
+          if (level) {
+            try {
+              nextChallenge = await ensureLevelChallenge(level, equipment, next);
+            } catch {
+              nextChallenge = null;
+            }
+          }
           const exerciseIds = [
             ...new Set([
               ...programme.days.flatMap((d) => d.exercises.map((e) => e.exercise.id)),
               ...Object.values(userSwaps).flatMap((swaps) => Object.values(swaps).map((e) => e.id)),
               ...Object.values(sessionSwaps).map((e) => e.id),
+              ...(nextChallenge ? [nextChallenge.exercise.id] : []),
             ]),
           ];
           const previous = await fetchPreviousSets(exerciseIds, activeSession?.id ?? null);
           if (!isCurrent) return;
+          setChallenge(nextChallenge);
           setData({
             programme,
             activeSession,
@@ -157,7 +180,7 @@ export default function TodayScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [programmeId, equipment, attempt])
+    }, [programmeId, equipment, level, attempt])
   );
 
   const programme = data?.programme ?? null;
@@ -168,7 +191,7 @@ export default function TodayScreen() {
     : undefined;
   const plannedDay =
     activeDay ?? programme?.days.find((item) => item.id === chosenDayId) ?? nextDay;
-  const day =
+  const resolvedDay =
     !plannedDay || !data || !equipment || !level
       ? plannedDay
       : activeDay
@@ -181,6 +204,13 @@ export default function TodayScreen() {
             quietMode,
             data.library
           );
+  const day =
+    resolvedDay &&
+    !activeDay &&
+    challenge?.status === 'accepted' &&
+    !quietMode
+      ? includeChallengeExercise(resolvedDay, challenge.exercise)
+      : resolvedDay;
   const maxZone = level ? sessionMaxZone(level, quietMode) : 1;
 
   async function handleStart() {
@@ -234,6 +264,83 @@ export default function TodayScreen() {
   function handleContinue() {
     if (activeSession) {
       router.push({ pathname: '/session/[id]', params: { id: activeSession.id } });
+    }
+  }
+
+  async function handleAcceptChallenge() {
+    if (!challenge) return;
+    setIsSavingChallenge(true);
+    try {
+      await acceptLevelChallenge(challenge.id);
+      setChallenge({
+        ...challenge,
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+      });
+      if (!data?.previous[challenge.exercise.id]) {
+        fetchPreviousSets([challenge.exercise.id], data?.activeSession?.id ?? null)
+          .then((previous) =>
+            setData((current) => current && { ...current, previous: { ...current.previous, ...previous } })
+          )
+          .catch(() => {});
+      }
+    } catch {
+      showDialog(
+        'That didn’t save',
+        'Check your connection, and that level_up.sql has been run in Supabase.'
+      );
+    } finally {
+      setIsSavingChallenge(false);
+    }
+  }
+
+  async function handleDeclineChallenge() {
+    if (!challenge) return;
+    setIsSavingChallenge(true);
+    try {
+      await declineLevelChallenge(challenge.id);
+      setChallenge(null);
+    } catch {
+      showDialog(
+        'That didn’t save',
+        'Check your connection, and that level_up.sql has been run in Supabase.'
+      );
+    } finally {
+      setIsSavingChallenge(false);
+    }
+  }
+
+  async function handleLevelUp() {
+    const upcoming = level ? nextLevel(level) : null;
+    if (!upcoming) return;
+    setIsSavingChallenge(true);
+    try {
+      await setConfidenceLevel(upcoming);
+      setChallenge(null);
+      showDialog(
+        `You’re on ${LEVEL_LABELS[upcoming]}`,
+        'You can move back down any time from Profile. No pressure.'
+      );
+    } catch {
+      showDialog('That didn’t save', 'Check your connection and try again.');
+    } finally {
+      setIsSavingChallenge(false);
+    }
+  }
+
+  async function handleStayAtLevel() {
+    if (!challenge) return;
+    setIsSavingChallenge(true);
+    try {
+      await declineLevelUp(challenge.id);
+      setChallenge(null);
+    } catch {
+      showDialog(
+        'That didn’t save',
+        'Check your connection, and that level_up.sql has been run in Supabase.'
+      );
+    } finally {
+      setIsSavingChallenge(false);
     }
   }
 
@@ -323,6 +430,19 @@ export default function TodayScreen() {
           </View>
         )}
 
+        {challenge && level && (
+          <LevelUpCard
+            challenge={challenge}
+            level={level}
+            quietMode={quietMode}
+            busy={isSavingChallenge}
+            onAccept={handleAcceptChallenge}
+            onDecline={handleDeclineChallenge}
+            onLevelUp={handleLevelUp}
+            onStay={handleStayAtLevel}
+          />
+        )}
+
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardLabel}>
@@ -357,6 +477,7 @@ export default function TodayScreen() {
 
           {day.exercises.map((item, index) => {
             const isSwapping = swapItem?.position === item.position;
+            const isChallenge = challenge?.exercise.id === item.exercise.id;
             return (
               <View key={item.position} style={styles.exerciseBlock}>
                 <View style={styles.exerciseRow}>
@@ -369,6 +490,9 @@ export default function TodayScreen() {
                     <Text style={styles.exerciseNumber}>{index + 1}</Text>
                     <View style={styles.exerciseText}>
                       <Text style={styles.exerciseName}>{item.exercise.name}</Text>
+                      {isChallenge && (
+                        <Text style={styles.swappedFrom}>A try from the next zone</Text>
+                      )}
                       {item.original && equipment && exerciseFits(item.original, equipment, maxZone) && (
                         <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
                       )}
@@ -380,7 +504,7 @@ export default function TodayScreen() {
                       )}
                     </View>
                   </Pressable>
-                  {!isInProgress && isPro && (
+                  {!isInProgress && isPro && !isChallenge && (
                     <Pressable
                       onPress={() => setSwapItem(isSwapping ? null : item)}
                       style={({ pressed }) => [
@@ -399,7 +523,7 @@ export default function TodayScreen() {
                     </Pressable>
                   )}
                 </View>
-                {!isInProgress && isPro && equipment && (
+                {!isInProgress && isPro && equipment && !isChallenge && (
                   <SwapSheet
                     open={isSwapping}
                     item={item}

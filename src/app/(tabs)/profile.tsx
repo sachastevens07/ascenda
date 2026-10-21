@@ -9,16 +9,25 @@ import { useAuth } from '@/lib/auth';
 import { deleteAllCycleNotes } from '@/lib/cycle';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import {
+  debugMarkChallengeReady,
+  debugOfferLevelChallenge,
+  debugResetLevelChallenge,
+} from '@/lib/levelUp';
+import {
   CONFIDENCE_LABELS,
   EQUIPMENT_ACCESS_LABELS,
   EXPERIENCE_LABELS,
   GOAL_LABELS,
+  LEVELS,
+  LEVEL_DESCRIPTIONS,
   LEVEL_LABELS,
   formatDaysPerWeek,
   getQuizAnswers,
   useProfile,
+  type Level,
 } from '@/lib/profile';
-import { formatKg } from '@/lib/programmes';
+import { fetchProgramme, formatKg, getNextDay } from '@/lib/programmes';
+import { fetchLastFinishedSession } from '@/lib/sessions';
 import { formatShortDate } from '@/lib/progress';
 import {
   DEV_OVERRIDES,
@@ -47,13 +56,14 @@ function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): 
 
 export default function ProfileScreen() {
   const { session } = useAuth();
-  const { profile, setCycleTracking } = useProfile();
+  const { profile, setCycleTracking, setConfidenceLevel } = useProfile();
   const subscription = useSubscription();
   const answers = getQuizAnswers(profile);
   const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isSavingCycle, setIsSavingCycle] = useState(false);
+  const [isSavingLevel, setIsSavingLevel] = useState(false);
   const tabBarHeight = useTabBarHeight();
 
   async function handleSignOut() {
@@ -141,6 +151,67 @@ export default function ProfileScreen() {
         { text: 'Cancel', style: 'cancel' },
       ]
     );
+  }
+
+  async function changeLevel(level: Level) {
+    setIsSavingLevel(true);
+    try {
+      await setConfidenceLevel(level);
+    } catch {
+      showDialog('That didn’t save', 'Check your connection and try again.');
+    } finally {
+      setIsSavingLevel(false);
+    }
+  }
+
+  function confirmChangeLevel(level: Level) {
+    if (!answers || level === answers.confidence_level) return;
+    showDialog(
+      `Change to ${LEVEL_LABELS[level]}?`,
+      `${LEVEL_DESCRIPTIONS[level]} You can change again any time.`,
+      [
+        { text: 'Change level', onPress: () => changeLevel(level) },
+        { text: 'Keep my level', style: 'cancel' },
+      ]
+    );
+  }
+
+  async function handleDevOffer() {
+    if (!answers) return;
+    try {
+      const programme = profile?.programme_id
+        ? await fetchProgramme(profile.programme_id, answers.equipment)
+        : null;
+      const last = programme ? await fetchLastFinishedSession() : null;
+      const day = programme ? getNextDay(programme, last?.programme_day_id ?? null) : null;
+      const offered = await debugOfferLevelChallenge(answers.confidence_level, answers.equipment, day);
+      showDialog(
+        offered ? 'Offer is on Today' : 'Nothing to offer',
+        offered
+          ? `${offered.exercise.name} is ready on the Today tab.`
+          : 'There’s no next-zone exercise for your equipment at this level.'
+      );
+    } catch {
+      showDialog('Couldn’t offer', 'Run supabase/level_up.sql in the SQL editor, then try again.');
+    }
+  }
+
+  async function handleDevReady() {
+    try {
+      await debugMarkChallengeReady();
+      showDialog('Marked as tried twice', 'Open Today to see the level-up offer.');
+    } catch {
+      showDialog('Couldn’t update', 'Accept a try first, or run level_up.sql.');
+    }
+  }
+
+  async function handleDevReset() {
+    try {
+      await debugResetLevelChallenge();
+      showDialog('Level-up reset', 'The current try is cleared.');
+    } catch {
+      showDialog('Couldn’t reset', 'Run supabase/level_up.sql in the SQL editor, then try again.');
+    }
   }
 
   function confirmDeleteCycleNotes() {
@@ -237,6 +308,50 @@ export default function ProfileScreen() {
             accessibilityRole="button">
             <Text style={styles.buttonText}>Change answers</Text>
           </Pressable>
+        </View>
+      )}
+
+      {answers && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Your level</Text>
+          <Text style={styles.label}>
+            You can move up or down any time. No pressure.
+          </Text>
+          {LEVELS.map((value) => {
+            const selected = value === answers.confidence_level;
+            return (
+              <Pressable
+                key={value}
+                onPress={() => confirmChangeLevel(value)}
+                disabled={isSavingLevel || selected}
+                style={({ pressed }) => [
+                  styles.levelOption,
+                  selected && styles.levelOptionSelected,
+                  pressed && styles.buttonPressed,
+                ]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected, disabled: isSavingLevel }}>
+                {selected && <Text style={styles.currentLevel}>Current</Text>}
+                <Text style={[styles.levelLabel, selected && styles.levelLabelSelected]}>
+                  {LEVEL_LABELS[value]}
+                </Text>
+                <Text style={styles.label}>{LEVEL_DESCRIPTIONS[value]}</Text>
+              </Pressable>
+            );
+          })}
+          {__DEV__ && (
+            <>
+              <Pressable style={styles.link} onPress={handleDevOffer} accessibilityRole="button">
+                <Text style={styles.devText}>Development only. Offer a try now</Text>
+              </Pressable>
+              <Pressable style={styles.devLink} onPress={handleDevReady} accessibilityRole="button">
+                <Text style={styles.devText}>Development only. Mark as tried twice</Text>
+              </Pressable>
+              <Pressable style={styles.devLink} onPress={handleDevReset} accessibilityRole="button">
+                <Text style={styles.devText}>Development only. Reset level-up</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       )}
 
@@ -360,6 +475,39 @@ const styles = StyleSheet.create({
   link: {
     alignItems: 'center',
     paddingTop: 16,
+    paddingBottom: 4,
+  },
+  levelOption: {
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colours.border,
+    backgroundColor: colours.background,
+  },
+  levelOptionSelected: {
+    borderColor: colours.accent,
+    backgroundColor: colours.accentSoft,
+  },
+  currentLevel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colours.accent,
+    marginBottom: 4,
+  },
+  levelLabel: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colours.text,
+    marginBottom: 4,
+  },
+  levelLabelSelected: {
+    color: colours.accent,
+  },
+  devLink: {
+    alignItems: 'center',
+    paddingTop: 8,
     paddingBottom: 4,
   },
   devText: {

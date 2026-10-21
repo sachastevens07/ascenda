@@ -63,17 +63,28 @@ export function pickReplacement(
   return ranked[0] ? toSlotExercise(ranked[0]) : null;
 }
 
+/** Sets and reps for a slot that isn't in the programme (a level-up try added to the session). */
+export const EXTRA_SWAP_SETS = { sets: 3, rep_min: 8, rep_max: 12 } as const;
+
 /** Replaces swapped slots, keeping the programme's exercise as `original`. */
 export function applySwaps(day: ProgrammeDay, swaps: DaySwaps = {}): ProgrammeDay {
-  return {
-    ...day,
-    exercises: day.exercises.map((item) => {
-      const swap = swaps[item.position];
-      return swap && swap.id !== item.exercise.id
-        ? { ...item, exercise: swap, original: item.exercise }
-        : item;
-    }),
-  };
+  const used = new Set(day.exercises.map((item) => item.position));
+  const exercises = day.exercises.map((item) => {
+    const swap = swaps[item.position];
+    return swap && swap.id !== item.exercise.id
+      ? { ...item, exercise: swap, original: item.exercise }
+      : item;
+  });
+  const extras = Object.entries(swaps)
+    .filter(([position]) => !used.has(Number(position)))
+    .map(([position, exercise]) => ({
+      position: Number(position),
+      ...EXTRA_SWAP_SETS,
+      exercise,
+      added: true,
+    }))
+    .sort((a, b) => a.position - b.position);
+  return { ...day, exercises: [...exercises, ...extras] };
 }
 
 /** The next gym zone above her cap, or null if she's already at the racks. */
@@ -99,10 +110,12 @@ export function eligibleSwaps(
   );
 }
 
-/** Slot position → exercise id for every swapped slot in a day, as stored on a session. */
+/** Slot position → exercise id for every swapped or added slot in a day, as stored on a session. */
 export function swapIds(day: ProgrammeDay): Record<string, string> {
   return Object.fromEntries(
-    day.exercises.filter((item) => item.original).map((item) => [item.position, item.exercise.id])
+    day.exercises
+      .filter((item) => item.original || item.added)
+      .map((item) => [item.position, item.exercise.id])
   );
 }
 

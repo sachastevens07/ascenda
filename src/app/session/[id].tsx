@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { ExerciseGuide } from '@/components/LevelUpCard';
 import { PillDropdown } from '@/components/PillDropdown';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
@@ -26,7 +27,13 @@ import {
   type CyclePhase,
 } from '@/lib/cycle';
 import { sessionMaxZone } from '@/lib/levels';
-import { getQuizAnswers, useProfile } from '@/lib/profile';
+import {
+  declineLevelUp,
+  fetchOpenLevelChallenge,
+  nextLevel,
+  type LevelChallenge,
+} from '@/lib/levelUp';
+import { getQuizAnswers, LEVEL_LABELS, useProfile } from '@/lib/profile';
 import {
   describeProgressionGoal,
   formatKg,
@@ -94,7 +101,7 @@ function formatPrevious(sets: LoggedSet[] | undefined): string | null {
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { profile } = useProfile();
+  const { profile, setConfidenceLevel } = useProfile();
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
   const maxZone = answers ? sessionMaxZone(answers.confidence_level, profile?.quiet_mode ?? false) : 1;
@@ -110,6 +117,7 @@ export default function SessionScreen() {
   const [bests, setBests] = useState<Record<string, ExerciseBests>>({});
   const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
+  const [challenge, setChallenge] = useState<LevelChallenge | null>(null);
 
   const workout = useWorkout();
   const { restEndsAt, publish } = workout;
@@ -127,12 +135,16 @@ export default function SessionScreen() {
         }
         const exerciseIds = log.day.exercises.map((item) => item.exercise.id);
         const historyBests = await fetchExerciseBests(exerciseIds, id).catch(() => ({}));
+        const openChallenge = answers
+          ? await fetchOpenLevelChallenge(answers.confidence_level).catch(() => null)
+          : null;
         if (!isCurrent) return;
         setDay(log.day);
         setPrevious(log.previous);
         setEntries(buildEntries(log.day, log.logged, log.previous, isPro));
         setStartedAt(new Date(log.session.started_at).getTime());
         setBests(historyBests);
+        setChallenge(openChallenge);
         setLoadState('ready');
       } catch {
         if (isCurrent) setLoadState('error');
@@ -141,7 +153,7 @@ export default function SessionScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [id, equipment, isPro, isSubscriptionLoading]);
+  }, [id, equipment, isPro, isSubscriptionLoading, answers?.confidence_level]);
 
   useEffect(() => {
     if (!cycleNotesOn) return;
@@ -324,6 +336,38 @@ export default function SessionScreen() {
       const trained =
         startedAt === null ? '' : ` You trained for ${formatDuration((Date.now() - startedAt) / 1000)}.`;
       showDialog('Session saved', `Nice work. That’s another one done.${trained}`);
+      if (answers) {
+        const updated = await fetchOpenLevelChallenge(answers.confidence_level).catch(() => null);
+        const upcoming = nextLevel(answers.confidence_level);
+        if (updated?.status === 'ready' && upcoming) {
+          showDialog(
+            `Move up to ${LEVEL_LABELS[upcoming]}?`,
+            `You’ve done ${updated.exercise.name} twice. ${LEVEL_LABELS[upcoming]} would add more of the gym to your usual sessions. You can stay here, or change later from Profile.`,
+            [
+              {
+                text: `Move to ${LEVEL_LABELS[upcoming]}`,
+                onPress: () => {
+                  setConfidenceLevel(upcoming)
+                    .then(() =>
+                      showDialog(
+                        `You’re on ${LEVEL_LABELS[upcoming]}`,
+                        'You can move back down any time from Profile. No pressure.'
+                      )
+                    )
+                    .catch(() => showDialog('That didn’t save', 'Check your connection and try again.'));
+                },
+              },
+              {
+                text: `Stay at ${LEVEL_LABELS[answers.confidence_level]}`,
+                style: 'cancel',
+                onPress: () => {
+                  declineLevelUp(updated.id).catch(() => {});
+                },
+              },
+            ]
+          );
+        }
+      }
     } catch {
       setIsFinishing(false);
       showDialog('Couldn’t finish the session', 'Check your connection and try again.');
@@ -436,6 +480,7 @@ export default function SessionScreen() {
         {day.exercises.map((item) => {
           const weighted = usesWeight(item.exercise.equipment);
           const previousText = formatPrevious(previous[item.exercise.id]);
+          const isChallenge = challenge?.exercise.id === item.exercise.id;
           const goalText = isPro
             ? describeProgressionGoal(getWeightSuggestion(item, previous[item.exercise.id]))
             : null;
@@ -451,6 +496,9 @@ export default function SessionScreen() {
                   accessibilityHint="Shows how to do this exercise">
                   <View style={styles.flex}>
                     <Text style={styles.exerciseName}>{item.exercise.name}</Text>
+                    {isChallenge && (
+                      <Text style={styles.swappedFrom}>A try from the next zone</Text>
+                    )}
                     {item.original &&
                       equipment &&
                       exerciseFits(item.original, equipment, maxZone) && (
@@ -462,7 +510,7 @@ export default function SessionScreen() {
                   </View>
                   <Ionicons name="information-circle-outline" size={24} color={colours.accent} />
                 </Pressable>
-                {isPro && (
+                {isPro && !isChallenge && (
                   <Pressable
                     onPress={() => openSwap(item)}
                     style={({ pressed }) => [
@@ -481,7 +529,12 @@ export default function SessionScreen() {
                   </Pressable>
                 )}
               </View>
-              {isPro && equipment && (
+              {isChallenge && challenge && (
+                <View style={styles.challengeGuide}>
+                  <ExerciseGuide exercise={challenge.exercise} />
+                </View>
+              )}
+              {isPro && equipment && !isChallenge && (
                 <SwapSheet
                   open={swapItem?.position === item.position}
                   item={item}
@@ -703,6 +756,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 8,
     marginBottom: 8,
+  },
+  challengeGuide: {
+    marginBottom: 12,
   },
   exerciseHeader: {
     flex: 1,
