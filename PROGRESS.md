@@ -26,7 +26,11 @@ Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules)
 
 ## In progress
 
-Nothing half-built. Features 4–10 are confirmed on the phone (user, 21 Oct). **Not yet confirmed on the phone**: Feature 12 (cycle notes; needs `supabase/cycle.sql` run first, unconfirmed), Feature 11 (Excel export + Open), the themed dialogs, and the floating tab bar + smaller floating workout bar. The .xlsx was checked in desktop Excel (dates, widths, frozen bold header, no repair prompt), not yet on the phone.
+Nothing half-built; all work is committed. Features 4–10 are confirmed on the phone (user, 21 Oct). Waiting on the user:
+- **Feature 12 (cycle notes)**: run `supabase/cycle.sql` in the SQL Editor, test on the phone, and review the consent wording (`confirmTurnOnCycleNotes` in `src/app/(tabs)/profile.tsx`). Files: `supabase/cycle.sql`, `src/lib/cycle.ts`, `src/lib/profile.tsx` (`setCycleTracking`), `src/app/(tabs)/profile.tsx`, `src/app/session/[id].tsx`, `src/app/(tabs)/progress.tsx`, `src/lib/export.ts`.
+- **Not yet confirmed on the phone**: Feature 11 (Excel export + Open), the themed dialogs, the floating tab bar + smaller floating workout bar. The .xlsx was checked in desktop Excel via PowerShell COM (dates, widths, frozen bold header, no repair prompt), not on the phone.
+
+If she reports a problem with any of these, fix it before starting the next step.
 
 ## Next step
 
@@ -43,7 +47,8 @@ Build **Feature 13: Paywall (RevenueCat)**: Free = logging, history, library, ex
 - The user often has two dev servers running (ports 8081 and 8082): the phone attaches to the stale one and `.expo/types/router.d.ts` gets corrupted, so `tsc` fails inside it. Delete that file (generated) and run one server.
 - `src/components/PlaceholderScreen.tsx` is unused (left in place).
 - **Export on iOS**: no Open button (no intent launcher; she opens it from Files), and exporting twice on the same day to the same folder is untested (Android adds " (1)" itself).
-- `AGENTS.md` still says CSV export; the user chose .xlsx (see Decisions). Update the brief if she agrees.
+- **`AGENTS.md` is out of date** in places (the user's later choices win; ask before editing the brief): it says CSV export (now .xlsx), 2–4 days (now 1–6), three templates (now 9), and "every set hit the top" for progression (code uses set 1 only, which is less conservative than the brief; raise this with the user).
+- `AGENTS.md` says run `npx expo lint`, but there's no ESLint config, so lint can't run.
 
 ## Decisions made (not in AGENTS.md)
 
@@ -61,7 +66,7 @@ Build **Feature 13: Paywall (RevenueCat)**: Free = logging, history, library, ex
 - **Progress**: only ticked sets from finished sessions; queries page past Supabase's 1000-row limit; PB = heaviest (least help for assisted, most reps for bodyweight/band); estimated 1RM = Epley on 1–12-rep sets, rounded to 0.5 kg, "no need to test it"; chart = heaviest weight per date, x by time, everything shown (no range toggle); weeks start Monday.
 - **Workout bar / timer**: bar on the four tabs only; elapsed = now − `started_at` (no pause); next set = first unticked set in programme order.
 - **Trophies**: heaviest weight, best estimated 1RM, most single-set volume; must beat finished-session history and earlier sets today; none on an exercise's first session, assisted machines or bodyweight/band.
-- **Export** (user-chosen): **Excel .xlsx instead of the brief's CSV** (user, 21 Oct: a CSV can't set column widths, so Excel showed dates as `#####`; tested in desktop Excel, even "21 Oct 2026" text only fits for some months). One sheet "Workouts", one row per set; columns Date (real date, `d mmm yyyy`), Start time and Set completed (real times, `hh:mm`, phone's time zone), Session (programme day name, blank if the day was deleted), Exercise, Equipment, Set, Weight (kg) (blank for bodyweight/band), Reps; bold frozen header; widths fit the content (text columns capped at 45). Ticked sets from finished sessions only (same as Progress); ordered by session start, then tick time. Button on Profile only. Saved to a folder she picks, then optional Open. Android won't let apps save into the Downloads root, so the copy suggests Documents. Free for everyone (keep it outside the paywall). On Android, a same-named file gets " (1)" added by the system; on iOS, exporting twice on the same day to the same folder is untested.
+- **Export** (user-chosen): **Excel .xlsx instead of the brief's CSV** (user, 21 Oct: a CSV can't set column widths, so Excel showed dates as `#####`; tested in desktop Excel, even "21 Oct 2026" text only fits for some months). One sheet "Workouts", one row per set; columns Date (real date, `d mmm yyyy`), Start time and Set completed (real times, `hh:mm`, phone's time zone), Session (programme day name, blank if the day was deleted), Exercise, Equipment, Set, Weight (kg) (blank for bodyweight/band), Reps; bold frozen header; widths fit the content (text columns capped at 45). Ticked sets from finished sessions only (same as Progress); ordered by session start, then tick time. Button on Profile only. Saved to a folder she picks, then optional Open. Android won't let apps save into the Downloads root, so the copy suggests Documents. Free for everyone (keep it outside the paywall).
 - **Cycle notes** (user-chosen): phases `period` "Period", `after_period` "After my period", `mid_cycle` "Mid-cycle", `before_period` "Before my period", `not_sure` "Not sure" (DB-enforced; keep `supabase/cycle.sql` and `src/lib/cycle.ts` in step). Tagged only from the logger, never prompted. `cycle_phase` is only queried while cycle notes are on, so the rest of the app works even if `cycle.sql` hasn't been run. Turning off keeps notes hidden unless she picks "Delete my notes". Patterns: finished tagged sessions only; average sets = ticked sets with reps; length ignores sessions over 4 h (left open); kg lifted = weight × reps, excluding bodyweight/band/assisted, averaged over sessions that had any. Copy states facts only ("This isn't advice"); no prescriptions. Consent wording is in `src/app/(tabs)/profile.tsx` (`confirmTurnOnCycleNotes`), awaiting the user's review.
 - No generated Supabase types: embedded relations cast through `unknown`; numerics converted with `Number()`.
 
