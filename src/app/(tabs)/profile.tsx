@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -27,7 +27,7 @@ import {
   type Level,
 } from '@/lib/profile';
 import { fetchProgramme, formatKg, getNextDay } from '@/lib/programmes';
-import { fetchLastFinishedSession } from '@/lib/sessions';
+import { fetchLastFinishedProgrammeSession } from '@/lib/sessions';
 import { formatShortDate } from '@/lib/progress';
 import {
   DEV_OVERRIDES,
@@ -182,7 +182,7 @@ export default function ProfileScreen() {
       const programme = profile?.programme_id
         ? await fetchProgramme(profile.programme_id, answers.equipment)
         : null;
-      const last = programme ? await fetchLastFinishedSession() : null;
+      const last = programme ? await fetchLastFinishedProgrammeSession() : null;
       const day = programme ? getNextDay(programme, last?.programme_day_id ?? null) : null;
       const offered = await debugOfferLevelChallenge(answers.confidence_level, answers.equipment, day);
       showDialog(
@@ -273,6 +273,19 @@ export default function ProfileScreen() {
             </Text>
           </Pressable>
         )}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>My workouts</Text>
+        <Text style={styles.label}>
+          Build your own sessions, or start the quiet-spot starter. Free for everyone.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
+          onPress={() => router.push('/workouts' as Href)}
+          accessibilityRole="button">
+          <Text style={styles.buttonText}>Open My workouts</Text>
+        </Pressable>
       </View>
 
       {profile?.programme && (

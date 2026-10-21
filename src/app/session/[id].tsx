@@ -26,6 +26,7 @@ import {
   saveSessionCyclePhase,
   type CyclePhase,
 } from '@/lib/cycle';
+import { replaceCustomWorkoutExercise, STARTER_WORKOUT_ID } from '@/lib/customWorkouts';
 import { sessionMaxZone } from '@/lib/levels';
 import {
   declineLevelUp,
@@ -118,6 +119,7 @@ export default function SessionScreen() {
   const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
   const [challenge, setChallenge] = useState<LevelChallenge | null>(null);
+  const [customWorkoutId, setCustomWorkoutId] = useState<string | null>(null);
 
   const workout = useWorkout();
   const { restEndsAt, publish } = workout;
@@ -145,6 +147,7 @@ export default function SessionScreen() {
         setStartedAt(new Date(log.session.started_at).getTime());
         setBests(historyBests);
         setChallenge(openChallenge);
+        setCustomWorkoutId(log.session.custom_workout_id);
         setLoadState('ready');
       } catch {
         if (isCurrent) setLoadState('error');
@@ -317,13 +320,23 @@ export default function SessionScreen() {
 
   async function handleSwap(exercise: SlotExercise, scope: SwapScope) {
     if (!day || !swapItem) return;
-    if (scope === 'always') await saveUserSwap(day.id, swapItem.position, exercise.id);
+    if (scope === 'always') {
+      if (customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID) {
+        await replaceCustomWorkoutExercise(customWorkoutId, swapItem.position, exercise.id);
+      } else if (!customWorkoutId) {
+        await saveUserSwap(day.id, swapItem.position, exercise.id);
+      }
+    }
     await replaceSlot(swapItem, exercise);
   }
 
   async function handleRestore() {
     if (!day || !swapItem?.original) return;
-    await deleteUserSwap(day.id, swapItem.position);
+    if (customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID) {
+      await replaceCustomWorkoutExercise(customWorkoutId, swapItem.position, swapItem.original.id);
+    } else if (!customWorkoutId) {
+      await deleteUserSwap(day.id, swapItem.position);
+    }
     await replaceSlot(swapItem, swapItem.original);
   }
 
@@ -546,6 +559,12 @@ export default function SessionScreen() {
                   onClose={() => setSwapItem(null)}
                   onSwap={handleSwap}
                   onRestore={handleRestore}
+                  allowAlways={customWorkoutId !== STARTER_WORKOUT_ID}
+                  alwaysDetail={
+                    customWorkoutId
+                      ? 'Replaces it in this workout'
+                      : 'Replaces it in your programme'
+                  }
                 />
               )}
 

@@ -1,3 +1,4 @@
+import { customWorkoutToDay, fetchCustomWorkout } from '@/lib/customWorkouts';
 import type { EquipmentAccess } from '@/lib/profile';
 import {
   fetchProgrammeDay,
@@ -118,13 +119,17 @@ export async function loadSessionLog(
   equipment: EquipmentAccess
 ): Promise<SessionLog | null> {
   const session = await fetchSession(id);
-  if (!session?.programme_day_id) return null;
-  const [programmeDay, swaps] = await Promise.all([
-    fetchProgrammeDay(session.programme_day_id, equipment),
-    fetchSessionSwaps(session),
-  ]);
-  if (!programmeDay) return null;
-  const day = applySwaps(programmeDay, swaps);
+  if (!session) return null;
+  const swaps = await fetchSessionSwaps(session);
+  let planned: ProgrammeDay | null = null;
+  if (session.custom_workout_id) {
+    const workout = await fetchCustomWorkout(session.custom_workout_id);
+    planned = workout ? customWorkoutToDay(workout) : null;
+  } else if (session.programme_day_id) {
+    planned = await fetchProgrammeDay(session.programme_day_id, equipment);
+  }
+  if (!planned) return null;
+  const day = applySwaps(planned, swaps);
   const exerciseIds = day.exercises.map((item) => item.exercise.id);
   const [logged, previous] = await Promise.all([
     fetchSessionSets(id),

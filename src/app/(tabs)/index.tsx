@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +17,13 @@ import { LevelUpCard } from '@/components/LevelUpCard';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
+import {
+  customWorkoutToDay,
+  fetchCustomWorkout,
+  fetchCustomWorkouts,
+  missingCustomWorkoutsMessage,
+  type CustomWorkout,
+} from '@/lib/customWorkouts';
 import { fetchFillLibrary, resolveDay, sessionMaxZone } from '@/lib/levels';
 import {
   acceptLevelChallenge,
@@ -35,14 +42,16 @@ import {
   getNextDay,
   getWeightSuggestion,
   type Programme,
+  type ProgrammeDay,
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
 import { formatShortDate } from '@/lib/progress';
 import {
   fetchActiveSession,
-  fetchLastFinishedSession,
+  fetchLastFinishedProgrammeSession,
   fetchPreviousSets,
+  startCustomSession,
   startSession,
   type LoggedSet,
   type Session,
@@ -67,10 +76,10 @@ import {
   type UserSwaps,
 } from '@/lib/swaps';
 
-type LoadState = 'loading' | 'error' | 'no-programme' | 'ready';
+type LoadState = 'loading' | 'error' | 'ready';
 
 type TodayData = {
-  programme: Programme;
+  programme: Programme | null;
   activeSession: Session | null;
   /** Swaps in the session in progress, if any. */
   sessionSwaps: DaySwaps;
@@ -80,6 +89,9 @@ type TodayData = {
   previous: Record<string, LoggedSet[]>;
   /** All exercises, used to fill slots above her level. */
   library: RankedExercise[];
+  customWorkouts: CustomWorkout[];
+  /** Custom session in progress, with this session's swaps applied. */
+  customDay: ProgrammeDay | null;
 };
 
 /** Sets or clears (`exercise` null) one slot's swap. */
@@ -124,28 +136,31 @@ export default function TodayScreen() {
   // Reloads every time Today comes into view, so it's up to date after a session.
   useFocusEffect(
     useCallback(() => {
-      if (!programmeId || !equipment) {
-        setLoadState('no-programme');
+      if (!equipment) {
+        setLoadState('error');
         return;
       }
       let isCurrent = true;
       (async () => {
         try {
-          const [programme, activeSession, lastFinished, userSwaps, library] = await Promise.all([
-            fetchProgramme(programmeId, equipment),
-            fetchActiveSession(),
-            fetchLastFinishedSession(),
-            fetchUserSwaps(equipment),
-            fetchFillLibrary(),
-          ]);
-          if (!programme) {
-            if (isCurrent) setLoadState('no-programme');
-            return;
-          }
+          const [programme, activeSession, lastFinished, userSwaps, library, customWorkouts] =
+            await Promise.all([
+              programmeId ? fetchProgramme(programmeId, equipment) : Promise.resolve(null),
+              fetchActiveSession(),
+              fetchLastFinishedProgrammeSession(),
+              fetchUserSwaps(equipment),
+              fetchFillLibrary(),
+              fetchCustomWorkouts().catch(() => [] as CustomWorkout[]),
+            ]);
           const sessionSwaps = activeSession ? await fetchSessionSwaps(activeSession) : {};
-          const next = getNextDay(programme, lastFinished?.programme_day_id ?? null);
+          let customDay: ProgrammeDay | null = null;
+          if (activeSession?.custom_workout_id) {
+            const workout = await fetchCustomWorkout(activeSession.custom_workout_id).catch(() => null);
+            customDay = workout ? applySwaps(customWorkoutToDay(workout), sessionSwaps) : null;
+          }
+          const next = programme ? getNextDay(programme, lastFinished?.programme_day_id ?? null) : null;
           let nextChallenge: LevelChallenge | null = null;
-          if (level) {
+          if (level && next) {
             try {
               nextChallenge = await ensureLevelChallenge(level, equipment, next);
             } catch {
@@ -154,7 +169,9 @@ export default function TodayScreen() {
           }
           const exerciseIds = [
             ...new Set([
-              ...programme.days.flatMap((d) => d.exercises.map((e) => e.exercise.id)),
+              ...(programme?.days.flatMap((d) => d.exercises.map((e) => e.exercise.id)) ?? []),
+              ...(customDay?.exercises.map((item) => item.exercise.id) ?? []),
+              ...customWorkouts.flatMap((workout) => workout.exercises.map((item) => item.exercise.id)),
               ...Object.values(userSwaps).flatMap((swaps) => Object.values(swaps).map((e) => e.id)),
               ...Object.values(sessionSwaps).map((e) => e.id),
               ...(nextChallenge ? [nextChallenge.exercise.id] : []),
@@ -171,6 +188,8 @@ export default function TodayScreen() {
             lastFinishedDayId: lastFinished?.programme_day_id ?? null,
             previous,
             library,
+            customWorkouts,
+            customDay,
           });
           setLoadState('ready');
         } catch {
@@ -186,9 +205,11 @@ export default function TodayScreen() {
   const programme = data?.programme ?? null;
   const activeSession = data?.activeSession ?? null;
   const nextDay = programme ? getNextDay(programme, data?.lastFinishedDayId ?? null) : null;
-  const activeDay = activeSession
+  const activeDay = activeSession?.programme_day_id
     ? programme?.days.find((item) => item.id === activeSession.programme_day_id)
     : undefined;
+  const customDay = data?.customDay ?? null;
+  const isCustomInProgress = customDay !== null;
   const plannedDay =
     activeDay ?? programme?.days.find((item) => item.id === chosenDayId) ?? nextDay;
   const resolvedDay =
@@ -223,6 +244,38 @@ export default function TodayScreen() {
       router.push({ pathname: '/session/[id]', params: { id: session.id } });
     } catch {
       showDialog('Couldn’t start the session', 'Check your connection and try again.');
+    } finally {
+      setIsStarting(false);
+    }
+  }
+
+  async function handleStartCustom(workout: CustomWorkout) {
+    if (activeSession) {
+      showDialog(
+        'You already have a session going',
+        'Finish or discard it first, then start this workout.',
+        [
+          {
+            text: 'Open it',
+            onPress: () => router.push({ pathname: '/session/[id]', params: { id: activeSession.id } }),
+          },
+          { text: 'OK', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+    setIsStarting(true);
+    try {
+      const session = await startCustomSession(workout.id);
+      router.push({ pathname: '/session/[id]', params: { id: session.id } });
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : '';
+      showDialog(
+        'Couldn’t start the workout',
+        /custom_workouts/i.test(detail)
+          ? missingCustomWorkoutsMessage()
+          : 'Check your connection and try again.'
+      );
     } finally {
       setIsStarting(false);
     }
@@ -345,7 +398,9 @@ export default function TodayScreen() {
   }
 
   async function handleQuietMode(enabled: boolean) {
-    if (activeDay !== undefined || isSavingQuiet || enabled === quietMode) return;
+    if (activeDay !== undefined || isCustomInProgress || isSavingQuiet || enabled === quietMode) {
+      return;
+    }
     setQuietDraft(enabled);
     setIsSavingQuiet(true);
     try {
@@ -361,12 +416,12 @@ export default function TodayScreen() {
     }
   }
 
-  if (loadState !== 'ready' || !programme || !day) {
+  if (loadState !== 'ready') {
     return (
       <View style={styles.centre}>
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.accent} />
-        ) : loadState === 'error' ? (
+        ) : (
           <>
             <Text style={styles.message}>
               We couldn’t load today’s session. Check your connection and try again.
@@ -378,30 +433,35 @@ export default function TodayScreen() {
               <Text style={styles.outlineButtonText}>Try again</Text>
             </Pressable>
           </>
-        ) : (
-          <Text style={styles.message}>
-            You don’t have a programme yet. Check your answers in Profile.
-          </Text>
         )}
       </View>
     );
   }
 
-  const isNextDay = day.id === nextDay?.id;
+  const isNextDay = Boolean(day && nextDay && day.id === nextDay.id);
   const isInProgress = activeDay !== undefined;
-  const suggestionFor = (item: (typeof day.exercises)[number]) =>
+  const sessionBusy = isInProgress || isCustomInProgress;
+  const suggestionFor = (item: ProgrammeExercise) =>
     getWeightSuggestion(item, data?.previous[item.exercise.id]);
-  const needsStartingWeights = day.exercises.some(
-    (item) => suggestionFor(item).kind === 'find-starting-weight'
+  const needsStartingWeights = Boolean(
+    day?.exercises.some((item) => suggestionFor(item).kind === 'find-starting-weight')
   );
+  const starterWorkout = data?.customWorkouts.find((item) => item.is_starter);
+  const myWorkouts = data?.customWorkouts.filter((item) => !item.is_starter) ?? [];
+  const featuredWorkouts = [
+    ...(starterWorkout ? [starterWorkout] : []),
+    ...myWorkouts.slice(0, 3),
+  ];
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         <Text style={styles.title}>Today</Text>
-        <Text style={styles.subtitle}>
-          {programme.name} · {formatDaysPerWeek(programme.days_per_week)} a week
-        </Text>
+        {programme && (
+          <Text style={styles.subtitle}>
+            {programme.name} · {formatDaysPerWeek(programme.days_per_week)} a week
+          </Text>
+        )}
 
         {subscription.trialEndsAt && isTrialEndingSoon(subscription) && (
           <View style={styles.tip}>
@@ -418,7 +478,7 @@ export default function TodayScreen() {
           </View>
         )}
 
-        {activeSession && !isInProgress && (
+        {activeSession && !isInProgress && !isCustomInProgress && (
           <View style={styles.tip}>
             <Text style={styles.tipText}>You have a session in progress from an earlier plan.</Text>
             <Pressable
@@ -443,6 +503,39 @@ export default function TodayScreen() {
           />
         )}
 
+        {isCustomInProgress && customDay && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>In progress</Text>
+            <Text style={styles.dayName}>{customDay.name}</Text>
+            <Text style={styles.cardLabel}>{customDay.exercises.length} exercises</Text>
+            {customDay.exercises.map((item, index) => (
+              <View key={`${item.exercise.id}-${item.position}`} style={styles.exerciseBlock}>
+                <View style={styles.exerciseRow}>
+                  <Pressable
+                    onPress={() =>
+                      router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
+                    }
+                    style={({ pressed }) => [styles.exerciseInfo, pressed && styles.pressed]}
+                    accessibilityRole="button">
+                    <Text style={styles.exerciseNumber}>{index + 1}</Text>
+                    <View style={styles.exerciseText}>
+                      <Text style={styles.exerciseName}>{item.exercise.name}</Text>
+                      <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
+                    </View>
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+            <Pressable
+              style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
+              onPress={handleContinue}
+              accessibilityRole="button">
+              <Text style={styles.startButtonText}>Continue session</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {programme && day ? (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardLabel}>
@@ -457,15 +550,15 @@ export default function TodayScreen() {
 
           <Pressable
             onPress={() => handleQuietMode(!quietMode)}
-            disabled={isInProgress || isSavingQuiet}
+            disabled={sessionBusy || isSavingQuiet}
             style={({ pressed }) => [styles.quietRow, pressed && styles.pressed]}
             accessibilityRole="switch"
-            accessibilityState={{ checked: quietMode, disabled: isInProgress }}
+            accessibilityState={{ checked: quietMode, disabled: sessionBusy }}
             accessibilityLabel="Quiet Mode">
             <View style={styles.quietCopy}>
               <Text style={styles.quietTitle}>Quiet Mode</Text>
               <Text style={styles.quietText}>
-                {isInProgress
+                {sessionBusy
                   ? 'Finish this session to change Quiet Mode.'
                   : 'Stay in one spot — dumbbells, and maybe a mat or bench.'}
               </Text>
@@ -555,6 +648,56 @@ export default function TodayScreen() {
             )}
           </Pressable>
         </View>
+        ) : (
+          <View style={styles.tip}>
+            <Text style={styles.tipText}>
+              You don’t have a programme yet. Check your answers in Profile, or start one of your
+              own workouts below.
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>My workouts</Text>
+          <Text style={styles.dayName}>Your sessions</Text>
+          <Text style={styles.cardLabel}>
+            Build your own, or start the quiet-spot starter. Free for everyone.
+          </Text>
+          {featuredWorkouts.length === 0 ? (
+            <Text style={styles.quietText}>
+              Create a workout to see it here. If this stays empty, run supabase/custom_workouts.sql.
+            </Text>
+          ) : (
+            featuredWorkouts.map((workout) => {
+              const count = workout.exercises.length;
+              return (
+                <View key={workout.id} style={styles.customRow}>
+                  <View style={styles.exerciseText}>
+                    {workout.is_starter && <Text style={styles.swappedFrom}>Starter</Text>}
+                    <Text style={styles.exerciseName}>{workout.name}</Text>
+                    <Text style={styles.exerciseDetail}>
+                      {count} {count === 1 ? 'exercise' : 'exercises'}
+                    </Text>
+                  </View>
+                  <Pressable
+                    style={({ pressed }) => [styles.miniStart, (pressed || isStarting) && styles.pressed]}
+                    onPress={() => handleStartCustom(workout)}
+                    disabled={isStarting}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Start ${workout.name}`}>
+                    <Text style={styles.miniStartText}>Start</Text>
+                  </Pressable>
+                </View>
+              );
+            })
+          )}
+          <Pressable
+            style={({ pressed }) => [styles.outlineButton, styles.tipButton, pressed && styles.pressed]}
+            onPress={() => router.push('/workouts' as Href)}
+            accessibilityRole="button">
+            <Text style={styles.outlineButtonText}>See all workouts</Text>
+          </Pressable>
+        </View>
 
         {needsStartingWeights && (
           <Text style={[styles.tip, styles.tipText]}>
@@ -579,7 +722,7 @@ export default function TodayScreen() {
           </View>
         )}
 
-        {isPro && programme.days.length > 1 && !isInProgress && (
+        {isPro && programme && programme.days.length > 1 && !isInProgress && !isCustomInProgress && (
           <Pressable
             style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
             onPress={() => setIsPickerOpen(true)}
@@ -587,7 +730,7 @@ export default function TodayScreen() {
             <Text style={styles.outlineButtonText}>Do a different day</Text>
           </Pressable>
         )}
-        {!isNextDay && !isInProgress && (
+        {programme && day && !isNextDay && !isInProgress && (
           <Pressable
             style={styles.link}
             onPress={() => setChosenDayId(null)}
@@ -614,8 +757,8 @@ export default function TodayScreen() {
         <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
           <Text style={styles.sheetTitle}>Choose a day</Text>
           <ScrollView>
-            {programme.days.map((item) => {
-              const isSelected = item.id === day.id;
+            {(programme?.days ?? []).map((item) => {
+              const isSelected = item.id === day?.id;
               return (
                 <Pressable
                   key={item.id}
@@ -873,6 +1016,29 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colours.textMuted,
     textAlign: 'center',
+  },
+  customRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colours.border,
+  },
+  miniStart: {
+    minHeight: 48,
+    minWidth: 88,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.accent,
+  },
+  miniStartText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colours.surface,
   },
   backdrop: {
     flex: 1,

@@ -21,6 +21,9 @@ type SwapSheetProps = {
   onSwap: (exercise: SlotExercise, scope: SwapScope) => Promise<void>;
   /** Puts the programme's own exercise back, today and in her programme. */
   onRestore: () => Promise<void>;
+  /** Hide "Every time" on the shared starter (it can't be edited). Default true. */
+  allowAlways?: boolean;
+  alwaysDetail?: string;
 };
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -44,6 +47,8 @@ export function SwapSheet({
   onClose,
   onSwap,
   onRestore,
+  allowAlways = true,
+  alwaysDetail = 'Replaces it in your programme',
 }: SwapSheetProps) {
   const [alternatives, setAlternatives] = useState<SlotExercise[]>([]);
   const [trySomethingNew, setTrySomethingNew] = useState<SlotExercise | null>(null);
@@ -57,7 +62,7 @@ export function SwapSheet({
   const canRestore = Boolean(item.original && exerciseFits(item.original, equipment, maxZone));
 
   const pillCount = chosen
-    ? 3
+    ? allowAlways ? 3 : 2
     : loadState === 'ready'
       ? (canRestore ? 1 : 0) +
         alternatives.length +
@@ -134,12 +139,14 @@ export function SwapSheet({
             disabled={isSaving}
             onPress={() => save(() => onSwap(chosen, 'today'))}
           />
-          <Pill
-            title="Every time"
-            detail="Replaces it in your programme"
-            disabled={isSaving}
-            onPress={() => save(() => onSwap(chosen, 'always'))}
-          />
+          {allowAlways && (
+            <Pill
+              title="Every time"
+              detail={alwaysDetail}
+              disabled={isSaving}
+              onPress={() => save(() => onSwap(chosen, 'always'))}
+            />
+          )}
           <Pill title="Back" muted disabled={isSaving} onPress={() => setChosen(null)} />
         </Pills>
       ) : loadState === 'loading' ? (

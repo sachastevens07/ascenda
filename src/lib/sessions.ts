@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase';
 
+export type SessionSource = 'programme' | 'custom' | 'ai';
+
 /** One row of the `sessions` table. */
 export type Session = {
   id: string;
@@ -10,6 +12,8 @@ export type Session = {
   completed_at: string | null;
   /** Swapped slots in this session: slot position (as text) → exercise id. */
   exercise_swaps: Record<string, string>;
+  source: SessionSource;
+  custom_workout_id: string | null;
 };
 
 /** One row of the `sets` table. */
@@ -23,8 +27,24 @@ export type LoggedSet = {
   completed: boolean;
 };
 
-const SESSION_COLUMNS = 'id, date, programme_day_id, started_at, completed_at, exercise_swaps';
+const SESSION_COLUMNS =
+  'id, date, programme_day_id, started_at, completed_at, exercise_swaps, source, custom_workout_id';
+const SESSION_COLUMNS_LEGACY = 'id, date, programme_day_id, started_at, completed_at, exercise_swaps';
 const SET_COLUMNS = 'session_id, exercise_id, set_number, weight_kg, reps, completed';
+
+function isMissingCustomSessionColumns(error: { message?: string; code?: string }): boolean {
+  return /source|custom_workout_id/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function toSession(row: Session | null): Session | null {
+  if (!row) return null;
+  return {
+    ...row,
+    source: row.source ?? 'programme',
+    custom_workout_id: row.custom_workout_id ?? null,
+    exercise_swaps: row.exercise_swaps ?? {},
+  };
+}
 
 /** Today's date on the phone, as YYYY-MM-DD. */
 function localDate(): string {
@@ -41,40 +61,66 @@ function toLoggedSet(row: Record<string, unknown>): LoggedSet {
   };
 }
 
+type SessionQueryResult = {
+  data: unknown;
+  error: { message?: string; code?: string } | null;
+};
+
+async function selectSession(
+  run: (columns: string) => PromiseLike<SessionQueryResult>
+): Promise<Session | null> {
+  const full = await run(SESSION_COLUMNS);
+  if (!full.error) return toSession(full.data as Session | null);
+  if (!isMissingCustomSessionColumns(full.error)) throw full.error;
+  const legacy = await run(SESSION_COLUMNS_LEGACY);
+  if (legacy.error) throw legacy.error;
+  return toSession(legacy.data as Session | null);
+}
+
 export async function fetchSession(id: string): Promise<Session | null> {
-  const { data, error } = await supabase
-    .from('sessions')
-    .select(SESSION_COLUMNS)
-    .eq('id', id)
-    .maybeSingle();
-  if (error) throw error;
-  return data as Session | null;
+  return selectSession((columns) =>
+    supabase.from('sessions').select(columns).eq('id', id).maybeSingle()
+  );
 }
 
 /** The most recent session that hasn't been finished, if any. */
 export async function fetchActiveSession(): Promise<Session | null> {
-  const { data, error } = await supabase
-    .from('sessions')
-    .select(SESSION_COLUMNS)
-    .is('completed_at', null)
-    .order('started_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data as Session | null;
+  return selectSession((columns) =>
+    supabase
+      .from('sessions')
+      .select(columns)
+      .is('completed_at', null)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  );
 }
 
 /** The most recently finished session, if any. */
 export async function fetchLastFinishedSession(): Promise<Session | null> {
-  const { data, error } = await supabase
-    .from('sessions')
-    .select(SESSION_COLUMNS)
-    .not('completed_at', 'is', null)
-    .order('completed_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error) throw error;
-  return data as Session | null;
+  return selectSession((columns) =>
+    supabase
+      .from('sessions')
+      .select(columns)
+      .not('completed_at', 'is', null)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  );
+}
+
+/** Last finished programme day — custom workouts don't move her programme along. */
+export async function fetchLastFinishedProgrammeSession(): Promise<Session | null> {
+  return selectSession((columns) =>
+    supabase
+      .from('sessions')
+      .select(columns)
+      .not('completed_at', 'is', null)
+      .not('programme_day_id', 'is', null)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  );
 }
 
 export async function startSession(
@@ -83,11 +129,57 @@ export async function startSession(
 ): Promise<Session> {
   const { data, error } = await supabase
     .from('sessions')
-    .insert({ programme_day_id: programmeDayId, date: localDate(), exercise_swaps: exerciseSwaps })
+    .insert({
+      programme_day_id: programmeDayId,
+      date: localDate(),
+      exercise_swaps: exerciseSwaps,
+      source: 'programme',
+    })
     .select(SESSION_COLUMNS)
     .single();
-  if (error) throw error;
-  return data as Session;
+  if (error) {
+    if (isMissingCustomSessionColumns(error)) {
+      const legacy = await supabase
+        .from('sessions')
+        .insert({
+          programme_day_id: programmeDayId,
+          date: localDate(),
+          exercise_swaps: exerciseSwaps,
+        })
+        .select(SESSION_COLUMNS_LEGACY)
+        .single();
+      if (legacy.error) throw legacy.error;
+      return toSession(legacy.data as Session)!;
+    }
+    throw error;
+  }
+  return toSession(data as Session)!;
+}
+
+export async function startCustomSession(
+  customWorkoutId: string,
+  exerciseSwaps: Record<string, string> = {}
+): Promise<Session> {
+  const { data, error } = await supabase
+    .from('sessions')
+    .insert({
+      programme_day_id: null,
+      custom_workout_id: customWorkoutId,
+      source: 'custom',
+      date: localDate(),
+      exercise_swaps: exerciseSwaps,
+    })
+    .select(SESSION_COLUMNS)
+    .single();
+  if (error) {
+    if (isMissingCustomSessionColumns(error)) {
+      throw new Error(
+        'Custom workouts need supabase/custom_workouts.sql run in the Supabase SQL editor.'
+      );
+    }
+    throw error;
+  }
+  return toSession(data as Session)!;
 }
 
 export async function saveSessionSwaps(
