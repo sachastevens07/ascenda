@@ -15,7 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { FilterSheet } from '@/components/FilterSheet';
+import { PillDropdown } from '@/components/PillDropdown';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import {
@@ -162,12 +162,19 @@ export default function SessionScreen() {
 
   async function changeCyclePhase(phase: CyclePhase | null) {
     const before = cyclePhase;
+    const sessionId = Array.isArray(id) ? id[0] : id;
     setCyclePhase(phase);
     try {
-      await saveSessionCyclePhase(id, phase);
-    } catch {
+      await saveSessionCyclePhase(sessionId, phase);
+    } catch (error) {
       setCyclePhase(before);
-      showDialog('That note didn’t save', 'Check your connection and try again.');
+      const detail = error instanceof Error ? error.message : '';
+      showDialog(
+        'That note didn’t save',
+        /cycle_phase/i.test(detail)
+          ? 'Cycle notes need supabase/cycle.sql run in the Supabase SQL editor.'
+          : 'Check your connection and try again.'
+      );
     }
   }
 
@@ -248,6 +255,10 @@ export default function SessionScreen() {
   }
 
   function openSwap(item: ProgrammeExercise) {
+    if (swapItem?.position === item.position) {
+      setSwapItem(null);
+      return;
+    }
     const hasTicked = setNumbers(item).some(
       (setNumber) => entries[setKey(item.exercise.id, setNumber)]?.completed
     );
@@ -411,7 +422,7 @@ export default function SessionScreen() {
           </View>
           {cycleNotesOn && (
             <View style={styles.cycleRow}>
-              <FilterSheet
+              <PillDropdown
                 label="Cycle phase"
                 allLabel="No note"
                 options={CYCLE_PHASES.map((phase) => ({ value: phase, label: CYCLE_PHASE_LABELS[phase] }))}
@@ -454,13 +465,36 @@ export default function SessionScreen() {
                 {isPro && (
                   <Pressable
                     onPress={() => openSwap(item)}
-                    style={({ pressed }) => [styles.swapButton, pressed && styles.pressed]}
+                    style={({ pressed }) => [
+                      styles.swapButton,
+                      swapItem?.position === item.position && styles.swapButtonOpen,
+                      pressed && styles.pressed,
+                    ]}
                     accessibilityRole="button"
+                    accessibilityState={{ expanded: swapItem?.position === item.position }}
                     accessibilityLabel={`Swap ${item.exercise.name}`}>
-                    <Ionicons name="swap-horizontal" size={24} color={colours.accent} />
+                    <Ionicons
+                      name="swap-horizontal"
+                      size={24}
+                      color={swapItem?.position === item.position ? colours.surface : colours.accent}
+                    />
                   </Pressable>
                 )}
               </View>
+              {isPro && equipment && (
+                <SwapSheet
+                  open={swapItem?.position === item.position}
+                  item={item}
+                  equipment={equipment}
+                  maxZone={maxZone}
+                  excludeIds={day.exercises.flatMap((slot) =>
+                    slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
+                  )}
+                  onClose={() => setSwapItem(null)}
+                  onSwap={handleSwap}
+                  onRestore={handleRestore}
+                />
+              )}
 
               <View style={styles.columnLabels}>
                 <Text style={[styles.columnLabel, styles.setColumn]}>Set</Text>
@@ -563,20 +597,6 @@ export default function SessionScreen() {
           General fitness guidance, not medical advice. Stop if anything hurts.
         </Text>
       </ScrollView>
-
-      {equipment && (
-        <SwapSheet
-          item={swapItem}
-          equipment={equipment}
-          maxZone={maxZone}
-          excludeIds={day.exercises.flatMap((slot) =>
-            slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
-          )}
-          onClose={() => setSwapItem(null)}
-          onSwap={handleSwap}
-          onRestore={handleRestore}
-        />
-      )}
 
       {restEndsAt !== null && (
         <View style={[styles.restBar, { paddingBottom: insets.bottom + 12 }]}>
@@ -682,7 +702,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   exerciseHeader: {
     flex: 1,
@@ -702,6 +722,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colours.accentSoft,
+  },
+  swapButtonOpen: {
+    backgroundColor: colours.accent,
   },
   exerciseName: {
     fontSize: 19,

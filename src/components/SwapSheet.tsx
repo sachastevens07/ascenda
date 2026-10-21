@@ -1,17 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { DialogCard, type DialogOptions } from '@/components/Dialog';
+import { showDialog } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import { EQUIPMENT_LABELS, ZONE_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
@@ -19,8 +10,8 @@ import type { ProgrammeExercise, SlotExercise } from '@/lib/programmes';
 import { exerciseFits, fetchAlternatives, type SwapScope } from '@/lib/swaps';
 
 type SwapSheetProps = {
-  /** The slot being swapped; the sheet is open while this is set. */
-  item: ProgrammeExercise | null;
+  open: boolean;
+  item: ProgrammeExercise;
   equipment: EquipmentAccess;
   /** Highest zone she may swap to (her level, or 1 in Quiet Mode). */
   maxZone: Zone;
@@ -34,7 +25,18 @@ type SwapSheetProps = {
 
 type LoadState = 'loading' | 'error' | 'ready';
 
+const OPTION_HEIGHT = 56;
+const OPTION_GAP = 8;
+const ANIM_MS = 220;
+
+function menuHeight(pills: number): number {
+  if (pills <= 0) return OPTION_HEIGHT;
+  return pills * OPTION_HEIGHT + (pills - 1) * OPTION_GAP;
+}
+
+/** In-place swap menu: alternatives drop down as pills under the exercise. */
 export function SwapSheet({
+  open,
   item,
   equipment,
   maxZone,
@@ -43,24 +45,51 @@ export function SwapSheet({
   onSwap,
   onRestore,
 }: SwapSheetProps) {
-  const insets = useSafeAreaInsets();
   const [alternatives, setAlternatives] = useState<SlotExercise[]>([]);
   const [trySomethingNew, setTrySomethingNew] = useState<SlotExercise | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [chosen, setChosen] = useState<SlotExercise | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<DialogOptions | null>(null);
+  const height = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
-  const current = item?.exercise ?? null;
   const excludeKey = excludeIds.join(',');
+  const canRestore = Boolean(item.original && exerciseFits(item.original, equipment, maxZone));
+
+  const pillCount = chosen
+    ? 3
+    : loadState === 'ready'
+      ? (canRestore ? 1 : 0) +
+        alternatives.length +
+        (trySomethingNew ? 1 : 0) +
+        (alternatives.length === 0 && !trySomethingNew && !canRestore ? 1 : 0)
+      : 1;
+  const targetHeight = open ? menuHeight(pillCount) : 0;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(height, {
+        toValue: targetHeight,
+        duration: ANIM_MS,
+        easing: open ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      Animated.timing(opacity, {
+        toValue: open ? 1 : 0,
+        duration: ANIM_MS,
+        easing: open ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [height, opacity, open, targetHeight]);
 
   useEffect(() => {
     setChosen(null);
     setTrySomethingNew(null);
-    if (!current) return;
+    if (!open) return;
     let isCurrent = true;
     setLoadState('loading');
-    fetchAlternatives(current, equipment, excludeKey.split(','), maxZone)
+    fetchAlternatives(item.exercise, equipment, excludeKey.split(','), maxZone)
       .then((result) => {
         if (!isCurrent) return;
         setAlternatives(result.alternatives);
@@ -73,7 +102,7 @@ export function SwapSheet({
     return () => {
       isCurrent = false;
     };
-  }, [current, equipment, excludeKey, maxZone]);
+  }, [open, item.exercise, equipment, excludeKey, maxZone]);
 
   async function save(action: () => Promise<void>) {
     setIsSaving(true);
@@ -81,231 +110,197 @@ export function SwapSheet({
       await action();
       onClose();
     } catch {
-      setSaveError({ title: 'That swap didn’t save', message: 'Check your connection and try again.' });
+      showDialog('That swap didn’t save', 'Check your connection and try again.');
     } finally {
       setIsSaving(false);
     }
   }
 
   return (
-    <Modal
-      visible={item !== null}
-      transparent
-      animationType="slide"
-      onRequestClose={saveError ? () => setSaveError(null) : onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel="Close" />
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-        {chosen ? (
-          <>
-            <Text style={styles.title}>Swap to {chosen.name}</Text>
-            <Text style={styles.subtitle}>How long for?</Text>
-            <Pressable
-              style={({ pressed }) => [styles.primaryButton, (pressed || isSaving) && styles.pressed]}
-              onPress={() => save(() => onSwap(chosen, 'today'))}
+    <Animated.View
+      style={[
+        styles.menu,
+        {
+          height,
+          opacity,
+          marginBottom: open ? OPTION_GAP : 0,
+        },
+      ]}
+      pointerEvents={open ? 'auto' : 'none'}>
+      {chosen ? (
+        <Pills>
+          <Pill
+            title="Just today"
+            disabled={isSaving}
+            onPress={() => save(() => onSwap(chosen, 'today'))}
+          />
+          <Pill
+            title="Every time"
+            detail="Replaces it in your programme"
+            disabled={isSaving}
+            onPress={() => save(() => onSwap(chosen, 'always'))}
+          />
+          <Pill title="Back" muted disabled={isSaving} onPress={() => setChosen(null)} />
+        </Pills>
+      ) : loadState === 'loading' ? (
+        <Pills>
+          <Status>
+            <ActivityIndicator color={colours.accent} />
+          </Status>
+        </Pills>
+      ) : loadState === 'error' ? (
+        <Pills>
+          <Status>
+            <Text style={styles.status}>We couldn’t load alternatives. Try again.</Text>
+          </Status>
+        </Pills>
+      ) : (
+        <Pills>
+          {canRestore && item.original && (
+            <Pill
+              title={`Back to ${item.original.name}`}
+              detail="The exercise from your programme"
+              icon="arrow-undo"
               disabled={isSaving}
-              accessibilityRole="button">
-              <Text style={styles.primaryButtonText}>Just today</Text>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.outlineButton, (pressed || isSaving) && styles.pressed]}
-              onPress={() => save(() => onSwap(chosen, 'always'))}
-              disabled={isSaving}
-              accessibilityRole="button">
-              <Text style={styles.outlineButtonText}>Every time</Text>
-              <Text style={styles.buttonHint}>Replaces it in your programme</Text>
-            </Pressable>
-            <Pressable
-              style={styles.link}
-              onPress={() => setChosen(null)}
-              disabled={isSaving}
-              accessibilityRole="button">
-              <Text style={styles.linkText}>Back</Text>
-            </Pressable>
-          </>
-        ) : (
-          <>
-            <Text style={styles.title}>Swap {current?.name}</Text>
-            <Text style={styles.subtitle}>These stay at your level, with equipment you have.</Text>
-            <ScrollView>
-              {item?.original && exerciseFits(item.original, equipment, maxZone) && (
-                <Pressable
-                  style={({ pressed }) => [styles.row, (pressed || isSaving) && styles.pressed]}
-                  onPress={() => save(onRestore)}
-                  disabled={isSaving}
-                  accessibilityRole="button">
-                  <Ionicons name="arrow-undo" size={22} color={colours.accent} />
-                  <View style={styles.rowText}>
-                    <Text style={styles.rowTitle}>Back to {item.original.name}</Text>
-                    <Text style={styles.rowDetail}>The exercise from your programme</Text>
-                  </View>
-                </Pressable>
-              )}
-              {loadState === 'loading' ? (
-                <ActivityIndicator style={styles.status} color={colours.accent} />
-              ) : loadState === 'error' ? (
-                <Text style={styles.status}>
-                  We couldn’t load alternatives. Check your connection and try again.
-                </Text>
-              ) : alternatives.length === 0 && !trySomethingNew ? (
-                <Text style={styles.status}>
-                  There’s nothing else for this muscle with your equipment.
-                </Text>
-              ) : (
-                alternatives.map((exercise) => (
-                  <Pressable
-                    key={exercise.id}
-                    style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                    onPress={() => setChosen(exercise)}
-                    accessibilityRole="button">
-                    <Ionicons name="swap-horizontal" size={22} color={colours.accent} />
-                    <View style={styles.rowText}>
-                      <Text style={styles.rowTitle}>{exercise.name}</Text>
-                      <Text style={styles.rowDetail}>{EQUIPMENT_LABELS[exercise.equipment]}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
-                  </Pressable>
-                ))
-              )}
-              {loadState === 'ready' && trySomethingNew && (
-                <>
-                  <Text style={styles.tryTitle}>Try something new</Text>
-                  <Text style={styles.tryHint}>
-                    One step further — {ZONE_LABELS[trySomethingNew.zone]}. Optional, and you can
-                    always go back.
-                  </Text>
-                  <Pressable
-                    style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                    onPress={() => setChosen(trySomethingNew)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Try something new: ${trySomethingNew.name}`}>
-                    <Ionicons name="sparkles-outline" size={22} color={colours.accent} />
-                    <View style={styles.rowText}>
-                      <Text style={styles.rowTitle}>{trySomethingNew.name}</Text>
-                      <Text style={styles.rowDetail}>
-                        {EQUIPMENT_LABELS[trySomethingNew.equipment]} ·{' '}
-                        {ZONE_LABELS[trySomethingNew.zone]}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
-                  </Pressable>
-                </>
-              )}
-            </ScrollView>
-          </>
-        )}
+              onPress={() => save(onRestore)}
+            />
+          )}
+          {alternatives.map((exercise) => (
+            <Pill
+              key={exercise.id}
+              title={exercise.name}
+              detail={EQUIPMENT_LABELS[exercise.equipment]}
+              icon="swap-horizontal"
+              onPress={() => setChosen(exercise)}
+            />
+          ))}
+          {trySomethingNew && (
+            <Pill
+              title={trySomethingNew.name}
+              detail={`Try something new · ${ZONE_LABELS[trySomethingNew.zone]}`}
+              icon="sparkles-outline"
+              onPress={() => setChosen(trySomethingNew)}
+            />
+          )}
+          {alternatives.length === 0 && !trySomethingNew && !canRestore && (
+            <Status>
+              <Text style={styles.status}>Nothing else for this muscle with your equipment.</Text>
+            </Status>
+          )}
+        </Pills>
+      )}
+    </Animated.View>
+  );
+}
+
+function Pills({ children }: { children: ReactNode }) {
+  const items = Children.toArray(children);
+  return (
+    <>
+      {items.map((child, index) => (
+        <View key={index} style={index < items.length - 1 ? styles.slot : undefined}>
+          {child}
+        </View>
+      ))}
+    </>
+  );
+}
+
+function Status({ children }: { children: ReactNode }) {
+  return <View style={styles.statusPill}>{children}</View>;
+}
+
+function Pill({
+  title,
+  detail,
+  icon,
+  muted,
+  disabled,
+  onPress,
+}: {
+  title: string;
+  detail?: string;
+  icon?: keyof typeof Ionicons.glyphMap;
+  muted?: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [styles.pill, muted && styles.pillMuted, pressed && styles.pressed]}
+      accessibilityRole="button">
+      {icon ? (
+        <Ionicons name={icon} size={20} color={colours.accent} style={styles.icon} />
+      ) : (
+        <View style={styles.icon} />
+      )}
+      <View style={styles.pillText}>
+        <Text style={styles.pillTitle} numberOfLines={1}>
+          {title}
+        </Text>
+        {detail ? (
+          <Text style={styles.pillDetail} numberOfLines={1}>
+            {detail}
+          </Text>
+        ) : null}
       </View>
-      {saveError && <DialogCard dialog={saveError} onClose={() => setSaveError(null)} />}
-    </Modal>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
+  menu: {
+    overflow: 'hidden',
   },
-  sheet: {
-    maxHeight: '75%',
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: colours.surface,
+  slot: {
+    marginBottom: OPTION_GAP,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  subtitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    color: colours.textMuted,
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  row: {
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    minHeight: 64,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
+    height: OPTION_HEIGHT,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colours.border,
+    backgroundColor: colours.surface,
   },
-  rowText: {
+  icon: {
+    width: 20,
+    marginRight: 10,
+  },
+  pillMuted: {
+    backgroundColor: colours.background,
+  },
+  pillText: {
     flex: 1,
   },
-  rowTitle: {
-    fontSize: 17,
+  pillTitle: {
+    fontSize: 16,
     fontWeight: '600',
     color: colours.text,
   },
-  rowDetail: {
-    fontSize: 14,
-    color: colours.textMuted,
-    marginTop: 2,
-  },
-  status: {
-    fontSize: 16,
-    lineHeight: 22,
-    color: colours.textMuted,
-    paddingVertical: 20,
-  },
-  tryTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.text,
-    marginTop: 16,
-  },
-  tryHint: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  primaryButton: {
-    minHeight: 60,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accent,
-    marginTop: 12,
-  },
-  primaryButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.surface,
-  },
-  outlineButton: {
-    minHeight: 64,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-    marginTop: 12,
-  },
-  outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  buttonHint: {
+  pillDetail: {
     fontSize: 13,
     color: colours.textMuted,
-    marginTop: 2,
+    marginTop: 1,
   },
-  link: {
+  statusPill: {
+    height: OPTION_HEIGHT,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colours.border,
+    backgroundColor: colours.surface,
     alignItems: 'center',
-    paddingVertical: 14,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
-  linkText: {
-    fontSize: 16,
-    fontWeight: '600',
+  status: {
+    fontSize: 15,
     color: colours.textMuted,
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.7,

@@ -7,7 +7,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from 'react-native';
@@ -94,7 +93,6 @@ export default function TodayScreen() {
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
   const level = answers?.confidence_level ?? null;
-  const quietMode = profile?.quiet_mode ?? false;
   const subscription = useSubscription();
   const { isPro } = subscription;
   const [data, setData] = useState<TodayData | null>(null);
@@ -106,6 +104,10 @@ export default function TodayScreen() {
   /** "Just today" swaps chosen before starting; screen state only, like the chosen day. */
   const [todaySwaps, setTodaySwaps] = useState<UserSwaps>({});
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
+  /** Lets the switch move before the save finishes; null means use the profile. */
+  const [quietDraft, setQuietDraft] = useState<boolean | null>(null);
+  const [isSavingQuiet, setIsSavingQuiet] = useState(false);
+  const quietMode = quietDraft ?? profile?.quiet_mode ?? false;
 
   // Reloads every time Today comes into view, so it's up to date after a session.
   useFocusEffect(
@@ -236,10 +238,19 @@ export default function TodayScreen() {
   }
 
   async function handleQuietMode(enabled: boolean) {
+    if (activeDay !== undefined || isSavingQuiet || enabled === quietMode) return;
+    setQuietDraft(enabled);
+    setIsSavingQuiet(true);
     try {
       await setQuietMode(enabled);
     } catch {
-      showDialog('Couldn’t update Quiet Mode', 'Check your connection and try again.');
+      setQuietDraft(null);
+      showDialog(
+        'Couldn’t update Quiet Mode',
+        'Check your connection, and that quiet_mode.sql has been run in Supabase.'
+      );
+    } finally {
+      setIsSavingQuiet(false);
     }
   }
 
@@ -324,62 +335,87 @@ export default function TodayScreen() {
           <Text style={styles.dayName}>{day.name}</Text>
           <Text style={styles.cardLabel}>{day.exercises.length} exercises</Text>
 
-          {!isInProgress && (
-            <Pressable
-              onPress={() => handleQuietMode(!quietMode)}
-              style={styles.quietRow}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: quietMode }}
-              accessibilityLabel="Quiet Mode">
-              <View style={styles.exerciseText}>
-                <Text style={styles.quietTitle}>Quiet Mode</Text>
-                <Text style={styles.quietText}>
-                  Stay in one spot — dumbbells, and maybe a mat or bench.
-                </Text>
-              </View>
-              <Switch
-                value={quietMode}
-                pointerEvents="none"
-                trackColor={{ false: colours.border, true: colours.accent }}
-                thumbColor={colours.surface}
-                ios_backgroundColor={colours.border}
-              />
-            </Pressable>
-          )}
+          <Pressable
+            onPress={() => handleQuietMode(!quietMode)}
+            disabled={isInProgress || isSavingQuiet}
+            style={({ pressed }) => [styles.quietRow, pressed && styles.pressed]}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: quietMode, disabled: isInProgress }}
+            accessibilityLabel="Quiet Mode">
+            <View style={styles.quietCopy}>
+              <Text style={styles.quietTitle}>Quiet Mode</Text>
+              <Text style={styles.quietText}>
+                {isInProgress
+                  ? 'Finish this session to change Quiet Mode.'
+                  : 'Stay in one spot — dumbbells, and maybe a mat or bench.'}
+              </Text>
+            </View>
+            <View style={[styles.quietTrack, quietMode && styles.quietTrackOn]}>
+              <View style={styles.quietThumb} />
+            </View>
+          </Pressable>
 
-          {day.exercises.map((item, index) => (
-            <View key={item.position} style={styles.exerciseRow}>
-              <Pressable
-                onPress={() =>
-                  router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
-                }
-                style={({ pressed }) => [styles.exerciseInfo, pressed && styles.pressed]}
-                accessibilityRole="button">
-                <Text style={styles.exerciseNumber}>{index + 1}</Text>
-                <View style={styles.exerciseText}>
-                  <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                  {item.original && equipment && exerciseFits(item.original, equipment, maxZone) && (
-                    <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
-                  )}
-                  <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
-                  {isPro && (
-                    <Text style={styles.suggestion}>
-                      {describeWeightSuggestion(suggestionFor(item))}
-                    </Text>
+          {day.exercises.map((item, index) => {
+            const isSwapping = swapItem?.position === item.position;
+            return (
+              <View key={item.position} style={styles.exerciseBlock}>
+                <View style={styles.exerciseRow}>
+                  <Pressable
+                    onPress={() =>
+                      router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
+                    }
+                    style={({ pressed }) => [styles.exerciseInfo, pressed && styles.pressed]}
+                    accessibilityRole="button">
+                    <Text style={styles.exerciseNumber}>{index + 1}</Text>
+                    <View style={styles.exerciseText}>
+                      <Text style={styles.exerciseName}>{item.exercise.name}</Text>
+                      {item.original && equipment && exerciseFits(item.original, equipment, maxZone) && (
+                        <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
+                      )}
+                      <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
+                      {isPro && (
+                        <Text style={styles.suggestion}>
+                          {describeWeightSuggestion(suggestionFor(item))}
+                        </Text>
+                      )}
+                    </View>
+                  </Pressable>
+                  {!isInProgress && isPro && (
+                    <Pressable
+                      onPress={() => setSwapItem(isSwapping ? null : item)}
+                      style={({ pressed }) => [
+                        styles.swapButton,
+                        isSwapping && styles.swapButtonOpen,
+                        pressed && styles.pressed,
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded: isSwapping }}
+                      accessibilityLabel={`Swap ${item.exercise.name}`}>
+                      <Ionicons
+                        name="swap-horizontal"
+                        size={24}
+                        color={isSwapping ? colours.surface : colours.accent}
+                      />
+                    </Pressable>
                   )}
                 </View>
-              </Pressable>
-              {!isInProgress && isPro && (
-                <Pressable
-                  onPress={() => setSwapItem(item)}
-                  style={({ pressed }) => [styles.swapButton, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Swap ${item.exercise.name}`}>
-                  <Ionicons name="swap-horizontal" size={24} color={colours.accent} />
-                </Pressable>
-              )}
-            </View>
-          ))}
+                {!isInProgress && isPro && equipment && (
+                  <SwapSheet
+                    open={isSwapping}
+                    item={item}
+                    equipment={equipment}
+                    maxZone={maxZone}
+                    excludeIds={day.exercises.flatMap((slot) =>
+                      slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
+                    )}
+                    onClose={() => setSwapItem(null)}
+                    onSwap={handleSwap}
+                    onRestore={handleRestore}
+                  />
+                )}
+              </View>
+            );
+          })}
 
           <Pressable
             style={({ pressed }) => [styles.startButton, (pressed || isStarting) && styles.pressed]}
@@ -440,20 +476,6 @@ export default function TodayScreen() {
           General fitness guidance, not medical advice. Stop if anything hurts.
         </Text>
       </ScrollView>
-
-      {equipment && (
-        <SwapSheet
-          item={swapItem}
-          equipment={equipment}
-          maxZone={maxZone}
-          excludeIds={day.exercises.flatMap((item) =>
-            item.original ? [item.exercise.id, item.original.id] : [item.exercise.id]
-          )}
-          onClose={() => setSwapItem(null)}
-          onSwap={handleSwap}
-          onRestore={handleRestore}
-        />
-      )}
 
       <Modal
         visible={isPickerOpen}
@@ -562,7 +584,30 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 12,
     marginBottom: 4,
-    paddingVertical: 8,
+    minHeight: 56,
+  },
+  quietCopy: {
+    flex: 1,
+  },
+  quietTrack: {
+    width: 52,
+    height: 32,
+    borderRadius: 16,
+    padding: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: colours.border,
+  },
+  quietTrackOn: {
+    justifyContent: 'flex-end',
+    backgroundColor: colours.accent,
+  },
+  quietThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colours.surface,
   },
   quietTitle: {
     fontSize: 17,
@@ -575,21 +620,26 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     marginTop: 2,
   },
+  exerciseBlock: {
+    marginTop: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colours.border,
+  },
   exerciseRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colours.border,
+  },
+  swapButtonOpen: {
+    backgroundColor: colours.accent,
   },
   exerciseInfo: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    minHeight: 72,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   swappedFrom: {
     fontSize: 14,
