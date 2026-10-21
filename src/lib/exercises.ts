@@ -50,6 +50,17 @@ export const EQUIPMENT_LABELS: Record<Equipment, string> = {
   bodyweight: 'Bodyweight',
 };
 
+/** Where in the gym an exercise is done. Keep in step with supabase/zones.sql. */
+export const ZONES = [1, 2, 3, 4] as const;
+export type Zone = (typeof ZONES)[number];
+
+export const ZONE_LABELS: Record<Zone, string> = {
+  1: 'Corner',
+  2: 'Dumbbell area',
+  3: 'Machines',
+  4: 'Barbell and squat rack',
+};
+
 /** Supabase Storage bucket for exercise photos. Files named `<exercise id>.<ext>` link themselves. */
 export const EXERCISE_MEDIA_BUCKET = 'exercise-media';
 
@@ -60,6 +71,7 @@ export type Exercise = {
   primary_muscle: Muscle;
   secondary_muscles: Muscle[];
   equipment: Equipment;
+  zone: Zone;
   /** A path in the exercise-media bucket, or a full https URL. Use `getMediaUrl` to display it. */
   media_url: string | null;
   cues: string[];
@@ -74,7 +86,7 @@ export function getMediaUrl(exercise: Exercise): string | null {
 }
 
 const EXERCISE_COLUMNS =
-  'id, name, primary_muscle, secondary_muscles, equipment, media_url, cues, location_hint';
+  'id, name, primary_muscle, secondary_muscles, equipment, zone, media_url, cues, location_hint';
 
 export async function fetchExercises(): Promise<Exercise[]> {
   const { data, error } = await supabase
