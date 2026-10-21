@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+import { createContext, useContext, useState, type ReactElement, type ReactNode } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View, type ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -31,9 +31,30 @@ export type PillTabBarProps = {
   position: Animated.AnimatedInterpolation<number>;
 };
 
+type TabBarHeight = { height: number; setHeight: (height: number) => void };
+
+const TabBarHeightContext = createContext<TabBarHeight>({ height: 0, setHeight: () => {} });
+
+/** Wrap the tabs in this so screens can make room for the floating tab bar. */
+export function TabBarHeightProvider({ children }: { children: ReactNode }) {
+  const [height, setHeight] = useState(0);
+  return (
+    <TabBarHeightContext.Provider value={{ height, setHeight }}>{children}</TabBarHeightContext.Provider>
+  );
+}
+
+/**
+ * How much of the bottom of the screen the floating tab bar (and workout bar) covers.
+ * Tab screens add this to the bottom padding of their scrolling content.
+ */
+export function useTabBarHeight(): number {
+  return useContext(TabBarHeightContext).height;
+}
+
 export function PillTabBar({ state, descriptors, navigation, position }: PillTabBarProps) {
   const insets = useSafeAreaInsets();
   const [innerWidth, setInnerWidth] = useState(0);
+  const { setHeight } = useContext(TabBarHeightContext);
 
   const tabWidth = innerWidth / state.routes.length;
   const indexes = state.routes.map((_, index) => index);
@@ -43,7 +64,10 @@ export function PillTabBar({ state, descriptors, navigation, position }: PillTab
   });
 
   return (
-    <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+    <View
+      style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}
+      pointerEvents="box-none"
+      onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
       <WorkoutBar />
       <View
         style={styles.pill}
@@ -90,9 +114,11 @@ export function PillTabBar({ state, descriptors, navigation, position }: PillTab
 
 const styles = StyleSheet.create({
   wrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     paddingHorizontal: 20,
-    paddingTop: 8,
-    backgroundColor: colours.background,
   },
   pill: {
     flexDirection: 'row',

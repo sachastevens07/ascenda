@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { FilterSheet, type FilterOption } from '@/components/FilterSheet';
+import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import {
   EQUIPMENT,
@@ -58,6 +59,7 @@ export default function LibraryScreen() {
   const [query, setQuery] = useState('');
   const [muscle, setMuscle] = useState<Muscle | null>(null);
   const [equipment, setEquipment] = useState<Equipment | null>(null);
+  const tabBarHeight = useTabBarHeight();
 
   const load = useCallback(async () => {
     try {
@@ -161,7 +163,7 @@ export default function LibraryScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(exercise) => exercise.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: tabBarHeight + 24 }]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           refreshing={isRefreshing}

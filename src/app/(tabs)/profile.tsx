@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import {
@@ -20,6 +21,7 @@ export default function ProfileScreen() {
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const tabBarHeight = useTabBarHeight();
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -38,7 +40,9 @@ export default function ProfileScreen() {
     : [];
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={[styles.container, { paddingBottom: tabBarHeight + 24 }]}>
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.label}>Signed in as</Text>
       <Text style={styles.email}>{session?.user.email}</Text>

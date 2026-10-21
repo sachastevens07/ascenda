@@ -44,7 +44,7 @@ export function WorkoutBar() {
         <View style={styles.liveDot} />
         <Text style={styles.dayName}>{active.dayName}</Text>
         <Text style={styles.elapsed}>{elapsed}</Text>
-        <Ionicons name="chevron-up" size={20} color={colours.accentSoft} />
+        <Ionicons name="chevron-up" size={18} color={colours.accentSoft} />
       </View>
 
       {nextSet ? (
@@ -79,12 +79,17 @@ function RestPill({ time }: { time: string }) {
 
 const styles = StyleSheet.create({
   bar: {
-    gap: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    gap: 3,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
     marginBottom: 8,
-    borderRadius: 20,
+    borderRadius: 18,
     backgroundColor: colours.text,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
   pressed: {
     opacity: 0.85,
@@ -102,18 +107,18 @@ const styles = StyleSheet.create({
   },
   dayName: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '700',
-    color: colours.surface,
+    color: colours.accentSoft,
   },
   elapsed: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '700',
     color: colours.accentSoft,
     fontVariant: ['tabular-nums'],
   },
   exercise: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: colours.surface,
   },
@@ -123,25 +128,25 @@ const styles = StyleSheet.create({
   },
   set: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     color: colours.accentSoft,
   },
   rest: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 6,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    gap: 5,
+    paddingVertical: 2,
+    paddingHorizontal: 10,
     borderRadius: 999,
     backgroundColor: colours.accent,
   },
   restLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: colours.accentSoft,
   },
   restTime: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '700',
     color: colours.surface,
     fontVariant: ['tabular-nums'],

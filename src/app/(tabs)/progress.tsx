@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LineChart } from '@/components/LineChart';
+import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import { formatKg } from '@/lib/programmes';
 import {
@@ -52,6 +53,7 @@ function describeBest(best: PersonalBest): string {
 
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useTabBarHeight();
   const [data, setData] = useState<ProgressData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -123,7 +125,7 @@ export default function ProgressScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 120 }]}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         <Text style={styles.title}>Progress</Text>
 
         <View style={styles.stats}>

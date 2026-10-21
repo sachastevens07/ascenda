@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useTabBarHeight } from '@/components/PillTabBar';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import { formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
@@ -74,6 +75,7 @@ function withSwap(
 
 export default function TodayScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useTabBarHeight();
   const { profile } = useProfile();
   const programmeId = profile?.programme_id ?? null;
   const equipment = getQuizAnswers(profile)?.equipment ?? null;
@@ -235,7 +237,7 @@ export default function TodayScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         <Text style={styles.title}>Today</Text>
         <Text style={styles.subtitle}>
           {programme.name} · {formatDaysPerWeek(programme.days_per_week)} a week
