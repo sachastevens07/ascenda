@@ -7,14 +7,15 @@ import { formatKg } from '@/lib/programmes';
 import { useNow, useWorkout } from '@/lib/workout';
 import { formatClock, type NextSet } from '@/lib/workoutLog';
 
-function describeNextSet(next: NextSet): string {
+/** "Set 2 · 12 kg × 8", "Set 2 · 10 reps". */
+function describeSet(next: NextSet): string {
   const load =
     next.weightKg !== null && next.reps !== null
       ? `${formatKg(next.weightKg)} × ${next.reps}`
       : next.reps !== null
         ? `${next.reps} reps`
         : null;
-  return [next.exerciseName, `Set ${next.setNumber}`, load].filter(Boolean).join(' · ');
+  return [`Set ${next.setNumber}`, load].filter(Boolean).join(' · ');
 }
 
 /** Shown above the tabs while a workout is in progress. Tap to go back to it. */
@@ -24,43 +25,62 @@ export function WorkoutBar() {
   if (!active) return null;
 
   const isResting = restEndsAt !== null && restEndsAt > now;
+  const elapsed = formatClock((now - active.startedAt) / 1000);
+  const rest = isResting ? formatClock(Math.ceil((restEndsAt - now) / 1000)) : null;
   return (
     <Pressable
       onPress={() => router.push({ pathname: '/session/[id]', params: { id: active.sessionId } })}
       style={({ pressed }) => [styles.bar, pressed && styles.pressed]}
       accessibilityRole="button"
-      accessibilityLabel="Workout in progress. Go back to your workout">
-      <View style={styles.text}>
-        <View style={styles.topRow}>
-          <View style={styles.liveDot} />
-          <Text style={styles.label} numberOfLines={1}>
-            {active.dayName}
-          </Text>
-          <Text style={styles.elapsed}>{formatClock((now - active.startedAt) / 1000)}</Text>
-        </View>
-        <Text style={styles.next} numberOfLines={1}>
-          {nextSet ? `Next: ${describeNextSet(nextSet)}` : 'All sets done. Tap to finish.'}
-        </Text>
+      accessibilityLabel={[
+        `Workout in progress: ${active.dayName}, ${elapsed}`,
+        nextSet ? `Next: ${nextSet.exerciseName}, ${describeSet(nextSet)}` : 'All sets done',
+        rest ? `Rest ${rest}` : null,
+        'Go back to your workout',
+      ]
+        .filter(Boolean)
+        .join('. ')}>
+      <View style={styles.row}>
+        <View style={styles.liveDot} />
+        <Text style={styles.dayName}>{active.dayName}</Text>
+        <Text style={styles.elapsed}>{elapsed}</Text>
+        <Ionicons name="chevron-up" size={20} color={colours.accentSoft} />
       </View>
-      {isResting ? (
-        <View style={styles.rest}>
-          <Text style={styles.restLabel}>Rest</Text>
-          <Text style={styles.restTime}>{formatClock(Math.ceil((restEndsAt - now) / 1000))}</Text>
-        </View>
+
+      {nextSet ? (
+        <>
+          <Text style={styles.exercise}>
+            <Text style={styles.nextLabel}>Next: </Text>
+            {nextSet.exerciseName}
+          </Text>
+          <View style={styles.row}>
+            <Text style={styles.set}>{describeSet(nextSet)}</Text>
+            {rest && <RestPill time={rest} />}
+          </View>
+        </>
       ) : (
-        <Ionicons name="chevron-up" size={22} color={colours.surface} />
+        <View style={styles.row}>
+          <Text style={styles.set}>All sets done. Tap to finish.</Text>
+          {rest && <RestPill time={rest} />}
+        </View>
       )}
     </Pressable>
   );
 }
 
+function RestPill({ time }: { time: string }) {
+  return (
+    <View style={styles.rest}>
+      <Text style={styles.restLabel}>Rest</Text>
+      <Text style={styles.restTime}>{time}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    minHeight: 64,
-    paddingVertical: 10,
+    gap: 6,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     marginBottom: 8,
     borderRadius: 20,
@@ -69,10 +89,7 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-  text: {
-    flex: 1,
-  },
-  topRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -83,7 +100,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colours.accentSoft,
   },
-  label: {
+  dayName: {
     flex: 1,
     fontSize: 15,
     fontWeight: '700',
@@ -95,26 +112,36 @@ const styles = StyleSheet.create({
     color: colours.accentSoft,
     fontVariant: ['tabular-nums'],
   },
-  next: {
-    fontSize: 14,
+  exercise: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colours.surface,
+  },
+  nextLabel: {
+    fontWeight: '400',
     color: colours.accentSoft,
-    marginTop: 3,
+  },
+  set: {
+    flex: 1,
+    fontSize: 15,
+    color: colours.accentSoft,
   },
   rest: {
-    alignItems: 'center',
-    minWidth: 64,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 999,
     backgroundColor: colours.accent,
   },
   restLabel: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
     color: colours.accentSoft,
   },
   restTime: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     color: colours.surface,
     fontVariant: ['tabular-nums'],
