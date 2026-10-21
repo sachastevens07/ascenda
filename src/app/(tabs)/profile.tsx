@@ -106,7 +106,7 @@ export default function ProfileScreen() {
         <Text style={styles.cardTitle}>Your data</Text>
         <Text style={styles.label}>
           Save every set from your finished sessions as a spreadsheet (CSV) in a folder you choose, such as
-          Downloads. It’s yours to keep.
+          Documents. It’s yours to keep.
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, (pressed || isExporting) && styles.buttonPressed]}
