@@ -14,6 +14,7 @@ export type Session = {
   exercise_swaps: Record<string, string>;
   source: SessionSource;
   custom_workout_id: string | null;
+  block_id: string | null;
 };
 
 /** One row of the `sets` table. */
@@ -28,9 +29,15 @@ export type LoggedSet = {
 };
 
 const SESSION_COLUMNS =
+  'id, date, programme_day_id, started_at, completed_at, exercise_swaps, source, custom_workout_id, block_id';
+const SESSION_COLUMNS_CUSTOM =
   'id, date, programme_day_id, started_at, completed_at, exercise_swaps, source, custom_workout_id';
 const SESSION_COLUMNS_LEGACY = 'id, date, programme_day_id, started_at, completed_at, exercise_swaps';
 const SET_COLUMNS = 'session_id, exercise_id, set_number, weight_kg, reps, completed';
+
+function isMissingBlockColumn(error: { message?: string; code?: string }): boolean {
+  return /block_id/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
 
 function isMissingCustomSessionColumns(error: { message?: string; code?: string }): boolean {
   return /source|custom_workout_id/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
@@ -42,6 +49,7 @@ function toSession(row: Session | null): Session | null {
     ...row,
     source: row.source ?? 'programme',
     custom_workout_id: row.custom_workout_id ?? null,
+    block_id: row.block_id ?? null,
     exercise_swaps: row.exercise_swaps ?? {},
   };
 }
@@ -71,7 +79,13 @@ async function selectSession(
 ): Promise<Session | null> {
   const full = await run(SESSION_COLUMNS);
   if (!full.error) return toSession(full.data as Session | null);
-  if (!isMissingCustomSessionColumns(full.error)) throw full.error;
+  if (isMissingBlockColumn(full.error)) {
+    const custom = await run(SESSION_COLUMNS_CUSTOM);
+    if (!custom.error) return toSession(custom.data as Session | null);
+    if (!isMissingCustomSessionColumns(custom.error)) throw custom.error;
+  } else if (!isMissingCustomSessionColumns(full.error)) {
+    throw full.error;
+  }
   const legacy = await run(SESSION_COLUMNS_LEGACY);
   if (legacy.error) throw legacy.error;
   return toSession(legacy.data as Session | null);
@@ -125,61 +139,76 @@ export async function fetchLastFinishedProgrammeSession(): Promise<Session | nul
 
 export async function startSession(
   programmeDayId: string,
-  exerciseSwaps: Record<string, string> = {}
+  exerciseSwaps: Record<string, string> = {},
+  blockId: string | null = null
 ): Promise<Session> {
-  const { data, error } = await supabase
+  const payload = {
+    programme_day_id: programmeDayId,
+    date: localDate(),
+    exercise_swaps: exerciseSwaps,
+    source: 'programme' as const,
+    ...(blockId ? { block_id: blockId } : {}),
+  };
+  const { data, error } = await supabase.from('sessions').insert(payload).select(SESSION_COLUMNS).single();
+  if (!error) return toSession(data as Session)!;
+  if (isMissingBlockColumn(error)) {
+    const { block_id: _ignored, ...withoutBlock } = payload;
+    const custom = await supabase
+      .from('sessions')
+      .insert(withoutBlock)
+      .select(SESSION_COLUMNS_CUSTOM)
+      .single();
+    if (!custom.error) return toSession(custom.data as Session)!;
+    if (!isMissingCustomSessionColumns(custom.error)) throw custom.error;
+  } else if (!isMissingCustomSessionColumns(error)) {
+    throw error;
+  }
+  const legacy = await supabase
     .from('sessions')
     .insert({
       programme_day_id: programmeDayId,
       date: localDate(),
       exercise_swaps: exerciseSwaps,
-      source: 'programme',
     })
-    .select(SESSION_COLUMNS)
+    .select(SESSION_COLUMNS_LEGACY)
     .single();
-  if (error) {
-    if (isMissingCustomSessionColumns(error)) {
-      const legacy = await supabase
-        .from('sessions')
-        .insert({
-          programme_day_id: programmeDayId,
-          date: localDate(),
-          exercise_swaps: exerciseSwaps,
-        })
-        .select(SESSION_COLUMNS_LEGACY)
-        .single();
-      if (legacy.error) throw legacy.error;
-      return toSession(legacy.data as Session)!;
-    }
-    throw error;
-  }
-  return toSession(data as Session)!;
+  if (legacy.error) throw legacy.error;
+  return toSession(legacy.data as Session)!;
 }
 
 export async function startCustomSession(
   customWorkoutId: string,
   exerciseSwaps: Record<string, string> = {}
 ): Promise<Session> {
-  const { data, error } = await supabase
-    .from('sessions')
-    .insert({
-      programme_day_id: null,
-      custom_workout_id: customWorkoutId,
-      source: 'custom',
-      date: localDate(),
-      exercise_swaps: exerciseSwaps,
-    })
-    .select(SESSION_COLUMNS)
-    .single();
-  if (error) {
-    if (isMissingCustomSessionColumns(error)) {
+  const payload = {
+    programme_day_id: null as string | null,
+    custom_workout_id: customWorkoutId,
+    source: 'custom' as const,
+    date: localDate(),
+    exercise_swaps: exerciseSwaps,
+  };
+  const { data, error } = await supabase.from('sessions').insert(payload).select(SESSION_COLUMNS).single();
+  if (!error) return toSession(data as Session)!;
+  if (isMissingBlockColumn(error)) {
+    const custom = await supabase
+      .from('sessions')
+      .insert(payload)
+      .select(SESSION_COLUMNS_CUSTOM)
+      .single();
+    if (!custom.error) return toSession(custom.data as Session)!;
+    if (isMissingCustomSessionColumns(custom.error)) {
       throw new Error(
         'Custom workouts need supabase/custom_workouts.sql run in the Supabase SQL editor.'
       );
     }
-    throw error;
+    throw custom.error;
   }
-  return toSession(data as Session)!;
+  if (isMissingCustomSessionColumns(error)) {
+    throw new Error(
+      'Custom workouts need supabase/custom_workouts.sql run in the Supabase SQL editor.'
+    );
+  }
+  throw error;
 }
 
 export async function saveSessionSwaps(

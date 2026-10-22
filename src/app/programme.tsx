@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BlockTargets } from '@/components/BlockTargets';
 import { colours } from '@/constants/theme';
+import { describeBlockPosition, ensureActiveBlock, type TrainingBlock } from '@/lib/blocks';
 import { fetchFillLibrary, resolveDay, sessionMaxZone } from '@/lib/levels';
 import {
   EQUIPMENT_ACCESS_LABELS,
@@ -14,6 +16,7 @@ import {
   type QuizAnswers,
 } from '@/lib/profile';
 import { fetchProgramme, formatSetsAndReps, type Programme } from '@/lib/programmes';
+import { useSubscription } from '@/lib/subscription';
 import { exerciseFits, fetchUserSwaps } from '@/lib/swaps';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
@@ -39,7 +42,9 @@ export default function ProgrammeScreen() {
   const programmeId = profile?.programme_id ?? null;
   const equipment = answers?.equipment ?? null;
   const level = answers?.confidence_level ?? null;
+  const { isPro } = useSubscription();
   const [programme, setProgramme] = useState<Programme | null>(null);
+  const [block, setBlock] = useState<TrainingBlock | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
 
   useEffect(() => {
@@ -50,16 +55,19 @@ export default function ProgrammeScreen() {
     let isCurrent = true;
     setLoadState('loading');
     Promise.all([fetchProgramme(programmeId, equipment), fetchUserSwaps(equipment), fetchFillLibrary()])
-      .then(([result, swaps, library]) => {
+      .then(async ([result, swaps, library]) => {
         if (!isCurrent) return;
-        setProgramme(
-          result && {
-            ...result,
-            days: result.days.map((day) =>
-              resolveDay(day, swaps[day.id] ?? {}, equipment, level, false, library)
-            ),
-          }
-        );
+        const resolved = result && {
+          ...result,
+          days: result.days.map((day) =>
+            resolveDay(day, swaps[day.id] ?? {}, equipment, level, false, library)
+          ),
+        };
+        setProgramme(resolved);
+        if (resolved) {
+          const nextBlock = await ensureActiveBlock(resolved, level, equipment).catch(() => null);
+          if (isCurrent) setBlock(nextBlock);
+        }
         setLoadState(result ? 'ready' : 'not-found');
       })
       .catch(() => {
@@ -98,7 +106,11 @@ export default function ProgrammeScreen() {
           {formatDaysPerWeek(programme.days_per_week)} a week ·{' '}
           {EQUIPMENT_ACCESS_LABELS[answers.equipment]}
         </Text>
+        {isPro && block && (
+          <Text style={styles.blockPosition}>{describeBlockPosition(block)}</Text>
+        )}
       </View>
+      {isPro && block && <BlockTargets block={block} />}
       <Text style={styles.body}>{programme.description}</Text>
       {note && <Text style={styles.note}>{note}</Text>}
 
@@ -164,6 +176,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colours.accent,
     marginTop: 4,
+  },
+  blockPosition: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colours.text,
+    marginTop: 6,
   },
   body: {
     fontSize: 17,

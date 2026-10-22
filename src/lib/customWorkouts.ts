@@ -1,4 +1,3 @@
-import { supabase } from '@/lib/supabase';
 import {
   SLOT_EXERCISE_COLUMNS,
   toSlotExercise,
@@ -6,6 +5,8 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import { startCustomSession, type Session } from '@/lib/sessions';
+import { supabase } from '@/lib/supabase';
 
 /** Shared beginner workout from supabase/custom_workouts.sql. */
 export const STARTER_WORKOUT_ID = '11111111-1111-4111-8111-111111111111';
@@ -46,6 +47,19 @@ function isMissingCustomWorkouts(error: { message?: string; code?: string }): bo
 
 export function missingCustomWorkoutsMessage(): string {
   return 'Custom workouts need supabase/custom_workouts.sql run in the Supabase SQL editor.';
+}
+
+export function describeCustomWorkoutError(error: unknown): string {
+  const detail =
+    error instanceof Error
+      ? error.message
+      : error && typeof error === 'object' && 'message' in error
+        ? String((error as { message: unknown }).message)
+        : '';
+  if (/42P01|custom_workouts|custom_workout_id|\bsource\b/i.test(detail)) {
+    return missingCustomWorkoutsMessage();
+  }
+  return detail || 'Check your connection and try again.';
 }
 
 type WorkoutRow = {
@@ -197,7 +211,7 @@ export async function saveCustomWorkout(
 ): Promise<CustomWorkout> {
   const trimmed = trimWorkoutName(name);
   if (trimmed.length < MIN_WORKOUT_NAME) throw new Error('Give this workout a name.');
-  if (slots.length === 0) throw new Error('Add at least one exercise.');
+  if (slots.length === 0 && id) throw new Error('Add at least one exercise.');
   if (slots.length > MAX_WORKOUT_EXERCISES) {
     throw new Error(`Keep it to ${MAX_WORKOUT_EXERCISES} exercises.`);
   }
@@ -259,6 +273,71 @@ export async function duplicateCustomWorkout(workout: CustomWorkout): Promise<Cu
       rep_max: item.rep_max,
     }))
   );
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function nextCustomWorkoutName(now = new Date()): string {
+  return trimWorkoutName(`${now.getDate()} ${MONTHS[now.getMonth()]} workout`);
+}
+
+/** Blank saved workout so she can start now and add lifts in the logger. */
+export async function createEmptyCustomWorkout(
+  name: string = nextCustomWorkoutName()
+): Promise<CustomWorkout> {
+  const trimmed = trimWorkoutName(name);
+  const userId = await currentUserId();
+  const { data, error } = await supabase
+    .from('custom_workouts')
+    .insert({ user_id: userId, name: trimmed, is_starter: false })
+    .select('id, user_id, name, is_starter, created_at, updated_at')
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id as string,
+    user_id: (data.user_id as string | null) ?? userId,
+    name: data.name as string,
+    is_starter: false,
+    created_at: data.created_at as string,
+    updated_at: data.updated_at as string,
+    exercises: [],
+  };
+}
+
+/** One tap: create an empty workout and open the logger. */
+export async function startBlankCustomSession(): Promise<Session> {
+  const workout = await createEmptyCustomWorkout();
+  return startCustomSession(workout.id);
+}
+
+/** Adds a slot to a saved workout (used when she adds mid-session). */
+export async function appendCustomWorkoutExercise(
+  workoutId: string,
+  exercise: SlotExercise
+): Promise<ProgrammeExercise> {
+  const workout = await fetchCustomWorkout(workoutId);
+  if (!workout || workout.is_starter) {
+    throw new Error('This workout can’t be changed.');
+  }
+  if (workout.exercises.some((item) => item.exercise.id === exercise.id)) {
+    throw new Error(`${exercise.name} is already in this workout.`);
+  }
+  if (workout.exercises.length >= MAX_WORKOUT_EXERCISES) {
+    throw new Error(`Keep it to ${MAX_WORKOUT_EXERCISES} exercises.`);
+  }
+  const position = (workout.exercises.at(-1)?.position ?? 0) + 1;
+  const { error } = await supabase.from('custom_workout_exercises').insert({
+    custom_workout_id: workoutId,
+    exercise_id: exercise.id,
+    position,
+    ...DEFAULT_SLOT,
+  });
+  if (error) throw error;
+  return {
+    position,
+    ...DEFAULT_SLOT,
+    exercise,
+  };
 }
 
 /** "Every time" on a saved workout: change that slot in the template. */

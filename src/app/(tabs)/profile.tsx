@@ -1,11 +1,18 @@
 import { router, type Href } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
+import {
+  debugRestartBlock,
+  describeBlockPosition,
+  ensureActiveBlock,
+  missingBlocksMessage,
+  type TrainingBlock,
+} from '@/lib/blocks';
 import { deleteAllCycleNotes } from '@/lib/cycle';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import {
@@ -64,7 +71,30 @@ export default function ProfileScreen() {
   const [isExporting, setIsExporting] = useState(false);
   const [isSavingCycle, setIsSavingCycle] = useState(false);
   const [isSavingLevel, setIsSavingLevel] = useState(false);
+  const [block, setBlock] = useState<TrainingBlock | null>(null);
   const tabBarHeight = useTabBarHeight();
+
+  useEffect(() => {
+    if (!subscription.isPro || !profile?.programme_id || !answers) {
+      setBlock(null);
+      return;
+    }
+    let isCurrent = true;
+    const programmeId = profile.programme_id;
+    const level = answers.confidence_level;
+    const equipment = answers.equipment;
+    fetchProgramme(programmeId, equipment)
+      .then((programme) => (programme ? ensureActiveBlock(programme, level, equipment) : null))
+      .then((next) => {
+        if (isCurrent) setBlock(next);
+      })
+      .catch(() => {
+        if (isCurrent) setBlock(null);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [subscription.isPro, profile?.programme_id, answers?.confidence_level, answers?.equipment]);
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -214,6 +244,25 @@ export default function ProfileScreen() {
     }
   }
 
+  async function handleDevRestartBlock() {
+    try {
+      await debugRestartBlock();
+      if (!profile?.programme_id || !answers) return;
+      const programme = await fetchProgramme(profile.programme_id, answers.equipment);
+      const next = programme
+        ? await ensureActiveBlock(programme, answers.confidence_level, answers.equipment)
+        : null;
+      setBlock(next);
+      if (!next) {
+        showDialog('Couldn’t reset', missingBlocksMessage());
+        return;
+      }
+      showDialog('Block reset', 'Today will show week 1 of a new 8-week block.');
+    } catch {
+      showDialog('Couldn’t reset', missingBlocksMessage());
+    }
+  }
+
   function confirmDeleteCycleNotes() {
     showDialog(
       'Delete all cycle notes?',
@@ -278,7 +327,7 @@ export default function ProfileScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>My workouts</Text>
         <Text style={styles.label}>
-          Build your own sessions, or start the quiet-spot starter. Free for everyone.
+          Start empty from Today, or reopen a saved session. Free for everyone.
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
@@ -295,6 +344,9 @@ export default function ProfileScreen() {
           <Text style={styles.label}>
             {formatDaysPerWeek(profile.programme.days_per_week)} a week
           </Text>
+          {subscription.isPro && block && (
+            <Text style={styles.blockPosition}>{describeBlockPosition(block)}</Text>
+          )}
           <Pressable
             style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
             onPress={() => router.push(subscription.isPro ? '/programme' : '/paywall')}
@@ -303,6 +355,11 @@ export default function ProfileScreen() {
               {subscription.isPro ? 'View programme' : 'View programme with Pro'}
             </Text>
           </Pressable>
+          {__DEV__ && (
+            <Pressable style={styles.devLink} onPress={handleDevRestartBlock} accessibilityRole="button">
+              <Text style={styles.devText}>Development only. Restart 8-week block</Text>
+            </Pressable>
+          )}
         </View>
       )}
 
@@ -481,6 +538,12 @@ const styles = StyleSheet.create({
   },
   cardButton: {
     marginTop: 20,
+  },
+  blockPosition: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colours.accent,
+    marginTop: 6,
   },
   buttonPressed: {
     opacity: 0.7,

@@ -1,0 +1,218 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useEffect, useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { FilterSheet } from '@/components/FilterSheet';
+import { colours } from '@/constants/theme';
+import { fetchExercisesForBuilder } from '@/lib/customWorkouts';
+import {
+  EQUIPMENT,
+  EQUIPMENT_LABELS,
+  MUSCLES,
+  MUSCLE_LABELS,
+  ZONE_LABELS,
+  ZONES,
+  type Equipment,
+  type Muscle,
+} from '@/lib/exercises';
+import type { SlotExercise } from '@/lib/programmes';
+
+type ZoneFilter = '1' | '2' | '3' | '4';
+
+function matchesSearch(exercise: SlotExercise, query: string): boolean {
+  if (!query) return true;
+  const haystack = [
+    exercise.name,
+    EQUIPMENT_LABELS[exercise.equipment],
+    MUSCLE_LABELS[exercise.primary_muscle],
+    ZONE_LABELS[exercise.zone],
+  ]
+    .join(' ')
+    .toLowerCase();
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .every((word) => haystack.includes(word));
+}
+
+type ExercisePickerProps = {
+  open: boolean;
+  takenIds: string[];
+  onClose: () => void;
+  onChoose: (exercise: SlotExercise) => void;
+};
+
+export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePickerProps) {
+  const insets = useSafeAreaInsets();
+  const [exercises, setExercises] = useState<SlotExercise[]>([]);
+  const [query, setQuery] = useState('');
+  const [muscle, setMuscle] = useState<Muscle | null>(null);
+  const [equipment, setEquipment] = useState<Equipment | null>(null);
+  const [zone, setZone] = useState<ZoneFilter | null>(null);
+
+  useEffect(() => {
+    if (!open || exercises.length > 0) return;
+    fetchExercisesForBuilder()
+      .then(setExercises)
+      .catch(() => {});
+  }, [open, exercises.length]);
+
+  const filtered = useMemo(() => {
+    const taken = new Set(takenIds);
+    return exercises.filter(
+      (exercise) =>
+        !taken.has(exercise.id) &&
+        (!muscle || exercise.primary_muscle === muscle) &&
+        (!equipment || exercise.equipment === equipment) &&
+        (!zone || String(exercise.zone) === zone) &&
+        matchesSearch(exercise, query.trim())
+    );
+  }, [exercises, takenIds, muscle, equipment, zone, query]);
+
+  return (
+    <Modal visible={open} animationType="slide" onRequestClose={onClose}>
+      <View style={[styles.picker, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
+        <View style={styles.pickerHeader}>
+          <Text style={styles.pickerTitle}>Add exercise</Text>
+          <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close">
+            <Ionicons name="close" size={28} color={colours.text} />
+          </Pressable>
+        </View>
+        <View style={styles.search}>
+          <Ionicons name="search" size={20} color={colours.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search"
+            placeholderTextColor={colours.textMuted}
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+        </View>
+        <View style={styles.filters}>
+          <FilterSheet
+            fill={false}
+            label="Muscle"
+            allLabel="All muscles"
+            options={MUSCLES.map((value) => ({ value, label: MUSCLE_LABELS[value] }))}
+            value={muscle}
+            onChange={setMuscle}
+          />
+          <FilterSheet
+            fill={false}
+            label="Equipment"
+            allLabel="All kit"
+            options={EQUIPMENT.map((value) => ({ value, label: EQUIPMENT_LABELS[value] }))}
+            value={equipment}
+            onChange={setEquipment}
+          />
+          <FilterSheet
+            fill={false}
+            label="Zone"
+            allLabel="All zones"
+            options={ZONES.map((value) => ({
+              value: String(value) as ZoneFilter,
+              label: ZONE_LABELS[value],
+            }))}
+            value={zone}
+            onChange={setZone}
+          />
+        </View>
+        <ScrollView keyboardShouldPersistTaps="handled">
+          {filtered.map((exercise) => (
+            <Pressable
+              key={exercise.id}
+              onPress={() => onChoose(exercise)}
+              style={({ pressed }) => [styles.pickRow, pressed && styles.pressed]}
+              accessibilityRole="button">
+              <View style={styles.flex}>
+                <Text style={styles.pickName}>{exercise.name}</Text>
+                <Text style={styles.meta}>
+                  {ZONE_LABELS[exercise.zone]} · {MUSCLE_LABELS[exercise.primary_muscle]} ·{' '}
+                  {EQUIPMENT_LABELS[exercise.equipment]}
+                </Text>
+              </View>
+              <Ionicons name="add-circle-outline" size={24} color={colours.accent} />
+            </Pressable>
+          ))}
+          {filtered.length === 0 && (
+            <Text style={styles.emptyPick}>No exercises match. Try clearing a filter.</Text>
+          )}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  picker: {
+    flex: 1,
+    backgroundColor: colours.background,
+    paddingHorizontal: 20,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  pickerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colours.text,
+  },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 52,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colours.border,
+    backgroundColor: colours.surface,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 17,
+    color: colours.text,
+    paddingVertical: 12,
+  },
+  filters: {
+    gap: 10,
+    marginVertical: 12,
+  },
+  pickRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 64,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colours.border,
+    gap: 10,
+  },
+  flex: {
+    flex: 1,
+  },
+  pickName: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colours.text,
+  },
+  meta: {
+    fontSize: 14,
+    color: colours.textMuted,
+    marginTop: 2,
+  },
+  emptyPick: {
+    fontSize: 16,
+    color: colours.textMuted,
+    textAlign: 'center',
+    marginTop: 24,
+  },
+  pressed: {
+    opacity: 0.7,
+  },
+});

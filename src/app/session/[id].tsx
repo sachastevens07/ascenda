@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { ExercisePicker } from '@/components/ExercisePicker';
 import { ExerciseGuide } from '@/components/LevelUpCard';
 import { PillDropdown } from '@/components/PillDropdown';
 import { SwapSheet } from '@/components/SwapSheet';
@@ -26,7 +27,13 @@ import {
   saveSessionCyclePhase,
   type CyclePhase,
 } from '@/lib/cycle';
-import { replaceCustomWorkoutExercise, STARTER_WORKOUT_ID } from '@/lib/customWorkouts';
+import { fillBlockTargetsFromSession } from '@/lib/blocks';
+import {
+  appendCustomWorkoutExercise,
+  deleteCustomWorkout,
+  replaceCustomWorkoutExercise,
+  STARTER_WORKOUT_ID,
+} from '@/lib/customWorkouts';
 import { sessionMaxZone } from '@/lib/levels';
 import {
   declineLevelUp,
@@ -120,6 +127,8 @@ export default function SessionScreen() {
   const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
   const [challenge, setChallenge] = useState<LevelChallenge | null>(null);
   const [customWorkoutId, setCustomWorkoutId] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   const workout = useWorkout();
   const { restEndsAt, publish } = workout;
@@ -330,6 +339,38 @@ export default function SessionScreen() {
     await replaceSlot(swapItem, exercise);
   }
 
+  async function handleAddExercise(exercise: SlotExercise) {
+    if (!day || !customWorkoutId || customWorkoutId === STARTER_WORKOUT_ID) return;
+    setPickerOpen(false);
+    setIsAdding(true);
+    try {
+      const added = await appendCustomWorkoutExercise(customWorkoutId, exercise);
+      const updatedDay = { ...day, exercises: [...day.exercises, added] };
+      const extraPrevious = previous[exercise.id]
+        ? {}
+        : await fetchPreviousSets([exercise.id], id).catch(() => ({}));
+      const extraBests = bests[exercise.id]
+        ? {}
+        : await fetchExerciseBests([exercise.id], id).catch(() => ({}));
+      const mergedPrevious = { ...previous, ...extraPrevious };
+      const newEntries = buildEntries(
+        { ...day, exercises: [added] },
+        [],
+        mergedPrevious,
+        isPro
+      );
+      setDay(updatedDay);
+      setPrevious(mergedPrevious);
+      setBests((current) => ({ ...current, ...extraBests }));
+      setEntries((current) => ({ ...current, ...newEntries }));
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : '';
+      showDialog('Couldn’t add that exercise', detail || 'Check your connection and try again.');
+    } finally {
+      setIsAdding(false);
+    }
+  }
+
   async function handleRestore() {
     if (!day || !swapItem?.original) return;
     if (customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID) {
@@ -344,6 +385,7 @@ export default function SessionScreen() {
     setIsFinishing(true);
     try {
       await finishSession(id);
+      await fillBlockTargetsFromSession(id).catch(() => {});
       workout.end();
       router.back();
       const trained =
@@ -391,6 +433,13 @@ export default function SessionScreen() {
     setIsFinishing(true);
     try {
       await discardSession(id);
+      if (
+        customWorkoutId &&
+        customWorkoutId !== STARTER_WORKOUT_ID &&
+        (day?.exercises.length ?? 0) === 0
+      ) {
+        await deleteCustomWorkout(customWorkoutId).catch(() => {});
+      }
       workout.end();
       router.back();
     } catch {
@@ -489,6 +538,12 @@ export default function SessionScreen() {
             </View>
           )}
         </View>
+
+        {day.exercises.length === 0 && (
+          <Text style={styles.emptyAdd}>
+            Add your first exercise when you’re ready. This session is yours to build as you go.
+          </Text>
+        )}
 
         {day.exercises.map((item) => {
           const weighted = usesWeight(item.exercise.equipment);
@@ -646,6 +701,16 @@ export default function SessionScreen() {
           );
         })}
 
+        {customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID && (
+          <Pressable
+            style={({ pressed }) => [styles.addButton, (pressed || isAdding) && styles.pressed]}
+            onPress={() => setPickerOpen(true)}
+            disabled={isAdding || isFinishing}
+            accessibilityRole="button">
+            <Text style={styles.addButtonText}>{isAdding ? 'Adding…' : 'Add exercise'}</Text>
+          </Pressable>
+        )}
+
         <Pressable
           style={({ pressed }) => [styles.finishButton, (pressed || isFinishing) && styles.pressed]}
           onPress={confirmFinish}
@@ -697,6 +762,15 @@ export default function SessionScreen() {
             <Text style={[styles.restButtonText, styles.skipText]}>Skip</Text>
           </Pressable>
         </View>
+      )}
+
+      {customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID && (
+        <ExercisePicker
+          open={pickerOpen}
+          takenIds={day.exercises.map((item) => item.exercise.id)}
+          onClose={() => setPickerOpen(false)}
+          onChoose={handleAddExercise}
+        />
       )}
     </KeyboardAvoidingView>
   );
@@ -887,6 +961,25 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  emptyAdd: {
+    fontSize: 16,
+    lineHeight: 23,
+    color: colours.textMuted,
+  },
+  addButton: {
+    minHeight: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colours.accent,
+    backgroundColor: colours.surface,
+  },
+  addButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.accent,
   },
   finishButton: {
     minHeight: 60,

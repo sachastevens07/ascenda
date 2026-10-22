@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BlockTargets } from '@/components/BlockTargets';
 import { showDialog } from '@/components/Dialog';
 import { LevelUpCard } from '@/components/LevelUpCard';
 import { useTabBarHeight } from '@/components/PillTabBar';
@@ -19,11 +20,13 @@ import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import {
   customWorkoutToDay,
+  describeCustomWorkoutError,
   fetchCustomWorkout,
   fetchCustomWorkouts,
-  missingCustomWorkoutsMessage,
+  startBlankCustomSession,
   type CustomWorkout,
 } from '@/lib/customWorkouts';
+import { describeBlockPosition, ensureActiveBlock, type TrainingBlock } from '@/lib/blocks';
 import { fetchFillLibrary, resolveDay, sessionMaxZone } from '@/lib/levels';
 import {
   acceptLevelChallenge,
@@ -92,6 +95,7 @@ type TodayData = {
   customWorkouts: CustomWorkout[];
   /** Custom session in progress, with this session's swaps applied. */
   customDay: ProgrammeDay | null;
+  block: TrainingBlock | null;
 };
 
 /** Sets or clears (`exercise` null) one slot's swap. */
@@ -178,6 +182,14 @@ export default function TodayScreen() {
             ]),
           ];
           const previous = await fetchPreviousSets(exerciseIds, activeSession?.id ?? null);
+          let block: TrainingBlock | null = null;
+          if (programme && level && equipment) {
+            try {
+              block = await ensureActiveBlock(programme, level, equipment);
+            } catch {
+              block = null;
+            }
+          }
           if (!isCurrent) return;
           setChallenge(nextChallenge);
           setData({
@@ -190,6 +202,7 @@ export default function TodayScreen() {
             library,
             customWorkouts,
             customDay,
+            block,
           });
           setLoadState('ready');
         } catch {
@@ -238,12 +251,38 @@ export default function TodayScreen() {
     if (!day) return;
     setIsStarting(true);
     try {
-      const session = await startSession(day.id, swapIds(day));
+      const session = await startSession(day.id, swapIds(day), data?.block?.id ?? null);
       setChosenDayId(null);
       setTodaySwaps({});
       router.push({ pathname: '/session/[id]', params: { id: session.id } });
     } catch {
       showDialog('Couldn’t start the session', 'Check your connection and try again.');
+    } finally {
+      setIsStarting(false);
+    }
+  }
+
+  async function handleStartBlank() {
+    if (activeSession) {
+      showDialog(
+        'You already have a session going',
+        'Finish or discard it first, then start this workout.',
+        [
+          {
+            text: 'Open it',
+            onPress: () => router.push({ pathname: '/session/[id]', params: { id: activeSession.id } }),
+          },
+          { text: 'OK', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+    setIsStarting(true);
+    try {
+      const session = await startBlankCustomSession();
+      router.push({ pathname: '/session/[id]', params: { id: session.id } });
+    } catch (error) {
+      showDialog('Couldn’t start the workout', describeCustomWorkoutError(error));
     } finally {
       setIsStarting(false);
     }
@@ -269,13 +308,7 @@ export default function TodayScreen() {
       const session = await startCustomSession(workout.id);
       router.push({ pathname: '/session/[id]', params: { id: session.id } });
     } catch (error) {
-      const detail = error instanceof Error ? error.message : '';
-      showDialog(
-        'Couldn’t start the workout',
-        /custom_workouts/i.test(detail)
-          ? missingCustomWorkoutsMessage()
-          : 'Check your connection and try again.'
-      );
+      showDialog('Couldn’t start the workout', describeCustomWorkoutError(error));
     } finally {
       setIsStarting(false);
     }
@@ -447,7 +480,8 @@ export default function TodayScreen() {
     day?.exercises.some((item) => suggestionFor(item).kind === 'find-starting-weight')
   );
   const starterWorkout = data?.customWorkouts.find((item) => item.is_starter);
-  const myWorkouts = data?.customWorkouts.filter((item) => !item.is_starter) ?? [];
+  const myWorkouts =
+    data?.customWorkouts.filter((item) => !item.is_starter && item.exercises.length > 0) ?? [];
   const featuredWorkouts = [
     ...(starterWorkout ? [starterWorkout] : []),
     ...myWorkouts.slice(0, 3),
@@ -546,6 +580,9 @@ export default function TodayScreen() {
             </Text>
           </View>
           <Text style={styles.dayName}>{day.name}</Text>
+          {isPro && data?.block && (
+            <Text style={styles.blockPosition}>{describeBlockPosition(data.block)}</Text>
+          )}
           <Text style={styles.cardLabel}>{day.exercises.length} exercises</Text>
 
           <Pressable
@@ -634,6 +671,8 @@ export default function TodayScreen() {
             );
           })}
 
+          {isPro && data?.block && <BlockTargets block={data.block} />}
+
           <Pressable
             style={({ pressed }) => [styles.startButton, (pressed || isStarting) && styles.pressed]}
             onPress={isInProgress ? handleContinue : handleStart}
@@ -658,14 +697,31 @@ export default function TodayScreen() {
         )}
 
         <View style={styles.card}>
+          <Text style={styles.cardLabel}>Your workout</Text>
+          <Text style={styles.dayName}>Start empty</Text>
+          <Text style={styles.cardLabel}>Add whatever you want as you go.</Text>
+          <Pressable
+            style={({ pressed }) => [styles.startButton, (pressed || isStarting) && styles.pressed]}
+            onPress={handleStartBlank}
+            disabled={isStarting}
+            accessibilityRole="button">
+            {isStarting ? (
+              <ActivityIndicator color={colours.surface} />
+            ) : (
+              <Text style={styles.startButtonText}>Start workout</Text>
+            )}
+          </Pressable>
+        </View>
+
+        <View style={styles.card}>
           <Text style={styles.cardLabel}>My workouts</Text>
-          <Text style={styles.dayName}>Your sessions</Text>
+          <Text style={styles.dayName}>Saved sessions</Text>
           <Text style={styles.cardLabel}>
-            Build your own, or start the quiet-spot starter. Free for everyone.
+            The quiet-spot starter, and anything you’ve saved.
           </Text>
           {featuredWorkouts.length === 0 ? (
             <Text style={styles.quietText}>
-              Create a workout to see it here. If this stays empty, run supabase/custom_workouts.sql.
+              Start a workout to see it here. If this stays empty, run supabase/custom_workouts.sql.
             </Text>
           ) : (
             featuredWorkouts.map((workout) => {
@@ -844,6 +900,12 @@ const styles = StyleSheet.create({
     color: colours.text,
     marginTop: 6,
     marginBottom: 2,
+  },
+  blockPosition: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colours.accent,
+    marginBottom: 4,
   },
   quietRow: {
     flexDirection: 'row',
