@@ -105,12 +105,11 @@ export type Profile = {
   programme: { name: string; days_per_week: number } | null;
   /** When on, Today's session stays in zone 1 (Corner). See supabase/quiet_mode.sql. */
   quiet_mode: boolean;
-  cycle_tracking_enabled: boolean;
   onboarding_completed_at: string | null;
 };
 
 const PROFILE_COLUMNS =
-  'user_id, goal, experience, days_per_week, equipment, confidence, confidence_level, bodyweight_kg, age_confirmed_at, programme_id, programme:programmes(name, days_per_week), quiet_mode, cycle_tracking_enabled, onboarding_completed_at';
+  'user_id, goal, experience, days_per_week, equipment, confidence, confidence_level, bodyweight_kg, age_confirmed_at, programme_id, programme:programmes(name, days_per_week), quiet_mode, onboarding_completed_at';
 
 /** numeric columns arrive as strings. */
 function toProfile(row: unknown): Profile {
@@ -138,8 +137,6 @@ type ProfileState = {
   confirmAge: () => Promise<void>;
   /** Deletes her account and everything in it, then signs out. */
   deleteAccount: () => Promise<void>;
-  /** Turning on records her consent (see supabase/cycle.sql). Turning off keeps her notes. */
-  setCycleTracking: (enabled: boolean) => Promise<void>;
   /** Quiet Mode keeps Today's session in one gym zone (the Corner). */
   setQuietMode: (enabled: boolean) => Promise<void>;
   /** Moves her level up or down and records it in confidence_history. */
@@ -221,21 +218,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
-  const setCycleTracking = useCallback(
-    async (enabled: boolean) => {
-      if (!userId) throw new Error('You need to be signed in.');
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({ cycle_tracking_enabled: enabled })
-        .eq('user_id', userId)
-        .select(PROFILE_COLUMNS)
-        .single();
-      if (error) throw error;
-      setLoaded({ userId, profile: toProfile(data), error: null });
-    },
-    [userId]
-  );
-
   const setQuietMode = useCallback(
     async (enabled: boolean) => {
       if (!userId) throw new Error('You need to be signed in.');
@@ -281,7 +263,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         saveQuizAnswers,
         confirmAge,
         deleteAccount,
-        setCycleTracking,
         setQuietMode,
         setConfidenceLevel,
       }}>

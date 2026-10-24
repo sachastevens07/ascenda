@@ -151,7 +151,7 @@ export default function PaywallScreen() {
           ))}
         </View>
         <Text style={styles.freeNote}>
-          Always free: logging your sets, your history, the exercise library, cycle notes and
+          Always free: logging your sets, your history, the exercise library and
           exporting your data.
         </Text>
 

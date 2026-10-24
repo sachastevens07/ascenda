@@ -11,7 +11,6 @@ create table if not exists public.profiles (
   confidence smallint,
   -- Assigned from the quiz answers once programmes exist (Feature 5).
   programme_id text,
-  cycle_tracking_enabled boolean not null default false,
   -- Set when the quiz is saved. Null means the user still needs to do the quiz.
   onboarding_completed_at timestamptz,
   created_at timestamptz not null default now(),

@@ -13,7 +13,6 @@ import {
   missingBlocksMessage,
   type TrainingBlock,
 } from '@/lib/blocks';
-import { deleteAllCycleNotes } from '@/lib/cycle';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import {
   debugMarkChallengeReady,
@@ -48,7 +47,7 @@ import { supabase } from '@/lib/supabase';
 
 function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
   if (!isPro) {
-    return 'Logging, your history, the library, export and cycle notes are free. Pro adds your programme, weight suggestions, swaps and charts.';
+    return 'Logging, your history, the library and export are free. Pro adds your programme, weight suggestions, swaps and charts.';
   }
   if (trialEndsAt) {
     return willRenew
@@ -63,13 +62,11 @@ function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): 
 
 export default function ProfileScreen() {
   const { session } = useAuth();
-  const { profile, setCycleTracking, setConfidenceLevel } = useProfile();
+  const { profile, setConfidenceLevel } = useProfile();
   const subscription = useSubscription();
   const answers = getQuizAnswers(profile);
-  const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isSavingCycle, setIsSavingCycle] = useState(false);
   const [isSavingLevel, setIsSavingLevel] = useState(false);
   const [block, setBlock] = useState<TrainingBlock | null>(null);
   const tabBarHeight = useTabBarHeight();
@@ -122,7 +119,7 @@ export default function ProfileScreen() {
   async function handleExport() {
     setIsExporting(true);
     try {
-      const result = await exportWorkoutHistory(cycleNotesOn);
+      const result = await exportWorkoutHistory();
       if (result.status === 'empty') {
         showDialog('Nothing to export yet', 'Finish a session and your sets will be ready to download.');
       } else if (result.status === 'saved') {
@@ -143,44 +140,6 @@ export default function ProfileScreen() {
     } finally {
       setIsExporting(false);
     }
-  }
-
-  async function changeCycleTracking(enabled: boolean, deleteNotes = false) {
-    setIsSavingCycle(true);
-    try {
-      if (deleteNotes) await deleteAllCycleNotes();
-      if (enabled !== cycleNotesOn) await setCycleTracking(enabled);
-      if (deleteNotes) showDialog('Cycle notes deleted', 'Your workouts are all still here.');
-    } catch {
-      showDialog('That didn’t save', 'Check your connection and try again.');
-    } finally {
-      setIsSavingCycle(false);
-    }
-  }
-
-  function confirmTurnOnCycleNotes() {
-    showDialog(
-      'Turn on cycle notes?',
-      'Cycle notes are optional health information. Only you can see them, and we never share them. ' +
-        'They’re only used to show you patterns in your own sessions: they don’t change your training ' +
-        'and aren’t medical advice. You can turn them off or delete them at any time.',
-      [
-        { text: 'Turn on', onPress: () => changeCycleTracking(true) },
-        { text: 'Not now', style: 'cancel' },
-      ]
-    );
-  }
-
-  function confirmTurnOffCycleNotes() {
-    showDialog(
-      'Turn off cycle notes?',
-      'You can keep your notes (hidden until you turn this back on) or delete them now.',
-      [
-        { text: 'Keep my notes', onPress: () => changeCycleTracking(false) },
-        { text: 'Delete my notes', style: 'destructive', onPress: () => changeCycleTracking(false, true) },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
   }
 
   async function changeLevel(level: Level) {
@@ -261,17 +220,6 @@ export default function ProfileScreen() {
     } catch {
       showDialog('Couldn’t reset', missingBlocksMessage());
     }
-  }
-
-  function confirmDeleteCycleNotes() {
-    showDialog(
-      'Delete all cycle notes?',
-      'This removes the cycle phase from every session. Your workouts stay.',
-      [
-        { text: 'Delete', style: 'destructive', onPress: () => changeCycleTracking(true, true) },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
   }
 
   const answerRows = answers
@@ -426,33 +374,6 @@ export default function ProfileScreen() {
       )}
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Cycle notes</Text>
-        <Text style={styles.label}>
-          {cycleNotesOn
-            ? 'On. Add a cycle phase to a session from the workout screen, and see your own patterns on Progress. Only you can see them.'
-            : 'Optional and off. Tag sessions with where you are in your cycle and see patterns in your own training. Only you can see them.'}
-        </Text>
-        <Pressable
-          style={({ pressed }) => [styles.button, styles.cardButton, (pressed || isSavingCycle) && styles.buttonPressed]}
-          onPress={cycleNotesOn ? confirmTurnOffCycleNotes : confirmTurnOnCycleNotes}
-          disabled={isSavingCycle}
-          accessibilityRole="button">
-          <Text style={styles.buttonText}>
-            {isSavingCycle ? 'Saving…' : cycleNotesOn ? 'Turn off cycle notes' : 'Turn on cycle notes'}
-          </Text>
-        </Pressable>
-        {cycleNotesOn && (
-          <Pressable
-            style={styles.link}
-            onPress={confirmDeleteCycleNotes}
-            disabled={isSavingCycle}
-            accessibilityRole="button">
-            <Text style={styles.dangerLinkText}>Delete all cycle notes</Text>
-          </Pressable>
-        )}
-      </View>
-
-      <View style={styles.card}>
         <Text style={styles.cardTitle}>Your data</Text>
         <Text style={styles.label}>
           Save every set from your finished sessions as a spreadsheet (Excel file) in a folder you choose,
@@ -590,11 +511,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colours.textMuted,
     textAlign: 'center',
-  },
-  dangerLinkText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.danger,
   },
   buttonText: {
     fontSize: 17,

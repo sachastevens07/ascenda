@@ -17,16 +17,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { ExercisePicker } from '@/components/ExercisePicker';
 import { ExerciseGuide } from '@/components/LevelUpCard';
-import { PillDropdown } from '@/components/PillDropdown';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
-import {
-  CYCLE_PHASES,
-  CYCLE_PHASE_LABELS,
-  fetchSessionCyclePhase,
-  saveSessionCyclePhase,
-  type CyclePhase,
-} from '@/lib/cycle';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import {
   appendCustomWorkoutExercise,
@@ -123,8 +115,6 @@ export default function SessionScreen() {
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [bests, setBests] = useState<Record<string, ExerciseBests>>({});
-  const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
-  const [cyclePhase, setCyclePhase] = useState<CyclePhase | null>(null);
   const [challenge, setChallenge] = useState<LevelChallenge | null>(null);
   const [customWorkoutId, setCustomWorkoutId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -168,39 +158,8 @@ export default function SessionScreen() {
   }, [id, equipment, isPro, isSubscriptionLoading, answers?.confidence_level]);
 
   useEffect(() => {
-    if (!cycleNotesOn) return;
-    let isCurrent = true;
-    fetchSessionCyclePhase(id)
-      .then((phase) => {
-        if (isCurrent) setCyclePhase(phase);
-      })
-      .catch(() => {});
-    return () => {
-      isCurrent = false;
-    };
-  }, [id, cycleNotesOn]);
-
-  useEffect(() => {
     ensureRestTimerPermission().catch(() => {});
   }, []);
-
-  async function changeCyclePhase(phase: CyclePhase | null) {
-    const before = cyclePhase;
-    const sessionId = Array.isArray(id) ? id[0] : id;
-    setCyclePhase(phase);
-    try {
-      await saveSessionCyclePhase(sessionId, phase);
-    } catch (error) {
-      setCyclePhase(before);
-      const detail = error instanceof Error ? error.message : '';
-      showDialog(
-        'That note didn’t save',
-        /cycle_phase/i.test(detail)
-          ? 'Cycle notes need supabase/cycle.sql run in the Supabase SQL editor.'
-          : 'Check your connection and try again.'
-      );
-    }
-  }
 
   // Keeps the bar above the tabs up to date with this session's next set.
   useEffect(() => {
@@ -526,17 +485,6 @@ export default function SessionScreen() {
               </View>
             )}
           </View>
-          {cycleNotesOn && (
-            <View style={styles.cycleRow}>
-              <PillDropdown
-                label="Cycle phase"
-                allLabel="No note"
-                options={CYCLE_PHASES.map((phase) => ({ value: phase, label: CYCLE_PHASE_LABELS[phase] }))}
-                value={cyclePhase}
-                onChange={changeCyclePhase}
-              />
-            </View>
-          )}
         </View>
 
         {day.exercises.length === 0 && (
@@ -830,10 +778,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.accent,
     fontVariant: ['tabular-nums'],
-  },
-  cycleRow: {
-    flexDirection: 'row',
-    marginTop: 12,
   },
   trophy: {
     alignSelf: 'center',

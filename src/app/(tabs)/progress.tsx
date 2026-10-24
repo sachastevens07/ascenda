@@ -15,7 +15,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
-import { CYCLE_PHASE_LABELS, fetchCyclePatterns, type PhasePattern } from '@/lib/cycle';
 import { ZONES, ZONE_LABELS, type Zone } from '@/lib/exercises';
 import { fetchConfidenceHistory, type ConfidenceHistory } from '@/lib/levelUp';
 import {
@@ -50,8 +49,6 @@ type LoadState = 'loading' | 'error' | 'ready';
 type ProgressData = {
   sets: ProgressSet[];
   sessionDates: string[];
-  /** Null while cycle notes are off, or if they couldn't be loaded. */
-  cyclePatterns: PhasePattern[] | null;
   /** Empty if she hasn't changed level, or if level_up.sql hasn't been run. */
   confidenceHistory: ConfidenceHistory[];
 };
@@ -78,7 +75,6 @@ export default function ProgressScreen() {
   const tabBarHeight = useTabBarHeight();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
-  const cycleNotesOn = profile?.cycle_tracking_enabled ?? false;
   const { isPro } = useSubscription();
   const [data, setData] = useState<ProgressData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -93,12 +89,11 @@ export default function ProgressScreen() {
       Promise.all([
         fetchProgressSets(),
         fetchFinishedSessionDates(),
-        cycleNotesOn ? fetchCyclePatterns().catch(() => null) : null,
         fetchConfidenceHistory().catch(() => []),
       ])
-        .then(([sets, sessionDates, cyclePatterns, confidenceHistory]) => {
+        .then(([sets, sessionDates, confidenceHistory]) => {
           if (!isCurrent) return;
-          setData({ sets, sessionDates, cyclePatterns, confidenceHistory });
+          setData({ sets, sessionDates, confidenceHistory });
           setLoadState('ready');
         })
         .catch(() => {
@@ -107,7 +102,7 @@ export default function ProgressScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [attempt, cycleNotesOn])
+    }, [attempt])
   );
 
   if (loadState !== 'ready' || !data) {
@@ -239,8 +234,6 @@ export default function ProgressScreen() {
                 to test it.
               </Text>
             </View>
-
-            {cycleNotesOn && data.cyclePatterns && <CyclePatterns patterns={data.cyclePatterns} />}
           </>
         )}
 
@@ -411,53 +404,6 @@ function ConfidenceCard({
       </Text>
     </View>
   );
-}
-
-function CyclePatterns({ patterns }: { patterns: PhasePattern[] }) {
-  return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Your cycle notes</Text>
-      {patterns.length === 0 ? (
-        <Text style={styles.chartNote}>
-          Add a cycle phase to a session from the workout screen, and your patterns will show here.
-        </Text>
-      ) : (
-        patterns.map((pattern) => {
-          const details = [
-            `${formatOneDecimal(pattern.averageSets)} sets`,
-            pattern.averageMinutes === null ? null : `${Math.round(pattern.averageMinutes)} min`,
-            pattern.averageVolumeKg === null
-              ? null
-              : `${formatThousands(Math.round(pattern.averageVolumeKg))} kg lifted`,
-          ].filter((detail) => detail !== null);
-          return (
-            <View key={pattern.phase} style={styles.bestRow}>
-              <View style={styles.flex}>
-                <Text style={styles.bestName}>{CYCLE_PHASE_LABELS[pattern.phase]}</Text>
-                <Text style={styles.bestDetail}>On average: {details.join(' · ')}</Text>
-              </View>
-              <Text style={styles.bestDate}>
-                {pattern.sessionCount} {pattern.sessionCount === 1 ? 'session' : 'sessions'}
-              </Text>
-            </View>
-          );
-        })
-      )}
-      <Text style={styles.footnote}>
-        From your own finished sessions. Everyone’s cycle is different, so patterns get clearer with a
-        few sessions in each phase. This isn’t advice.
-      </Text>
-    </View>
-  );
-}
-
-/** 12500 → "12,500". */
-function formatThousands(value: number): string {
-  return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function formatOneDecimal(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 function Stat({ value, label }: { value: number; label: string }) {

@@ -2,7 +2,6 @@ import { Directory } from 'expo-file-system';
 import { startActivityAsync } from 'expo-intent-launcher';
 import { Platform } from 'react-native';
 
-import { CYCLE_PHASE_LABELS, type CyclePhase } from '@/lib/cycle';
 import { EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
 import { supabase } from '@/lib/supabase';
 import { buildXlsx, type XlsxCell, type XlsxColumn } from '@/lib/xlsx';
@@ -25,14 +24,12 @@ type ExportRow = {
     date: string;
     started_at: string;
     programme_day: { name: string } | null;
-    /** Only fetched while cycle notes are on. */
-    cycle_phase?: CyclePhase | null;
   };
 };
 
 /** Every ticked set from her finished sessions, in the order she did them. */
-async function fetchExportRows(includeCyclePhase: boolean): Promise<ExportRow[]> {
-  const sessionColumns = `date, started_at, completed_at, ${includeCyclePhase ? 'cycle_phase, ' : ''}programme_day:programme_days(name)`;
+async function fetchExportRows(): Promise<ExportRow[]> {
+  const sessionColumns = 'date, started_at, completed_at, programme_day:programme_days(name)';
   const rows: ExportRow[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await supabase
@@ -70,7 +67,7 @@ function textWidth(header: string, values: string[]): number {
   return Math.min(45, Math.max(header.length, ...values.map((value) => value.length)) + 3);
 }
 
-function toSpreadsheet(rows: ExportRow[], includeCyclePhase: boolean): Uint8Array {
+function toSpreadsheet(rows: ExportRow[]): Uint8Array {
   const sessionNames = rows.map((row) => row.session.programme_day?.name ?? '');
   const exerciseNames = rows.map((row) => row.exercise.name);
   const columns: XlsxColumn[] = [
@@ -83,10 +80,8 @@ function toSpreadsheet(rows: ExportRow[], includeCyclePhase: boolean): Uint8Arra
     { header: 'Weight (kg)', width: 12 },
     { header: 'Reps', width: 7 },
     { header: 'Set completed', width: 15 },
-    ...(includeCyclePhase ? [{ header: 'Cycle phase', width: 18 }] : []),
   ];
   const cells = rows.map((row, i): XlsxCell[] => {
-    const phase = row.session.cycle_phase;
     return [
       { kind: 'date', value: row.session.date },
       { kind: 'time', value: localMinutes(row.session.started_at) },
@@ -97,7 +92,6 @@ function toSpreadsheet(rows: ExportRow[], includeCyclePhase: boolean): Uint8Arra
       number(row.weight_kg === null ? null : Number(row.weight_kg)),
       number(row.reps),
       row.completed_at ? { kind: 'time', value: localMinutes(row.completed_at) } : null,
-      ...(includeCyclePhase ? [phase ? text(CYCLE_PHASE_LABELS[phase]) : null] : []),
     ];
   });
   return buildXlsx('Workouts', columns, cells);
@@ -122,10 +116,9 @@ export async function openExportedFile(uri: string): Promise<void> {
 
 /**
  * Asks her for a folder (e.g. Documents) and saves her workout history there as an Excel file.
- * Cycle phase is only included while she has cycle notes turned on.
  */
-export async function exportWorkoutHistory(includeCyclePhase: boolean): Promise<ExportResult> {
-  const rows = await fetchExportRows(includeCyclePhase);
+export async function exportWorkoutHistory(): Promise<ExportResult> {
+  const rows = await fetchExportRows();
   if (rows.length === 0) return { status: 'empty' };
 
   let folder: Directory;
@@ -140,7 +133,7 @@ export async function exportWorkoutHistory(includeCyclePhase: boolean): Promise<
   const pad = (value: number) => String(value).padStart(2, '0');
   const stamp = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
   const file = folder.createFile(`workout-history-${stamp}.xlsx`, XLSX_MIME_TYPE);
-  file.write(toSpreadsheet(rows, includeCyclePhase));
+  file.write(toSpreadsheet(rows));
   return {
     status: 'saved',
     fileName: file.name,
