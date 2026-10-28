@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { customWorkoutToDay, fetchCustomWorkout } from '@/lib/customWorkouts';
 import type { EquipmentAccess } from '@/lib/profile';
 import {
@@ -6,8 +8,10 @@ import {
   usesWeight,
   type ProgrammeDay,
   type ProgrammeExercise,
+  type SlotExercise,
 } from '@/lib/programmes';
 import { estimateOneRepMax, type ExerciseBests } from '@/lib/progress';
+import { fetchRoutineDay, routineDayToProgrammeDay } from '@/lib/routines';
 import {
   fetchPreviousSets,
   fetchSession,
@@ -16,6 +20,59 @@ import {
   type Session,
 } from '@/lib/sessions';
 import { applySwaps, fetchSessionSwaps } from '@/lib/swaps';
+
+export type SessionPlanSlot = {
+  position: number;
+  sets: number;
+  rep_min: number;
+  rep_max: number;
+  rest_seconds: number;
+  exercise: SlotExercise;
+};
+
+export type SessionPlan = {
+  slots: SessionPlanSlot[];
+};
+
+function sessionPlanKey(id: string): string {
+  return `session-plan:${id}`;
+}
+
+export async function saveSessionPlan(sessionId: string, plan: SessionPlan): Promise<void> {
+  await AsyncStorage.setItem(sessionPlanKey(sessionId), JSON.stringify(plan));
+}
+
+export async function loadSessionPlan(sessionId: string): Promise<SessionPlan | null> {
+  const raw = await AsyncStorage.getItem(sessionPlanKey(sessionId));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as SessionPlan;
+  } catch {
+    return null;
+  }
+}
+
+export async function clearSessionPlan(sessionId: string): Promise<void> {
+  await AsyncStorage.removeItem(sessionPlanKey(sessionId));
+}
+
+export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): ProgrammeDay {
+  return {
+    ...day,
+    exercises: plan.slots.map((slot) => {
+      const existing = day.exercises.find((item) => item.position === slot.position);
+      const swapped = existing && existing.exercise.id !== slot.exercise.id;
+      return {
+        position: slot.position,
+        sets: slot.sets,
+        rep_min: slot.rep_min,
+        rep_max: slot.rep_max,
+        exercise: slot.exercise,
+        original: swapped ? existing.exercise : existing?.original,
+      };
+    }),
+  };
+}
 
 /** What's in the boxes for one set. Kept as text so she can type freely. */
 export type SetEntry = { weight: string; reps: string; completed: boolean };
@@ -125,11 +182,16 @@ export async function loadSessionLog(
   if (session.custom_workout_id) {
     const workout = await fetchCustomWorkout(session.custom_workout_id);
     planned = workout ? customWorkoutToDay(workout) : null;
+  } else if (session.routine_day_id) {
+    const routineDay = await fetchRoutineDay(session.routine_day_id);
+    planned = routineDay ? routineDayToProgrammeDay(routineDay) : null;
   } else if (session.programme_day_id) {
     planned = await fetchProgrammeDay(session.programme_day_id, equipment);
   }
   if (!planned) return null;
-  const day = applySwaps(planned, swaps);
+  const plan = await loadSessionPlan(session.id);
+  const swapped = applySwaps(planned, swaps);
+  const day = plan && plan.slots.length > 0 ? applySessionPlan(swapped, plan) : swapped;
   const exerciseIds = day.exercises.map((item) => item.exercise.id);
   const [logged, previous] = await Promise.all([
     fetchSessionSets(id),

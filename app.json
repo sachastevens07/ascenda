@@ -26,7 +26,14 @@
       "expo-router",
       "expo-status-bar",
       "expo-font",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Add a private progress photo from your library.",
+          "cameraPermission": "Take a private progress photo."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

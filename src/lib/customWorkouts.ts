@@ -14,6 +14,9 @@ export const STARTER_WORKOUT_ID = '11111111-1111-4111-8111-111111111111';
 export const MIN_WORKOUT_NAME = 1;
 export const MAX_WORKOUT_NAME = 60;
 export const MAX_WORKOUT_EXERCISES = 12;
+/** Free users can keep this many saved workouts, including the shared starter. */
+export const FREE_CUSTOM_WORKOUT_LIMIT = 4;
+export const FREE_CUSTOM_WORKOUT_LIMIT_CODE = 'FREE_CUSTOM_WORKOUT_LIMIT';
 export const MIN_SETS = 1;
 export const MAX_SETS = 6;
 export const MIN_REPS = 1;
@@ -56,10 +59,45 @@ export function describeCustomWorkoutError(error: unknown): string {
       : error && typeof error === 'object' && 'message' in error
         ? String((error as { message: unknown }).message)
         : '';
+  if (detail === FREE_CUSTOM_WORKOUT_LIMIT_CODE) {
+    return `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts, including the starter. Pro is unlimited. Your existing workouts stay.`;
+  }
   if (/42P01|custom_workouts|custom_workout_id|\bsource\b/i.test(detail)) {
     return missingCustomWorkoutsMessage();
   }
   return detail || 'Check your connection and try again.';
+}
+
+export function isFreeCustomWorkoutLimitError(error: unknown): boolean {
+  return error instanceof Error && error.message === FREE_CUSTOM_WORKOUT_LIMIT_CODE;
+}
+
+export function atFreeCustomWorkoutLimit(ownedCount: number, isPro: boolean): boolean {
+  return !isPro && ownedCount >= FREE_CUSTOM_WORKOUT_LIMIT;
+}
+
+export async function countOwnedCustomWorkouts(): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('custom_workouts')
+      .select('id', { count: 'exact', head: true });
+    if (error) {
+      if (isMissingCustomWorkouts(error)) return 0;
+      throw error;
+    }
+    return count ?? 0;
+  } catch (error) {
+    if (error && typeof error === 'object' && isMissingCustomWorkouts(error)) return 0;
+    throw error;
+  }
+}
+
+async function assertCanCreateCustomWorkout(isPro: boolean): Promise<void> {
+  if (isPro) return;
+  const owned = await countOwnedCustomWorkouts();
+  if (owned >= FREE_CUSTOM_WORKOUT_LIMIT) {
+    throw new Error(FREE_CUSTOM_WORKOUT_LIMIT_CODE);
+  }
 }
 
 type WorkoutRow = {
@@ -207,14 +245,16 @@ export type WorkoutDraftSlot = {
 export async function saveCustomWorkout(
   id: string | null,
   name: string,
-  slots: WorkoutDraftSlot[]
+  slots: WorkoutDraftSlot[],
+  isPro = false
 ): Promise<CustomWorkout> {
   const trimmed = trimWorkoutName(name);
   if (trimmed.length < MIN_WORKOUT_NAME) throw new Error('Give this workout a name.');
-  if (slots.length === 0 && id) throw new Error('Add at least one exercise.');
+  if (slots.length === 0) throw new Error('Add at least one exercise.');
   if (slots.length > MAX_WORKOUT_EXERCISES) {
     throw new Error(`Keep it to ${MAX_WORKOUT_EXERCISES} exercises.`);
   }
+  if (!id) await assertCanCreateCustomWorkout(isPro);
 
   const rows = slots.map((slot, index) => ({
     position: index + 1,
@@ -259,7 +299,10 @@ export async function deleteCustomWorkout(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function duplicateCustomWorkout(workout: CustomWorkout): Promise<CustomWorkout> {
+export async function duplicateCustomWorkout(
+  workout: CustomWorkout,
+  isPro = false
+): Promise<CustomWorkout> {
   const copyName = trimWorkoutName(
     workout.name.endsWith(' (copy)') ? workout.name : `${workout.name} (copy)`
   );
@@ -271,7 +314,8 @@ export async function duplicateCustomWorkout(workout: CustomWorkout): Promise<Cu
       sets: item.sets,
       rep_min: item.rep_min,
       rep_max: item.rep_max,
-    }))
+    })),
+    isPro
   );
 }
 
@@ -283,8 +327,10 @@ export function nextCustomWorkoutName(now = new Date()): string {
 
 /** Blank saved workout so she can start now and add lifts in the logger. */
 export async function createEmptyCustomWorkout(
-  name: string = nextCustomWorkoutName()
+  name: string = nextCustomWorkoutName(),
+  isPro = false
 ): Promise<CustomWorkout> {
+  await assertCanCreateCustomWorkout(isPro);
   const trimmed = trimWorkoutName(name);
   const userId = await currentUserId();
   const { data, error } = await supabase
@@ -305,8 +351,8 @@ export async function createEmptyCustomWorkout(
 }
 
 /** One tap: create an empty workout and open the logger. */
-export async function startBlankCustomSession(): Promise<Session> {
-  const workout = await createEmptyCustomWorkout();
+export async function startBlankCustomSession(isPro = false): Promise<Session> {
+  const workout = await createEmptyCustomWorkout(nextCustomWorkoutName(), isPro);
   return startCustomSession(workout.id);
 }
 

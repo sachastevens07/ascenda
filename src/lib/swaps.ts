@@ -28,13 +28,16 @@ export const EQUIPMENT_FOR_ACCESS: Record<EquipmentAccess, readonly Equipment[]>
   home: ['bodyweight', 'band'],
 };
 
-/** Same muscle / kit rules as swaps, plus her zone cap (confidence level, or zone 1 in Quiet Mode). */
+/** Same muscle / kit rules as swaps. `maxZone` is optional; R7 no longer caps by confidence level. */
 export function exerciseFits(
   exercise: SlotExercise,
   access: EquipmentAccess,
-  maxZone: Zone
+  maxZone?: Zone
 ): boolean {
-  return exercise.zone <= maxZone && EQUIPMENT_FOR_ACCESS[access].includes(exercise.equipment);
+  return (
+    (maxZone === undefined || exercise.zone <= maxZone) &&
+    EQUIPMENT_FOR_ACCESS[access].includes(exercise.equipment)
+  );
 }
 
 export type RankedExercise = SlotExercise & { secondary_muscles: Muscle[] };

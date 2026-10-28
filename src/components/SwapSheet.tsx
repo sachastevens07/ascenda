@@ -13,8 +13,8 @@ type SwapSheetProps = {
   open: boolean;
   item: ProgrammeExercise;
   equipment: EquipmentAccess;
-  /** Highest zone she may swap to (her level, or 1 in Quiet Mode). */
-  maxZone: Zone;
+  /** Optional zone cap. Omit it so any same-muscle swap on her kit is allowed. */
+  maxZone?: Zone;
   /** Exercises already in the day, which can't be offered. */
   excludeIds: string[];
   onClose: () => void;

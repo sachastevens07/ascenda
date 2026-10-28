@@ -47,6 +47,17 @@ function RootNavigator() {
       <Stack.Protected guard={!!session && isOnboarded}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
+          name="library"
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Home',
+            headerTintColor: colours.accent,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.background },
+          }}
+        />
+        <Stack.Screen
           name="exercise/[id]"
           options={{
             headerShown: true,
@@ -62,7 +73,7 @@ function RootNavigator() {
           options={{
             headerShown: true,
             title: '',
-            headerBackTitle: 'Today',
+            headerBackTitle: 'Home',
             headerTintColor: colours.accent,
             headerShadowVisible: false,
             headerStyle: { backgroundColor: colours.background },
@@ -79,29 +90,16 @@ function RootNavigator() {
             headerStyle: { backgroundColor: colours.background },
           }}
         />
+        <Stack.Screen name="workouts" options={{ headerShown: false }} />
+        <Stack.Screen name="routines" options={{ headerShown: false }} />
         <Stack.Screen
-          name="workouts/index"
+          name="paywall"
           options={{
-            headerShown: true,
-            title: '',
-            headerBackTitle: 'Today',
-            headerTintColor: colours.accent,
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.background },
+            presentation: 'modal',
+            gestureEnabled: true,
+            animation: 'slide_from_bottom',
           }}
         />
-        <Stack.Screen
-          name="workouts/[id]"
-          options={{
-            headerShown: true,
-            title: '',
-            headerBackTitle: 'My workouts',
-            headerTintColor: colours.accent,
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.background },
-          }}
-        />
-        <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
       </Stack.Protected>
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="onboarding" />

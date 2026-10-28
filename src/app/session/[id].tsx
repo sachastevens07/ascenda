@@ -16,9 +16,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { ExercisePicker } from '@/components/ExercisePicker';
-import { ExerciseGuide } from '@/components/LevelUpCard';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
+import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import {
   appendCustomWorkoutExercise,
@@ -26,14 +26,7 @@ import {
   replaceCustomWorkoutExercise,
   STARTER_WORKOUT_ID,
 } from '@/lib/customWorkouts';
-import { sessionMaxZone } from '@/lib/levels';
-import {
-  declineLevelUp,
-  fetchOpenLevelChallenge,
-  nextLevel,
-  type LevelChallenge,
-} from '@/lib/levelUp';
-import { getQuizAnswers, LEVEL_LABELS, useProfile } from '@/lib/profile';
+import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   describeProgressionGoal,
   formatKg,
@@ -44,6 +37,8 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import { markPlannerDateDone } from '@/lib/planner';
+import { maybeCompleteEnrolment } from '@/lib/routines';
 import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
   DEFAULT_REST_SECONDS,
@@ -64,6 +59,7 @@ import { useNow, useWorkout } from '@/lib/workout';
 import {
   RECORD_LABELS,
   buildEntries,
+  clearSessionPlan,
   formatClock,
   formatDuration,
   getNextSet,
@@ -101,10 +97,9 @@ function formatPrevious(sets: LoggedSet[] | undefined): string | null {
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { profile, setConfidenceLevel } = useProfile();
+  const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
-  const maxZone = answers ? sessionMaxZone(answers.confidence_level, profile?.quiet_mode ?? false) : 1;
   const { isPro, isLoading: isSubscriptionLoading } = useSubscription();
 
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -115,8 +110,9 @@ export default function SessionScreen() {
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [bests, setBests] = useState<Record<string, ExerciseBests>>({});
-  const [challenge, setChallenge] = useState<LevelChallenge | null>(null);
   const [customWorkoutId, setCustomWorkoutId] = useState<string | null>(null);
+  const [sessionDate, setSessionDate] = useState<string | null>(null);
+  const [routineEnrolmentId, setRoutineEnrolmentId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -136,17 +132,15 @@ export default function SessionScreen() {
         }
         const exerciseIds = log.day.exercises.map((item) => item.exercise.id);
         const historyBests = await fetchExerciseBests(exerciseIds, id).catch(() => ({}));
-        const openChallenge = answers
-          ? await fetchOpenLevelChallenge(answers.confidence_level).catch(() => null)
-          : null;
         if (!isCurrent) return;
         setDay(log.day);
         setPrevious(log.previous);
         setEntries(buildEntries(log.day, log.logged, log.previous, isPro));
         setStartedAt(new Date(log.session.started_at).getTime());
         setBests(historyBests);
-        setChallenge(openChallenge);
         setCustomWorkoutId(log.session.custom_workout_id);
+        setSessionDate(log.session.date);
+        setRoutineEnrolmentId(log.session.routine_enrolment_id);
         setLoadState('ready');
       } catch {
         if (isCurrent) setLoadState('error');
@@ -155,7 +149,7 @@ export default function SessionScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [id, equipment, isPro, isSubscriptionLoading, answers?.confidence_level]);
+  }, [id, equipment, isPro, isSubscriptionLoading]);
 
   useEffect(() => {
     ensureRestTimerPermission().catch(() => {});
@@ -343,45 +337,44 @@ export default function SessionScreen() {
   async function finish() {
     setIsFinishing(true);
     try {
-      await finishSession(id);
+      const durationSeconds =
+        startedAt === null ? undefined : Math.max(0, Math.round((Date.now() - startedAt) / 1000));
+      await finishSession(id, durationSeconds);
+      if (sessionDate) {
+        await markPlannerDateDone(sessionDate).catch(() => {});
+      }
+      await clearSessionPlan(id).catch(() => {});
       await fillBlockTargetsFromSession(id).catch(() => {});
+      const finishedRoutine = routineEnrolmentId
+        ? await maybeCompleteEnrolment(routineEnrolmentId).catch(() => false)
+        : false;
+      const ticked: Record<string, { weightKg: number | null; reps: number }[]> = {};
+      if (day) {
+        for (const item of day.exercises) {
+          ticked[item.exercise.id] = setNumbers(item)
+            .map((setNumber) => entries[setKey(item.exercise.id, setNumber)])
+            .filter((entry): entry is SetEntry => Boolean(entry?.completed))
+            .map((entry) => ({
+              weightKg: usesWeight(item.exercise.equipment) ? parseWeight(entry.weight) : null,
+              reps: parseReps(entry.reps) ?? 0,
+            }));
+        }
+      }
+      const wins = collectSessionWins({
+        exercises: (day?.exercises ?? []).map((item) => item.exercise),
+        ticked,
+        previous,
+        bests,
+      });
+      if (finishedRoutine) wins.unshift('You finished the routine.');
       workout.end();
       router.back();
       const trained =
-        startedAt === null ? '' : ` You trained for ${formatDuration((Date.now() - startedAt) / 1000)}.`;
-      showDialog('Session saved', `Nice work. That’s another one done.${trained}`);
-      if (answers) {
-        const updated = await fetchOpenLevelChallenge(answers.confidence_level).catch(() => null);
-        const upcoming = nextLevel(answers.confidence_level);
-        if (updated?.status === 'ready' && upcoming) {
-          showDialog(
-            `Move up to ${LEVEL_LABELS[upcoming]}?`,
-            `You’ve done ${updated.exercise.name} twice. ${LEVEL_LABELS[upcoming]} would add more of the gym to your usual sessions. You can stay here, or change later from Profile.`,
-            [
-              {
-                text: `Move to ${LEVEL_LABELS[upcoming]}`,
-                onPress: () => {
-                  setConfidenceLevel(upcoming)
-                    .then(() =>
-                      showDialog(
-                        `You’re on ${LEVEL_LABELS[upcoming]}`,
-                        'You can move back down any time from Profile. No pressure.'
-                      )
-                    )
-                    .catch(() => showDialog('That didn’t save', 'Check your connection and try again.'));
-                },
-              },
-              {
-                text: `Stay at ${LEVEL_LABELS[answers.confidence_level]}`,
-                style: 'cancel',
-                onPress: () => {
-                  declineLevelUp(updated.id).catch(() => {});
-                },
-              },
-            ]
-          );
-        }
-      }
+        durationSeconds === undefined ? '' : `You trained for ${formatDuration(durationSeconds)}.`;
+      const body =
+        [...wins.slice(0, 3), trained].filter(Boolean).join('\n') ||
+        'Nice work. That’s another one done.';
+      showDialog('Session saved', body);
     } catch {
       setIsFinishing(false);
       showDialog('Couldn’t finish the session', 'Check your connection and try again.');
@@ -392,6 +385,7 @@ export default function SessionScreen() {
     setIsFinishing(true);
     try {
       await discardSession(id);
+      await clearSessionPlan(id).catch(() => {});
       if (
         customWorkoutId &&
         customWorkoutId !== STARTER_WORKOUT_ID &&
@@ -496,7 +490,7 @@ export default function SessionScreen() {
         {day.exercises.map((item) => {
           const weighted = usesWeight(item.exercise.equipment);
           const previousText = formatPrevious(previous[item.exercise.id]);
-          const isChallenge = challenge?.exercise.id === item.exercise.id;
+          const isFirstTime = !previous[item.exercise.id]?.length;
           const goalText = isPro
             ? describeProgressionGoal(getWeightSuggestion(item, previous[item.exercise.id]))
             : null;
@@ -512,21 +506,19 @@ export default function SessionScreen() {
                   accessibilityHint="Shows how to do this exercise">
                   <View style={styles.flex}>
                     <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                    {isChallenge && (
-                      <Text style={styles.swappedFrom}>A try from the next zone</Text>
+                    {item.original && equipment && exerciseFits(item.original, equipment) && (
+                      <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
                     )}
-                    {item.original &&
-                      equipment &&
-                      exerciseFits(item.original, equipment, maxZone) && (
-                        <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
-                      )}
                     <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
+                    {isFirstTime && (
+                      <Text style={styles.previous}>First time — tap for the guide</Text>
+                    )}
                     {previousText && <Text style={styles.previous}>{previousText}</Text>}
                     {goalText && <Text style={styles.goal}>{goalText}</Text>}
                   </View>
                   <Ionicons name="information-circle-outline" size={24} color={colours.accent} />
                 </Pressable>
-                {isPro && !isChallenge && (
+                {isPro && (
                   <Pressable
                     onPress={() => openSwap(item)}
                     style={({ pressed }) => [
@@ -545,17 +537,11 @@ export default function SessionScreen() {
                   </Pressable>
                 )}
               </View>
-              {isChallenge && challenge && (
-                <View style={styles.challengeGuide}>
-                  <ExerciseGuide exercise={challenge.exercise} />
-                </View>
-              )}
-              {isPro && equipment && !isChallenge && (
+              {isPro && equipment && (
                 <SwapSheet
                   open={swapItem?.position === item.position}
                   item={item}
                   equipment={equipment}
-                  maxZone={maxZone}
                   excludeIds={day.exercises.flatMap((slot) =>
                     slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
                   )}

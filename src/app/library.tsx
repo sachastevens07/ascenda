@@ -4,15 +4,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FilterSheet, type FilterOption } from '@/components/FilterSheet';
-import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 import {
   EQUIPMENT,
@@ -24,6 +25,7 @@ import {
   type Exercise,
   type Muscle,
 } from '@/lib/exercises';
+import { getExerciseImageSource } from '@/lib/exerciseMedia';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -52,6 +54,7 @@ function matchesSearch(exercise: Exercise, query: string): boolean {
 }
 
 export default function LibraryScreen() {
+  const insets = useSafeAreaInsets();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
@@ -59,7 +62,6 @@ export default function LibraryScreen() {
   const [query, setQuery] = useState('');
   const [muscle, setMuscle] = useState<Muscle | null>(null);
   const [equipment, setEquipment] = useState<Equipment | null>(null);
-  const tabBarHeight = useTabBarHeight();
 
   const load = useCallback(async () => {
     try {
@@ -103,7 +105,7 @@ export default function LibraryScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Library</Text>
+        <Text style={styles.title}>Exercise library</Text>
 
         <View style={styles.search}>
           <Ionicons name="search" size={20} color={colours.textMuted} />
@@ -163,7 +165,7 @@ export default function LibraryScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(exercise) => exercise.id}
-          contentContainerStyle={[styles.list, { paddingBottom: tabBarHeight + 24 }]}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           refreshing={isRefreshing}
@@ -183,20 +185,37 @@ export default function LibraryScreen() {
               )}
             </View>
           }
-          renderItem={({ item }) => (
-            <Pressable
-              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-              onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: item.id } })}
-              accessibilityRole="button">
-              <View style={styles.cardText}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardSubtitle}>
-                  {MUSCLE_LABELS[item.primary_muscle]} · {EQUIPMENT_LABELS[item.equipment]}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
-            </Pressable>
-          )}
+          renderItem={({ item }) => {
+            const photo = getExerciseImageSource(item);
+            return (
+              <Pressable
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: item.id } })}
+                accessibilityRole="button">
+                <View style={styles.thumb}>
+                  {photo ? (
+                    <Image
+                      source={photo}
+                      style={styles.thumbImage}
+                      resizeMode="cover"
+                      accessibilityLabel=""
+                    />
+                  ) : (
+                    <View style={styles.thumbEmpty}>
+                      <Ionicons name="barbell-outline" size={20} color={colours.accent} />
+                    </View>
+                  )}
+                </View>
+                <View style={styles.cardText}>
+                  <Text style={styles.cardTitle}>{item.name}</Text>
+                  <Text style={styles.cardSubtitle}>
+                    {MUSCLE_LABELS[item.primary_muscle]} · {EQUIPMENT_LABELS[item.equipment]}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
+              </Pressable>
+            );
+          }}
         />
       )}
     </View>
@@ -210,7 +229,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 32,
+    paddingTop: 8,
     gap: 12,
   },
   title: {
@@ -259,6 +278,23 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 18,
     backgroundColor: colours.surface,
+    gap: 14,
+  },
+  thumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: colours.accentSoft,
+  },
+  thumbImage: {
+    width: 56,
+    height: 56,
+  },
+  thumbEmpty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardPressed: {
     opacity: 0.7,

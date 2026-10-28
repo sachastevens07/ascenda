@@ -61,6 +61,29 @@ export const ZONE_LABELS: Record<Zone, string> = {
   4: 'Barbell and squat rack',
 };
 
+/** Filters in the custom workout builder (R5). Honest gym-anxiety tags, not medical. */
+export const BUILDER_TAGS = ['one-spot', 'busy-gym', 'minimal-equipment'] as const;
+export type BuilderTag = (typeof BUILDER_TAGS)[number];
+
+export const BUILDER_TAG_LABELS: Record<BuilderTag, string> = {
+  'one-spot': 'One spot',
+  'busy-gym': 'Busy gym friendly',
+  'minimal-equipment': 'Minimal equipment',
+};
+
+export function exerciseMatchesBuilderTag(
+  exercise: { zone: Zone; equipment: Equipment },
+  tag: BuilderTag
+): boolean {
+  if (tag === 'one-spot') return exercise.zone === 1;
+  if (tag === 'busy-gym') return exercise.equipment === 'machine' || exercise.equipment === 'cable';
+  return (
+    exercise.equipment === 'dumbbell' ||
+    exercise.equipment === 'bodyweight' ||
+    exercise.equipment === 'band'
+  );
+}
+
 /** Supabase Storage bucket for exercise photos. Files named `<exercise id>.<ext>` link themselves. */
 export const EXERCISE_MEDIA_BUCKET = 'exercise-media';
 
@@ -78,7 +101,7 @@ export type Exercise = {
   location_hint: string;
 };
 
-export function getMediaUrl(exercise: Exercise): string | null {
+export function getMediaUrl(exercise: Pick<Exercise, 'media_url'>): string | null {
   const { media_url } = exercise;
   if (!media_url) return null;
   if (/^https?:\/\//.test(media_url)) return media_url;

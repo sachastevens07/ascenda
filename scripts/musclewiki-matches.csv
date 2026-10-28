@@ -1,0 +1,176 @@
+our_id,our_name,mw_id_1,mw_name_1,mw_id_2,mw_name_2,mw_id_3,mw_name_3,approved_id
+ab-crunch-machine,Ab Crunch Machine,,,,,,,
+arnold-press,Arnold Press,423,Dumbbell Arnold Press,833,Vitruvian Arnold Press,416,Dumbbell Seated Arnold Press,
+assisted-dip,Assisted Dip,1182,Bodyweight Box Assisted Dips,1492,Machine Assisted Parallel Bar Dips,,,
+assisted-pull-up,Assisted Pull-Up,,,,,,,
+back-extension,Back Extension,1664,Machine Back Extension,1402,Lower Back Extensions 4,1403,Lower Back Extensions 3,
+band-biceps-curl,Band Biceps Curl,,,,,,,
+band-chest-press,Band Chest Press,502,Band Chest Press,1881,Band Bench Press,1645,Band Standing Chest Press,502
+band-lat-pulldown,Band Lat Pulldown,,,,,,,
+band-lateral-raise,Band Lateral Raise,515,Band Low Lateral Raise,516,Band Mid Lateral Raise,1895,Band Single Arm Lateral Raise,
+band-pallof-press,Band Pallof Press,268,Band Pallof Press,1793,Band Pallof Press To Wood Chopper,1791,Band High To Low Pallof Press Wood Chopper,268
+band-pull-apart,Band Pull-Apart,,,,,,,
+band-row,Band Row,276,Band Row,1624,Band Upright Row,1648,Band Squat Hold Row,276
+band-shoulder-press,Band Shoulder Press,,,,,,,
+band-triceps-pushdown,Band Triceps Pushdown,,,,,,,
+banded-clamshell,Banded Clamshell,,,,,,,
+banded-glute-bridge,Banded Glute Bridge,,,,,,,
+banded-hamstring-curl,Banded Hamstring Curl,,,,,,,
+banded-hip-thrust,Banded Hip Thrust,,,,,,,
+banded-kickback,Banded Kickback,,,,,,,
+banded-lateral-walk,Banded Lateral Walk,,,,,,,
+banded-squat,Banded Squat,1835,Barbell Banded Back Squat,1837,Barbell Banded Front Squat,1839,Barbell Banded Split Squat,
+barbell-back-squat,Barbell Back Squat,753,Landmine Hack Squat,1835,Barbell Banded Back Squat,335,Barbell Heels Up Back Squat,
+barbell-bench-press,Barbell Bench Press,4,Barbell Bench Press,55,Barbell Incline Bench Press,337,Barbell Hooklying Bench Press,4
+barbell-bent-over-row,Barbell Bent-Over Row,,,,,,,
+barbell-biceps-curl,Barbell Biceps Curl,,,,,,,
+barbell-box-squat,Barbell Box Squat,343,Barbell Pause Box Squat,,,,,
+barbell-deadlift,Barbell Deadlift,39,Barbell Deadlift,305,Barbell Sumo Deadlift,306,Barbell Staggered Deadlift,39
+barbell-glute-bridge,Barbell Glute Bridge,334,Barbell Glute Bridge,553,Barbell Feet Elevated Glute Bridge,555,Barbell Feet Elevated Staggered Glute Bridge,334
+barbell-hip-thrust,Barbell Hip Thrust,30,Barbell Hip Thrust,1056,Barbell Figure Four Hip Thrust,1059,Barbell Single Leg Hip Thrust,30
+barbell-overhead-press,Barbell Overhead Press,303,Barbell Overhead Press,773,Landmine Single Arm Overhead Press,1054,Barbell Behind The Neck Seated Overhead Press,303
+barbell-romanian-deadlift,Barbell Romanian Deadlift,313,Barbell Romanian Deadlift,1838,Barbell Banded Romanian Deadlift,354,Barbell Snatch Grip Romanian Deadlift,313
+barbell-sumo-deadlift,Barbell Sumo Deadlift,305,Barbell Sumo Deadlift,1627,Barbell Sumo Pause Deadlift,,,305
+bear-plank,Bear Plank,,,,,,,
+bench-dip,Bench Dip,18,Bench Dips,,,,,18
+bird-dog,Bird Dog,867,Bird Dog,,,,,867
+bodyweight-calf-raise,Bodyweight Calf Raise,1523,Bodyweight Donkey Calf Raise,1750,Bodyweight Single Leg Calf Raise,,,
+bodyweight-reverse-lunge,Bodyweight Reverse Lunge,373,Bodyweight Reverse Lunge,1134,Bodyweight Alternating Reverse Lunges,1720,Bodyweight Deficit Reverse Lunge,373
+bodyweight-split-squat,Bodyweight Split Squat,,,,,,,
+bodyweight-squat,Bodyweight Squat,192,Bodyweight Squat,1080,Bodyweight Pulse Squat,1087,Bodyweight Pop Squat,192
+bulgarian-split-squat,Bulgarian Split Squat,42,Bulgarian Split Squat,295,Barbell Bulgarian Split Squat,317,Dumbbell Bulgarian Split Squat,42
+cable-biceps-curl,Cable Biceps Curl,,,,,,,
+cable-chest-fly,Cable Chest Fly,992,Cable Incline Chest Fly,994,Cable Bench Chest Fly,2263,Cable Decline Chest Fly,
+cable-crunch,Cable Crunch,249,Cable Row Bar Kneeling Crunch,248,Cable Standing Crunch,1004,Cable Rope Kneeling Crunch,
+cable-face-pull,Cable Face Pull,22,Cable Rope Face Pulls,1916,Cable Bar Face Pull,1001,Cable Rope Kneeling Face Pull,
+cable-glute-kickback,Cable Glute Kickback,1012,Cable Standing Glute Kickback,224,Cable Standing Straight Leg Glute Kickback,,,
+cable-hammer-curl,Cable Rope Hammer Curl,1032,Cable Rope Hammer Curl,,,,,1032
+cable-hip-abduction,Standing Cable Hip Abduction,223,Cable Standing Hip Abduction,,,,,223
+cable-hip-adduction,Standing Cable Hip Adduction,1008,Cable Standing Hip Adduction,,,,,1008
+cable-lateral-raise,Cable Lateral Raise,1015,Cable Low Bilateral Lateral Raise,1025,Cable Rope Mid Lateral Raise,227,Cable Low Single Arm Lateral Raise,
+cable-overhead-triceps-extension,Cable Overhead Triceps Extension,,,,,,,
+cable-pallof-press,Cable Pallof Press,250,Cable Pallof Press,1039,Cable Pallof Press Rotation,1803,Cable Kneeling Pallof Press,250
+cable-pull-through,Cable Pull-Through,,,,,,,
+cable-rear-delt-fly,Cable Rear Delt Fly,228,Cable High Single Arm Rear Delt Fly,,,,,
+cable-squat,Cable Squat,218,Cable Goblet Squat,219,Cable Split Squat,968,Cable Zercher Squat,
+cable-triceps-pushdown,Cable Triceps Pushdown,,,,,,,
+cable-woodchop,Cable Woodchop,,,,,,,
+chest-dip,Chest Dip,,,,,,,
+chest-supported-dumbbell-row,Chest-Supported Dumbbell Row,,,,,,,
+chin-up,Chin-Up,1557,Bodyweight Assisted Pull Up,1558,Bodyweight Assisted Chin Up,1559,Bodyweight Assisted Gironda Chin Up,
+close-grip-bench-press,Close-Grip Bench Press,,,,,,,
+close-grip-lat-pulldown,Close-Grip Lat Pulldown,,,,,,,
+close-grip-push-up,Close-Grip Push-Up,,,,,,,
+concentration-curl,Concentration Curl,62,Kettlebell Concentration Curl,562,Dumbbell Concentration Curl,748,Landmine Concentration Curl,
+copenhagen-plank,Copenhagen Plank,,,,,,,
+curtsy-lunge,Dumbbell Curtsy Lunge,391,Dumbbell Goblet Curtsy Lunge,1755,Dumbbell Curtsy Deficit Lunge,1582,Dumbbell Goblet Alternating Curtsy Lunge,
+dead-bug,Dead Bug,869,Dead Bug,1386,Dead Bugs Same Side,1387,Dead Bugs Cross Lateral,869
+decline-push-up,Decline Push-Up,,,,,,,
+deficit-reverse-lunge,Deficit Reverse Lunge,1718,Kettlebell Deficit Reverse Lunge,1719,Dumbbell Deficit Reverse Lunge,1720,Bodyweight Deficit Reverse Lunge,
+donkey-kick,Donkey Kick,,,,,,,
+dumbbell-bench-press,Dumbbell Bench Press,377,Dumbbell Bench Press,417,Dumbbell Squeeze Press,381,Dumbbell Decline Bench Press,377
+dumbbell-biceps-curl,Dumbbell Biceps Curl,,,,,,,
+dumbbell-calf-raise,Dumbbell Calf Raise,294,Dumbbell Calf Raise,448,Dumbbell Seated Calf Raise,1749,Dumbbell Single Leg Calf Raise,294
+dumbbell-floor-press,Dumbbell Floor Press,1181,Dumbbell Floor Press,,,,,1181
+dumbbell-fly,Dumbbell Fly,1855,Dumbbell Single Arm Push Press,379,Dumbbell Chest Fly,1964,Dumbbell Floor Fly,
+dumbbell-front-raise,Dumbbell Front Raise,46,Dumbbell Front Raise,1619,Dumbbell Incline Front Raise,1638,Dumbbell Full Front Raise,46
+dumbbell-hammer-curl,Dumbbell Hammer Curl,3,Dumbbell Hammer Curl,400,Dumbbell Incline Hammer Curl,1951,Dumbbell Seated Hammer Curl,3
+dumbbell-hip-thrust,Dumbbell Hip Thrust,286,Dumbbell Hip Thrust,466,Dumbbell Staggered Hip thrust,425,Dumbbell Figure Four Hip Thrust,286
+dumbbell-lateral-lunge,Dumbbell Lateral Lunge,405,Dumbbell Lateral Lunge Reach,393,Dumbbell Goblet Lateral Lunge,1583,Dumbbell Alternating Lateral Lunge,
+dumbbell-lateral-raise,Dumbbell Lateral Raise,20,Dumbbell Lateral Raise,376,Dumbbell Bayesian Lateral Raise,1636,Dumbbell Full Lateral Raise,20
+dumbbell-lying-triceps-extension,Dumbbell Lying Triceps Extension,,,,,,,
+dumbbell-pullover,Dumbbell Pullover,413,Dumbbell Pullover,1282,Dumbbell Pullover Eccentrics,1955,Dumbbell Single Arm Pullover,413
+dumbbell-reverse-lunge,Dumbbell Reverse Lunge,414,Dumbbell Reverse Lunge,394,Dumbbell Goblet Reverse Lunge,1584,Dumbbell Alternating Reverse Lunge,414
+dumbbell-romanian-deadlift,Dumbbell Romanian Deadlift,291,Dumbbell Romanian Deadlift,1063,Dumbbell Cross Body Romanian Deadlift,1782,Dumbbell Half Kneeling Romanian Deadlift,291
+dumbbell-shoulder-press,Dumbbell Shoulder Press,1629,Dumbbell Cuban Press,453,Dumbbell Single Arm Neutral Overhead Press,,,
+dumbbell-shrug,Dumbbell Shrug,290,Dumbbell Shrug,12,Dumbbell Seated Shrug,451,Dumbbell Silverback Shrug,290
+dumbbell-step-up,Dumbbell Step-Up,,,,,,,
+dumbbell-sumo-squat,Dumbbell Sumo Squat,467,Dumbbell Sumo Squat,,,,,467
+dumbbell-triceps-kickback,Dumbbell Triceps Kickback,,,,,,,
+dumbbell-walking-lunge,Dumbbell Walking Lunge,,,,,,,
+ez-bar-curl,EZ-Bar Curl,,,,,,,
+ez-bar-skull-crusher,EZ-Bar Skull Crusher,,,,,,,
+fire-hydrant,Fire Hydrant,2201,Mini Band Fire Hydrant,,,,,
+frog-pump,Frog Pump,,,,,,,
+front-squat,Barbell Front Squat,298,Barbell Front Squat Olympic,299,Barbell Front Squat Bodybuilding,1057,Barbell Front Squat With Straps,
+glute-bridge,Glute Bridge,29,Glute Bridge,1365,Glute Bridge Eccentric Unilateral,531,Plate Glute Bridge to Chest Press,29
+glute-focused-back-extension,Glute-Focused Back Extension,,,,,,,
+glute-kickback-machine,Glute Kickback Machine,1687,Machine Glute Kickback,935,Smith Machine Glute Kickback,1512,Machine Hip And Glute Kickback,1687
+goblet-squat,Goblet Squat,11,Dumbbell Goblet Squat,100,Kettlebell Goblet Squat,218,Cable Goblet Squat,
+good-morning,Barbell Good Morning,364,Barbell Zercher Good Morning,300,Barbell High Bar Good Morning,301,Barbell Low Bar Good Morning,
+hack-squat,Hack Squat,753,Landmine Hack Squat,1499,Machine Hack Squat,1685,Horizontal Hack Squat,
+hanging-knee-raise,Hanging Knee Raise,206,Hanging Knee Raises,,,,,206
+heels-elevated-goblet-squat,Heels-Elevated Goblet Squat,,,,,,,
+hip-abduction-machine,Hip Abduction Machine,1505,Machine Hip Abduction,1511,Machine Hip And Glute Abduction,,,1505
+hip-adduction-machine,Hip Adduction Machine,1504,Machine Hip Adduction,1510,Machine Hip And Glute Adduction,,,1504
+hip-thrust-machine,Hip Thrust Machine,1498,Machine Hip Thrust,945,Smith Machine Hip Thrust,936,Smith Machine Hanging Knee Tuck,1498
+hollow-body-hold,Hollow Body Hold,,,,,,,
+incline-barbell-bench-press,Incline Barbell Bench Press,55,Barbell Incline Bench Press,1058,Barbell High Incline Bench Press,1815,Barbell Guillotine Incline Bench Press,55
+incline-dumbbell-curl,Incline Dumbbell Curl,1530,Dumbbell Incline Curl,400,Dumbbell Incline Hammer Curl,401,Dumbbell Incline Reverse Curl,1530
+incline-dumbbell-press,Incline Dumbbell Press,398,Dumbbell Incline Bench Press,397,Dumbbell Guillotine Incline Bench Press,411,Dumbbell Neutral Incline Bench Press,
+incline-machine-chest-press,Incline Machine Chest Press,1653,Machine Plate Loaded Incline Chest Press,,,,,
+incline-push-up,Incline Push-Up,,,,,,,
+incline-y-raise,Incline Y Raise,398,Dumbbell Incline Bench Press,1620,Barbell Seated Full Front Raise,1721,Dumbbell Laying Incline Lateral Raise,
+inverted-row,Inverted Row,183,Inverted Row,954,Smith Machine Inverted Row,1563,Bodyweight Underhand Inverted Row,183
+jump-squat,Jump Squat,191,Jump Squats,2204,Mini Band Jump Squat,1085,In And Out Jump Squat,191
+kettlebell-deadlift,Kettlebell Deadlift,78,Kettlebell Deadlift (Single),919,Kettlebell Romanian Deadlift,929,Kettlebell Staggered Deadlift,
+kettlebell-farmers-carry,Kettlebell Farmer's Carry,,,,,,,
+kettlebell-floor-press,Kettlebell Floor Press,1175,Kettlebell Floor Press,1176,Kettlebell Single Arm Floor Press,,,1175
+kettlebell-goblet-squat,Kettlebell Goblet Squat,100,Kettlebell Goblet Squat,2324,Kettlebell Goblet Cossack Squat,101,Kettlebell Heels Up Goblet Squat,100
+kettlebell-overhead-press,Kettlebell Overhead Press,2308,Kettlebell Z Press,897,Kettlebell Clean And Press,1071,Kettlebell Seated Overhead Press,
+kettlebell-reverse-lunge,Kettlebell Reverse Lunge,918,Kettlebell Reverse Lunge,1579,Kettlebell Alternating Reverse Lunge,1718,Kettlebell Deficit Reverse Lunge,918
+kettlebell-romanian-deadlift,Kettlebell Romanian Deadlift,919,Kettlebell Romanian Deadlift,1784,Kettlebell Half Kneeling Romanian Deadlift,1785,Kettlebell Half Kneeling Goblet Romanian Deadlift,919
+kettlebell-row,Kettlebell Row,920,Kettlebell Row,80,Kettlebell Row (Single),96,Kettlebell Upright Row,920
+kettlebell-suitcase-carry,Kettlebell Suitcase Carry,,,,,,,
+kettlebell-sumo-deadlift,Kettlebell Sumo Deadlift,931,Kettlebell Sumo Deadlift,,,,,931
+kettlebell-swing,Kettlebell Swing,79,Kettlebell Swing,901,Kettlebell Swing (Double),1576,Kettlebell Swing Lunge,79
+knee-push-up,Knee Push-Up,1143,Bodyweight Knee Push Ups,1590,Weighted Knee Push Ups,,,
+landmine-press,Landmine Press,765,Landmine Overhead Press,757,Landmine Kneeling Overhead Press,770,Landmine Seated Overhead Press,
+lat-pulldown,Lat Pulldown,1659,Machine Plate Loaded Pulldown,,,,,
+leg-extension,Leg Extension,10,Machine Leg Extension,437,Dumbbell Leg Extension,514,Band Leg Extension,
+leg-press,Leg Press,9,Machine Leg Press,266,Band Leg Press,1690,Vertical Leg Press,
+leg-press-calf-raise,Leg Press Calf Raise,1502,Machine Horizontal Leg Press Calf Raise,,,,,
+low-to-high-cable-fly,Low-to-High Cable Fly,,,,,,,
+lying-leg-curl,Lying Leg Curl,,,,,,,
+lying-leg-raise,Lying Leg Raise,1482,Adductor Leg Raise Side Lying,1485,Abductor Leg Raise Side Lying,1481,Adductor Leg Raise Side Lying Isometric,
+machine-chest-press,Machine Chest Press,1513,Machine Chest Press,1653,Machine Plate Loaded Incline Chest Press,1654,Machine Plate Loaded Decline Chest Press,1513
+machine-lateral-raise,Machine Lateral Raise,1665,Machine Standing Lateral Raise,,,,,
+machine-row,Machine Row,1514,Machine Underhand Row,1515,Machine Neutral Row,1516,Machine Overhand Row,
+machine-shoulder-press,Machine Shoulder Press,,,,,,,
+mountain-climber,Mountain Climber,474,Mountain Climber,601,TRX Mountain Climber,1546,Slalom Mountain Climber,474
+nordic-curl,Nordic Curl,208,Nordic Hamstring Curl,,,,,
+one-arm-dumbbell-row,One-Arm Dumbbell Row,,,,,,,
+overhead-triceps-extension,Overhead Triceps Extension,,,,,,,
+pec-deck,Pec Deck,,,,,,,
+pike-push-up,Pike Push-Up,,,,,,,
+plank,Plank,573,Plank IYTW,1333,Plank Saw,204,Forearm Plank,
+plank-shoulder-tap,Plank Shoulder Tap,,,,,,,
+preacher-curl-machine,Preacher Curl Machine,1666,Machine Standing Plate Loaded Preacher Curl,1667,Machine Seated Plate Loaded Preacher Curl,,,
+pull-up,Pull-Up,1643,Dead Hang,1416,Seated Lateral Line Stretch,1639,Plate Weighted Dead Hang,
+push-up,Push-Up,594,TRX Hamstring Curl,1136,Bodyweight Clapping Push Up,1139,Bodyweight Explosive Push Up,
+rear-delt-fly,Bent-Over Rear Delt Fly,,,,,,,
+renegade-row,Renegade Row,447,Dumbbell Renegade Row,574,Pushup to Renegade Row,,,
+reverse-crunch,Reverse Crunch,882,Reverse Crunch,1528,Reverse Crunch Kick Up,940,Smith Machine Reverse Crunch Hip Raise,882
+reverse-pec-deck,Reverse Pec Deck,,,,,,,
+seated-cable-row,Seated Cable Row,24,Machine Seated Cable Row,,,,,
+seated-calf-raise,Seated Calf Raise,34,Machine Seated Calf Raises,66,Kettlebell Seated Calf Raise,350,Barbell Seated Calf Raise,
+seated-leg-curl,Seated Leg Curl,828,Seated Leg Curl,998,Cable Seated Leg Curl,1198,Machine Seated Leg Curl,828
+side-lying-adduction,Side-Lying Inner Thigh Raise,,,,,,,
+side-plank,Side Plank,322,Side Plank Up Down,323,Side Plank Reach Through,325,Elbow Side Plank,
+single-arm-cable-chest-press,Single-Arm Cable Chest Press,,,,,,,
+single-arm-lat-pulldown,Single-Arm Lat Pulldown,,,,,,,
+single-leg-box-squat,Single-Leg Box Squat,,,,,,,
+single-leg-calf-raise,Single-Leg Calf Raise,,,,,,,
+single-leg-glute-bridge,Single-Leg Glute Bridge,,,,,,,
+single-leg-hip-thrust,Single-Leg Hip Thrust,,,,,,,
+single-leg-leg-press,Single-Leg Leg Press,,,,,,,
+single-leg-romanian-deadlift,Single-Leg Romanian Deadlift,,,,,,,
+sliding-leg-curl,Sliding Leg Curl,,,,,,,
+standing-cable-leg-curl,Standing Cable Leg Curl,,,,,,,
+standing-calf-raise,Standing Calf Raise,33,Machine Standing Calf Raises,856,Vitruvian Standing Calf Raise,,,
+straight-arm-pulldown,Straight-Arm Pulldown,,,,,,,
+superman,Superman,195,Supermans,582,Dumbbell Superman,887,Kettlebell Superman,195
+t-bar-row,T-Bar Row,,,,,,,
+trap-bar-deadlift,Trap Bar Deadlift,2224,Trap Bar Deficit Deadlift,2225,Trap Bar Pause Deadlift,2227,Trap Bar Romanian Deadlift,
+turkish-get-up,Turkish Get-Up,,,,,,,
+wall-sit,Wall Sit,1596,Wall Sit,1595,Weighted Wall Sit,1598,Wall Angels,1596

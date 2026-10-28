@@ -1,35 +1,13 @@
-import { createContext, useContext, useState, type ReactElement, type ReactNode } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View, type ColorValue } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { MaterialTopTabBarProps } from 'expo-router/js-top-tabs';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { WorkoutBar } from '@/components/WorkoutBar';
 import { colours } from '@/constants/theme';
 
 const PILL_PADDING = 6;
 
-type TabRoute = {
-  key: string;
-  name: string;
-  params?: object;
-};
-
-type TabOptions = {
-  title?: string;
-  tabBarIcon?: (props: { focused: boolean; color: ColorValue }) => ReactElement;
-};
-
-export type PillTabBarProps = {
-  state: { index: number; routes: TabRoute[] };
-  descriptors: Record<string, { options: TabOptions }>;
-  navigation: {
-    emit: (event: { type: 'tabPress'; target: string; canPreventDefault: true }) => {
-      defaultPrevented: boolean;
-    };
-    navigate: (name: string, params?: object) => void;
-  };
-  /** Swipe progress from the pager: 0 = first tab, 1 = second tab, and fractions in between. */
-  position: Animated.AnimatedInterpolation<number>;
-};
+export type PillTabBarProps = MaterialTopTabBarProps;
 
 type TabBarHeight = { height: number; setHeight: (height: number) => void };
 
@@ -51,8 +29,14 @@ export function useTabBarHeight(): number {
   return useContext(TabBarHeightContext).height;
 }
 
-export function PillTabBar({ state, descriptors, navigation, position }: PillTabBarProps) {
-  const insets = useSafeAreaInsets();
+export function PillTabBar({
+  state,
+  descriptors,
+  emitter,
+  navigateToTab,
+  position,
+  insets,
+}: PillTabBarProps) {
   const [innerWidth, setInnerWidth] = useState(0);
   const { setHeight } = useContext(TabBarHeightContext);
 
@@ -84,13 +68,13 @@ export function PillTabBar({ state, descriptors, navigation, position }: PillTab
           const label = title ?? route.name;
 
           const onPress = () => {
-            const event = navigation.emit({
+            const event = emitter.emit({
               type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
             if (!focused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+              navigateToTab(route.key);
             }
           };
 

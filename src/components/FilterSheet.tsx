@@ -18,6 +18,8 @@ type FilterSheetProps<T extends string> = {
   options: FilterOption<T>[];
   value: T | null;
   onChange: (value: T | null) => void;
+  /** Stretch to fill a row. Turn off when stacking filters so the label stays readable. */
+  fill?: boolean;
 };
 
 export function FilterSheet<T extends string>({
@@ -26,6 +28,7 @@ export function FilterSheet<T extends string>({
   options,
   value,
   onChange,
+  fill = true,
 }: FilterSheetProps<T>) {
   const insets = useSafeAreaInsets();
   const [isOpen, setIsOpen] = useState(false);
@@ -44,7 +47,7 @@ export function FilterSheet<T extends string>({
     <>
       <Pressable
         onPress={() => setIsOpen(true)}
-        style={[styles.button, isActive && styles.buttonActive]}
+        style={[styles.button, fill && styles.buttonFill, isActive && styles.buttonActive]}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${selected?.label ?? allLabel}`}>
         <Text style={[styles.buttonText, isActive && styles.buttonTextActive]} numberOfLines={1}>
@@ -91,7 +94,6 @@ export function FilterSheet<T extends string>({
 
 const styles = StyleSheet.create({
   button: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -102,6 +104,9 @@ const styles = StyleSheet.create({
     borderColor: colours.border,
     backgroundColor: colours.surface,
     gap: 6,
+  },
+  buttonFill: {
+    flex: 1,
   },
   buttonActive: {
     borderColor: colours.accent,

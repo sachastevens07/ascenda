@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PillTabBar, TabBarHeightProvider, type PillTabBarProps } from '@/components/PillTabBar';
+import { PillTabBar, TabBarHeightProvider } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
@@ -27,18 +27,18 @@ export default function TabLayout() {
       <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: colours.background }}>
         <TopTabs
           tabBarPosition="bottom"
-          tabBar={(props: PillTabBarProps) => <PillTabBar {...props} />}>
+          tabBar={(props) => <PillTabBar {...props} />}>
           <TopTabs.Screen
             name="index"
-            options={{ title: 'Today', tabBarIcon: tabIcon('today', 'today-outline') }}
+            options={{ title: 'Home', tabBarIcon: tabIcon('home', 'home-outline') }}
           />
           <TopTabs.Screen
-            name="progress"
-            options={{ title: 'Progress', tabBarIcon: tabIcon('stats-chart', 'stats-chart-outline') }}
+            name="planner"
+            options={{ title: 'Planner', tabBarIcon: tabIcon('calendar', 'calendar-outline') }}
           />
           <TopTabs.Screen
-            name="library"
-            options={{ title: 'Library', tabBarIcon: tabIcon('barbell', 'barbell-outline') }}
+            name="activity"
+            options={{ title: 'Activity', tabBarIcon: tabIcon('stats-chart', 'stats-chart-outline') }}
           />
           <TopTabs.Screen
             name="profile"

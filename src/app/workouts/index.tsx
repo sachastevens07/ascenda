@@ -1,28 +1,42 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import {
+  FREE_CUSTOM_WORKOUT_LIMIT,
+  atFreeCustomWorkoutLimit,
   deleteCustomWorkout,
+  describeCustomWorkoutError,
   duplicateCustomWorkout,
   fetchCustomWorkouts,
+  isFreeCustomWorkoutLimitError,
   missingCustomWorkoutsMessage,
+  startBlankCustomSession,
   type CustomWorkout,
 } from '@/lib/customWorkouts';
+import {
+  addCustomWorkoutToPlanner,
+  describePlannerError,
+  upcomingPlannerDays,
+} from '@/lib/planner';
+import { openPaywall } from '@/lib/paywall';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
+import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
 export default function WorkoutsScreen() {
   const insets = useSafeAreaInsets();
+  const { isPro } = useSubscription();
   const [workouts, setWorkouts] = useState<CustomWorkout[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [missingSql, setMissingSql] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [plannerWorkout, setPlannerWorkout] = useState<CustomWorkout | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -47,6 +61,55 @@ export default function WorkoutsScreen() {
     }, [attempt])
   );
 
+  const mine = workouts.filter((item) => !item.is_starter);
+  const savedCount = workouts.length;
+  const atLimit = atFreeCustomWorkoutLimit(savedCount, isPro);
+
+  function requireCreateRoom(): boolean {
+    if (atLimit) {
+      openPaywall('custom-limit');
+      return false;
+    }
+    return true;
+  }
+
+  function handleCreate() {
+    if (!requireCreateRoom()) return;
+    router.push({ pathname: '/workouts/[id]', params: { id: 'new' } });
+  }
+
+  async function handleStartBlank() {
+    if (!requireCreateRoom()) return;
+    setBusyId('blank');
+    try {
+      const active = await fetchActiveSession();
+      if (active) {
+        showDialog(
+          'You already have a session going',
+          'Finish or discard it first, then start this workout.',
+          [
+            {
+              text: 'Open it',
+              onPress: () => router.push({ pathname: '/session/[id]', params: { id: active.id } }),
+            },
+            { text: 'OK', style: 'cancel' },
+          ]
+        );
+        return;
+      }
+      const session = await startBlankCustomSession(isPro);
+      router.push({ pathname: '/session/[id]', params: { id: session.id } });
+    } catch (error) {
+      if (isFreeCustomWorkoutLimitError(error)) {
+        openPaywall('custom-limit');
+        return;
+      }
+      showDialog('Couldn’t start the workout', describeCustomWorkoutError(error));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   async function handleStart(workout: CustomWorkout) {
     setBusyId(workout.id);
     try {
@@ -68,28 +131,29 @@ export default function WorkoutsScreen() {
       const session = await startCustomSession(workout.id);
       router.push({ pathname: '/session/[id]', params: { id: session.id } });
     } catch (error) {
-      const detail = error instanceof Error ? error.message : '';
-      showDialog(
-        'Couldn’t start the workout',
-        /custom_workouts/i.test(detail) ? missingCustomWorkoutsMessage() : 'Check your connection and try again.'
-      );
+      showDialog('Couldn’t start the workout', describeCustomWorkoutError(error));
     } finally {
       setBusyId(null);
     }
   }
 
   async function handleDuplicate(workout: CustomWorkout) {
+    if (!requireCreateRoom()) return;
     setBusyId(workout.id);
     try {
-      const copy = await duplicateCustomWorkout(workout);
+      const copy = await duplicateCustomWorkout(workout, isPro);
       setWorkouts((current) => {
         const starter = current.filter((item) => item.is_starter);
         const rest = current.filter((item) => !item.is_starter && item.id !== copy.id);
         return [...starter, copy, ...rest];
       });
       router.push({ pathname: '/workouts/[id]', params: { id: copy.id } });
-    } catch {
-      showDialog('Couldn’t copy it', 'Check your connection and try again.');
+    } catch (error) {
+      if (isFreeCustomWorkoutLimitError(error)) {
+        openPaywall('custom-limit');
+        return;
+      }
+      showDialog('Couldn’t copy it', describeCustomWorkoutError(error));
     } finally {
       setBusyId(null);
     }
@@ -114,6 +178,25 @@ export default function WorkoutsScreen() {
       },
       { text: 'Keep it', style: 'cancel' },
     ]);
+  }
+
+  async function handlePlan(date: string) {
+    if (!plannerWorkout) return;
+    const workout = plannerWorkout;
+    setBusyId(workout.id);
+    try {
+      const day = upcomingPlannerDays().find((item) => item.iso === date);
+      await addCustomWorkoutToPlanner(workout.id, date);
+      setPlannerWorkout(null);
+      showDialog(
+        'Added to your planner',
+        `${workout.name} is on ${day?.label ?? date}. Open Planner to see your week.`
+      );
+    } catch (error) {
+      showDialog('Couldn’t add it', describePlannerError(error));
+    } finally {
+      setBusyId(null);
+    }
   }
 
   if (loadState !== 'ready') {
@@ -144,7 +227,6 @@ export default function WorkoutsScreen() {
   }
 
   const starter = workouts.find((item) => item.is_starter);
-  const mine = workouts.filter((item) => !item.is_starter);
 
   return (
     <ScrollView
@@ -152,15 +234,32 @@ export default function WorkoutsScreen() {
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
       <Text style={styles.title}>My workouts</Text>
       <Text style={styles.lead}>
-        Build your own sessions, or start with the quiet-spot starter. Free for everyone.
+        {isPro
+          ? 'Create as many as you like. Start one, or add it to a day in the planner.'
+          : `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts, including the starter (${savedCount} of ${FREE_CUSTOM_WORKOUT_LIMIT}). Existing ones stay if a plan lapses.`}
       </Text>
 
-      <Pressable
-        style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
-        onPress={() => router.push({ pathname: '/workouts/[id]', params: { id: 'new' } })}
-        accessibilityRole="button">
-        <Text style={styles.primaryText}>Create workout</Text>
-      </Pressable>
+      <View style={styles.card}>
+        <Text style={styles.kicker}>New</Text>
+        <Text style={styles.cardTitle}>Create workout</Text>
+        <Text style={styles.cardMeta}>Name it, pick exercises, set sets and reps, then save.</Text>
+        <Pressable
+          style={({ pressed }) => [styles.primary, styles.islandButton, pressed && styles.pressed]}
+          onPress={handleCreate}
+          disabled={busyId !== null}
+          accessibilityRole="button">
+          <Text style={styles.primaryText}>{atLimit ? 'Create with Pro' : 'Create workout'}</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.link, pressed && styles.pressed]}
+          onPress={handleStartBlank}
+          disabled={busyId !== null}
+          accessibilityRole="button">
+          <Text style={styles.linkText}>
+            {busyId === 'blank' ? 'Starting…' : 'Or start empty and add lifts as you go'}
+          </Text>
+        </Pressable>
+      </View>
 
       {starter && (
         <WorkoutCard
@@ -168,6 +267,7 @@ export default function WorkoutsScreen() {
           busy={busyId === starter.id}
           onStart={() => handleStart(starter)}
           onDuplicate={() => handleDuplicate(starter)}
+          onPlan={() => setPlannerWorkout(starter)}
         />
       )}
 
@@ -185,6 +285,7 @@ export default function WorkoutsScreen() {
             onEdit={() => router.push({ pathname: '/workouts/[id]', params: { id: workout.id } })}
             onDuplicate={() => handleDuplicate(workout)}
             onDelete={() => confirmDelete(workout)}
+            onPlan={() => setPlannerWorkout(workout)}
           />
         ))
       )}
@@ -192,6 +293,40 @@ export default function WorkoutsScreen() {
       <Text style={styles.disclaimer}>
         General fitness guidance, not medical advice. Stop if anything hurts.
       </Text>
+
+      <Modal
+        visible={plannerWorkout !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setPlannerWorkout(null)}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={() => setPlannerWorkout(null)}
+          accessibilityLabel="Close"
+        />
+        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+          <Text style={styles.sheetTitle}>Add to planner</Text>
+          <Text style={styles.sheetLead}>
+            {plannerWorkout
+              ? `Pick a day for ${plannerWorkout.name}. It will show on the Planner week.`
+              : ''}
+          </Text>
+          <ScrollView>
+            {upcomingPlannerDays().map((day) => (
+              <Pressable
+                key={day.iso}
+                onPress={() => handlePlan(day.iso)}
+                style={styles.sheetRow}
+                accessibilityRole="button">
+                <Text style={styles.sheetRowText}>
+                  {day.label}
+                  {day.isToday ? ' · today' : ''}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -203,6 +338,7 @@ function WorkoutCard({
   onEdit,
   onDuplicate,
   onDelete,
+  onPlan,
 }: {
   workout: CustomWorkout;
   busy: boolean;
@@ -210,6 +346,7 @@ function WorkoutCard({
   onEdit?: () => void;
   onDuplicate: () => void;
   onDelete?: () => void;
+  onPlan: () => void;
 }) {
   const count = workout.exercises.length;
   return (
@@ -234,6 +371,9 @@ function WorkoutCard({
         )}
         <Pressable onPress={onDuplicate} style={styles.link} accessibilityRole="button">
           <Text style={styles.linkText}>Duplicate</Text>
+        </Pressable>
+        <Pressable onPress={onPlan} style={styles.link} accessibilityRole="button">
+          <Text style={styles.linkText}>Add to planner</Text>
         </Pressable>
         {onDelete && (
           <Pressable onPress={onDelete} style={styles.link} accessibilityRole="button">
@@ -290,6 +430,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colours.accent,
+  },
+  islandButton: {
+    marginTop: 16,
   },
   primaryText: {
     fontSize: 17,
@@ -363,5 +506,39 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     textAlign: 'center',
     marginTop: 8,
+  },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(31, 27, 36, 0.35)',
+  },
+  sheet: {
+    maxHeight: '70%',
+    paddingTop: 20,
+    paddingHorizontal: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    backgroundColor: colours.surface,
+  },
+  sheetTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colours.text,
+  },
+  sheetLead: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: colours.textMuted,
+    marginTop: 6,
+    marginBottom: 8,
+  },
+  sheetRow: {
+    minHeight: 56,
+    justifyContent: 'center',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colours.border,
+  },
+  sheetRowText: {
+    fontSize: 17,
+    color: colours.text,
   },
 });

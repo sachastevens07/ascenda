@@ -1,5 +1,5 @@
-import { router, type Href } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect, type Href } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
@@ -15,25 +15,20 @@ import {
 } from '@/lib/blocks';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import {
-  debugMarkChallengeReady,
-  debugOfferLevelChallenge,
-  debugResetLevelChallenge,
-} from '@/lib/levelUp';
-import {
   CONFIDENCE_LABELS,
   EQUIPMENT_ACCESS_LABELS,
   EXPERIENCE_LABELS,
+  FOCUS_AREA_LABELS,
   GOAL_LABELS,
-  LEVELS,
-  LEVEL_DESCRIPTIONS,
-  LEVEL_LABELS,
+  TRAINING_LOCATION_LABELS,
   formatDaysPerWeek,
+  formatSessionMinutes,
   getQuizAnswers,
   useProfile,
-  type Level,
 } from '@/lib/profile';
-import { fetchProgramme, formatKg, getNextDay } from '@/lib/programmes';
-import { fetchLastFinishedProgrammeSession } from '@/lib/sessions';
+import { fetchProgramme, formatKg } from '@/lib/programmes';
+import { openPaywall } from '@/lib/paywall';
+import { currentEnrolmentWeek, fetchActiveEnrolment, type RoutineEnrolment } from '@/lib/routines';
 import { formatShortDate } from '@/lib/progress';
 import {
   DEV_OVERRIDES,
@@ -47,7 +42,7 @@ import { supabase } from '@/lib/supabase';
 
 function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
   if (!isPro) {
-    return 'Logging, your history, the library and export are free. Pro adds your programme, weight suggestions, swaps and charts.';
+    return 'Logging, history, export, the library, two starter routines, the planner and your streak are free. Pro adds every routine, unlimited workouts, charts, a roadmap and private photos.';
   }
   if (trialEndsAt) {
     return willRenew
@@ -62,14 +57,30 @@ function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): 
 
 export default function ProfileScreen() {
   const { session } = useAuth();
-  const { profile, setConfidenceLevel } = useProfile();
+  const { profile } = useProfile();
   const subscription = useSubscription();
   const answers = getQuizAnswers(profile);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isSavingLevel, setIsSavingLevel] = useState(false);
   const [block, setBlock] = useState<TrainingBlock | null>(null);
+  const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const tabBarHeight = useTabBarHeight();
+
+  useFocusEffect(
+    useCallback(() => {
+      let isCurrent = true;
+      fetchActiveEnrolment()
+        .then((next) => {
+          if (isCurrent) setEnrolment(next);
+        })
+        .catch(() => {
+          if (isCurrent) setEnrolment(null);
+        });
+      return () => {
+        isCurrent = false;
+      };
+    }, [])
+  );
 
   useEffect(() => {
     if (!subscription.isPro || !profile?.programme_id || !answers) {
@@ -78,10 +89,9 @@ export default function ProfileScreen() {
     }
     let isCurrent = true;
     const programmeId = profile.programme_id;
-    const level = answers.confidence_level;
     const equipment = answers.equipment;
     fetchProgramme(programmeId, equipment)
-      .then((programme) => (programme ? ensureActiveBlock(programme, level, equipment) : null))
+      .then((programme) => (programme ? ensureActiveBlock(programme, 4, equipment) : null))
       .then((next) => {
         if (isCurrent) setBlock(next);
       })
@@ -91,7 +101,7 @@ export default function ProfileScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [subscription.isPro, profile?.programme_id, answers?.confidence_level, answers?.equipment]);
+  }, [subscription.isPro, profile?.programme_id, answers?.equipment]);
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -142,81 +152,20 @@ export default function ProfileScreen() {
     }
   }
 
-  async function changeLevel(level: Level) {
-    setIsSavingLevel(true);
-    try {
-      await setConfidenceLevel(level);
-    } catch {
-      showDialog('That didn’t save', 'Check your connection and try again.');
-    } finally {
-      setIsSavingLevel(false);
-    }
-  }
-
-  function confirmChangeLevel(level: Level) {
-    if (!answers || level === answers.confidence_level) return;
-    showDialog(
-      `Change to ${LEVEL_LABELS[level]}?`,
-      `${LEVEL_DESCRIPTIONS[level]} You can change again any time.`,
-      [
-        { text: 'Change level', onPress: () => changeLevel(level) },
-        { text: 'Keep my level', style: 'cancel' },
-      ]
-    );
-  }
-
-  async function handleDevOffer() {
-    if (!answers) return;
-    try {
-      const programme = profile?.programme_id
-        ? await fetchProgramme(profile.programme_id, answers.equipment)
-        : null;
-      const last = programme ? await fetchLastFinishedProgrammeSession() : null;
-      const day = programme ? getNextDay(programme, last?.programme_day_id ?? null) : null;
-      const offered = await debugOfferLevelChallenge(answers.confidence_level, answers.equipment, day);
-      showDialog(
-        offered ? 'Offer is on Today' : 'Nothing to offer',
-        offered
-          ? `${offered.exercise.name} is ready on the Today tab.`
-          : 'There’s no next-zone exercise for your equipment at this level.'
-      );
-    } catch {
-      showDialog('Couldn’t offer', 'Run supabase/level_up.sql in the SQL editor, then try again.');
-    }
-  }
-
-  async function handleDevReady() {
-    try {
-      await debugMarkChallengeReady();
-      showDialog('Marked as tried twice', 'Open Today to see the level-up offer.');
-    } catch {
-      showDialog('Couldn’t update', 'Accept a try first, or run level_up.sql.');
-    }
-  }
-
-  async function handleDevReset() {
-    try {
-      await debugResetLevelChallenge();
-      showDialog('Level-up reset', 'The current try is cleared.');
-    } catch {
-      showDialog('Couldn’t reset', 'Run supabase/level_up.sql in the SQL editor, then try again.');
-    }
-  }
-
   async function handleDevRestartBlock() {
     try {
       await debugRestartBlock();
       if (!profile?.programme_id || !answers) return;
       const programme = await fetchProgramme(profile.programme_id, answers.equipment);
       const next = programme
-        ? await ensureActiveBlock(programme, answers.confidence_level, answers.equipment)
+        ? await ensureActiveBlock(programme, 4, answers.equipment)
         : null;
       setBlock(next);
       if (!next) {
         showDialog('Couldn’t reset', missingBlocksMessage());
         return;
       }
-      showDialog('Block reset', 'Today will show week 1 of a new 8-week block.');
+      showDialog('Block reset', 'Home will show week 1 of a new 8-week block.');
     } catch {
       showDialog('Couldn’t reset', missingBlocksMessage());
     }
@@ -224,12 +173,19 @@ export default function ProfileScreen() {
 
   const answerRows = answers
     ? [
+        { name: 'Name', value: answers.display_name || 'Not added' },
         { name: 'Goal', value: GOAL_LABELS[answers.goal] },
         { name: 'Experience', value: EXPERIENCE_LABELS[answers.experience] },
+        { name: 'Where you train', value: TRAINING_LOCATION_LABELS[answers.training_location] },
+        { name: 'Equipment', value: EQUIPMENT_ACCESS_LABELS[answers.equipment] },
+        { name: 'Gym comfort', value: `${answers.confidence}. ${CONFIDENCE_LABELS[answers.confidence]}` },
         { name: 'Days per week', value: formatDaysPerWeek(answers.days_per_week) },
-        { name: 'Where you train', value: EQUIPMENT_ACCESS_LABELS[answers.equipment] },
-        { name: 'Gym confidence', value: `${answers.confidence}. ${CONFIDENCE_LABELS[answers.confidence]}` },
-        { name: 'Level', value: LEVEL_LABELS[answers.confidence_level] },
+        { name: 'Session length', value: formatSessionMinutes(answers.session_minutes) },
+        {
+          name: 'Focus',
+          value: answers.focus_areas.map((item) => FOCUS_AREA_LABELS[item]).join(', '),
+        },
+        { name: 'Streak goal', value: `${answers.streak_goal_weeks} weeks` },
         {
           name: 'Bodyweight (optional)',
           value: profile?.bodyweight_kg ? formatKg(profile.bodyweight_kg) : 'Not added',
@@ -243,6 +199,7 @@ export default function ProfileScreen() {
       contentContainerStyle={[styles.container, { paddingBottom: tabBarHeight + 24 }]}>
       <Text style={styles.title}>Profile</Text>
       <Text style={styles.label}>Signed in as</Text>
+      {answers?.display_name ? <Text style={styles.email}>{answers.display_name}</Text> : null}
       <Text style={styles.email}>{session?.user.email}</Text>
 
       <View style={styles.card}>
@@ -251,7 +208,7 @@ export default function ProfileScreen() {
         <Text style={styles.label}>{describePlan(subscription)}</Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-          onPress={subscription.isPro ? handleManageSubscription : () => router.push('/paywall')}
+          onPress={subscription.isPro ? handleManageSubscription : () => openPaywall('general')}
           accessibilityRole="button">
           <Text style={styles.buttonText}>
             {subscription.isPro ? 'Manage subscription' : 'See Pro'}
@@ -273,9 +230,24 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.cardTitle}>Routines</Text>
+        <Text style={styles.label}>
+          {enrolment
+            ? `${enrolment.routine.name} · week ${currentEnrolmentWeek(enrolment)} of ${enrolment.routine.length_weeks}`
+            : 'Browse the six launch plans and start one. Home will use this next.'}
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
+          onPress={() => router.push('/routines' as Href)}
+          accessibilityRole="button">
+          <Text style={styles.buttonText}>{enrolment ? 'View routines' : 'Open routines'}</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>My workouts</Text>
         <Text style={styles.label}>
-          Start empty from Today, or reopen a saved session. Free for everyone.
+          Start empty from Home, or reopen a saved session. Free for everyone.
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
@@ -297,7 +269,10 @@ export default function ProfileScreen() {
           )}
           <Pressable
             style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-            onPress={() => router.push(subscription.isPro ? '/programme' : '/paywall')}
+            onPress={() => {
+              if (subscription.isPro) router.push('/programme');
+              else openPaywall('general');
+            }}
             accessibilityRole="button">
             <Text style={styles.buttonText}>
               {subscription.isPro ? 'View programme' : 'View programme with Pro'}
@@ -326,50 +301,6 @@ export default function ProfileScreen() {
             accessibilityRole="button">
             <Text style={styles.buttonText}>Change answers</Text>
           </Pressable>
-        </View>
-      )}
-
-      {answers && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Your level</Text>
-          <Text style={styles.label}>
-            You can move up or down any time. No pressure.
-          </Text>
-          {LEVELS.map((value) => {
-            const selected = value === answers.confidence_level;
-            return (
-              <Pressable
-                key={value}
-                onPress={() => confirmChangeLevel(value)}
-                disabled={isSavingLevel || selected}
-                style={({ pressed }) => [
-                  styles.levelOption,
-                  selected && styles.levelOptionSelected,
-                  pressed && styles.buttonPressed,
-                ]}
-                accessibilityRole="radio"
-                accessibilityState={{ selected, disabled: isSavingLevel }}>
-                {selected && <Text style={styles.currentLevel}>Current</Text>}
-                <Text style={[styles.levelLabel, selected && styles.levelLabelSelected]}>
-                  {LEVEL_LABELS[value]}
-                </Text>
-                <Text style={styles.label}>{LEVEL_DESCRIPTIONS[value]}</Text>
-              </Pressable>
-            );
-          })}
-          {__DEV__ && (
-            <>
-              <Pressable style={styles.link} onPress={handleDevOffer} accessibilityRole="button">
-                <Text style={styles.devText}>Development only. Offer a try now</Text>
-              </Pressable>
-              <Pressable style={styles.devLink} onPress={handleDevReady} accessibilityRole="button">
-                <Text style={styles.devText}>Development only. Mark as tried twice</Text>
-              </Pressable>
-              <Pressable style={styles.devLink} onPress={handleDevReset} accessibilityRole="button">
-                <Text style={styles.devText}>Development only. Reset level-up</Text>
-              </Pressable>
-            </>
-          )}
         </View>
       )}
 

@@ -76,6 +76,7 @@ create unique index if not exists custom_workout_exercises_workout_position_idx
 
 -- 3. Sessions can come from a programme day or a saved workout.
 -- block_id is P2 (needs the blocks table) — not added here.
+alter table public.sessions alter column programme_day_id drop not null;
 alter table public.sessions add column if not exists source text;
 alter table public.sessions add column if not exists custom_workout_id uuid
   references public.custom_workouts (id) on delete set null;

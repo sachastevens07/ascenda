@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -15,6 +15,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import {
+  FREE_ALWAYS,
+  PRO_FEATURES,
+  defaultPackageId,
+  isPaywallReason,
+  paywallCopy,
+} from '@/lib/paywall';
+import {
   REMINDER_DAYS_BEFORE,
   STORE_NAME,
   fetchProPackages,
@@ -26,14 +33,6 @@ import {
 } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'unavailable' | 'ready';
-
-const PRO_FEATURES = [
-  { icon: 'calendar-outline', text: 'A programme planned around your goal and your week' },
-  { icon: 'today-outline', text: 'Today’s session ready when you walk in' },
-  { icon: 'trending-up', text: 'Know when to lift a little heavier' },
-  { icon: 'swap-horizontal', text: 'Swap any exercise for one that suits your gym' },
-  { icon: 'stats-chart-outline', text: 'Charts of your lifts and weeks' },
-] as const;
 
 function periodName(item: PurchasesPackage): string {
   return item.packageType === 'ANNUAL' ? 'year' : 'month';
@@ -50,12 +49,21 @@ function getAnnualSaving(packages: PurchasesPackage[]): number | null {
 
 export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ reason?: string | string[] }>();
+  const rawReason = Array.isArray(params.reason) ? params.reason[0] : params.reason;
+  const reason = isPaywallReason(rawReason) ? rawReason : 'general';
+  const copy = paywallCopy(reason);
   const { isAvailable, applyCustomerInfo } = useSubscription();
   const [loadState, setLoadState] = useState<LoadState>(isAvailable ? 'loading' : 'unavailable');
   const [attempt, setAttempt] = useState(0);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
+
+  function dismiss() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  }
 
   useEffect(() => {
     if (!isAvailable) return;
@@ -65,7 +73,7 @@ export default function PaywallScreen() {
       .then((result) => {
         if (!isCurrent) return;
         setPackages(result);
-        setSelectedId(result[0]?.identifier ?? null);
+        setSelectedId(defaultPackageId(result));
         setLoadState(result.length > 0 ? 'ready' : 'unavailable');
       })
       .catch(() => {
@@ -88,12 +96,12 @@ export default function PaywallScreen() {
       if (!info) return;
       applyCustomerInfo(info);
       if (hasProEntitlement(info)) {
-        router.back();
+        dismiss();
         showDialog(
           'Welcome to Pro',
           trialDays
             ? `Your free trial has started. We’ll remind you ${REMINDER_DAYS_BEFORE} days before it ends.`
-            : 'Your programme, suggestions, swaps and charts are ready.'
+            : 'Every routine, unlimited workouts, charts, a roadmap and private photos are ready.'
         );
       } else {
         showDialog('Almost there', `Pro will unlock as soon as ${STORE_NAME} confirms your payment.`);
@@ -114,7 +122,7 @@ export default function PaywallScreen() {
       const info = await restorePurchases();
       applyCustomerInfo(info);
       if (hasProEntitlement(info)) {
-        router.back();
+        dismiss();
         showDialog('Pro restored', 'Welcome back. Everything is unlocked again.');
       } else {
         showDialog('No subscription found', `We couldn’t find Pro on this ${STORE_NAME} account.`);
@@ -127,138 +135,157 @@ export default function PaywallScreen() {
   }
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={styles.overlay}>
       <Pressable
-        style={({ pressed }) => [styles.close, pressed && styles.pressed]}
-        onPress={() => router.back()}
+        style={styles.backdrop}
+        onPress={dismiss}
         accessibilityRole="button"
-        accessibilityLabel="Close">
-        <Ionicons name="close" size={28} color={colours.text} />
-      </Pressable>
+        accessibilityLabel="Close"
+      />
+      <View style={[styles.sheet, { marginTop: Math.max(insets.top, 36) }]}>
+        <Pressable
+          style={({ pressed }) => [styles.close, pressed && styles.pressed]}
+          onPress={dismiss}
+          accessibilityRole="button"
+          accessibilityLabel="Close">
+          <Ionicons name="close" size={28} color={colours.text} />
+        </Pressable>
 
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-        <Text style={styles.eyebrow}>Women’s Strength Pro</Text>
-        <Text style={styles.title}>Walk in with a plan</Text>
+        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
+          <Text style={styles.eyebrow}>{copy.eyebrow}</Text>
+          <Text style={styles.title}>{copy.title}</Text>
+          <Text style={styles.body}>{copy.body}</Text>
 
-        <View style={styles.features}>
-          {PRO_FEATURES.map((feature) => (
-            <View key={feature.text} style={styles.feature}>
-              <View style={styles.featureIcon}>
-                <Ionicons name={feature.icon} size={22} color={colours.accent} />
+          <View style={styles.features}>
+            {PRO_FEATURES.map((feature) => (
+              <View key={feature.text} style={styles.feature}>
+                <View style={styles.featureIcon}>
+                  <Ionicons name={feature.icon} size={22} color={colours.accent} />
+                </View>
+                <Text style={styles.featureText}>{feature.text}</Text>
               </View>
-              <Text style={styles.featureText}>{feature.text}</Text>
-            </View>
-          ))}
-        </View>
-        <Text style={styles.freeNote}>
-          Always free: logging your sets, your history, the exercise library and
-          exporting your data.
-        </Text>
-
-        {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} style={styles.loading} />
-        ) : loadState !== 'ready' ? (
-          <View style={styles.notice}>
-            <Text style={styles.noticeText}>
-              {loadState === 'error'
-                ? 'We couldn’t load the plans. Check your connection and try again.'
-                : 'Pro isn’t available to buy yet. Check back soon.'}
-            </Text>
-            {loadState === 'error' && (
-              <Pressable
-                style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-                onPress={() => setAttempt((count) => count + 1)}
-                accessibilityRole="button">
-                <Text style={styles.outlineButtonText}>Try again</Text>
-              </Pressable>
-            )}
+            ))}
           </View>
-        ) : (
-          <>
-            <View style={styles.plans}>
-              {packages.map((item) => {
-                const isSelected = item.identifier === selectedId;
-                const isAnnual = item.packageType === 'ANNUAL';
-                return (
-                  <Pressable
-                    key={item.identifier}
-                    onPress={() => setSelectedId(item.identifier)}
-                    style={[styles.plan, isSelected && styles.planSelected]}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: isSelected }}>
-                    <Ionicons
-                      name={isSelected ? 'radio-button-on' : 'radio-button-off'}
-                      size={24}
-                      color={colours.accent}
-                    />
-                    <View style={styles.flex}>
-                      <Text style={styles.planName}>{isAnnual ? 'Yearly' : 'Monthly'}</Text>
-                      <Text style={styles.planPrice}>
-                        {item.product.priceString} a {periodName(item)}
-                      </Text>
-                      {isAnnual && item.product.pricePerMonthString && (
-                        <Text style={styles.planDetail}>
-                          Works out at {item.product.pricePerMonthString} a month
+          <Text style={styles.freeNote}>{FREE_ALWAYS}</Text>
+
+          {loadState === 'loading' ? (
+            <ActivityIndicator color={colours.accent} style={styles.loading} />
+          ) : loadState !== 'ready' ? (
+            <View style={styles.notice}>
+              <Text style={styles.noticeText}>
+                {loadState === 'error'
+                  ? 'We couldn’t load the plans. Check your connection and try again.'
+                  : 'Pro isn’t available to buy yet. Check back soon.'}
+              </Text>
+              {loadState === 'error' && (
+                <Pressable
+                  style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+                  onPress={() => setAttempt((count) => count + 1)}
+                  accessibilityRole="button">
+                  <Text style={styles.outlineButtonText}>Try again</Text>
+                </Pressable>
+              )}
+            </View>
+          ) : (
+            <>
+              <View style={styles.plans}>
+                {packages.map((item) => {
+                  const isSelected = item.identifier === selectedId;
+                  const isAnnual = item.packageType === 'ANNUAL';
+                  return (
+                    <Pressable
+                      key={item.identifier}
+                      onPress={() => setSelectedId(item.identifier)}
+                      style={[styles.plan, isSelected && styles.planSelected]}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: isSelected }}>
+                      <Ionicons
+                        name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                        size={24}
+                        color={colours.accent}
+                      />
+                      <View style={styles.flex}>
+                        <Text style={styles.planName}>{isAnnual ? 'Yearly' : 'Monthly'}</Text>
+                        <Text style={styles.planPrice}>
+                          {item.product.priceString} a {periodName(item)}
+                        </Text>
+                        {isAnnual && item.product.pricePerMonthString && (
+                          <Text style={styles.planDetail}>
+                            Works out at {item.product.pricePerMonthString} a month
+                          </Text>
+                        )}
+                      </View>
+                      {isAnnual && (
+                        <Text style={styles.badge}>
+                          {annualSaving !== null ? `Save ${annualSaving}%` : 'Best value'}
                         </Text>
                       )}
-                    </View>
-                    {isAnnual && annualSaving !== null && (
-                      <Text style={styles.badge}>Save {annualSaving}%</Text>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
 
-            <Pressable
-              style={({ pressed }) => [styles.button, (pressed || busy !== null) && styles.pressed]}
-              onPress={handleSubscribe}
-              disabled={busy !== null || !selected}
-              accessibilityRole="button">
-              {busy === 'buy' ? (
-                <ActivityIndicator color={colours.surface} />
-              ) : (
-                <Text style={styles.buttonText}>
-                  {trialDays ? `Start ${trialDays}-day free trial` : 'Subscribe'}
+              <Pressable
+                style={({ pressed }) => [styles.button, (pressed || busy !== null) && styles.pressed]}
+                onPress={handleSubscribe}
+                disabled={busy !== null || !selected}
+                accessibilityRole="button">
+                {busy === 'buy' ? (
+                  <ActivityIndicator color={colours.surface} />
+                ) : (
+                  <Text style={styles.buttonText}>
+                    {trialDays ? `Start ${trialDays}-day free trial` : 'Subscribe'}
+                  </Text>
+                )}
+              </Pressable>
+
+              {selected && (
+                <Text style={styles.finePrint}>
+                  {trialDays
+                    ? `Free for ${trialDays} days, then ${selected.product.priceString} a ${periodName(selected)}. ` +
+                      `We’ll remind you ${REMINDER_DAYS_BEFORE} days before your trial ends. ` +
+                      `Cancel at least 24 hours before it ends in your ${STORE_NAME} settings.`
+                    : `${selected.product.priceString} a ${periodName(selected)}, renewing automatically. ` +
+                      `Cancel any time in your ${STORE_NAME} settings.`}
                 </Text>
               )}
-            </Pressable>
+            </>
+          )}
 
-            {selected && (
-              <Text style={styles.finePrint}>
-                {trialDays
-                  ? `Free for ${trialDays} days, then ${selected.product.priceString} a ${periodName(selected)}. ` +
-                    `We’ll remind you ${REMINDER_DAYS_BEFORE} days before your trial ends. `
-                  : `${selected.product.priceString} a ${periodName(selected)}, renewing automatically. `}
-                Cancel any time in your {STORE_NAME} settings.
+          {isAvailable && (
+            <Pressable
+              style={styles.link}
+              onPress={handleRestore}
+              disabled={busy !== null}
+              accessibilityRole="button">
+              <Text style={styles.linkText}>
+                {busy === 'restore' ? 'Restoring…' : 'Restore purchases'}
               </Text>
-            )}
-          </>
-        )}
-
-        {isAvailable && (
-          <Pressable
-            style={styles.link}
-            onPress={handleRestore}
-            disabled={busy !== null}
-            accessibilityRole="button">
-            <Text style={styles.linkText}>
-              {busy === 'restore' ? 'Restoring…' : 'Restore purchases'}
-            </Text>
+            </Pressable>
+          )}
+          <Pressable style={styles.link} onPress={dismiss} accessibilityRole="button">
+            <Text style={styles.mutedLinkText}>Not now</Text>
           </Pressable>
-        )}
-        <Pressable style={styles.link} onPress={() => router.back()} accessibilityRole="button">
-          <Text style={styles.mutedLinkText}>Not now</Text>
-        </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(31, 27, 36, 0.35)',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+  },
+  sheet: {
     flex: 1,
     backgroundColor: colours.background,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    overflow: 'hidden',
   },
   close: {
     alignSelf: 'flex-end',
@@ -282,6 +309,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.text,
     marginTop: -8,
+  },
+  body: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: colours.textMuted,
+    marginTop: -4,
   },
   features: {
     gap: 12,

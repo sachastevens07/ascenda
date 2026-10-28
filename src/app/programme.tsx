@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlockTargets } from '@/components/BlockTargets';
 import { colours } from '@/constants/theme';
 import { describeBlockPosition, ensureActiveBlock, type TrainingBlock } from '@/lib/blocks';
-import { fetchFillLibrary, resolveDay, sessionMaxZone } from '@/lib/levels';
+import { fetchFillLibrary, resolveDay } from '@/lib/levels';
 import {
   EQUIPMENT_ACCESS_LABELS,
   formatDaysPerWeek,
@@ -41,14 +41,13 @@ export default function ProgrammeScreen() {
   const answers = getQuizAnswers(profile);
   const programmeId = profile?.programme_id ?? null;
   const equipment = answers?.equipment ?? null;
-  const level = answers?.confidence_level ?? null;
   const { isPro } = useSubscription();
   const [programme, setProgramme] = useState<Programme | null>(null);
   const [block, setBlock] = useState<TrainingBlock | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
 
   useEffect(() => {
-    if (!programmeId || !equipment || !level) {
+    if (!programmeId || !equipment) {
       setLoadState('not-found');
       return;
     }
@@ -60,12 +59,12 @@ export default function ProgrammeScreen() {
         const resolved = result && {
           ...result,
           days: result.days.map((day) =>
-            resolveDay(day, swaps[day.id] ?? {}, equipment, level, false, library)
+            resolveDay(day, swaps[day.id] ?? {}, equipment, 4, false, library)
           ),
         };
         setProgramme(resolved);
         if (resolved) {
-          const nextBlock = await ensureActiveBlock(resolved, level, equipment).catch(() => null);
+          const nextBlock = await ensureActiveBlock(resolved, 4, equipment).catch(() => null);
           if (isCurrent) setBlock(nextBlock);
         }
         setLoadState(result ? 'ready' : 'not-found');
@@ -76,7 +75,7 @@ export default function ProgrammeScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [programmeId, equipment, level]);
+  }, [programmeId, equipment]);
 
   if (loadState !== 'ready' || !programme || !answers) {
     return (
@@ -127,7 +126,7 @@ export default function ProgrammeScreen() {
               <View style={styles.exerciseText}>
                 <Text style={styles.exerciseName}>{item.exercise.name}</Text>
                 {item.original &&
-                  exerciseFits(item.original, answers.equipment, sessionMaxZone(answers.confidence_level, false)) && (
+                  exerciseFits(item.original, answers.equipment) && (
                     <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
                   )}
                 <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>

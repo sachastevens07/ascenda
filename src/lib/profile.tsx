@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { DEFAULT_STREAK_GOAL, STREAK_GOALS, type StreakGoal } from '@/lib/activityStats';
 import { useAuth } from '@/lib/auth';
 import { recordLevelChange } from '@/lib/levelUp';
 import { supabase } from '@/lib/supabase';
@@ -23,8 +24,9 @@ export const EXPERIENCE_LABELS: Record<Experience, string> = {
   confident: 'I know my way around',
 };
 
-export const DAYS_PER_WEEK_OPTIONS = [1, 2, 3, 4, 5, 6] as const;
-export type DaysPerWeek = (typeof DAYS_PER_WEEK_OPTIONS)[number];
+export const DAYS_PER_WEEK_OPTIONS = [1, 2, 3, 4] as const;
+/** 5–6 can still exist on older profiles; the quiz now only offers 1–4. */
+export type DaysPerWeek = 1 | 2 | 3 | 4 | 5 | 6;
 
 export function formatDaysPerWeek(days: number): string {
   return days === 1 ? '1 day' : `${days} days`;
@@ -77,6 +79,42 @@ export function levelForConfidence(confidence: Confidence): Level {
 /** Bodyweight is optional; these limits match the database. */
 export const MIN_BODYWEIGHT_KG = 30;
 export const MAX_BODYWEIGHT_KG = 300;
+export const MIN_DISPLAY_NAME = 1;
+export const MAX_DISPLAY_NAME = 40;
+
+export const TRAINING_LOCATIONS = ['gym', 'home', 'both'] as const;
+export type TrainingLocation = (typeof TRAINING_LOCATIONS)[number];
+
+export const TRAINING_LOCATION_LABELS: Record<TrainingLocation, string> = {
+  gym: 'The gym',
+  home: 'At home',
+  both: 'Both',
+};
+
+export const SESSION_MINUTES_OPTIONS = [30, 45, 60] as const;
+export type SessionMinutes = (typeof SESSION_MINUTES_OPTIONS)[number];
+export const DEFAULT_SESSION_MINUTES: SessionMinutes = 45;
+
+export const SESSION_MINUTES_LABELS: Record<SessionMinutes, string> = {
+  30: '30 minutes',
+  45: '45 minutes',
+  60: '60+ minutes',
+};
+
+export function formatSessionMinutes(minutes: SessionMinutes): string {
+  return SESSION_MINUTES_LABELS[minutes];
+}
+
+export const FOCUS_AREAS = ['glutes', 'legs', 'upper', 'core', 'full_body'] as const;
+export type FocusArea = (typeof FOCUS_AREAS)[number];
+
+export const FOCUS_AREA_LABELS: Record<FocusArea, string> = {
+  glutes: 'Glutes',
+  legs: 'Legs',
+  upper: 'Upper body',
+  core: 'Core',
+  full_body: 'Full body',
+};
 
 export type QuizAnswers = {
   goal: Goal;
@@ -85,17 +123,29 @@ export type QuizAnswers = {
   equipment: EquipmentAccess;
   confidence: Confidence;
   confidence_level: Level;
+  training_location: TrainingLocation;
+  session_minutes: SessionMinutes;
+  focus_areas: FocusArea[];
+  streak_goal_weeks: StreakGoal;
+  display_name: string;
 };
 
 /** One row of the `profiles` table. Quiz fields are null until the quiz is saved. */
 export type Profile = {
   user_id: string;
   goal: Goal | null;
+  main_goal: Goal | null;
   experience: Experience | null;
   days_per_week: DaysPerWeek | null;
   equipment: EquipmentAccess | null;
+  training_location: TrainingLocation | null;
+  session_minutes: SessionMinutes | null;
+  focus_areas: FocusArea[];
   confidence: Confidence | null;
+  gym_comfort: Confidence | null;
   confidence_level: Level | null;
+  streak_goal_weeks: StreakGoal | null;
+  display_name: string | null;
   /** Optional. Only for relative-strength stats; never BMI or any health score. */
   bodyweight_kg: number | null;
   /** Null until she confirms she's 18 or over. */
@@ -110,13 +160,66 @@ export type Profile = {
 
 const PROFILE_COLUMNS =
   'user_id, goal, experience, days_per_week, equipment, confidence, confidence_level, bodyweight_kg, age_confirmed_at, programme_id, programme:programmes(name, days_per_week), quiet_mode, onboarding_completed_at';
+const ONBOARDING_V2_COLUMNS =
+  'main_goal, training_location, session_minutes, focus_areas, gym_comfort, streak_goal_weeks, display_name';
+const PROFILE_COLUMNS_V2 = `${PROFILE_COLUMNS}, ${ONBOARDING_V2_COLUMNS}`;
+
+function isMissingOnboardingV2(error: { message?: string; code?: string }): boolean {
+  return /main_goal|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
+}
+
+function parseFocusAreas(value: unknown): FocusArea[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is FocusArea =>
+    (FOCUS_AREAS as readonly string[]).includes(String(item))
+  );
+}
+
+function parseSessionMinutes(value: unknown): SessionMinutes | null {
+  const minutes = Number(value);
+  return (SESSION_MINUTES_OPTIONS as readonly number[]).includes(minutes)
+    ? (minutes as SessionMinutes)
+    : null;
+}
+
+function parseStreakGoal(value: unknown): StreakGoal | null {
+  const weeks = Number(value);
+  return (STREAK_GOALS as readonly number[]).includes(weeks) ? (weeks as StreakGoal) : null;
+}
+
+export function trainingLocationFromEquipment(equipment: EquipmentAccess): TrainingLocation {
+  if (equipment === 'full_gym') return 'gym';
+  if (equipment === 'home') return 'home';
+  return 'both';
+}
+
+export function focusAreasFromGoal(goal: Goal): FocusArea[] {
+  return goal === 'glutes_legs' ? ['glutes', 'legs'] : ['full_body'];
+}
+
+export function equipmentOptionsForLocation(location: TrainingLocation): EquipmentAccess[] {
+  if (location === 'home') return ['dumbbells', 'home'];
+  if (location === 'gym') return ['full_gym', 'dumbbells'];
+  return ['full_gym', 'dumbbells', 'home'];
+}
 
 /** numeric columns arrive as strings. */
 function toProfile(row: unknown): Profile {
   const profile = row as Profile;
   return {
     ...profile,
-    bodyweight_kg: profile.bodyweight_kg === null ? null : Number(profile.bodyweight_kg),
+    main_goal: profile.main_goal ?? profile.goal ?? null,
+    training_location: profile.training_location ?? null,
+    session_minutes: parseSessionMinutes(profile.session_minutes),
+    focus_areas: parseFocusAreas(profile.focus_areas),
+    gym_comfort: profile.gym_comfort ?? profile.confidence ?? null,
+    streak_goal_weeks: parseStreakGoal(profile.streak_goal_weeks),
+    display_name: profile.display_name?.trim() ? profile.display_name.trim() : null,
+    bodyweight_kg: profile.bodyweight_kg === null || profile.bodyweight_kg === undefined
+      ? null
+      : Number(profile.bodyweight_kg),
     quiet_mode: profile.quiet_mode === true,
   };
 }
@@ -145,15 +248,21 @@ type ProfileState = {
 
 const ProfileContext = createContext<ProfileState | null>(null);
 
+async function selectOwnProfile(
+  userId: string,
+  columns: string
+): Promise<{ data: unknown; error: { message?: string; code?: string } | null }> {
+  return await supabase.from('profiles').select(columns).eq('user_id', userId).maybeSingle();
+}
+
 async function loadProfile(userId: string | null): Promise<LoadedProfile> {
   if (!userId) return { userId, profile: null, error: null };
-  const { data, error } = await supabase
-    .from('profiles')
-    .select(PROFILE_COLUMNS)
-    .eq('user_id', userId)
-    .maybeSingle();
-  if (error) return { userId, profile: null, error: error.message };
-  return { userId, profile: data ? toProfile(data) : null, error: null };
+  const full = await selectOwnProfile(userId, PROFILE_COLUMNS_V2);
+  if (!full.error) return { userId, profile: full.data ? toProfile(full.data) : null, error: null };
+  if (!isMissingOnboardingV2(full.error)) return { userId, profile: null, error: full.error.message ?? 'Couldn’t load profile' };
+  const base = await selectOwnProfile(userId, PROFILE_COLUMNS);
+  if (base.error) return { userId, profile: null, error: base.error.message ?? 'Couldn’t load profile' };
+  return { userId, profile: base.data ? toProfile(base.data) : null, error: null };
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
@@ -181,19 +290,38 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     async (answers: QuizAnswers, bodyweightKg: number | null) => {
       if (!userId) throw new Error('You need to be signed in.');
       const previousLevel = loaded?.userId === userId ? loaded.profile?.confidence_level : null;
-      // Upsert so it still works for an account that somehow has no profile row yet.
-      const { data, error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: userId,
-          ...answers,
-          bodyweight_kg: bodyweightKg,
-          onboarding_completed_at: new Date().toISOString(),
-        })
-        .select(PROFILE_COLUMNS)
-        .single();
-      if (error) throw error;
-      setLoaded({ userId, profile: toProfile(data), error: null });
+      const completedAt = new Date().toISOString();
+      const legacy = {
+        user_id: userId,
+        goal: answers.goal,
+        experience: answers.experience,
+        days_per_week: answers.days_per_week,
+        equipment: answers.equipment,
+        confidence: answers.confidence,
+        confidence_level: answers.confidence_level,
+        bodyweight_kg: bodyweightKg,
+        onboarding_completed_at: completedAt,
+      };
+      const payload = {
+        ...legacy,
+        main_goal: answers.goal,
+        training_location: answers.training_location,
+        session_minutes: answers.session_minutes,
+        focus_areas: answers.focus_areas,
+        gym_comfort: answers.confidence,
+        streak_goal_weeks: answers.streak_goal_weeks,
+        display_name: answers.display_name.trim() || null,
+      };
+      const full = await supabase.from('profiles').upsert(payload).select(PROFILE_COLUMNS_V2).single();
+      if (full.error && isMissingOnboardingV2(full.error)) {
+        const base = await supabase.from('profiles').upsert(legacy).select(PROFILE_COLUMNS).single();
+        if (base.error) throw base.error;
+        setLoaded({ userId, profile: toProfile(base.data), error: null });
+      } else if (full.error) {
+        throw full.error;
+      } else {
+        setLoaded({ userId, profile: toProfile(full.data), error: null });
+      }
       if (previousLevel && previousLevel !== answers.confidence_level) {
         await recordLevelChange(previousLevel, answers.confidence_level).catch(() => {});
       }
@@ -284,5 +412,18 @@ export function getQuizAnswers(profile: Profile | null): QuizAnswers | null {
   if (!goal || !experience || !days_per_week || !equipment || !confidence || !confidence_level) {
     return null;
   }
-  return { goal, experience, days_per_week, equipment, confidence, confidence_level };
+  return {
+    goal,
+    experience,
+    days_per_week,
+    equipment,
+    confidence,
+    confidence_level,
+    training_location:
+      profile.training_location ?? trainingLocationFromEquipment(equipment),
+    session_minutes: profile.session_minutes ?? DEFAULT_SESSION_MINUTES,
+    focus_areas: profile.focus_areas.length > 0 ? profile.focus_areas : focusAreasFromGoal(goal),
+    streak_goal_weeks: profile.streak_goal_weeks ?? DEFAULT_STREAK_GOAL,
+    display_name: profile.display_name ?? '',
+  };
 }

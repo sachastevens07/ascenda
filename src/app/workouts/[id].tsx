@@ -1,9 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { FilterSheet } from '@/components/FilterSheet';
+import { ExercisePicker } from '@/components/ExercisePicker';
 import { colours } from '@/constants/theme';
 import {
   DEFAULT_SLOT,
@@ -25,41 +24,37 @@ import {
   MIN_REPS,
   MIN_SETS,
   fetchCustomWorkout,
-  fetchExercisesForBuilder,
+  isFreeCustomWorkoutLimitError,
   missingCustomWorkoutsMessage,
   saveCustomWorkout,
   trimWorkoutName,
   type WorkoutDraftSlot,
 } from '@/lib/customWorkouts';
-import {
-  EQUIPMENT,
-  EQUIPMENT_LABELS,
-  MUSCLES,
-  MUSCLE_LABELS,
-  ZONE_LABELS,
-  ZONES,
-  type Equipment,
-  type Muscle,
-} from '@/lib/exercises';
+import { EQUIPMENT_LABELS, ZONE_LABELS } from '@/lib/exercises';
+import { openPaywall } from '@/lib/paywall';
 import type { SlotExercise } from '@/lib/programmes';
-
-type ZoneFilter = '1' | '2' | '3' | '4';
+import { useSubscription } from '@/lib/subscription';
 
 export default function WorkoutEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
   const insets = useSafeAreaInsets();
+  const { isPro } = useSubscription();
   const [name, setName] = useState('');
   const [slots, setSlots] = useState<WorkoutDraftSlot[]>([]);
-  const [loadState, setLoadState] = useState<'loading' | 'error' | 'ready'>(
-    isNew ? 'ready' : 'loading'
-  );
+  const [loadState, setLoadState] = useState<'loading' | 'error' | 'ready'>('loading');
   const [isSaving, setIsSaving] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
-    if (isNew || !id) return;
     let isCurrent = true;
+    if (isNew) {
+      setName('');
+      setSlots([]);
+      setLoadState('ready');
+      return;
+    }
+    if (!id) return;
     fetchCustomWorkout(id)
       .then((workout) => {
         if (!isCurrent) return;
@@ -118,7 +113,7 @@ export default function WorkoutEditorScreen() {
   async function handleSave() {
     const trimmed = trimWorkoutName(name);
     if (trimmed.length === 0) {
-      showDialog('Name this workout', 'Give it a short name you’ll recognise on Today.');
+      showDialog('Name this workout', 'Give it a short name you’ll recognise on Home.');
       return;
     }
     if (slots.length === 0) {
@@ -127,10 +122,14 @@ export default function WorkoutEditorScreen() {
     }
     setIsSaving(true);
     try {
-      await saveCustomWorkout(isNew ? null : id, trimmed, slots);
+      await saveCustomWorkout(isNew ? null : id, trimmed, slots, isPro);
       if (router.canGoBack()) router.back();
       else router.replace('/workouts' as Href);
     } catch (error) {
+      if (isFreeCustomWorkoutLimitError(error)) {
+        openPaywall('custom-limit');
+        return;
+      }
       const detail = error instanceof Error ? error.message : '';
       showDialog(
         'That didn’t save',
@@ -149,7 +148,11 @@ export default function WorkoutEditorScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.accent} />
         ) : (
-          <Text style={styles.message}>We couldn’t load this workout.</Text>
+          <Text style={styles.message}>
+            {isNew
+              ? missingCustomWorkoutsMessage()
+              : 'We couldn’t load this workout.'}
+          </Text>
         )}
       </View>
     );
@@ -189,29 +192,27 @@ export default function WorkoutEditorScreen() {
                 <Ionicons name="close-circle" size={26} color={colours.textMuted} />
               </Pressable>
             </View>
-            <View style={styles.steppers}>
-              <Stepper
-                label="Sets"
-                value={slot.sets}
-                min={MIN_SETS}
-                max={MAX_SETS}
-                onChange={(sets) => updateSlot(index, { sets })}
-              />
-              <Stepper
-                label="Min reps"
-                value={slot.rep_min}
-                min={MIN_REPS}
-                max={slot.rep_max}
-                onChange={(rep_min) => updateSlot(index, { rep_min })}
-              />
-              <Stepper
-                label="Max reps"
-                value={slot.rep_max}
-                min={slot.rep_min}
-                max={MAX_REPS}
-                onChange={(rep_max) => updateSlot(index, { rep_max })}
-              />
-            </View>
+            <Stepper
+              label="Sets"
+              value={slot.sets}
+              min={MIN_SETS}
+              max={MAX_SETS}
+              onChange={(sets) => updateSlot(index, { sets })}
+            />
+            <Stepper
+              label="Min reps"
+              value={slot.rep_min}
+              min={MIN_REPS}
+              max={slot.rep_max}
+              onChange={(rep_min) => updateSlot(index, { rep_min })}
+            />
+            <Stepper
+              label="Max reps"
+              value={slot.rep_max}
+              min={slot.rep_min}
+              max={MAX_REPS}
+              onChange={(rep_max) => updateSlot(index, { rep_max })}
+            />
             <View style={styles.reorder}>
               <Pressable
                 onPress={() => move(index, -1)}
@@ -242,6 +243,14 @@ export default function WorkoutEditorScreen() {
           onPress={() => setPickerOpen(true)}
           accessibilityRole="button">
           <Text style={styles.outlineText}>Add exercise</Text>
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.libraryLink, pressed && styles.pressed]}
+          onPress={() => router.push('/library')}
+          accessibilityRole="button">
+          <Ionicons name="barbell-outline" size={18} color={colours.accent} />
+          <Text style={styles.libraryLinkText}>Exercise library</Text>
         </Pressable>
 
         <Pressable
@@ -290,7 +299,7 @@ function Stepper({
           style={styles.stepperButton}
           accessibilityRole="button"
           accessibilityLabel={`Fewer ${label}`}>
-          <Ionicons name="remove" size={20} color={value <= min ? colours.border : colours.accent} />
+          <Ionicons name="remove" size={22} color={value <= min ? colours.border : colours.accent} />
         </Pressable>
         <Text style={styles.stepperValue}>{value}</Text>
         <Pressable
@@ -299,136 +308,10 @@ function Stepper({
           style={styles.stepperButton}
           accessibilityRole="button"
           accessibilityLabel={`More ${label}`}>
-          <Ionicons name="add" size={20} color={value >= max ? colours.border : colours.accent} />
+          <Ionicons name="add" size={22} color={value >= max ? colours.border : colours.accent} />
         </Pressable>
       </View>
     </View>
-  );
-}
-
-function matchesSearch(exercise: SlotExercise, query: string): boolean {
-  if (!query) return true;
-  const haystack = [
-    exercise.name,
-    EQUIPMENT_LABELS[exercise.equipment],
-    MUSCLE_LABELS[exercise.primary_muscle],
-    ZONE_LABELS[exercise.zone],
-  ]
-    .join(' ')
-    .toLowerCase();
-  return query
-    .toLowerCase()
-    .split(/\s+/)
-    .every((word) => haystack.includes(word));
-}
-
-function ExercisePicker({
-  open,
-  takenIds,
-  onClose,
-  onChoose,
-}: {
-  open: boolean;
-  takenIds: string[];
-  onClose: () => void;
-  onChoose: (exercise: SlotExercise) => void;
-}) {
-  const insets = useSafeAreaInsets();
-  const [exercises, setExercises] = useState<SlotExercise[]>([]);
-  const [query, setQuery] = useState('');
-  const [muscle, setMuscle] = useState<Muscle | null>(null);
-  const [equipment, setEquipment] = useState<Equipment | null>(null);
-  const [zone, setZone] = useState<ZoneFilter | null>(null);
-
-  useEffect(() => {
-    if (!open || exercises.length > 0) return;
-    fetchExercisesForBuilder()
-      .then(setExercises)
-      .catch(() => {});
-  }, [open, exercises.length]);
-
-  const filtered = useMemo(() => {
-    const taken = new Set(takenIds);
-    return exercises.filter(
-      (exercise) =>
-        !taken.has(exercise.id) &&
-        (!muscle || exercise.primary_muscle === muscle) &&
-        (!equipment || exercise.equipment === equipment) &&
-        (!zone || String(exercise.zone) === zone) &&
-        matchesSearch(exercise, query.trim())
-    );
-  }, [exercises, takenIds, muscle, equipment, zone, query]);
-
-  return (
-    <Modal visible={open} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.picker, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
-        <View style={styles.pickerHeader}>
-          <Text style={styles.pickerTitle}>Add exercise</Text>
-          <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close">
-            <Ionicons name="close" size={28} color={colours.text} />
-          </Pressable>
-        </View>
-        <View style={styles.search}>
-          <Ionicons name="search" size={20} color={colours.textMuted} />
-          <TextInput
-            style={styles.searchInput}
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search"
-            placeholderTextColor={colours.textMuted}
-            autoCorrect={false}
-            returnKeyType="search"
-          />
-        </View>
-        <View style={styles.filters}>
-          <FilterSheet
-            label="Muscle"
-            allLabel="All muscles"
-            options={MUSCLES.map((value) => ({ value, label: MUSCLE_LABELS[value] }))}
-            value={muscle}
-            onChange={setMuscle}
-          />
-          <FilterSheet
-            label="Equipment"
-            allLabel="All kit"
-            options={EQUIPMENT.map((value) => ({ value, label: EQUIPMENT_LABELS[value] }))}
-            value={equipment}
-            onChange={setEquipment}
-          />
-          <FilterSheet
-            label="Zone"
-            allLabel="All zones"
-            options={ZONES.map((value) => ({
-              value: String(value) as ZoneFilter,
-              label: ZONE_LABELS[value],
-            }))}
-            value={zone}
-            onChange={setZone}
-          />
-        </View>
-        <ScrollView keyboardShouldPersistTaps="handled">
-          {filtered.map((exercise) => (
-            <Pressable
-              key={exercise.id}
-              onPress={() => onChoose(exercise)}
-              style={({ pressed }) => [styles.pickRow, pressed && styles.pressed]}
-              accessibilityRole="button">
-              <View style={styles.flex}>
-                <Text style={styles.pickName}>{exercise.name}</Text>
-                <Text style={styles.meta}>
-                  {ZONE_LABELS[exercise.zone]} · {MUSCLE_LABELS[exercise.primary_muscle]} ·{' '}
-                  {EQUIPMENT_LABELS[exercise.equipment]}
-                </Text>
-              </View>
-              <Ionicons name="add-circle-outline" size={24} color={colours.accent} />
-            </Pressable>
-          ))}
-          {filtered.length === 0 && (
-            <Text style={styles.emptyPick}>No exercises match. Try clearing a filter.</Text>
-          )}
-        </ScrollView>
-      </View>
-    </Modal>
   );
 }
 
@@ -492,37 +375,34 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     marginTop: 2,
   },
-  steppers: {
-    flexDirection: 'row',
-    gap: 8,
-  },
   stepper: {
-    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'space-between',
+    minHeight: 48,
   },
   stepperLabel: {
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: '600',
-    color: colours.textMuted,
+    color: colours.text,
   },
   stepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
   stepperButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colours.accentSoft,
   },
   stepperValue: {
-    minWidth: 24,
+    minWidth: 28,
     textAlign: 'center',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
     color: colours.text,
   },
@@ -552,6 +432,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.accent,
   },
+  libraryLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: 44,
+  },
+  libraryLinkText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colours.accent,
+  },
   primary: {
     minHeight: 56,
     borderRadius: 999,
@@ -577,64 +469,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colours.textMuted,
     textAlign: 'center',
-  },
-  picker: {
-    flex: 1,
-    backgroundColor: colours.background,
-    paddingHorizontal: 20,
-  },
-  pickerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  pickerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 52,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colours.border,
-    backgroundColor: colours.surface,
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 17,
-    color: colours.text,
-    paddingVertical: 12,
-  },
-  filters: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginVertical: 12,
-  },
-  pickRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 64,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
-    gap: 10,
-  },
-  pickName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  emptyPick: {
-    fontSize: 16,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 24,
   },
 });

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 
-export type SessionSource = 'programme' | 'custom' | 'ai';
+export type SessionSource = 'programme' | 'custom' | 'ai' | 'routine';
 
 /** One row of the `sessions` table. */
 export type Session = {
@@ -15,6 +15,8 @@ export type Session = {
   source: SessionSource;
   custom_workout_id: string | null;
   block_id: string | null;
+  routine_enrolment_id: string | null;
+  routine_day_id: string | null;
 };
 
 /** One row of the `sets` table. */
@@ -28,12 +30,18 @@ export type LoggedSet = {
   completed: boolean;
 };
 
+const SESSION_COLUMNS_ROUTINES =
+  'id, date, programme_day_id, started_at, completed_at, exercise_swaps, source, custom_workout_id, block_id, routine_enrolment_id, routine_day_id';
 const SESSION_COLUMNS =
   'id, date, programme_day_id, started_at, completed_at, exercise_swaps, source, custom_workout_id, block_id';
 const SESSION_COLUMNS_CUSTOM =
   'id, date, programme_day_id, started_at, completed_at, exercise_swaps, source, custom_workout_id';
 const SESSION_COLUMNS_LEGACY = 'id, date, programme_day_id, started_at, completed_at, exercise_swaps';
 const SET_COLUMNS = 'session_id, exercise_id, set_number, weight_kg, reps, completed';
+
+function isMissingRoutineSessionColumns(error: { message?: string; code?: string }): boolean {
+  return /routine_enrolment_id|routine_day_id/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
 
 function isMissingBlockColumn(error: { message?: string; code?: string }): boolean {
   return /block_id/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
@@ -50,6 +58,8 @@ function toSession(row: Session | null): Session | null {
     source: row.source ?? 'programme',
     custom_workout_id: row.custom_workout_id ?? null,
     block_id: row.block_id ?? null,
+    routine_enrolment_id: row.routine_enrolment_id ?? null,
+    routine_day_id: row.routine_day_id ?? null,
     exercise_swaps: row.exercise_swaps ?? {},
   };
 }
@@ -77,6 +87,11 @@ type SessionQueryResult = {
 async function selectSession(
   run: (columns: string) => PromiseLike<SessionQueryResult>
 ): Promise<Session | null> {
+  const routines = await run(SESSION_COLUMNS_ROUTINES);
+  if (!routines.error) return toSession(routines.data as Session | null);
+  if (!isMissingRoutineSessionColumns(routines.error) && !isMissingBlockColumn(routines.error)) {
+    if (!isMissingCustomSessionColumns(routines.error)) throw routines.error;
+  }
   const full = await run(SESSION_COLUMNS);
   if (!full.error) return toSession(full.data as Session | null);
   if (isMissingBlockColumn(full.error)) {
@@ -121,6 +136,29 @@ export async function fetchLastFinishedSession(): Promise<Session | null> {
       .limit(1)
       .maybeSingle()
   );
+}
+
+/** Last finished session for this enrolment — used to pick the next routine day. */
+export async function fetchLastFinishedRoutineSession(
+  enrolmentId: string
+): Promise<Session | null> {
+  try {
+    return await selectSession((columns) =>
+      supabase
+        .from('sessions')
+        .select(columns)
+        .eq('routine_enrolment_id', enrolmentId)
+        .not('completed_at', 'is', null)
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    );
+  } catch (error) {
+    if (error && typeof error === 'object' && isMissingRoutineSessionColumns(error)) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /** Last finished programme day — custom workouts don't move her programme along. */
@@ -176,6 +214,36 @@ export async function startSession(
   return toSession(legacy.data as Session)!;
 }
 
+export async function startRoutineSession(input: {
+  enrolmentId: string;
+  routineDayId: string;
+  sourceProgrammeDayId?: string | null;
+  exerciseSwaps?: Record<string, string>;
+}): Promise<Session> {
+  const exerciseSwaps = input.exerciseSwaps ?? {};
+  const payload = {
+    programme_day_id: input.sourceProgrammeDayId ?? null,
+    date: localDate(),
+    exercise_swaps: exerciseSwaps,
+    source: 'routine' as const,
+    routine_enrolment_id: input.enrolmentId,
+    routine_day_id: input.routineDayId,
+  };
+  const { data, error } = await supabase
+    .from('sessions')
+    .insert(payload)
+    .select(SESSION_COLUMNS_ROUTINES)
+    .single();
+  if (!error) return toSession(data as Session)!;
+  if (isMissingRoutineSessionColumns(error) || /source/i.test(error.message ?? '')) {
+    if (input.sourceProgrammeDayId) {
+      return startSession(input.sourceProgrammeDayId, exerciseSwaps);
+    }
+    throw new Error('Routines need supabase/routines.sql run in the Supabase SQL editor.');
+  }
+  throw error;
+}
+
 export async function startCustomSession(
   customWorkoutId: string,
   exerciseSwaps: Record<string, string> = {}
@@ -222,11 +290,20 @@ export async function saveSessionSwaps(
   if (error) throw error;
 }
 
-export async function finishSession(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('sessions')
-    .update({ completed_at: new Date().toISOString() })
-    .eq('id', id);
+export async function finishSession(id: string, durationSeconds?: number): Promise<void> {
+  const completedAt = new Date().toISOString();
+  const payload: { completed_at: string; duration_seconds?: number } = {
+    completed_at: completedAt,
+  };
+  if (durationSeconds !== undefined && Number.isFinite(durationSeconds) && durationSeconds >= 0) {
+    payload.duration_seconds = Math.round(durationSeconds);
+  }
+  const { error } = await supabase.from('sessions').update(payload).eq('id', id);
+  if (error && payload.duration_seconds !== undefined && /duration_seconds/i.test(error.message)) {
+    const retry = await supabase.from('sessions').update({ completed_at: completedAt }).eq('id', id);
+    if (retry.error) throw retry.error;
+    return;
+  }
   if (error) throw error;
 }
 

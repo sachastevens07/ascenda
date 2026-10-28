@@ -133,7 +133,7 @@ export async function exportWorkoutHistory(): Promise<ExportResult> {
   const pad = (value: number) => String(value).padStart(2, '0');
   const stamp = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
   const file = folder.createFile(`workout-history-${stamp}.xlsx`, XLSX_MIME_TYPE);
-  file.write(toSpreadsheet(rows));
+  await file.write(toSpreadsheet(rows));
   return {
     status: 'saved',
     fileName: file.name,

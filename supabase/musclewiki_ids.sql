@@ -1,0 +1,60 @@
+-- Approved MuscleWiki ids from scripts/musclewiki-matches.csv.
+-- Paste into Supabase > SQL Editor after supabase/musclewiki.sql.
+-- Safe to run again: it only sets musclewiki_id on these rows.
+-- Never deletes sessions, sets, or exercise rows.
+
+update public.exercises set musclewiki_id = 502 where id = 'band-chest-press';
+update public.exercises set musclewiki_id = 268 where id = 'band-pallof-press';
+update public.exercises set musclewiki_id = 276 where id = 'band-row';
+update public.exercises set musclewiki_id = 4 where id = 'barbell-bench-press';
+update public.exercises set musclewiki_id = 39 where id = 'barbell-deadlift';
+update public.exercises set musclewiki_id = 334 where id = 'barbell-glute-bridge';
+update public.exercises set musclewiki_id = 30 where id = 'barbell-hip-thrust';
+update public.exercises set musclewiki_id = 303 where id = 'barbell-overhead-press';
+update public.exercises set musclewiki_id = 313 where id = 'barbell-romanian-deadlift';
+update public.exercises set musclewiki_id = 305 where id = 'barbell-sumo-deadlift';
+update public.exercises set musclewiki_id = 18 where id = 'bench-dip';
+update public.exercises set musclewiki_id = 867 where id = 'bird-dog';
+update public.exercises set musclewiki_id = 373 where id = 'bodyweight-reverse-lunge';
+update public.exercises set musclewiki_id = 192 where id = 'bodyweight-squat';
+update public.exercises set musclewiki_id = 42 where id = 'bulgarian-split-squat';
+update public.exercises set musclewiki_id = 1032 where id = 'cable-hammer-curl';
+update public.exercises set musclewiki_id = 223 where id = 'cable-hip-abduction';
+update public.exercises set musclewiki_id = 1008 where id = 'cable-hip-adduction';
+update public.exercises set musclewiki_id = 250 where id = 'cable-pallof-press';
+update public.exercises set musclewiki_id = 869 where id = 'dead-bug';
+update public.exercises set musclewiki_id = 377 where id = 'dumbbell-bench-press';
+update public.exercises set musclewiki_id = 294 where id = 'dumbbell-calf-raise';
+update public.exercises set musclewiki_id = 1181 where id = 'dumbbell-floor-press';
+update public.exercises set musclewiki_id = 46 where id = 'dumbbell-front-raise';
+update public.exercises set musclewiki_id = 3 where id = 'dumbbell-hammer-curl';
+update public.exercises set musclewiki_id = 286 where id = 'dumbbell-hip-thrust';
+update public.exercises set musclewiki_id = 20 where id = 'dumbbell-lateral-raise';
+update public.exercises set musclewiki_id = 413 where id = 'dumbbell-pullover';
+update public.exercises set musclewiki_id = 414 where id = 'dumbbell-reverse-lunge';
+update public.exercises set musclewiki_id = 291 where id = 'dumbbell-romanian-deadlift';
+update public.exercises set musclewiki_id = 290 where id = 'dumbbell-shrug';
+update public.exercises set musclewiki_id = 467 where id = 'dumbbell-sumo-squat';
+update public.exercises set musclewiki_id = 29 where id = 'glute-bridge';
+update public.exercises set musclewiki_id = 1687 where id = 'glute-kickback-machine';
+update public.exercises set musclewiki_id = 206 where id = 'hanging-knee-raise';
+update public.exercises set musclewiki_id = 1505 where id = 'hip-abduction-machine';
+update public.exercises set musclewiki_id = 1504 where id = 'hip-adduction-machine';
+update public.exercises set musclewiki_id = 1498 where id = 'hip-thrust-machine';
+update public.exercises set musclewiki_id = 55 where id = 'incline-barbell-bench-press';
+update public.exercises set musclewiki_id = 1530 where id = 'incline-dumbbell-curl';
+update public.exercises set musclewiki_id = 183 where id = 'inverted-row';
+update public.exercises set musclewiki_id = 191 where id = 'jump-squat';
+update public.exercises set musclewiki_id = 1175 where id = 'kettlebell-floor-press';
+update public.exercises set musclewiki_id = 100 where id = 'kettlebell-goblet-squat';
+update public.exercises set musclewiki_id = 918 where id = 'kettlebell-reverse-lunge';
+update public.exercises set musclewiki_id = 919 where id = 'kettlebell-romanian-deadlift';
+update public.exercises set musclewiki_id = 920 where id = 'kettlebell-row';
+update public.exercises set musclewiki_id = 931 where id = 'kettlebell-sumo-deadlift';
+update public.exercises set musclewiki_id = 79 where id = 'kettlebell-swing';
+update public.exercises set musclewiki_id = 1513 where id = 'machine-chest-press';
+update public.exercises set musclewiki_id = 474 where id = 'mountain-climber';
+update public.exercises set musclewiki_id = 882 where id = 'reverse-crunch';
+update public.exercises set musclewiki_id = 828 where id = 'seated-leg-curl';
+update public.exercises set musclewiki_id = 195 where id = 'superman';
+update public.exercises set musclewiki_id = 1596 where id = 'wall-sit';
