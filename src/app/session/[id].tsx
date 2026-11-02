@@ -1,15 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +17,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { ExercisePicker } from '@/components/ExercisePicker';
 import { SwapSheet } from '@/components/SwapSheet';
-import { colours } from '@/constants/theme';
+import {
+  EmptyState,
+  IconButton,
+  PrimaryButton,
+  ProgressBar,
+  RestTimerBar,
+  SecondaryButton,
+  SetRow,
+  TextButton,
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import {
@@ -26,11 +36,10 @@ import {
   replaceCustomWorkoutExercise,
   STARTER_WORKOUT_ID,
 } from '@/lib/customWorkouts';
+import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
-  describeProgressionGoal,
   formatKg,
-  formatSetsAndReps,
   getWeightSuggestion,
   usesWeight,
   type ProgrammeDay,
@@ -64,6 +73,7 @@ import {
   clearSessionPlan,
   formatClock,
   formatDuration,
+  formatWeightInput,
   getNextSet,
   getSetRecords,
   loadSessionLog,
@@ -84,21 +94,45 @@ function showRecords(kinds: RecordKind[]) {
   );
 }
 
-function formatPrevious(sets: LoggedSet[] | undefined): string | null {
-  if (!sets || sets.length === 0) return null;
-  const weights = new Set(sets.map((set) => set.weight_kg));
-  const reps = sets.map((set) => set.reps ?? 0).join(', ');
-  const [onlyWeight] = [...weights];
-  if (weights.size === 1 && onlyWeight !== null) return `Last time: ${formatKg(onlyWeight)} × ${reps}`;
-  if (weights.size === 1) return `Last time: ${reps} reps`;
-  return `Last time: ${sets
-    .map((set) => (set.weight_kg === null ? `${set.reps}` : `${formatKg(set.weight_kg)} × ${set.reps}`))
-    .join(', ')}`;
+function formatCompactSets(item: Pick<ProgrammeExercise, 'sets' | 'rep_min' | 'rep_max'>): string {
+  const reps = item.rep_min === item.rep_max ? `${item.rep_min}` : `${item.rep_min}-${item.rep_max}`;
+  return `${item.sets} × ${reps}`;
+}
+
+function lastSetPlaceholders(
+  sets: LoggedSet[] | undefined,
+  setNumber: number,
+  weighted: boolean
+): { kg?: string; reps?: string } {
+  if (!sets || sets.length === 0) return {};
+  const last = sets.find((set) => set.set_number === setNumber) ?? sets[sets.length - 1];
+  return {
+    kg: weighted && last.weight_kg !== null ? String(Number(last.weight_kg.toFixed(2))) : undefined,
+    reps: last.reps !== null ? String(last.reps) : undefined,
+  };
+}
+
+function ExerciseThumb({ item }: { item: ProgrammeExercise }) {
+  const { colours, radius, type } = useTheme();
+  const photo = getExerciseImageSource(item.exercise);
+  return (
+    <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
+      {photo ? (
+        <Image source={photo} style={styles.photoFill} resizeMode="cover" />
+      ) : (
+        <Text style={[type.title3, { color: colours.brand }]}>{item.exercise.name.slice(0, 1)}</Text>
+      )}
+      <View style={[styles.play, { backgroundColor: colours.overlay, borderRadius: radius.full }]}>
+        <Ionicons name="play" size={12} color={colours.onAccent} />
+      </View>
+    </View>
+  );
 }
 
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { colours, type, spacing, radius, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
@@ -162,7 +196,6 @@ export default function SessionScreen() {
     ensureRestTimerPermission().catch(() => {});
   }, []);
 
-  // Keeps the bar above the tabs up to date with this session's next set.
   useEffect(() => {
     if (!day || startedAt === null) return;
     publish({ sessionId: id, dayName: day.name, startedAt }, getNextSet(day, entries));
@@ -205,7 +238,6 @@ export default function SessionScreen() {
     const before = entries;
     setEntries((current) => {
       const next = { ...current, [key]: updated };
-      // Carry a newly entered weight on to the following sets that don't have one yet.
       if (completing && weighted) {
         for (const later of setNumbers(item).filter((n) => n > setNumber)) {
           const laterKey = setKey(item.exercise.id, later);
@@ -227,7 +259,6 @@ export default function SessionScreen() {
     }
   }
 
-  /** Saves edits to a set that's already ticked. */
   async function saveEdit(item: ProgrammeExercise, setNumber: number) {
     const entry = entries[setKey(item.exercise.id, setNumber)];
     if (!entry?.completed) return;
@@ -256,7 +287,6 @@ export default function SessionScreen() {
     setSwapItem(item);
   }
 
-  /** Puts `exercise` in the slot for this session and pre-fills its sets. */
   async function replaceSlot(item: ProgrammeExercise, exercise: SlotExercise) {
     if (!day) return;
     const original = item.original ?? item.exercise;
@@ -283,7 +313,6 @@ export default function SessionScreen() {
     setDay(updatedDay);
     setPrevious(mergedPrevious);
     setBests((current) => ({ ...current, ...newBests }));
-    // Keep anything she already typed for this exercise earlier in the session.
     setEntries((current) => ({ ...newEntries, ...current }));
   }
 
@@ -313,12 +342,7 @@ export default function SessionScreen() {
         ? {}
         : await fetchExerciseBests([exercise.id], id).catch(() => ({}));
       const mergedPrevious = { ...previous, ...extraPrevious };
-      const newEntries = buildEntries(
-        { ...day, exercises: [added] },
-        [],
-        mergedPrevious,
-        isPro
-      );
+      const newEntries = buildEntries({ ...day, exercises: [added] }, [], mergedPrevious, isPro);
       setDay(updatedDay);
       setPrevious(mergedPrevious);
       setBests((current) => ({ ...current, ...extraBests }));
@@ -453,13 +477,23 @@ export default function SessionScreen() {
     finish();
   }
 
+  const headerOptions = {
+    headerShown: true,
+    title: '',
+    headerBackTitle: 'Home',
+    headerShadowVisible: false,
+    headerStyle: { backgroundColor: colours.bg },
+    headerTintColor: colours.brand,
+  } as const;
+
   if (loadState !== 'ready' || !day) {
     return (
-      <View style={styles.centre}>
+      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
+        <Stack.Screen options={headerOptions} />
         {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} />
+          <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={styles.message}>
+          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
             {loadState === 'not-found'
               ? 'We couldn’t find this session.'
               : 'We couldn’t load this session. Check your connection and try again.'}
@@ -471,47 +505,67 @@ export default function SessionScreen() {
 
   const restRemaining = restEndsAt === null ? 0 : Math.ceil((restEndsAt - now) / 1000);
   const records = getSetRecords(day, entries, bests);
+  const showGuideTip = day.exercises.some((item) => !previous[item.exercise.id]?.length);
 
   return (
     <KeyboardAvoidingView
-      style={styles.screen}
+      style={[styles.screen, { backgroundColor: colours.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: insets.bottom + (restEndsAt === null ? 32 : 140) },
-        ]}
-        keyboardShouldPersistTaps="handled">
-        <View>
-          <Text style={styles.title}>{day.name}</Text>
-          <View style={styles.headerRow}>
-            <Text style={styles.progress}>
-              {doneSets} of {totalSets} sets done
-            </Text>
-            {startedAt !== null && (
-              <View style={styles.elapsed} accessibilityLabel="Time since you started">
-                <Ionicons name="stopwatch-outline" size={18} color={colours.accent} />
-                <Text style={styles.elapsedText}>{formatClock((now - startedAt) / 1000)}</Text>
-              </View>
-            )}
-          </View>
-        </View>
+      <Stack.Screen options={headerOptions} />
 
-        {day.exercises.length === 0 && (
-          <Text style={styles.emptyAdd}>
-            Add your first exercise when you’re ready. This session is yours to build as you go.
-          </Text>
-        )}
+      <View style={[styles.stickyTop, { backgroundColor: colours.bg, borderBottomColor: colours.border }]}>
+        <Text style={[type.title2, { color: colours.ink }]} numberOfLines={1}>
+          {day.name}
+        </Text>
+        <View style={styles.headerMeta}>
+          <View style={styles.flex}>
+            <Text style={[type.caption, { color: colours.inkMuted, marginBottom: 6 }]}>
+              {doneSets} of {totalSets} sets
+            </Text>
+            <ProgressBar progress={totalSets === 0 ? 0 : doneSets / totalSets} />
+          </View>
+          {startedAt !== null ? (
+            <View
+              style={[styles.elapsed, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}
+              accessibilityLabel="Time since you started">
+              <Ionicons name="stopwatch-outline" size={16} color={colours.brand} />
+              <Text style={[type.bodySm, { color: colours.brand, fontWeight: '700', fontVariant: ['tabular-nums'] }]}>
+                {formatClock((now - startedAt) / 1000)}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}>
+        {showGuideTip ? (
+          <View style={[styles.tip, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
+            <Ionicons name="information-circle-outline" size={20} color={colours.brand} />
+            <Text style={[type.bodySm, { color: colours.ink, flex: 1 }]}>
+              First time on a lift? Tap the info icon for a quick guide.
+            </Text>
+          </View>
+        ) : null}
+
+        {day.exercises.length === 0 ? (
+          <EmptyState
+            icon="barbell-outline"
+            title="No exercises yet"
+            body="Add your first exercise when you’re ready. This session is yours to build as you go."
+          />
+        ) : null}
 
         {day.exercises.map((item) => {
           const weighted = usesWeight(item.exercise.equipment);
-          const previousText = formatPrevious(previous[item.exercise.id]);
-          const isFirstTime = !previous[item.exercise.id]?.length;
-          const goalText = isPro
-            ? describeProgressionGoal(getWeightSuggestion(item, previous[item.exercise.id]))
-            : null;
+          const suggestion = isPro ? getWeightSuggestion(item, previous[item.exercise.id]) : null;
+          const increase = suggestion?.kind === 'increase' ? suggestion : null;
           return (
-            <View key={item.position} style={styles.card}>
+            <View
+              key={item.position}
+              style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
               <View style={styles.cardHeader}>
                 <Pressable
                   onPress={() =>
@@ -520,40 +574,45 @@ export default function SessionScreen() {
                   style={({ pressed }) => [styles.exerciseHeader, pressed && styles.pressed]}
                   accessibilityRole="button"
                   accessibilityHint="Shows how to do this exercise">
+                  <ExerciseThumb item={item} />
                   <View style={styles.flex}>
-                    <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                    {item.original && equipment && exerciseFits(item.original, equipment) && (
-                      <Text style={styles.swappedFrom}>Instead of {item.original.name}</Text>
-                    )}
-                    <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
-                    {isFirstTime && (
-                      <Text style={styles.previous}>First time: tap for the guide</Text>
-                    )}
-                    {previousText && <Text style={styles.previous}>{previousText}</Text>}
-                    {goalText && <Text style={styles.goal}>{goalText}</Text>}
+                    <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
+                      {item.exercise.name}
+                    </Text>
+                    {item.original && equipment && exerciseFits(item.original, equipment) ? (
+                      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                        Instead of {item.original.name}
+                      </Text>
+                    ) : null}
+                    <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                      {formatCompactSets(item)}
+                    </Text>
                   </View>
-                  <Ionicons name="information-circle-outline" size={24} color={colours.accent} />
                 </Pressable>
-                {isPro && (
-                  <Pressable
+                <IconButton
+                  icon="information-circle-outline"
+                  variant="muted"
+                  accessibilityLabel={`${item.exercise.name} guide`}
+                  onPress={() =>
+                    router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
+                  }
+                />
+                {isPro ? (
+                  <IconButton
+                    icon="swap-horizontal"
+                    variant="muted"
+                    accessibilityLabel={`Swap ${item.exercise.name}`}
                     onPress={() => openSwap(item)}
-                    style={({ pressed }) => [
-                      styles.swapButton,
-                      swapItem?.position === item.position && styles.swapButtonOpen,
-                      pressed && styles.pressed,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded: swapItem?.position === item.position }}
-                    accessibilityLabel={`Swap ${item.exercise.name}`}>
-                    <Ionicons
-                      name="swap-horizontal"
-                      size={24}
-                      color={swapItem?.position === item.position ? colours.surface : colours.accent}
-                    />
-                  </Pressable>
-                )}
+                    color={swapItem?.position === item.position ? colours.onBrand : colours.ink}
+                    style={
+                      swapItem?.position === item.position
+                        ? { backgroundColor: colours.brand }
+                        : undefined
+                    }
+                  />
+                ) : null}
               </View>
-              {isPro && equipment && (
+              {isPro && equipment ? (
                 <SwapSheet
                   open={swapItem?.position === item.position}
                   item={item}
@@ -566,159 +625,98 @@ export default function SessionScreen() {
                   onRestore={handleRestore}
                   allowAlways={customWorkoutId !== STARTER_WORKOUT_ID}
                   alwaysDetail={
-                    customWorkoutId
-                      ? 'Replaces it in this workout'
-                      : 'Replaces it in your programme'
+                    customWorkoutId ? 'Replaces it in this workout' : 'Replaces it in your programme'
                   }
                 />
-              )}
-
-              <View style={styles.columnLabels}>
-                <Text style={[styles.columnLabel, styles.setColumn]}>Set</Text>
-                <Text style={[styles.columnLabel, styles.flex]}>{weighted ? 'kg' : ''}</Text>
-                <Text style={[styles.columnLabel, styles.flex]}>Reps</Text>
-                <View style={styles.checkColumn} />
-              </View>
+              ) : null}
 
               {setNumbers(item).map((setNumber) => {
                 const key = setKey(item.exercise.id, setNumber);
                 const entry = entries[key];
                 const setRecords = records[key];
+                const placeholders = lastSetPlaceholders(previous[item.exercise.id], setNumber, weighted);
+                const chip =
+                  setNumber === 1 && increase
+                    ? increase.changeKg > 0
+                      ? `Go up ${formatKg(increase.changeKg)}`
+                      : `${formatKg(-increase.changeKg)} less help`
+                    : undefined;
                 return (
-                  <View key={key} style={styles.setRow}>
-                    {setRecords ? (
-                      <Pressable
-                        onPress={() => showRecords(setRecords)}
-                        style={styles.setColumn}
-                        hitSlop={8}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Set ${setNumber}: new personal best. ${setRecords
-                          .map((kind) => RECORD_LABELS[kind])
-                          .join(', ')}`}>
-                        <Text style={styles.setNumber}>{setNumber}</Text>
-                        <Ionicons name="trophy" size={18} color={colours.trophy} style={styles.trophy} />
-                      </Pressable>
-                    ) : (
-                      <Text style={[styles.setNumber, styles.setColumn]}>{setNumber}</Text>
-                    )}
-                    {weighted ? (
-                      <TextInput
-                        style={[styles.input, styles.flex, entry.completed && styles.inputDone]}
-                        value={entry.weight}
-                        onChangeText={(text) => updateEntry(key, { weight: text })}
-                        onEndEditing={() => saveEdit(item, setNumber)}
-                        keyboardType="decimal-pad"
-                        selectTextOnFocus
-                        placeholder="–"
-                        placeholderTextColor={colours.textMuted}
-                        accessibilityLabel={`Set ${setNumber} weight in kilograms`}
-                      />
-                    ) : (
-                      <Text style={[styles.noWeight, styles.flex]}>
-                        {item.exercise.equipment === 'band' ? 'Band' : 'Bodyweight'}
-                      </Text>
-                    )}
-                    <TextInput
-                      style={[styles.input, styles.flex, entry.completed && styles.inputDone]}
-                      value={entry.reps}
-                      onChangeText={(text) => updateEntry(key, { reps: text })}
-                      onEndEditing={() => saveEdit(item, setNumber)}
-                      keyboardType="number-pad"
-                      selectTextOnFocus
-                      accessibilityLabel={`Set ${setNumber} reps`}
-                    />
-                    <Pressable
-                      onPress={() => toggleSet(item, setNumber)}
-                      style={({ pressed }) => [
-                        styles.check,
-                        entry.completed && styles.checkDone,
-                        pressed && styles.pressed,
-                      ]}
-                      hitSlop={4}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: entry.completed }}
-                      accessibilityLabel={`Set ${setNumber} done`}>
-                      <Ionicons
-                        name="checkmark"
-                        size={28}
-                        color={entry.completed ? colours.surface : colours.accent}
-                      />
-                    </Pressable>
-                  </View>
+                  <SetRow
+                    key={key}
+                    setNumber={setNumber}
+                    kg={entry.weight}
+                    reps={entry.reps}
+                    completed={entry.completed}
+                    weighted={weighted}
+                    weightLabel={item.exercise.equipment === 'band' ? 'Band' : 'Bodyweight'}
+                    kgPlaceholder={placeholders.kg}
+                    repsPlaceholder={placeholders.reps}
+                    suggestedLabel={chip}
+                    recordLabel={
+                      setRecords ? setRecords.map((kind) => RECORD_LABELS[kind]).join(', ') : undefined
+                    }
+                    onToggle={() => toggleSet(item, setNumber)}
+                    onChangeKg={(text) => updateEntry(key, { weight: text })}
+                    onChangeReps={(text) => updateEntry(key, { reps: text })}
+                    onEndKg={() => saveEdit(item, setNumber)}
+                    onEndReps={() => saveEdit(item, setNumber)}
+                    onSuggest={
+                      increase
+                        ? () => updateEntry(key, { weight: formatWeightInput(increase.kg) })
+                        : undefined
+                    }
+                    onRecord={setRecords ? () => showRecords(setRecords) : undefined}
+                    style={{ marginTop: spacing.sm }}
+                  />
                 );
               })}
             </View>
           );
         })}
 
-        {customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID && (
-          <Pressable
-            style={({ pressed }) => [styles.addButton, (pressed || isAdding) && styles.pressed]}
+        {customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID ? (
+          <SecondaryButton
+            label={isAdding ? 'Adding…' : 'Add exercise'}
             onPress={() => setPickerOpen(true)}
             disabled={isAdding || isFinishing}
-            accessibilityRole="button">
-            <Text style={styles.addButtonText}>{isAdding ? 'Adding…' : 'Add exercise'}</Text>
-          </Pressable>
-        )}
-
-        <Pressable
-          style={({ pressed }) => [styles.finishButton, (pressed || isFinishing) && styles.pressed]}
-          onPress={confirmFinish}
-          disabled={isFinishing}
-          accessibilityRole="button">
-          {isFinishing ? (
-            <ActivityIndicator color={colours.surface} />
-          ) : (
-            <Text style={styles.finishText}>Finish session</Text>
-          )}
-        </Pressable>
-        <Pressable
-          style={styles.link}
-          onPress={confirmDiscard}
-          disabled={isFinishing}
-          accessibilityRole="button">
-          <Text style={styles.linkText}>Discard session</Text>
-        </Pressable>
-
+            loading={isAdding}
+          />
+        ) : null}
       </ScrollView>
 
-      {restEndsAt !== null && (
-        <View style={[styles.restBar, { paddingBottom: insets.bottom + 12 }]}>
-          <View style={styles.restClock}>
-            <Text style={styles.restLabel}>Rest</Text>
-            <Text style={styles.restTime}>{formatClock(restRemaining)}</Text>
-          </View>
-          <Pressable
-            style={({ pressed }) => [styles.restButton, pressed && styles.pressed]}
-            onPress={() => workout.adjustRest(-REST_ADJUST_SECONDS)}
-            accessibilityRole="button"
-            accessibilityLabel={`${REST_ADJUST_SECONDS} seconds less rest`}>
-            <Text style={styles.restButtonText}>−{REST_ADJUST_SECONDS}s</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.restButton, pressed && styles.pressed]}
-            onPress={() => workout.adjustRest(REST_ADJUST_SECONDS)}
-            accessibilityRole="button"
-            accessibilityLabel={`${REST_ADJUST_SECONDS} seconds more rest`}>
-            <Text style={styles.restButtonText}>+{REST_ADJUST_SECONDS}s</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.restButton, styles.skipButton, pressed && styles.pressed]}
-            onPress={workout.stopRest}
-            accessibilityRole="button">
-            <Text style={[styles.restButtonText, styles.skipText]}>Skip</Text>
-          </Pressable>
-        </View>
-      )}
+      {restEndsAt !== null ? (
+        <RestTimerBar
+          label={formatClock(restRemaining)}
+          onMinus={() => workout.adjustRest(-REST_ADJUST_SECONDS)}
+          onPlus={() => workout.adjustRest(REST_ADJUST_SECONDS)}
+          onSkip={workout.stopRest}
+        />
+      ) : null}
 
-      {customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID && (
+      <View
+        style={[
+          styles.stickyBottom,
+          { backgroundColor: colours.bg, paddingBottom: insets.bottom + 8 },
+          shadow,
+        ]}>
+        <PrimaryButton
+          label="Finish session"
+          onPress={confirmFinish}
+          loading={isFinishing}
+          disabled={isFinishing}
+        />
+        <TextButton label="Discard" onPress={confirmDiscard} disabled={isFinishing} />
+      </View>
+
+      {customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID ? (
         <ExercisePicker
           open={pickerOpen}
           takenIds={day.exercises.map((item) => item.exercise.id)}
           onClose={() => setPickerOpen(false)}
           onChoose={handleAddExercise}
         />
-      )}
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
@@ -726,10 +724,11 @@ export default function SessionScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   content: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 24,
     gap: 16,
   },
   centre: {
@@ -737,261 +736,76 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colours.background,
   },
-  message: {
-    fontSize: 17,
-    color: colours.textMuted,
-    textAlign: 'center',
+  stickyTop: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  flex: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  headerRow: {
+  headerMeta: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  progress: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.accent,
+    alignItems: 'flex-end',
+    gap: 12,
+    marginTop: 10,
   },
   elapsed: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 4,
+    paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 999,
-    backgroundColor: colours.accentSoft,
   },
-  elapsedText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.accent,
-    fontVariant: ['tabular-nums'],
-  },
-  trophy: {
-    alignSelf: 'center',
-    marginTop: 2,
+  tip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   card: {
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: colours.surface,
+    padding: 14,
   },
   cardHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
-  },
-  challengeGuide: {
-    marginBottom: 12,
+    marginBottom: 4,
   },
   exerciseHeader: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 12,
   },
-  swappedFrom: {
-    fontSize: 14,
-    color: colours.textMuted,
-    marginTop: 1,
-  },
-  swapButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accentSoft,
-  },
-  swapButtonOpen: {
-    backgroundColor: colours.accent,
-  },
-  exerciseName: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  exerciseDetail: {
-    fontSize: 15,
-    color: colours.text,
-    marginTop: 2,
-  },
-  previous: {
-    fontSize: 14,
-    color: colours.accent,
-    marginTop: 2,
-  },
-  goal: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colours.accent,
-    marginTop: 2,
-  },
-  columnLabels: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 4,
-  },
-  columnLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  setColumn: {
-    width: 32,
-  },
-  checkColumn: {
-    width: 56,
-  },
-  setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 8,
-  },
-  setNumber: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  input: {
-    height: 56,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colours.border,
-    backgroundColor: colours.background,
-    fontSize: 20,
-    fontWeight: '600',
-    color: colours.text,
-    textAlign: 'center',
-  },
-  inputDone: {
-    borderColor: colours.accentSoft,
-    backgroundColor: colours.accentSoft,
-  },
-  noWeight: {
-    fontSize: 15,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  check: {
+  thumb: {
     width: 56,
     height: 56,
-    borderRadius: 16,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
   },
-  checkDone: {
-    backgroundColor: colours.accent,
+  photoFill: {
+    width: '100%',
+    height: '100%',
   },
-  pressed: {
-    opacity: 0.7,
-  },
-  emptyAdd: {
-    fontSize: 16,
-    lineHeight: 23,
-    color: colours.textMuted,
-  },
-  addButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-  },
-  addButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  finishButton: {
-    minHeight: 60,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accent,
-    marginTop: 8,
-  },
-  finishText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.surface,
-  },
-  link: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  linkText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.textMuted,
-  },
-  restBar: {
+  play: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
+    right: 4,
+    bottom: 4,
+    width: 22,
+    height: 22,
     alignItems: 'center',
-    gap: 8,
-    paddingTop: 12,
-    paddingHorizontal: 16,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: colours.text,
+    justifyContent: 'center',
   },
-  restClock: {
+  flex: {
     flex: 1,
   },
-  restLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colours.accentSoft,
+  stickyBottom: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
-  restTime: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colours.surface,
-    fontVariant: ['tabular-nums'],
-  },
-  restButton: {
-    minWidth: 60,
-    height: 52,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  restButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.surface,
-  },
-  skipButton: {
-    backgroundColor: colours.accent,
-  },
-  skipText: {
-    color: colours.surface,
+  pressed: {
+    opacity: 0.8,
   },
 });
