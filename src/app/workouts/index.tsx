@@ -1,8 +1,16 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  AnchoredMenu,
+  MenuHeader,
+  MenuRow,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
 import { ProMark } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
@@ -39,6 +47,7 @@ export default function WorkoutsScreen() {
   const [attempt, setAttempt] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [plannerWorkout, setPlannerWorkout] = useState<CustomWorkout | null>(null);
+  const [plannerAnchor, setPlannerAnchor] = useState<AnchorRect | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -275,7 +284,10 @@ export default function WorkoutsScreen() {
           busy={busyId === starter.id}
           onStart={() => handleStart(starter)}
           onDuplicate={() => handleDuplicate(starter)}
-          onPlan={() => setPlannerWorkout(starter)}
+          onPlan={(anchor) => {
+              setPlannerAnchor(anchor);
+              setPlannerWorkout(starter);
+            }}
         />
       )}
 
@@ -293,7 +305,10 @@ export default function WorkoutsScreen() {
             onEdit={() => router.push({ pathname: '/workouts/[id]', params: { id: workout.id } })}
             onDuplicate={() => handleDuplicate(workout)}
             onDelete={() => confirmDelete(workout)}
-            onPlan={() => setPlannerWorkout(workout)}
+            onPlan={(anchor) => {
+              setPlannerAnchor(anchor);
+              setPlannerWorkout(workout);
+            }}
           />
         ))
       )}
@@ -302,39 +317,26 @@ export default function WorkoutsScreen() {
         General fitness guidance, not medical advice. Stop if anything hurts.
       </Text>
 
-      <Modal
+      <AnchoredMenu
         visible={plannerWorkout !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setPlannerWorkout(null)}>
-        <Pressable
-          style={styles.backdrop}
-          onPress={() => setPlannerWorkout(null)}
-          accessibilityLabel="Close"
-        />
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-          <Text style={styles.sheetTitle}>Add to planner</Text>
-          <Text style={styles.sheetLead}>
-            {plannerWorkout
+        anchor={plannerAnchor}
+        onClose={() => setPlannerWorkout(null)}>
+        <MenuHeader
+          label="Add to planner"
+          detail={
+            plannerWorkout
               ? `Pick a day for ${plannerWorkout.name}. It will show on the Planner week.`
-              : ''}
-          </Text>
-          <ScrollView>
-            {upcomingPlannerDays().map((day) => (
-              <Pressable
-                key={day.iso}
-                onPress={() => handlePlan(day.iso)}
-                style={styles.sheetRow}
-                accessibilityRole="button">
-                <Text style={styles.sheetRowText}>
-                  {day.label}
-                  {day.isToday ? ' · today' : ''}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      </Modal>
+              : undefined
+          }
+        />
+        {upcomingPlannerDays().map((day) => (
+          <MenuRow
+            key={day.iso}
+            label={day.isToday ? `${day.label} · today` : day.label}
+            onPress={() => handlePlan(day.iso)}
+          />
+        ))}
+      </AnchoredMenu>
     </ScrollView>
   );
 }
@@ -354,8 +356,9 @@ function WorkoutCard({
   onEdit?: () => void;
   onDuplicate: () => void;
   onDelete?: () => void;
-  onPlan: () => void;
+  onPlan: (anchor: AnchorRect) => void;
 }) {
+  const planRef = useRef<AnchorHandle>(null);
   const count = workout.exercises.length;
   return (
     <View style={styles.card}>
@@ -380,7 +383,12 @@ function WorkoutCard({
         <Pressable onPress={onDuplicate} style={styles.link} accessibilityRole="button">
           <Text style={styles.linkText}>Duplicate</Text>
         </Pressable>
-        <Pressable onPress={onPlan} style={styles.link} accessibilityRole="button">
+        <Pressable
+          ref={planRef}
+          collapsable={false}
+          onPress={() => measureAnchor(planRef.current, onPlan)}
+          style={styles.link}
+          accessibilityRole="button">
           <Text style={styles.linkText}>Add to planner</Text>
         </Pressable>
         {onDelete && (
@@ -514,39 +522,5 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     textAlign: 'center',
     marginTop: 8,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
-  },
-  sheet: {
-    maxHeight: '70%',
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: colours.surface,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  sheetLead: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colours.textMuted,
-    marginTop: 6,
-    marginBottom: 8,
-  },
-  sheetRow: {
-    minHeight: 56,
-    justifyContent: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
-  },
-  sheetRowText: {
-    fontSize: 17,
-    color: colours.text,
   },
 });

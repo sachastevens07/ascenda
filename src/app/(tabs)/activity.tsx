@@ -5,7 +5,6 @@ import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,8 +12,14 @@ import {
   View,
   type ScrollViewInstance,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  AnchoredMenu,
+  MenuRow,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
 import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
@@ -108,7 +113,6 @@ function describeBest(best: PersonalBest): string {
 }
 
 export default function ActivityScreen() {
-  const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
   const { isPro } = useSubscription();
   const { profile } = useProfile();
@@ -118,6 +122,8 @@ export default function ActivityScreen() {
   const [attempt, setAttempt] = useState(0);
   const [liftId, setLiftId] = useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const liftPickerRef = useRef<AnchorHandle>(null);
+  const [pickerAnchor, setPickerAnchor] = useState<AnchorRect | null>(null);
   const [tab, setTab] = useState<ActivityTab>('progress');
   const [showPhotos, setShowPhotos] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -419,14 +425,25 @@ export default function ActivityScreen() {
                       <ProBadge />
                     </View>
                     <Pressable
+                      ref={liftPickerRef}
+                      collapsable={false}
                       style={({ pressed }) => [styles.picker, pressed && styles.pressed]}
-                      onPress={() => setIsPickerOpen(true)}
+                      onPress={() => {
+                        measureAnchor(liftPickerRef.current, (rect) => {
+                          setPickerAnchor(rect);
+                          setIsPickerOpen(true);
+                        });
+                      }}
                       accessibilityRole="button"
                       accessibilityLabel={`Lift: ${lift.exerciseName}. Change lift`}>
                       <Text style={styles.pickerText} numberOfLines={1}>
                         {lift.exerciseName}
                       </Text>
-                      <Ionicons name="chevron-down" size={18} color={colours.accent} />
+                      <Ionicons
+                        name={isPickerOpen ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color={colours.accent}
+                      />
                     </Pressable>
                     <LineChart
                       points={history.map((point) => ({
@@ -628,46 +645,23 @@ export default function ActivityScreen() {
         </Text>
       </ScrollView>
 
-      <Modal
+      <AnchoredMenu
         visible={isPickerOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsPickerOpen(false)}>
-        <Pressable
-          style={styles.backdrop}
-          onPress={() => setIsPickerOpen(false)}
-          accessibilityLabel="Close"
-        />
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-          <Text style={styles.sheetTitle}>Choose a lift</Text>
-          <ScrollView>
-            {liftOptions.map((option) => {
-              const isSelected = option.exerciseId === lift?.exerciseId;
-              return (
-                <Pressable
-                  key={option.exerciseId}
-                  onPress={() => {
-                    setLiftId(option.exerciseId);
-                    setIsPickerOpen(false);
-                  }}
-                  style={styles.sheetRow}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isSelected }}>
-                  <View style={styles.flex}>
-                    <Text style={[styles.sheetRowText, isSelected && styles.sheetRowTextSelected]}>
-                      {option.exerciseName}
-                    </Text>
-                    <Text style={styles.bestDetail}>
-                      {option.sessionCount} {option.sessionCount === 1 ? 'session' : 'sessions'}
-                    </Text>
-                  </View>
-                  {isSelected && <Ionicons name="checkmark" size={22} color={colours.accent} />}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      </Modal>
+        anchor={pickerAnchor}
+        onClose={() => setIsPickerOpen(false)}>
+        {liftOptions.map((option) => (
+          <MenuRow
+            key={option.exerciseId}
+            label={option.exerciseName}
+            detail={`${option.sessionCount} ${option.sessionCount === 1 ? 'session' : 'sessions'}`}
+            selected={option.exerciseId === lift?.exerciseId}
+            onPress={() => {
+              setLiftId(option.exerciseId);
+              setIsPickerOpen(false);
+            }}
+          />
+        ))}
+      </AnchoredMenu>
     </View>
   );
 }
@@ -1221,39 +1215,5 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colours.textMuted,
     textAlign: 'center',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
-  },
-  sheet: {
-    maxHeight: '70%',
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: colours.surface,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 8,
-  },
-  sheetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 64,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
-  },
-  sheetRowText: {
-    fontSize: 17,
-    color: colours.text,
-  },
-  sheetRowTextSelected: {
-    fontWeight: '700',
-    color: colours.accent,
   },
 });

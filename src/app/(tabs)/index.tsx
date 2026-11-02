@@ -3,6 +3,14 @@ import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import {
+  AnchoredMenu,
+  MenuHeader,
+  MenuRow,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/AnchoredMenu';
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
@@ -64,6 +72,9 @@ export default function HomeScreen() {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
   const openedOnboardingPaywall = useRef(false);
+  const routineMenuRef = useRef<AnchorHandle>(null);
+  const [routineMenuOpen, setRoutineMenuOpen] = useState(false);
+  const [routineMenuAnchor, setRoutineMenuAnchor] = useState<AnchorRect | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -173,11 +184,10 @@ export default function HomeScreen() {
 
   function openRoutineMenu() {
     if (!data?.enrolment) return;
-    showDialog(data.enrolment.routine.name, 'Switch to another plan, or end this one. Your logged sessions stay.', [
-      { text: 'Switch routine', onPress: () => router.push('/programmes' as Href) },
-      { text: 'End routine', style: 'destructive', onPress: requestEndRoutine },
-      { text: 'Not now', style: 'cancel' },
-    ]);
+    measureAnchor(routineMenuRef.current, (rect) => {
+      setRoutineMenuAnchor(rect);
+      setRoutineMenuOpen(true);
+    });
   }
 
   if (loadState !== 'ready' || !data) {
@@ -320,6 +330,8 @@ export default function HomeScreen() {
               </View>
             </Pressable>
             <Pressable
+              ref={routineMenuRef}
+              collapsable={false}
               onPress={openRoutineMenu}
               style={({ pressed }) => [styles.sessionMenu, pressed && styles.pressed]}
               accessibilityRole="button"
@@ -369,6 +381,31 @@ export default function HomeScreen() {
           General fitness guidance, not medical advice. Stop if anything hurts.
         </Text>
       </ScrollView>
+
+      <AnchoredMenu
+        visible={routineMenuOpen}
+        anchor={routineMenuAnchor}
+        onClose={() => setRoutineMenuOpen(false)}>
+        <MenuHeader
+          label={enrolment?.routine.name ?? 'Your routine'}
+          detail="Switch to another plan, or end this one. Your logged sessions stay."
+        />
+        <MenuRow
+          label="Switch routine"
+          onPress={() => {
+            setRoutineMenuOpen(false);
+            router.push('/programmes' as Href);
+          }}
+        />
+        <MenuRow
+          label="End routine"
+          danger
+          onPress={() => {
+            setRoutineMenuOpen(false);
+            requestEndRoutine();
+          }}
+        />
+      </AnchoredMenu>
     </View>
   );
 }

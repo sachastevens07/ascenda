@@ -3,16 +3,23 @@ import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
-  Modal,
   Pressable,
   ScrollView,
+  SectionList,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  AnchoredMenu,
+  MenuHeader,
+  MenuRow,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { colours } from '@/constants/theme';
@@ -40,11 +47,13 @@ import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 type LoadState = 'loading' | 'error' | 'ready';
 type SheetMode = 'day' | 'workouts' | null;
 type ViewMode = 'agenda' | 'month';
+type AgendaSection = { iso: string; day: PlannerDayView; data: PlannerDayView[] };
 
 export default function PlannerScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
-  const agendaRef = useRef<FlatList<PlannerDayView>>(null);
+  const agendaRef = useRef<SectionList<PlannerDayView, AgendaSection>>(null);
+  const fabRef = useRef<AnchorHandle>(null);
   const [range, setRange] = useState<PlannerRange | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -53,6 +62,7 @@ export default function PlannerScreen() {
   const [movingId, setMovingId] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<PlannerDayView | null>(null);
   const [sheet, setSheet] = useState<SheetMode>(null);
+  const [anchor, setAnchor] = useState<AnchorRect | null>(null);
   const [workouts, setWorkouts] = useState<CustomWorkout[]>([]);
   const [busy, setBusy] = useState(false);
   const [didScrollToToday, setDidScrollToToday] = useState(false);
@@ -91,6 +101,10 @@ export default function PlannerScreen() {
     () => (range?.days ?? []).filter((day) => day.iso >= todayIso),
     [range, todayIso]
   );
+  const agendaSections = useMemo<AgendaSection[]>(
+    () => agendaDays.map((day) => ({ iso: day.iso, day, data: [day] })),
+    [agendaDays]
+  );
 
   const weekDays = useMemo(() => {
     const monday = toIso(startOfWeekMonday(new Date()));
@@ -112,7 +126,7 @@ export default function PlannerScreen() {
     try {
       await work();
       await reload();
-      setSheet(null);
+      closeSheets();
       return true;
     } catch (error) {
       showDialog(failTitle, describePlannerError(error));
@@ -122,7 +136,7 @@ export default function PlannerScreen() {
     }
   }
 
-  function openDay(day: PlannerDayView) {
+  function openDay(day: PlannerDayView, from?: AnchorHandle | null) {
     if (movingId) {
       void runAction(() => movePlannedSession(movingId, day.iso), 'Couldn’t move it').then((ok) => {
         if (ok) setMovingId(null);
@@ -130,6 +144,13 @@ export default function PlannerScreen() {
       return;
     }
     setSelectedDay(day);
+    if (from) {
+      measureAnchor(from, (rect) => {
+        setAnchor(rect);
+        setSheet('day');
+      });
+      return;
+    }
     setSheet('day');
   }
 
@@ -164,19 +185,22 @@ export default function PlannerScreen() {
   function startMove() {
     if (!selectedDay?.plan) return;
     setMovingId(selectedDay.plan.id);
-    setSheet(null);
+    closeSheets();
   }
 
   function handleAddPress() {
     const day = selectedDay ?? daysByIso.get(todayIso) ?? agendaDays[0];
     if (!day) return;
     setSelectedDay(day);
-    setSheet('day');
+    measureAnchor(fabRef.current, (rect) => {
+      setAnchor(rect);
+      setSheet('day');
+    });
   }
 
   async function handleOpen(day: PlannerDayView) {
     if (!day.plan) return;
-    setSheet(null);
+    closeSheets();
 
     if (day.plan.routine_day_id) {
       if (!range?.enrolment) {
@@ -223,9 +247,14 @@ export default function PlannerScreen() {
   }
 
   function scrollAgendaToToday() {
-    const index = agendaDays.findIndex((day) => day.isToday);
+    const index = agendaSections.findIndex((section) => section.day.isToday);
     if (index < 0) return;
-    agendaRef.current?.scrollToIndex({ index, viewPosition: 0, animated: false });
+    agendaRef.current?.scrollToLocation({
+      sectionIndex: index,
+      itemIndex: 0,
+      viewPosition: 0,
+      animated: false,
+    });
   }
 
   if (loadState !== 'ready' || !range) {
@@ -291,10 +320,12 @@ export default function PlannerScreen() {
       )}
 
       {viewMode === 'agenda' ? (
-        <FlatList
+        <SectionList
           ref={agendaRef}
-          data={agendaDays}
+          sections={agendaSections}
           keyExtractor={(day) => day.iso}
+          style={styles.agenda}
+          stickySectionHeadersEnabled={true}
           onLayout={() => {
             if (!didScrollToToday) {
               setDidScrollToToday(true);
@@ -303,11 +334,18 @@ export default function PlannerScreen() {
           }}
           onScrollToIndexFailed={() => {}}
           contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}
+          renderSectionHeader={({ section }) => (
+            <View style={[styles.dayHeading, section.day.isToday && styles.dayHeadingToday]}>
+              <Text style={[styles.dayHeadingText, section.day.isToday && styles.dayHeadingTextToday]}>
+                {formatAgendaHeading(section.day)}
+              </Text>
+            </View>
+          )}
           renderItem={({ item }) => (
             <AgendaDay
               day={item}
               moving={movingId !== null && item.plan?.id === movingId}
-              onPress={() => openDay(item)}
+              onPress={(from) => openDay(item, from)}
               disabled={busy}
             />
           )}
@@ -334,7 +372,7 @@ export default function PlannerScreen() {
           }
         />
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}>
+        <ScrollView style={styles.agenda} contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}>
           <View style={styles.weekdayRow}>
             {CALENDAR_WEEKDAYS.map((label) => (
               <Text key={label} style={styles.weekdayLabel}>
@@ -351,9 +389,9 @@ export default function PlannerScreen() {
               daysByIso={daysByIso}
               selectedIso={selectedDay?.iso ?? todayIso}
               movingId={movingId}
-              onPressDay={(iso) => {
+              onPressDay={(iso, from) => {
                 const day = daysByIso.get(iso);
-                if (day) openDay(day);
+                if (day) openDay(day, from);
               }}
             />
           ))}
@@ -361,6 +399,8 @@ export default function PlannerScreen() {
       )}
 
       <Pressable
+        ref={fabRef}
+        collapsable={false}
         onPress={handleAddPress}
         style={({ pressed }) => [
           styles.fab,
@@ -372,61 +412,59 @@ export default function PlannerScreen() {
         <Ionicons name="add" size={28} color={colours.surface} />
       </Pressable>
 
-      <Modal visible={sheet !== null} transparent animationType="slide" onRequestClose={closeSheets}>
-        <Pressable style={styles.backdrop} onPress={closeSheets} accessibilityLabel="Close" />
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-          {sheet === 'day' && selectedDay ? (
-            <>
-              <Text style={styles.sheetTitle}>{formatAgendaHeading(selectedDay)}</Text>
-              <Text style={styles.sheetLead}>
-                {selectedDay.title ?? 'Nothing planned yet.'}
-                {selectedDay.exercises.length > 0 ? ` ${selectedDay.exercises.join(', ')}.` : ''}
-              </Text>
-              {selectedDay.kind !== 'empty' && selectedDay.kind !== 'rest' && (
-                <SheetAction label="Open session" onPress={() => handleOpen(selectedDay)} />
-              )}
-              {selectedDay.plan && selectedDay.kind !== 'rest' && (
-                <SheetAction label="Move to another day" onPress={startMove} />
-              )}
-              <SheetAction label="Add a custom workout" onPress={openWorkouts} />
-              {selectedDay.kind !== 'rest' ? (
-                <SheetAction label="Mark rest day" onPress={handleRest} />
-              ) : (
-                <SheetAction label="Clear rest day" onPress={handleClear} />
-              )}
-              {selectedDay.plan && selectedDay.plan.status === 'planned' && (
-                <SheetAction label="Remove from this day" danger onPress={handleClear} />
-              )}
-            </>
-          ) : null}
+      <AnchoredMenu visible={sheet !== null} anchor={anchor} onClose={closeSheets}>
+        {sheet === 'day' && selectedDay ? (
+          <>
+            <MenuHeader
+              label={formatAgendaHeading(selectedDay)}
+              detail={
+                selectedDay.exercises.length > 0
+                  ? `${selectedDay.title ?? 'Nothing planned yet.'} ${selectedDay.exercises.join(', ')}.`
+                  : (selectedDay.title ?? 'Nothing planned yet.')
+              }
+            />
+            {selectedDay.kind !== 'empty' && selectedDay.kind !== 'rest' && (
+              <MenuRow label="Open session" onPress={() => handleOpen(selectedDay)} />
+            )}
+            {selectedDay.plan && selectedDay.kind !== 'rest' && (
+              <MenuRow label="Move to another day" onPress={startMove} />
+            )}
+            <MenuRow label="Add a custom workout" onPress={openWorkouts} />
+            {selectedDay.kind !== 'rest' ? (
+              <MenuRow label="Mark rest day" onPress={handleRest} />
+            ) : (
+              <MenuRow label="Clear rest day" onPress={handleClear} />
+            )}
+            {selectedDay.plan && selectedDay.plan.status === 'planned' && (
+              <MenuRow label="Remove from this day" danger onPress={handleClear} />
+            )}
+          </>
+        ) : null}
 
-          {sheet === 'workouts' ? (
-            <>
-              <Text style={styles.sheetTitle}>Add a workout</Text>
-              <Text style={styles.sheetLead}>
-                {selectedDay
+        {sheet === 'workouts' ? (
+          <>
+            <MenuHeader
+              label="Add a workout"
+              detail={
+                selectedDay
                   ? `This replaces anything already planned on ${selectedDay.weekday}.`
-                  : 'Pick a saved workout.'}
-              </Text>
-              <ScrollView>
-                {workouts.length === 0 ? (
-                  <Text style={styles.sheetLead}>
-                    Save a workout first from My workouts, then add it here.
-                  </Text>
-                ) : (
-                  workouts.map((workout) => (
-                    <SheetAction
-                      key={workout.id}
-                      label={workout.is_starter ? `${workout.name} · starter` : workout.name}
-                      onPress={() => handleAddWorkout(workout)}
-                    />
-                  ))
-                )}
-              </ScrollView>
-            </>
-          ) : null}
-        </View>
-      </Modal>
+                  : 'Pick a saved workout.'
+              }
+            />
+            {workouts.length === 0 ? (
+              <MenuHeader label="Save a workout first from My workouts, then add it here." />
+            ) : (
+              workouts.map((workout) => (
+                <MenuRow
+                  key={workout.id}
+                  label={workout.is_starter ? `${workout.name} · starter` : workout.name}
+                  onPress={() => handleAddWorkout(workout)}
+                />
+              ))
+            )}
+          </>
+        ) : null}
+      </AnchoredMenu>
     </View>
   );
 }
@@ -439,25 +477,22 @@ function AgendaDay({
 }: {
   day: PlannerDayView;
   moving: boolean;
-  onPress: () => void;
+  onPress: (from: AnchorHandle | null) => void;
   disabled: boolean;
 }) {
+  const rowRef = useRef<AnchorHandle>(null);
   const kicker =
     day.kind === 'routine' ? 'Routine' : day.kind === 'custom' ? 'Custom' : day.kind === 'rest' ? 'Rest' : null;
 
   return (
-    <View>
-      <View style={[styles.dayHeading, day.isToday && styles.dayHeadingToday]}>
-        <Text style={[styles.dayHeadingText, day.isToday && styles.dayHeadingTextToday]}>
-          {formatAgendaHeading(day)}
-        </Text>
-      </View>
-      <Pressable
-        onPress={onPress}
-        disabled={disabled}
-        style={({ pressed }) => [styles.sessionRow, moving && styles.sessionMoving, pressed && styles.pressed]}
-        accessibilityRole="button"
-        accessibilityLabel={`${formatAgendaHeading(day)}. ${day.title ?? 'Add a workout'}`}>
+    <Pressable
+      ref={rowRef}
+      collapsable={false}
+      onPress={() => onPress(rowRef.current)}
+      disabled={disabled}
+      style={({ pressed }) => [styles.sessionRow, moving && styles.sessionMoving, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={`${formatAgendaHeading(day)}. ${day.title ?? 'Add a workout'}`}>
         <View style={[styles.tick, day.completed && styles.tickDone]}>
           {day.completed ? <Ionicons name="checkmark" size={16} color={colours.surface} /> : null}
         </View>
@@ -473,8 +508,7 @@ function AgendaDay({
           ) : null}
         </View>
         <Ionicons name="chevron-forward" size={18} color={colours.textMuted} />
-      </Pressable>
-    </View>
+    </Pressable>
   );
 }
 
@@ -493,7 +527,7 @@ function MonthBlock({
   daysByIso: Map<string, PlannerDayView>;
   selectedIso: string;
   movingId: string | null;
-  onPressDay: (iso: string) => void;
+  onPressDay: (iso: string, from: AnchorHandle | null) => void;
 }) {
   const first = startOfMonth(new Date(year, month, 1));
   const lead = (first.getDay() + 6) % 7;
@@ -518,30 +552,16 @@ function MonthBlock({
           const hasWorkout = day?.kind === 'routine' || day?.kind === 'custom';
           const isMoving = movingId !== null && day?.plan?.id === movingId;
           return (
-            <Pressable
+            <MonthCell
               key={iso}
-              onPress={() => onPressDay(iso)}
-              style={styles.monthCell}
-              accessibilityRole="button"
-              accessibilityLabel={`${day?.weekday ?? ''} ${day?.dayNumber ?? ''}${hasWorkout ? ', session planned' : ''}`}>
-              <View
-                style={[
-                  styles.dateBubble,
-                  isToday && styles.dateBubbleToday,
-                  isSelected && !isToday && styles.dateBubbleSelected,
-                  isMoving && styles.dateBubbleSelected,
-                ]}>
-                <Text
-                  style={[
-                    styles.dateNumber,
-                    day?.isPast && !isToday && styles.dateNumberPast,
-                    isToday && styles.dateNumberToday,
-                  ]}>
-                  {day?.dayNumber ?? Number(iso.slice(8))}
-                </Text>
-              </View>
-              <View style={[styles.dot, hasWorkout ? styles.dotOn : styles.dotOff]} />
-            </Pressable>
+              iso={iso}
+              day={day}
+              isToday={isToday}
+              isSelected={isSelected}
+              hasWorkout={hasWorkout}
+              isMoving={isMoving}
+              onPressDay={onPressDay}
+            />
           );
         })}
       </View>
@@ -549,18 +569,49 @@ function MonthBlock({
   );
 }
 
-function SheetAction({
-  label,
-  onPress,
-  danger = false,
+function MonthCell({
+  iso,
+  day,
+  isToday,
+  isSelected,
+  hasWorkout,
+  isMoving,
+  onPressDay,
 }: {
-  label: string;
-  onPress: () => void;
-  danger?: boolean;
+  iso: string;
+  day: PlannerDayView | undefined;
+  isToday: boolean;
+  isSelected: boolean;
+  hasWorkout: boolean;
+  isMoving: boolean;
+  onPressDay: (iso: string, from: AnchorHandle | null) => void;
 }) {
+  const cellRef = useRef<AnchorHandle>(null);
   return (
-    <Pressable onPress={onPress} style={styles.sheetRow} accessibilityRole="button">
-      <Text style={[styles.sheetRowText, danger && styles.dangerText]}>{label}</Text>
+    <Pressable
+      ref={cellRef}
+      collapsable={false}
+      onPress={() => onPressDay(iso, cellRef.current)}
+      style={styles.monthCell}
+      accessibilityRole="button"
+      accessibilityLabel={`${day?.weekday ?? ''} ${day?.dayNumber ?? ''}${hasWorkout ? ', session planned' : ''}`}>
+      <View
+        style={[
+          styles.dateBubble,
+          isToday && styles.dateBubbleToday,
+          isSelected && !isToday && styles.dateBubbleSelected,
+          isMoving && styles.dateBubbleSelected,
+        ]}>
+        <Text
+          style={[
+            styles.dateNumber,
+            day?.isPast && !isToday && styles.dateNumberPast,
+            isToday && styles.dateNumberToday,
+          ]}>
+          {day?.dayNumber ?? Number(iso.slice(8))}
+        </Text>
+      </View>
+      <View style={[styles.dot, hasWorkout ? styles.dotOn : styles.dotOff]} />
     </Pressable>
   );
 }
@@ -617,6 +668,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 8,
   },
+  agenda: {
+    flex: 1,
+  },
   moveBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -647,6 +701,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 10,
     backgroundColor: colours.background,
+    zIndex: 2,
+    elevation: 3,
   },
   dayHeadingToday: {
     backgroundColor: colours.text,
@@ -833,43 +889,5 @@ const styles = StyleSheet.create({
     color: colours.textMuted,
     textAlign: 'center',
     marginTop: 8,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
-  },
-  sheet: {
-    maxHeight: '70%',
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: colours.surface,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  sheetLead: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colours.textMuted,
-    marginTop: 6,
-    marginBottom: 8,
-  },
-  sheetRow: {
-    minHeight: 56,
-    justifyContent: 'center',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
-  },
-  sheetRowText: {
-    fontSize: 17,
-    color: colours.text,
-  },
-  dangerText: {
-    color: colours.danger,
-    fontWeight: '600',
   },
 });

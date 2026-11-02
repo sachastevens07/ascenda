@@ -1,8 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
+import {
+  AnchoredMenu,
+  MenuRow,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/AnchoredMenu';
 import { colours } from '@/constants/theme';
 
 export type FilterOption<T extends string> = {
@@ -11,7 +17,7 @@ export type FilterOption<T extends string> = {
 };
 
 type FilterSheetProps<T extends string> = {
-  /** Shown on the button and as the sheet title, e.g. "Muscle". */
+  /** Shown on the button and as the menu title, e.g. "Muscle". */
   label: string;
   /** Text for the "no filter" choice, e.g. "All muscles". */
   allLabel: string;
@@ -30,11 +36,19 @@ export function FilterSheet<T extends string>({
   onChange,
   fill = true,
 }: FilterSheetProps<T>) {
-  const insets = useSafeAreaInsets();
+  const buttonRef = useRef<AnchorHandle>(null);
+  const [anchor, setAnchor] = useState<AnchorRect | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
   const selected = options.find((option) => option.value === value);
   const isActive = selected !== undefined;
+
+  function open() {
+    measureAnchor(buttonRef.current, (rect) => {
+      setAnchor(rect);
+      setIsOpen(true);
+    });
+  }
 
   function choose(next: T | null) {
     onChange(next);
@@ -46,7 +60,9 @@ export function FilterSheet<T extends string>({
   return (
     <>
       <Pressable
-        onPress={() => setIsOpen(true)}
+        ref={buttonRef}
+        collapsable={false}
+        onPress={open}
         style={[styles.button, fill && styles.buttonFill, isActive && styles.buttonActive]}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${selected?.label ?? allLabel}`}>
@@ -54,40 +70,22 @@ export function FilterSheet<T extends string>({
           {selected?.label ?? label}
         </Text>
         <Ionicons
-          name="chevron-down"
+          name={isOpen ? 'chevron-up' : 'chevron-down'}
           size={18}
           color={isActive ? colours.accent : colours.textMuted}
         />
       </Pressable>
 
-      <Modal
-        visible={isOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setIsOpen(false)} accessibilityLabel="Close" />
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-          <Text style={styles.sheetTitle}>{label}</Text>
-          <ScrollView>
-            {rows.map((row) => {
-              const isSelected = row.value === value;
-              return (
-                <Pressable
-                  key={row.value ?? 'all'}
-                  onPress={() => choose(row.value)}
-                  style={styles.row}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isSelected }}>
-                  <Text style={[styles.rowText, isSelected && styles.rowTextSelected]}>
-                    {row.label}
-                  </Text>
-                  {isSelected && <Ionicons name="checkmark" size={22} color={colours.accent} />}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      </Modal>
+      <AnchoredMenu visible={isOpen} anchor={anchor} onClose={() => setIsOpen(false)} minWidth={200}>
+        {rows.map((row) => (
+          <MenuRow
+            key={row.value ?? 'all'}
+            label={row.label}
+            selected={row.value === value}
+            onPress={() => choose(row.value)}
+          />
+        ))}
+      </AnchoredMenu>
     </>
   );
 }
@@ -119,40 +117,6 @@ const styles = StyleSheet.create({
     color: colours.text,
   },
   buttonTextActive: {
-    color: colours.accent,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
-  },
-  sheet: {
-    maxHeight: '70%',
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: colours.surface,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 56,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
-  },
-  rowText: {
-    fontSize: 17,
-    color: colours.text,
-  },
-  rowTextSelected: {
-    fontWeight: '700',
     color: colours.accent,
   },
 });

@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AnchoredMenu, MenuRow, measureAnchor, type AnchorHandle, type AnchorRect } from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
 import { ProMark } from '@/components/ProBadge';
 import { SwapSheet } from '@/components/SwapSheet';
@@ -70,6 +71,8 @@ export default function SessionDetailScreen() {
   const [slots, setSlots] = useState<DraftSlot[]>([]);
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const dayPickerRef = useRef<AnchorHandle>(null);
+  const [pickerAnchor, setPickerAnchor] = useState<AnchorRect | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [isSavingWorkout, setIsSavingWorkout] = useState(false);
   const [loadState, setLoadState] = useState<'loading' | 'error' | 'ready'>('loading');
@@ -401,8 +404,15 @@ export default function SessionDetailScreen() {
 
         {weekDays.length > 1 && (
           <Pressable
+            ref={dayPickerRef}
+            collapsable={false}
             style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-            onPress={() => setIsPickerOpen(true)}
+            onPress={() => {
+              measureAnchor(dayPickerRef.current, (rect) => {
+                setPickerAnchor(rect);
+                setIsPickerOpen(true);
+              });
+            }}
             accessibilityRole="button">
             <Text style={styles.outlineButtonText}>Do a different day</Text>
           </Pressable>
@@ -437,44 +447,26 @@ export default function SessionDetailScreen() {
         </Pressable>
       </ScrollView>
 
-      <Modal
+      <AnchoredMenu
         visible={isPickerOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsPickerOpen(false)}>
-        <Pressable
-          style={styles.backdrop}
-          onPress={() => setIsPickerOpen(false)}
-          accessibilityLabel="Close"
-        />
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
-          <Text style={styles.sheetTitle}>Week {planned.weekNumber}</Text>
-          <ScrollView>
-            {weekDays.map((day) => {
-              const isSelected = day.id === planned.day.id;
-              const next = routine ? findPlannedSession(routine, day.id) : null;
-              return (
-                <Pressable
-                  key={day.id}
-                  onPress={() => {
-                    if (next) applyDay(next);
-                    setIsPickerOpen(false);
-                  }}
-                  style={styles.sheetRow}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isSelected }}>
-                  <View style={styles.exerciseText}>
-                    <Text style={[styles.sheetRowText, isSelected && styles.sheetRowTextSelected]}>
-                      Day {day.day_number}: {day.name}
-                    </Text>
-                  </View>
-                  {isSelected && <Ionicons name="checkmark" size={22} color={colours.accent} />}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      </Modal>
+        anchor={pickerAnchor}
+        onClose={() => setIsPickerOpen(false)}>
+        {weekDays.map((day) => {
+          const isSelected = day.id === planned.day.id;
+          const next = routine ? findPlannedSession(routine, day.id) : null;
+          return (
+            <MenuRow
+              key={day.id}
+              label={`Day ${day.day_number}: ${day.name}`}
+              selected={isSelected}
+              onPress={() => {
+                if (next) applyDay(next);
+                setIsPickerOpen(false);
+              }}
+            />
+          );
+        })}
+      </AnchoredMenu>
     </View>
   );
 }
@@ -682,40 +674,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colours.surface,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
-  },
-  sheet: {
-    maxHeight: '70%',
-    paddingTop: 20,
-    paddingHorizontal: 24,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    backgroundColor: colours.surface,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 8,
-  },
-  sheetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 64,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
-  },
-  sheetRowText: {
-    fontSize: 17,
-    color: colours.text,
-  },
-  sheetRowTextSelected: {
-    fontWeight: '700',
-    color: colours.accent,
   },
   pressed: {
     opacity: 0.7,
