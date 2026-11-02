@@ -2,7 +2,46 @@
 
 Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules), then this file.
 
-## Done
+`AGENTS.md` is the v2.1 brief (copied 2 Nov 2026). Current phase is **v2.1 (S1–S12)** once v2.0 and M1 are confirmed. Do not start AI or food. Older v1.0–v1.2 notes below are historical.
+
+## Current status (checked against the code, 2 Nov 2026)
+
+Git: `main` at `c0a910a` (“First backup commit”), working tree clean besides this handoff. R2–R11 landed in that backup, not as separate task commits. SQL is still pasted by hand; this repo cannot see the remote database.
+
+### v2.0 (R1–R11)
+
+| Task | Code | Notes |
+| --- | --- | --- |
+| **R1** Remove cycle notes | **Done** | Cycle UI, export column, profile flags and `src/lib/cycle.ts` are gone. `supabase/cycle.sql` is a stub. `supabase/remove_cycle_notes.sql` is written and **not confirmed run**. |
+| **R2** New navigation | **Done** | Tabs are Home, Planner, Activity, Profile. Library is `src/app/library.tsx`, opened from Home and the workout editor. |
+| **R3** Routines | **Done** | Six launch routines in `supabase/routines.sql` and `src/lib/routines.ts`. Enrolments, tags, weeks/days/exercises. SQL **not confirmed run**. |
+| **R4** Home / routine / session detail | **Done** | Featured row, next-session card, routine detail, session detail → existing logger. Free users are sent to the paywall and cannot open a Pro routine at all (S3 will allow a week-1 preview). |
+| **R5** Custom workout builder | **Done, cap bug** | Create / edit / duplicate / delete / add to planner. Free cap is 4, but `countOwnedCustomWorkouts()` and the My workouts list count the **shared starter** toward that 4, so a free user only gets **3 owned** workouts. Duplicate custom already hits the cap. There is **no** duplicate-routine / save-from-routine path. RLS does not enforce the cap. Fixed in S1. |
+| **R6** Planner | **Done** | Agenda from today through ~3 months, month calendar toggle, move / rest / add custom. Feeds Activity “X of Y”. |
+| **R7** Gym unlocked | **Done** | Quiet Mode, level-up offers and the confidence card are off the screens. `confidence_history`, `quiet_mode`, `confidence_level` and `exercises.zone` stay in the DB. Dead files remain: `src/components/LevelUpCard.tsx`, `src/lib/levelUp.ts` (profile still writes history). Exercise detail is a first-time guide. Activity shows Gym unlocked badges. |
+| **R8** Activity tab | **Done** | Header (sessions, weighted lifts, hours), this week X of Y, weekly streak with a rest-week pass, Progress / Achievements, progress photos, post-session wins. `supabase/activity.sql` **not confirmed run**. Streak goal chips still sit on Activity (S5 moves them to Profile). |
+| **R9** Onboarding | **Done** | Short screens, insights, plan reveal, then a queued paywall. Existing users are not re-quizzed. `supabase/onboarding_v2.sql` **not confirmed run**. Notification permission is still asked by the rest timer, not after the first session. |
+| **R10** Paywall | **Done** | Entitlement `ascenda_pro`, yearly pre-selected, contextual `openPaywall(reason)`. Free Home row is the two starter routines. Swaps and progression stay Pro. No reusable Pro badge yet (S3). |
+| **R11** Photos | **Done** | Six Pexels covers in `assets/covers/` + `src/lib/images.ts`. Fourteen exercise photos in `assets/exercises/` + `src/lib/exerciseMedia.ts`. Bundled files show even before `routine_covers.sql` / `exercise_media.sql` are run. Those files are **not confirmed run**. |
+
+v2.0 leftover that is **not** a missing R task: PostHog, Sign in with Apple, lbs setting, EAS / TestFlight, email verification (now S12).
+
+### M1 MuscleWiki videos — **partly done** (do not treat as complete)
+
+**Present:** `supabase/musclewiki.sql` (adds `musclewiki_id`, `mw_video_urls`, `mw_cached_at`); one-off match script `scripts/match-musclewiki.mjs`; apply script `scripts/apply-musclewiki-ids.mjs`; `scripts/musclewiki-matches.csv` with **55** approved ids; `supabase/musclewiki_ids.sql`.
+
+**Missing:** Supabase CLI, `supabase/config.toml`, `supabase/functions` (`mw-exercise`, `mw-media-token`), in-app tap-to-play player, media tokens. The app never reads `musclewiki_id`. No video library in the app.
+
+S1 does not depend on M1. The brief says to flag unfinished v2.0/M1 work before starting v2.1 — M1 is the unfinished one.
+
+### v2.1 (S1–S12) — **not started**
+
+Next task: **S1. Fix the duplicate loophole.** Then S2–S12 in order.
+
+## Done (historical)
+
+The numbered list and v1.1 / v1.2 / v2.0 bullets below are what was built, kept for handoff. Prefer the table above when it disagrees.
+
 
 1. **App shell**: root `Stack` (`src/app/_layout.tsx`) + swipeable tabs Home / Planner / Activity / Profile (`src/app/(tabs)/_layout.tsx`, `expo-router/js-top-tabs`) with a custom floating pill tab bar (`src/components/PillTabBar.tsx`). Library is a stack screen (`src/app/library.tsx`), not a tab.
 2. **Auth**: Supabase email + password (`src/lib/supabase.ts`, `src/lib/auth.tsx`); `Stack.Protected` shows only `src/app/sign-in.tsx` when signed out; session kept in AsyncStorage.
@@ -54,9 +93,9 @@ Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules)
 
 ## In progress
 
-**R11 is coded.** Cover photos show from the bundled files even before `routine_covers.sql` is run. The 14 exercise photos show from `assets/exercises/` even before `exercise_media.sql` is run. Those two files are **not run yet**. Existing onboarded users are not sent through the quiz again.
+v2.0 code is in. v2.1 has not been started. M1 is only the match pipeline.
 
-The user said on 24 Oct that earlier SQL files (including `routines.sql` and `planned_sessions.sql`) were already pasted in. `activity.sql` and `onboarding_v2.sql` are still waiting. Workout history stays. Without `onboarding_v2.sql`, the quiz still saves the old fields; new answers stay on the phone until the file is run. Without `activity.sql`, streak goal stays at 8.
+The user said on 24 Oct that earlier SQL files (including `routines.sql` and `planned_sessions.sql`) were already pasted in. `activity.sql` and `onboarding_v2.sql` were still waiting, and R11 cover/media SQL plus `remove_cycle_notes.sql` were not confirmed. Workout history stays. Without `onboarding_v2.sql`, the quiz still saves the old fields; new answers stay on the phone until the file is run. Without `activity.sql`, streak goal stays at 8.
 
 Also still on the user's side:
 - **Run SQL (not confirmed yet)**: `supabase/zones.sql` (C1), then `supabase/onboarding_v1_1.sql` (C2), then `supabase/quiet_mode.sql` (C3), then `supabase/level_up.sql` (C5), then `supabase/custom_workouts.sql` (P1), then `supabase/blocks.sql` (P2), then `supabase/remove_cycle_notes.sql` (v2.0 R1, after the user confirms), then `supabase/routines.sql` (v2.0 R3, after the user confirms), then `supabase/planned_sessions.sql` (v2.0 R5, after the user confirms), then `supabase/activity.sql` (v2.0 R8, after the user confirms), then `supabase/onboarding_v2.sql` (v2.0 R9, after the user confirms), then `supabase/routine_covers.sql` (v2.0 R11, after the user confirms), then `supabase/exercise_media.sql` (v2.0 R11 exercise photos, after the user confirms). Until the first three are run the app is broken: Library/exercise detail fail (no `exercises.zone`) and the profile can't load (no `confidence_level` / `quiet_mode`). Without `level_up.sql`, Today still loads but C5 never appears. Without `custom_workouts.sql`, Today and the programme logger still work; My workouts is empty and Start/Save say to run that file. Without `blocks.sql`, Today still loads and the week line / target bars stay hidden. Without `remove_cycle_notes.sql` the leftover cycle columns sit unused; the app no longer reads them. Without `routines.sql`, Home / logger still work; Profile → Routines is empty and says to run that file. Without `planned_sessions.sql`, Add to planner says to run that file. Without `activity.sql`, Activity still loads; streak goal stays 8, photos explain the file, and time uses clock stamps if duration is empty. Without `onboarding_v2.sql`, onboarding still completes using the old profile columns. Checks: `select zone, count(*) from public.exercises group by zone order by zone;` → 89 / 39 / 29 / 18; `select confidence, confidence_level, age_confirmed_at, quiet_mode from public.profiles;` → every quiz-done profile has a level, `quiet_mode` is false; `\d public.confidence_history` and `\d public.level_challenges` exist; `select name, is_starter from public.custom_workouts;` → one starter row; `select source from public.sessions limit 1;` works; `select status, start_date, length_weeks from public.blocks;` → one `active` row per programme user; `select block_id from public.sessions limit 1;` works. After R1: `\d public.sessions` has no `cycle_phase`; `\d public.profiles` has no `cycle_tracking_enabled` / `cycle_consent_at`. After R3: `select id, is_pro, length_weeks from public.routines order by sort_order;` → 6 rows (2 free, 4 Pro); `select count(*) from public.routine_enrolments where status = 'active';` → one per user whose `programme_id` is `full-body-3`, `upper-lower-4` or `lower-body-3` (and anyone who tapped Start). After R5: `\d public.planned_sessions` exists.
@@ -68,7 +107,9 @@ Also still on the user's side:
 
 ## Next step
 
-v2.0 R1–R11 are coded. Do not start later phases (AI, food) unless asked. Still not built: PostHog analytics, Sign in with Apple, lbs setting, EAS development build. Next product step in the brief is TestFlight with 15–20 testers.
+**v2.1 S1 — fix the duplicate loophole** (after the user approves the plan). Do not start S2 until S1 is tested, `PROGRESS.md` updated and committed. M1 is unfinished; S1 does not need videos. Do not start AI or food.
+
+Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification is S12.
 
 ## Known bugs / issues
 
@@ -87,7 +128,9 @@ v2.0 R1–R11 are coded. Do not start later phases (AI, food) unless asked. Stil
 - The user often has two dev servers running (ports 8081 and 8082): the phone attaches to the stale one and `.expo/types/router.d.ts` gets corrupted, so `tsc` fails inside it. Delete that file (generated) and run one server.
 - `src/components/PlaceholderScreen.tsx` is unused (left in place).
 - **Export on iOS**: no Open button (no intent launcher; she opens it from Files), and exporting twice on the same day to the same folder is untested (Android adds " (1)" itself).
-- **`AGENTS.md` is now the v2.0 redesign brief** (copied 24 Oct from the user's rewrite). Older v1.1/v1.2 notes in this file still describe what was built; later user choices still win where they differ (CSV export is now .xlsx; days 1–6; 9 programme templates; free users can log their assigned day; progression uses set 1 only).
+- **`AGENTS.md` is the v2.1 brief** (copied 2 Nov 2026 from the user's rewrite). Older v1.1/v1.2 notes in this file still describe what was built; later user choices still win where they differ (CSV export is now .xlsx; days 1–6; 9 programme templates; free users can log their assigned day; progression uses set 1 only).
+- **M1 is not done.** Match SQL/scripts exist; no Edge Functions and no in-app video player.
+- **S1 is the next code task.** Free custom-workout cap currently counts the shared starter; there is no duplicate-routine path.
 - **Paywall not tested with real money paths**: Expo Go can only use RevenueCat's Test Store (`test_` key); App Store / Google Play purchases, Manage subscription (`showManageSubscriptions` does nothing in Expo Go) and the trial notification need a development build. With no RevenueCat key the app runs as Free and the paywall says "Pro isn't available to buy yet".
 - Free users' existing "Every time" swaps still apply on Today and in the logger (they just can't add or change swaps).
 - `AGENTS.md` says run `npx expo lint`, but there's no ESLint config, so lint can't run.
