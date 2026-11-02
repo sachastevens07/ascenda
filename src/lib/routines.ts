@@ -15,6 +15,14 @@ export const LAUNCH_ROUTINE_IDS = [
   'busy-gym-6',
   'upper-lower-4',
   'lower-body-3',
+  'full-body-2',
+  'home-strength-6',
+  'upper-body-6',
+  'glute-builder-6',
+  'joint-friendly-6',
+  'short-cycle-4',
+  'barbell-strength-8',
+  'one-spot-2',
 ] as const;
 
 export type RoutineGoal = 'strength' | 'glutes_legs' | 'general' | 'confidence';

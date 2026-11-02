@@ -39,7 +39,7 @@ function entry(
 }
 
 /**
- * Local reference for the six launch covers. Add a row here when you add an `images` row.
+ * Local reference for routine covers. Add a row here when you add an `images` row.
  * To replace a photo: upload `{id}.jpg` to the `routine-covers` bucket and set `images.url`
  * to that public URL, or change `images.url` to any other licensed URL.
  */
@@ -85,6 +85,62 @@ export const IMAGE_CATALOGUE: Record<string, ImageCatalogueEntry> = {
     'Andrea Piacquadio',
     '3775566',
     require('../../assets/covers/cover-lower-body-3.jpg')
+  ),
+  'cover-full-body-2': entry(
+    'cover-full-body-2',
+    'Women training with dumbbells in a bright gym',
+    'Andrea Piacquadio',
+    '3768696',
+    require('../../assets/covers/cover-full-body-2.jpg')
+  ),
+  'cover-home-strength-6': entry(
+    'cover-home-strength-6',
+    'Woman training on a stability ball',
+    'Andrea Piacquadio',
+    '3757377',
+    require('../../assets/covers/cover-home-strength-6.jpg')
+  ),
+  'cover-upper-body-6': entry(
+    'cover-upper-body-6',
+    'Woman doing a shoulder press on a gym machine',
+    'Andrea Piacquadio',
+    '3775576',
+    require('../../assets/covers/cover-upper-body-6.jpg')
+  ),
+  'cover-glute-builder-6': entry(
+    'cover-glute-builder-6',
+    'Woman using gym equipment for lower-body work',
+    'Andrea Piacquadio',
+    '3775567',
+    require('../../assets/covers/cover-glute-builder-6.jpg')
+  ),
+  'cover-joint-friendly-6': entry(
+    'cover-joint-friendly-6',
+    'Woman sitting with a fit ball in a gym',
+    'Andrea Piacquadio',
+    '3768593',
+    require('../../assets/covers/cover-joint-friendly-6.jpg')
+  ),
+  'cover-short-cycle-4': entry(
+    'cover-short-cycle-4',
+    'Women in a group dumbbell session',
+    'Andrea Piacquadio',
+    '863926',
+    require('../../assets/covers/cover-short-cycle-4.jpg')
+  ),
+  'cover-barbell-strength-8': entry(
+    'cover-barbell-strength-8',
+    'Woman lifting weights in a gym',
+    'Andrea Piacquadio',
+    '3768162',
+    require('../../assets/covers/cover-barbell-strength-8.jpg')
+  ),
+  'cover-one-spot-2': entry(
+    'cover-one-spot-2',
+    'Women training with dumbbells in a bright studio',
+    'Andrea Piacquadio',
+    '3768690',
+    require('../../assets/covers/cover-one-spot-2.jpg')
   ),
 };
 

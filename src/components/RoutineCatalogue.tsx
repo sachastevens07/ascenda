@@ -132,7 +132,7 @@ export function RoutineCatalogue({
       <Text style={[styles.intro, !showTitle && styles.introFlush]}>
         {routineType === 'stretch'
           ? 'Short timed sessions for mornings, desks, hips and cool-downs. Three are free. Holds, not sets and reps.'
-          : 'Six plans to start with. Filter by tag, then open a plan to see the week-by-week details. Pro plans show week 1 on the free plan.'}
+          : 'Filter by tag, then open a plan to see the week-by-week details. Two starters are free. Pro plans show week 1 on the free plan.'}
       </Text>
 
       {path && routineType === 'strength' && (

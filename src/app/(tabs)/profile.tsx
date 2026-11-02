@@ -273,7 +273,7 @@ export default function ProfileScreen() {
         <Text style={styles.label}>
           {enrolment
             ? `${enrolment.routine.name} · week ${currentEnrolmentWeek(enrolment)} of ${enrolment.routine.length_weeks}`
-            : 'Browse the six launch plans and start one. Home will use this next.'}
+            : 'Browse the catalogue and start one. Home will use this next.'}
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
