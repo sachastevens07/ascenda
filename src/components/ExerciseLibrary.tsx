@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FilterSheet, type FilterOption } from '@/components/FilterSheet';
 import { colours } from '@/constants/theme';
+import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
 import {
   EQUIPMENT,
   EQUIPMENT_LABELS,
@@ -161,7 +162,7 @@ export function ExerciseLibrary({
         <View style={styles.centre}>
           <Text style={styles.emptyTitle}>We couldn’t load the library</Text>
           <Text style={styles.emptyText}>Check your connection and try again.</Text>
-          {__DEV__ && errorDetail && <Text style={styles.errorDetail}>{errorDetail}</Text>}
+          {SHOW_DEV_TOOLS && errorDetail && <Text style={styles.errorDetail}>{errorDetail}</Text>}
           <Pressable
             style={styles.retry}
             onPress={() => {

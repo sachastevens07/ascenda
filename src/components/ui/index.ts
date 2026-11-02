@@ -1,0 +1,24 @@
+/** Shared visual kit for the redesign. Wire these in screen-by-screen; do not restyle old screens from here. */
+
+export {
+  ButtonRow,
+  DestructiveTextButton,
+  PrimaryButton,
+  SecondaryButton,
+  TextButton,
+} from './Buttons';
+export { IconButton } from './IconButton';
+export { AchievementBadge, FreeBadge, LockedOverlay, ProBadge, ProMark } from './Badges';
+export { Chip, EmptyState, HeroImage, ImageCard, StatTile, Tag } from './Cards';
+export { ListRow, SectionHeader, StickyDayHeader } from './List';
+export { ProgressBar, ProgressRing } from './Progress';
+export { RestTimerBar, SetRow } from './Workout';
+
+export {
+  AnchoredMenu as OverflowMenu,
+  MenuHeader,
+  MenuRow,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/AnchoredMenu';

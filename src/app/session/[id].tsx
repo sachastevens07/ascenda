@@ -680,9 +680,6 @@ export default function SessionScreen() {
           <Text style={styles.linkText}>Discard session</Text>
         </Pressable>
 
-        <Text style={styles.disclaimer}>
-          General fitness guidance, not medical advice. Stop if anything hurts.
-        </Text>
       </ScrollView>
 
       {restEndsAt !== null && (
@@ -948,12 +945,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colours.textMuted,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
   },
   restBar: {
     position: 'absolute',

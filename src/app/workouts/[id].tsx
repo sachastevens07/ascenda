@@ -261,9 +261,6 @@ export default function WorkoutEditorScreen() {
           <Text style={styles.primaryText}>{isSaving ? 'Saving…' : 'Save workout'}</Text>
         </Pressable>
 
-        <Text style={styles.disclaimer}>
-          General fitness guidance, not medical advice. Stop if anything hurts.
-        </Text>
       </ScrollView>
 
       <ExercisePicker
@@ -461,12 +458,6 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 17,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
     color: colours.textMuted,
     textAlign: 'center',
   },

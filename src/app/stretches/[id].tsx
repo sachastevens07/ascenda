@@ -210,10 +210,6 @@ export default function StretchDetailScreen() {
         </View>
       )}
 
-      <Text style={styles.disclaimer}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
-
       <Pressable
         style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
         onPress={() => void handleStart()}
@@ -397,13 +393,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: colours.surface,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 8,
   },
   pressed: {
     opacity: 0.7,

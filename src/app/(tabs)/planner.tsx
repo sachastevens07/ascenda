@@ -399,9 +399,6 @@ export default function PlannerScreen() {
                 accessibilityRole="button">
                 <Text style={styles.linkText}>My workouts</Text>
               </Pressable>
-              <Text style={styles.disclaimer}>
-                General fitness guidance, not medical advice. Stop if anything hurts.
-              </Text>
             </View>
           }
         />
@@ -947,12 +944,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 8,
   },
 });

@@ -137,9 +137,6 @@ export default function ProgrammeScreen() {
         </View>
       ))}
 
-      <Text style={styles.disclaimer}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
     </ScrollView>
   );
 }
@@ -241,12 +238,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colours.accent,
     marginTop: 1,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 4,
   },
 });

@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colours } from '@/constants/theme';
+import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
 import {
   EQUIPMENT_LABELS,
   EXERCISE_MEDIA_BUCKET,
@@ -122,7 +123,7 @@ export default function ExerciseScreen() {
         <View style={[styles.media, styles.mediaPlaceholder, { width: mediaWidth, height: mediaHeight }]}>
           <Ionicons name="barbell-outline" size={48} color={colours.accent} />
           <Text style={styles.mediaPlaceholderText}>Demo image coming soon</Text>
-          {__DEV__ && (
+          {SHOW_DEV_TOOLS && (
             <Text style={styles.mediaDevHint}>
               Upload {exercise.id}.jpg to the {EXERCISE_MEDIA_BUCKET} bucket
             </Text>
@@ -213,9 +214,6 @@ export default function ExerciseScreen() {
         )}
       </View>
 
-      <Text style={styles.disclaimer}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
     </ScrollView>
   );
 }
@@ -374,12 +372,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 4,
   },
 });

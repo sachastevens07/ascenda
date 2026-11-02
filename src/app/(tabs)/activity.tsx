@@ -660,9 +660,6 @@ export default function ActivityScreen() {
           </>
         )}
 
-        <Text style={styles.disclaimer}>
-          General fitness guidance, not medical advice. Stop if anything hurts.
-        </Text>
       </ScrollView>
 
       <AnchoredMenu
@@ -1242,11 +1239,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
   },
 });

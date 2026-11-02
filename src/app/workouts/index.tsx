@@ -313,10 +313,6 @@ export default function WorkoutsScreen() {
         ))
       )}
 
-      <Text style={styles.disclaimer}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
-
       <AnchoredMenu
         visible={plannerWorkout !== null}
         anchor={plannerAnchor}
@@ -515,12 +511,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 8,
   },
 });

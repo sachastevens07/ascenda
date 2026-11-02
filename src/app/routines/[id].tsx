@@ -399,10 +399,6 @@ export default function RoutineDetailScreen() {
         );
       })}
 
-      <Text style={styles.disclaimer}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
-
       <Pressable
         style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
         onPress={handleDuplicate}
@@ -664,14 +660,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colours.textMuted,
     marginTop: 2,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 20,
   },
   outlineButton: {
     minHeight: 56,

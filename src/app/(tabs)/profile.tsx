@@ -40,6 +40,7 @@ import {
   useSubscription,
   type ProStatus,
 } from '@/lib/subscription';
+import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
 import { supabase } from '@/lib/supabase';
 
 function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
@@ -253,7 +254,7 @@ export default function ProfileScreen() {
             </ProMark>
           )}
         </Pressable>
-        {__DEV__ && (
+        {SHOW_DEV_TOOLS && (
           <Pressable
             style={styles.link}
             onPress={() => {
@@ -321,7 +322,7 @@ export default function ProfileScreen() {
               </ProMark>
             )}
           </Pressable>
-          {__DEV__ && (
+          {SHOW_DEV_TOOLS && (
             <Pressable style={styles.devLink} onPress={handleDevRestartBlock} accessibilityRole="button">
               <Text style={styles.devText}>Development only. Restart 8-week block</Text>
             </Pressable>
@@ -383,6 +384,10 @@ export default function ProfileScreen() {
         accessibilityRole="button">
         <Text style={styles.buttonText}>{isSigningOut ? 'Signing out…' : 'Sign out'}</Text>
       </Pressable>
+
+      <Text style={styles.disclaimer}>
+        General fitness guidance, not medical advice. Stop if anything hurts.
+      </Text>
     </ScrollView>
   );
 }
@@ -513,5 +518,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     color: colours.accent,
+  },
+  disclaimer: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colours.textMuted,
+    textAlign: 'center',
+    marginTop: 24,
   },
 });
