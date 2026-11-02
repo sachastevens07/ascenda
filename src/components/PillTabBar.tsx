@@ -40,12 +40,16 @@ export function PillTabBar({
   const [innerWidth, setInnerWidth] = useState(0);
   const { setHeight } = useContext(TabBarHeightContext);
 
-  const tabWidth = innerWidth / state.routes.length;
+  const tabCount = Math.max(state.routes.length, 1);
+  const tabWidth = innerWidth / tabCount;
   const indexes = state.routes.map((_, index) => index);
-  const translateX = position.interpolate({
-    inputRange: indexes,
-    outputRange: indexes.map((index) => index * tabWidth),
-  });
+  const translateX =
+    innerWidth > 0
+      ? position.interpolate({
+          inputRange: indexes,
+          outputRange: indexes.map((index) => index * tabWidth),
+        })
+      : 0;
 
   return (
     <View
@@ -53,50 +57,52 @@ export function PillTabBar({
       pointerEvents="box-none"
       onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
       <WorkoutBar />
-      <View
-        style={styles.pill}
-        onLayout={(event) => setInnerWidth(event.nativeEvent.layout.width - PILL_PADDING * 2)}>
-        {innerWidth > 0 && (
-          <Animated.View
-            style={[styles.indicator, { width: tabWidth, transform: [{ translateX }] }]}
-          />
-        )}
-        {state.routes.map((route, index) => {
-          const { title, tabBarIcon } = descriptors[route.key].options;
-          const focused = state.index === index;
-          const colour = focused ? colours.accent : colours.textMuted;
-          const label = title ?? route.name;
+      <View style={styles.pill}>
+        <View
+          style={styles.pillInner}
+          onLayout={(event) => setInnerWidth(event.nativeEvent.layout.width)}>
+          {innerWidth > 0 && (
+            <Animated.View
+              style={[styles.indicator, { width: tabWidth, transform: [{ translateX }] }]}
+            />
+          )}
+          {state.routes.map((route, index) => {
+            const { title, tabBarIcon } = descriptors[route.key].options;
+            const focused = state.index === index;
+            const colour = focused ? colours.accent : colours.textMuted;
+            const label = title ?? route.name;
 
-          const onPress = () => {
-            const event = emitter.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-            if (!focused && !event.defaultPrevented) {
-              navigateToTab(route.key);
-            }
-          };
+            const onPress = () => {
+              const event = emitter.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+              if (!focused && !event.defaultPrevented) {
+                navigateToTab(route.key);
+              }
+            };
 
-          return (
-            <Pressable
-              key={route.key}
-              onPress={onPress}
-              style={styles.tab}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: focused }}
-              accessibilityLabel={label}>
-              {tabBarIcon?.({ focused, color: colour })}
-              <Text
-                style={[styles.label, { color: colour }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.8}>
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
+            return (
+              <Pressable
+                key={route.key}
+                onPress={onPress}
+                style={styles.tab}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: focused }}
+                accessibilityLabel={label}>
+                {tabBarIcon?.({ focused, color: colour })}
+                <Text
+                  style={[styles.label, { color: colour }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -108,12 +114,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
   },
   pill: {
-    flexDirection: 'row',
     padding: PILL_PADDING,
     borderRadius: 999,
+    overflow: 'hidden',
     backgroundColor: colours.surface,
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -121,23 +127,33 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 6,
   },
+  pillInner: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
   indicator: {
     position: 'absolute',
-    top: PILL_PADDING,
-    bottom: PILL_PADDING,
-    left: PILL_PADDING,
+    top: 0,
+    bottom: 0,
+    left: 0,
     borderRadius: 999,
     backgroundColor: colours.accentSoft,
   },
   tab: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 56,
+    paddingHorizontal: 2,
     gap: 2,
+    zIndex: 1,
   },
   label: {
+    width: '100%',
     fontSize: 11,
     fontWeight: '600',
+    textAlign: 'center',
   },
 });

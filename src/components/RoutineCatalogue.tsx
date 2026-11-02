@@ -6,9 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
 import { FilterSheet } from '@/components/FilterSheet';
+import { ProBadge } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import { coverForRoutine } from '@/lib/images';
-import { openPaywall } from '@/lib/paywall';
 import {
   abandonActiveEnrolment,
   collectRoutineTags,
@@ -20,7 +20,6 @@ import {
   type RoutineEnrolment,
   type RoutineSummary,
 } from '@/lib/routines';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -33,7 +32,6 @@ export function RoutineCatalogue({
 }) {
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
-  const { isPro } = useSubscription();
   const [routines, setRoutines] = useState<RoutineSummary[]>([]);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -91,10 +89,6 @@ export function RoutineCatalogue({
   }
 
   function openDetails(summary: RoutineSummary) {
-    if (summary.is_pro && !isPro) {
-      openPaywall('routine');
-      return;
-    }
     router.push({ pathname: '/routines/[id]', params: { id: summary.id } } as Href);
   }
 
@@ -104,7 +98,8 @@ export function RoutineCatalogue({
       contentContainerStyle={[styles.container, { paddingBottom }]}>
       {showTitle ? <Text style={styles.title}>Routines</Text> : null}
       <Text style={[styles.intro, !showTitle && styles.introFlush]}>
-        Six plans to start with. Filter by tag, then open a free plan to see the week-by-week details.
+        Six plans to start with. Filter by tag, then open a plan to see the week-by-week details. Pro
+        plans show week 1 on the free plan.
       </Text>
 
       {enrolment && (
@@ -173,9 +168,11 @@ export function RoutineCatalogue({
                 style={styles.cover}
               />
               <View style={styles.chipRow}>
-                <Text style={[styles.chip, !summary.is_pro && styles.chipFree]}>
-                  {summary.is_pro ? 'Pro' : 'Free'}
-                </Text>
+                {summary.is_pro ? (
+                  <ProBadge />
+                ) : (
+                  <Text style={[styles.chip, styles.chipFree]}>Free</Text>
+                )}
                 {isCurrent && <Text style={[styles.chip, styles.chipCurrent]}>Current</Text>}
               </View>
               <Text style={styles.cardTitle}>{summary.name}</Text>
@@ -195,9 +192,7 @@ export function RoutineCatalogue({
                 style={({ pressed }) => [styles.button, pressed && styles.pressed]}
                 onPress={() => openDetails(summary)}
                 accessibilityRole="button">
-                <Text style={styles.buttonText}>
-                  {summary.is_pro && !isPro ? 'Start with Pro' : 'See more details'}
-                </Text>
+                <Text style={styles.buttonText}>See more details</Text>
               </Pressable>
             </View>
           );
@@ -267,6 +262,8 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 8,
   },
   chip: {
@@ -278,7 +275,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     overflow: 'hidden',
-    marginRight: 8,
   },
   chipFree: {
     color: colours.surface,

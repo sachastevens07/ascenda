@@ -4,6 +4,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { ProMark } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import {
   FREE_CUSTOM_WORKOUT_LIMIT,
@@ -249,7 +250,13 @@ export default function WorkoutsScreen() {
           onPress={handleCreate}
           disabled={busyId !== null}
           accessibilityRole="button">
-          <Text style={styles.primaryText}>{atLimit ? 'Create with Pro' : 'Create workout'}</Text>
+          {atLimit ? (
+            <ProMark locked textStyle={styles.primaryText}>
+              Create with Pro
+            </ProMark>
+          ) : (
+            <Text style={styles.primaryText}>Create workout</Text>
+          )}
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}

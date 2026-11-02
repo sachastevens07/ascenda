@@ -250,7 +250,7 @@ export default function OnboardingScreen() {
       const picked = pickRecommendedRoutine(routines, answers);
       setRecommended(picked);
       if (picked) {
-        const detail = await fetchRoutine(picked.id).catch(() => null);
+        const detail = await fetchRoutine(picked.id, { includeLockedWeeks: isPro }).catch(() => null);
         setProjection(detail ? projectKeyLift(detail) : null);
       } else {
         setProjection(null);

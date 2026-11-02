@@ -5,6 +5,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { ProMark } from '@/components/ProBadge';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
 import {
@@ -412,13 +413,15 @@ export default function SessionDetailScreen() {
           onPress={handleSaveWorkout}
           disabled={isSavingWorkout || isStarting || slots.length === 0}
           accessibilityRole="button">
-          <Text style={styles.outlineButtonText}>
-            {isSavingWorkout
-              ? 'Saving…'
-              : routine.is_pro && !isPro
-                ? 'Save as workout with Pro'
-                : 'Save as workout'}
-          </Text>
+          {routine.is_pro && !isPro && !isSavingWorkout ? (
+            <ProMark locked textStyle={styles.outlineButtonText}>
+              Save as workout with Pro
+            </ProMark>
+          ) : (
+            <Text style={styles.outlineButtonText}>
+              {isSavingWorkout ? 'Saving…' : 'Save as workout'}
+            </Text>
+          )}
         </Pressable>
 
         <Pressable

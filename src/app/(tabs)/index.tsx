@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
+import { ProBadge, ProMark } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import { coverForRoutine } from '@/lib/images';
 import {
@@ -118,10 +119,6 @@ export default function HomeScreen() {
   }
 
   function openRoutine(routine: RoutineSummary) {
-    if (routine.is_pro && !subscription.isPro) {
-      openPaywall('routine');
-      return;
-    }
     router.push({ pathname: '/routines/[id]', params: { id: routine.id } } as Href);
   }
 
@@ -243,13 +240,13 @@ export default function HomeScreen() {
                       letter={routine.name.slice(0, 1)}
                       height={176}
                     />
-                    <Text
-                      style={[
-                        styles.featuredChip,
-                        !routine.is_pro && styles.featuredChipFree,
-                      ]}>
-                      {routine.is_pro ? 'Pro' : 'Free'}
-                    </Text>
+                    {routine.is_pro ? (
+                      <View style={styles.featuredChipWrap}>
+                        <ProBadge compact />
+                      </View>
+                    ) : (
+                      <Text style={[styles.featuredChip, styles.featuredChipFree]}>Free</Text>
+                    )}
                   </View>
                   <View style={styles.featuredBody}>
                     <Text style={styles.featuredName} numberOfLines={2}>
@@ -302,11 +299,13 @@ export default function HomeScreen() {
               style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
               onPress={handleCreateWorkout}
               accessibilityRole="button">
-              <Text style={styles.startButtonText}>
-                {atFreeCustomWorkoutLimit(data.ownedWorkouts, subscription.isPro)
-                  ? 'Create with Pro'
-                  : 'Create a workout'}
-              </Text>
+              {atFreeCustomWorkoutLimit(data.ownedWorkouts, subscription.isPro) ? (
+                <ProMark locked textStyle={styles.startButtonText}>
+                  Create with Pro
+                </ProMark>
+              ) : (
+                <Text style={styles.startButtonText}>Create a workout</Text>
+              )}
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.link, pressed && styles.pressed]}
@@ -403,6 +402,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.accent,
     backgroundColor: colours.surface,
+  },
+  featuredChipWrap: {
+    position: 'absolute',
+    left: 12,
+    bottom: 12,
   },
   featuredChipFree: {
     color: colours.surface,

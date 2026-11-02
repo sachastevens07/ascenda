@@ -150,10 +150,14 @@ const DETAIL_SELECT = `
   routine_weeks (
     id, week_number,
     routine_days (
-      id, day_number, name, source_programme_day_id,
-      routine_day_exercises (${DAY_EXERCISE_SELECT})
+      id, day_number, name, source_programme_day_id
     )
   )
+`;
+const EXERCISE_QUERY_SELECT = `
+  routine_day_id,
+  position, sets, rep_min, rep_max, rest_seconds,
+  exercise:exercises (${SLOT_EXERCISE_COLUMNS})
 `;
 
 type TagRow = { tag: string };
@@ -165,7 +169,17 @@ type SummaryRow = Omit<RoutineSummary, 'cover' | 'tags'> & {
 };
 
 type DayRow = Omit<RoutineDay, 'exercises'> & {
-  routine_day_exercises: (Omit<RoutineDayExercise, 'exercise'> & { exercise: SlotExercise })[] | null;
+  routine_day_exercises?: (Omit<RoutineDayExercise, 'exercise'> & { exercise: SlotExercise })[] | null;
+};
+
+type ExerciseQueryRow = Omit<RoutineDayExercise, 'exercise'> & {
+  routine_day_id: string;
+  exercise: SlotExercise;
+};
+
+export type FetchRoutineOptions = {
+  /** When false, Pro routines omit week 2+ exercise rows. Defaults to true. */
+  includeLockedWeeks?: boolean;
 };
 
 type WeekRow = Omit<RoutineWeek, 'days'> & {
@@ -220,14 +234,7 @@ function toDay(row: DayRow): RoutineDay {
     source_programme_day_id: row.source_programme_day_id,
     exercises: [...(row.routine_day_exercises ?? [])]
       .sort((a, b) => a.position - b.position)
-      .map((item) => ({
-        position: item.position,
-        sets: item.sets,
-        rep_min: item.rep_min,
-        rep_max: item.rep_max,
-        rest_seconds: item.rest_seconds,
-        exercise: toSlotExercise(item.exercise),
-      })),
+      .map(toDayExercise),
   };
 }
 
@@ -243,6 +250,69 @@ function toRoutine(row: DetailRow): Routine {
           .sort((a, b) => a.day_number - b.day_number)
           .map(toDay),
       })),
+  };
+}
+
+export function isRoutineWeekLocked(
+  routine: Pick<RoutineSummary, 'is_pro'>,
+  weekNumber: number,
+  isPro: boolean
+): boolean {
+  return routine.is_pro && !isPro && weekNumber > 1;
+}
+
+function dayIdsForPreview(routine: Routine, includeLockedWeeks: boolean): string[] {
+  return routine.weeks
+    .filter((week) => includeLockedWeeks || !routine.is_pro || week.week_number <= 1)
+    .flatMap((week) => week.days.map((day) => day.id));
+}
+
+function toDayExercise(item: Omit<RoutineDayExercise, 'exercise'> & { exercise: SlotExercise }): RoutineDayExercise {
+  return {
+    position: item.position,
+    sets: item.sets,
+    rep_min: item.rep_min,
+    rep_max: item.rep_max,
+    rest_seconds: item.rest_seconds,
+    exercise: toSlotExercise(item.exercise),
+  };
+}
+
+async function fetchExercisesForDays(dayIds: string[]): Promise<Map<string, RoutineDayExercise[]>> {
+  const byDay = new Map<string, RoutineDayExercise[]>();
+  if (dayIds.length === 0) return byDay;
+  const { data, error } = await supabase
+    .from('routine_day_exercises')
+    .select(EXERCISE_QUERY_SELECT)
+    .in('routine_day_id', dayIds);
+  if (error) {
+    if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
+    throw new Error(error.message);
+  }
+  for (const row of (data ?? []) as unknown as ExerciseQueryRow[]) {
+    const list = byDay.get(row.routine_day_id) ?? [];
+    list.push(toDayExercise(row));
+    byDay.set(row.routine_day_id, list);
+  }
+  for (const [dayId, list] of byDay) {
+    byDay.set(
+      dayId,
+      [...list].sort((a, b) => a.position - b.position)
+    );
+  }
+  return byDay;
+}
+
+function withDayExercises(routine: Routine, byDay: Map<string, RoutineDayExercise[]>): Routine {
+  return {
+    ...routine,
+    weeks: routine.weeks.map((week) => ({
+      ...week,
+      days: week.days.map((day) => ({
+        ...day,
+        exercises: byDay.get(day.id) ?? [],
+      })),
+    })),
   };
 }
 
@@ -456,13 +526,20 @@ export async function fetchRoutines(): Promise<RoutineSummary[]> {
   return ((data ?? []) as unknown as SummaryRow[]).map(toSummary);
 }
 
-export async function fetchRoutine(id: string): Promise<Routine | null> {
+export async function fetchRoutine(
+  id: string,
+  options?: FetchRoutineOptions
+): Promise<Routine | null> {
+  const includeLockedWeeks = options?.includeLockedWeeks ?? true;
   const { data, error } = await supabase.from('routines').select(DETAIL_SELECT).eq('id', id).maybeSingle();
   if (error) {
     if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
     throw new Error(error.message);
   }
-  return data ? toRoutine(data as unknown as DetailRow) : null;
+  if (!data) return null;
+  const routine = toRoutine(data as unknown as DetailRow);
+  const byDay = await fetchExercisesForDays(dayIdsForPreview(routine, includeLockedWeeks));
+  return withDayExercises(routine, byDay);
 }
 
 export async function fetchRoutineDay(id: string): Promise<RoutineDay | null> {

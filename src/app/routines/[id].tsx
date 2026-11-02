@@ -1,11 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
+import { ProBadge, ProMark } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import { EQUIPMENT_LABELS, MUSCLE_LABELS } from '@/lib/exercises';
 import { coverForRoutine } from '@/lib/images';
@@ -29,6 +30,7 @@ import {
   firstDayOfRoutine,
   formatRestSeconds,
   groupRoutinePhases,
+  isRoutineWeekLocked,
   missingRoutinesMessage,
   startRoutine,
   type Routine,
@@ -68,8 +70,15 @@ export default function RoutineDetailScreen() {
         setLoadState('not-found');
         return;
       }
+      if (subscription.isLoading) {
+        setLoadState((state) => (state === 'ready' ? state : 'loading'));
+        return;
+      }
       setLoadState((state) => (state === 'ready' ? state : 'loading'));
-      Promise.all([fetchRoutine(id), fetchActiveEnrolment()])
+      Promise.all([
+        fetchRoutine(id, { includeLockedWeeks: subscription.isPro }),
+        fetchActiveEnrolment(),
+      ])
         .then(([next, active]) => {
           if (!isCurrent) return;
           setRoutine(next);
@@ -85,16 +94,8 @@ export default function RoutineDetailScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [id])
+    }, [id, subscription.isLoading, subscription.isPro])
   );
-
-  useEffect(() => {
-    if (!routine || subscription.isLoading || subscription.isPro) return;
-    if (!routine.is_pro) return;
-    openPaywall('routine');
-    if (router.canGoBack()) router.back();
-    else router.replace('/');
-  }, [routine, subscription.isLoading, subscription.isPro]);
 
   function requestStart() {
     if (!routine) return;
@@ -183,14 +184,6 @@ export default function RoutineDetailScreen() {
     );
   }
 
-  if (routine.is_pro && !subscription.isPro) {
-    return (
-      <View style={styles.centre}>
-        <Text style={styles.message}>This plan is part of Pro.</Text>
-      </View>
-    );
-  }
-
   const isCurrent = enrolment?.routine_id === routine.id;
   const details = [
     { name: 'Length', value: `${routine.length_weeks} weeks` },
@@ -213,9 +206,11 @@ export default function RoutineDetailScreen() {
         style={styles.cover}
       />
       <View style={styles.chipRow}>
-        <Text style={[styles.chip, !routine.is_pro && styles.chipFree]}>
-          {routine.is_pro ? 'Pro' : 'Free'}
-        </Text>
+        {routine.is_pro ? (
+          <ProBadge />
+        ) : (
+          <Text style={[styles.chip, styles.chipFree]}>Free</Text>
+        )}
         {isCurrent && <Text style={[styles.chip, styles.chipCurrent]}>Current</Text>}
       </View>
       <Text style={styles.title}>{routine.name}</Text>
@@ -255,26 +250,52 @@ export default function RoutineDetailScreen() {
 
       <Text style={styles.sectionTitle}>Week-by-week plan</Text>
       {routine.weeks.map((week) => {
-        const weekOpen = openWeek === week.week_number;
+        const weekLocked = isRoutineWeekLocked(routine, week.week_number, subscription.isPro);
+        const weekOpen = !weekLocked && openWeek === week.week_number;
         return (
           <View key={week.id} style={styles.card}>
-            <Pressable
-              onPress={() => {
-                setOpenWeek(weekOpen ? null : week.week_number);
-                setOpenDayId(null);
-              }}
-              style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
-              accessibilityRole="button">
-              <View>
-                <Text style={styles.cardTitle}>Week {week.week_number}</Text>
-                <Text style={styles.dayLabel}>{week.days.length} days</Text>
-              </View>
-              <Ionicons
-                name={weekOpen ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={colours.accent}
-              />
-            </Pressable>
+            {weekLocked ? (
+              <>
+                <View style={styles.weekHeader}>
+                  <View>
+                    <Text style={styles.cardTitle}>Week {week.week_number}</Text>
+                    <Text style={styles.dayLabel}>{week.days.length} days</Text>
+                  </View>
+                  <ProBadge locked />
+                </View>
+                <View style={styles.lockedPreview} accessibilityElementsHidden>
+                  <View style={styles.lockedLine} />
+                  <View style={[styles.lockedLine, styles.lockedLineShort]} />
+                  <View style={styles.lockedLine} />
+                </View>
+                <Pressable
+                  style={({ pressed }) => [styles.unlockButton, pressed && styles.pressed]}
+                  onPress={() => openPaywall('routine')}
+                  accessibilityRole="button">
+                  <ProMark locked textStyle={styles.unlockButtonText}>
+                    Unlock with Pro
+                  </ProMark>
+                </Pressable>
+              </>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  setOpenWeek(weekOpen ? null : week.week_number);
+                  setOpenDayId(null);
+                }}
+                style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
+                accessibilityRole="button">
+                <View>
+                  <Text style={styles.cardTitle}>Week {week.week_number}</Text>
+                  <Text style={styles.dayLabel}>{week.days.length} days</Text>
+                </View>
+                <Ionicons
+                  name={weekOpen ? 'chevron-up' : 'chevron-down'}
+                  size={20}
+                  color={colours.accent}
+                />
+              </Pressable>
+            )}
             {weekOpen &&
               week.days.map((day) => {
                 const dayOpen = openDayId === day.id;
@@ -334,13 +355,13 @@ export default function RoutineDetailScreen() {
         onPress={handleDuplicate}
         disabled={isDuplicating || isStarting}
         accessibilityRole="button">
-        <Text style={styles.outlineButtonText}>
-          {isDuplicating
-            ? 'Copying…'
-            : routine.is_pro && !subscription.isPro
-              ? 'Duplicate with Pro'
-              : 'Duplicate'}
-        </Text>
+        {routine.is_pro && !subscription.isPro && !isDuplicating ? (
+          <ProMark locked textStyle={styles.outlineButtonText}>
+            Duplicate with Pro
+          </ProMark>
+        ) : (
+          <Text style={styles.outlineButtonText}>{isDuplicating ? 'Copying…' : 'Duplicate'}</Text>
+        )}
       </Pressable>
 
       <Pressable
@@ -348,15 +369,15 @@ export default function RoutineDetailScreen() {
         onPress={requestStart}
         disabled={isStarting || isCurrent}
         accessibilityRole="button">
-        <Text style={styles.startButtonText}>
-          {isCurrent
-            ? 'This is your current routine'
-            : isStarting
-              ? 'Starting…'
-              : routine.is_pro && !subscription.isPro
-                ? 'Start with Pro'
-                : 'Start routine'}
-        </Text>
+        {routine.is_pro && !subscription.isPro && !isCurrent && !isStarting ? (
+          <ProMark locked textStyle={styles.startButtonText}>
+            Start with Pro
+          </ProMark>
+        ) : (
+          <Text style={styles.startButtonText}>
+            {isCurrent ? 'This is your current routine' : isStarting ? 'Starting…' : 'Start routine'}
+          </Text>
+        )}
       </Pressable>
     </ScrollView>
   );
@@ -390,6 +411,8 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 8,
   },
   chip: {
@@ -401,7 +424,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     overflow: 'hidden',
-    marginRight: 8,
   },
   chipFree: {
     color: colours.surface,
@@ -480,6 +502,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: 52,
+  },
+  lockedPreview: {
+    gap: 8,
+    marginTop: 8,
+    marginBottom: 14,
+  },
+  lockedLine: {
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: colours.border,
+    opacity: 0.7,
+  },
+  lockedLineShort: {
+    width: '62%',
+  },
+  unlockButton: {
+    minHeight: 48,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.accentSoft,
+  },
+  unlockButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colours.accent,
   },
   dayBlock: {
     marginTop: 8,

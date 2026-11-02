@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
+import { ProBadge, ProMark } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import { getAchievementBadges, type AchievementBadge } from '@/lib/achievements';
 import {
@@ -432,7 +433,10 @@ export default function ActivityScreen() {
 
                 {isPro ? (
                   <View style={styles.card}>
-                    <Text style={styles.cardTitle}>Sessions per week</Text>
+                    <View style={styles.titleRow}>
+                      <Text style={styles.cardTitle}>Sessions per week</Text>
+                      <ProBadge />
+                    </View>
                     <WeeklyBars weeks={weeks} />
                   </View>
                 ) : (
@@ -445,9 +449,12 @@ export default function ActivityScreen() {
 
                 {isPro && lift && (
                   <View style={styles.card}>
-                    <Text style={styles.cardTitle}>
-                      {lift.assisted ? 'Help over time' : 'Weight over time'}
-                    </Text>
+                    <View style={styles.titleRow}>
+                      <Text style={styles.cardTitle}>
+                        {lift.assisted ? 'Help over time' : 'Weight over time'}
+                      </Text>
+                      <ProBadge />
+                    </View>
                     <Pressable
                       style={({ pressed }) => [styles.picker, pressed && styles.pressed]}
                       onPress={() => setIsPickerOpen(true)}
@@ -497,7 +504,10 @@ export default function ActivityScreen() {
 
             {isPro ? (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>Progress photos</Text>
+                <View style={styles.titleRow}>
+                  <Text style={styles.cardTitle}>Progress photos</Text>
+                  <ProBadge />
+                </View>
                 <Text style={styles.chartNote}>
                   Optional, private, and never sent to AI. Hidden until you choose to show them.
                 </Text>
@@ -710,14 +720,18 @@ function ProCard({
 }) {
   return (
     <View style={styles.card}>
-      <Ionicons name="stats-chart-outline" size={28} color={colours.accent} />
+      <View style={styles.titleRow}>
+        <ProBadge locked />
+      </View>
       <Text style={styles.cardTitle}>{title}</Text>
       <Text style={styles.chartNote}>{copy}</Text>
       <Pressable
         style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
         onPress={() => openPaywall(reason)}
         accessibilityRole="button">
-        <Text style={styles.outlineButtonText}>See Pro</Text>
+        <ProMark locked textStyle={styles.outlineButtonText}>
+          See Pro
+        </ProMark>
       </Pressable>
     </View>
   );
@@ -733,14 +747,20 @@ function RoutineRoadmapCard({
   if (!enrolment) {
     return (
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Routine roadmap</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.cardTitle}>Routine roadmap</Text>
+          <ProBadge />
+        </View>
         <Text style={styles.chartNote}>Start a routine and its weeks will show here.</Text>
       </View>
     );
   }
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>{enrolment.routine.name}</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.cardTitle}>{enrolment.routine.name}</Text>
+        <ProBadge />
+      </View>
       <Text style={styles.chartNote}>
         Week {currentEnrolmentWeek(enrolment)} of {enrolment.routine.length_weeks}
       </Text>
@@ -776,7 +796,10 @@ function RoutineReviewCard({
   if (!enrolment) return null;
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>End-of-routine review</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.cardTitle}>End-of-routine review</Text>
+        <ProBadge />
+      </View>
       <Text style={styles.bestName}>{enrolment.routine.name}</Text>
       <Text style={styles.chartNote}>
         You finished this plan
@@ -1062,6 +1085,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colours.text,
+    flexShrink: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
   },
   picker: {
     flexDirection: 'row',

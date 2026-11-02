@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
+import { ProBadge, ProMark } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import {
@@ -204,15 +205,26 @@ export default function ProfileScreen() {
 
       <View style={styles.card}>
         <Text style={styles.label}>Your plan</Text>
-        <Text style={styles.cardTitle}>{subscription.isPro ? 'Pro' : 'Free'}</Text>
+        {subscription.isPro ? (
+          <View style={styles.planTitleRow}>
+            <Text style={[styles.cardTitle, styles.planTitle]}>Pro</Text>
+            <ProBadge />
+          </View>
+        ) : (
+          <Text style={styles.cardTitle}>Free</Text>
+        )}
         <Text style={styles.label}>{describePlan(subscription)}</Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
           onPress={subscription.isPro ? handleManageSubscription : () => openPaywall('general')}
           accessibilityRole="button">
-          <Text style={styles.buttonText}>
-            {subscription.isPro ? 'Manage subscription' : 'See Pro'}
-          </Text>
+          {subscription.isPro ? (
+            <Text style={styles.buttonText}>Manage subscription</Text>
+          ) : (
+            <ProMark locked textStyle={styles.buttonText}>
+              See Pro
+            </ProMark>
+          )}
         </Pressable>
         {__DEV__ && (
           <Pressable
@@ -274,9 +286,13 @@ export default function ProfileScreen() {
               else openPaywall('general');
             }}
             accessibilityRole="button">
-            <Text style={styles.buttonText}>
-              {subscription.isPro ? 'View programme' : 'View programme with Pro'}
-            </Text>
+            {subscription.isPro ? (
+              <Text style={styles.buttonText}>View programme</Text>
+            ) : (
+              <ProMark locked textStyle={styles.buttonText}>
+                View programme with Pro
+              </ProMark>
+            )}
           </Pressable>
           {__DEV__ && (
             <Pressable style={styles.devLink} onPress={handleDevRestartBlock} accessibilityRole="button">
@@ -367,6 +383,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colours.text,
     marginBottom: 8,
+  },
+  planTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  planTitle: {
+    marginBottom: 0,
   },
   row: {
     paddingVertical: 10,
