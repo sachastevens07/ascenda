@@ -56,13 +56,16 @@ export function ProgressRing({
 
 export function ProgressBar({
   progress,
+  tone = 'brand',
   style,
 }: {
   progress: number;
+  tone?: 'brand' | 'accent';
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius } = useTheme();
   const clamped = Math.min(1, Math.max(0, progress));
+  const fill = tone === 'accent' ? colours.accent : colours.brand;
   return (
     <View
       accessibilityRole="progressbar"
@@ -72,7 +75,7 @@ export function ProgressBar({
           styles.barFill,
           {
             width: `${clamped * 100}%`,
-            backgroundColor: colours.brand,
+            backgroundColor: fill,
             borderRadius: radius.full,
           },
         ]}

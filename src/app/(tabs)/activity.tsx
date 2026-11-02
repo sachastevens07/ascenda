@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import type { ComponentProps } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -13,18 +14,26 @@ import {
   type ScrollViewInstance,
 } from 'react-native';
 
-import {
-  AnchoredMenu,
-  MenuRow,
-  measureAnchor,
-  type AnchorHandle,
-  type AnchorRect,
-} from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
 import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
-import { ProBadge, ProMark } from '@/components/ProBadge';
-import { colours } from '@/constants/theme';
+import {
+  AchievementBadge as BadgeMark,
+  EmptyState,
+  MenuRow,
+  DestructiveTextButton,
+  OverflowMenu,
+  ProBadge,
+  ProgressBar,
+  ProgressRing,
+  SecondaryButton,
+  StatTile,
+  TextButton,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import { getAchievementBadges, type AchievementBadge } from '@/lib/achievements';
 import {
   describeStreak,
@@ -37,7 +46,7 @@ import {
   type FinishedSessionMeta,
   type WeeklyStreak,
 } from '@/lib/activityStats';
-import { equipmentListLabel, exerciseListLabel, getGymUnlocked } from '@/lib/gymUnlocked';
+import { getGymUnlocked } from '@/lib/gymUnlocked';
 import { openPaywall, type PaywallReason } from '@/lib/paywall';
 import {
   fetchPlannedCountsByWeek,
@@ -45,7 +54,7 @@ import {
   toIso,
   type WeekPlanProgress,
 } from '@/lib/planner';
-import { formatKg } from '@/lib/programmes';
+import { formatKg, usesWeight } from '@/lib/programmes';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   fetchProgressSets,
@@ -89,6 +98,7 @@ import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type ActivityTab = 'progress' | 'achievements';
+type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type ActivityData = {
   sets: ProgressSet[];
@@ -111,6 +121,19 @@ const BAR_GAP = 8;
 const BAR_AREA_HEIGHT = 120;
 const MIN_BAR_SCALE = 4;
 
+const SESSION_IDS = ['session-1', 'week-1', 'session-5', 'session-10', 'session-25', 'session-50'];
+const STREAK_IDS = ['streak-4', 'streak-8', 'streak-12'];
+const PB_IDS = ['pb-1'];
+const PROGRAMME_IDS = ['routine-1'];
+const SESSION_THRESHOLDS = [1, 5, 10, 25, 50];
+const STREAK_THRESHOLDS = [4, 8, 12];
+const WEIGHT_THRESHOLDS = [10_000, 100_000, 500_000, 1_000_000];
+const GYM_THRESHOLDS = [1, 5, 10, 25];
+const TABS = [
+  { id: 'progress', label: 'Progress' },
+  { id: 'achievements', label: 'Achievements' },
+] as const;
+
 function describeBest(best: PersonalBest): string {
   switch (best.kind) {
     case 'weight':
@@ -122,8 +145,54 @@ function describeBest(best: PersonalBest): string {
   }
 }
 
+function formatTotalKg(kg: number): string {
+  const rounded = kg >= 100 ? Math.round(kg) : Number(kg.toFixed(1));
+  return `${rounded.toLocaleString('en-GB')} kg`;
+}
+
+function totalWeightLiftedKg(sets: ProgressSet[]): number {
+  return sets.reduce((sum, set) => {
+    if (!usesWeight(set.equipment) || set.weightKg === null) return sum;
+    return sum + Math.abs(set.weightKg) * set.reps;
+  }, 0);
+}
+
+function pickBadges(badges: AchievementBadge[], ids: string[]): AchievementBadge[] {
+  const byId = new Map(badges.map((badge) => [badge.id, badge]));
+  return ids.flatMap((id) => {
+    const badge = byId.get(id);
+    return badge ? [badge] : [];
+  });
+}
+
+function nextStep(value: number, thresholds: number[]): { label: string; ratio: number } | null {
+  if (thresholds.length === 0) return null;
+  const next = thresholds.find((step) => value < step) ?? thresholds[thresholds.length - 1];
+  const ratio = next === 0 ? 0 : Math.min(1, value / next);
+  return { label: `${Math.round(value).toLocaleString('en-GB')} / ${next.toLocaleString('en-GB')}`, ratio };
+}
+
+function badgeIcon(id: string): IconName {
+  if (id.startsWith('session-')) return 'barbell-outline';
+  if (id === 'week-1') return 'calendar-outline';
+  if (id.startsWith('streak-')) return 'flame-outline';
+  if (id.startsWith('pb-')) return 'trophy-outline';
+  if (id.startsWith('routine-')) return 'ribbon-outline';
+  if (id === 'equipment-barbell') return 'barbell-outline';
+  if (id === 'equipment-machine') return 'hardware-chip-outline';
+  if (id === 'equipment-cable') return 'git-network-outline';
+  if (id === 'equipment-dumbbell') return 'barbell-outline';
+  if (id === 'equipment-kettlebell') return 'fitness-outline';
+  if (id === 'equipment-band') return 'ellipse-outline';
+  if (id === 'equipment-bodyweight') return 'body-outline';
+  if (id.startsWith('zone-')) return 'location-outline';
+  if (id.startsWith('exercises-') || id.includes('exercise')) return 'sparkles-outline';
+  return 'medal-outline';
+}
+
 export default function ActivityScreen() {
   const tabBarHeight = useTabBarHeight();
+  const { colours, radius, shadow, type } = useTheme();
   const { isPro } = useSubscription();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
@@ -285,23 +354,22 @@ export default function ActivityScreen() {
 
   if (loadState !== 'ready' || !data) {
     return (
-      <View style={styles.centre}>
+      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
         {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} />
+          <ActivityIndicator color={colours.brand} />
         ) : (
           <>
-            <Text style={styles.message}>
+            <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
               We couldn’t load your activity. Check your connection and try again.
             </Text>
-            <Pressable
-              style={({ pressed }) => [styles.outlineButton, styles.retry, pressed && styles.pressed]}
+            <SecondaryButton
+              label="Try again"
               onPress={() => {
                 setLoadState('loading');
                 setAttempt((count) => count + 1);
               }}
-              accessibilityRole="button">
-              <Text style={styles.outlineButtonText}>Try again</Text>
-            </Pressable>
+              style={styles.retry}
+            />
           </>
         )}
       </View>
@@ -326,57 +394,88 @@ export default function ActivityScreen() {
     gym,
   });
   const comparePhotos = data.photos.filter((photo) => compareIds.includes(photo.id));
+  const streakRatio = data.streak.goal > 0 ? data.streak.current / data.streak.goal : 0;
+  const liftedKg = totalWeightLiftedKg(data.sets);
+  const gymProgress = nextStep(gym.exerciseCount, GYM_THRESHOLDS);
+  const weightTarget = WEIGHT_THRESHOLDS.find((step) => liftedKg < step) ?? WEIGHT_THRESHOLDS[WEIGHT_THRESHOLDS.length - 1];
+  const weightProgress = nextStep(liftedKg, WEIGHT_THRESHOLDS);
+  const card = [
+    styles.card,
+    { backgroundColor: colours.surface, borderRadius: radius.xl },
+    shadow,
+  ];
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
-        <Text style={styles.title}>Activity</Text>
+        <Text style={[type.display, { color: colours.ink }]}>Activity</Text>
 
         <View style={styles.stats}>
-          <Stat value={String(totals.sessions)} label={totals.sessions === 1 ? 'session' : 'sessions'} />
-          <Stat
+          <StatTile
+            value={String(totals.sessions)}
+            label={totals.sessions === 1 ? 'session' : 'sessions'}
+            style={styles.statFlex}
+          />
+          <StatTile
             value={String(totals.liftsTracked)}
             label={totals.liftsTracked === 1 ? 'lift tracked' : 'lifts tracked'}
+            style={styles.statFlex}
           />
-          <Stat value={formatTrainingHours(totals.durationSeconds)} label="time spent" />
+          <StatTile value={formatTrainingHours(totals.durationSeconds)} label="time spent" style={styles.statFlex} />
         </View>
 
-        {data.weekProgress.planned > 0 && (
-          <Text style={styles.weekLine}>
+        {data.weekProgress.planned > 0 ? (
+          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: -4 }]}>
             This week: {data.streak.doneThisWeek} of {data.weekProgress.planned}{' '}
             {data.weekProgress.planned === 1 ? 'workout' : 'workouts'}
           </Text>
-        )}
+        ) : null}
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Weekly streak</Text>
-          <Text style={styles.levelName}>
-            {data.streak.current} of {data.streak.goal} weeks
-          </Text>
-          <View style={styles.streakTrack} accessibilityRole="progressbar">
-            <View
-              style={[
-                styles.streakFill,
-                { width: `${Math.min(100, (data.streak.current / data.streak.goal) * 100)}%` },
-              ]}
+        <View style={card}>
+          <Text style={[type.eyebrow, { color: colours.accent }]}>Weekly streak</Text>
+          <View style={styles.streakRow}>
+            <ProgressRing progress={streakRatio} size={84} stroke={8} tone="accent">
+              <Text style={[type.title3, { color: colours.ink }]}>
+                {data.streak.current}/{data.streak.goal}
+              </Text>
+            </ProgressRing>
+            <View style={styles.flex}>
+              <Text style={[type.title2, { color: colours.ink }]}>
+                {data.streak.current} of {data.streak.goal} weeks
+              </Text>
+              <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                {describeStreak(data.streak)}
+              </Text>
+            </View>
+            <StatTile
+              value={String(data.streak.best)}
+              label="All-time best"
+              icon="trophy-outline"
+              style={[styles.bestTile, { backgroundColor: colours.surfaceMuted }]}
             />
           </View>
-          <Text style={styles.chartNote}>{describeStreak(data.streak)}</Text>
         </View>
 
-        <View style={styles.tabRow}>
-          {(['progress', 'achievements'] as const).map((value) => {
-            const selected = tab === value;
+        <View style={[styles.tabRow, { borderBottomColor: colours.border }]} accessibilityRole="tablist">
+          {TABS.map((item) => {
+            const selected = tab === item.id;
             return (
               <Pressable
-                key={value}
-                onPress={() => setTab(value)}
-                style={[styles.tabChip, selected && styles.tabChipOn]}
+                key={item.id}
+                onPress={() => setTab(item.id)}
+                style={styles.tab}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}>
-                <Text style={[styles.tabChipText, selected && styles.tabChipTextOn]}>
-                  {value === 'progress' ? 'Progress' : 'Achievements'}
+                <Text
+                  style={[
+                    type.title3,
+                    { color: selected ? colours.ink : colours.inkMuted, fontWeight: selected ? '700' : '500' },
+                  ]}>
+                  {item.label}
                 </Text>
+                <View
+                  style={[styles.underline, { backgroundColor: selected ? colours.brand : 'transparent' }]}
+                />
               </Pressable>
             );
           })}
@@ -384,46 +483,49 @@ export default function ActivityScreen() {
 
         {tab === 'progress' ? (
           <>
-            {isEmpty && (
-              <View style={styles.emptyIntro}>
-                <Ionicons name="trending-up" size={36} color={colours.accent} />
-                <Text style={styles.emptyTitle}>Your progress starts here</Text>
-                <Text style={styles.emptyCopy}>
-                  Finish your first session and your personal bests, lifts and weeks will appear here.
-                </Text>
-              </View>
-            )}
+            <CurrentRoutineCard enrolment={data.enrolment} roadmap={data.roadmap} isPro={isPro} />
 
-            {!isEmpty && (
+            {isEmpty ? (
+              <EmptyState
+                icon="trending-up-outline"
+                title="Your progress starts here"
+                body="Finish your first session and your personal bests, lifts and weeks will appear here."
+              />
+            ) : (
               <>
-                <View style={styles.card}>
-                  <Text style={styles.cardTitle}>Personal bests</Text>
+                <View style={card}>
+                  <Text style={[type.title, { color: colours.ink }]}>Personal bests</Text>
                   {bests.map((best) => (
-                    <View key={best.exerciseId} style={styles.bestRow}>
+                    <View
+                      key={best.exerciseId}
+                      style={[styles.bestRow, { borderTopColor: colours.border }]}>
                       <View style={styles.flex}>
-                        <Text style={styles.bestName}>{best.exerciseName}</Text>
-                        <Text style={styles.bestValue}>{describeBest(best)}</Text>
-                        {best.estimatedMaxKg !== null && (
-                          <Text style={styles.bestDetail}>
+                        <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
+                          {best.exerciseName}
+                        </Text>
+                        <Text style={[type.title3, { color: colours.accent, marginTop: 2 }]}>
+                          {describeBest(best)}
+                        </Text>
+                        {best.estimatedMaxKg !== null ? (
+                          <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
                             Estimated 1-rep max: {formatKg(best.estimatedMaxKg)}
                           </Text>
-                        )}
+                        ) : null}
                       </View>
-                      <Text style={styles.bestDate}>{formatShortDate(parseDate(best.date))}</Text>
+                      <Text style={[type.caption, { color: colours.inkMuted }]}>
+                        {formatShortDate(parseDate(best.date))}
+                      </Text>
                     </View>
                   ))}
-                  <Text style={styles.footnote}>
-                    Estimated 1-rep max is worked out from your best set of up to 12 reps. There’s no
-                    need to test it.
+                  <Text style={[type.caption, { color: colours.inkMuted }]}>
+                    Estimated 1-rep max is worked out from your best set of up to 12 reps. There’s no need
+                    to test it.
                   </Text>
                 </View>
 
                 {isPro ? (
-                  <View style={styles.card}>
-                    <View style={styles.titleRow}>
-                      <Text style={styles.cardTitle}>Sessions per week</Text>
-                      <ProBadge />
-                    </View>
+                  <View style={card}>
+                    <Text style={[type.title, { color: colours.ink }]}>Sessions per week</Text>
                     <WeeklyBars weeks={weeks} />
                   </View>
                 ) : (
@@ -434,18 +536,19 @@ export default function ActivityScreen() {
                   />
                 )}
 
-                {isPro && lift && (
-                  <View style={styles.card}>
-                    <View style={styles.titleRow}>
-                      <Text style={styles.cardTitle}>
-                        {lift.assisted ? 'Help over time' : 'Weight over time'}
-                      </Text>
-                      <ProBadge />
-                    </View>
+                {isPro && lift ? (
+                  <View style={card}>
+                    <Text style={[type.title, { color: colours.ink }]}>
+                      {lift.assisted ? 'Help over time' : 'Weight over time'}
+                    </Text>
                     <Pressable
                       ref={liftPickerRef}
                       collapsable={false}
-                      style={({ pressed }) => [styles.picker, pressed && styles.pressed]}
+                      style={({ pressed }) => [
+                        styles.picker,
+                        { backgroundColor: colours.brandSoft, borderRadius: radius.full },
+                        pressed && styles.pressed,
+                      ]}
                       onPress={() => {
                         measureAnchor(liftPickerRef.current, (rect) => {
                           setPickerAnchor(rect);
@@ -454,13 +557,13 @@ export default function ActivityScreen() {
                       }}
                       accessibilityRole="button"
                       accessibilityLabel={`Lift: ${lift.exerciseName}. Change lift`}>
-                      <Text style={styles.pickerText} numberOfLines={1}>
+                      <Text style={[type.body, { color: colours.brand, fontWeight: '700', flex: 1 }]} numberOfLines={1}>
                         {lift.exerciseName}
                       </Text>
                       <Ionicons
                         name={isPickerOpen ? 'chevron-up' : 'chevron-down'}
                         size={18}
-                        color={colours.accent}
+                        color={colours.brand}
                       />
                     </Pressable>
                     <LineChart
@@ -471,20 +574,12 @@ export default function ActivityScreen() {
                       formatX={(x) => formatShortDate(new Date(x))}
                       formatY={(y) => `${Math.round(y)} kg`}
                     />
-                    <Text style={styles.chartNote}>{describeChange(history, lift.assisted)}</Text>
+                    <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                      {describeChange(history, lift.assisted)}
+                    </Text>
                   </View>
-                )}
+                ) : null}
               </>
-            )}
-
-            {isPro ? (
-              <RoutineRoadmapCard enrolment={data.enrolment} roadmap={data.roadmap} />
-            ) : (
-              <ProCard
-                reason="roadmap"
-                title="Routine roadmap"
-                copy="With Pro, see each week of your routine and which days you’ve finished."
-              />
             )}
 
             {isPro ? (
@@ -503,80 +598,79 @@ export default function ActivityScreen() {
             ) : null}
 
             {isPro ? (
-              <View style={styles.card}>
-                <View style={styles.titleRow}>
-                  <Text style={styles.cardTitle}>Progress photos</Text>
-                  <ProBadge />
-                </View>
-                <Text style={styles.chartNote}>
+              <View style={card}>
+                <Text style={[type.title, { color: colours.ink }]}>Progress photos</Text>
+                <Text style={[type.bodySm, { color: colours.inkMuted }]}>
                   Optional, private, and never sent to AI. Hidden until you choose to show them.
                 </Text>
-                {data.photosError && !data.photosError.includes('activity.sql') ? (
-                  <Text style={styles.bestDetail}>{data.photosError}</Text>
+                {data.photosError ? (
+                  <Text style={[type.caption, { color: colours.inkMuted }]}>{data.photosError}</Text>
                 ) : null}
-                {data.photosError?.includes('activity.sql') ? (
-                  <Text style={styles.bestDetail}>{data.photosError}</Text>
-                ) : showPhotos ? (
+                {showPhotos ? (
                   <>
-                    <Pressable
-                      style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+                    <TextButton
+                      label="Hide photos"
                       onPress={() => {
                         setShowPhotos(false);
                         setCompareIds([]);
                       }}
-                      accessibilityRole="button">
-                      <Text style={styles.outlineButtonText}>Hide photos</Text>
-                    </Pressable>
-                    <View style={styles.goalRow}>
-                      <Pressable
-                        style={({ pressed }) => [styles.smallButton, pressed && styles.pressed]}
+                    />
+                    <View style={styles.photoActions}>
+                      <SecondaryButton
+                        label="Camera"
                         onPress={() => void pickPhoto('camera')}
                         disabled={isPhotoBusy}
-                        accessibilityRole="button">
-                        <Text style={styles.smallButtonText}>Camera</Text>
-                      </Pressable>
-                      <Pressable
-                        style={({ pressed }) => [styles.smallButton, pressed && styles.pressed]}
+                        style={styles.photoAction}
+                      />
+                      <SecondaryButton
+                        label="Library"
                         onPress={() => void pickPhoto('library')}
                         disabled={isPhotoBusy}
-                        accessibilityRole="button">
-                        <Text style={styles.smallButtonText}>Library</Text>
-                      </Pressable>
+                        style={styles.photoAction}
+                      />
                     </View>
-                    {isPhotoBusy && <ActivityIndicator color={colours.accent} />}
-                    {comparePhotos.length === 2 && (
+                    {isPhotoBusy ? <ActivityIndicator color={colours.brand} /> : null}
+                    {comparePhotos.length === 2 ? (
                       <View style={styles.compareRow}>
                         {comparePhotos.map((photo) => (
                           <View key={photo.id} style={styles.flex}>
                             {photo.url ? (
-                              <Image source={{ uri: photo.url }} style={styles.compareImage} />
+                              <Image source={{ uri: photo.url }} style={[styles.compareImage, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]} />
                             ) : (
-                              <View style={styles.compareImage} />
+                              <View style={[styles.compareImage, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]} />
                             )}
-                            <Text style={styles.bestDetail}>
+                            <Text style={[type.caption, { color: colours.inkMuted, marginTop: 6 }]}>
                               {formatShortDate(parseDate(photo.taken_on))}
                             </Text>
                           </View>
                         ))}
                       </View>
-                    )}
+                    ) : null}
                     {data.photos.length === 0 ? (
-                      <Text style={styles.bestDetail}>No photos yet. Add one when you want.</Text>
+                      <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                        No photos yet. Add one when you want.
+                      </Text>
                     ) : (
                       data.photos.map((photo) => {
                         const selected = compareIds.includes(photo.id);
                         return (
                           <View key={photo.id} style={styles.photoRow}>
                             {photo.url ? (
-                              <Image source={{ uri: photo.url }} style={styles.photoThumb} />
+                              <Image
+                                source={{ uri: photo.url }}
+                                style={[styles.photoThumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}
+                              />
                             ) : (
-                              <View style={styles.photoThumb} />
+                              <View
+                                style={[styles.photoThumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}
+                              />
                             )}
                             <View style={styles.flex}>
-                              <Text style={styles.bestName}>
+                              <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
                                 {formatShortDate(parseDate(photo.taken_on))}
                               </Text>
-                              <Pressable
+                              <TextButton
+                                label={selected ? 'Remove from compare' : 'Compare'}
                                 onPress={() =>
                                   setCompareIds((current) => {
                                     if (current.includes(photo.id)) {
@@ -587,38 +681,28 @@ export default function ActivityScreen() {
                                       : [...current, photo.id];
                                   })
                                 }
-                                accessibilityRole="button">
-                                <Text style={styles.linkText}>
-                                  {selected ? 'Remove from compare' : 'Compare'}
-                                </Text>
-                              </Pressable>
+                                style={styles.inlineAction}
+                              />
                             </View>
                             <Pressable
                               onPress={() => confirmDeletePhoto(photo)}
                               accessibilityRole="button"
                               accessibilityLabel="Delete photo">
-                              <Ionicons name="trash-outline" size={22} color={colours.textMuted} />
+                              <Ionicons name="trash-outline" size={22} color={colours.inkMuted} />
                             </Pressable>
                           </View>
                         );
                       })
                     )}
-                    {data.photos.length > 0 && (
-                      <Pressable
-                        style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+                    {data.photos.length > 0 ? (
+                      <DestructiveTextButton
+                        label="Delete all photos"
                         onPress={() => confirmDeleteAll(data.photos)}
-                        accessibilityRole="button">
-                        <Text style={styles.outlineButtonText}>Delete all photos</Text>
-                      </Pressable>
-                    )}
+                      />
+                    ) : null}
                   </>
                 ) : (
-                  <Pressable
-                    style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-                    onPress={() => setShowPhotos(true)}
-                    accessibilityRole="button">
-                    <Text style={styles.outlineButtonText}>Show photos</Text>
-                  </Pressable>
+                  <TextButton label="Show photos" onPress={() => setShowPhotos(true)} />
                 )}
               </View>
             ) : (
@@ -631,41 +715,74 @@ export default function ActivityScreen() {
           </>
         ) : (
           <>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Gym unlocked</Text>
-              <Text style={styles.chartNote}>
+            <AchievementGroup
+              title="Sessions"
+              progress={nextStep(data.sessions.length, SESSION_THRESHOLDS)}
+              badges={pickBadges(badges, SESSION_IDS)}
+            />
+            <AchievementGroup
+              title="Streaks"
+              progress={nextStep(data.streak.current, STREAK_THRESHOLDS)}
+              badges={pickBadges(badges, STREAK_IDS)}
+            />
+            <AchievementGroup
+              title="Weight lifted"
+              progress={
+                weightProgress
+                  ? {
+                      label: `${formatTotalKg(liftedKg)} towards ${formatTotalKg(weightTarget)}`,
+                      ratio: weightProgress.ratio,
+                    }
+                  : null
+              }
+              badges={[]}
+              empty="Ticked weighted sets add up here. Badge tiers come next."
+            />
+            <AchievementGroup
+              title="Personal bests"
+              progress={nextStep(bests.length, [1, 10, 50, 100])}
+              badges={pickBadges(badges, PB_IDS)}
+            />
+            <AchievementGroup
+              title="Programmes"
+              progress={nextStep(
+                data.completedEnrolment ? Math.max(1, data.completedRoutines) : data.completedRoutines,
+                [1, 3, 10]
+              )}
+              badges={pickBadges(badges, PROGRAMME_IDS)}
+            />
+            <View style={card}>
+              <Text style={[type.title, { color: colours.ink }]}>Gym unlocked</Text>
+              <Text style={[type.bodySm, { color: colours.inkMuted }]}>
                 Every new exercise and piece of kit you tick in a finished session counts.
               </Text>
               <View style={styles.gymStats}>
-                <View style={styles.flex}>
-                  <Text style={styles.levelName}>{gym.exerciseCount}</Text>
-                  <Text style={styles.bestDetail}>{exerciseListLabel(gym.exerciseCount)}</Text>
-                </View>
-                <View style={styles.flex}>
-                  <Text style={styles.levelName}>{gym.equipmentCount}</Text>
-                  <Text style={styles.bestDetail}>{equipmentListLabel(gym.equipmentCount)}</Text>
-                </View>
+                <StatTile
+                  value={String(gym.exerciseCount)}
+                  label={gym.exerciseCount === 1 ? 'exercise tried' : 'exercises tried'}
+                  style={styles.statFlex}
+                />
+                <StatTile
+                  value={String(gym.equipmentCount)}
+                  label={gym.equipmentCount === 1 ? 'type of equipment' : 'types of equipment'}
+                  style={styles.statFlex}
+                />
               </View>
-            </View>
-
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Achievements</Text>
-              {badges.map((badge) => (
-                <BadgeRow key={badge.id} badge={badge} />
-              ))}
-              <Text style={styles.footnote}>
-                Locked badges stay grey until you unlock them.
-              </Text>
+              {gymProgress ? (
+                <>
+                  <Text style={[type.caption, { color: colours.inkMuted }]}>
+                    {gymProgress.label} exercises
+                  </Text>
+                  <ProgressBar progress={gymProgress.ratio} />
+                </>
+              ) : null}
+              <BadgeGrid badges={gym.badges} />
             </View>
           </>
         )}
-
       </ScrollView>
 
-      <AnchoredMenu
-        visible={isPickerOpen}
-        anchor={pickerAnchor}
-        onClose={() => setIsPickerOpen(false)}>
+      <OverflowMenu visible={isPickerOpen} anchor={pickerAnchor} onClose={() => setIsPickerOpen(false)}>
         {liftOptions.map((option) => (
           <MenuRow
             key={option.exerciseId}
@@ -678,7 +795,72 @@ export default function ActivityScreen() {
             }}
           />
         ))}
-      </AnchoredMenu>
+      </OverflowMenu>
+    </View>
+  );
+}
+
+function CurrentRoutineCard({
+  enrolment,
+  roadmap,
+  isPro,
+}: {
+  enrolment: RoutineEnrolment | null;
+  roadmap: RoadmapWeek[];
+  isPro: boolean;
+}) {
+  const { colours, radius, shadow, type } = useTheme();
+  const showProBadge = Boolean(enrolment?.routine.is_pro && !isPro);
+  const week = enrolment ? currentEnrolmentWeek(enrolment) : 0;
+  const totalDays = enrolment
+    ? Math.max(1, enrolment.routine.length_weeks * enrolment.routine.days_per_week)
+    : 1;
+  const doneDays = roadmap.reduce((count, item) => count + item.days.filter((day) => day.done).length, 0);
+
+  return (
+    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+      <View style={styles.titleRow}>
+        <Text style={[type.eyebrow, { color: colours.accent }]}>Current routine</Text>
+        {showProBadge ? <ProBadge locked compact /> : null}
+      </View>
+      {enrolment ? (
+        <>
+          <Text style={[type.title, { color: colours.ink }]}>{enrolment.routine.name}</Text>
+          <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+            Week {week} of {enrolment.routine.length_weeks}
+          </Text>
+          <ProgressBar progress={doneDays / totalDays} />
+          {isPro
+            ? roadmap.map((item) => (
+                <View key={item.weekNumber} style={[styles.roadmapWeek, { borderTopColor: colours.border }]}>
+                  <Text
+                    style={[
+                      type.body,
+                      { color: item.current ? colours.brand : colours.ink, fontWeight: '600' },
+                    ]}>
+                    Week {item.weekNumber}
+                    {item.current ? ' · now' : ''}
+                    {item.checkpoint ? ' · checkpoint' : ''}
+                  </Text>
+                  {item.days.map((day) => (
+                    <View key={day.id} style={styles.roadmapDay}>
+                      <Ionicons
+                        name={day.done ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={18}
+                        color={day.done ? colours.success : colours.border}
+                      />
+                      <Text style={[type.bodySm, { color: colours.inkMuted }]}>{day.name}</Text>
+                    </View>
+                  ))}
+                </View>
+              ))
+            : null}
+        </>
+      ) : (
+        <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+          Start a routine from Programmes and your weeks will show here.
+        </Text>
+      )}
     </View>
   );
 }
@@ -692,71 +874,13 @@ function ProCard({
   copy: string;
   reason: PaywallReason;
 }) {
+  const { colours, radius, shadow, type } = useTheme();
   return (
-    <View style={styles.card}>
-      <View style={styles.titleRow}>
-        <ProBadge locked />
-      </View>
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.chartNote}>{copy}</Text>
-      <Pressable
-        style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-        onPress={() => openPaywall(reason)}
-        accessibilityRole="button">
-        <ProMark locked textStyle={styles.outlineButtonText}>
-          See Pro
-        </ProMark>
-      </Pressable>
-    </View>
-  );
-}
-
-function RoutineRoadmapCard({
-  enrolment,
-  roadmap,
-}: {
-  enrolment: RoutineEnrolment | null;
-  roadmap: RoadmapWeek[];
-}) {
-  if (!enrolment) {
-    return (
-      <View style={styles.card}>
-        <View style={styles.titleRow}>
-          <Text style={styles.cardTitle}>Routine roadmap</Text>
-          <ProBadge />
-        </View>
-        <Text style={styles.chartNote}>Start a routine and its weeks will show here.</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={styles.card}>
-      <View style={styles.titleRow}>
-        <Text style={styles.cardTitle}>{enrolment.routine.name}</Text>
-        <ProBadge />
-      </View>
-      <Text style={styles.chartNote}>
-        Week {currentEnrolmentWeek(enrolment)} of {enrolment.routine.length_weeks}
-      </Text>
-      {roadmap.map((week) => (
-        <View key={week.weekNumber} style={styles.roadmapWeek}>
-          <Text style={[styles.bestName, week.current && styles.pickerText]}>
-            Week {week.weekNumber}
-            {week.current ? ' · now' : ''}
-            {week.checkpoint ? ' · checkpoint' : ''}
-          </Text>
-          {week.days.map((day) => (
-            <View key={day.id} style={styles.roadmapDay}>
-              <Ionicons
-                name={day.done ? 'checkmark-circle' : 'ellipse-outline'}
-                size={18}
-                color={day.done ? colours.accent : colours.border}
-              />
-              <Text style={styles.bestDetail}>{day.name}</Text>
-            </View>
-          ))}
-        </View>
-      ))}
+    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+      <ProBadge locked />
+      <Text style={[type.title, { color: colours.ink }]}>{title}</Text>
+      <Text style={[type.bodySm, { color: colours.inkMuted }]}>{copy}</Text>
+      <SecondaryButton label="See Pro" onPress={() => openPaywall(reason)} />
     </View>
   );
 }
@@ -772,15 +896,13 @@ function RoutineReviewCard({
   review: EnrolmentReview | null;
   nextRoutine: RoutineSummary | null;
 }) {
+  const { colours, radius, shadow, type } = useTheme();
   if (!enrolment) return null;
   return (
-    <View style={styles.card}>
-      <View style={styles.titleRow}>
-        <Text style={styles.cardTitle}>End-of-routine review</Text>
-        <ProBadge />
-      </View>
-      <Text style={styles.bestName}>{enrolment.routine.name}</Text>
-      <Text style={styles.chartNote}>
+    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+      <Text style={[type.title, { color: colours.ink }]}>End-of-routine review</Text>
+      <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>{enrolment.routine.name}</Text>
+      <Text style={[type.bodySm, { color: colours.inkMuted }]}>
         You finished this plan
         {enrolment.completed_at
           ? ` on ${formatShortDate(parseDate(enrolment.completed_at.slice(0, 10)))}`
@@ -788,15 +910,78 @@ function RoutineReviewCard({
         . {review ? describeReview(review) : `${sessions} ${sessions === 1 ? 'session' : 'sessions'} logged.`}
       </Text>
       {review?.lifts.map((lift) => (
-        <Text key={lift.exerciseId} style={styles.bestDetail}>
+        <Text key={lift.exerciseId} style={[type.bodySm, { color: colours.inkMuted }]}>
           {formatLiftCompare(lift)}
         </Text>
       ))}
       {nextRoutine ? (
-        <Text style={styles.footnote}>Next on your path: {nextRoutine.name}.</Text>
+        <Text style={[type.caption, { color: colours.inkMuted }]}>Next on your path: {nextRoutine.name}.</Text>
       ) : (
-        <Text style={styles.footnote}>That’s a full routine. Start another when you’re ready.</Text>
+        <Text style={[type.caption, { color: colours.inkMuted }]}>
+          That’s a full routine. Start another when you’re ready.
+        </Text>
       )}
+    </View>
+  );
+}
+
+function AchievementGroup({
+  title,
+  progress,
+  badges,
+  empty,
+}: {
+  title: string;
+  progress: { label: string; ratio: number } | null;
+  badges: AchievementBadge[];
+  empty?: string;
+}) {
+  const { colours, radius, shadow, type } = useTheme();
+  return (
+    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+      <Text style={[type.title, { color: colours.ink }]}>{title}</Text>
+      {progress ? (
+        <>
+          <Text style={[type.caption, { color: colours.inkMuted }]}>{progress.label}</Text>
+          <ProgressBar progress={progress.ratio} />
+        </>
+      ) : null}
+      {badges.length > 0 ? (
+        <BadgeGrid badges={badges} />
+      ) : empty ? (
+        <Text style={[type.bodySm, { color: colours.inkMuted }]}>{empty}</Text>
+      ) : null}
+    </View>
+  );
+}
+
+function BadgeGrid({ badges }: { badges: AchievementBadge[] }) {
+  const { colours, type } = useTheme();
+  return (
+    <View style={styles.badgeGrid}>
+      {badges.map((badge) => (
+        <View key={badge.id} style={styles.badgeCell}>
+          <BadgeMark unlocked={badge.unlocked} label={badge.title}>
+            <Ionicons
+              name={badgeIcon(badge.id)}
+              size={22}
+              color={badge.unlocked ? colours.onBrand : colours.inkMuted}
+            />
+          </BadgeMark>
+          <Text
+            style={[
+              type.caption,
+              {
+                color: badge.unlocked ? colours.ink : colours.inkMuted,
+                textAlign: 'center',
+                marginTop: 8,
+              },
+            ]}
+            numberOfLines={2}>
+            {badge.title}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 }
@@ -818,40 +1003,8 @@ function describeChange(history: { kg: number }[], assisted: boolean): string {
     : `Latest: ${formatKg(latest)}. Every session counts.`;
 }
 
-function BadgeRow({ badge }: { badge: AchievementBadge }) {
-  return (
-    <View
-      style={[styles.badgeRow, !badge.unlocked && styles.badgeRowLocked]}
-      accessibilityState={{ disabled: !badge.unlocked }}>
-      <View style={[styles.badgeDot, badge.unlocked && styles.badgeDotOn]}>
-        {badge.unlocked ? <Ionicons name="checkmark" size={14} color={colours.surface} /> : null}
-      </View>
-      <View style={styles.flex}>
-        <Text style={[styles.bestName, !badge.unlocked && styles.badgeLockedText]}>{badge.title}</Text>
-        <Text style={styles.bestDetail}>
-          {badge.unlocked
-            ? badge.unlockedOn
-              ? `${badge.detail} ${formatShortDate(parseDate(badge.unlockedOn))}`
-              : badge.detail
-            : badge.detail}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue} numberOfLines={1}>
-        {value}
-      </Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function WeeklyBars({ weeks }: { weeks: WeekCount[] }) {
+  const { colours, type } = useTheme();
   const scrollRef = useRef<ScrollViewInstance>(null);
   const scale = Math.max(MIN_BAR_SCALE, ...weeks.map((week) => week.count));
   return (
@@ -867,16 +1020,22 @@ function WeeklyBars({ weeks }: { weeks: WeekCount[] }) {
         return (
           <View key={week.weekStart.getTime()} style={styles.barColumn}>
             <View style={styles.barArea}>
-              {week.count > 0 && <Text style={styles.barCount}>{week.count}</Text>}
+              {week.count > 0 ? (
+                <Text style={[type.caption, { color: colours.accent, fontWeight: '700', marginBottom: 4 }]}>
+                  {week.count}
+                </Text>
+              ) : null}
               <View
                 style={[
                   styles.bar,
-                  { height: Math.max(4, (week.count / scale) * (BAR_AREA_HEIGHT - 20)) },
-                  week.count === 0 && styles.barEmpty,
+                  {
+                    height: Math.max(4, (week.count / scale) * (BAR_AREA_HEIGHT - 20)),
+                    backgroundColor: week.count === 0 ? colours.border : colours.accent,
+                  },
                 ]}
               />
             </View>
-            <Text style={styles.barLabel} numberOfLines={1}>
+            <Text style={[styles.barLabel, type.caption, { color: colours.inkMuted }]} numberOfLines={1}>
               {isThisWeek ? 'Now' : showLabel ? formatShortDate(week.weekStart) : ''}
             </Text>
           </View>
@@ -889,7 +1048,6 @@ function WeeklyBars({ weeks }: { weeks: WeekCount[] }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   content: {
     padding: 24,
@@ -902,183 +1060,61 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 32,
     gap: 12,
-    backgroundColor: colours.background,
-  },
-  message: {
-    fontSize: 17,
-    lineHeight: 24,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colours.text,
-    textAlign: 'center',
-  },
-  emptyIntro: {
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
-  },
-  emptyCopy: {
-    fontSize: 17,
-    lineHeight: 24,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  levelName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  streakTrack: {
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: colours.border,
-    overflow: 'hidden',
-  },
-  streakFill: {
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: colours.accent,
-  },
-  goalRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  goalChip: {
-    minHeight: 44,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: colours.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.surface,
-  },
-  goalChipOn: {
-    borderColor: colours.accent,
-    backgroundColor: colours.accentSoft,
-  },
-  goalChipText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colours.textMuted,
-  },
-  goalChipTextOn: {
-    color: colours.accent,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  tabChip: {
-    flex: 1,
-    minHeight: 48,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.surface,
-  },
-  tabChipOn: {
-    backgroundColor: colours.accent,
-  },
-  tabChipText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.textMuted,
-  },
-  tabChipTextOn: {
-    color: colours.surface,
-  },
-  gymStats: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 6,
-  },
-  badgeRowLocked: {
-    opacity: 0.45,
-  },
-  badgeDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colours.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeDotOn: {
-    borderColor: colours.accent,
-    backgroundColor: colours.accent,
-  },
-  badgeLockedText: {
-    color: colours.textMuted,
   },
   retry: {
     alignSelf: 'stretch',
     marginTop: 12,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  weekLine: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.accent,
-    marginTop: -8,
-  },
-  flex: {
-    flex: 1,
-  },
   stats: {
     flexDirection: 'row',
     gap: 10,
   },
-  stat: {
+  statFlex: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 10,
-    borderRadius: 18,
-    backgroundColor: colours.accent,
+    minWidth: 0,
+    padding: 12,
   },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colours.surface,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colours.accentSoft,
-    marginTop: 2,
+  flex: {
+    flex: 1,
+    minWidth: 0,
   },
   card: {
     padding: 20,
-    borderRadius: 22,
-    backgroundColor: colours.surface,
     gap: 12,
   },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-    flexShrink: 1,
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  bestTile: {
+    minWidth: 88,
+    maxWidth: 108,
+    padding: 12,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginHorizontal: -24,
+    paddingHorizontal: 24,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingTop: 8,
+    gap: 8,
+  },
+  underline: {
+    height: 3,
+    alignSelf: 'stretch',
+    borderRadius: 2,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8,
-    marginBottom: 4,
   },
   picker: {
     flexDirection: 'row',
@@ -1087,19 +1123,6 @@ const styles = StyleSheet.create({
     gap: 8,
     minHeight: 48,
     paddingHorizontal: 16,
-    borderRadius: 999,
-    backgroundColor: colours.accentSoft,
-  },
-  pickerText: {
-    flexShrink: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  chartNote: {
-    fontSize: 15,
-    lineHeight: 21,
-    color: colours.text,
   },
   bars: {
     alignItems: 'flex-end',
@@ -1120,21 +1143,9 @@ const styles = StyleSheet.create({
   bar: {
     width: BAR_WIDTH,
     borderRadius: 6,
-    backgroundColor: colours.accent,
-  },
-  barEmpty: {
-    backgroundColor: colours.border,
-  },
-  barCount: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colours.accent,
-    marginBottom: 4,
   },
   barLabel: {
     width: BAR_WIDTH * 3,
-    fontSize: 11,
-    color: colours.textMuted,
     textAlign: 'center',
     marginTop: 6,
   },
@@ -1144,66 +1155,14 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colours.border,
   },
-  bestName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
+  photoActions: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  bestValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.accent,
-    marginTop: 2,
-  },
-  bestDetail: {
-    fontSize: 14,
-    color: colours.textMuted,
-    marginTop: 2,
-  },
-  bestDate: {
-    fontSize: 14,
-    color: colours.textMuted,
-  },
-  footnote: {
-    fontSize: 13,
-    lineHeight: 19,
-    color: colours.textMuted,
-    marginTop: 4,
-  },
-  outlineButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-  },
-  outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  smallButton: {
+  photoAction: {
+    flex: 1,
     minHeight: 48,
-    paddingHorizontal: 16,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accentSoft,
-  },
-  smallButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  linkText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colours.accent,
-    marginTop: 4,
   },
   photoRow: {
     flexDirection: 'row',
@@ -1213,8 +1172,6 @@ const styles = StyleSheet.create({
   photoThumb: {
     width: 64,
     height: 64,
-    borderRadius: 12,
-    backgroundColor: colours.border,
   },
   compareRow: {
     flexDirection: 'row',
@@ -1223,14 +1180,29 @@ const styles = StyleSheet.create({
   compareImage: {
     width: '100%',
     aspectRatio: 3 / 4,
-    borderRadius: 16,
-    backgroundColor: colours.border,
+  },
+  inlineAction: {
+    alignSelf: 'flex-start',
+    minHeight: 36,
+    paddingHorizontal: 0,
+  },
+  gymStats: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  badgeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  badgeCell: {
+    width: '30%',
+    alignItems: 'center',
   },
   roadmapWeek: {
     gap: 4,
     paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colours.border,
   },
   roadmapDay: {
     flexDirection: 'row',
@@ -1238,6 +1210,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.8,
   },
 });

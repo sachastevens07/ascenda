@@ -83,7 +83,7 @@ export function AchievementBadge({
       style={[styles.achievement, { backgroundColor: unlocked ? colours.brand : colours.surfaceMuted }, style]}
       accessibilityLabel={unlocked ? label : `${label}, locked`}>
       {children}
-      {unlocked ? <Ionicons name="checkmark" size={14} color={colours.onBrand} /> : null}
+      {unlocked && !children ? <Ionicons name="checkmark" size={14} color={colours.onBrand} /> : null}
     </View>
   );
 }
@@ -158,9 +158,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   achievement: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,

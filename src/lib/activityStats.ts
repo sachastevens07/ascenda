@@ -32,6 +32,8 @@ export type ActivityTotals = {
 
 export type WeeklyStreak = {
   current: number;
+  /** Longest run of hit weeks, from the same history as `current`. */
+  best: number;
   goal: StreakGoal;
   hitThisWeek: boolean;
   targetThisWeek: number;
@@ -133,6 +135,7 @@ export function getWeeklyStreak(
   if (!firstDate) {
     return {
       current: 0,
+      best: 0,
       goal,
       hitThisWeek: false,
       targetThisWeek: plannedByWeek.get(thisMondayIso) ?? fallbackTarget,
@@ -173,8 +176,22 @@ export function getWeeklyStreak(
     current += 1;
   }
 
+  let best = 0;
+  let run = 0;
+  for (const week of weeks) {
+    if (week.monday === thisMondayIso && !week.hit) continue;
+    if (week.target <= 0) continue;
+    if (week.hit) {
+      run += 1;
+      if (run > best) best = run;
+    } else {
+      run = 0;
+    }
+  }
+
   return {
     current,
+    best,
     goal,
     hitThisWeek,
     targetThisWeek,
