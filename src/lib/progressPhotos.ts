@@ -1,3 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, type Href } from 'expo-router';
+
+import { showDialog } from '@/components/Dialog';
 import { supabase } from '@/lib/supabase';
 
 export const PROGRESS_PHOTOS_BUCKET = 'progress-photos';
@@ -128,4 +132,35 @@ export async function deleteAllProgressPhotos(photos: ProgressPhoto[]): Promise<
     .from(PROGRESS_PHOTOS_BUCKET)
     .remove(photos.map((photo) => photo.storage_path))
     .catch(() => {});
+}
+
+const PHOTO_PROMPT_KEY = 'photo-prompts-dismissed';
+
+export async function arePhotoPromptsDismissed(): Promise<boolean> {
+  return (await AsyncStorage.getItem(PHOTO_PROMPT_KEY)) === '1';
+}
+
+export async function dismissPhotoPrompts(): Promise<void> {
+  await AsyncStorage.setItem(PHOTO_PROMPT_KEY, '1');
+}
+
+/** Gentle, Pro-only. Easy to skip or turn off for good. */
+export async function offerProgrammePhoto(moment: 'start' | 'end'): Promise<void> {
+  if (await arePhotoPromptsDismissed()) return;
+  const title = moment === 'start' ? 'Optional start photo' : 'Optional end photo';
+  const message =
+    moment === 'start'
+      ? 'A private photo you can compare at the end of this plan. Never sent to AI. Skip any time.'
+      : 'A private photo to sit next to your start photo. Never sent to AI. Skip any time.';
+  showDialog(title, message, [
+    {
+      text: 'Open Activity',
+      onPress: () => router.push('/activity' as Href),
+    },
+    {
+      text: 'Don’t ask again',
+      onPress: () => void dismissPhotoPrompts(),
+    },
+    { text: 'Not now', style: 'cancel' },
+  ]);
 }

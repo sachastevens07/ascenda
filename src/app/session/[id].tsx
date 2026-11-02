@@ -38,6 +38,7 @@ import {
   type SlotExercise,
 } from '@/lib/programmes';
 import { markPlannerDateDone } from '@/lib/planner';
+import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
 import { maybeCompleteEnrolment } from '@/lib/routines';
 import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
@@ -351,6 +352,10 @@ export default function SessionScreen() {
       }
       await clearSessionPlan(id).catch(() => {});
       await fillBlockTargetsFromSession(id).catch(() => {});
+      const checkpointLines =
+        routineEnrolmentId && day
+          ? await recordCheckpointIfNeeded(routineEnrolmentId, day.id).catch(() => [])
+          : [];
       const finishedRoutine = routineEnrolmentId
         ? await maybeCompleteEnrolment(routineEnrolmentId).catch(() => false)
         : false;
@@ -372,8 +377,13 @@ export default function SessionScreen() {
         previous,
         bests,
       });
+      if (checkpointLines.length > 0) wins.unshift(...checkpointLines.slice(0, 2));
       if (finishedRoutine) wins.unshift('You finished the routine.');
       workout.end();
+      if (finishedRoutine && routineEnrolmentId) {
+        router.replace({ pathname: '/routines/complete', params: { enrolmentId: routineEnrolmentId } });
+        return;
+      }
       router.back();
       const trained =
         durationSeconds === undefined ? '' : `You trained for ${formatDuration(durationSeconds)}.`;

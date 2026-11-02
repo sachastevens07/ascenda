@@ -17,6 +17,7 @@ import {
   isProRoutineDuplicateError,
 } from '@/lib/customWorkouts';
 import { openPaywall } from '@/lib/paywall';
+import { offerProgrammePhoto } from '@/lib/progressPhotos';
 import { formatDaysPerWeek } from '@/lib/profile';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
@@ -164,6 +165,7 @@ export default function RoutineDetailScreen() {
     try {
       const next = await startRoutine(routine.id);
       setEnrolment(next);
+      if (subscription.isPro) void offerProgrammePhoto('start');
     } catch (error) {
       showDialog('Couldn’t start the routine', describeRoutineError(error));
     } finally {
@@ -303,7 +305,10 @@ export default function RoutineDetailScreen() {
               <>
                 <View style={styles.weekHeader}>
                   <View>
-                    <Text style={styles.cardTitle}>Week {week.week_number}</Text>
+                    <Text style={styles.cardTitle}>
+                      Week {week.week_number}
+                      {week.is_checkpoint ? ' · checkpoint' : ''}
+                    </Text>
                     <Text style={styles.dayLabel}>{week.days.length} days</Text>
                   </View>
                   <ProBadge locked />
@@ -331,7 +336,10 @@ export default function RoutineDetailScreen() {
                 style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
                 accessibilityRole="button">
                 <View>
-                  <Text style={styles.cardTitle}>Week {week.week_number}</Text>
+                  <Text style={styles.cardTitle}>
+                    Week {week.week_number}
+                    {week.is_checkpoint ? ' · checkpoint' : ''}
+                  </Text>
                   <Text style={styles.dayLabel}>{week.days.length} days</Text>
                 </View>
                 <Ionicons

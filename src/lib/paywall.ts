@@ -10,6 +10,8 @@ export const PAYWALL_REASONS = [
   'roadmap',
   'review',
   'photos',
+  'path',
+  'challenge',
   'general',
 ] as const;
 
@@ -62,6 +64,16 @@ const COPY: Record<PaywallReason, PaywallCopy> = {
     title: 'Keep private photos',
     body: 'Pro stores them in a private folder on your account. Hidden until you tap Show photos, and never sent to AI.',
   },
+  path: {
+    eyebrow: 'Programme path',
+    title: 'See the map ahead',
+    body: 'Pro shows the full path from Gym Confidence onwards. The first routine on the path can stay free.',
+  },
+  challenge: {
+    eyebrow: 'Challenge',
+    title: 'Join with Pro',
+    body: 'This challenge is part of Pro. Logging stays free. Join when you are ready.',
+  },
   general: {
     eyebrow: 'Ascenda Pro',
     title: 'Everything in one plan',
@@ -70,7 +82,7 @@ const COPY: Record<PaywallReason, PaywallCopy> = {
 };
 
 export const PRO_FEATURES = [
-  { icon: 'map-outline' as const, text: 'Every routine and stretch, plus the one we pick for you' },
+  { icon: 'map-outline' as const, text: 'Every routine, stretch and programme path' },
   { icon: 'add-circle-outline' as const, text: 'Unlimited custom workouts' },
   { icon: 'stats-chart-outline' as const, text: 'Progress charts and a week-by-week roadmap' },
   { icon: 'flag-outline' as const, text: 'End-of-routine review and every achievement' },

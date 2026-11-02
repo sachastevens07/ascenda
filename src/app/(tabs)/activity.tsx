@@ -68,6 +68,13 @@ import {
   type ProgressPhoto,
 } from '@/lib/progressPhotos';
 import {
+  describeReview,
+  fetchEnrolmentReview,
+  formatLiftCompare,
+  type EnrolmentReview,
+} from '@/lib/checkpoints';
+import { nextRoutineOnPath } from '@/lib/paths';
+import {
   countEnrolmentSessions,
   currentEnrolmentWeek,
   fetchActiveEnrolment,
@@ -76,6 +83,7 @@ import {
   fetchRoutineRoadmap,
   type RoadmapWeek,
   type RoutineEnrolment,
+  type RoutineSummary,
 } from '@/lib/routines';
 import { useSubscription } from '@/lib/subscription';
 
@@ -94,6 +102,8 @@ type ActivityData = {
   roadmap: RoadmapWeek[];
   photos: ProgressPhoto[];
   photosError: string | null;
+  review: EnrolmentReview | null;
+  nextPathRoutine: RoutineSummary | null;
 };
 
 const BAR_WIDTH = 20;
@@ -157,6 +167,12 @@ export default function ActivityScreen() {
           ]);
           const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
           const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, goal);
+          const review = completedEnrolment
+            ? await fetchEnrolmentReview(completedEnrolment, sessions, sets).catch(() => null)
+            : null;
+          const pathNext = completedEnrolment
+            ? await nextRoutineOnPath(completedEnrolment.routine_id).catch(() => null)
+            : null;
           if (!isCurrent) return;
           setData({
             sets,
@@ -170,6 +186,8 @@ export default function ActivityScreen() {
             roadmap,
             photos: photosResult.photos,
             photosError: photosResult.error,
+            review,
+            nextPathRoutine: pathNext?.routine ?? null,
           });
           setLoadState('ready');
         } catch {
@@ -473,6 +491,8 @@ export default function ActivityScreen() {
               <RoutineReviewCard
                 enrolment={data.completedEnrolment}
                 sessions={data.completedRoutineSessions}
+                review={data.review}
+                nextRoutine={data.nextPathRoutine}
               />
             ) : data.completedEnrolment ? (
               <ProCard
@@ -726,6 +746,7 @@ function RoutineRoadmapCard({
           <Text style={[styles.bestName, week.current && styles.pickerText]}>
             Week {week.weekNumber}
             {week.current ? ' · now' : ''}
+            {week.checkpoint ? ' · checkpoint' : ''}
           </Text>
           {week.days.map((day) => (
             <View key={day.id} style={styles.roadmapDay}>
@@ -746,9 +767,13 @@ function RoutineRoadmapCard({
 function RoutineReviewCard({
   enrolment,
   sessions,
+  review,
+  nextRoutine,
 }: {
   enrolment: RoutineEnrolment | null;
   sessions: number;
+  review: EnrolmentReview | null;
+  nextRoutine: RoutineSummary | null;
 }) {
   if (!enrolment) return null;
   return (
@@ -763,10 +788,18 @@ function RoutineReviewCard({
         {enrolment.completed_at
           ? ` on ${formatShortDate(parseDate(enrolment.completed_at.slice(0, 10)))}`
           : ''}
-        . {sessions} {sessions === 1 ? 'session' : 'sessions'} logged across{' '}
-        {enrolment.routine.length_weeks} weeks.
+        . {review ? describeReview(review) : `${sessions} ${sessions === 1 ? 'session' : 'sessions'} logged.`}
       </Text>
-      <Text style={styles.footnote}>That’s a full routine. Start another when you’re ready.</Text>
+      {review?.lifts.map((lift) => (
+        <Text key={lift.exerciseId} style={styles.bestDetail}>
+          {formatLiftCompare(lift)}
+        </Text>
+      ))}
+      {nextRoutine ? (
+        <Text style={styles.footnote}>Next on your path: {nextRoutine.name}.</Text>
+      ) : (
+        <Text style={styles.footnote}>That’s a full routine. Start another when you’re ready.</Text>
+      )}
     </View>
   );
 }

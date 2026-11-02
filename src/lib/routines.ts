@@ -73,6 +73,7 @@ export type RoutineDay = {
 export type RoutineWeek = {
   id: string;
   week_number: number;
+  is_checkpoint: boolean;
   days: RoutineDay[];
 };
 
@@ -154,13 +155,22 @@ const DAY_EXERCISE_SELECT_LEGACY = `
   position, sets, rep_min, rep_max, rest_seconds,
   exercise:exercises (${SLOT_EXERCISE_COLUMNS})
 `;
-const DETAIL_SELECT = `
-  ${SUMMARY_SELECT},
-  routine_weeks (
+const WEEK_NEST = `
+    id, week_number, is_checkpoint,
+    routine_days (
+      id, day_number, name, source_programme_day_id
+    )
+`;
+const WEEK_NEST_LEGACY = `
     id, week_number,
     routine_days (
       id, day_number, name, source_programme_day_id
     )
+`;
+const DETAIL_SELECT = `
+  ${SUMMARY_SELECT},
+  routine_weeks (
+    ${WEEK_NEST}
   )
 `;
 const EXERCISE_QUERY_SELECT = `
@@ -177,7 +187,7 @@ const EXERCISE_QUERY_SELECT_LEGACY = `
 type TagRow = { tag: string };
 type CoverRow = CoverImage | CoverImage[] | null;
 
-type SummaryRow = Omit<RoutineSummary, 'cover' | 'tags'> & {
+export type SummaryRow = Omit<RoutineSummary, 'cover' | 'tags'> & {
   cover: CoverRow;
   routine_tags: TagRow[] | null;
 };
@@ -219,7 +229,7 @@ function oneCover(cover: CoverRow): CoverImage | null {
   return Array.isArray(cover) ? (cover[0] ?? null) : cover;
 }
 
-function toSummary(row: SummaryRow): RoutineSummary {
+export function toSummary(row: SummaryRow): RoutineSummary {
   return {
     id: row.id,
     name: row.name,
@@ -261,6 +271,7 @@ function toRoutine(row: DetailRow): Routine {
       .map((week) => ({
         id: week.id,
         week_number: week.week_number,
+        is_checkpoint: Boolean(week.is_checkpoint),
         days: [...(week.routine_days ?? [])]
           .sort((a, b) => a.day_number - b.day_number)
           .map(toDay),
@@ -302,6 +313,10 @@ function isMissingTypeColumn(error: { message?: string; code?: string }): boolea
   return /routines\.type|\btype\b.*schema cache|column .*type/i.test(
     `${error.code ?? ''} ${error.message ?? ''}`
   );
+}
+
+function isMissingCheckpointColumn(error: { message?: string; code?: string }): boolean {
+  return /is_checkpoint/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
 async function fetchExercisesForDays(dayIds: string[]): Promise<Map<string, RoutineDayExercise[]>> {
@@ -587,30 +602,27 @@ export async function fetchRoutine(
   options?: FetchRoutineOptions
 ): Promise<Routine | null> {
   const includeLockedWeeks = options?.includeLockedWeeks ?? true;
-  let { data, error } = await supabase.from('routines').select(DETAIL_SELECT).eq('id', id).maybeSingle();
-  if (error && isMissingTypeColumn(error)) {
-    const retry = await supabase
-      .from('routines')
-      .select(
-        `${SUMMARY_SELECT_BASE},
-  routine_weeks (
-    id, week_number,
-    routine_days (
-      id, day_number, name, source_programme_day_id
-    )
-  )`
-      )
-      .eq('id', id)
-      .maybeSingle();
-    data = retry.data as typeof data;
-    error = retry.error;
-  }
-  if (error) {
+  const attempts = [
+    `${SUMMARY_SELECT}, routine_weeks (${WEEK_NEST})`,
+    `${SUMMARY_SELECT_BASE}, routine_weeks (${WEEK_NEST})`,
+    `${SUMMARY_SELECT}, routine_weeks (${WEEK_NEST_LEGACY})`,
+    `${SUMMARY_SELECT_BASE}, routine_weeks (${WEEK_NEST_LEGACY})`,
+  ];
+  let data: unknown = null;
+  let error: { message?: string; code?: string } | null = null;
+  for (const select of attempts) {
+    const result = await supabase.from('routines').select(select).eq('id', id).maybeSingle();
+    data = result.data;
+    error = result.error;
+    if (!error) break;
     if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
-    throw new Error(error.message);
+    if (!isMissingTypeColumn(error) && !isMissingCheckpointColumn(error)) {
+      throw new Error(error.message);
+    }
   }
+  if (error) throw new Error(error.message);
   if (!data) return null;
-  const routine = toRoutine(data as unknown as DetailRow);
+  const routine = toRoutine(data as DetailRow);
   const byDay = await fetchExercisesForDays(dayIdsForPreview(routine, includeLockedWeeks));
   return withDayExercises(routine, byDay);
 }
@@ -660,6 +672,69 @@ export async function fetchActiveEnrolment(): Promise<RoutineEnrolment | null> {
   }
   if (!data) return null;
   return toEnrolment(data as unknown as EnrolmentRow);
+}
+
+export async function fetchEnrolment(id: string): Promise<RoutineEnrolment | null> {
+  const { data, error } = await selectEnrolment((columns) =>
+    supabase.from('routine_enrolments').select(columns).eq('id', id).maybeSingle()
+  );
+  if (error) {
+    if (isMissingRoutines(error)) return null;
+    throw new Error(error.message);
+  }
+  return data ? toEnrolment(data as unknown as EnrolmentRow) : null;
+}
+
+export type RoutineProgress = {
+  routineId: string;
+  done: number;
+  target: number;
+  status: EnrolmentStatus;
+};
+
+/** Active or completed progress per routine, for card rings. */
+export async function fetchRoutineProgressMap(): Promise<Record<string, RoutineProgress>> {
+  const { data, error } = await selectEnrolment((columns) =>
+    supabase
+      .from('routine_enrolments')
+      .select(columns)
+      .in('status', ['active', 'complete'])
+      .order('completed_at', { ascending: false })
+  );
+  if (error) {
+    if (isMissingRoutines(error)) return {};
+    throw new Error(error.message);
+  }
+  const rows = ((data ?? []) as EnrolmentRow[]).map(toEnrolment);
+  const ids = rows.map((row) => row.id);
+  const counts = new Map<string, number>();
+  if (ids.length > 0) {
+    const sessions = await supabase
+      .from('sessions')
+      .select('routine_enrolment_id')
+      .in('routine_enrolment_id', ids)
+      .not('completed_at', 'is', null);
+    if (!sessions.error) {
+      for (const row of sessions.data ?? []) {
+        const enrolmentId = (row as { routine_enrolment_id: string | null }).routine_enrolment_id;
+        if (!enrolmentId) continue;
+        counts.set(enrolmentId, (counts.get(enrolmentId) ?? 0) + 1);
+      }
+    }
+  }
+  const map: Record<string, RoutineProgress> = {};
+  for (const row of rows) {
+    const existing = map[row.routine_id];
+    if (existing && existing.status === 'active') continue;
+    if (existing && row.status !== 'active') continue;
+    map[row.routine_id] = {
+      routineId: row.routine_id,
+      done: counts.get(row.id) ?? 0,
+      target: Math.max(1, row.routine.length_weeks * row.routine.days_per_week),
+      status: row.status,
+    };
+  }
+  return map;
 }
 
 function isMissingPlannerTable(error: { message?: string; code?: string }): boolean {
@@ -807,6 +882,7 @@ export type RoadmapDay = {
 export type RoadmapWeek = {
   weekNumber: number;
   current: boolean;
+  checkpoint: boolean;
   days: RoadmapDay[];
 };
 
@@ -833,6 +909,7 @@ export async function fetchRoutineRoadmap(enrolment: RoutineEnrolment): Promise<
   return routine.weeks.map((week) => ({
     weekNumber: week.week_number,
     current: week.week_number === currentWeek,
+    checkpoint: Boolean(week.is_checkpoint),
     days: week.days.map((day) => ({
       id: day.id,
       name: day.name,

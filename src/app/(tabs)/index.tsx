@@ -15,7 +15,14 @@ import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { ProBadge, ProMark } from '@/components/ProBadge';
+import { ProgressRing } from '@/components/ProgressRing';
 import { colours } from '@/constants/theme';
+import {
+  challengeCountdown,
+  fetchChallenges,
+  pickHomeChallenge,
+  type Challenge,
+} from '@/lib/challenges';
 import { coverForRoutine } from '@/lib/images';
 import {
   atFreeCustomWorkoutLimit,
@@ -24,12 +31,14 @@ import {
 import { consumeOnboardingPaywall } from '@/lib/onboarding';
 import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
+import { fetchThisWeekProgress, type WeekPlanProgress } from '@/lib/planner';
 import { formatShortDate } from '@/lib/progress';
 import {
   describeRoutineError,
   endActiveEnrolment,
   fetchActiveEnrolment,
   fetchRoutine,
+  fetchRoutineProgressMap,
   fetchRoutines,
   getNextRoutineDay,
   missingRoutinesMessage,
@@ -61,6 +70,9 @@ type HomeData = {
   missingSql: boolean;
   activeSession: Session | null;
   ownedWorkouts: number;
+  weekProgress: WeekPlanProgress;
+  challenge: Challenge | null;
+  progress: Record<string, { done: number; target: number }>;
 };
 
 export default function HomeScreen() {
@@ -90,12 +102,16 @@ export default function HomeScreen() {
       }
       (async () => {
         try {
-          const [routines, enrolment, activeSession, ownedWorkouts] = await Promise.all([
-            fetchRoutines(),
-            fetchActiveEnrolment(),
-            fetchActiveSession(),
-            countOwnedCustomWorkouts(),
-          ]);
+          const [routines, enrolment, activeSession, ownedWorkouts, weekProgress, challenges, progress] =
+            await Promise.all([
+              fetchRoutines(),
+              fetchActiveEnrolment(),
+              fetchActiveSession(),
+              countOwnedCustomWorkouts(),
+              fetchThisWeekProgress().catch(() => ({ completed: 0, planned: 0 })),
+              fetchChallenges().catch(() => []),
+              fetchRoutineProgressMap().catch(() => ({})),
+            ]);
           const missingSql = routines.length === 0;
           const featured = answers
             ? pickFeaturedRoutines(routines, answers, subscription.isPro ? 4 : 2, {
@@ -113,7 +129,18 @@ export default function HomeScreen() {
             next = routine ? getNextRoutineDay(routine, enrolment, lastDayId) : null;
           }
           if (!isCurrent) return;
-          setData({ featured, enrolment, routine, next, missingSql, activeSession, ownedWorkouts });
+          setData({
+            featured,
+            enrolment,
+            routine,
+            next,
+            missingSql,
+            activeSession,
+            ownedWorkouts,
+            weekProgress,
+            challenge: pickHomeChallenge(challenges),
+            progress,
+          });
           setLoadState('ready');
         } catch {
           if (isCurrent) setLoadState((state) => (state === 'ready' ? state : 'error'));
@@ -213,8 +240,9 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, enrolment, next, missingSql, activeSession } = data;
+  const { featured, enrolment, next, missingSql, activeSession, weekProgress, challenge, progress } = data;
   const inProgress = Boolean(activeSession);
+  const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
 
   return (
     <View style={styles.screen}>
@@ -236,6 +264,36 @@ export default function HomeScreen() {
               <Text style={styles.outlineButtonText}>Manage subscription</Text>
             </Pressable>
           </View>
+        )}
+
+        {weekProgress.planned > 0 && (
+          <View style={styles.weekCard}>
+            <ProgressRing progress={weekRatio} size={72} stroke={7}>
+              <Text style={styles.weekRing}>
+                {weekProgress.completed}/{weekProgress.planned}
+              </Text>
+            </ProgressRing>
+            <View style={styles.flex}>
+              <Text style={styles.cardLabel}>This week</Text>
+              <Text style={styles.dayName}>
+                {weekProgress.completed} of {weekProgress.planned}{' '}
+                {weekProgress.planned === 1 ? 'workout' : 'workouts'}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {challenge && (
+          <Pressable
+            onPress={() =>
+              router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)
+            }
+            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            accessibilityRole="button">
+            <Text style={styles.cardLabel}>Challenge</Text>
+            <Text style={styles.dayName}>{challenge.name}</Text>
+            <Text style={styles.cardLabel}>{challengeCountdown(challenge)}</Text>
+          </Pressable>
         )}
 
         {inProgress && (
@@ -285,6 +343,15 @@ export default function HomeScreen() {
                       letter={routine.name.slice(0, 1)}
                       height={176}
                     />
+                    {progress[routine.id] ? (
+                      <View style={styles.featuredRing}>
+                        <ProgressRing
+                          progress={progress[routine.id].done / progress[routine.id].target}
+                          size={36}
+                          stroke={4}
+                        />
+                      </View>
+                    ) : null}
                     {routine.is_pro ? (
                       <View style={styles.featuredChipWrap}>
                         <ProBadge compact />
@@ -496,6 +563,27 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 12,
     bottom: 12,
+  },
+  featuredRing: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+  },
+  weekCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 20,
+    borderRadius: 22,
+    backgroundColor: colours.surface,
+  },
+  weekRing: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colours.text,
+  },
+  flex: {
+    flex: 1,
   },
   featuredChipFree: {
     color: colours.surface,

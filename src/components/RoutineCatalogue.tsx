@@ -7,8 +7,17 @@ import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
 import { FilterSheet } from '@/components/FilterSheet';
 import { ProBadge } from '@/components/ProBadge';
+import { ProgressRing } from '@/components/ProgressRing';
 import { colours } from '@/constants/theme';
+import {
+  challengeCountdown,
+  challengeStatus,
+  fetchChallenges,
+  type Challenge,
+} from '@/lib/challenges';
 import { coverForRoutine } from '@/lib/images';
+import { openPaywall } from '@/lib/paywall';
+import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
   collectRoutineTags,
   formatTagLabel,
@@ -16,11 +25,14 @@ import {
   currentEnrolmentWeek,
   describeRoutineError,
   fetchActiveEnrolment,
+  fetchRoutineProgressMap,
   fetchRoutines,
   missingRoutinesMessage,
   type RoutineEnrolment,
+  type RoutineProgress,
   type RoutineSummary,
 } from '@/lib/routines';
+import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -35,6 +47,7 @@ export function RoutineCatalogue({
 }) {
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
+  const subscription = useSubscription();
   const [routines, setRoutines] = useState<RoutineSummary[]>([]);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -42,19 +55,28 @@ export function RoutineCatalogue({
   const [attempt, setAttempt] = useState(0);
   const [isLeaving, setIsLeaving] = useState(false);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [path, setPath] = useState<RoutinePath | null>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [progress, setProgress] = useState<Record<string, RoutineProgress>>({});
 
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
       (async () => {
         try {
-          const [list, active] = await Promise.all([
+          const [list, active, paths, challengeList, progressMap] = await Promise.all([
             fetchRoutines({ type: routineType }),
             fetchActiveEnrolment(),
+            routineType === 'strength' ? fetchPaths().catch(() => []) : Promise.resolve([]),
+            routineType === 'strength' ? fetchChallenges().catch(() => []) : Promise.resolve([]),
+            routineType === 'strength' ? fetchRoutineProgressMap().catch(() => ({})) : Promise.resolve({}),
           ]);
           if (!isCurrent) return;
           setRoutines(list);
           setEnrolment(active);
+          setPath(paths[0] ?? null);
+          setChallenges(challengeList.filter((item) => challengeStatus(item) !== 'ended'));
+          setProgress(progressMap);
           setMissingSql(list.length === 0);
           setLoadState('ready');
         } catch (error) {
@@ -112,6 +134,49 @@ export function RoutineCatalogue({
           ? 'Short timed sessions for mornings, desks, hips and cool-downs. Three are free. Holds, not sets and reps.'
           : 'Six plans to start with. Filter by tag, then open a plan to see the week-by-week details. Pro plans show week 1 on the free plan.'}
       </Text>
+
+      {path && routineType === 'strength' && (
+        <Pressable
+          onPress={() => {
+            if (path.is_pro && !subscription.isPro) {
+              openPaywall('path');
+              return;
+            }
+            router.push({ pathname: '/paths/[id]', params: { id: path.id } } as Href);
+          }}
+          style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+          accessibilityRole="button">
+          <View style={styles.chipRow}>
+            <Text style={styles.activeLabel}>Path</Text>
+            {path.is_pro ? <ProBadge compact /> : null}
+          </View>
+          <Text style={styles.cardTitle}>{path.name}</Text>
+          <Text style={styles.meta}>
+            {path.steps.filter((step) => step.done).length} of {path.steps.length} routines finished
+          </Text>
+          <Text style={styles.body}>{path.description}</Text>
+          <Text style={styles.buttonText}>Open path map</Text>
+        </Pressable>
+      )}
+
+      {routineType === 'strength' &&
+        challenges.map((challenge) => (
+          <Pressable
+            key={challenge.id}
+            onPress={() =>
+              router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)
+            }
+            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            accessibilityRole="button">
+            <View style={styles.chipRow}>
+              <Text style={styles.activeLabel}>Challenge</Text>
+              {challenge.is_pro ? <ProBadge compact /> : null}
+            </View>
+            <Text style={styles.cardTitle}>{challenge.name}</Text>
+            <Text style={styles.meta}>{challengeCountdown(challenge)}</Text>
+            <Text style={styles.body}>{challenge.description}</Text>
+          </Pressable>
+        ))}
 
       {enrolment && routineType === 'strength' && (
         <View style={styles.activeCard}>
@@ -179,6 +244,7 @@ export function RoutineCatalogue({
         .filter((summary) => !tagFilter || summary.tags.includes(tagFilter))
         .map((summary) => {
           const isCurrent = enrolment?.routine_id === summary.id;
+          const ring = progress[summary.id];
           return (
             <View key={summary.id} style={styles.card}>
               <CoverPhoto
@@ -194,8 +260,20 @@ export function RoutineCatalogue({
                   <Text style={[styles.chip, styles.chipFree]}>Free</Text>
                 )}
                 {isCurrent && <Text style={[styles.chip, styles.chipCurrent]}>Current</Text>}
+                {ring ? (
+                  <View style={styles.ringWrap}>
+                    <ProgressRing progress={ring.done / ring.target} size={36} stroke={4} />
+                  </View>
+                ) : null}
               </View>
               <Text style={styles.cardTitle}>{summary.name}</Text>
+              {ring ? (
+                <Text style={styles.meta}>
+                  {ring.status === 'complete'
+                    ? 'Finished'
+                    : `${ring.done} of ${ring.target} sessions`}
+                </Text>
+              ) : null}
               <Text style={styles.meta}>
                 {routineType === 'stretch'
                   ? `About ${summary.session_minutes} min · mat`
@@ -304,6 +382,9 @@ const styles = StyleSheet.create({
   chipCurrent: {
     color: colours.accent,
     backgroundColor: colours.background,
+  },
+  ringWrap: {
+    marginLeft: 'auto',
   },
   cardTitle: {
     fontSize: 22,
