@@ -44,18 +44,19 @@ export function PillTabBar({
   const tabCount = state.routes.length;
   const framesReady = tabFrames.length === tabCount && tabFrames.every((frame) => frame.width > 0);
   const indexes = state.routes.map((_, index) => index);
+  const baseWidth = framesReady ? tabFrames[0].width : 0;
   const translateX = framesReady
     ? position.interpolate({
         inputRange: indexes,
-        outputRange: tabFrames.map((frame) => frame.x),
+        outputRange: tabFrames.map((frame) => frame.x + (frame.width - baseWidth) / 2),
       })
     : 0;
-  const indicatorWidth = framesReady
+  const scaleX = framesReady
     ? position.interpolate({
         inputRange: indexes,
-        outputRange: tabFrames.map((frame) => frame.width),
+        outputRange: tabFrames.map((frame) => frame.width / baseWidth),
       })
-    : 0;
+    : 1;
 
   function rememberFrame(index: number, x: number, width: number) {
     setTabFrames((current) => {
@@ -79,7 +80,7 @@ export function PillTabBar({
             <Animated.View
               style={[
                 styles.indicator,
-                { width: indicatorWidth, transform: [{ translateX }] },
+                { width: baseWidth, transform: [{ translateX }, { scaleX }] },
               ]}
             />
           )}

@@ -27,6 +27,7 @@ import {
   getQuizAnswers,
   useProfile,
 } from '@/lib/profile';
+import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import { fetchProgramme, formatKg } from '@/lib/programmes';
 import { openPaywall } from '@/lib/paywall';
 import { currentEnrolmentWeek, fetchActiveEnrolment, type RoutineEnrolment } from '@/lib/routines';
@@ -58,7 +59,7 @@ function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): 
 
 export default function ProfileScreen() {
   const { session } = useAuth();
-  const { profile } = useProfile();
+  const { profile, reload } = useProfile();
   const subscription = useSubscription();
   const answers = getQuizAnswers(profile);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -170,6 +171,32 @@ export default function ProfileScreen() {
     } catch {
       showDialog('Couldn’t reset', missingBlocksMessage());
     }
+  }
+
+  async function handleSaveStreakGoal(goal: StreakGoal) {
+    try {
+      await saveStreakGoal(goal);
+      reload();
+    } catch (error) {
+      showDialog(
+        'Couldn’t save that goal',
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    }
+  }
+
+  function requestEditStreakGoal() {
+    showDialog(
+      'Streak goal',
+      'This is the finish line for your weekly streak. A week counts when you hit your target.',
+      [
+        ...STREAK_GOALS.map((goal) => ({
+          text: `${goal} weeks`,
+          onPress: () => void handleSaveStreakGoal(goal),
+        })),
+        { text: 'Not now', style: 'cancel' as const },
+      ]
+    );
   }
 
   const answerRows = answers
@@ -301,6 +328,20 @@ export default function ProfileScreen() {
           )}
         </View>
       )}
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Settings</Text>
+        <Text style={styles.label}>
+          Streak goal is {answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks. A week counts when you hit your
+          target.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
+          onPress={requestEditStreakGoal}
+          accessibilityRole="button">
+          <Text style={styles.buttonText}>Edit streak goal</Text>
+        </Pressable>
+      </View>
 
       {answers && (
         <View style={styles.card}>

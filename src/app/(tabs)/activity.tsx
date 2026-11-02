@@ -22,17 +22,14 @@ import { ProBadge, ProMark } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import { getAchievementBadges, type AchievementBadge } from '@/lib/achievements';
 import {
-  DEFAULT_STREAK_GOAL,
-  STREAK_GOALS,
   describeStreak,
   fetchFinishedSessionMeta,
   fetchStreakGoal,
   formatTrainingHours,
   getActivityTotals,
   getWeeklyStreak,
-  saveStreakGoal,
+  sessionCountsTowardStreak,
   type FinishedSessionMeta,
-  type StreakGoal,
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import { equipmentListLabel, exerciseListLabel, getGymUnlocked } from '@/lib/gymUnlocked';
@@ -125,7 +122,6 @@ export default function ActivityScreen() {
   const [showPhotos, setShowPhotos] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isPhotoBusy, setIsPhotoBusy] = useState(false);
-  const [streakGoal, setStreakGoal] = useState<StreakGoal>(DEFAULT_STREAK_GOAL);
 
   useFocusEffect(
     useCallback(() => {
@@ -156,7 +152,6 @@ export default function ActivityScreen() {
           const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
           const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, goal);
           if (!isCurrent) return;
-          setStreakGoal(goal);
           setData({
             sets,
             sessions,
@@ -180,24 +175,6 @@ export default function ActivityScreen() {
       };
     }, [attempt, answers?.days_per_week])
   );
-
-  async function changeStreakGoal(goal: StreakGoal) {
-    const previous = streakGoal;
-    setStreakGoal(goal);
-    setData((current) => (current ? { ...current, streak: { ...current.streak, goal } } : current));
-    try {
-      await saveStreakGoal(goal);
-    } catch (error) {
-      setStreakGoal(previous);
-      setData((current) =>
-        current ? { ...current, streak: { ...current.streak, goal: previous } } : current
-      );
-      showDialog(
-        'Couldn’t save that goal',
-        error instanceof Error ? error.message : 'Check your connection and try again.'
-      );
-    }
-  }
 
   async function reloadPhotos() {
     try {
@@ -313,7 +290,9 @@ export default function ActivityScreen() {
   const liftOptions = getLiftOptions(data.sets);
   const lift = liftOptions.find((option) => option.exerciseId === liftId) ?? liftOptions[0];
   const history = lift ? getLiftHistory(data.sets, lift.exerciseId) : [];
-  const weeks = getWeeklyCounts(data.sessions.map((session) => session.date));
+  const weeks = getWeeklyCounts(
+    data.sessions.filter(sessionCountsTowardStreak).map((session) => session.date)
+  );
   const gym = getGymUnlocked(data.sets);
   const badges = getAchievementBadges({
     sessions: data.sessions,
@@ -340,7 +319,7 @@ export default function ActivityScreen() {
 
         {data.weekProgress.planned > 0 && (
           <Text style={styles.weekLine}>
-            This week: {data.weekProgress.completed} of {data.weekProgress.planned}{' '}
+            This week: {data.streak.doneThisWeek} of {data.weekProgress.planned}{' '}
             {data.weekProgress.planned === 1 ? 'workout' : 'workouts'}
           </Text>
         )}
@@ -359,22 +338,6 @@ export default function ActivityScreen() {
             />
           </View>
           <Text style={styles.chartNote}>{describeStreak(data.streak)}</Text>
-          <Text style={styles.bestDetail}>Streak goal</Text>
-          <View style={styles.goalRow}>
-            {STREAK_GOALS.map((goal) => {
-              const selected = streakGoal === goal;
-              return (
-                <Pressable
-                  key={goal}
-                  onPress={() => void changeStreakGoal(goal)}
-                  style={[styles.goalChip, selected && styles.goalChipOn]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}>
-                  <Text style={[styles.goalChipText, selected && styles.goalChipTextOn]}>{goal} weeks</Text>
-                </Pressable>
-              );
-            })}
-          </View>
         </View>
 
         <View style={styles.tabRow}>
@@ -654,7 +617,7 @@ export default function ActivityScreen() {
                 <BadgeRow key={badge.id} badge={badge} />
               ))}
               <Text style={styles.footnote}>
-                Locked badges stay grey until you unlock them. A rest week can keep a streak going.
+                Locked badges stay grey until you unlock them.
               </Text>
             </View>
           </>

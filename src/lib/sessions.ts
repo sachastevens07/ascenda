@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 
-export type SessionSource = 'programme' | 'custom' | 'ai' | 'routine';
+export type SessionSource = 'programme' | 'custom' | 'ai' | 'routine' | 'stretch';
 
 /** One row of the `sessions` table. */
 export type Session = {

@@ -3,8 +3,11 @@ import { startOfWeekMonday, toIso } from '@/lib/planner';
 import type { ExerciseBests, ProgressSet } from '@/lib/progress';
 import { parseDate } from '@/lib/progress';
 import { usesWeight } from '@/lib/programmes';
-import type { LoggedSet } from '@/lib/sessions';
+import type { LoggedSet, SessionSource } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
+
+/** Stretch sessions this long count toward the weekly target and streak. */
+export const STREAK_STRETCH_MIN_SECONDS = 10 * 60;
 
 export const STREAK_GOALS = [4, 8, 12] as const;
 export type StreakGoal = (typeof STREAK_GOALS)[number];
@@ -17,6 +20,7 @@ export type FinishedSessionMeta = {
   completed_at: string;
   duration_seconds: number | null;
   routine_enrolment_id: string | null;
+  source: SessionSource;
 };
 
 export type ActivityTotals = {
@@ -29,8 +33,6 @@ export type ActivityTotals = {
 export type WeeklyStreak = {
   current: number;
   goal: StreakGoal;
-  /** Weeks in the current streak that used a rest-week pass. */
-  restPassesUsed: number;
   hitThisWeek: boolean;
   targetThisWeek: number;
   doneThisWeek: number;
@@ -53,18 +55,26 @@ export function sessionDurationSeconds(session: FinishedSessionMeta): number {
   return Math.round((end - start) / 1000);
 }
 
+/** Strength sessions always count. Stretch sessions count from 10 minutes. */
+export function sessionCountsTowardStreak(session: FinishedSessionMeta): boolean {
+  if (session.source === 'stretch') {
+    return sessionDurationSeconds(session) >= STREAK_STRETCH_MIN_SECONDS;
+  }
+  return true;
+}
+
 export async function fetchFinishedSessionMeta(): Promise<FinishedSessionMeta[]> {
   const rows: FinishedSessionMeta[] = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('sessions')
-      .select('id, date, started_at, completed_at, duration_seconds, routine_enrolment_id')
+      .select('id, date, started_at, completed_at, duration_seconds, routine_enrolment_id, source')
       .not('completed_at', 'is', null)
       .order('date')
       .order('id')
       .range(from, from + 999);
     if (error) {
-      if (/duration_seconds|routine_enrolment_id/i.test(error.message)) {
+      if (/duration_seconds|routine_enrolment_id|source/i.test(error.message)) {
         const fallback = await supabase
           .from('sessions')
           .select('id, date, started_at, completed_at')
@@ -74,35 +84,39 @@ export async function fetchFinishedSessionMeta(): Promise<FinishedSessionMeta[]>
           .range(from, from + 999);
         if (fallback.error) throw fallback.error;
         rows.push(
-          ...((fallback.data ?? []) as Omit<FinishedSessionMeta, 'duration_seconds' | 'routine_enrolment_id'>[]).map(
-            (row) => ({
-              ...row,
-              duration_seconds: null,
-              routine_enrolment_id: null,
-            })
-          )
+          ...((fallback.data ?? []) as Omit<
+            FinishedSessionMeta,
+            'duration_seconds' | 'routine_enrolment_id' | 'source'
+          >[]).map((row) => ({
+            ...row,
+            duration_seconds: null,
+            routine_enrolment_id: null,
+            source: 'programme' as const,
+          }))
         );
         if (!fallback.data || fallback.data.length < 1000) break;
         continue;
       }
       throw error;
     }
-    rows.push(...((data ?? []) as FinishedSessionMeta[]));
+    rows.push(
+      ...((data ?? []) as FinishedSessionMeta[]).map((row) => ({
+        ...row,
+        source: row.source ?? 'programme',
+      }))
+    );
     if (!data || data.length < 1000) break;
   }
   return rows;
 }
 
 export function getActivityTotals(sessions: FinishedSessionMeta[], sets: ProgressSet[]): ActivityTotals {
+  const counted = sessions.filter(sessionCountsTowardStreak);
   return {
-    sessions: sessions.length,
+    sessions: counted.length,
     liftsTracked: sets.filter((set) => usesWeight(set.equipment)).length,
     durationSeconds: sessions.reduce((sum, session) => sum + sessionDurationSeconds(session), 0),
   };
-}
-
-function monthKey(iso: string): string {
-  return iso.slice(0, 7);
 }
 
 export function getWeeklyStreak(
@@ -114,12 +128,12 @@ export function getWeeklyStreak(
 ): WeeklyStreak {
   const thisMonday = startOfWeekMonday(now);
   const thisMondayIso = toIso(thisMonday);
-  const firstDate = sessions[0]?.date;
+  const counted = sessions.filter(sessionCountsTowardStreak);
+  const firstDate = counted[0]?.date;
   if (!firstDate) {
     return {
       current: 0,
       goal,
-      restPassesUsed: 0,
       hitThisWeek: false,
       targetThisWeek: plannedByWeek.get(thisMondayIso) ?? fallbackTarget,
       doneThisWeek: 0,
@@ -127,7 +141,7 @@ export function getWeeklyStreak(
   }
 
   const doneByWeek = new Map<string, number>();
-  for (const session of sessions) {
+  for (const session of counted) {
     const monday = toIso(startOfWeekMonday(parseDate(session.date)));
     doneByWeek.set(monday, (doneByWeek.get(monday) ?? 0) + 1);
   }
@@ -150,29 +164,18 @@ export function getWeeklyStreak(
   const doneThisWeek = thisWeek?.done ?? 0;
   const hitThisWeek = Boolean(thisWeek?.hit);
 
-  const passesUsed = new Set<string>();
   let current = 0;
   for (let index = weeks.length - 1; index >= 0; index -= 1) {
     const week = weeks[index];
     if (week.monday === thisMondayIso && !week.hit) continue;
     if (week.target <= 0) continue;
-    if (week.hit) {
-      current += 1;
-      continue;
-    }
-    const month = monthKey(week.monday);
-    if (!passesUsed.has(month)) {
-      passesUsed.add(month);
-      current += 1;
-      continue;
-    }
-    break;
+    if (!week.hit) break;
+    current += 1;
   }
 
   return {
     current,
     goal,
-    restPassesUsed: passesUsed.size,
     hitThisWeek,
     targetThisWeek,
     doneThisWeek,
@@ -181,15 +184,12 @@ export function getWeeklyStreak(
 
 export function describeStreak(streak: WeeklyStreak): string {
   if (streak.current === 0) {
-    return 'Hit your week to start a streak. One rest week a month keeps it going — no guilt if you need it.';
+    return 'Hit your week to start a streak. A week counts when you reach the planner target.';
   }
   if (streak.current >= streak.goal) {
     return `You’ve hit ${streak.current} weeks. That’s the goal you set. Keep going if it feels good.`;
   }
-  if (streak.restPassesUsed > 0) {
-    return 'A rest week this month counted so your streak could stay. Gentle pause, not a failure.';
-  }
-  return 'A week counts when you hit the planner target. One rest week a month is allowed.';
+  return 'A week counts when you hit the planner target. Miss one and the count starts again, with no guilt.';
 }
 
 export async function fetchStreakGoal(): Promise<StreakGoal> {

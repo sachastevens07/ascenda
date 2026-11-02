@@ -594,7 +594,7 @@ export default function OnboardingScreen() {
           <InsightStep
             metric={`${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
             title="Consistency is what moves the needle"
-            body={`People who stay consistent for ${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks are much more likely to still be training after that — and to feel at home with their plan. That’s all a streak is: a finish line you can see, not a test. One rest week a month can keep it going.`}
+            body={`People who stay consistent for ${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks are much more likely to still be training after that, and to feel at home with their plan. That’s all a streak is: a finish line you can see, not a test. A week counts when you hit your target.`}
             onContinue={() => goNext('insight-streak')}
           />
         )}
