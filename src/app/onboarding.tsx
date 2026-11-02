@@ -423,7 +423,7 @@ export default function OnboardingScreen() {
             <Text style={styles.welcome}>Welcome to Ascenda</Text>
             <Text style={styles.title}>Let’s find a plan that fits you</Text>
             <Text style={styles.subtitle}>
-              A few short questions. No weight-loss pressure — just a clear first session.
+              A few short questions. No weight-loss pressure, just a clear first session.
             </Text>
             <Pressable
               style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -903,7 +903,7 @@ function RevealStep({
           {recommended.is_pro ? (
             <Text style={styles.subtitle}>
               This one is Pro. If you don’t subscribe, we’ll start you on the free Gym Confidence
-              plan — same first-session feeling.
+              plan, with the same first-session feeling.
             </Text>
           ) : null}
         </>

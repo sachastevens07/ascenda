@@ -85,7 +85,7 @@ export function LevelUpCard({
         <Text style={styles.kicker}>Optional</Text>
         <Text style={styles.title}>Try something from the {zoneName.toLowerCase()}?</Text>
         <Text style={styles.body}>
-          You’ve done four sessions at your level. This is only if you feel like it — no rush, and
+          You’ve done four sessions at your level. This is only if you feel like it. No rush, and
           you can say no.
         </Text>
         <ExerciseGuide exercise={challenge.exercise} />

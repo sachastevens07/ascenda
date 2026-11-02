@@ -207,7 +207,7 @@ insert into public.routines (
     'full-body-3',
     'Full body',
     'full-body-3',
-    'Three full-body sessions a week. Beginner-friendly, and it works at any level. Eight weeks of the same three days — go up when you hit the top of the range.',
+    'Three full-body sessions a week. Beginner-friendly, and it works at any level. Eight weeks of the same three days. Go up when you hit the top of the range.',
     'cover-full-body-3',
     'general',
     8, 3, 45, 'beginner', 'full_gym', false, true, 2, 'full-body-3'

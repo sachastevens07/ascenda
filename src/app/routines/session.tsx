@@ -291,7 +291,7 @@ export default function SessionDetailScreen() {
         </Text>
         <Text style={styles.title}>{planned.day.name}</Text>
         <Text style={styles.intro}>
-          Change today only — swaps, sets and removals don’t rewrite the routine. Then start when
+          Change today only: swaps, sets and removals don’t rewrite the routine. Then start when
           you’re ready.
         </Text>
 

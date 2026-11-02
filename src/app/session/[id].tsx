@@ -527,7 +527,7 @@ export default function SessionScreen() {
                     )}
                     <Text style={styles.exerciseDetail}>{formatSetsAndReps(item)}</Text>
                     {isFirstTime && (
-                      <Text style={styles.previous}>First time — tap for the guide</Text>
+                      <Text style={styles.previous}>First time: tap for the guide</Text>
                     )}
                     {previousText && <Text style={styles.previous}>{previousText}</Text>}
                     {goalText && <Text style={styles.goal}>{goalText}</Text>}

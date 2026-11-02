@@ -190,7 +190,7 @@ export default function ExerciseScreen() {
           <Text style={styles.cardTitle}>If it’s taken</Text>
         </View>
         <Text style={styles.body}>
-          Pick one of these — same muscles, no need to wait. You can also swap from the logger.
+          Pick one of these: same muscles, no need to wait. You can also swap from the logger.
         </Text>
         {swaps.length === 0 ? (
           <Text style={styles.muted}>We’ll suggest a swap here once the library has finished loading.</Text>
