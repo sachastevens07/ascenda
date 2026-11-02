@@ -1,8 +1,26 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/constants/theme';
+
+export function ChipScroller({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.chips}
+      style={style}>
+      {children}
+    </ScrollView>
+  );
+}
 
 export function SectionHeader({
   title,
@@ -99,6 +117,12 @@ export function StickyDayHeader({
 }
 
 const styles = StyleSheet.create({
+  chips: {
+    gap: 8,
+    paddingVertical: 4,
+    paddingRight: 8,
+    alignItems: 'center',
+  },
   section: {
     flexDirection: 'row',
     alignItems: 'center',

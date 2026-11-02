@@ -49,59 +49,61 @@ export function ImageCard({
   style,
 }: ImageCardProps) {
   const { colours, radius, shadow, type } = useTheme();
-  const body = (
-    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
-      <View
-        style={[
-          styles.photo,
-          { backgroundColor: colours.surfaceMuted },
-          imageHeight ? { height: imageHeight } : { aspectRatio: imageAspectRatio },
-        ]}>
-        {image ? (
-          <Image source={image} style={styles.photoFill} resizeMode="cover" />
-        ) : (
-          <Text style={[styles.letter, { color: colours.brand }]}>{(letter ?? title).slice(0, 1)}</Text>
-        )}
-        {isPro || isFree ? (
-          <View style={styles.badge}>
-            {isPro ? <ProBadge locked={locked} compact /> : <FreeBadge />}
-          </View>
-        ) : null}
-        {typeof progress === 'number' ? (
-          <View style={styles.ring}>
-            <ProgressRing progress={progress} size={40} stroke={4} />
-          </View>
-        ) : null}
-      </View>
-      <View style={styles.body}>
-        <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
-          {title}
-        </Text>
-        {subtitle ? (
-          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]} numberOfLines={2}>
-            {subtitle}
+  const frame = (
+    <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
+      <View style={[styles.card, { borderRadius: radius.lg }]}>
+        <View
+          style={[
+            styles.photo,
+            { backgroundColor: colours.surfaceMuted },
+            imageHeight ? { height: imageHeight } : { aspectRatio: imageAspectRatio },
+          ]}>
+          {image ? (
+            <Image source={image} style={styles.photoFill} resizeMode="cover" />
+          ) : (
+            <Text style={[styles.letter, { color: colours.brand }]}>{(letter ?? title).slice(0, 1)}</Text>
+          )}
+          {isPro || isFree ? (
+            <View style={styles.badge}>
+              {isPro ? <ProBadge locked={locked} compact /> : <FreeBadge />}
+            </View>
+          ) : null}
+          {typeof progress === 'number' ? (
+            <View style={styles.ring}>
+              <ProgressRing progress={progress} size={40} stroke={4} />
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.body}>
+          <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
+            {title}
           </Text>
-        ) : null}
-        {tags.length > 0 ? (
-          <View style={styles.tags}>
-            {tags.slice(0, 3).map((tag) => (
-              <Chip key={tag} label={tag} />
-            ))}
-          </View>
-        ) : null}
+          {subtitle ? (
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]} numberOfLines={2}>
+              {subtitle}
+            </Text>
+          ) : null}
+          {tags.length > 0 ? (
+            <View style={styles.tags}>
+              {tags.slice(0, 3).map((tag) => (
+                <Chip key={tag} label={tag} />
+              ))}
+            </View>
+          ) : null}
+        </View>
       </View>
     </View>
   );
 
   if (!onPress) {
-    return <View style={style}>{body}</View>;
+    return <View style={style}>{frame}</View>;
   }
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       style={({ pressed }) => [style, pressed && styles.pressed]}>
-      {body}
+      {frame}
     </Pressable>
   );
 }
@@ -256,8 +258,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    minHeight: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   heroFallback: {
     flex: 1,

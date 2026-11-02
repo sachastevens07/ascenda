@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ExerciseLibrary } from '@/components/ExerciseLibrary';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 
 const SECTIONS = [
   { id: 'routines', label: 'Routines' },
@@ -17,6 +17,7 @@ type Section = (typeof SECTIONS)[number]['id'];
 
 export default function ProgrammesScreen() {
   const tabBarHeight = useTabBarHeight();
+  const { colours, type } = useTheme();
   const params = useLocalSearchParams<{ section?: string | string[] }>();
   const requested = Array.isArray(params.section) ? params.section[0] : params.section;
   const [section, setSection] = useState<Section>(
@@ -30,20 +31,34 @@ export default function ProgrammesScreen() {
   }, [requested]);
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Programmes</Text>
-        <View style={styles.tabRow} accessibilityRole="tablist">
+        <Text style={[type.display, { color: colours.ink }]}>Programmes</Text>
+        <View
+          style={[styles.tabRow, { borderBottomColor: colours.border }]}
+          accessibilityRole="tablist">
           {SECTIONS.map((item) => {
             const selected = section === item.id;
             return (
               <Pressable
                 key={item.id}
                 onPress={() => setSection(item.id)}
-                style={[styles.tabChip, selected && styles.tabChipOn]}
+                style={styles.tab}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}>
-                <Text style={[styles.tabChipText, selected && styles.tabChipTextOn]}>{item.label}</Text>
+                <Text
+                  style={[
+                    type.title3,
+                    { color: selected ? colours.ink : colours.inkMuted, fontWeight: selected ? '700' : '500' },
+                  ]}>
+                  {item.label}
+                </Text>
+                <View
+                  style={[
+                    styles.underline,
+                    { backgroundColor: selected ? colours.brand : 'transparent' },
+                  ]}
+                />
               </Pressable>
             );
           })}
@@ -64,40 +79,25 @@ export default function ProgrammesScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   header: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 8,
-    gap: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colours.text,
   },
   tabRow: {
     flexDirection: 'row',
-    gap: 8,
+    marginTop: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  tabChip: {
+  tab: {
     flex: 1,
-    minHeight: 48,
-    borderRadius: 999,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.surface,
+    paddingTop: 10,
   },
-  tabChipOn: {
-    backgroundColor: colours.accent,
-  },
-  tabChipText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colours.textMuted,
-  },
-  tabChipTextOn: {
-    color: colours.surface,
+  underline: {
+    marginTop: 10,
+    height: 2,
+    alignSelf: 'stretch',
+    borderRadius: 999,
   },
 });

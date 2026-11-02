@@ -364,44 +364,46 @@ export default function HomeScreen() {
         ) : null}
 
         {enrolment && next && !inProgress ? (
-          <View style={[styles.hero, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-            <Pressable onPress={openSessionDetail} accessibilityRole="button">
-              <View style={[styles.heroPhoto, { backgroundColor: colours.surfaceMuted }]}>
-                {nextThumb ? (
-                  <Image
-                    source={nextThumb}
-                    style={styles.heroFill}
-                    resizeMode="cover"
-                    accessibilityLabel={next.day.name}
-                  />
-                ) : (
-                  <Text style={[styles.heroLetter, { color: colours.brand }]}>{next.day.name.slice(0, 1)}</Text>
-                )}
-              </View>
-            </Pressable>
-            <View style={styles.heroBody}>
-              <View style={styles.heroHeading}>
-                <View style={styles.flex}>
-                  <Text style={[type.eyebrow, { color: colours.accent }]}>
-                    Week {next.weekNumber} · day {next.day.day_number}
-                  </Text>
-                  <Pressable onPress={openSessionDetail} accessibilityRole="button">
-                    <Text style={[type.title2, { color: colours.ink, marginTop: spacing.xs }]}>{next.day.name}</Text>
-                  </Pressable>
-                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
-                    {enrolment.routine.session_minutes} min · {next.day.exercises.length} exercises
-                  </Text>
+          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+            <View style={[styles.heroClip, { borderRadius: radius.xl }]}>
+              <Pressable onPress={openSessionDetail} accessibilityRole="button">
+                <View style={[styles.heroPhoto, { backgroundColor: colours.surfaceMuted }]}>
+                  {nextThumb ? (
+                    <Image
+                      source={nextThumb}
+                      style={styles.heroFill}
+                      resizeMode="cover"
+                      accessibilityLabel={next.day.name}
+                    />
+                  ) : (
+                    <Text style={[styles.heroLetter, { color: colours.brand }]}>{next.day.name.slice(0, 1)}</Text>
+                  )}
                 </View>
-                <View ref={routineMenuRef} collapsable={false}>
-                  <IconButton
-                    icon="ellipsis-horizontal"
-                    variant="muted"
-                    accessibilityLabel="Switch or end this routine"
-                    onPress={openRoutineMenu}
-                  />
+              </Pressable>
+              <View style={styles.heroBody}>
+                <View style={styles.heroHeading}>
+                  <View style={styles.flex}>
+                    <Text style={[type.eyebrow, { color: colours.accent }]}>
+                      Week {next.weekNumber} · day {next.day.day_number}
+                    </Text>
+                    <Pressable onPress={openSessionDetail} accessibilityRole="button">
+                      <Text style={[type.title2, { color: colours.ink, marginTop: spacing.xs }]}>{next.day.name}</Text>
+                    </Pressable>
+                    <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                      {enrolment.routine.session_minutes} min · {next.day.exercises.length} exercises
+                    </Text>
+                  </View>
+                  <View ref={routineMenuRef} collapsable={false}>
+                    <IconButton
+                      icon="ellipsis-horizontal"
+                      variant="muted"
+                      accessibilityLabel="Switch or end this routine"
+                      onPress={openRoutineMenu}
+                    />
+                  </View>
                 </View>
+                <PrimaryButton label="Start session" tone="accent" onPress={openSessionDetail} style={{ marginTop: spacing.md }} />
               </View>
-              <PrimaryButton label="Start session" tone="accent" onPress={openSessionDetail} style={{ marginTop: spacing.md }} />
             </View>
           </View>
         ) : null}
@@ -599,7 +601,7 @@ const styles = StyleSheet.create({
   card: {
     padding: 20,
   },
-  hero: {
+  heroClip: {
     overflow: 'hidden',
   },
   heroPhoto: {
@@ -641,11 +643,13 @@ const styles = StyleSheet.create({
   },
   carouselBleed: {
     marginHorizontal: -24,
+    marginVertical: -12,
+    overflow: 'visible',
   },
   carousel: {
     paddingHorizontal: 24,
+    paddingVertical: 12,
     gap: 12,
-    paddingRight: 24,
   },
   limitButton: {
     minHeight: 56,

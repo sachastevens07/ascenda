@@ -1,24 +1,46 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
-import { FilterSheet } from '@/components/FilterSheet';
-import { ProBadge } from '@/components/ProBadge';
-import { ProgressRing } from '@/components/ProgressRing';
-import { colours } from '@/constants/theme';
+import {
+  Chip,
+  ChipScroller,
+  FreeBadge,
+  IconButton,
+  MenuHeader,
+  MenuRow,
+  OverflowMenu,
+  PrimaryButton,
+  ProBadge,
+  ProgressBar,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import {
   challengeCountdown,
   challengeStatus,
   fetchChallenges,
   type Challenge,
 } from '@/lib/challenges';
-import { coverForRoutine } from '@/lib/images';
+import { coverForRoutine, coverSources } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
+  DIFFICULTY_LABELS,
+  ROUTINE_GOAL_LABELS,
   collectRoutineTags,
   formatTagLabel,
   endActiveEnrolment,
@@ -36,6 +58,10 @@ import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
+function coverImage(routine: Pick<RoutineSummary, 'id' | 'cover'>): ImageSourcePropType | null {
+  return coverSources(coverForRoutine(routine))[0] ?? null;
+}
+
 export function RoutineCatalogue({
   showTitle = true,
   bottomInset,
@@ -47,6 +73,7 @@ export function RoutineCatalogue({
 }) {
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
+  const { colours, spacing, radius, shadow, type } = useTheme();
   const subscription = useSubscription();
   const [routines, setRoutines] = useState<RoutineSummary[]>([]);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
@@ -58,6 +85,9 @@ export function RoutineCatalogue({
   const [path, setPath] = useState<RoutinePath | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [progress, setProgress] = useState<Record<string, RoutineProgress>>({});
+  const menuRef = useRef<AnchorHandle>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -124,330 +154,339 @@ export function RoutineCatalogue({
     router.push({ pathname: '/routines/[id]', params: { id: summary.id } } as Href);
   }
 
+  function openCurrentMenu() {
+    measureAnchor(menuRef.current, (rect) => {
+      setMenuAnchor(rect);
+      setMenuOpen(true);
+    });
+  }
+
+  const tags = collectRoutineTags(routines);
+  const currentProgress = enrolment ? progress[enrolment.routine_id] : undefined;
+  const currentWeek = enrolment ? currentEnrolmentWeek(enrolment) : 0;
+  const currentBar =
+    currentProgress && currentProgress.target > 0
+      ? currentProgress.done / currentProgress.target
+      : enrolment
+        ? currentWeek / enrolment.routine.length_weeks
+        : 0;
+
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={[styles.container, { paddingBottom }]}>
-      {showTitle ? <Text style={styles.title}>{routineType === 'stretch' ? 'Stretches' : 'Routines'}</Text> : null}
-      <Text style={[styles.intro, !showTitle && styles.introFlush]}>
-        {routineType === 'stretch'
-          ? 'Short timed sessions for mornings, desks, hips and cool-downs. Three are free. Holds, not sets and reps.'
-          : 'Filter by tag, then open a plan to see the week-by-week details. Two starters are free. Pro plans show week 1 on the free plan.'}
-      </Text>
-
-      {path && routineType === 'strength' && (
-        <Pressable
-          onPress={() => {
-            if (path.is_pro && !subscription.isPro) {
-              openPaywall('path');
-              return;
-            }
-            router.push({ pathname: '/paths/[id]', params: { id: path.id } } as Href);
-          }}
-          style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-          accessibilityRole="button">
-          <View style={styles.chipRow}>
-            <Text style={styles.activeLabel}>Path</Text>
-            {path.is_pro ? <ProBadge compact /> : null}
-          </View>
-          <Text style={styles.cardTitle}>{path.name}</Text>
-          <Text style={styles.meta}>
-            {path.steps.filter((step) => step.done).length} of {path.steps.length} routines finished
+    <>
+      <ScrollView
+        style={[styles.scroll, { backgroundColor: colours.bg }]}
+        contentContainerStyle={[styles.container, { paddingBottom }]}>
+        {showTitle ? (
+          <Text style={[type.display, { color: colours.ink, marginBottom: spacing.sm }]}>
+            {routineType === 'stretch' ? 'Stretches' : 'Routines'}
           </Text>
-          <Text style={styles.body}>{path.description}</Text>
-          <Text style={styles.buttonText}>Open path map</Text>
-        </Pressable>
-      )}
+        ) : null}
 
-      {routineType === 'strength' &&
-        challenges.map((challenge) => (
+        {path && routineType === 'strength' ? (
           <Pressable
-            key={challenge.id}
-            onPress={() =>
-              router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)
-            }
-            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            onPress={() => {
+              if (path.is_pro && !subscription.isPro) {
+                openPaywall('path');
+                return;
+              }
+              router.push({ pathname: '/paths/[id]', params: { id: path.id } } as Href);
+            }}
+            style={({ pressed }) => [pressed && styles.pressed]}
             accessibilityRole="button">
-            <View style={styles.chipRow}>
-              <Text style={styles.activeLabel}>Challenge</Text>
-              {challenge.is_pro ? <ProBadge compact /> : null}
-            </View>
-            <Text style={styles.cardTitle}>{challenge.name}</Text>
-            <Text style={styles.meta}>{challengeCountdown(challenge)}</Text>
-            <Text style={styles.body}>{challenge.description}</Text>
-          </Pressable>
-        ))}
-
-      {enrolment && routineType === 'strength' && (
-        <View style={styles.activeCard}>
-          <Text style={styles.activeLabel}>Your current routine</Text>
-          <Text style={styles.activeName}>{enrolment.routine.name}</Text>
-          <Text style={styles.meta}>
-            Week {currentEnrolmentWeek(enrolment)} of {enrolment.routine.length_weeks}
-          </Text>
-          <Pressable
-            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-            onPress={requestLeave}
-            disabled={isLeaving}
-            accessibilityRole="button">
-            <Text style={styles.secondaryText}>{isLeaving ? 'Ending…' : 'End routine'}</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {loadState === 'loading' && <ActivityIndicator color={colours.accent} style={styles.spinner} />}
-
-      {loadState === 'error' && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Couldn’t load routines</Text>
-          <Text style={styles.body}>
-            {missingSql ? missingRoutinesMessage() : 'Check your connection and try again.'}
-          </Text>
-          <Pressable
-            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-            onPress={() => setAttempt((n) => n + 1)}
-            accessibilityRole="button">
-            <Text style={styles.buttonText}>Try again</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {loadState === 'ready' && missingSql && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            {routineType === 'stretch' ? 'Stretches aren’t in the database yet' : 'Routines aren’t in the database yet'}
-          </Text>
-          <Text style={styles.body}>
-            {routineType === 'stretch'
-              ? 'Stretch routines need supabase/stretches.sql run in the Supabase SQL editor.'
-              : missingRoutinesMessage()}
-          </Text>
-        </View>
-      )}
-
-      {routines.length > 0 && (
-        <View style={styles.filterRow}>
-          <FilterSheet
-            label="Tag"
-            allLabel="All tags"
-            options={collectRoutineTags(routines).map((value) => ({
-              value,
-              label: formatTagLabel(value),
-            }))}
-            value={tagFilter}
-            onChange={setTagFilter}
-          />
-        </View>
-      )}
-
-      {routines
-        .filter((summary) => !tagFilter || summary.tags.includes(tagFilter))
-        .map((summary) => {
-          const isCurrent = enrolment?.routine_id === summary.id;
-          const ring = progress[summary.id];
-          return (
-            <View key={summary.id} style={styles.card}>
-              <CoverPhoto
-                cover={coverForRoutine(summary)}
-                letter={summary.name.slice(0, 1)}
-                height={168}
-                style={styles.cover}
-              />
-              <View style={styles.chipRow}>
-                {summary.is_pro ? (
-                  <ProBadge />
-                ) : (
-                  <Text style={[styles.chip, styles.chipFree]}>Free</Text>
-                )}
-                {isCurrent && <Text style={[styles.chip, styles.chipCurrent]}>Current</Text>}
-                {ring ? (
-                  <View style={styles.ringWrap}>
-                    <ProgressRing progress={ring.done / ring.target} size={36} stroke={4} />
-                  </View>
-                ) : null}
-              </View>
-              <Text style={styles.cardTitle}>{summary.name}</Text>
-              {ring ? (
-                <Text style={styles.meta}>
-                  {ring.status === 'complete'
-                    ? 'Finished'
-                    : `${ring.done} of ${ring.target} sessions`}
+            <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
+              <View style={[styles.block, { borderRadius: radius.lg }]}>
+                <View style={styles.rowBetween}>
+                  <Text style={[type.eyebrow, { color: colours.accent }]}>Path</Text>
+                  {path.is_pro && !subscription.isPro ? <ProBadge compact /> : null}
+                </View>
+                <Text style={[type.title3, { color: colours.ink, marginTop: spacing.sm }]}>{path.name}</Text>
+                <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                  {path.steps.filter((step) => step.done).length} of {path.steps.length} routines finished
                 </Text>
-              ) : null}
-              <Text style={styles.meta}>
-                {routineType === 'stretch'
-                  ? `About ${summary.session_minutes} min · mat`
-                  : `${summary.length_weeks} weeks · ${summary.days_per_week} days / week · about ${summary.session_minutes} min`}
-              </Text>
-              <Text style={styles.body}>{summary.description}</Text>
-              <View style={styles.tagRow}>
-                {summary.tags.map((tag) => (
-                  <Text key={tag} style={styles.tag}>
-                    {formatTagLabel(tag)}
+              </View>
+            </View>
+          </Pressable>
+        ) : null}
+
+        {routineType === 'strength' &&
+          challenges.map((challenge) => (
+            <Pressable
+              key={challenge.id}
+              onPress={() =>
+                router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)
+              }
+              style={({ pressed }) => [pressed && styles.pressed]}
+              accessibilityRole="button">
+              <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
+                <View style={[styles.block, { borderRadius: radius.lg }]}>
+                  <View style={styles.rowBetween}>
+                    <Text style={[type.eyebrow, { color: colours.accent }]}>Challenge</Text>
+                    {challenge.is_pro && !subscription.isPro ? <ProBadge compact /> : null}
+                  </View>
+                  <Text style={[type.title3, { color: colours.ink, marginTop: spacing.sm }]}>{challenge.name}</Text>
+                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                    {challengeCountdown(challenge)}
                   </Text>
+                </View>
+              </View>
+            </Pressable>
+          ))}
+
+        {enrolment && routineType === 'strength' ? (
+          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
+            <View style={[styles.pin, { borderRadius: radius.lg }]}>
+              <Pressable
+                onPress={() => openDetails(enrolment.routine)}
+                style={styles.pinMain}
+                accessibilityRole="button">
+                <Thumb image={coverImage(enrolment.routine)} letter={enrolment.routine.name} />
+                <View style={styles.pinCopy}>
+                  <Text style={[type.eyebrow, { color: colours.accent }]}>Current routine</Text>
+                  <Text style={[type.title3, { color: colours.ink, marginTop: 4 }]} numberOfLines={2}>
+                    {enrolment.routine.name}
+                  </Text>
+                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                    {currentProgress
+                      ? currentProgress.status === 'complete'
+                        ? 'Finished'
+                        : `${currentProgress.done} of ${currentProgress.target} sessions`
+                      : `Week ${currentWeek} of ${enrolment.routine.length_weeks}`}
+                  </Text>
+                  <ProgressBar progress={currentBar} style={{ marginTop: 10 }} />
+                </View>
+              </Pressable>
+              <View ref={menuRef} collapsable={false}>
+                <IconButton
+                  icon="ellipsis-horizontal"
+                  variant="muted"
+                  accessibilityLabel="Routine options"
+                  onPress={openCurrentMenu}
+                />
+              </View>
+            </View>
+          </View>
+        ) : null}
+
+        {loadState === 'loading' ? <ActivityIndicator color={colours.brand} style={styles.spinner} /> : null}
+
+        {loadState === 'error' ? (
+          <View style={[styles.block, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+            <Text style={[type.title3, { color: colours.ink }]}>Couldn’t load routines</Text>
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.sm }]}>
+              {missingSql ? missingRoutinesMessage() : 'Check your connection and try again.'}
+            </Text>
+            <PrimaryButton
+              label="Try again"
+              onPress={() => setAttempt((n) => n + 1)}
+              style={{ marginTop: spacing.md }}
+            />
+          </View>
+        ) : null}
+
+        {loadState === 'ready' && missingSql ? (
+          <View style={[styles.block, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
+            <Text style={[type.title3, { color: colours.ink }]}>
+              {routineType === 'stretch' ? 'Stretches aren’t in the database yet' : 'Routines aren’t in the database yet'}
+            </Text>
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.sm }]}>
+              {routineType === 'stretch'
+                ? 'Stretch routines need supabase/stretches.sql run in the Supabase SQL editor.'
+                : missingRoutinesMessage()}
+            </Text>
+          </View>
+        ) : null}
+
+        {routines.length > 0 ? (
+          <ChipScroller style={styles.filters}>
+            <Chip label="All" selected={tagFilter === null} onPress={() => setTagFilter(null)} />
+            {tags.map((tag) => (
+              <Chip
+                key={tag}
+                label={formatTagLabel(tag)}
+                selected={tagFilter === tag}
+                onPress={() => setTagFilter(tagFilter === tag ? null : tag)}
+              />
+            ))}
+          </ChipScroller>
+        ) : null}
+
+        {routines
+          .filter((summary) => !tagFilter || summary.tags.includes(tagFilter))
+          .map((summary) => (
+            <CatalogueCard
+              key={summary.id}
+              summary={summary}
+              stretch={routineType === 'stretch'}
+              showBadges={!subscription.isPro}
+              onPress={() => openDetails(summary)}
+            />
+          ))}
+      </ScrollView>
+
+      <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={() => setMenuOpen(false)}>
+        <MenuHeader
+          label={enrolment?.routine.name ?? 'Your routine'}
+          detail="Your logged sessions stay if you end this plan."
+        />
+        <MenuRow
+          label="View routine"
+          onPress={() => {
+            setMenuOpen(false);
+            if (enrolment) openDetails(enrolment.routine);
+          }}
+        />
+        <MenuRow
+          label={isLeaving ? 'Ending…' : 'End routine'}
+          danger
+          onPress={() => {
+            setMenuOpen(false);
+            requestLeave();
+          }}
+        />
+      </OverflowMenu>
+    </>
+  );
+}
+
+function CatalogueCard({
+  summary,
+  stretch,
+  showBadges,
+  onPress,
+}: {
+  summary: RoutineSummary;
+  stretch: boolean;
+  showBadges: boolean;
+  onPress: () => void;
+}) {
+  const { colours, radius, shadow, type } = useTheme();
+  const image = coverImage(summary);
+  const eyebrow = stretch
+    ? formatTagLabel(summary.tags[0] ?? 'Stretch')
+    : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_LABELS[summary.goal]}`;
+  const meta = stretch
+    ? `${summary.session_minutes} min`
+    : `${summary.length_weeks} weeks · ${summary.days_per_week} days / week`;
+  const chips = summary.tags.filter((tag) => !stretch || tag !== summary.tags[0]).slice(0, 2);
+
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => pressed && styles.pressed}>
+      <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
+        <View style={[styles.compact, { borderRadius: radius.lg }]}>
+          <Thumb image={image} letter={summary.name} />
+          <View style={styles.compactCopy}>
+            <View style={styles.rowBetween}>
+              <Text style={[type.eyebrow, { color: colours.inkMuted, flex: 1 }]} numberOfLines={1}>
+                {eyebrow}
+              </Text>
+              {showBadges ? summary.is_pro ? <ProBadge compact /> : <FreeBadge /> : null}
+            </View>
+            <Text style={[type.title3, { color: colours.ink, marginTop: 4 }]} numberOfLines={2}>
+              {summary.name}
+            </Text>
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]} numberOfLines={1}>
+              {meta}
+            </Text>
+            {chips.length > 0 ? (
+              <View style={styles.chipRow}>
+                {chips.map((tag) => (
+                  <Chip key={tag} label={formatTagLabel(tag)} />
                 ))}
               </View>
-              <Pressable
-                style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-                onPress={() => openDetails(summary)}
-                accessibilityRole="button">
-                <Text style={styles.buttonText}>See more details</Text>
-              </Pressable>
-            </View>
-          );
-        })}
-    </ScrollView>
+            ) : null}
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function Thumb({ image, letter }: { image: ImageSourcePropType | null; letter: string }) {
+  const { colours, radius } = useTheme();
+  return (
+    <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
+      {image ? (
+        <Image source={image} style={styles.thumbFill} resizeMode="cover" accessibilityLabel="" />
+      ) : (
+        <Text style={[styles.thumbLetter, { color: colours.brand }]}>{letter.slice(0, 1)}</Text>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   container: {
     padding: 24,
-    paddingTop: 8,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 8,
-  },
-  intro: {
-    fontSize: 16,
-    color: colours.textMuted,
-    marginBottom: 16,
-    lineHeight: 22,
-  },
-  introFlush: {
-    marginTop: 4,
-  },
-  filterRow: {
-    marginBottom: 20,
+    paddingTop: 16,
+    gap: 14,
   },
   spinner: {
     marginVertical: 24,
   },
-  activeCard: {
-    padding: 20,
-    borderRadius: 18,
-    backgroundColor: colours.accentSoft,
-    marginBottom: 24,
-  },
-  activeLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colours.accent,
-    marginBottom: 4,
-  },
-  activeName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  card: {
-    padding: 20,
-    borderRadius: 22,
+  block: {
+    padding: 16,
     overflow: 'hidden',
-    backgroundColor: colours.surface,
-    marginBottom: 20,
   },
-  cover: {
-    marginHorizontal: -20,
-    marginTop: -20,
-    marginBottom: 16,
+  pin: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 12,
+    overflow: 'hidden',
   },
-  chipRow: {
+  pinMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  pinCopy: {
+    flex: 1,
+  },
+  compact: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    padding: 12,
+    overflow: 'hidden',
+  },
+  compactCopy: {
+    flex: 1,
+  },
+  thumb: {
+    width: 88,
+    height: 88,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbFill: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbLetter: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  rowBetween: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
   },
-  chip: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colours.accent,
-    backgroundColor: colours.accentSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  chipFree: {
-    color: colours.surface,
-    backgroundColor: colours.accent,
-  },
-  chipCurrent: {
-    color: colours.accent,
-    backgroundColor: colours.background,
-  },
-  ringWrap: {
-    marginLeft: 'auto',
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 6,
-  },
-  meta: {
-    fontSize: 15,
-    color: colours.textMuted,
-    marginBottom: 4,
-  },
-  body: {
-    fontSize: 16,
-    color: colours.text,
-    marginTop: 8,
-    lineHeight: 22,
-  },
-  tagRow: {
+  chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 12,
+    gap: 8,
+    marginTop: 8,
   },
-  tag: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colours.textMuted,
-    borderWidth: 1,
-    borderColor: colours.border,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  button: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-    marginTop: 12,
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  secondary: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 12,
-  },
-  secondaryText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.accent,
+  filters: {
+    marginHorizontal: -24,
+    paddingHorizontal: 24,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.92,
   },
 });

@@ -119,16 +119,16 @@ export type ShadowStyle = Pick<
 
 const lightShadow: ShadowStyle = {
   shadowColor: '#2C1810',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.08,
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.12,
   shadowRadius: 12,
   elevation: 3,
 };
 
 const darkShadow: ShadowStyle = {
   shadowColor: '#000000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.4,
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.45,
   shadowRadius: 12,
   elevation: 3,
 };
