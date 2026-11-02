@@ -66,9 +66,9 @@ export const BUILDER_TAGS = ['one-spot', 'busy-gym', 'minimal-equipment'] as con
 export type BuilderTag = (typeof BUILDER_TAGS)[number];
 
 export const BUILDER_TAG_LABELS: Record<BuilderTag, string> = {
-  'one-spot': 'One spot',
-  'busy-gym': 'Busy gym friendly',
-  'minimal-equipment': 'Minimal equipment',
+  'one-spot': 'One Spot',
+  'busy-gym': 'Busy Gym Friendly',
+  'minimal-equipment': 'Minimal Equipment',
 };
 
 export function exerciseMatchesBuilderTag(

@@ -13,7 +13,8 @@ import { Vibration } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { cancelRestOver, scheduleRestOver } from '@/lib/restTimer';
-import { fetchActiveSession } from '@/lib/sessions';
+import { fetchRoutineDay } from '@/lib/routines';
+import { fetchActiveSession, type SessionSource } from '@/lib/sessions';
 import { useSubscription } from '@/lib/subscription';
 import { buildEntries, getNextSet, loadSessionLog, type NextSet } from '@/lib/workoutLog';
 
@@ -23,6 +24,7 @@ export type ActiveWorkout = {
   dayName: string;
   /** Epoch milliseconds. */
   startedAt: number;
+  source?: SessionSource;
 };
 
 type WorkoutState = {
@@ -87,6 +89,18 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     (async () => {
       const current = await fetchActiveSession();
       if (!current) return;
+      if (current.source === 'stretch') {
+        const day = current.routine_day_id ? await fetchRoutineDay(current.routine_day_id) : null;
+        if (!isCurrent || hasPublished.current) return;
+        setActive({
+          sessionId: current.id,
+          dayName: day?.name ?? 'Stretch',
+          startedAt: new Date(current.started_at).getTime(),
+          source: 'stretch',
+        });
+        setNextSet(null);
+        return;
+      }
       const log = await loadSessionLog(current.id, equipment);
       if (!isCurrent || !log || hasPublished.current) return;
       setActive({

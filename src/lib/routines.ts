@@ -20,6 +20,7 @@ export const LAUNCH_ROUTINE_IDS = [
 export type RoutineGoal = 'strength' | 'glutes_legs' | 'general' | 'confidence';
 export type RoutineDifficulty = 'beginner' | 'intermediate' | 'experienced';
 export type RoutineEquipment = 'full_gym' | 'dumbbells' | 'home';
+export type RoutineType = 'strength' | 'stretch';
 export type EnrolmentStatus = 'active' | 'complete' | 'abandoned';
 
 export type CoverImage = {
@@ -46,6 +47,7 @@ export type RoutineSummary = {
   is_featured_eligible: boolean;
   sort_order: number;
   source_programme_id: string | null;
+  type: RoutineType;
   tags: string[];
 };
 
@@ -55,6 +57,8 @@ export type RoutineDayExercise = {
   rep_min: number;
   rep_max: number;
   rest_seconds: number;
+  /** Timed hold for stretch steps. Null on strength slots. */
+  duration_seconds: number | null;
   exercise: SlotExercise;
 };
 
@@ -135,13 +139,18 @@ export function describeRoutineError(error: unknown): string {
 }
 
 const COVER_SELECT = 'id, url, storage_path, alt_text, licence_source';
-const SUMMARY_SELECT = `
+const SUMMARY_SELECT_BASE = `
   id, name, slug, description, goal, length_weeks, days_per_week, session_minutes,
   difficulty, equipment, is_pro, is_featured_eligible, sort_order, source_programme_id,
   cover:images (${COVER_SELECT}),
   routine_tags (tag)
 `;
+const SUMMARY_SELECT = `${SUMMARY_SELECT_BASE}, type`;
 const DAY_EXERCISE_SELECT = `
+  position, sets, rep_min, rep_max, rest_seconds, duration_seconds,
+  exercise:exercises (${SLOT_EXERCISE_COLUMNS})
+`;
+const DAY_EXERCISE_SELECT_LEGACY = `
   position, sets, rep_min, rep_max, rest_seconds,
   exercise:exercises (${SLOT_EXERCISE_COLUMNS})
 `;
@@ -155,6 +164,11 @@ const DETAIL_SELECT = `
   )
 `;
 const EXERCISE_QUERY_SELECT = `
+  routine_day_id,
+  position, sets, rep_min, rep_max, rest_seconds, duration_seconds,
+  exercise:exercises (${SLOT_EXERCISE_COLUMNS})
+`;
+const EXERCISE_QUERY_SELECT_LEGACY = `
   routine_day_id,
   position, sets, rep_min, rep_max, rest_seconds,
   exercise:exercises (${SLOT_EXERCISE_COLUMNS})
@@ -222,6 +236,7 @@ function toSummary(row: SummaryRow): RoutineSummary {
     is_featured_eligible: row.is_featured_eligible,
     sort_order: row.sort_order,
     source_programme_id: row.source_programme_id,
+    type: row.type === 'stretch' ? 'stretch' : 'strength',
     tags: (row.routine_tags ?? []).map((item) => item.tag),
   };
 }
@@ -274,17 +289,36 @@ function toDayExercise(item: Omit<RoutineDayExercise, 'exercise'> & { exercise: 
     rep_min: item.rep_min,
     rep_max: item.rep_max,
     rest_seconds: item.rest_seconds,
+    duration_seconds: item.duration_seconds ?? null,
     exercise: toSlotExercise(item.exercise),
   };
+}
+
+function isMissingDurationColumn(error: { message?: string; code?: string }): boolean {
+  return /duration_seconds/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isMissingTypeColumn(error: { message?: string; code?: string }): boolean {
+  return /routines\.type|\btype\b.*schema cache|column .*type/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
 }
 
 async function fetchExercisesForDays(dayIds: string[]): Promise<Map<string, RoutineDayExercise[]>> {
   const byDay = new Map<string, RoutineDayExercise[]>();
   if (dayIds.length === 0) return byDay;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('routine_day_exercises')
     .select(EXERCISE_QUERY_SELECT)
     .in('routine_day_id', dayIds);
+  if (error && isMissingDurationColumn(error)) {
+    const retry = await supabase
+      .from('routine_day_exercises')
+      .select(EXERCISE_QUERY_SELECT_LEGACY)
+      .in('routine_day_id', dayIds);
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
   if (error) {
     if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
     throw new Error(error.message);
@@ -474,7 +508,8 @@ export function pickFeaturedRoutines(
   count = 4,
   options?: { freeOnly?: boolean }
 ): RoutineSummary[] {
-  const pool = options?.freeOnly ? routines.filter((routine) => !routine.is_pro) : routines;
+  const strength = routines.filter((routine) => routine.type !== 'stretch');
+  const pool = options?.freeOnly ? strength.filter((routine) => !routine.is_pro) : strength;
   const eligible = pool.filter((routine) => routine.is_featured_eligible);
   const rankedSource = eligible.length > 0 ? eligible : pool;
   const ranked = [...rankedSource].sort((a, b) => {
@@ -496,6 +531,11 @@ export function collectRoutineTags(routines: RoutineSummary[]): string[] {
   return [...new Set(routines.flatMap((routine) => routine.tags))].sort((a, b) => a.localeCompare(b));
 }
 
+/** Title-case a stored tag such as "one spot" or "beginner-friendly". */
+export function formatTagLabel(tag: string): string {
+  return tag.replace(/[A-Za-z]+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
 /** So R4 can reuse getWeightSuggestion() without a second progression path. */
 export function routineDayToProgrammeDay(day: RoutineDay): ProgrammeDay {
   return {
@@ -514,16 +554,32 @@ export function routineDayToProgrammeDay(day: RoutineDay): ProgrammeDay {
   };
 }
 
-export async function fetchRoutines(): Promise<RoutineSummary[]> {
-  const { data, error } = await supabase
+export async function fetchRoutines(options?: { type?: RoutineType }): Promise<RoutineSummary[]> {
+  const wanted = options?.type;
+  const withType = await supabase
     .from('routines')
     .select(SUMMARY_SELECT)
     .order('sort_order', { ascending: true });
-  if (error) {
-    if (isMissingRoutines(error)) return [];
-    throw new Error(error.message);
+  if (withType.error && isMissingTypeColumn(withType.error)) {
+    const fallback = await supabase
+      .from('routines')
+      .select(SUMMARY_SELECT_BASE)
+      .order('sort_order', { ascending: true });
+    if (fallback.error) {
+      if (isMissingRoutines(fallback.error)) return [];
+      throw new Error(fallback.error.message);
+    }
+    const list = ((fallback.data ?? []) as unknown as SummaryRow[]).map(toSummary);
+    if (wanted === 'stretch') return [];
+    return list;
   }
-  return ((data ?? []) as unknown as SummaryRow[]).map(toSummary);
+  if (withType.error) {
+    if (isMissingRoutines(withType.error)) return [];
+    throw new Error(withType.error.message);
+  }
+  const list = ((withType.data ?? []) as unknown as SummaryRow[]).map(toSummary);
+  if (!wanted) return list.filter((routine) => routine.type !== 'stretch');
+  return list.filter((routine) => routine.type === wanted);
 }
 
 export async function fetchRoutine(
@@ -531,7 +587,24 @@ export async function fetchRoutine(
   options?: FetchRoutineOptions
 ): Promise<Routine | null> {
   const includeLockedWeeks = options?.includeLockedWeeks ?? true;
-  const { data, error } = await supabase.from('routines').select(DETAIL_SELECT).eq('id', id).maybeSingle();
+  let { data, error } = await supabase.from('routines').select(DETAIL_SELECT).eq('id', id).maybeSingle();
+  if (error && isMissingTypeColumn(error)) {
+    const retry = await supabase
+      .from('routines')
+      .select(
+        `${SUMMARY_SELECT_BASE},
+  routine_weeks (
+    id, week_number,
+    routine_days (
+      id, day_number, name, source_programme_day_id
+    )
+  )`
+      )
+      .eq('id', id)
+      .maybeSingle();
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
   if (error) {
     if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
     throw new Error(error.message);
@@ -543,11 +616,22 @@ export async function fetchRoutine(
 }
 
 export async function fetchRoutineDay(id: string): Promise<RoutineDay | null> {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('routine_days')
     .select(`id, day_number, name, source_programme_day_id, routine_day_exercises (${DAY_EXERCISE_SELECT})`)
     .eq('id', id)
     .maybeSingle();
+  if (error && isMissingDurationColumn(error)) {
+    const retry = await supabase
+      .from('routine_days')
+      .select(
+        `id, day_number, name, source_programme_day_id, routine_day_exercises (${DAY_EXERCISE_SELECT_LEGACY})`
+      )
+      .eq('id', id)
+      .maybeSingle();
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
   if (error) {
     if (isMissingRoutines(error)) return null;
     throw new Error(error.message);
@@ -555,27 +639,27 @@ export async function fetchRoutineDay(id: string): Promise<RoutineDay | null> {
   return data ? toDay(data as unknown as DayRow) : null;
 }
 
+const ENROLMENT_SELECT = `id, user_id, routine_id, start_date, status, completed_at, routine:routines (${SUMMARY_SELECT})`;
+const ENROLMENT_SELECT_BASE = `id, user_id, routine_id, start_date, status, completed_at, routine:routines (${SUMMARY_SELECT_BASE})`;
+
+async function selectEnrolment(
+  run: (columns: string) => PromiseLike<{ data: unknown; error: { message?: string; code?: string } | null }>
+): Promise<{ data: unknown; error: { message?: string; code?: string } | null }> {
+  const withType = await run(ENROLMENT_SELECT);
+  if (!withType.error || !isMissingTypeColumn(withType.error)) return withType;
+  return run(ENROLMENT_SELECT_BASE);
+}
+
 export async function fetchActiveEnrolment(): Promise<RoutineEnrolment | null> {
-  const { data, error } = await supabase
-    .from('routine_enrolments')
-    .select(`id, user_id, routine_id, start_date, status, completed_at, routine:routines (${SUMMARY_SELECT})`)
-    .eq('status', 'active')
-    .maybeSingle();
+  const { data, error } = await selectEnrolment((columns) =>
+    supabase.from('routine_enrolments').select(columns).eq('status', 'active').maybeSingle()
+  );
   if (error) {
     if (isMissingRoutines(error)) return null;
     throw new Error(error.message);
   }
   if (!data) return null;
-  const row = data as unknown as EnrolmentRow;
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    routine_id: row.routine_id,
-    start_date: row.start_date,
-    status: row.status,
-    completed_at: row.completed_at,
-    routine: toSummary(row.routine),
-  };
+  return toEnrolment(data as unknown as EnrolmentRow);
 }
 
 function isMissingPlannerTable(error: { message?: string; code?: string }): boolean {
@@ -603,6 +687,11 @@ export async function startRoutine(routineId: string): Promise<RoutineEnrolment>
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Sign in first.');
 
+  const catalogue = await fetchRoutine(routineId);
+  if (catalogue?.type === 'stretch') {
+    throw new Error('Stretch sessions start from Programmes, not as a training plan.');
+  }
+
   const previous = await fetchActiveEnrolment();
   if (previous) {
     const done = await countEnrolmentSessions(previous.id);
@@ -623,30 +712,19 @@ export async function startRoutine(routineId: string): Promise<RoutineEnrolment>
     await clearUpcomingRoutinePlans(user.id);
   }
 
-  const { data, error } = await supabase
-    .from('routine_enrolments')
-    .insert({
-      user_id: user.id,
-      routine_id: routineId,
-      start_date: todayDate(),
-      status: 'active',
-    })
-    .select(`id, user_id, routine_id, start_date, status, completed_at, routine:routines (${SUMMARY_SELECT})`)
-    .single();
+  const { error } = await supabase.from('routine_enrolments').insert({
+    user_id: user.id,
+    routine_id: routineId,
+    start_date: todayDate(),
+    status: 'active',
+  });
   if (error) {
     if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
     throw new Error(error.message);
   }
-  const row = data as unknown as EnrolmentRow;
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    routine_id: row.routine_id,
-    start_date: row.start_date,
-    status: row.status,
-    completed_at: row.completed_at,
-    routine: toSummary(row.routine),
-  };
+  const created = await fetchActiveEnrolment();
+  if (!created) throw new Error('Couldn’t start that routine. Try again.');
+  return created;
 }
 
 export async function completeActiveEnrolment(): Promise<void> {
@@ -691,13 +769,15 @@ function toEnrolment(row: EnrolmentRow): RoutineEnrolment {
 }
 
 export async function fetchLatestCompletedEnrolment(): Promise<RoutineEnrolment | null> {
-  const { data, error } = await supabase
-    .from('routine_enrolments')
-    .select(`id, user_id, routine_id, start_date, status, completed_at, routine:routines (${SUMMARY_SELECT})`)
-    .eq('status', 'complete')
-    .order('completed_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await selectEnrolment((columns) =>
+    supabase
+      .from('routine_enrolments')
+      .select(columns)
+      .eq('status', 'complete')
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  );
   if (error) {
     if (isMissingRoutines(error)) return null;
     throw new Error(error.message);

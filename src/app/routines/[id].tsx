@@ -30,6 +30,7 @@ import {
   fetchRoutine,
   firstDayOfRoutine,
   formatRestSeconds,
+  formatTagLabel,
   groupRoutinePhases,
   isRoutineWeekLocked,
   missingRoutinesMessage,
@@ -83,6 +84,10 @@ export default function RoutineDetailScreen() {
       ])
         .then(([next, active]) => {
           if (!isCurrent) return;
+          if (next?.type === 'stretch') {
+            router.replace({ pathname: '/stretches/[id]', params: { id: next.id } } as Href);
+            return;
+          }
           setRoutine(next);
           setEnrolment(active);
           setErrorMessage(null);
@@ -258,7 +263,7 @@ export default function RoutineDetailScreen() {
       <View style={styles.tagRow}>
         {routine.tags.map((tag) => (
           <Text key={tag} style={styles.tag}>
-            {tag}
+            {formatTagLabel(tag)}
           </Text>
         ))}
       </View>

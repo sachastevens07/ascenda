@@ -48,6 +48,7 @@ import {
 import {
   discardSession,
   fetchPreviousSets,
+  fetchSession,
   finishSession,
   saveSessionSwaps,
   saveSet,
@@ -125,6 +126,11 @@ export default function SessionScreen() {
     let isCurrent = true;
     (async () => {
       try {
+        const current = await fetchSession(id);
+        if (current?.source === 'stretch') {
+          router.replace({ pathname: '/stretches/play', params: { sessionId: id } });
+          return;
+        }
         const log = await loadSessionLog(id, equipment);
         if (!log) {
           if (isCurrent) setLoadState('not-found');

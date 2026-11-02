@@ -29,12 +29,20 @@ export function WorkoutBar() {
   const rest = isResting ? formatClock(Math.ceil((restEndsAt - now) / 1000)) : null;
   return (
     <Pressable
-      onPress={() => router.push({ pathname: '/session/[id]', params: { id: active.sessionId } })}
+      onPress={() =>
+        active.source === 'stretch'
+          ? router.push({ pathname: '/stretches/play', params: { sessionId: active.sessionId } })
+          : router.push({ pathname: '/session/[id]', params: { id: active.sessionId } })
+      }
       style={({ pressed }) => [styles.bar, pressed && styles.pressed]}
       accessibilityRole="button"
       accessibilityLabel={[
         `Workout in progress: ${active.dayName}, ${elapsed}`,
-        nextSet ? `Next: ${nextSet.exerciseName}, ${describeSet(nextSet)}` : 'All sets done',
+        nextSet
+          ? `Next: ${nextSet.exerciseName}, ${describeSet(nextSet)}`
+          : active.source === 'stretch'
+            ? 'Tap to continue your stretch'
+            : 'All sets done',
         rest ? `Rest ${rest}` : null,
         'Go back to your workout',
       ]
@@ -60,7 +68,9 @@ export function WorkoutBar() {
         </>
       ) : (
         <View style={styles.row}>
-          <Text style={styles.set}>All sets done. Tap to finish.</Text>
+          <Text style={styles.set}>
+            {active.source === 'stretch' ? 'Tap to continue your stretch.' : 'All sets done. Tap to finish.'}
+          </Text>
           {rest && <RestPill time={rest} />}
         </View>
       )}

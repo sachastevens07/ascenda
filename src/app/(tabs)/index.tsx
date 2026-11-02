@@ -148,9 +148,12 @@ export default function HomeScreen() {
   }
 
   function continueSession() {
-    if (data?.activeSession) {
-      router.push({ pathname: '/session/[id]', params: { id: data.activeSession.id } });
+    if (!data?.activeSession) return;
+    if (data.activeSession.source === 'stretch') {
+      router.push({ pathname: '/stretches/play', params: { sessionId: data.activeSession.id } });
+      return;
     }
+    router.push({ pathname: '/session/[id]', params: { id: data.activeSession.id } });
   }
 
   function handleCreateWorkout() {
@@ -316,7 +319,24 @@ export default function HomeScreen() {
                 height={96}
                 style={styles.sessionCover}
               />
+            </Pressable>
+            <View style={styles.sessionHeading}>
               <Text style={styles.cardLabel}>Your next session</Text>
+              <Pressable
+                ref={routineMenuRef}
+                collapsable={false}
+                onPress={openRoutineMenu}
+                hitSlop={8}
+                style={({ pressed }) => [styles.sessionMenu, pressed && styles.pressed]}
+                accessibilityRole="button"
+                accessibilityLabel="Switch or end this routine">
+                <Ionicons name="ellipsis-horizontal" size={22} color={colours.text} />
+              </Pressable>
+            </View>
+            <Pressable
+              onPress={openSessionDetail}
+              style={({ pressed }) => pressed && styles.pressed}
+              accessibilityRole="button">
               <Text style={styles.dayName}>{next.day.name}</Text>
               <Text style={styles.cardLabel}>
                 Week {next.weekNumber} · day {next.day.day_number} · about{' '}
@@ -328,15 +348,6 @@ export default function HomeScreen() {
               <View style={styles.startButton}>
                 <Text style={styles.startButtonText}>Open session</Text>
               </View>
-            </Pressable>
-            <Pressable
-              ref={routineMenuRef}
-              collapsable={false}
-              onPress={openRoutineMenu}
-              style={({ pressed }) => [styles.sessionMenu, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel="Switch or end this routine">
-              <Ionicons name="ellipsis-horizontal" size={22} color={colours.text} />
             </Pressable>
           </View>
         )}
@@ -510,23 +521,26 @@ const styles = StyleSheet.create({
   },
   sessionCard: {
     overflow: 'hidden',
-    position: 'relative',
+  },
+  sessionHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 4,
   },
   sessionMenu: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
     width: 40,
     height: 40,
+    marginRight: -8,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colours.surface,
   },
   sessionCover: {
     marginHorizontal: -20,
     marginTop: -20,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   cardLabel: {
     fontSize: 14,

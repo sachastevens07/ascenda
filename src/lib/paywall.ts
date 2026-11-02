@@ -4,6 +4,7 @@ import type { PurchasesPackage } from 'react-native-purchases';
 export const PAYWALL_REASONS = [
   'onboarding',
   'routine',
+  'stretch',
   'custom-limit',
   'charts',
   'roadmap',
@@ -30,6 +31,11 @@ const COPY: Record<PaywallReason, PaywallCopy> = {
     eyebrow: 'Pro routine',
     title: 'This plan is part of Pro',
     body: 'Start it with Pro, or keep the two free starter routines. Logging and your history stay free.',
+  },
+  stretch: {
+    eyebrow: 'Pro stretch',
+    title: 'Unlock every stretch session',
+    body: 'Three timed sessions stay free. Pro opens the rest. Logging stays free either way.',
   },
   'custom-limit': {
     eyebrow: 'Free includes 4 workouts',
@@ -64,7 +70,7 @@ const COPY: Record<PaywallReason, PaywallCopy> = {
 };
 
 export const PRO_FEATURES = [
-  { icon: 'map-outline' as const, text: 'Every routine, plus the one we pick for you' },
+  { icon: 'map-outline' as const, text: 'Every routine and stretch, plus the one we pick for you' },
   { icon: 'add-circle-outline' as const, text: 'Unlimited custom workouts' },
   { icon: 'stats-chart-outline' as const, text: 'Progress charts and a week-by-week roadmap' },
   { icon: 'flag-outline' as const, text: 'End-of-routine review and every achievement' },
@@ -72,7 +78,7 @@ export const PRO_FEATURES = [
 ];
 
 export const FREE_ALWAYS =
-  'Always free: logging, full history, export, the exercise library, two starter routines, the planner, your week and streak, basic achievements and post-session wins.';
+  'Always free: logging, full history, export, the exercise library, two starter routines, a few stretch sessions, the planner, your week and streak, basic achievements and post-session wins.';
 
 export function isPaywallReason(value: string | undefined): value is PaywallReason {
   return PAYWALL_REASONS.includes(value as PaywallReason);

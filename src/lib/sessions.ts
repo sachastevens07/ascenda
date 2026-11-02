@@ -244,6 +244,26 @@ export async function startRoutineSession(input: {
   throw error;
 }
 
+export async function startStretchSession(routineDayId: string): Promise<Session> {
+  const payload = {
+    programme_day_id: null as string | null,
+    date: localDate(),
+    exercise_swaps: {} as Record<string, string>,
+    source: 'stretch' as const,
+    routine_day_id: routineDayId,
+  };
+  const { data, error } = await supabase
+    .from('sessions')
+    .insert(payload)
+    .select(SESSION_COLUMNS_ROUTINES)
+    .single();
+  if (!error) return toSession(data as Session)!;
+  if (isMissingRoutineSessionColumns(error) || /source/i.test(error.message ?? '')) {
+    throw new Error('Stretch sessions need supabase/stretches.sql run in the Supabase SQL editor.');
+  }
+  throw error;
+}
+
 export async function startCustomSession(
   customWorkoutId: string,
   exerciseSwaps: Record<string, string> = {}

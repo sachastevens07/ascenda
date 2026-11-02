@@ -39,16 +39,12 @@ export default function ProgrammesScreen() {
         </View>
       </View>
 
-      {section === 'routines' && <RoutineCatalogue showTitle={false} bottomInset={tabBarHeight} />}
+      {section === 'routines' && (
+        <RoutineCatalogue showTitle={false} bottomInset={tabBarHeight} routineType="strength" />
+      )}
       {section === 'exercises' && <ExerciseLibrary title={null} bottomInset={tabBarHeight} />}
       {section === 'stretches' && (
-        <View style={[styles.empty, { paddingBottom: tabBarHeight + 24 }]}>
-          <Text style={styles.emptyTitle}>Stretch routines are next</Text>
-          <Text style={styles.emptyBody}>
-            Short timed sessions will live here. For now, your strength plans and the exercise library
-            are ready to use.
-          </Text>
-        </View>
+        <RoutineCatalogue showTitle={false} bottomInset={tabBarHeight} routineType="stretch" />
       )}
     </View>
   );
@@ -92,21 +88,5 @@ const styles = StyleSheet.create({
   },
   tabChipTextOn: {
     color: colours.surface,
-  },
-  empty: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-  },
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 8,
-  },
-  emptyBody: {
-    fontSize: 16,
-    lineHeight: 23,
-    color: colours.textMuted,
   },
 });

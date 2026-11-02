@@ -11,6 +11,7 @@ import { colours } from '@/constants/theme';
 import { coverForRoutine } from '@/lib/images';
 import {
   collectRoutineTags,
+  formatTagLabel,
   endActiveEnrolment,
   currentEnrolmentWeek,
   describeRoutineError,
@@ -26,9 +27,11 @@ type LoadState = 'loading' | 'error' | 'ready';
 export function RoutineCatalogue({
   showTitle = true,
   bottomInset,
+  routineType = 'strength',
 }: {
   showTitle?: boolean;
   bottomInset?: number;
+  routineType?: 'strength' | 'stretch';
 }) {
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
@@ -45,7 +48,10 @@ export function RoutineCatalogue({
       let isCurrent = true;
       (async () => {
         try {
-          const [list, active] = await Promise.all([fetchRoutines(), fetchActiveEnrolment()]);
+          const [list, active] = await Promise.all([
+            fetchRoutines({ type: routineType }),
+            fetchActiveEnrolment(),
+          ]);
           if (!isCurrent) return;
           setRoutines(list);
           setEnrolment(active);
@@ -61,7 +67,7 @@ export function RoutineCatalogue({
       return () => {
         isCurrent = false;
       };
-    }, [attempt])
+    }, [attempt, routineType])
   );
 
   function requestLeave() {
@@ -89,6 +95,10 @@ export function RoutineCatalogue({
   }
 
   function openDetails(summary: RoutineSummary) {
+    if (routineType === 'stretch') {
+      router.push({ pathname: '/stretches/[id]', params: { id: summary.id } } as Href);
+      return;
+    }
     router.push({ pathname: '/routines/[id]', params: { id: summary.id } } as Href);
   }
 
@@ -96,13 +106,14 @@ export function RoutineCatalogue({
     <ScrollView
       style={styles.scroll}
       contentContainerStyle={[styles.container, { paddingBottom }]}>
-      {showTitle ? <Text style={styles.title}>Routines</Text> : null}
+      {showTitle ? <Text style={styles.title}>{routineType === 'stretch' ? 'Stretches' : 'Routines'}</Text> : null}
       <Text style={[styles.intro, !showTitle && styles.introFlush]}>
-        Six plans to start with. Filter by tag, then open a plan to see the week-by-week details. Pro
-        plans show week 1 on the free plan.
+        {routineType === 'stretch'
+          ? 'Short timed sessions for mornings, desks, hips and cool-downs. Three are free. Holds, not sets and reps.'
+          : 'Six plans to start with. Filter by tag, then open a plan to see the week-by-week details. Pro plans show week 1 on the free plan.'}
       </Text>
 
-      {enrolment && (
+      {enrolment && routineType === 'strength' && (
         <View style={styles.activeCard}>
           <Text style={styles.activeLabel}>Your current routine</Text>
           <Text style={styles.activeName}>{enrolment.routine.name}</Text>
@@ -138,8 +149,14 @@ export function RoutineCatalogue({
 
       {loadState === 'ready' && missingSql && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Routines aren’t in the database yet</Text>
-          <Text style={styles.body}>{missingRoutinesMessage()}</Text>
+          <Text style={styles.cardTitle}>
+            {routineType === 'stretch' ? 'Stretches aren’t in the database yet' : 'Routines aren’t in the database yet'}
+          </Text>
+          <Text style={styles.body}>
+            {routineType === 'stretch'
+              ? 'Stretch routines need supabase/stretches.sql run in the Supabase SQL editor.'
+              : missingRoutinesMessage()}
+          </Text>
         </View>
       )}
 
@@ -148,7 +165,10 @@ export function RoutineCatalogue({
           <FilterSheet
             label="Tag"
             allLabel="All tags"
-            options={collectRoutineTags(routines).map((value) => ({ value, label: value }))}
+            options={collectRoutineTags(routines).map((value) => ({
+              value,
+              label: formatTagLabel(value),
+            }))}
             value={tagFilter}
             onChange={setTagFilter}
           />
@@ -177,14 +197,15 @@ export function RoutineCatalogue({
               </View>
               <Text style={styles.cardTitle}>{summary.name}</Text>
               <Text style={styles.meta}>
-                {summary.length_weeks} weeks · {summary.days_per_week} days / week · about{' '}
-                {summary.session_minutes} min
+                {routineType === 'stretch'
+                  ? `About ${summary.session_minutes} min · mat`
+                  : `${summary.length_weeks} weeks · ${summary.days_per_week} days / week · about ${summary.session_minutes} min`}
               </Text>
               <Text style={styles.body}>{summary.description}</Text>
               <View style={styles.tagRow}>
                 {summary.tags.map((tag) => (
                   <Text key={tag} style={styles.tag}>
-                    {tag}
+                    {formatTagLabel(tag)}
                   </Text>
                 ))}
               </View>

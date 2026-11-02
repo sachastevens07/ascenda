@@ -39,13 +39,15 @@ import {
   startOfMonth,
   startOfWeekMonday,
   toIso,
+  upcomingPlannerDays,
   type PlannerDayView,
   type PlannerRange,
 } from '@/lib/planner';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 
 type LoadState = 'loading' | 'error' | 'ready';
-type SheetMode = 'day' | 'workouts' | null;
+type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | null;
+type PickDayReason = 'workout' | 'rest';
 type ViewMode = 'agenda' | 'month';
 type AgendaSection = { iso: string; day: PlannerDayView; data: PlannerDayView[] };
 
@@ -64,6 +66,9 @@ export default function PlannerScreen() {
   const [sheet, setSheet] = useState<SheetMode>(null);
   const [anchor, setAnchor] = useState<AnchorRect | null>(null);
   const [workouts, setWorkouts] = useState<CustomWorkout[]>([]);
+  const [pendingWorkout, setPendingWorkout] = useState<CustomWorkout | null>(null);
+  const [pickDayReason, setPickDayReason] = useState<PickDayReason | null>(null);
+  const [menuSource, setMenuSource] = useState<'day' | 'fab'>('day');
   const [busy, setBusy] = useState(false);
   const [didScrollToToday, setDidScrollToToday] = useState(false);
 
@@ -119,6 +124,8 @@ export default function PlannerScreen() {
 
   function closeSheets() {
     setSheet(null);
+    setPendingWorkout(null);
+    setPickDayReason(null);
   }
 
   async function runAction(work: () => Promise<unknown>, failTitle: string): Promise<boolean> {
@@ -144,6 +151,7 @@ export default function PlannerScreen() {
       return;
     }
     setSelectedDay(day);
+    setMenuSource('day');
     if (from) {
       measureAnchor(from, (rect) => {
         setAnchor(rect);
@@ -168,13 +176,28 @@ export default function PlannerScreen() {
   }
 
   async function handleAddWorkout(workout: CustomWorkout) {
-    if (!selectedDay) return;
-    await runAction(() => addCustomWorkoutToPlanner(workout.id, selectedDay.iso), 'Couldn’t add it');
+    if (menuSource === 'day' && selectedDay) {
+      await runAction(() => addCustomWorkoutToPlanner(workout.id, selectedDay.iso), 'Couldn’t add it');
+      return;
+    }
+    setPendingWorkout(workout);
+    setPickDayReason('workout');
+    setSheet('pick-day');
   }
 
   async function handleRest() {
     if (!selectedDay) return;
     await runAction(() => setRestDay(selectedDay.iso), 'Couldn’t mark rest');
+  }
+
+  async function handlePickDay(iso: string) {
+    if (pickDayReason === 'rest') {
+      await runAction(() => setRestDay(iso), 'Couldn’t mark rest');
+      return;
+    }
+    if (pendingWorkout) {
+      await runAction(() => addCustomWorkoutToPlanner(pendingWorkout.id, iso), 'Couldn’t add it');
+    }
   }
 
   async function handleClear() {
@@ -189,13 +212,24 @@ export default function PlannerScreen() {
   }
 
   function handleAddPress() {
-    const day = selectedDay ?? daysByIso.get(todayIso) ?? agendaDays[0];
-    if (!day) return;
-    setSelectedDay(day);
+    setMenuSource('fab');
+    setPendingWorkout(null);
+    setPickDayReason(null);
     measureAnchor(fabRef.current, (rect) => {
       setAnchor(rect);
-      setSheet('day');
+      setSheet('fab');
     });
+  }
+
+  async function startFabAddWorkout() {
+    setPickDayReason('workout');
+    await openWorkouts();
+  }
+
+  function startFabRest() {
+    setPendingWorkout(null);
+    setPickDayReason('rest');
+    setSheet('pick-day');
   }
 
   async function handleOpen(day: PlannerDayView) {
@@ -408,20 +442,31 @@ export default function PlannerScreen() {
           pressed && styles.pressed,
         ]}
         accessibilityRole="button"
-        accessibilityLabel="Add to a day">
+        accessibilityLabel="Add to the planner">
         <Ionicons name="add" size={28} color={colours.surface} />
       </Pressable>
 
       <AnchoredMenu visible={sheet !== null} anchor={anchor} onClose={closeSheets}>
+        {sheet === 'fab' ? (
+          <>
+            <MenuHeader label="Add to your planner" detail="Pick what to add, then choose a day." />
+            <MenuRow label="Add a custom workout" onPress={() => void startFabAddWorkout()} />
+            <MenuRow label="Mark a rest day" onPress={startFabRest} />
+            <MenuRow
+              label="My workouts"
+              onPress={() => {
+                closeSheets();
+                router.push('/workouts' as Href);
+              }}
+            />
+          </>
+        ) : null}
+
         {sheet === 'day' && selectedDay ? (
           <>
             <MenuHeader
               label={formatAgendaHeading(selectedDay)}
-              detail={
-                selectedDay.exercises.length > 0
-                  ? `${selectedDay.title ?? 'Nothing planned yet.'} ${selectedDay.exercises.join(', ')}.`
-                  : (selectedDay.title ?? 'Nothing planned yet.')
-              }
+              detail={selectedDay.title ?? 'Nothing planned yet'}
             />
             {selectedDay.kind !== 'empty' && selectedDay.kind !== 'rest' && (
               <MenuRow label="Open session" onPress={() => handleOpen(selectedDay)} />
@@ -448,7 +493,7 @@ export default function PlannerScreen() {
               detail={
                 selectedDay
                   ? `This replaces anything already planned on ${selectedDay.weekday}.`
-                  : 'Pick a saved workout.'
+                  : 'Then pick which day to put it on.'
               }
             />
             {workouts.length === 0 ? (
@@ -462,6 +507,26 @@ export default function PlannerScreen() {
                 />
               ))
             )}
+          </>
+        ) : null}
+
+        {sheet === 'pick-day' ? (
+          <>
+            <MenuHeader
+              label={pickDayReason === 'rest' ? 'Mark a rest day' : 'Pick a day'}
+              detail={
+                pendingWorkout
+                  ? `Add ${pendingWorkout.name} to one of the next two weeks.`
+                  : 'Choose a day in the next two weeks.'
+              }
+            />
+            {upcomingPlannerDays().map((day) => (
+              <MenuRow
+                key={day.iso}
+                label={day.isToday ? `${day.label} · today` : day.label}
+                onPress={() => void handlePickDay(day.iso)}
+              />
+            ))}
           </>
         ) : null}
       </AnchoredMenu>

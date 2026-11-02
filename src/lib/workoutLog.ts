@@ -176,7 +176,7 @@ export async function loadSessionLog(
   equipment: EquipmentAccess
 ): Promise<SessionLog | null> {
   const session = await fetchSession(id);
-  if (!session) return null;
+  if (!session || session.source === 'stretch') return null;
   const swaps = await fetchSessionSwaps(session);
   let planned: ProgrammeDay | null = null;
   if (session.custom_workout_id) {
