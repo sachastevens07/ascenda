@@ -13,6 +13,7 @@ export function IconButton({
   disabled = false,
   color,
   size = 22,
+  variant = 'plain',
   style,
 }: {
   icon: IoniconName;
@@ -21,9 +22,11 @@ export function IconButton({
   disabled?: boolean;
   color?: string;
   size?: number;
+  variant?: 'plain' | 'muted';
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours } = useTheme();
+  const { colours, radius } = useTheme();
+  const muted = variant === 'muted';
   return (
     <Pressable
       onPress={onPress}
@@ -34,6 +37,12 @@ export function IconButton({
       hitSlop={8}
       style={({ pressed }) => [
         styles.hit,
+        muted && {
+          width: 40,
+          height: 40,
+          borderRadius: radius.full,
+          backgroundColor: colours.surfaceMuted,
+        },
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,

@@ -8,11 +8,13 @@ export function ProgressRing({
   progress,
   size = 48,
   stroke = 5,
+  tone = 'brand',
   children,
 }: {
   progress: number;
   size?: number;
   stroke?: number;
+  tone?: 'brand' | 'accent';
   children?: ReactNode;
 }) {
   const { colours } = useTheme();
@@ -21,6 +23,7 @@ export function ProgressRing({
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - clamped);
   const centre = size / 2;
+  const fill = tone === 'accent' ? colours.accent : colours.brand;
   return (
     <View style={[styles.ringWrap, { width: size, height: size }]} accessibilityRole="progressbar">
       <Svg width={size} height={size}>
@@ -36,7 +39,7 @@ export function ProgressRing({
           cx={centre}
           cy={centre}
           r={radius}
-          stroke={colours.brand}
+          stroke={fill}
           strokeWidth={stroke}
           fill="none"
           strokeDasharray={`${circumference} ${circumference}`}

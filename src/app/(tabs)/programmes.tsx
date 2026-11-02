@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ExerciseLibrary } from '@/components/ExerciseLibrary';
@@ -16,7 +17,17 @@ type Section = (typeof SECTIONS)[number]['id'];
 
 export default function ProgrammesScreen() {
   const tabBarHeight = useTabBarHeight();
-  const [section, setSection] = useState<Section>('routines');
+  const params = useLocalSearchParams<{ section?: string | string[] }>();
+  const requested = Array.isArray(params.section) ? params.section[0] : params.section;
+  const [section, setSection] = useState<Section>(
+    requested === 'stretches' || requested === 'exercises' || requested === 'routines' ? requested : 'routines'
+  );
+
+  useEffect(() => {
+    if (requested === 'stretches' || requested === 'exercises' || requested === 'routines') {
+      setSection(requested);
+    }
+  }, [requested]);
 
   return (
     <View style={styles.screen}>

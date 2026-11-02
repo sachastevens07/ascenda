@@ -57,11 +57,11 @@ export function FreeBadge({ style }: { style?: StyleProp<ViewStyle> }) {
     <View
       style={[
         styles.free,
-        { backgroundColor: colours.surfaceMuted, borderRadius: radius.full },
+        { backgroundColor: colours.surface, borderRadius: radius.full },
         style,
       ]}
       accessibilityLabel="Free">
-      <Text style={[styles.freeLabel, { color: colours.inkMuted }]}>FREE</Text>
+      <Text style={[styles.freeLabel, { color: colours.brand }]}>FREE</Text>
     </View>
   );
 }

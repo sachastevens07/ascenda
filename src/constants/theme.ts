@@ -141,20 +141,53 @@ export const type = {
     letterSpacing: -0.4,
     lineHeight: 40,
   } satisfies TextStyle,
+  title1: {
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 34,
+  } satisfies TextStyle,
+  title2: {
+    fontSize: 22,
+    fontWeight: '700',
+    lineHeight: 28,
+  } satisfies TextStyle,
+  /** Same as title2; kept for screens already using `type.title`. */
   title: {
     fontSize: 22,
     fontWeight: '700',
     lineHeight: 28,
+  } satisfies TextStyle,
+  title3: {
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
   } satisfies TextStyle,
   body: {
     fontSize: 16,
     fontWeight: '400',
     lineHeight: 24,
   } satisfies TextStyle,
+  bodySm: {
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
+  } satisfies TextStyle,
   caption: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
-    lineHeight: 18,
+    lineHeight: 16,
+  } satisfies TextStyle,
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    lineHeight: 14,
+    textTransform: 'uppercase',
+  } satisfies TextStyle,
+  number: {
+    fontSize: 28,
+    fontWeight: '700',
+    lineHeight: 32,
   } satisfies TextStyle,
   button: {
     fontSize: 16,

@@ -26,6 +26,9 @@ type ImageCardProps = {
   isFree?: boolean;
   locked?: boolean;
   progress?: number;
+  /** Default 4:5. Ignored when `imageHeight` is set. */
+  imageAspectRatio?: number;
+  imageHeight?: number;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 };
@@ -40,24 +43,30 @@ export function ImageCard({
   isFree = false,
   locked = false,
   progress,
+  imageAspectRatio = 4 / 5,
+  imageHeight,
   onPress,
   style,
 }: ImageCardProps) {
   const { colours, radius, shadow, type } = useTheme();
   const body = (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: colours.surface, borderRadius: radius.lg },
-        shadow,
-        style,
-      ]}>
-      <View style={[styles.photo, { backgroundColor: colours.surfaceMuted }]}>
+    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
+      <View
+        style={[
+          styles.photo,
+          { backgroundColor: colours.surfaceMuted },
+          imageHeight ? { height: imageHeight } : { aspectRatio: imageAspectRatio },
+        ]}>
         {image ? (
           <Image source={image} style={styles.photoFill} resizeMode="cover" />
         ) : (
           <Text style={[styles.letter, { color: colours.brand }]}>{(letter ?? title).slice(0, 1)}</Text>
         )}
+        {isPro || isFree ? (
+          <View style={styles.badge}>
+            {isPro ? <ProBadge locked={locked} compact /> : <FreeBadge />}
+          </View>
+        ) : null}
         {typeof progress === 'number' ? (
           <View style={styles.ring}>
             <ProgressRing progress={progress} size={40} stroke={4} />
@@ -65,14 +74,11 @@ export function ImageCard({
         ) : null}
       </View>
       <View style={styles.body}>
-        <View style={styles.titleRow}>
-          <Text style={[type.title, { color: colours.ink, flex: 1 }]} numberOfLines={2}>
-            {title}
-          </Text>
-          {isPro ? <ProBadge locked={locked} compact /> : isFree ? <FreeBadge /> : null}
-        </View>
+        <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
+          {title}
+        </Text>
         {subtitle ? (
-          <Text style={[type.caption, { color: colours.inkMuted, marginTop: 4 }]} numberOfLines={2}>
+          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]} numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}
@@ -87,9 +93,14 @@ export function ImageCard({
     </View>
   );
 
-  if (!onPress) return body;
+  if (!onPress) {
+    return <View style={style}>{body}</View>;
+  }
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [style, pressed && styles.pressed]}>
       {body}
     </Pressable>
   );
@@ -210,9 +221,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   photo: {
-    height: 140,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
   },
   photoFill: {
     width: '100%',
@@ -233,11 +248,6 @@ const styles = StyleSheet.create({
   },
   body: {
     padding: 16,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
   },
   tags: {
     flexDirection: 'row',
