@@ -9,6 +9,12 @@ import { showDialog } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import { EQUIPMENT_LABELS, MUSCLE_LABELS } from '@/lib/exercises';
 import { coverForRoutine } from '@/lib/images';
+import {
+  describeCustomWorkoutError,
+  duplicateRoutineDay,
+  isFreeCustomWorkoutLimitError,
+  isProRoutineDuplicateError,
+} from '@/lib/customWorkouts';
 import { openPaywall } from '@/lib/paywall';
 import { formatDaysPerWeek } from '@/lib/profile';
 import { formatSetsAndReps } from '@/lib/programmes';
@@ -20,6 +26,7 @@ import {
   describeRoutineError,
   fetchActiveEnrolment,
   fetchRoutine,
+  firstDayOfRoutine,
   formatRestSeconds,
   groupRoutinePhases,
   missingRoutinesMessage,
@@ -50,6 +57,7 @@ export default function RoutineDetailScreen() {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
   const [openWeek, setOpenWeek] = useState<number | null>(null);
   const [openDayId, setOpenDayId] = useState<string | null>(null);
 
@@ -114,6 +122,48 @@ export default function RoutineDetailScreen() {
       showDialog('Couldn’t start the routine', describeRoutineError(error));
     } finally {
       setIsStarting(false);
+    }
+  }
+
+  async function handleDuplicate() {
+    if (!routine) return;
+    if (routine.is_pro && !subscription.isPro) {
+      openPaywall('routine');
+      return;
+    }
+    const day = firstDayOfRoutine(routine);
+    if (!day) {
+      showDialog('Nothing to copy', 'This routine has no days yet.');
+      return;
+    }
+    setIsDuplicating(true);
+    try {
+      const copy = await duplicateRoutineDay(
+        routine,
+        {
+          name: day.name,
+          exercises: day.exercises.map((item) => ({
+            exercise: item.exercise,
+            sets: item.sets,
+            rep_min: item.rep_min,
+            rep_max: item.rep_max,
+          })),
+        },
+        subscription.isPro
+      );
+      router.push({ pathname: '/workouts/[id]', params: { id: copy.id } });
+    } catch (error) {
+      if (isProRoutineDuplicateError(error)) {
+        openPaywall('routine');
+        return;
+      }
+      if (isFreeCustomWorkoutLimitError(error)) {
+        openPaywall('custom-limit');
+        return;
+      }
+      showDialog('Couldn’t copy it', describeCustomWorkoutError(error));
+    } finally {
+      setIsDuplicating(false);
     }
   }
 
@@ -278,6 +328,20 @@ export default function RoutineDetailScreen() {
       <Text style={styles.disclaimer}>
         General fitness guidance, not medical advice. Stop if anything hurts.
       </Text>
+
+      <Pressable
+        style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+        onPress={handleDuplicate}
+        disabled={isDuplicating || isStarting}
+        accessibilityRole="button">
+        <Text style={styles.outlineButtonText}>
+          {isDuplicating
+            ? 'Copying…'
+            : routine.is_pro && !subscription.isPro
+              ? 'Duplicate with Pro'
+              : 'Duplicate'}
+        </Text>
+      </Pressable>
 
       <Pressable
         style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
@@ -490,6 +554,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     marginBottom: 20,
+  },
+  outlineButton: {
+    minHeight: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colours.accent,
+    backgroundColor: colours.surface,
+    marginBottom: 12,
+  },
+  outlineButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.accent,
   },
   startButton: {
     minHeight: 56,

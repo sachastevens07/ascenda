@@ -34,7 +34,7 @@ const COPY: Record<PaywallReason, PaywallCopy> = {
   'custom-limit': {
     eyebrow: 'Free includes 4 workouts',
     title: 'Save as many as you like',
-    body: 'You’ve used the four free custom workouts. Pro is unlimited. The ones you already have stay.',
+    body: 'You’ve used the four free custom workouts. Duplicates count towards that. The shared starter does not. Pro is unlimited. The ones you already have stay.',
   },
   charts: {
     eyebrow: 'Progress charts',

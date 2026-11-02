@@ -359,6 +359,15 @@ export function daysInWeek(routine: Routine, weekNumber: number): RoutineDay[] {
   return routine.weeks.find((week) => week.week_number === weekNumber)?.days ?? [];
 }
 
+/** Week 1, day 1 (or the earliest week/day if week 1 is missing). */
+export function firstDayOfRoutine(routine: Routine): RoutineDay | null {
+  const weeks = [...routine.weeks].sort((a, b) => a.week_number - b.week_number);
+  const week = weeks.find((item) => item.week_number === 1) ?? weeks[0];
+  if (!week) return null;
+  const days = [...week.days].sort((a, b) => a.day_number - b.day_number);
+  return days[0] ?? null;
+}
+
 function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   let score = 0;
   if (routine.equipment === answers.equipment) score += 5;

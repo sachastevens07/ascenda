@@ -14,6 +14,7 @@ import {
   fetchCustomWorkouts,
   isFreeCustomWorkoutLimitError,
   missingCustomWorkoutsMessage,
+  ownedCustomWorkoutCount,
   startBlankCustomSession,
   type CustomWorkout,
 } from '@/lib/customWorkouts';
@@ -62,8 +63,8 @@ export default function WorkoutsScreen() {
   );
 
   const mine = workouts.filter((item) => !item.is_starter);
-  const savedCount = workouts.length;
-  const atLimit = atFreeCustomWorkoutLimit(savedCount, isPro);
+  const ownedCount = ownedCustomWorkoutCount(workouts);
+  const atLimit = atFreeCustomWorkoutLimit(ownedCount, isPro);
 
   function requireCreateRoom(): boolean {
     if (atLimit) {
@@ -236,7 +237,7 @@ export default function WorkoutsScreen() {
       <Text style={styles.lead}>
         {isPro
           ? 'Create as many as you like. Start one, or add it to a day in the planner.'
-          : `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts, including the starter (${savedCount} of ${FREE_CUSTOM_WORKOUT_LIMIT}). Existing ones stay if a plan lapses.`}
+          : `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts (${ownedCount} of ${FREE_CUSTOM_WORKOUT_LIMIT}). Duplicates count. The starter does not. Existing ones stay if a plan lapses.`}
       </Text>
 
       <View style={styles.card}>

@@ -14,9 +14,10 @@ export const STARTER_WORKOUT_ID = '11111111-1111-4111-8111-111111111111';
 export const MIN_WORKOUT_NAME = 1;
 export const MAX_WORKOUT_NAME = 60;
 export const MAX_WORKOUT_EXERCISES = 12;
-/** Free users can keep this many saved workouts, including the shared starter. */
+/** Free users can keep this many owned workouts. Duplicates count. The shared starter does not. */
 export const FREE_CUSTOM_WORKOUT_LIMIT = 4;
 export const FREE_CUSTOM_WORKOUT_LIMIT_CODE = 'FREE_CUSTOM_WORKOUT_LIMIT';
+export const PRO_ROUTINE_DUPLICATE_CODE = 'PRO_ROUTINE_DUPLICATE';
 export const MIN_SETS = 1;
 export const MAX_SETS = 6;
 export const MIN_REPS = 1;
@@ -60,7 +61,10 @@ export function describeCustomWorkoutError(error: unknown): string {
         ? String((error as { message: unknown }).message)
         : '';
   if (detail === FREE_CUSTOM_WORKOUT_LIMIT_CODE) {
-    return `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts, including the starter. Pro is unlimited. Your existing workouts stay.`;
+    return `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts. Duplicates count. The starter does not. Pro is unlimited. Your existing workouts stay.`;
+  }
+  if (detail === PRO_ROUTINE_DUPLICATE_CODE) {
+    return 'Pro routines can’t be copied on the free plan.';
   }
   if (/42P01|custom_workouts|custom_workout_id|\bsource\b/i.test(detail)) {
     return missingCustomWorkoutsMessage();
@@ -72,15 +76,24 @@ export function isFreeCustomWorkoutLimitError(error: unknown): boolean {
   return error instanceof Error && error.message === FREE_CUSTOM_WORKOUT_LIMIT_CODE;
 }
 
+export function isProRoutineDuplicateError(error: unknown): boolean {
+  return error instanceof Error && error.message === PRO_ROUTINE_DUPLICATE_CODE;
+}
+
 export function atFreeCustomWorkoutLimit(ownedCount: number, isPro: boolean): boolean {
   return !isPro && ownedCount >= FREE_CUSTOM_WORKOUT_LIMIT;
+}
+
+export function ownedCustomWorkoutCount(workouts: CustomWorkout[]): number {
+  return workouts.filter((item) => !item.is_starter).length;
 }
 
 export async function countOwnedCustomWorkouts(): Promise<number> {
   try {
     const { count, error } = await supabase
       .from('custom_workouts')
-      .select('id', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true })
+      .eq('is_starter', false);
     if (error) {
       if (isMissingCustomWorkouts(error)) return 0;
       throw error;
@@ -166,6 +179,12 @@ export function customWorkoutToDay(workout: CustomWorkout): ProgrammeDay {
 
 export function trimWorkoutName(name: string): string {
   return name.trim().slice(0, MAX_WORKOUT_NAME);
+}
+
+export function copyWorkoutName(name: string): string {
+  const trimmed = trimWorkoutName(name);
+  if (trimmed.endsWith(' (copy)')) return trimmed;
+  return trimWorkoutName(`${trimmed} (copy)`);
 }
 
 /** Library rows for the builder. Includes zone so she can filter; any zone is allowed. */
@@ -303,18 +322,38 @@ export async function duplicateCustomWorkout(
   workout: CustomWorkout,
   isPro = false
 ): Promise<CustomWorkout> {
-  const copyName = trimWorkoutName(
-    workout.name.endsWith(' (copy)') ? workout.name : `${workout.name} (copy)`
-  );
   return saveCustomWorkout(
     null,
-    copyName,
+    copyWorkoutName(workout.name),
     workout.exercises.map((item) => ({
       exercise: item.exercise,
       sets: item.sets,
       rep_min: item.rep_min,
       rep_max: item.rep_max,
     })),
+    isPro
+  );
+}
+
+export type RoutineDayCopy = {
+  name: string;
+  exercises: WorkoutDraftSlot[];
+};
+
+/** Saves one routine day as an owned custom workout. Counts toward the free cap of 4. */
+export async function duplicateRoutineDay(
+  routine: { name: string; is_pro: boolean },
+  day: RoutineDayCopy,
+  isPro = false,
+  name?: string
+): Promise<CustomWorkout> {
+  if (routine.is_pro && !isPro) {
+    throw new Error(PRO_ROUTINE_DUPLICATE_CODE);
+  }
+  return saveCustomWorkout(
+    null,
+    name ?? copyWorkoutName(routine.name),
+    day.exercises.slice(0, MAX_WORKOUT_EXERCISES),
     isPro
   );
 }

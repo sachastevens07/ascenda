@@ -7,7 +7,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { SwapSheet } from '@/components/SwapSheet';
 import { colours } from '@/constants/theme';
-import { MAX_REPS, MAX_SETS, MIN_REPS, MIN_SETS } from '@/lib/customWorkouts';
+import {
+  copyWorkoutName,
+  describeCustomWorkoutError,
+  duplicateRoutineDay,
+  isFreeCustomWorkoutLimitError,
+  isProRoutineDuplicateError,
+  MAX_REPS,
+  MAX_SETS,
+  MIN_REPS,
+  MIN_SETS,
+} from '@/lib/customWorkouts';
+import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   describeWeightSuggestion,
@@ -59,6 +70,7 @@ export default function SessionDetailScreen() {
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
+  const [isSavingWorkout, setIsSavingWorkout] = useState(false);
   const [loadState, setLoadState] = useState<'loading' | 'error' | 'ready'>('loading');
   const [previous, setPrevious] = useState<Record<string, LoggedSet[]>>({});
 
@@ -159,6 +171,50 @@ export default function SessionDetailScreen() {
       await deleteUserSwap(planned.day.source_programme_day_id, position);
     }
     updateSlot(position, { exercise: original, original: undefined });
+  }
+
+  async function handleSaveWorkout() {
+    if (!routine || !planned || slots.length === 0) return;
+    if (routine.is_pro && !isPro) {
+      openPaywall('routine');
+      return;
+    }
+    setIsSavingWorkout(true);
+    try {
+      const copy = await duplicateRoutineDay(
+        routine,
+        {
+          name: planned.day.name,
+          exercises: slots.map((item) => ({
+            exercise: item.exercise,
+            sets: item.sets,
+            rep_min: item.rep_min,
+            rep_max: item.rep_max,
+          })),
+        },
+        isPro,
+        copyWorkoutName(planned.day.name)
+      );
+      showDialog('Saved to My workouts', `${copy.name} is in your list.`, [
+        {
+          text: 'Open it',
+          onPress: () => router.push({ pathname: '/workouts/[id]', params: { id: copy.id } }),
+        },
+        { text: 'Done', style: 'cancel' },
+      ]);
+    } catch (error) {
+      if (isProRoutineDuplicateError(error)) {
+        openPaywall('routine');
+        return;
+      }
+      if (isFreeCustomWorkoutLimitError(error)) {
+        openPaywall('custom-limit');
+        return;
+      }
+      showDialog('Couldn’t save it', describeCustomWorkoutError(error));
+    } finally {
+      setIsSavingWorkout(false);
+    }
   }
 
   async function handleStart() {
@@ -352,9 +408,23 @@ export default function SessionDetailScreen() {
         )}
 
         <Pressable
+          style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+          onPress={handleSaveWorkout}
+          disabled={isSavingWorkout || isStarting || slots.length === 0}
+          accessibilityRole="button">
+          <Text style={styles.outlineButtonText}>
+            {isSavingWorkout
+              ? 'Saving…'
+              : routine.is_pro && !isPro
+                ? 'Save as workout with Pro'
+                : 'Save as workout'}
+          </Text>
+        </Pressable>
+
+        <Pressable
           style={({ pressed }) => [styles.startButton, (pressed || isStarting) && styles.pressed]}
           onPress={handleStart}
-          disabled={isStarting || slots.length === 0}
+          disabled={isStarting || isSavingWorkout || slots.length === 0}
           accessibilityRole="button">
           {isStarting ? (
             <ActivityIndicator color={colours.surface} />
