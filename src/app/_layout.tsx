@@ -51,7 +51,7 @@ function RootNavigator() {
           options={{
             headerShown: true,
             title: '',
-            headerBackTitle: 'Home',
+            headerBackTitle: 'Back',
             headerTintColor: colours.accent,
             headerShadowVisible: false,
             headerStyle: { backgroundColor: colours.background },
@@ -62,7 +62,7 @@ function RootNavigator() {
           options={{
             headerShown: true,
             title: '',
-            headerBackTitle: 'Library',
+            headerBackTitle: 'Back',
             headerTintColor: colours.accent,
             headerShadowVisible: false,
             headerStyle: { backgroundColor: colours.background },

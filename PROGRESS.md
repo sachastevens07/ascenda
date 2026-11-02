@@ -13,7 +13,7 @@ Git: `main` at `c0a910a` (“First backup commit”), working tree clean besides
 | Task | Code | Notes |
 | --- | --- | --- |
 | **R1** Remove cycle notes | **Done** | Cycle UI, export column, profile flags and `src/lib/cycle.ts` are gone. `supabase/cycle.sql` is a stub. `supabase/remove_cycle_notes.sql` is written and **not confirmed run**. |
-| **R2** New navigation | **Done** | Tabs are Home, Planner, Activity, Profile. Library is `src/app/library.tsx`, opened from Home and the workout editor. |
+| **R2** New navigation | **Done, replaced by S2** | S2 added a Programmes tab. Tabs are now Home, Programmes, Planner, Activity, Profile. Library lives under Programmes → Exercises. The stack screen `src/app/library.tsx` remains for the workout editor. |
 | **R3** Routines | **Done** | Six launch routines in `supabase/routines.sql` and `src/lib/routines.ts`. Enrolments, tags, weeks/days/exercises. SQL **not confirmed run**. |
 | **R4** Home / routine / session detail | **Done** | Featured row, next-session card, routine detail, session detail → existing logger. Free users are sent to the paywall and cannot open a Pro routine at all (S3 will allow a week-1 preview). |
 | **R5** Custom workout builder | **Done** (cap fixed in S1) | Create / edit / duplicate / delete / add to planner. Free cap is 4 **owned** workouts; the shared starter does not count. Duplicate custom, duplicate-routine and save-from-routine all hit that cap (S1). |
@@ -36,7 +36,8 @@ S1 does not depend on M1. The brief says to flag unfinished v2.0/M1 work before 
 
 ### v2.1 (S1–S12)
 
-- **S1. Duplicate loophole — done (2 Nov 2026).** Owned custom workouts only count toward the free 4 (`is_starter = false`). Duplicate custom, Duplicate on routine detail (week 1 day 1) and Save as workout on session detail all use that cap. Free users cannot duplicate a Pro routine (paywall, no row). No new SQL. RLS still does not enforce the cap (Pro lives in RevenueCat). Then S2–S12 in order.
+- **S1. Duplicate loophole — done (2 Nov 2026).** Owned custom workouts only count toward the free 4 (`is_starter = false`). Duplicate custom, Duplicate on routine detail (week 1 day 1) and Save as workout on session detail all use that cap. Free users cannot duplicate a Pro routine (paywall, no row). No new SQL. RLS still does not enforce the cap (Pro lives in RevenueCat).
+- **S2. Programmes tab — done (2 Nov 2026).** Tabs are Home, Programmes, Planner, Activity, Profile. Programmes has Routines / Stretches / Exercises. Stretches is an empty state until S8. Exercise library moved here; Home no longer has the library pill or the “week X of Y” plan banner (the next-session card still names the active routine). `/routines` redirects to Programmes. Workout editor still opens `/library`. Then S3–S12 in order.
 
 ## Done (historical)
 
@@ -93,7 +94,7 @@ The numbered list and v1.1 / v1.2 / v2.0 bullets below are what was built, kept 
 
 ## In progress
 
-v2.0 code is in. **S1 is done.** Next is S2 (Programmes tab). M1 is only the match pipeline.
+v2.0 code is in. **S1 and S2 are done.** Next is S3 (Pro badge and locked previews). M1 is only the match pipeline.
 
 The user said on 24 Oct that earlier SQL files (including `routines.sql` and `planned_sessions.sql`) were already pasted in. `activity.sql` and `onboarding_v2.sql` were still waiting, and R11 cover/media SQL plus `remove_cycle_notes.sql` were not confirmed. Workout history stays. Without `onboarding_v2.sql`, the quiz still saves the old fields; new answers stay on the phone until the file is run. Without `activity.sql`, streak goal stays at 8.
 
@@ -107,7 +108,7 @@ Also still on the user's side:
 
 ## Next step
 
-**v2.1 S2 — Programmes tab**, after the user has tested S1. Do not start S2 until they say so. M1 is unfinished; S2 does not need videos. Do not start AI or food.
+**v2.1 S3 — Pro badge and locked previews**, after the user has tested S2. Do not start S3 until they say so. M1 is unfinished; S3 does not need videos. Do not start AI or food.
 
 Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification is S12.
 
@@ -131,6 +132,7 @@ Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS developme
 - **`AGENTS.md` is the v2.1 brief** (copied 2 Nov 2026 from the user's rewrite). Older v1.1/v1.2 notes in this file still describe what was built; later user choices still win where they differ (CSV export is now .xlsx; days 1–6; 9 programme templates; free users can log their assigned day; progression uses set 1 only).
 - **M1 is not done.** Match SQL/scripts exist; no Edge Functions and no in-app video player.
 - **S1 is done.** Free cap is 4 owned workouts; starter does not count; Duplicate / Save as workout hit the cap; Pro routines cannot be copied on Free.
+- **S2 is done.** Tabs are Home, Programmes, Planner, Activity, Profile. Library is Programmes → Exercises. Home plan banner and library pill are gone.
 - **Paywall not tested with real money paths**: Expo Go can only use RevenueCat's Test Store (`test_` key); App Store / Google Play purchases, Manage subscription (`showManageSubscriptions` does nothing in Expo Go) and the trial notification need a development build. With no RevenueCat key the app runs as Free and the paywall says "Pro isn't available to buy yet".
 - Free users' existing "Every time" swaps still apply on Today and in the logger (they just can't add or change swaps).
 - `AGENTS.md` says run `npx expo lint`, but there's no ESLint config, so lint can't run.
@@ -167,6 +169,7 @@ Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS developme
 - **Home / session detail** (R4, 24 Oct): Featured scoring uses quiz goal, experience, equipment, days/week and gym comfort; always tries to include one free routine. Next session follows calendar week from enrolment start, then the day after the last finished routine session. Session-detail edits (sets/reps/remove/swap) are today-only. “Every time” swaps only persist when the routine day still maps to a `programme_days` row (converted week 1). Swaps stay Pro; remove / sets / different day are free. No new SQL: today-only plan is AsyncStorage. Logger, rest timer, pre-fill and progression stay the existing code.
 - **Custom workouts** (R5, 24 Oct): free cap is 4 **owned** rows (`is_starter` false). Starter can be duplicated (counts as one of the 4) but not edited or deleted. Cap is enforced in the app with RevenueCat `isPro` (no server entitlement check). Builder tags: one spot = zone 1, busy gym = machine/cable, minimal equipment = dumbbell/bodyweight/band. Add to planner writes `planned_sessions` for a chosen date (next 14 days); one live plan per day (replaces). `planned_sessions.routine_day_id` has no FK yet so the file can run before `routines.sql`.
 - **Duplicate loophole** (S1, 2 Nov): count only owned rows (the starter does not fill a slot). Create, duplicate custom, Duplicate on routine detail (week 1 day 1, named `{routine} (copy)`), and Save as workout on session detail (today’s day, including today-only edits) all share `assertCanCreateCustomWorkout`. Free users cannot copy a Pro routine at all (`openPaywall('routine')`). No new SQL; Pro is still not stored in Postgres so RLS cannot enforce the cap.
+- **Programmes tab** (S2, 2 Nov): five tabs, Programmes second. Shared `RoutineCatalogue` and `ExerciseLibrary`. Stretches empty until S8. No new SQL. Pill labels shrink to fit five items (`adjustsFontSizeToFit`).
 - **Planner** (R6, 24 Oct): agenda list from today through the next 3 months (current month plus two), toggle to a stacked monthly calendar (dots on session days, today filled). Inspired by SWEAT’s planner, not a copy: no food tab, no subscription nag. Routine weeks in that window are filled automatically (3 days → Mon/Wed/Fri, etc.). Mid-week start still places this week’s sessions. Move is tap-to-move. Activity still uses this week’s X of Y. No new library or migration.
 - **Gym unlocked** (R7, 24 Oct): do not drop `confidence_history` or `zone`. Setup steps are generated in `src/lib/gymUnlocked.ts` from equipment/zone so we did not add a column (coach can replace later). Onboarding no longer asks Corner/Machines/Whole gym; `confidence_level` is still written from the 1–5 gym-confidence answer so the profile row stays valid. Programme/block fills use zone 4 (no gating). `levelUp.ts` / `LevelUpCard.tsx` stay on disk unused.
 - **Activity** (R8, 24 Oct): lifts tracked = ticked sets where `usesWeight` is true. Streak is computed live (one rest-week pass per calendar month); `rest_passes_used_month` is stored but not written yet. Goal defaults to 8 until R9 asks. Photos never go to AI; signed URLs last 1 hour. `expo-image-picker` added (needed for camera/library; plugin in `app.json`). Milestones table exists for later; badges are computed from history so a missing table does not hide them. Enrolment completes when finished routine sessions reach `length_weeks × days_per_week`.

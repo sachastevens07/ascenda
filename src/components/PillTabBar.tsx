@@ -87,7 +87,13 @@ export function PillTabBar({
               accessibilityState={{ selected: focused }}
               accessibilityLabel={label}>
               {tabBarIcon?.({ focused, color: colour })}
-              <Text style={[styles.label, { color: colour }]}>{label}</Text>
+              <Text
+                style={[styles.label, { color: colour }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}>
+                {label}
+              </Text>
             </Pressable>
           );
         })}
@@ -131,7 +137,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
 });

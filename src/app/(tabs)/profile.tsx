@@ -238,7 +238,7 @@ export default function ProfileScreen() {
         </Text>
         <Pressable
           style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-          onPress={() => router.push('/routines' as Href)}
+          onPress={() => router.push('/programmes' as Href)}
           accessibilityRole="button">
           <Text style={styles.buttonText}>{enrolment ? 'View routines' : 'Open routines'}</Text>
         </Pressable>

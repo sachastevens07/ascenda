@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -17,7 +16,6 @@ import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import {
-  currentEnrolmentWeek,
   describeRoutineError,
   fetchActiveEnrolment,
   fetchRoutine,
@@ -179,25 +177,9 @@ export default function HomeScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
-        <View style={styles.homeHeader}>
-          <Text style={styles.title}>
-            {profile?.display_name ? `Hi, ${profile.display_name}` : 'Home'}
-          </Text>
-          <Pressable
-            style={({ pressed }) => [styles.libraryButton, pressed && styles.pressed]}
-            onPress={() => router.push('/library')}
-            accessibilityRole="button">
-            <Ionicons name="barbell-outline" size={18} color={colours.accent} />
-            <Text style={styles.libraryButtonText}>Exercise library</Text>
-          </Pressable>
-        </View>
-
-        {enrolment && (
-          <Text style={styles.subtitle}>
-            {enrolment.routine.name} · week {currentEnrolmentWeek(enrolment)} of{' '}
-            {enrolment.routine.length_weeks}
-          </Text>
-        )}
+        <Text style={styles.title}>
+          {profile?.display_name ? `Hi, ${profile.display_name}` : 'Home'}
+        </Text>
 
         {subscription.trialEndsAt && isTrialEndingSoon(subscription) && (
           <View style={styles.tip}>
@@ -234,7 +216,7 @@ export default function HomeScreen() {
               {subscription.isPro ? 'Featured for you' : 'Starter routines'}
             </Text>
             <Pressable
-              onPress={() => router.push('/routines' as Href)}
+              onPress={() => router.push('/programmes' as Href)}
               style={({ pressed }) => pressed && styles.pressed}
               accessibilityRole="button">
               <Text style={styles.viewAll}>View all</Text>
@@ -378,39 +360,10 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     marginTop: 24,
   },
-  homeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
   title: {
     fontSize: 32,
     fontWeight: '700',
     color: colours.text,
-    flexShrink: 1,
-  },
-  libraryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minHeight: 40,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-  },
-  libraryButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.accent,
-    marginTop: -12,
   },
   sectionHeader: {
     flexDirection: 'row',

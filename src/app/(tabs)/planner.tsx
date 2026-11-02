@@ -316,7 +316,7 @@ export default function PlannerScreen() {
               {!range.enrolment && (
                 <Pressable
                   style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-                  onPress={() => router.push('/routines' as Href)}
+                  onPress={() => router.push('/programmes' as Href)}
                   accessibilityRole="button">
                   <Text style={styles.linkText}>Browse routines</Text>
                 </Pressable>

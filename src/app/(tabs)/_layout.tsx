@@ -33,6 +33,10 @@ export default function TabLayout() {
             options={{ title: 'Home', tabBarIcon: tabIcon('home', 'home-outline') }}
           />
           <TopTabs.Screen
+            name="programmes"
+            options={{ title: 'Programmes', tabBarIcon: tabIcon('albums', 'albums-outline') }}
+          />
+          <TopTabs.Screen
             name="planner"
             options={{ title: 'Planner', tabBarIcon: tabIcon('calendar', 'calendar-outline') }}
           />
