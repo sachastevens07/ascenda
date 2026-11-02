@@ -49,6 +49,7 @@ export function SectionHeader({
 export function ListRow({
   title,
   subtitle,
+  eyebrow,
   left,
   right,
   onPress,
@@ -57,6 +58,7 @@ export function ListRow({
 }: {
   title: string;
   subtitle?: string;
+  eyebrow?: string;
   left?: ReactNode;
   right?: ReactNode;
   onPress?: () => void;
@@ -73,6 +75,9 @@ export function ListRow({
       ]}>
       {left}
       <View style={styles.rowText}>
+        {eyebrow ? (
+          <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 2 }]}>{eyebrow}</Text>
+        ) : null}
         <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
           {title}
         </Text>
@@ -83,7 +88,7 @@ export function ListRow({
         ) : null}
       </View>
       {right}
-      {showChevron && onPress ? <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} /> : null}
+      {showChevron ? <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} /> : null}
     </View>
   );
   if (!onPress) return inner;
@@ -99,27 +104,39 @@ export function ListRow({
 
 export function StickyDayHeader({
   title,
+  today = false,
   onRest,
   onAdd,
   style,
 }: {
   title: string;
+  today?: boolean;
   onRest?: () => void;
   onAdd?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, type } = useTheme();
+  const ink = today ? colours.onBrand : colours.inkMuted;
   return (
-    <View style={[styles.sticky, { backgroundColor: colours.bg, borderBottomColor: colours.border }, style]}>
-      <Text style={[type.title, { color: colours.ink, flex: 1 }]}>{title}</Text>
+    <View
+      style={[
+        styles.sticky,
+        today
+          ? { backgroundColor: colours.ink }
+          : { backgroundColor: colours.surfaceMuted, borderBottomColor: colours.border },
+        style,
+      ]}>
+      <Text style={[type.title3, { color: ink, flex: 1 }]} numberOfLines={1}>
+        {title}
+      </Text>
       {onRest ? (
         <Pressable onPress={onRest} accessibilityRole="button" accessibilityLabel="Rest day" hitSlop={8}>
-          <Ionicons name="moon-outline" size={22} color={colours.ink} />
+          <Ionicons name="moon-outline" size={22} color={ink} />
         </Pressable>
       ) : null}
       {onAdd ? (
         <Pressable onPress={onAdd} accessibilityRole="button" accessibilityLabel="Add workout" hitSlop={8}>
-          <Ionicons name="add" size={24} color={colours.ink} />
+          <Ionicons name="add" size={24} color={ink} />
         </Pressable>
       ) : null}
     </View>
@@ -153,12 +170,14 @@ const styles = StyleSheet.create({
   },
   sticky: {
     minHeight: 48,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    zIndex: 2,
+    elevation: 3,
   },
   pressed: {
     opacity: 0.8,

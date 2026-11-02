@@ -12,17 +12,22 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { showDialog } from '@/components/Dialog';
+import { useTabBarHeight } from '@/components/PillTabBar';
 import {
-  AnchoredMenu,
+  IconButton,
+  ListRow,
   MenuHeader,
   MenuRow,
+  OverflowMenu,
+  PrimaryButton,
+  StickyDayHeader,
+  TextButton,
   measureAnchor,
   type AnchorHandle,
   type AnchorRect,
-} from '@/components/AnchoredMenu';
-import { showDialog } from '@/components/Dialog';
-import { useTabBarHeight } from '@/components/PillTabBar';
-import { colours } from '@/constants/theme';
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import { fetchCustomWorkouts, type CustomWorkout } from '@/lib/customWorkouts';
 import {
   CALENDAR_WEEKDAYS,
@@ -34,6 +39,7 @@ import {
   loadPlannerRange,
   monthsInHorizon,
   movePlannedSession,
+  parseIsoDate,
   plannerHorizon,
   setRestDay,
   startOfMonth,
@@ -51,9 +57,12 @@ type PickDayReason = 'workout' | 'rest';
 type ViewMode = 'agenda' | 'month';
 type AgendaSection = { iso: string; day: PlannerDayView; data: PlannerDayView[] };
 
+const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
+
 export default function PlannerScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
+  const { colours, type, spacing, radius, shadow } = useTheme();
   const agendaRef = useRef<SectionList<PlannerDayView, AgendaSection>>(null);
   const fabRef = useRef<AnchorHandle>(null);
   const [range, setRange] = useState<PlannerRange | null>(null);
@@ -71,6 +80,7 @@ export default function PlannerScreen() {
   const [menuSource, setMenuSource] = useState<'day' | 'fab'>('day');
   const [busy, setBusy] = useState(false);
   const [didScrollToToday, setDidScrollToToday] = useState(false);
+  const [weekStartIso, setWeekStartIso] = useState(() => toIso(startOfWeekMonday(new Date())));
 
   const horizon = useMemo(() => plannerHorizon(), []);
   const todayIso = toIso(new Date());
@@ -116,6 +126,14 @@ export default function PlannerScreen() {
     const sunday = toIso(addDays(startOfWeekMonday(new Date()), 6));
     return (range?.days ?? []).filter((day) => day.iso >= monday && day.iso <= sunday);
   }, [range]);
+
+  const stripDays = useMemo(() => {
+    const start = parseIsoDate(weekStartIso);
+    return Array.from({ length: 7 }, (_, index) => daysByIso.get(toIso(addDays(start, index))) ?? null);
+  }, [weekStartIso, daysByIso]);
+
+  const canPrevWeek = parseIsoDate(weekStartIso) > startOfWeekMonday(horizon.from);
+  const canNextWeek = parseIsoDate(weekStartIso) < startOfWeekMonday(horizon.to);
 
   const months = useMemo(() => monthsInHorizon(horizon.from, horizon.to), [horizon.from, horizon.to]);
   const weekPlanned = weekDays.filter((day) => day.kind === 'routine' || day.kind === 'custom');
@@ -291,23 +309,53 @@ export default function PlannerScreen() {
     });
   }
 
+  function scrollToIso(iso: string) {
+    const index = agendaSections.findIndex((section) => section.iso === iso);
+    if (index < 0) return;
+    agendaRef.current?.scrollToLocation({
+      sectionIndex: index,
+      itemIndex: 0,
+      viewPosition: 0,
+      animated: true,
+    });
+  }
+
+  function shiftWeek(delta: number) {
+    const next = addDays(parseIsoDate(weekStartIso), delta * 7);
+    const min = startOfWeekMonday(horizon.from);
+    const max = startOfWeekMonday(horizon.to);
+    if (next < min || next > max) return;
+    const iso = toIso(next);
+    setWeekStartIso(iso);
+    const weekEnd = toIso(addDays(next, 6));
+    const target = agendaSections.find((section) => section.iso >= iso && section.iso <= weekEnd);
+    if (viewMode === 'agenda' && target) scrollToIso(target.iso);
+  }
+
+  function handleStripDay(day: PlannerDayView) {
+    if (viewMode === 'month') {
+      setSelectedDay(day);
+      return;
+    }
+    scrollToIso(day.iso);
+  }
+
   if (loadState !== 'ready' || !range) {
     return (
-      <View style={styles.centre}>
+      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
         {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} />
+          <ActivityIndicator color={colours.brand} />
         ) : (
           <>
-            <Text style={styles.message}>{errorMessage}</Text>
-            <Pressable
-              style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+            <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>{errorMessage}</Text>
+            <PrimaryButton
+              label="Try again"
               onPress={() => {
                 setLoadState('loading');
                 setAttempt((count) => count + 1);
               }}
-              accessibilityRole="button">
-              <Text style={styles.outlineButtonText}>Try again</Text>
-            </Pressable>
+              style={{ marginTop: spacing.md, alignSelf: 'stretch' }}
+            />
           </>
         )}
       </View>
@@ -315,43 +363,86 @@ export default function PlannerScreen() {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <View style={[styles.top, { paddingTop: Math.max(insets.top, 16) + 8 }]}>
-        <Text style={styles.title}>Planner</Text>
-        <Pressable
+        <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Planner</Text>
+        <IconButton
+          icon={viewMode === 'agenda' ? 'calendar-outline' : 'list-outline'}
+          variant="muted"
+          accessibilityLabel={viewMode === 'agenda' ? 'Show monthly calendar' : 'Show list'}
           onPress={() => setViewMode((mode) => (mode === 'agenda' ? 'month' : 'agenda'))}
-          style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-          accessibilityRole="button"
-          accessibilityLabel={viewMode === 'agenda' ? 'Show monthly calendar' : 'Show list'}>
-          <Ionicons
-            name={viewMode === 'agenda' ? 'calendar-outline' : 'list-outline'}
-            size={22}
-            color={colours.text}
-          />
-        </Pressable>
+        />
+      </View>
+
+      <View style={styles.strip}>
+        <IconButton
+          icon="chevron-back"
+          accessibilityLabel="Previous week"
+          disabled={!canPrevWeek}
+          onPress={() => shiftWeek(-1)}
+        />
+        {stripDays.map((day, index) => {
+          const letter = WEEKDAY_LETTERS[index];
+          const planned = day?.kind === 'routine' || day?.kind === 'custom';
+          const selected = day?.iso === (selectedDay?.iso ?? todayIso);
+          return (
+            <Pressable
+              key={letter + String(index)}
+              onPress={() => day && handleStripDay(day)}
+              disabled={!day}
+              style={styles.stripDay}
+              accessibilityRole="button"
+              accessibilityLabel={day ? `${day.weekday} ${day.dayNumber}` : letter}>
+              <Text style={[type.caption, { color: colours.inkMuted }]}>{letter}</Text>
+              <View
+                style={[
+                  styles.stripCircle,
+                  { borderRadius: radius.full },
+                  day?.isToday && { backgroundColor: colours.ink },
+                  selected && !day?.isToday && { borderWidth: 1.5, borderColor: colours.brand },
+                ]}>
+                <Text
+                  style={[
+                    type.bodySm,
+                    { fontWeight: '700', color: day?.isToday ? colours.onBrand : colours.ink },
+                    day?.isPast && !day.isToday && { color: colours.inkMuted },
+                  ]}>
+                  {day?.dayNumber ?? ''}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.stripDot,
+                  { backgroundColor: planned ? colours.accent : 'transparent' },
+                ]}
+              />
+            </Pressable>
+          );
+        })}
+        <IconButton
+          icon="chevron-forward"
+          accessibilityLabel="Next week"
+          disabled={!canNextWeek}
+          onPress={() => shiftWeek(1)}
+        />
       </View>
 
       {movingDay ? (
-        <View style={styles.moveBanner}>
-          <Text style={styles.moveText}>Tap a day to move {movingDay.title ?? 'this session'}.</Text>
-          <Pressable
-            onPress={() => setMovingId(null)}
-            style={({ pressed }) => [styles.moveCancel, pressed && styles.pressed]}
-            accessibilityRole="button">
-            <Text style={styles.moveCancelText}>Cancel</Text>
-          </Pressable>
+        <View
+          style={[
+            styles.moveBanner,
+            { backgroundColor: colours.brandSoft, borderRadius: radius.lg },
+          ]}>
+          <Text style={[type.bodySm, { color: colours.ink, fontWeight: '600', flex: 1 }]}>
+            Tap a day to move {movingDay.title ?? 'this session'}.
+          </Text>
+          <TextButton label="Cancel" onPress={() => setMovingId(null)} />
         </View>
       ) : weekPlanned.length > 0 ? (
-        <Text style={styles.progress}>
+        <Text style={[type.caption, { color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }]}>
           This week: {weekDone} of {weekPlanned.length} {weekPlanned.length === 1 ? 'workout' : 'workouts'}
         </Text>
-      ) : (
-        <Text style={styles.lead}>
-          {range.enrolment
-            ? 'Scroll to see the next three months. Tap a day to add, move or rest.'
-            : 'Start a routine to fill the days, or add a custom workout to any date.'}
-        </Text>
-      )}
+      ) : null}
 
       {viewMode === 'agenda' ? (
         <SectionList
@@ -369,11 +460,7 @@ export default function PlannerScreen() {
           onScrollToIndexFailed={() => {}}
           contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}
           renderSectionHeader={({ section }) => (
-            <View style={[styles.dayHeading, section.day.isToday && styles.dayHeadingToday]}>
-              <Text style={[styles.dayHeadingText, section.day.isToday && styles.dayHeadingTextToday]}>
-                {formatAgendaHeading(section.day)}
-              </Text>
-            </View>
+            <StickyDayHeader title={formatAgendaHeading(section.day)} today={section.day.isToday} />
           )}
           renderItem={({ item }) => (
             <AgendaDay
@@ -385,20 +472,10 @@ export default function PlannerScreen() {
           )}
           ListFooterComponent={
             <View style={styles.footer}>
-              {!range.enrolment && (
-                <Pressable
-                  style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-                  onPress={() => router.push('/programmes' as Href)}
-                  accessibilityRole="button">
-                  <Text style={styles.linkText}>Browse routines</Text>
-                </Pressable>
-              )}
-              <Pressable
-                style={({ pressed }) => [styles.link, pressed && styles.pressed]}
-                onPress={() => router.push('/workouts' as Href)}
-                accessibilityRole="button">
-                <Text style={styles.linkText}>My workouts</Text>
-              </Pressable>
+              {!range.enrolment ? (
+                <TextButton label="Browse routines" onPress={() => router.push('/programmes' as Href)} />
+              ) : null}
+              <TextButton label="My workouts" onPress={() => router.push('/workouts' as Href)} />
             </View>
           }
         />
@@ -406,7 +483,7 @@ export default function PlannerScreen() {
         <ScrollView style={styles.agenda} contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}>
           <View style={styles.weekdayRow}>
             {CALENDAR_WEEKDAYS.map((label) => (
-              <Text key={label} style={styles.weekdayLabel}>
+              <Text key={label} style={[type.caption, styles.weekdayLabel, { color: colours.inkMuted }]}>
                 {label}
               </Text>
             ))}
@@ -435,15 +512,20 @@ export default function PlannerScreen() {
         onPress={handleAddPress}
         style={({ pressed }) => [
           styles.fab,
-          { bottom: tabBarHeight + 16 },
+          {
+            bottom: tabBarHeight + 16,
+            backgroundColor: colours.ink,
+            borderRadius: radius.full,
+          },
+          shadow,
           pressed && styles.pressed,
         ]}
         accessibilityRole="button"
         accessibilityLabel="Add to the planner">
-        <Ionicons name="add" size={28} color={colours.surface} />
+        <Ionicons name="add" size={28} color={colours.onBrand} />
       </Pressable>
 
-      <AnchoredMenu visible={sheet !== null} anchor={anchor} onClose={closeSheets}>
+      <OverflowMenu visible={sheet !== null} anchor={anchor} onClose={closeSheets}>
         {sheet === 'fab' ? (
           <>
             <MenuHeader label="Add to your planner" detail="Pick what to add, then choose a day." />
@@ -526,7 +608,7 @@ export default function PlannerScreen() {
             ))}
           </>
         ) : null}
-      </AnchoredMenu>
+      </OverflowMenu>
     </View>
   );
 }
@@ -542,9 +624,10 @@ function AgendaDay({
   onPress: (from: AnchorHandle | null) => void;
   disabled: boolean;
 }) {
+  const { colours, type, radius } = useTheme();
   const rowRef = useRef<AnchorHandle>(null);
-  const kicker =
-    day.kind === 'routine' ? 'Routine' : day.kind === 'custom' ? 'Custom' : day.kind === 'rest' ? 'Rest' : null;
+  const quiet = day.kind === 'empty' || day.kind === 'rest';
+  const eyebrow = day.kind === 'routine' ? 'Routine' : day.kind === 'custom' ? 'Custom' : undefined;
 
   return (
     <Pressable
@@ -552,24 +635,39 @@ function AgendaDay({
       collapsable={false}
       onPress={() => onPress(rowRef.current)}
       disabled={disabled}
-      style={({ pressed }) => [styles.sessionRow, moving && styles.sessionMoving, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        quiet ? styles.quietRow : styles.sessionRow,
+        { backgroundColor: moving ? colours.brandSoft : quiet ? colours.bg : colours.surface },
+        pressed && styles.pressed,
+      ]}
       accessibilityRole="button"
-      accessibilityLabel={`${formatAgendaHeading(day)}. ${day.title ?? 'Add a workout'}`}>
-        <View style={[styles.tick, day.completed && styles.tickDone]}>
-          {day.completed ? <Ionicons name="checkmark" size={16} color={colours.surface} /> : null}
-        </View>
-        <View style={styles.sessionBody}>
-          {kicker ? <Text style={styles.kicker}>{kicker}</Text> : null}
-          <Text style={[styles.sessionTitle, day.kind === 'empty' && styles.sessionEmpty]} numberOfLines={1}>
-            {day.title ?? 'Add a workout'}
-          </Text>
-          {day.subtitle ? (
-            <Text style={styles.sessionMeta} numberOfLines={1}>
-              {day.subtitle}
-            </Text>
-          ) : null}
-        </View>
-        <Ionicons name="chevron-forward" size={18} color={colours.textMuted} />
+      accessibilityLabel={`${formatAgendaHeading(day)}. ${day.title ?? (day.kind === 'rest' ? 'Rest day' : 'Tap to add')}`}>
+      {quiet ? (
+        <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+          {day.kind === 'rest' ? 'Rest day' : 'Tap to add'}
+        </Text>
+      ) : (
+        <ListRow
+          eyebrow={eyebrow}
+          title={day.title ?? 'Session'}
+          subtitle={day.subtitle ?? undefined}
+          showChevron
+          style={{ backgroundColor: 'transparent' }}
+          left={
+            <View
+              style={[
+                styles.tick,
+                {
+                  borderColor: day.completed ? colours.success : colours.border,
+                  backgroundColor: day.completed ? colours.success : colours.surface,
+                  borderRadius: radius.full,
+                },
+              ]}>
+              {day.completed ? <Ionicons name="checkmark" size={14} color={colours.onBrand} /> : null}
+            </View>
+          }
+        />
+      )}
     </Pressable>
   );
 }
@@ -591,6 +689,7 @@ function MonthBlock({
   movingId: string | null;
   onPressDay: (iso: string, from: AnchorHandle | null) => void;
 }) {
+  const { colours, type } = useTheme();
   const first = startOfMonth(new Date(year, month, 1));
   const lead = (first.getDay() + 6) % 7;
   const lastDate = new Date(year, month + 1, 0).getDate();
@@ -602,7 +701,7 @@ function MonthBlock({
 
   return (
     <View style={styles.monthBlock}>
-      <Text style={styles.monthTitle}>{label}</Text>
+      <Text style={[type.title1, { color: colours.ink, marginBottom: 12 }]}>{label}</Text>
       <View style={styles.monthGrid}>
         {cells.map((iso, index) => {
           if (!iso) {
@@ -648,6 +747,7 @@ function MonthCell({
   isMoving: boolean;
   onPressDay: (iso: string, from: AnchorHandle | null) => void;
 }) {
+  const { colours, type, radius } = useTheme();
   const cellRef = useRef<AnchorHandle>(null);
   return (
     <Pressable
@@ -660,20 +760,24 @@ function MonthCell({
       <View
         style={[
           styles.dateBubble,
-          isToday && styles.dateBubbleToday,
-          isSelected && !isToday && styles.dateBubbleSelected,
-          isMoving && styles.dateBubbleSelected,
+          { borderRadius: radius.full },
+          isToday && { backgroundColor: colours.ink },
+          (isSelected && !isToday) || isMoving
+            ? { borderWidth: 1.5, borderColor: colours.brand }
+            : null,
         ]}>
         <Text
           style={[
-            styles.dateNumber,
-            day?.isPast && !isToday && styles.dateNumberPast,
-            isToday && styles.dateNumberToday,
+            type.bodySm,
+            { fontWeight: '600', color: isToday ? colours.onBrand : colours.ink },
+            day?.isPast && !isToday && { color: colours.inkMuted },
           ]}>
           {day?.dayNumber ?? Number(iso.slice(8))}
         </Text>
       </View>
-      <View style={[styles.dot, hasWorkout ? styles.dotOn : styles.dotOff]} />
+      <View
+        style={[styles.dot, { backgroundColor: hasWorkout ? colours.accent : 'transparent' }]}
+      />
     </Pressable>
   );
 }
@@ -681,7 +785,6 @@ function MonthCell({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   centre: {
     flex: 1,
@@ -689,46 +792,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 32,
     gap: 12,
-    backgroundColor: colours.background,
-  },
-  message: {
-    fontSize: 17,
-    lineHeight: 24,
-    color: colours.textMuted,
-    textAlign: 'center',
   },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  strip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
     paddingBottom: 8,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colours.text,
+  stripDay: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
   },
-  iconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  stripCircle: {
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  progress: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colours.accent,
-    paddingHorizontal: 24,
-    paddingBottom: 8,
-  },
-  lead: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colours.textMuted,
-    paddingHorizontal: 24,
-    paddingBottom: 8,
+  stripDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   agenda: {
     flex: 1,
@@ -736,98 +830,27 @@ const styles = StyleSheet.create({
   moveBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
     marginHorizontal: 16,
     marginBottom: 8,
-    padding: 14,
-    borderRadius: 18,
-    backgroundColor: colours.accentSoft,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
-  moveText: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  moveCancel: {
+  quietRow: {
     minHeight: 44,
     justifyContent: 'center',
-  },
-  moveCancelText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  dayHeading: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: colours.background,
-    zIndex: 2,
-    elevation: 3,
-  },
-  dayHeadingToday: {
-    backgroundColor: colours.text,
-  },
-  dayHeadingText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colours.textMuted,
-  },
-  dayHeadingTextToday: {
-    color: colours.surface,
   },
   sessionRow: {
-    minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: colours.surface,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
-  },
-  sessionMoving: {
-    backgroundColor: colours.accentSoft,
+    backgroundColor: 'transparent',
   },
   tick: {
     width: 22,
     height: 22,
-    borderRadius: 11,
     borderWidth: 1.5,
-    borderColor: colours.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tickDone: {
-    borderColor: colours.accent,
-    backgroundColor: colours.accent,
-  },
-  sessionBody: {
-    flex: 1,
-  },
-  kicker: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    color: colours.accent,
-    marginBottom: 2,
-  },
-  sessionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  sessionEmpty: {
-    fontWeight: '600',
-    color: colours.textMuted,
-  },
-  sessionMeta: {
-    fontSize: 14,
-    color: colours.textMuted,
-    marginTop: 2,
   },
   weekdayRow: {
     flexDirection: 'row',
@@ -837,22 +860,12 @@ const styles = StyleSheet.create({
   weekdayLabel: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
     textTransform: 'uppercase',
-    color: colours.textMuted,
   },
   monthBlock: {
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
-  },
-  monthTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 12,
   },
   monthGrid: {
     flexDirection: 'row',
@@ -867,27 +880,8 @@ const styles = StyleSheet.create({
   dateBubble: {
     width: 36,
     height: 36,
-    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  dateBubbleToday: {
-    backgroundColor: colours.text,
-  },
-  dateBubbleSelected: {
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-  },
-  dateNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  dateNumberPast: {
-    color: colours.textMuted,
-  },
-  dateNumberToday: {
-    color: colours.surface,
   },
   dot: {
     width: 5,
@@ -895,54 +889,21 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
     marginTop: 4,
   },
-  dotOn: {
-    backgroundColor: colours.accent,
-  },
-  dotOff: {
-    backgroundColor: 'transparent',
-  },
   fab: {
     position: 'absolute',
     right: 20,
     width: 56,
     height: 56,
-    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colours.text,
   },
   footer: {
     paddingTop: 16,
-    paddingHorizontal: 24,
-  },
-  link: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  linkText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.accent,
-  },
-  outlineButton: {
-    minHeight: 52,
-    alignSelf: 'stretch',
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
     paddingHorizontal: 20,
-    marginTop: 12,
-  },
-  outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
+    paddingBottom: 8,
+    alignItems: 'flex-start',
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.8,
   },
 });
