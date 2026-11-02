@@ -1,6 +1,8 @@
 import type { Session } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { completeSessionFromUrl } from '@/lib/emailAuth';
 import { supabase } from '@/lib/supabase';
 
 type AuthState = {
@@ -19,6 +21,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState({ session, isLoading: false });
     });
     return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    function handleUrl(url: string | null) {
+      if (url) void completeSessionFromUrl(url).catch(() => {});
+    }
+    void Linking.getInitialURL().then(handleUrl);
+    const subscription = Linking.addEventListener('url', ({ url }) => handleUrl(url));
+    return () => subscription.remove();
   }, []);
 
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;

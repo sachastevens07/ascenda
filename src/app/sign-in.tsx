@@ -1,3 +1,4 @@
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colours } from '@/constants/theme';
+import { authRedirectUrl, isEmailNotConfirmed } from '@/lib/emailAuth';
 import { supabase } from '@/lib/supabase';
 
 type Mode = 'sign-in' | 'sign-up';
@@ -54,20 +56,23 @@ export default function SignInScreen() {
       const { data, error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password,
-        options: { data: { age_confirmed: true } },
+        options: { data: { age_confirmed: true }, emailRedirectTo: authRedirectUrl() },
       });
       if (error) {
         setMessage({ kind: 'error', text: error.message });
       } else if (!data.session) {
-        setMessage({
-          kind: 'info',
-          text: 'Nearly there! Check your inbox for a confirmation email, then come back and sign in.',
-        });
-        setMode('sign-in');
+        router.replace({ pathname: '/check-inbox', params: { email: trimmedEmail } } as Href);
+        setIsSubmitting(false);
+        return;
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
       if (error) {
+        if (isEmailNotConfirmed(error)) {
+          router.replace({ pathname: '/check-inbox', params: { email: trimmedEmail } } as Href);
+          setIsSubmitting(false);
+          return;
+        }
         setMessage({
           kind: 'error',
           text:
