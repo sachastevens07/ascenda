@@ -578,20 +578,49 @@ export async function fetchActiveEnrolment(): Promise<RoutineEnrolment | null> {
   };
 }
 
+function isMissingPlannerTable(error: { message?: string; code?: string }): boolean {
+  const detail = `${error.code ?? ''} ${error.message ?? ''}`.toLowerCase();
+  return error.code === '42P01' || error.code === 'PGRST205' || /planned_sessions/.test(detail);
+}
+
+/** Drops upcoming routine days from the planner. Custom workouts and finished days stay. */
+async function clearUpcomingRoutinePlans(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('planned_sessions')
+    .delete()
+    .eq('user_id', userId)
+    .gte('date', todayDate())
+    .eq('status', 'planned')
+    .not('routine_day_id', 'is', null);
+  if (error && !isMissingPlannerTable(error)) {
+    throw new Error(error.message);
+  }
+}
+
 export async function startRoutine(routineId: string): Promise<RoutineEnrolment> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Sign in first.');
 
-  const { error: abandonError } = await supabase
-    .from('routine_enrolments')
-    .update({ status: 'abandoned' })
-    .eq('user_id', user.id)
-    .eq('status', 'active');
-  if (abandonError) {
-    if (isMissingRoutines(abandonError)) throw new Error(missingRoutinesMessage());
-    throw new Error(abandonError.message);
+  const previous = await fetchActiveEnrolment();
+  if (previous) {
+    const done = await countEnrolmentSessions(previous.id);
+    const target = previous.routine.length_weeks * previous.routine.days_per_week;
+    if (target > 0 && done >= target) {
+      await completeActiveEnrolment();
+    } else {
+      const { error: abandonError } = await supabase
+        .from('routine_enrolments')
+        .update({ status: 'abandoned' })
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+      if (abandonError) {
+        if (isMissingRoutines(abandonError)) throw new Error(missingRoutinesMessage());
+        throw new Error(abandonError.message);
+      }
+    }
+    await clearUpcomingRoutinePlans(user.id);
   }
 
   const { data, error } = await supabase
@@ -758,4 +787,30 @@ export async function abandonActiveEnrolment(): Promise<void> {
     if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
     throw new Error(error.message);
   }
+}
+
+export type EndRoutineResult = 'complete' | 'abandoned';
+
+/**
+ * Ends the active routine. Marks it complete if every planned session is already logged,
+ * otherwise abandoned. Upcoming planned sessions from that routine are cleared.
+ */
+export async function endActiveEnrolment(): Promise<EndRoutineResult | null> {
+  const enrolment = await fetchActiveEnrolment();
+  if (!enrolment) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Sign in first.');
+
+  const done = await countEnrolmentSessions(enrolment.id);
+  const target = enrolment.routine.length_weeks * enrolment.routine.days_per_week;
+  const finished = target > 0 && done >= target;
+  if (finished) {
+    await completeActiveEnrolment();
+  } else {
+    await abandonActiveEnrolment();
+  }
+  await clearUpcomingRoutinePlans(user.id);
+  return finished ? 'complete' : 'abandoned';
 }

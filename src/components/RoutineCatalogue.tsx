@@ -10,8 +10,8 @@ import { ProBadge } from '@/components/ProBadge';
 import { colours } from '@/constants/theme';
 import { coverForRoutine } from '@/lib/images';
 import {
-  abandonActiveEnrolment,
   collectRoutineTags,
+  endActiveEnrolment,
   currentEnrolmentWeek,
   describeRoutineError,
   fetchActiveEnrolment,
@@ -67,11 +67,11 @@ export function RoutineCatalogue({
   function requestLeave() {
     if (!enrolment) return;
     showDialog(
-      `Leave ${enrolment.routine.name}?`,
-      'You can start it again later. Your logged sessions stay.',
+      `End ${enrolment.routine.name}?`,
+      'Your logged sessions and progress stay. Upcoming planned sessions from this plan will be cleared.',
       [
-        { text: 'Leave routine', style: 'destructive', onPress: handleLeave },
-        { text: 'Stay', style: 'cancel' },
+        { text: 'End routine', style: 'destructive', onPress: handleLeave },
+        { text: 'Keep this plan', style: 'cancel' },
       ]
     );
   }
@@ -79,10 +79,10 @@ export function RoutineCatalogue({
   async function handleLeave() {
     setIsLeaving(true);
     try {
-      await abandonActiveEnrolment();
+      await endActiveEnrolment();
       setEnrolment(null);
     } catch (error) {
-      showDialog('Couldn’t leave the routine', describeRoutineError(error));
+      showDialog('Couldn’t end the routine', describeRoutineError(error));
     } finally {
       setIsLeaving(false);
     }
@@ -114,7 +114,7 @@ export function RoutineCatalogue({
             onPress={requestLeave}
             disabled={isLeaving}
             accessibilityRole="button">
-            <Text style={styles.secondaryText}>Leave routine</Text>
+            <Text style={styles.secondaryText}>{isLeaving ? 'Ending…' : 'End routine'}</Text>
           </Pressable>
         </View>
       )}

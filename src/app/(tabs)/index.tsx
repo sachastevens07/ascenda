@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -18,6 +19,7 @@ import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import {
   describeRoutineError,
+  endActiveEnrolment,
   fetchActiveEnrolment,
   fetchRoutine,
   fetchRoutines,
@@ -148,6 +150,36 @@ export default function HomeScreen() {
     router.push({ pathname: '/workouts/[id]', params: { id: 'new' } });
   }
 
+  function requestEndRoutine() {
+    if (!data?.enrolment) return;
+    showDialog(
+      `End ${data.enrolment.routine.name}?`,
+      'Your logged sessions and progress stay. Upcoming planned sessions from this plan will be cleared.',
+      [
+        { text: 'End routine', style: 'destructive', onPress: handleEndRoutine },
+        { text: 'Keep this plan', style: 'cancel' },
+      ]
+    );
+  }
+
+  async function handleEndRoutine() {
+    try {
+      await endActiveEnrolment();
+      setAttempt((count) => count + 1);
+    } catch (error) {
+      showDialog('Couldn’t end the routine', describeRoutineError(error));
+    }
+  }
+
+  function openRoutineMenu() {
+    if (!data?.enrolment) return;
+    showDialog(data.enrolment.routine.name, 'Switch to another plan, or end this one. Your logged sessions stay.', [
+      { text: 'Switch routine', onPress: () => router.push('/programmes' as Href) },
+      { text: 'End routine', style: 'destructive', onPress: requestEndRoutine },
+      { text: 'Not now', style: 'cancel' },
+    ]);
+  }
+
   if (loadState !== 'ready' || !data) {
     return (
       <View style={styles.centre}>
@@ -263,29 +295,38 @@ export default function HomeScreen() {
         </View>
 
         {enrolment && next && !inProgress && (
-          <Pressable
-            onPress={openSessionDetail}
-            style={({ pressed }) => [styles.card, styles.sessionCard, pressed && styles.pressed]}
-            accessibilityRole="button">
-            <CoverPhoto
-              cover={coverForRoutine(enrolment.routine)}
-              letter={enrolment.routine.name.slice(0, 1)}
-              height={96}
-              style={styles.sessionCover}
-            />
-            <Text style={styles.cardLabel}>Your next session</Text>
-            <Text style={styles.dayName}>{next.day.name}</Text>
-            <Text style={styles.cardLabel}>
-              Week {next.weekNumber} · day {next.day.day_number} · about{' '}
-              {enrolment.routine.session_minutes} min
-            </Text>
-            <Text style={styles.sessionHint}>
-              {next.day.exercises.length} exercises. Tap to review, swap or start.
-            </Text>
-            <View style={styles.startButton}>
-              <Text style={styles.startButtonText}>Open session</Text>
-            </View>
-          </Pressable>
+          <View style={[styles.card, styles.sessionCard]}>
+            <Pressable
+              onPress={openSessionDetail}
+              style={({ pressed }) => pressed && styles.pressed}
+              accessibilityRole="button">
+              <CoverPhoto
+                cover={coverForRoutine(enrolment.routine)}
+                letter={enrolment.routine.name.slice(0, 1)}
+                height={96}
+                style={styles.sessionCover}
+              />
+              <Text style={styles.cardLabel}>Your next session</Text>
+              <Text style={styles.dayName}>{next.day.name}</Text>
+              <Text style={styles.cardLabel}>
+                Week {next.weekNumber} · day {next.day.day_number} · about{' '}
+                {enrolment.routine.session_minutes} min
+              </Text>
+              <Text style={styles.sessionHint}>
+                {next.day.exercises.length} exercises. Tap to review, swap or start.
+              </Text>
+              <View style={styles.startButton}>
+                <Text style={styles.startButtonText}>Open session</Text>
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={openRoutineMenu}
+              style={({ pressed }) => [styles.sessionMenu, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Switch or end this routine">
+              <Ionicons name="ellipsis-horizontal" size={22} color={colours.text} />
+            </Pressable>
+          </View>
         )}
 
         {!enrolment && (
@@ -432,6 +473,18 @@ const styles = StyleSheet.create({
   },
   sessionCard: {
     overflow: 'hidden',
+    position: 'relative',
+  },
+  sessionMenu: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.surface,
   },
   sessionCover: {
     marginHorizontal: -20,

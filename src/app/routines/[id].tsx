@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,6 +25,7 @@ import {
   ROUTINE_GOAL_LABELS,
   currentEnrolmentWeek,
   describeRoutineError,
+  endActiveEnrolment,
   fetchActiveEnrolment,
   fetchRoutine,
   firstDayOfRoutine,
@@ -60,6 +61,7 @@ export default function RoutineDetailScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
   const [openWeek, setOpenWeek] = useState<number | null>(null);
   const [openDayId, setOpenDayId] = useState<string | null>(null);
 
@@ -105,12 +107,50 @@ export default function RoutineDetailScreen() {
       return;
     }
     const message = enrolment
-      ? `This leaves ${enrolment.routine.name} and starts ${routine.name} from week 1.`
-      : `${routine.name} starts today. Home will use this in the next step.`;
+      ? `This ends ${enrolment.routine.name} and starts ${routine.name} from week 1. Your logged sessions stay. Upcoming planned sessions from the old plan will be cleared.`
+      : `${routine.name} starts today. Home will show your next session from this plan.`;
     showDialog(`Start ${routine.name}?`, message, [
       { text: 'Start routine', onPress: handleStart },
       { text: 'Not now', style: 'cancel' },
     ]);
+  }
+
+  function requestSwitch() {
+    showDialog(
+      'Switch routine?',
+      'Pick another plan from Programmes. Your logged sessions stay. This plan stays current until you start a new one.',
+      [
+        {
+          text: 'Choose a plan',
+          onPress: () => router.push('/programmes' as Href),
+        },
+        { text: 'Not now', style: 'cancel' },
+      ]
+    );
+  }
+
+  function requestEnd() {
+    if (!routine) return;
+    showDialog(
+      `End ${routine.name}?`,
+      'Your logged sessions and progress stay. Upcoming planned sessions from this plan will be cleared.',
+      [
+        { text: 'End routine', style: 'destructive', onPress: handleEnd },
+        { text: 'Keep this plan', style: 'cancel' },
+      ]
+    );
+  }
+
+  async function handleEnd() {
+    setIsEnding(true);
+    try {
+      await endActiveEnrolment();
+      setEnrolment(null);
+    } catch (error) {
+      showDialog('Couldn’t end the routine', describeRoutineError(error));
+    } finally {
+      setIsEnding(false);
+    }
   }
 
   async function handleStart() {
@@ -353,7 +393,7 @@ export default function RoutineDetailScreen() {
       <Pressable
         style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
         onPress={handleDuplicate}
-        disabled={isDuplicating || isStarting}
+        disabled={isDuplicating || isStarting || isEnding}
         accessibilityRole="button">
         {routine.is_pro && !subscription.isPro && !isDuplicating ? (
           <ProMark locked textStyle={styles.outlineButtonText}>
@@ -364,21 +404,38 @@ export default function RoutineDetailScreen() {
         )}
       </Pressable>
 
-      <Pressable
-        style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
-        onPress={requestStart}
-        disabled={isStarting || isCurrent}
-        accessibilityRole="button">
-        {routine.is_pro && !subscription.isPro && !isCurrent && !isStarting ? (
-          <ProMark locked textStyle={styles.startButtonText}>
-            Start with Pro
-          </ProMark>
-        ) : (
-          <Text style={styles.startButtonText}>
-            {isCurrent ? 'This is your current routine' : isStarting ? 'Starting…' : 'Start routine'}
-          </Text>
-        )}
-      </Pressable>
+      {isCurrent ? (
+        <>
+          <Pressable
+            style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
+            onPress={requestSwitch}
+            disabled={isStarting || isEnding || isDuplicating}
+            accessibilityRole="button">
+            <Text style={styles.outlineButtonText}>Switch routine</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.endButton, pressed && styles.pressed]}
+            onPress={requestEnd}
+            disabled={isStarting || isEnding || isDuplicating}
+            accessibilityRole="button">
+            <Text style={styles.endButtonText}>{isEnding ? 'Ending…' : 'End routine'}</Text>
+          </Pressable>
+        </>
+      ) : (
+        <Pressable
+          style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
+          onPress={requestStart}
+          disabled={isStarting || isEnding}
+          accessibilityRole="button">
+          {routine.is_pro && !subscription.isPro && !isStarting ? (
+            <ProMark locked textStyle={styles.startButtonText}>
+              Start with Pro
+            </ProMark>
+          ) : (
+            <Text style={styles.startButtonText}>{isStarting ? 'Starting…' : 'Start routine'}</Text>
+          )}
+        </Pressable>
+      )}
     </ScrollView>
   );
 }
@@ -624,6 +681,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colours.accent,
+  },
+  endButton: {
+    minHeight: 56,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colours.surface,
+    borderWidth: 1.5,
+    borderColor: colours.danger,
+  },
+  endButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colours.danger,
   },
   startButtonText: {
     fontSize: 17,

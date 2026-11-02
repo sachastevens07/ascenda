@@ -5,11 +5,12 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { WorkoutBar } from '@/components/WorkoutBar';
 import { colours } from '@/constants/theme';
 
-const PILL_PADDING = 6;
+const PILL_PADDING = 4;
 
 export type PillTabBarProps = MaterialTopTabBarProps;
 
 type TabBarHeight = { height: number; setHeight: (height: number) => void };
+type TabFrame = { x: number; width: number };
 
 const TabBarHeightContext = createContext<TabBarHeight>({ height: 0, setHeight: () => {} });
 
@@ -37,19 +38,34 @@ export function PillTabBar({
   position,
   insets,
 }: PillTabBarProps) {
-  const [innerWidth, setInnerWidth] = useState(0);
+  const [tabFrames, setTabFrames] = useState<TabFrame[]>([]);
   const { setHeight } = useContext(TabBarHeightContext);
 
-  const tabCount = Math.max(state.routes.length, 1);
-  const tabWidth = innerWidth / tabCount;
+  const tabCount = state.routes.length;
+  const framesReady = tabFrames.length === tabCount && tabFrames.every((frame) => frame.width > 0);
   const indexes = state.routes.map((_, index) => index);
-  const translateX =
-    innerWidth > 0
-      ? position.interpolate({
-          inputRange: indexes,
-          outputRange: indexes.map((index) => index * tabWidth),
-        })
-      : 0;
+  const translateX = framesReady
+    ? position.interpolate({
+        inputRange: indexes,
+        outputRange: tabFrames.map((frame) => frame.x),
+      })
+    : 0;
+  const indicatorWidth = framesReady
+    ? position.interpolate({
+        inputRange: indexes,
+        outputRange: tabFrames.map((frame) => frame.width),
+      })
+    : 0;
+
+  function rememberFrame(index: number, x: number, width: number) {
+    setTabFrames((current) => {
+      const prev = current[index];
+      if (prev && prev.x === x && prev.width === width && current.length === tabCount) return current;
+      const next = current.length === tabCount ? current.slice() : Array.from({ length: tabCount }, () => ({ x: 0, width: 0 }));
+      next[index] = { x, width };
+      return next;
+    });
+  }
 
   return (
     <View
@@ -58,12 +74,13 @@ export function PillTabBar({
       onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
       <WorkoutBar />
       <View style={styles.pill}>
-        <View
-          style={styles.pillInner}
-          onLayout={(event) => setInnerWidth(event.nativeEvent.layout.width)}>
-          {innerWidth > 0 && (
+        <View style={styles.pillInner}>
+          {framesReady && (
             <Animated.View
-              style={[styles.indicator, { width: tabWidth, transform: [{ translateX }] }]}
+              style={[
+                styles.indicator,
+                { width: indicatorWidth, transform: [{ translateX }] },
+              ]}
             />
           )}
           {state.routes.map((route, index) => {
@@ -87,6 +104,10 @@ export function PillTabBar({
               <Pressable
                 key={route.key}
                 onPress={onPress}
+                onLayout={(event) => {
+                  const { x, width } = event.nativeEvent.layout;
+                  rememberFrame(index, x, width);
+                }}
                 style={styles.tab}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: focused }}
@@ -96,7 +117,7 @@ export function PillTabBar({
                   style={[styles.label, { color: colour }]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  minimumFontScale={0.7}>
+                  minimumFontScale={0.65}>
                   {label}
                 </Text>
               </Pressable>
@@ -114,11 +135,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   pill: {
     padding: PILL_PADDING,
-    borderRadius: 999,
+    borderRadius: 28,
     overflow: 'hidden',
     backgroundColor: colours.surface,
     shadowColor: '#000',
@@ -137,22 +158,23 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: 0,
-    borderRadius: 999,
+    borderRadius: 22,
     backgroundColor: colours.accentSoft,
   },
   tab: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
     minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 56,
-    paddingHorizontal: 2,
+    paddingHorizontal: 1,
     gap: 2,
     zIndex: 1,
   },
   label: {
-    width: '100%',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     textAlign: 'center',
   },
