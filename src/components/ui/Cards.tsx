@@ -112,16 +112,20 @@ export function HeroImage({
   image,
   letter,
   title,
+  eyebrow,
   height = 220,
+  children,
   style,
 }: {
   image?: ImageSourcePropType | null;
   letter?: string;
   title?: string;
+  eyebrow?: string;
   height?: number;
+  children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type } = useTheme();
+  const { colours, type, spacing } = useTheme();
   return (
     <View style={[{ height, backgroundColor: colours.surfaceMuted }, style]}>
       {image ? (
@@ -131,11 +135,21 @@ export function HeroImage({
           <Text style={[styles.letterLarge, { color: colours.brand }]}>{(letter ?? title ?? 'A').slice(0, 1)}</Text>
         </View>
       )}
-      {title ? (
-        <View style={[styles.heroOverlay, { backgroundColor: colours.overlay }]}>
-          <Text style={[type.display, { color: colours.onAccent }]}>{title}</Text>
+      {title || eyebrow ? (
+        <View style={styles.heroOverlay} pointerEvents="none">
+          <View style={[styles.heroFade, { backgroundColor: colours.overlay }]}>
+            {eyebrow ? (
+              <Text style={[type.eyebrow, { color: colours.onAccent, marginBottom: spacing.sm }]}>{eyebrow}</Text>
+            ) : null}
+            {title ? (
+              <Text style={[type.display, { color: colours.onAccent }]} numberOfLines={2}>
+                {title}
+              </Text>
+            ) : null}
+          </View>
         </View>
       ) : null}
+      {children}
     </View>
   );
 }
@@ -143,17 +157,32 @@ export function HeroImage({
 export function StatTile({
   value,
   label,
+  icon,
   style,
 }: {
   value: string;
   label: string;
+  icon?: ComponentProps<typeof Ionicons>['name'];
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius, type } = useTheme();
   return (
     <View style={[styles.stat, { backgroundColor: colours.surface, borderRadius: radius.lg }, style]}>
-      <Text style={[type.display, { color: colours.ink, fontSize: 28, lineHeight: 34 }]}>{value}</Text>
-      <Text style={[type.caption, { color: colours.inkMuted, marginTop: 4 }]}>{label}</Text>
+      {icon ? (
+        <View style={[styles.statIcon, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
+          <Ionicons name={icon} size={16} color={colours.brand} />
+        </View>
+      ) : null}
+      <Text
+        style={[
+          icon ? type.title3 : type.display,
+          { color: colours.ink, marginTop: icon ? 8 : 0 },
+          !icon && { fontSize: 28, lineHeight: 34 },
+        ]}
+        numberOfLines={2}>
+        {value}
+      </Text>
+      <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>{label}</Text>
     </View>
   );
 }
@@ -276,11 +305,21 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     justifyContent: 'flex-end',
-    padding: 20,
+  },
+  heroFade: {
+    paddingHorizontal: 20,
+    paddingTop: 48,
+    paddingBottom: 48,
   },
   stat: {
     padding: 16,
     minWidth: 96,
+  },
+  statIcon: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   empty: {
     alignItems: 'center',

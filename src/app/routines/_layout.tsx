@@ -13,7 +13,7 @@ export default function RoutinesLayout() {
         headerStyle: { backgroundColor: colours.background },
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="[id]" options={{ headerBackTitle: 'Routines' }} />
+      <Stack.Screen name="[id]" options={{ headerShown: false }} />
       <Stack.Screen name="session" options={{ headerBackTitle: 'Home' }} />
       <Stack.Screen name="complete" options={{ headerBackTitle: 'Home', gestureEnabled: false }} />
     </Stack>

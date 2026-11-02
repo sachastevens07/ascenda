@@ -22,11 +22,12 @@ export function IconButton({
   disabled?: boolean;
   color?: string;
   size?: number;
-  variant?: 'plain' | 'muted';
+  variant?: 'plain' | 'muted' | 'overlay';
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius } = useTheme();
   const muted = variant === 'muted';
+  const overlay = variant === 'overlay';
   return (
     <Pressable
       onPress={onPress}
@@ -43,11 +44,17 @@ export function IconButton({
           borderRadius: radius.full,
           backgroundColor: colours.surfaceMuted,
         },
+        overlay && {
+          width: 40,
+          height: 40,
+          borderRadius: radius.full,
+          backgroundColor: 'rgba(0, 0, 0, 0.35)',
+        },
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
         style,
       ]}>
-      <Ionicons name={icon} size={size} color={color ?? colours.ink} />
+      <Ionicons name={icon} size={size} color={color ?? (overlay ? colours.onAccent : colours.ink)} />
     </Pressable>
   );
 }

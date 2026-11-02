@@ -1,24 +1,49 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useRef, useState, type ComponentProps } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
-import { ProBadge, ProMark } from '@/components/ProBadge';
-import { colours } from '@/constants/theme';
-import { EQUIPMENT_LABELS, MUSCLE_LABELS } from '@/lib/exercises';
-import { coverForRoutine } from '@/lib/images';
+import {
+  Chip,
+  FreeBadge,
+  HeroImage,
+  IconButton,
+  LockedOverlay,
+  MenuHeader,
+  MenuRow,
+  OverflowMenu,
+  PrimaryButton,
+  ProBadge,
+  StatTile,
+  TextButton,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import {
   describeCustomWorkoutError,
   duplicateRoutineDay,
   isFreeCustomWorkoutLimitError,
   isProRoutineDuplicateError,
 } from '@/lib/customWorkouts';
+import { EQUIPMENT_LABELS, MUSCLE_LABELS, type Equipment } from '@/lib/exercises';
+import { getExerciseImageSource } from '@/lib/exerciseMedia';
+import { coverForRoutine, coverSources } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
-import { offerProgrammePhoto } from '@/lib/progressPhotos';
 import { formatDaysPerWeek } from '@/lib/profile';
+import { offerProgrammePhoto } from '@/lib/progressPhotos';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
   DIFFICULTY_LABELS,
@@ -29,36 +54,91 @@ import {
   endActiveEnrolment,
   fetchActiveEnrolment,
   fetchRoutine,
+  fetchRoutineRoadmap,
   firstDayOfRoutine,
   formatRestSeconds,
   formatTagLabel,
+  getNextRoutineDay,
   groupRoutinePhases,
   isRoutineWeekLocked,
   missingRoutinesMessage,
   startRoutine,
+  type PlannedSession,
   type Routine,
+  type RoutineDay,
   type RoutineEnrolment,
+  type RoutinePhase,
+  type RoutineWeek,
 } from '@/lib/routines';
+import { fetchLastFinishedRoutineSession } from '@/lib/sessions';
 import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
-function describeHowItWorks(routine: Routine): string {
-  const sessions = routine.length_weeks * routine.days_per_week;
-  const phases = groupRoutinePhases(routine.weeks);
-  const shape =
-    phases.length === 1
-      ? `The same ${routine.days_per_week} workouts each week.`
-      : `${phases.length} stages, so the sessions change as you go.`;
-  return `${routine.length_weeks} weeks, ${formatDaysPerWeek(routine.days_per_week)} a week, about ${routine.session_minutes} minutes a session. ${sessions} sessions in total. ${shape} When set 1 hits the top of the range, the app suggests a small increase next time.`;
+const SHEET_OVERLAP = 24;
+const SHEET_RADIUS = 28;
+
+function dominantEquipment(phase: RoutinePhase): Equipment | null {
+  const counts = new Map<Equipment, number>();
+  for (const day of phase.days) {
+    for (const item of day.exercises) {
+      const equipment = item.exercise.equipment;
+      counts.set(equipment, (counts.get(equipment) ?? 0) + 1);
+    }
+  }
+  let best: Equipment | null = null;
+  let n = 0;
+  for (const [equipment, count] of counts) {
+    if (count > n) {
+      best = equipment;
+      n = count;
+    }
+  }
+  return best;
+}
+
+function phaseLabel(phase: RoutinePhase, index: number, routine: Routine): string {
+  const equipment = dominantEquipment(phase);
+  let stage = '';
+  if (equipment === 'dumbbell' || equipment === 'kettlebell') {
+    stage = routine.tags.includes('one spot') || routine.id === 'gym-confidence-6' ? 'One spot' : 'Dumbbells';
+  } else if (equipment === 'machine' || equipment === 'cable') {
+    stage = 'Machines';
+  } else if (equipment === 'barbell') {
+    stage = 'Free weights';
+  } else if (equipment === 'band' || equipment === 'bodyweight') {
+    stage = 'Minimal equipment';
+  }
+  const prefix = `Stage ${index + 1}`;
+  return stage ? `${prefix}: ${stage}` : prefix;
+}
+
+function DayThumb({ day }: { day: RoutineDay }) {
+  const { colours, radius, type } = useTheme();
+  const photo = day.exercises[0] ? getExerciseImageSource(day.exercises[0].exercise) : null;
+  return (
+    <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
+      {photo ? (
+        <Image source={photo} style={styles.photoFill} resizeMode="cover" />
+      ) : (
+        <Text style={[type.title3, { color: colours.brand }]}>{day.name.slice(0, 1)}</Text>
+      )}
+    </View>
+  );
 }
 
 export default function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const { colours, type, spacing, shadow } = useTheme();
   const subscription = useSubscription();
+  const menuRef = useRef<AnchorHandle>(null);
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
+  const [nextSession, setNextSession] = useState<PlannedSession | null>(null);
+  const [doneDayIds, setDoneDayIds] = useState<Set<string>>(new Set());
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
@@ -66,6 +146,11 @@ export default function RoutineDetailScreen() {
   const [isEnding, setIsEnding] = useState(false);
   const [openWeek, setOpenWeek] = useState<number | null>(null);
   const [openDayId, setOpenDayId] = useState<string | null>(null);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
+
+  const heroHeight = Math.round(windowHeight * 0.45);
 
   useFocusEffect(
     useCallback(() => {
@@ -79,11 +164,8 @@ export default function RoutineDetailScreen() {
         return;
       }
       setLoadState((state) => (state === 'ready' ? state : 'loading'));
-      Promise.all([
-        fetchRoutine(id, { includeLockedWeeks: subscription.isPro }),
-        fetchActiveEnrolment(),
-      ])
-        .then(([next, active]) => {
+      Promise.all([fetchRoutine(id, { includeLockedWeeks: subscription.isPro }), fetchActiveEnrolment()])
+        .then(async ([next, active]) => {
           if (!isCurrent) return;
           if (next?.type === 'stretch') {
             router.replace({ pathname: '/stretches/[id]', params: { id: next.id } } as Href);
@@ -92,6 +174,22 @@ export default function RoutineDetailScreen() {
           setRoutine(next);
           setEnrolment(active);
           setErrorMessage(null);
+          if (next && active?.routine_id === next.id) {
+            const [last, roadmap] = await Promise.all([
+              fetchLastFinishedRoutineSession(active.id),
+              fetchRoutineRoadmap(active),
+            ]);
+            if (!isCurrent) return;
+            setNextSession(
+              getNextRoutineDay(next, active, last?.routine_day_id ?? last?.programme_day_id ?? null)
+            );
+            setDoneDayIds(
+              new Set(roadmap.flatMap((week) => week.days.filter((day) => day.done).map((day) => day.id)))
+            );
+          } else {
+            setNextSession(null);
+            setDoneDayIds(new Set());
+          }
           setLoadState(next ? 'ready' : 'not-found');
         })
         .catch((error) => {
@@ -104,6 +202,18 @@ export default function RoutineDetailScreen() {
       };
     }, [id, subscription.isLoading, subscription.isPro])
   );
+
+  function goBack() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/programmes' as Href);
+  }
+
+  function openMenu() {
+    measureAnchor(menuRef.current, (rect) => {
+      setMenuAnchor(rect);
+      setMenuOpen(true);
+    });
+  }
 
   function requestStart() {
     if (!routine) return;
@@ -152,6 +262,8 @@ export default function RoutineDetailScreen() {
     try {
       await endActiveEnrolment();
       setEnrolment(null);
+      setNextSession(null);
+      setDoneDayIds(new Set());
     } catch (error) {
       showDialog('Couldn’t end the routine', describeRoutineError(error));
     } finally {
@@ -165,12 +277,26 @@ export default function RoutineDetailScreen() {
     try {
       const next = await startRoutine(routine.id);
       setEnrolment(next);
+      const last = await fetchLastFinishedRoutineSession(next.id);
+      setNextSession(getNextRoutineDay(routine, next, last?.routine_day_id ?? last?.programme_day_id ?? null));
       if (subscription.isPro) void offerProgrammePhoto('start');
     } catch (error) {
       showDialog('Couldn’t start the routine', describeRoutineError(error));
     } finally {
       setIsStarting(false);
     }
+  }
+
+  function openNextSession() {
+    if (!enrolment || !nextSession) return;
+    router.push({
+      pathname: '/routines/session',
+      params: {
+        routineId: enrolment.routine_id,
+        dayId: nextSession.day.id,
+        enrolmentId: enrolment.id,
+      },
+    } as Href);
   }
 
   async function handleDuplicate() {
@@ -217,11 +343,11 @@ export default function RoutineDetailScreen() {
 
   if (loadState !== 'ready' || !routine) {
     return (
-      <View style={styles.centre}>
+      <View style={[styles.centre, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
         {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} />
+          <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={styles.message}>
+          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
             {loadState === 'not-found'
               ? 'We couldn’t find that routine.'
               : (errorMessage ?? missingRoutinesMessage())}
@@ -232,477 +358,446 @@ export default function RoutineDetailScreen() {
   }
 
   const isCurrent = enrolment?.routine_id === routine.id;
-  const details = [
-    { name: 'Length', value: `${routine.length_weeks} weeks` },
-    { name: 'Days each week', value: formatDaysPerWeek(routine.days_per_week) },
-    { name: 'Session length', value: `About ${routine.session_minutes} minutes` },
-    { name: 'Difficulty', value: DIFFICULTY_LABELS[routine.difficulty] },
-    { name: 'Equipment', value: ROUTINE_EQUIPMENT_LABELS[routine.equipment] },
-    { name: 'Goal', value: ROUTINE_GOAL_LABELS[routine.goal] },
-    { name: 'Access', value: routine.is_pro ? 'Pro' : 'Free' },
+  const cover = coverSources(coverForRoutine(routine))[0] ?? null;
+  const busy = isStarting || isDuplicating || isEnding;
+  const showMore = routine.description.trim().length > 90;
+  const phases = groupRoutinePhases(routine.weeks);
+  const weeksByNumber = new Map(routine.weeks.map((week) => [week.week_number, week]));
+  const stickyLabel = isCurrent
+    ? 'Start next session'
+    : routine.is_pro && !subscription.isPro
+      ? 'Start with Pro'
+      : 'Start routine';
+  const showSticky = !isCurrent || Boolean(nextSession);
+  const stats: { label: string; value: string; icon: IoniconName }[] = [
+    { label: 'Weeks', value: String(routine.length_weeks), icon: 'calendar-outline' },
+    { label: 'Days a week', value: formatDaysPerWeek(routine.days_per_week), icon: 'repeat-outline' },
+    { label: 'Minutes', value: `${routine.session_minutes} min`, icon: 'time-outline' },
+    { label: 'Level', value: DIFFICULTY_LABELS[routine.difficulty], icon: 'bar-chart-outline' },
+    { label: 'Equipment', value: ROUTINE_EQUIPMENT_LABELS[routine.equipment], icon: 'barbell-outline' },
+    { label: 'Goal', value: ROUTINE_GOAL_LABELS[routine.goal], icon: 'flag-outline' },
   ];
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 32 }]}>
-      <CoverPhoto
-        cover={coverForRoutine(routine)}
-        letter={routine.name.slice(0, 1)}
-        height={280}
-        style={styles.cover}
-      />
-      <View style={styles.chipRow}>
-        {routine.is_pro ? (
-          <ProBadge />
-        ) : (
-          <Text style={[styles.chip, styles.chipFree]}>Free</Text>
-        )}
-        {isCurrent && <Text style={[styles.chip, styles.chipCurrent]}>Current</Text>}
-      </View>
-      <Text style={styles.title}>{routine.name}</Text>
-      <Text style={styles.body}>{routine.description}</Text>
-      <View style={styles.tagRow}>
-        {routine.tags.map((tag) => (
-          <Text key={tag} style={styles.tag}>
-            {formatTagLabel(tag)}
-          </Text>
-        ))}
-      </View>
-
-      {isCurrent && enrolment && (
-        <View style={styles.note}>
-          <Text style={styles.noteTitle}>You’re on this plan</Text>
-          <Text style={styles.noteBody}>
-            Week {currentEnrolmentWeek(enrolment)} of {routine.length_weeks}. Logging still uses your
-            programme on Home until the next step.
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Plan details</Text>
-        {details.map((row) => (
-          <View key={row.name} style={styles.detailRow}>
-            <Text style={styles.detailName}>{row.name}</Text>
-            <Text style={styles.detailValue}>{row.value}</Text>
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={{ paddingBottom: showSticky ? 16 : insets.bottom + 24 }}
+        showsVerticalScrollIndicator={false}>
+        <HeroImage
+          image={cover}
+          letter={routine.name}
+          title={routine.name}
+          eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · ${ROUTINE_GOAL_LABELS[routine.goal]}`}
+          height={heroHeight}>
+          <View style={[styles.heroBar, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
+            <IconButton icon="chevron-back" variant="overlay" accessibilityLabel="Back" onPress={goBack} />
+            <View ref={menuRef} collapsable={false}>
+              <IconButton
+                icon="ellipsis-horizontal"
+                variant="overlay"
+                accessibilityLabel="Routine options"
+                onPress={openMenu}
+              />
+            </View>
           </View>
-        ))}
-      </View>
+        </HeroImage>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>How this plan works</Text>
-        <Text style={styles.bodyTight}>{describeHowItWorks(routine)}</Text>
-      </View>
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colours.bg,
+              marginTop: -SHEET_OVERLAP,
+              borderTopLeftRadius: SHEET_RADIUS,
+              borderTopRightRadius: SHEET_RADIUS,
+              paddingBottom: spacing.lg,
+            },
+          ]}>
+          <View style={styles.badgeRow}>
+            {!subscription.isPro ? routine.is_pro ? <ProBadge /> : <FreeBadge /> : null}
+            {isCurrent ? <Chip label="Current" selected /> : null}
+          </View>
 
-      <Text style={styles.sectionTitle}>Week-by-week plan</Text>
-      {routine.weeks.map((week) => {
-        const weekLocked = isRoutineWeekLocked(routine, week.week_number, subscription.isPro);
-        const weekOpen = !weekLocked && openWeek === week.week_number;
-        return (
-          <View key={week.id} style={styles.card}>
-            {weekLocked ? (
-              <>
-                <View style={styles.weekHeader}>
-                  <View>
-                    <Text style={styles.cardTitle}>
-                      Week {week.week_number}
-                      {week.is_checkpoint ? ' · checkpoint' : ''}
-                    </Text>
-                    <Text style={styles.dayLabel}>{week.days.length} days</Text>
-                  </View>
-                  <ProBadge locked />
-                </View>
-                <View style={styles.lockedPreview} accessibilityElementsHidden>
-                  <View style={styles.lockedLine} />
-                  <View style={[styles.lockedLine, styles.lockedLineShort]} />
-                  <View style={styles.lockedLine} />
-                </View>
-                <Pressable
-                  style={({ pressed }) => [styles.unlockButton, pressed && styles.pressed]}
-                  onPress={() => openPaywall('routine')}
-                  accessibilityRole="button">
-                  <ProMark locked textStyle={styles.unlockButtonText}>
-                    Unlock with Pro
-                  </ProMark>
-                </Pressable>
-              </>
-            ) : (
-              <Pressable
-                onPress={() => {
-                  setOpenWeek(weekOpen ? null : week.week_number);
-                  setOpenDayId(null);
-                }}
-                style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
-                accessibilityRole="button">
-                <View>
-                  <Text style={styles.cardTitle}>
-                    Week {week.week_number}
-                    {week.is_checkpoint ? ' · checkpoint' : ''}
+          <Text
+            style={[type.body, { color: colours.ink }]}
+            numberOfLines={descriptionOpen ? undefined : 2}>
+            {routine.description}
+          </Text>
+          {showMore ? (
+            <TextButton
+              label={descriptionOpen ? 'Less' : 'More'}
+              onPress={() => setDescriptionOpen((open) => !open)}
+              style={styles.more}
+            />
+          ) : null}
+
+          {routine.tags.length > 0 ? (
+            <View style={styles.tagRow}>
+              {routine.tags.map((tag) => (
+                <Chip key={tag} label={formatTagLabel(tag)} />
+              ))}
+            </View>
+          ) : null}
+
+          {isCurrent && enrolment ? (
+            <Text style={[type.caption, { color: colours.inkMuted, marginTop: spacing.md }]}>
+              Week {currentEnrolmentWeek(enrolment)} of {routine.length_weeks}
+            </Text>
+          ) : null}
+
+          <View style={styles.statGrid}>
+            {stats.map((stat) => (
+              <StatTile
+                key={stat.label}
+                icon={stat.icon}
+                value={stat.value}
+                label={stat.label}
+                style={styles.statCell}
+              />
+            ))}
+          </View>
+
+          <Text style={[type.title2, { color: colours.ink, marginTop: spacing.lg, marginBottom: spacing.md }]}>
+            Week by week
+          </Text>
+
+          {phases.map((phase, phaseIndex) => {
+            const weeks: RoutineWeek[] = [];
+            for (let n = phase.fromWeek; n <= phase.toWeek; n += 1) {
+              const week = weeksByNumber.get(n);
+              if (week) weeks.push(week);
+            }
+            return (
+              <View key={`${phase.fromWeek}-${phase.toWeek}`} style={styles.phase}>
+                {phases.length > 1 ? (
+                  <Text style={[type.eyebrow, { color: colours.accent, marginBottom: spacing.sm }]}>
+                    {phaseLabel(phase, phaseIndex, routine)}
                   </Text>
-                  <Text style={styles.dayLabel}>{week.days.length} days</Text>
-                </View>
-                <Ionicons
-                  name={weekOpen ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={colours.accent}
-                />
-              </Pressable>
-            )}
-            {weekOpen &&
-              week.days.map((day) => {
-                const dayOpen = openDayId === day.id;
-                return (
-                  <View key={day.id} style={styles.dayBlock}>
-                    <Pressable
-                      onPress={() => setOpenDayId(dayOpen ? null : day.id)}
-                      style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
-                      accessibilityRole="button">
-                      <View>
-                        <Text style={styles.dayName}>{day.name}</Text>
-                        <Text style={styles.dayLabel}>
-                          Day {day.day_number} · {day.exercises.length} exercises
-                        </Text>
+                ) : null}
+                {weeks.map((week) => {
+                  const weekLocked = isRoutineWeekLocked(routine, week.week_number, subscription.isPro);
+                  const weekOpen = !weekLocked && openWeek === week.week_number;
+                  return (
+                    <View key={week.id} style={styles.weekRow}>
+                      <View style={styles.rail}>
+                        <View style={[styles.dot, { backgroundColor: colours.brand }]} />
+                        <View style={[styles.railLine, { backgroundColor: colours.brandSoft }]} />
                       </View>
-                      <Ionicons
-                        name={dayOpen ? 'chevron-up' : 'chevron-down'}
-                        size={18}
-                        color={colours.textMuted}
-                      />
-                    </Pressable>
-                    {dayOpen &&
-                      day.exercises.map((item) => (
-                        <Pressable
-                          key={`${day.id}-${item.position}`}
-                          onPress={() =>
-                            router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
-                          }
-                          style={({ pressed }) => [styles.exerciseRow, pressed && styles.pressed]}
-                          accessibilityRole="button">
-                          <View style={styles.exerciseText}>
-                            <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                            <Text style={styles.exerciseDetail}>
-                              {formatSetsAndReps(item)} · {formatRestSeconds(item.rest_seconds)}
-                            </Text>
-                            <Text style={styles.exerciseDetail}>
-                              {MUSCLE_LABELS[item.exercise.primary_muscle]} ·{' '}
-                              {EQUIPMENT_LABELS[item.exercise.equipment]}
-                            </Text>
-                          </View>
-                          <Ionicons name="chevron-forward" size={20} color={colours.textMuted} />
-                        </Pressable>
-                      ))}
-                  </View>
-                );
-              })}
-          </View>
-        );
-      })}
+                      <View style={styles.weekBody}>
+                        <View
+                          style={[
+                            styles.weekCard,
+                            { backgroundColor: colours.surface, borderRadius: 16 },
+                            weekLocked && styles.weekLocked,
+                          ]}>
+                          {weekLocked ? (
+                            <>
+                              <View style={styles.weekHeader}>
+                                <View style={styles.flex}>
+                                  <Text style={[type.title3, { color: colours.ink }]}>
+                                    Week {week.week_number}
+                                    {week.is_checkpoint ? ' · checkpoint' : ''}
+                                  </Text>
+                                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                    {week.days.length} days
+                                  </Text>
+                                </View>
+                              </View>
+                              <LockedOverlay
+                                onUnlock={() => openPaywall('routine')}
+                                label={`Unlock weeks 2 to ${routine.length_weeks} with Pro`}
+                              />
+                            </>
+                          ) : (
+                            <Pressable
+                              onPress={() => {
+                                setOpenWeek(weekOpen ? null : week.week_number);
+                                setOpenDayId(null);
+                              }}
+                              style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
+                              accessibilityRole="button">
+                              <View style={styles.flex}>
+                                <Text style={[type.title3, { color: colours.ink }]}>
+                                  Week {week.week_number}
+                                  {week.is_checkpoint ? ' · checkpoint' : ''}
+                                </Text>
+                                <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                  {week.days.length} days
+                                </Text>
+                              </View>
+                              <Ionicons
+                                name={weekOpen ? 'chevron-up' : 'chevron-down'}
+                                size={20}
+                                color={colours.brand}
+                              />
+                            </Pressable>
+                          )}
+                        </View>
+                        {weekOpen
+                          ? week.days.map((day) => {
+                              const dayOpen = openDayId === day.id;
+                              const done = doneDayIds.has(day.id);
+                              return (
+                                <View key={day.id} style={styles.dayWrap}>
+                                  <Pressable
+                                    onPress={() => setOpenDayId(dayOpen ? null : day.id)}
+                                    style={({ pressed }) => [
+                                      styles.dayCard,
+                                      { backgroundColor: colours.surface, borderRadius: 16 },
+                                      pressed && styles.pressed,
+                                    ]}
+                                    accessibilityRole="button">
+                                    <DayThumb day={day} />
+                                    <View style={styles.flex}>
+                                      <Text style={[type.title3, { color: colours.ink }]} numberOfLines={1}>
+                                        {day.name}
+                                      </Text>
+                                      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                        Day {day.day_number} · {routine.session_minutes} min
+                                      </Text>
+                                    </View>
+                                    {done ? (
+                                      <Ionicons name="checkmark-circle" size={22} color={colours.success} />
+                                    ) : (
+                                      <Ionicons
+                                        name={dayOpen ? 'chevron-up' : 'chevron-down'}
+                                        size={18}
+                                        color={colours.inkMuted}
+                                      />
+                                    )}
+                                  </Pressable>
+                                  {dayOpen
+                                    ? day.exercises.map((item) => (
+                                        <Pressable
+                                          key={`${day.id}-${item.position}`}
+                                          onPress={() =>
+                                            router.push({
+                                              pathname: '/exercise/[id]',
+                                              params: { id: item.exercise.id },
+                                            })
+                                          }
+                                          style={({ pressed }) => [
+                                            styles.exerciseRow,
+                                            { borderTopColor: colours.border },
+                                            pressed && styles.pressed,
+                                          ]}
+                                          accessibilityRole="button">
+                                          <View style={styles.flex}>
+                                            <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
+                                              {item.exercise.name}
+                                            </Text>
+                                            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                              {formatSetsAndReps(item)} · {formatRestSeconds(item.rest_seconds)}
+                                            </Text>
+                                            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                              {MUSCLE_LABELS[item.exercise.primary_muscle]} ·{' '}
+                                              {EQUIPMENT_LABELS[item.exercise.equipment]}
+                                            </Text>
+                                          </View>
+                                          <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
+                                        </Pressable>
+                                      ))
+                                    : null}
+                                </View>
+                              );
+                            })
+                          : null}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
 
-      <Pressable
-        style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-        onPress={handleDuplicate}
-        disabled={isDuplicating || isStarting || isEnding}
-        accessibilityRole="button">
-        {routine.is_pro && !subscription.isPro && !isDuplicating ? (
-          <ProMark locked textStyle={styles.outlineButtonText}>
-            Duplicate with Pro
-          </ProMark>
-        ) : (
-          <Text style={styles.outlineButtonText}>{isDuplicating ? 'Copying…' : 'Duplicate'}</Text>
-        )}
-      </Pressable>
+      {showSticky ? (
+        <View
+          style={[
+            styles.sticky,
+            { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12 },
+            shadow,
+          ]}>
+          <PrimaryButton
+            label={isStarting ? 'Starting…' : stickyLabel}
+            tone={isCurrent ? 'accent' : 'brand'}
+            loading={isStarting}
+            disabled={busy}
+            onPress={isCurrent ? openNextSession : requestStart}
+          />
+        </View>
+      ) : null}
 
-      {isCurrent ? (
-        <>
-          <Pressable
-            style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-            onPress={requestSwitch}
-            disabled={isStarting || isEnding || isDuplicating}
-            accessibilityRole="button">
-            <Text style={styles.outlineButtonText}>Switch routine</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.endButton, pressed && styles.pressed]}
-            onPress={requestEnd}
-            disabled={isStarting || isEnding || isDuplicating}
-            accessibilityRole="button">
-            <Text style={styles.endButtonText}>{isEnding ? 'Ending…' : 'End routine'}</Text>
-          </Pressable>
-        </>
-      ) : (
-        <Pressable
-          style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
-          onPress={requestStart}
-          disabled={isStarting || isEnding}
-          accessibilityRole="button">
-          {routine.is_pro && !subscription.isPro && !isStarting ? (
-            <ProMark locked textStyle={styles.startButtonText}>
-              Start with Pro
-            </ProMark>
-          ) : (
-            <Text style={styles.startButtonText}>{isStarting ? 'Starting…' : 'Start routine'}</Text>
-          )}
-        </Pressable>
-      )}
-    </ScrollView>
+      <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={() => setMenuOpen(false)}>
+        <MenuHeader label={routine.name} detail="Copy this plan, or change the one you’re on." />
+        <MenuRow
+          label={isDuplicating ? 'Copying…' : 'Duplicate'}
+          onPress={() => {
+            setMenuOpen(false);
+            void handleDuplicate();
+          }}
+        />
+        {isCurrent ? (
+          <>
+            <MenuRow
+              label="Switch routine"
+              onPress={() => {
+                setMenuOpen(false);
+                requestSwitch();
+              }}
+            />
+            <MenuRow
+              label={isEnding ? 'Ending…' : 'End routine'}
+              danger
+              onPress={() => {
+                setMenuOpen(false);
+                requestEnd();
+              }}
+            />
+          </>
+        ) : null}
+      </OverflowMenu>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
-    backgroundColor: colours.background,
-  },
-  container: {
-    padding: 24,
-    paddingTop: 8,
   },
   centre: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colours.background,
   },
-  message: {
-    fontSize: 17,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  cover: {
-    marginHorizontal: -24,
-    marginTop: -8,
-    marginBottom: 20,
-  },
-  chipRow: {
+  heroBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+  },
+  sheet: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  chip: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colours.accent,
-    backgroundColor: colours.accentSoft,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
-  chipFree: {
-    color: colours.surface,
-    backgroundColor: colours.accent,
-  },
-  chipCurrent: {
-    color: colours.accent,
-    backgroundColor: colours.background,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 8,
-  },
-  body: {
-    fontSize: 17,
-    lineHeight: 25,
-    color: colours.text,
-  },
-  bodyTight: {
-    fontSize: 16,
-    lineHeight: 23,
-    color: colours.text,
+  more: {
+    alignSelf: 'flex-start',
+    minHeight: 36,
+    paddingHorizontal: 0,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 14,
+    gap: 8,
+    marginTop: 12,
+  },
+  statGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 20,
+  },
+  statCell: {
+    width: '47%',
+    flexGrow: 1,
+    minWidth: '47%',
+  },
+  phase: {
     marginBottom: 8,
   },
-  tag: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colours.textMuted,
-    borderWidth: 1,
-    borderColor: colours.border,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
+  weekRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  rail: {
+    width: 22,
+    alignItems: 'center',
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginTop: 18,
+  },
+  railLine: {
+    flex: 1,
+    width: 2,
+    marginTop: 4,
+  },
+  weekBody: {
+    flex: 1,
+    paddingBottom: 12,
+    paddingLeft: 8,
+  },
+  weekCard: {
     overflow: 'hidden',
-    marginRight: 8,
-    marginBottom: 8,
   },
-  note: {
-    padding: 16,
-    borderRadius: 14,
-    backgroundColor: colours.accentSoft,
-    marginBottom: 16,
-  },
-  noteTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colours.accent,
-    marginBottom: 4,
-  },
-  noteBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colours.text,
-  },
-  card: {
-    padding: 18,
-    borderRadius: 18,
-    backgroundColor: colours.surface,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 4,
+  weekLocked: {
+    minHeight: 132,
   },
   weekHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 52,
+    minHeight: 56,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  lockedPreview: {
-    gap: 8,
+  dayWrap: {
     marginTop: 8,
-    marginBottom: 14,
   },
-  lockedLine: {
-    height: 12,
-    borderRadius: 999,
-    backgroundColor: colours.border,
-    opacity: 0.7,
+  dayCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 72,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  lockedLineShort: {
-    width: '62%',
-  },
-  unlockButton: {
-    minHeight: 48,
-    borderRadius: 999,
+  thumb: {
+    width: 56,
+    height: 56,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colours.accentSoft,
   },
-  unlockButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.accent,
+  photoFill: {
+    width: '100%',
+    height: '100%',
   },
-  dayBlock: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colours.border,
-  },
-  dayName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  detailRow: {
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colours.border,
-  },
-  detailName: {
-    fontSize: 14,
-    color: colours.textMuted,
-  },
-  detailValue: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
-    marginTop: 2,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colours.text,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  phaseTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.accent,
-    marginBottom: 10,
-    marginTop: 4,
-  },
-  dayLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colours.textMuted,
+  flex: {
+    flex: 1,
   },
   exerciseRow: {
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 56,
     paddingVertical: 10,
+    paddingHorizontal: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colours.border,
   },
-  exerciseText: {
-    flex: 1,
-  },
-  exerciseName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  exerciseDetail: {
-    fontSize: 15,
-    color: colours.textMuted,
-    marginTop: 2,
-  },
-  outlineButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-    marginBottom: 12,
-  },
-  outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  startButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accent,
-  },
-  endButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.surface,
-    borderWidth: 1.5,
-    borderColor: colours.danger,
-  },
-  endButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.danger,
-  },
-  startButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.surface,
+  sticky: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.8,
   },
 });
