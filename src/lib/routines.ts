@@ -502,8 +502,8 @@ function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   else if (answers.equipment === 'dumbbells' && routine.equipment === 'full_gym') score += 1;
 
   const dayGap = Math.abs(routine.days_per_week - answers.days_per_week);
-  if (dayGap === 0) score += 3;
-  else if (dayGap === 1) score += 2;
+  if (dayGap === 0) score += 6;
+  else if (dayGap === 1) score += 1;
 
   if (routine.goal === answers.goal) score += 3;
   if (routine.goal === 'confidence' && answers.confidence <= 2) score += 4;
@@ -517,11 +517,30 @@ function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
     score += 2;
   }
   if (answers.equipment === 'full_gym' && routine.tags.includes('busy gym friendly')) score += 1;
-  if (routine.id === 'gym-confidence-6' && (answers.experience === 'new' || answers.confidence <= 2)) {
+  if (
+    routine.id === 'gym-confidence-6' &&
+    dayGap === 0 &&
+    (answers.experience === 'new' || answers.confidence <= 2)
+  ) {
     score += 3;
   }
   if (!routine.is_pro) score += 1;
   return score;
+}
+
+/** Swap `candidate` into the row without dropping the only free card. */
+function replaceFeaturedSlot(picked: RoutineSummary[], candidate: RoutineSummary | undefined): void {
+  if (!candidate || picked.some((routine) => routine.id === candidate.id)) return;
+  const freeCount = picked.filter((routine) => !routine.is_pro).length;
+  let index = picked.length - 1;
+  for (let i = picked.length - 1; i >= 0; i -= 1) {
+    const soleFree = freeCount === 1 && !picked[i].is_pro;
+    if (!soleFree) {
+      index = i;
+      break;
+    }
+  }
+  picked[index] = candidate;
 }
 
 /** 3–5 featured cards, tailored to her quiz. Always tries to include one free routine. */
@@ -544,8 +563,16 @@ export function pickFeaturedRoutines(
     : Math.min(5, Math.max(3, Math.min(count, ranked.length)));
   const picked = ranked.slice(0, size);
   if (picked.length > 0 && !picked.some((routine) => !routine.is_pro)) {
-    const free = ranked.find((routine) => !routine.is_pro);
-    if (free) picked[picked.length - 1] = free;
+    replaceFeaturedSlot(
+      picked,
+      ranked.find((routine) => !routine.is_pro)
+    );
+  }
+  if (picked.length > 0 && !picked.some((routine) => routine.days_per_week === answers.days_per_week)) {
+    replaceFeaturedSlot(
+      picked,
+      ranked.find((routine) => routine.days_per_week === answers.days_per_week)
+    );
   }
   return picked;
 }
