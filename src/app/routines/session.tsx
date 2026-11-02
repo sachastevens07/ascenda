@@ -1,14 +1,33 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AnchoredMenu, MenuRow, measureAnchor, type AnchorHandle, type AnchorRect } from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
-import { ProMark } from '@/components/ProBadge';
 import { SwapSheet } from '@/components/SwapSheet';
-import { colours } from '@/constants/theme';
+import {
+  EmptyState,
+  IconButton,
+  ListRow,
+  MenuHeader,
+  MenuRow,
+  OverflowMenu,
+  PrimaryButton,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import {
   copyWorkoutName,
   describeCustomWorkoutError,
@@ -20,12 +39,14 @@ import {
   MIN_REPS,
   MIN_SETS,
 } from '@/lib/customWorkouts';
+import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
-  describeWeightSuggestion,
+  formatKg,
   formatSetsAndReps,
   getWeightSuggestion,
+  usesWeight,
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
@@ -39,7 +60,13 @@ import {
   type Routine,
   type RoutineDayExercise,
 } from '@/lib/routines';
-import { fetchActiveSession, fetchPreviousSets, startRoutineSession, type LoggedSet } from '@/lib/sessions';
+import {
+  fetchActiveSession,
+  fetchPreviousSets,
+  heaviestWeight,
+  startRoutineSession,
+  type LoggedSet,
+} from '@/lib/sessions';
 import { useSubscription } from '@/lib/subscription';
 import { deleteUserSwap, exerciseFits, saveUserSwap, type SwapScope } from '@/lib/swaps';
 import { saveSessionPlan } from '@/lib/workoutLog';
@@ -54,6 +81,30 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function formatCompactSets(item: Pick<DraftSlot, 'sets' | 'rep_min' | 'rep_max'>): string {
+  const reps = item.rep_min === item.rep_max ? `${item.rep_min}` : `${item.rep_min}-${item.rep_max}`;
+  return `${item.sets} × ${reps}`;
+}
+
+function lastWeightLabel(sets: LoggedSet[] | undefined): string | null {
+  const kg = heaviestWeight(sets);
+  return kg === null ? null : `${formatKg(kg)} last time`;
+}
+
+function ExerciseThumb({ slot }: { slot: DraftSlot }) {
+  const { colours, radius, type } = useTheme();
+  const photo = getExerciseImageSource(slot.exercise);
+  return (
+    <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
+      {photo ? (
+        <Image source={photo} style={styles.photoFill} resizeMode="cover" />
+      ) : (
+        <Text style={[type.title3, { color: colours.brand }]}>{slot.exercise.name.slice(0, 1)}</Text>
+      )}
+    </View>
+  );
+}
+
 export default function SessionDetailScreen() {
   const { routineId, dayId, enrolmentId } = useLocalSearchParams<{
     routineId: string;
@@ -61,6 +112,7 @@ export default function SessionDetailScreen() {
     enrolmentId: string;
   }>();
   const insets = useSafeAreaInsets();
+  const { colours, type, spacing, radius, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
@@ -70,9 +122,11 @@ export default function SessionDetailScreen() {
   const [planned, setPlanned] = useState<PlannedSession | null>(null);
   const [slots, setSlots] = useState<DraftSlot[]>([]);
   const [swapItem, setSwapItem] = useState<ProgrammeExercise | null>(null);
-  const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const dayPickerRef = useRef<AnchorHandle>(null);
-  const [pickerAnchor, setPickerAnchor] = useState<AnchorRect | null>(null);
+  const [editSlot, setEditSlot] = useState<DraftSlot | null>(null);
+  const menuRef = useRef<AnchorHandle>(null);
+  const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuMode, setMenuMode] = useState<'actions' | 'days'>('actions');
   const [isStarting, setIsStarting] = useState(false);
   const [isSavingWorkout, setIsSavingWorkout] = useState(false);
   const [loadState, setLoadState] = useState<'loading' | 'error' | 'ready'>('loading');
@@ -125,6 +179,7 @@ export default function SessionDetailScreen() {
     setPlanned(next);
     setSlots(next.day.exercises.map(toDraft));
     setSwapItem(null);
+    setEditSlot(null);
     const ids = next.day.exercises.map((item) => item.exercise.id);
     fetchPreviousSets(ids)
       .then(setPrevious)
@@ -135,6 +190,9 @@ export default function SessionDetailScreen() {
     setSlots((current) =>
       current.map((item) => (item.position === position ? { ...item, ...change } : item))
     );
+    setEditSlot((current) =>
+      current && current.position === position ? { ...current, ...change } : current
+    );
   }
 
   function handleRemove(position: number) {
@@ -144,7 +202,11 @@ export default function SessionDetailScreen() {
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => setSlots((current) => current.filter((item) => item.position !== position)),
+        onPress: () => {
+          setSlots((current) => current.filter((item) => item.position !== position));
+          setEditSlot((current) => (current?.position === position ? null : current));
+          setSwapItem((current) => (current?.position === position ? null : current));
+        },
       },
       { text: 'Keep it', style: 'cancel' },
     ]);
@@ -163,7 +225,7 @@ export default function SessionDetailScreen() {
     });
     if (!previous[exercise.id]) {
       fetchPreviousSets([exercise.id])
-        .then((sets) => setPrevious((current) => ({ ...current, ...sets })))
+        .then((sets) => setPrevious((currentSets) => ({ ...currentSets, ...sets })))
         .catch(() => {});
     }
   }
@@ -271,202 +333,322 @@ export default function SessionDetailScreen() {
     }
   }
 
+  function openMenu() {
+    measureAnchor(menuRef.current, (rect) => {
+      setMenuAnchor(rect);
+      setMenuMode('actions');
+      setMenuOpen(true);
+    });
+  }
+
+  function closeMenu() {
+    setMenuOpen(false);
+    setMenuMode('actions');
+  }
+
+  const showStartingTip = slots.some((item) => {
+    if (!usesWeight(item.exercise.equipment)) return false;
+    return (
+      getWeightSuggestion(
+        {
+          position: item.position,
+          sets: item.sets,
+          rep_min: item.rep_min,
+          rep_max: item.rep_max,
+          exercise: item.exercise,
+        },
+        previous[item.exercise.id]
+      ).kind === 'find-starting-weight'
+    );
+  });
+
   if (loadState !== 'ready' || !planned || !routine) {
     return (
-      <View style={styles.centre}>
+      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Home',
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+            headerTintColor: colours.brand,
+          }}
+        />
         {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} />
+          <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={styles.message}>We couldn’t load this session. Go back and try again.</Text>
+          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+            We couldn’t load this session. Go back and try again.
+          </Text>
         )}
       </View>
     );
   }
 
+  const busy = isStarting || isSavingWorkout;
+  const saveLabel =
+    routine.is_pro && !isPro && !isSavingWorkout
+      ? 'Save as workout with Pro'
+      : isSavingWorkout
+        ? 'Saving…'
+        : 'Save as workout';
+
   return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
-        <Text style={styles.label}>
-          Week {planned.weekNumber} · day {planned.day.day_number} · about {routine.session_minutes} min
-        </Text>
-        <Text style={styles.title}>{planned.day.name}</Text>
-        <Text style={styles.intro}>
-          Change today only: swaps, sets and removals don’t rewrite the routine. Then start when
-          you’re ready.
-        </Text>
-
-        {slots.map((item, index) => {
-          const asProgramme: ProgrammeExercise = {
-            position: item.position,
-            sets: item.sets,
-            rep_min: item.rep_min,
-            rep_max: item.rep_max,
-            exercise: item.exercise,
-            original: item.original,
-          };
-          const isSwapping = swapItem?.position === item.position;
-          const suggestion = getWeightSuggestion(asProgramme, previous[item.exercise.id]);
-          return (
-            <View key={`${item.position}-${item.exercise.id}`} style={styles.card}>
-              <View style={styles.row}>
-                <Pressable
-                  onPress={() =>
-                    router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
-                  }
-                  style={({ pressed }) => [styles.exerciseInfo, pressed && styles.pressed]}
-                  accessibilityRole="button">
-                  <Text style={styles.number}>{index + 1}</Text>
-                  <View style={styles.exerciseText}>
-                    <Text style={styles.exerciseName}>{item.exercise.name}</Text>
-                    {item.original && equipment && exerciseFits(item.original, equipment) && (
-                      <Text style={styles.swapped}>Instead of {item.original.name}</Text>
-                    )}
-                    <Text style={styles.detail}>{formatSetsAndReps(asProgramme)}</Text>
-                    {isPro && (
-                      <Text style={styles.suggestion}>{describeWeightSuggestion(suggestion)}</Text>
-                    )}
-                  </View>
-                </Pressable>
-                {isPro && (
-                  <Pressable
-                    onPress={() => setSwapItem(isSwapping ? null : asProgramme)}
-                    style={({ pressed }) => [
-                      styles.iconButton,
-                      isSwapping && styles.iconButtonOpen,
-                      pressed && styles.pressed,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Swap ${item.exercise.name}`}>
-                    <Ionicons
-                      name="swap-horizontal"
-                      size={22}
-                      color={isSwapping ? colours.surface : colours.accent}
-                    />
-                  </Pressable>
-                )}
-                <Pressable
-                  onPress={() => handleRemove(item.position)}
-                  style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Remove ${item.exercise.name}`}>
-                  <Ionicons name="close" size={22} color={colours.danger} />
-                </Pressable>
-              </View>
-              {isPro && equipment && (
-                <SwapSheet
-                  open={isSwapping}
-                  item={asProgramme}
-                  equipment={equipment}
-                  excludeIds={slots.flatMap((slot) =>
-                    slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
-                  )}
-                  allowAlways={Boolean(planned.day.source_programme_day_id)}
-                  alwaysDetail="Replaces it in this routine day"
-                  onClose={() => setSwapItem(null)}
-                  onSwap={handleSwap}
-                  onRestore={handleRestore}
-                />
-              )}
-              <View style={styles.steppers}>
-                <Stepper
-                  label="Sets"
-                  value={item.sets}
-                  display={`${item.sets}`}
-                  onMinus={() => updateSlot(item.position, { sets: clamp(item.sets - 1, MIN_SETS, MAX_SETS) })}
-                  onPlus={() => updateSlot(item.position, { sets: clamp(item.sets + 1, MIN_SETS, MAX_SETS) })}
-                />
-                <Stepper
-                  label="Reps"
-                  value={item.rep_min}
-                  display={`${item.rep_min}–${item.rep_max}`}
-                  onMinus={() =>
-                    updateSlot(item.position, {
-                      rep_min: clamp(item.rep_min - 1, MIN_REPS, item.rep_max),
-                    })
-                  }
-                  onPlus={() =>
-                    updateSlot(item.position, {
-                      rep_max: clamp(item.rep_max + 1, item.rep_min, MAX_REPS),
-                    })
-                  }
-                />
-              </View>
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: '',
+          headerBackTitle: 'Home',
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colours.bg },
+          headerTintColor: colours.brand,
+          headerRight: () => (
+            <View ref={menuRef} collapsable={false}>
+              <IconButton
+                icon="ellipsis-horizontal"
+                variant="muted"
+                accessibilityLabel="Session options"
+                onPress={openMenu}
+              />
             </View>
-          );
-        })}
+          ),
+        }}
+      />
 
-        {slots.length === 0 && (
-          <View style={styles.card}>
-            <Text style={styles.exerciseName}>No exercises left for today</Text>
-            <Text style={styles.detail}>Add a different day, or go back and leave this session.</Text>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: 24 }]}
+        showsVerticalScrollIndicator={false}>
+        <Text style={[type.eyebrow, { color: colours.accent }]}>
+          Week {planned.weekNumber} · day {planned.day.day_number}
+        </Text>
+        <Text style={[type.title1, { color: colours.ink, marginTop: spacing.sm }]}>{planned.day.name}</Text>
+        <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+          {routine.session_minutes} min · {slots.length} {slots.length === 1 ? 'exercise' : 'exercises'}
+        </Text>
+
+        {showStartingTip ? (
+          <View
+            style={[
+              styles.tip,
+              { backgroundColor: colours.brandSoft, borderRadius: radius.lg, marginTop: spacing.lg },
+            ]}>
+            <Ionicons name="information-circle-outline" size={20} color={colours.brand} />
+            <Text style={[type.bodySm, { color: colours.ink, flex: 1 }]}>Find your starting weight</Text>
           </View>
-        )}
+        ) : null}
 
-        {weekDays.length > 1 && (
-          <Pressable
-            ref={dayPickerRef}
-            collapsable={false}
-            style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-            onPress={() => {
-              measureAnchor(dayPickerRef.current, (rect) => {
-                setPickerAnchor(rect);
-                setIsPickerOpen(true);
-              });
-            }}
-            accessibilityRole="button">
-            <Text style={styles.outlineButtonText}>Do a different day</Text>
-          </Pressable>
-        )}
+        <View
+          style={[
+            styles.list,
+            { backgroundColor: colours.surface, borderRadius: radius.lg, marginTop: spacing.lg },
+          ]}>
+          {slots.map((item) => {
+            const asProgramme: ProgrammeExercise = {
+              position: item.position,
+              sets: item.sets,
+              rep_min: item.rep_min,
+              rep_max: item.rep_max,
+              exercise: item.exercise,
+              original: item.original,
+            };
+            const isSwapping = swapItem?.position === item.position;
+            const last = lastWeightLabel(previous[item.exercise.id]);
+            const subtitle = [
+              formatCompactSets(item),
+              last,
+              item.original && equipment && exerciseFits(item.original, equipment)
+                ? `Instead of ${item.original.name}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ');
+            return (
+              <View key={`${item.position}-${item.exercise.id}`}>
+                <ListRow
+                  title={item.exercise.name}
+                  subtitle={subtitle}
+                  showChevron={false}
+                  onPress={() => {
+                    setSwapItem(null);
+                    setEditSlot(item);
+                  }}
+                  left={
+                    <Pressable
+                      onPress={() =>
+                        router.push({ pathname: '/exercise/[id]', params: { id: item.exercise.id } })
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.exercise.name} guide`}>
+                      <ExerciseThumb slot={item} />
+                    </Pressable>
+                  }
+                  right={
+                    <View style={styles.rowActions}>
+                      {isPro ? (
+                        <IconButton
+                          icon="swap-horizontal"
+                          variant="muted"
+                          accessibilityLabel={`Swap ${item.exercise.name}`}
+                          onPress={() => {
+                            setEditSlot(null);
+                            setSwapItem(isSwapping ? null : asProgramme);
+                          }}
+                          color={isSwapping ? colours.onBrand : colours.ink}
+                          style={isSwapping ? { backgroundColor: colours.brand } : undefined}
+                        />
+                      ) : null}
+                      <IconButton
+                        icon="close"
+                        variant="muted"
+                        accessibilityLabel={`Remove ${item.exercise.name}`}
+                        onPress={() => handleRemove(item.position)}
+                        color={colours.danger}
+                      />
+                    </View>
+                  }
+                />
+                {isPro && equipment ? (
+                  <SwapSheet
+                    open={isSwapping}
+                    item={asProgramme}
+                    equipment={equipment}
+                    excludeIds={slots.flatMap((slot) =>
+                      slot.original ? [slot.exercise.id, slot.original.id] : [slot.exercise.id]
+                    )}
+                    allowAlways={Boolean(planned.day.source_programme_day_id)}
+                    alwaysDetail="Replaces it in this routine day"
+                    onClose={() => setSwapItem(null)}
+                    onSwap={handleSwap}
+                    onRestore={handleRestore}
+                  />
+                ) : null}
+              </View>
+            );
+          })}
 
-        <Pressable
-          style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-          onPress={handleSaveWorkout}
-          disabled={isSavingWorkout || isStarting || slots.length === 0}
-          accessibilityRole="button">
-          {routine.is_pro && !isPro && !isSavingWorkout ? (
-            <ProMark locked textStyle={styles.outlineButtonText}>
-              Save as workout with Pro
-            </ProMark>
-          ) : (
-            <Text style={styles.outlineButtonText}>
-              {isSavingWorkout ? 'Saving…' : 'Save as workout'}
-            </Text>
-          )}
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.startButton, (pressed || isStarting) && styles.pressed]}
-          onPress={handleStart}
-          disabled={isStarting || isSavingWorkout || slots.length === 0}
-          accessibilityRole="button">
-          {isStarting ? (
-            <ActivityIndicator color={colours.surface} />
-          ) : (
-            <Text style={styles.startButtonText}>Start session</Text>
-          )}
-        </Pressable>
+          {slots.length === 0 ? (
+            <EmptyState
+              icon="barbell-outline"
+              title="No exercises left for today"
+              body="Add a different day, or go back and leave this session."
+            />
+          ) : null}
+        </View>
       </ScrollView>
 
-      <AnchoredMenu
-        visible={isPickerOpen}
-        anchor={pickerAnchor}
-        onClose={() => setIsPickerOpen(false)}>
-        {weekDays.map((day) => {
-          const isSelected = day.id === planned.day.id;
-          const next = routine ? findPlannedSession(routine, day.id) : null;
-          return (
+      <View
+        style={[
+          styles.sticky,
+          { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12 },
+          shadow,
+        ]}>
+        <PrimaryButton
+          label="Start session"
+          tone="accent"
+          loading={isStarting}
+          disabled={busy || slots.length === 0}
+          onPress={handleStart}
+        />
+      </View>
+
+      <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={closeMenu}>
+        {menuMode === 'days' ? (
+          <>
+            <MenuHeader label="Do a different day" />
+            {weekDays.map((day) => {
+              const isSelected = day.id === planned.day.id;
+              const next = findPlannedSession(routine, day.id);
+              return (
+                <MenuRow
+                  key={day.id}
+                  label={`Day ${day.day_number}: ${day.name}`}
+                  selected={isSelected}
+                  onPress={() => {
+                    if (next) applyDay(next);
+                    closeMenu();
+                  }}
+                />
+              );
+            })}
+          </>
+        ) : (
+          <>
+            <MenuHeader label={planned.day.name} />
+            {weekDays.length > 1 ? (
+              <MenuRow label="Do a different day" onPress={() => setMenuMode('days')} />
+            ) : null}
             <MenuRow
-              key={day.id}
-              label={`Day ${day.day_number}: ${day.name}`}
-              selected={isSelected}
+              label={saveLabel}
               onPress={() => {
-                if (next) applyDay(next);
-                setIsPickerOpen(false);
+                closeMenu();
+                void handleSaveWorkout();
               }}
             />
-          );
-        })}
-      </AnchoredMenu>
+          </>
+        )}
+      </OverflowMenu>
+
+      <Modal
+        visible={editSlot !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditSlot(null)}>
+        <View style={[styles.sheetLayer, { backgroundColor: colours.overlay }]}>
+          <Pressable style={styles.sheetDismiss} onPress={() => setEditSlot(null)} accessibilityLabel="Close" />
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colours.surface,
+                borderTopLeftRadius: 28,
+                borderTopRightRadius: 28,
+                paddingBottom: insets.bottom + 16,
+              },
+            ]}>
+            {editSlot ? (
+              <>
+                <Text style={[type.title3, { color: colours.ink }]}>{editSlot.exercise.name}</Text>
+                <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4, marginBottom: spacing.md }]}>
+                  {formatSetsAndReps(editSlot)}
+                </Text>
+                <View style={styles.steppers}>
+                  <Stepper
+                    label="Sets"
+                    display={`${editSlot.sets}`}
+                    onMinus={() =>
+                      updateSlot(editSlot.position, {
+                        sets: clamp(editSlot.sets - 1, MIN_SETS, MAX_SETS),
+                      })
+                    }
+                    onPlus={() =>
+                      updateSlot(editSlot.position, {
+                        sets: clamp(editSlot.sets + 1, MIN_SETS, MAX_SETS),
+                      })
+                    }
+                  />
+                  <Stepper
+                    label="Reps"
+                    display={`${editSlot.rep_min}-${editSlot.rep_max}`}
+                    onMinus={() =>
+                      updateSlot(editSlot.position, {
+                        rep_min: clamp(editSlot.rep_min - 1, MIN_REPS, editSlot.rep_max),
+                      })
+                    }
+                    onPlus={() =>
+                      updateSlot(editSlot.position, {
+                        rep_max: clamp(editSlot.rep_max + 1, editSlot.rep_min, MAX_REPS),
+                      })
+                    }
+                  />
+                </View>
+                <PrimaryButton label="Done" onPress={() => setEditSlot(null)} style={{ marginTop: spacing.lg }} />
+              </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -478,29 +660,33 @@ function Stepper({
   onPlus,
 }: {
   label: string;
-  value: number;
   display: string;
   onMinus: () => void;
   onPlus: () => void;
 }) {
+  const { colours, type, radius } = useTheme();
   return (
     <View style={styles.stepper}>
-      <Text style={styles.stepperLabel}>{label}</Text>
-      <View style={styles.stepperControls}>
+      <Text style={[type.caption, { color: colours.inkMuted, marginBottom: 6 }]}>{label}</Text>
+      <View
+        style={[
+          styles.stepperControls,
+          { backgroundColor: colours.bg, borderRadius: radius.full },
+        ]}>
         <Pressable
           onPress={onMinus}
           style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={`Fewer ${label.toLowerCase()}`}>
-          <Text style={styles.stepperButtonText}>−</Text>
+          <Text style={[type.title2, { color: colours.brand }]}>−</Text>
         </Pressable>
-        <Text style={styles.stepperValue}>{display}</Text>
+        <Text style={[type.body, { color: colours.ink, fontWeight: '700' }]}>{display}</Text>
         <Pressable
           onPress={onPlus}
           style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel={`More ${label.toLowerCase()}`}>
-          <Text style={styles.stepperButtonText}>+</Text>
+          <Text style={[type.title2, { color: colours.brand }]}>+</Text>
         </Pressable>
       </View>
     </View>
@@ -510,170 +696,77 @@ function Stepper({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   content: {
-    padding: 24,
+    paddingHorizontal: 20,
     paddingTop: 8,
-    gap: 12,
   },
   centre: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colours.background,
   },
-  message: {
-    fontSize: 17,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colours.accent,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  intro: {
-    fontSize: 16,
-    lineHeight: 22,
-    color: colours.textMuted,
-    marginBottom: 8,
-  },
-  card: {
-    padding: 16,
-    borderRadius: 18,
-    backgroundColor: colours.surface,
-  },
-  row: {
+  tip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  exerciseInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  number: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  list: {
     overflow: 'hidden',
-    textAlign: 'center',
-    lineHeight: 32,
-    fontSize: 15,
-    fontWeight: '700',
-    color: colours.accent,
-    backgroundColor: colours.accentSoft,
   },
-  exerciseText: {
-    flex: 1,
+  rowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  exerciseName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  swapped: {
-    fontSize: 14,
-    color: colours.accent,
-    marginTop: 2,
-  },
-  detail: {
-    fontSize: 15,
-    color: colours.textMuted,
-    marginTop: 2,
-  },
-  suggestion: {
-    fontSize: 14,
-    color: colours.accent,
-    marginTop: 2,
-  },
-  iconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  thumb: {
+    width: 56,
+    height: 56,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colours.accentSoft,
   },
-  iconButtonOpen: {
-    backgroundColor: colours.accent,
+  photoFill: {
+    width: '100%',
+    height: '100%',
+  },
+  sticky: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  sheetLayer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  sheetDismiss: {
+    flex: 1,
+  },
+  sheet: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
   },
   steppers: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 12,
   },
   stepper: {
     flex: 1,
-  },
-  stepperLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colours.textMuted,
-    marginBottom: 6,
   },
   stepperControls: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: 48,
-    borderRadius: 999,
-    backgroundColor: colours.background,
     paddingHorizontal: 6,
   },
   stepperButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  stepperButtonText: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: colours.accent,
-  },
-  stepperValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  outlineButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-    marginTop: 8,
-  },
-  outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  startButton: {
-    minHeight: 60,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accent,
-    marginTop: 4,
-  },
-  startButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.surface,
   },
   pressed: {
     opacity: 0.7,

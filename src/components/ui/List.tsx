@@ -50,6 +50,7 @@ export function ListRow({
   title,
   subtitle,
   left,
+  right,
   onPress,
   showChevron = true,
   style,
@@ -57,6 +58,7 @@ export function ListRow({
   title: string;
   subtitle?: string;
   left?: ReactNode;
+  right?: ReactNode;
   onPress?: () => void;
   showChevron?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -71,17 +73,25 @@ export function ListRow({
       ]}>
       {left}
       <View style={styles.rowText}>
-        <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>{title}</Text>
+        <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
+          {title}
+        </Text>
         {subtitle ? (
-          <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>{subtitle}</Text>
+          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]} numberOfLines={2}>
+            {subtitle}
+          </Text>
         ) : null}
       </View>
+      {right}
       {showChevron && onPress ? <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} /> : null}
     </View>
   );
   if (!onPress) return inner;
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => pressed && styles.pressed}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => pressed && styles.pressed}>
       {inner}
     </Pressable>
   );
@@ -130,8 +140,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   row: {
-    minHeight: 56,
-    paddingVertical: 12,
+    minHeight: 64,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',

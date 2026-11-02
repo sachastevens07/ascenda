@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { colours } from '@/constants/theme';
+import { colours, light } from '@/constants/theme';
 
 export default function RoutinesLayout() {
   return (
@@ -14,7 +14,14 @@ export default function RoutinesLayout() {
       }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="session" options={{ headerBackTitle: 'Home' }} />
+      <Stack.Screen
+        name="session"
+        options={{
+          headerBackTitle: 'Home',
+          headerTintColor: light.brand,
+          headerStyle: { backgroundColor: light.bg },
+        }}
+      />
       <Stack.Screen name="complete" options={{ headerBackTitle: 'Home', gestureEnabled: false }} />
     </Stack>
   );
