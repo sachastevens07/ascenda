@@ -8,12 +8,15 @@ import {
 } from '@/lib/firstSession';
 import { describeRoutineError, fetchRoutineDay, routineDayToProgrammeDay } from '@/lib/routines';
 import { fetchActiveSession, startRoutineSession } from '@/lib/sessions';
-import { saveSessionPlan, sessionPlanFromDay } from '@/lib/workoutLog';
+import { markWelcomeBackSession } from '@/lib/welcomeBack';
+import { lightenSessionPlan, saveSessionPlan, sessionPlanFromDay } from '@/lib/workoutLog';
 
 export type StartLoggerInput = {
   enrolmentId: string;
   routineDayId: string;
   sourceProgrammeDayId?: string | null;
+  easeBack?: boolean;
+  welcomeBack?: boolean;
 };
 
 /** Creates a routine session and opens the logger. Returns an in-progress session instead if one exists. */
@@ -31,7 +34,12 @@ export async function startRoutineLogger(
     routineDayId: input.routineDayId,
     sourceProgrammeDayId: input.sourceProgrammeDayId ?? day?.source_programme_day_id,
   });
-  if (day) await saveSessionPlan(session.id, sessionPlanFromDay(routineDayToProgrammeDay(day)));
+  if (day) {
+    let plan = sessionPlanFromDay(routineDayToProgrammeDay(day));
+    if (input.easeBack) plan = lightenSessionPlan(plan);
+    await saveSessionPlan(session.id, plan);
+  }
+  if (input.welcomeBack || input.easeBack) await markWelcomeBackSession(session.id);
   return { sessionId: session.id, alreadyActive: false };
 }
 

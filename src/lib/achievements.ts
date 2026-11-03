@@ -38,6 +38,8 @@ export function getAchievementBadges(input: {
   streak: WeeklyStreak;
   completedRoutines: number;
   gym?: GymUnlocked;
+  backOnTrack?: boolean;
+  backOnTrackAt?: string | null;
 }): AchievementBadge[] {
   const gym = input.gym ?? getGymUnlocked(input.sets);
   const bests: PersonalBest[] = getPersonalBests(input.sets);
@@ -59,6 +61,13 @@ export function getAchievementBadges(input: {
       detail: 'Two or more sessions in the same week.',
       unlocked: firstWeek !== null,
       unlockedOn: firstWeek,
+    },
+    {
+      id: 'back-on-track',
+      title: 'Back on track',
+      detail: 'You eased back in after time away.',
+      unlocked: Boolean(input.backOnTrack),
+      unlockedOn: input.backOnTrackAt ?? null,
     },
     {
       id: 'session-5',

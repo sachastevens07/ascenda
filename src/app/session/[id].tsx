@@ -112,8 +112,10 @@ import {
   setKey,
   setNumbers,
   type RecordKind,
+  type SessionEaseBack,
   type SetEntry,
 } from '@/lib/workoutLog';
+import { consumeWelcomeBackSession, recordWelcomeBackCompleted } from '@/lib/welcomeBack';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 type MenuMode = 'actions' | 'days';
@@ -235,6 +237,7 @@ export default function SessionScreen() {
   const [isSavingWorkout, setIsSavingWorkout] = useState(false);
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
+  const [easeBack, setEaseBack] = useState<SessionEaseBack | null>(null);
   const menuRef = useRef<AnchorHandle>(null);
   const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -276,7 +279,12 @@ export default function SessionScreen() {
         setSession(log.session);
         setDay(log.day);
         setPrevious(log.previous);
-        setEntries(buildEntries(log.day, log.logged, log.previous, isPro));
+        setEaseBack(log.easeBack);
+        setEntries(
+          buildEntries(log.day, log.logged, log.previous, isPro, {
+            weightScale: log.easeBack?.weightScale,
+          })
+        );
         setBests(historyBests);
         setStartedAt(new Date(log.session.started_at).getTime());
         setLoadState('ready');
@@ -311,7 +319,7 @@ export default function SessionScreen() {
   }, []);
 
   async function persistPlan(nextDay: ProgrammeDay) {
-    await saveSessionPlan(id, sessionPlanFromDay(nextDay));
+    await saveSessionPlan(id, sessionPlanFromDay(nextDay, easeBack ?? undefined));
   }
 
   function updateEntry(key: string, change: Partial<SetEntry>) {
@@ -394,7 +402,9 @@ export default function SessionScreen() {
       if (slot) {
         Object.assign(
           next,
-          buildEntries({ ...nextDay, exercises: [slot] }, [], { ...previous, ...extra }, isPro)
+          buildEntries({ ...nextDay, exercises: [slot] }, [], { ...previous, ...extra }, isPro, {
+            weightScale: easeBack?.weightScale,
+          })
         );
       }
       return next;
@@ -431,7 +441,12 @@ export default function SessionScreen() {
       }
       const slot = nextDay.exercises.find((item) => item.position === swapItem.position);
       if (slot) {
-        Object.assign(next, buildEntries({ ...nextDay, exercises: [slot] }, [], previous, isPro));
+        Object.assign(
+          next,
+          buildEntries({ ...nextDay, exercises: [slot] }, [], previous, isPro, {
+            weightScale: easeBack?.weightScale,
+          })
+        );
       }
       return next;
     });
@@ -471,7 +486,8 @@ export default function SessionScreen() {
           { ...nextDay, exercises: [slot] },
           [],
           extra,
-          isPro
+          isPro,
+          { weightScale: easeBack?.weightScale }
         ),
       }));
       await persistPlan(nextDay);
@@ -591,7 +607,7 @@ export default function SessionScreen() {
           fetchPreviousSets(exerciseIds, id),
           fetchExerciseBests(exerciseIds, id).catch(() => ({})),
         ]);
-        await saveSessionPlan(id, sessionPlanFromDay(programmeDay));
+        await saveSessionPlan(id, sessionPlanFromDay(programmeDay, easeBack ?? undefined));
         await saveSessionSwaps(id, {});
         setSession((current) =>
           current
@@ -606,7 +622,9 @@ export default function SessionScreen() {
         setDay(programmeDay);
         setPrevious(prev);
         setBests(nextBests);
-        setEntries(buildEntries(programmeDay, logged, prev, isPro));
+        setEntries(
+          buildEntries(programmeDay, logged, prev, isPro, { weightScale: easeBack?.weightScale })
+        );
         setSwapItem(null);
       } catch (error) {
         showDialog(
@@ -709,6 +727,11 @@ export default function SessionScreen() {
       });
       if (checkpointLines.length > 0) wins.unshift(...checkpointLines.slice(0, 2));
       if (finishedRoutine) wins.unshift('You finished the routine.');
+      const welcomeBackDone = await consumeWelcomeBackSession(id);
+      if (welcomeBackDone) {
+        await recordWelcomeBackCompleted(session?.date ?? new Date().toISOString().slice(0, 10));
+        wins.unshift('Back on track');
+      }
       end();
       if (finishedRoutine && enrolmentId) {
         router.replace({ pathname: '/routines/complete', params: { enrolmentId } } as Href);
@@ -902,7 +925,8 @@ export default function SessionScreen() {
 
         {day.exercises.map((item) => {
           const weighted = usesWeight(item.exercise.equipment);
-          const suggestion = isPro ? getWeightSuggestion(item, previous[item.exercise.id]) : null;
+          const suggestion =
+            isPro && !easeBack ? getWeightSuggestion(item, previous[item.exercise.id]) : null;
           const increase = suggestion?.kind === 'increase' ? suggestion : null;
           return (
             <View

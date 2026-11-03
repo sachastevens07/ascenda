@@ -109,7 +109,12 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         startedAt: new Date(current.started_at).getTime(),
       });
       setNextSet(
-        getNextSet(log.day, buildEntries(log.day, log.logged, log.previous, isProRef.current))
+        getNextSet(
+          log.day,
+          buildEntries(log.day, log.logged, log.previous, isProRef.current, {
+            weightScale: log.easeBack?.weightScale,
+          })
+        )
       );
     })().catch(() => {});
     return () => {

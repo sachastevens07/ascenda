@@ -17,11 +17,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **H1. Streak rework (3 Nov 2026).** A week counts with one session (strength or a 10+ minute stretch). Hitting the planner target is a gold week. Rest weeks: earn 1 per 4 session weeks, bank up to 2, plan in the Planner or apply after a quiet week. An extra session the following week repairs a miss. Home and Activity always show weeks trained plus current run. Profile can hide the streak. `supabase/streak_h1.sql` adds `rest_weeks_banked`, `hide_streak` and `streak_weeks`. No new libraries. Logger, progression, swaps and paywall were not touched.
 
+**H2. Welcome-back (3 Nov 2026).** After at least one full week without a session, Home replaces the next-session hero with a Welcome back card. Primary starts a lighter version of her next session (one fewer set, about 10% less load). Other options: restart this week of her plan, switch to a lighter routine if she has been away 3+ weeks, or start the usual session. Finishing any of those awards Back on track (once per return; the badge stays earned). Monday / 1st of the month / start of term only change the one-line copy. Tester preview is behind showDevTools. No SQL. No new libraries.
+
 ### In progress
 None.
 
 ### Next step
-**H2** welcome-back flow. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
+**H3** planner-linked reminders (ask before a notifications library). Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -53,6 +55,14 @@ None.
 - Lose body fat is allowed. Featured / recommended routines still use strength (and never calorie or diet language).
 - N4 tap rules: tap to add; tap a selected non-main chip to make it main; tap Main to remove it. At 3, further chips dim and show a hint.
 - H1: gold weeks count towards earning rest weeks. Weeks trained counts only weeks with a session (empty rest weeks do not). Repair needs one extra session above this week’s target (`max(target, 1) + 1`). Hide streak hides Home streak copy and the Activity StreakCard; this-week X of Y stays. Reaching a streak goal offers the next finish line (4 → 8 → 12) and does not change it unless she taps it. Only rest rows are stored in `streak_weeks`; counted / gold / repaired / missed are computed. The quiet-week prompt can appear any day of the following week, not only Monday. `accentSoft` was added to the theme palette for the rest-week banner. D5 / D6 restyles were not done. AGENTS.md still says confirm before H1; this task was built after an explicit go-ahead.
+- H2 trigger is time away from any finished session (at least one full calendar week with no session), not H1 rest-week status. Rest weeks do not hide the card.
+- H2 “finishes a session after missing a week” awards the badge; the card itself only shows before she trains this week.
+- Lighter session: `max(1, sets - 1)` and last weight × 0.9, rounded to 0.5 kg. Progression increase chips are off for that session only.
+- Restart week shifts `routine_enrolments.start_date` so she is on the week of her last routine session (or week 1). History is not deleted.
+- Away 3+ weeks offers a lighter routine, preferring Gym Confidence: 6 weeks. Pro lighter plans still open the paywall if she is on Free.
+- Back on track is repeatable as a session win; the Awards badge unlocks once. First unlock is stored in `milestones` if that table exists; repeats stay on-device.
+- Monday / 1st / start of term (1–14 Jan, Apr, Sep) only change the card line. They do not show the card to people who trained last week.
+- H5 `welcome_back_shown` / `welcome_back_completed` events are left for H5. H6 will restyle the badge.
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
@@ -61,8 +71,9 @@ None.
 - Paste `supabase/streak_h1.sql` so rest weeks and hide-streak follow her to a new phone. Until then rest weeks and hide streak still work on this device (AsyncStorage). Workout history is never touched.
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
 - To turn tester tools on: Profile, scroll to **Version 1.0.0**, press and hold it until the dialog appears. Hold again to turn them off. (AGENTS.md suggested five long-presses; a single hold is what we shipped after phone testing.)
+- H2 tester preview: with tester tools on, Profile → Developer → **Preview welcome-back**. Home then shows the card even if you trained last week. Turn it off, or finish a welcome-back session, or tap Not now.
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. Next **H2**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. Next **H3**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -151,7 +162,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 
 **Group 2:** N3 **done** (3 Nov 2026). N1 **done**. N4 **done**.
 
-**Group 3:** H1 **done** (3 Nov 2026). H2, H3 (ask before a notifications library; `expo-notifications` is already in `app.json` / `package.json`), H4, H5, H6, H7, H8.
+**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 (ask before a notifications library; `expo-notifications` is already in `app.json` / `package.json`), H4, H5, H6, H7, H8.
 
 **Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
 
@@ -245,7 +256,7 @@ Also still on the user's side:
 
 ## Next step
 
-**H2** welcome-back flow. Then H3 (ask before a notifications library). **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
+**H3** planner-linked reminders (ask before a notifications library). **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
 
 Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready.
 

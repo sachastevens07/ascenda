@@ -30,6 +30,7 @@ export {
 } from './Disclaimer';
 export { GoalChipGroup } from './GoalChipGroup';
 export { RestWeekBanner, StreakCard } from './Streak';
+export { WelcomeBackCard } from './WelcomeBack';
 
 export {
   AnchoredMenu as OverflowMenu,

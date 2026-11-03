@@ -30,8 +30,16 @@ export type SessionPlanSlot = {
   exercise: SlotExercise;
 };
 
+export const EASE_BACK_WEIGHT_SCALE = 0.9;
+
+export type SessionEaseBack = {
+  weightScale: number;
+};
+
 export type SessionPlan = {
   slots: SessionPlanSlot[];
+  /** Welcome-back lighter session: fewer sets live on the slots; weights scale in the logger. */
+  easeBack?: SessionEaseBack;
 };
 
 function sessionPlanKey(id: string): string {
@@ -58,7 +66,7 @@ export async function clearSessionPlan(sessionId: string): Promise<void> {
 
 export const FALLBACK_REST_SECONDS = 90;
 
-export function sessionPlanFromDay(day: ProgrammeDay): SessionPlan {
+export function sessionPlanFromDay(day: ProgrammeDay, easeBack?: SessionEaseBack): SessionPlan {
   return {
     slots: day.exercises.map((item) => ({
       position: item.position,
@@ -68,7 +76,27 @@ export function sessionPlanFromDay(day: ProgrammeDay): SessionPlan {
       rest_seconds: item.rest_seconds ?? FALLBACK_REST_SECONDS,
       exercise: item.exercise,
     })),
+    easeBack,
   };
+}
+
+/** One fewer set per exercise (minimum 1) and a 10% lower suggested load. */
+export function lightenSessionPlan(
+  plan: SessionPlan,
+  scale = EASE_BACK_WEIGHT_SCALE
+): SessionPlan {
+  return {
+    ...plan,
+    easeBack: { weightScale: scale },
+    slots: plan.slots.map((slot) => ({
+      ...slot,
+      sets: Math.max(1, slot.sets - 1),
+    })),
+  };
+}
+
+export function scaleEaseWeight(kg: number, scale: number): number {
+  return Math.max(0, Math.round(kg * scale * 2) / 2);
 }
 
 export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): ProgrammeDay {
@@ -139,9 +167,11 @@ export function buildEntries(
   day: ProgrammeDay,
   logged: LoggedSet[],
   previous: Record<string, LoggedSet[]>,
-  withProgression: boolean
+  withProgression: boolean,
+  options?: { weightScale?: number }
 ): Record<string, SetEntry> {
   const entries: Record<string, SetEntry> = {};
+  const weightScale = options?.weightScale;
   for (const item of day.exercises) {
     const exerciseId = item.exercise.id;
     const previousSets = previous[exerciseId] ?? [];
@@ -158,7 +188,7 @@ export function buildEntries(
         };
         continue;
       }
-      if (withProgression && suggestion.kind === 'increase') {
+      if (withProgression && !weightScale && suggestion.kind === 'increase') {
         entries[setKey(exerciseId, setNumber)] = {
           weight: formatWeightInput(suggestion.kg),
           reps: String(item.rep_min),
@@ -169,8 +199,12 @@ export function buildEntries(
       const last =
         previousSets.find((set) => set.set_number === setNumber) ??
         previousSets[previousSets.length - 1];
+      let weightKg = last?.weight_kg ?? null;
+      if (weightKg !== null && weightScale) {
+        weightKg = scaleEaseWeight(weightKg, weightScale);
+      }
       entries[setKey(exerciseId, setNumber)] = {
-        weight: usesWeight(item.exercise.equipment) ? formatWeightInput(last?.weight_kg ?? null) : '',
+        weight: usesWeight(item.exercise.equipment) ? formatWeightInput(weightKg) : '',
         reps: String(last?.reps ?? item.rep_min),
         completed: false,
       };
@@ -185,6 +219,7 @@ export type SessionLog = {
   day: ProgrammeDay;
   logged: LoggedSet[];
   previous: Record<string, LoggedSet[]>;
+  easeBack: SessionEaseBack | null;
 };
 
 /** Everything needed to show a session in the logger. Null if the session or its day is gone. */
@@ -214,7 +249,7 @@ export async function loadSessionLog(
     fetchSessionSets(id),
     fetchPreviousSets(exerciseIds, id),
   ]);
-  return { session, day, logged, previous };
+  return { session, day, logged, previous, easeBack: plan?.easeBack ?? null };
 }
 
 /** The first set not yet ticked, in programme order. Null when every set is done. */

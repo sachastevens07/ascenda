@@ -47,6 +47,7 @@ import {
 } from '@/lib/activityStats';
 import { getGymUnlocked } from '@/lib/gymUnlocked';
 import { fetchHideStreak, fetchRestWeekStarts, syncRestWeeksBanked } from '@/lib/streak';
+import { fetchBackOnTrack } from '@/lib/welcomeBack';
 import { openPaywall, type PaywallReason } from '@/lib/paywall';
 import {
   fetchPlannedCountsByWeek,
@@ -106,6 +107,8 @@ type ActivityData = {
   weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
   hideStreak: boolean;
+  backOnTrack: boolean;
+  backOnTrackAt: string | null;
   enrolment: RoutineEnrolment | null;
   completedEnrolment: RoutineEnrolment | null;
   completedRoutineSessions: number;
@@ -190,6 +193,7 @@ function medalMark(id: string): string | null {
 function badgeIcon(id: string): IconName {
   if (id.startsWith('session-')) return 'barbell-outline';
   if (id === 'week-1') return 'calendar-outline';
+  if (id === 'back-on-track') return 'heart-outline';
   if (id.startsWith('streak-')) return 'flame-outline';
   if (id.startsWith('pb-')) return 'trophy-outline';
   if (id.startsWith('routine-')) return 'ribbon-outline';
@@ -228,7 +232,7 @@ export default function ActivityScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, restWeeks] =
+          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, restWeeks, backOnTrack] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
@@ -239,6 +243,7 @@ export default function ActivityScreen() {
               fetchCompletedEnrolmentCount().catch(() => 0),
               fetchHideStreak().catch(() => false),
               fetchRestWeekStarts().catch(() => new Set<string>()),
+              fetchBackOnTrack().catch(() => ({ unlocked: false, at: null as string | null })),
             ]);
           const from = sessions[0]?.date ?? toIso(new Date());
           const [plannedByWeek, photosResult, roadmap, completedRoutineSessions] = await Promise.all([
@@ -267,6 +272,8 @@ export default function ActivityScreen() {
             weekProgress,
             streak,
             hideStreak,
+            backOnTrack: backOnTrack.unlocked,
+            backOnTrackAt: backOnTrack.at,
             enrolment,
             completedEnrolment,
             completedRoutineSessions,
@@ -410,6 +417,8 @@ export default function ActivityScreen() {
     streak: data.streak,
     completedRoutines: data.completedEnrolment ? Math.max(1, data.completedRoutines) : 0,
     gym,
+    backOnTrack: data.backOnTrack,
+    backOnTrackAt: data.backOnTrackAt,
   });
   const comparePhotos = data.photos.filter((photo) => compareIds.includes(photo.id));
   const liftedKg = totalWeightLiftedKg(data.sets);

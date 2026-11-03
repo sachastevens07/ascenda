@@ -31,6 +31,7 @@ import {
   ProgressRing,
   SectionHeader,
   TextButton,
+  WelcomeBackCard,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
@@ -72,15 +73,24 @@ import {
   fetchRoutine,
   fetchRoutineProgressMap,
   fetchRoutines,
+  firstDayOfRoutine,
   getNextRoutineDay,
   missingRoutinesMessage,
   pickFeaturedRoutines,
+  resetEnrolmentToWeek,
+  startRoutine,
   type PlannedSession,
   type Routine,
   type RoutineDay,
   type RoutineEnrolment,
   type RoutineSummary,
 } from '@/lib/routines';
+import {
+  dismissWelcomeBack,
+  resolveWelcomeBackOffer,
+  saveWelcomeBackPreview,
+  type WelcomeBackOffer,
+} from '@/lib/welcomeBack';
 import { openRoutineLogger } from '@/lib/startLogger';
 import {
   fetchActiveSession,
@@ -109,6 +119,7 @@ type HomeData = {
   weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
   hideStreak: boolean;
+  welcomeBack: WelcomeBackOffer | null;
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
 };
@@ -206,10 +217,11 @@ export default function HomeScreen() {
           );
           let routine: Routine | null = null;
           let next: PlannedSession | null = null;
+          let lastDayId: string | null = null;
           if (enrolment) {
             routine = await fetchRoutine(enrolment.routine_id);
             const last = await fetchLastFinishedRoutineSession(enrolment.id);
-            const lastDayId = last?.routine_day_id ?? last?.programme_day_id ?? null;
+            lastDayId = last?.routine_day_id ?? last?.programme_day_id ?? null;
             next = routine ? getNextRoutineDay(routine, enrolment, lastDayId) : null;
           }
           const from = sessions[0]?.date ?? toIso(new Date());
@@ -219,6 +231,15 @@ export default function HomeScreen() {
           const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
           const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, streakGoal, restWeeks);
           void syncRestWeeksBanked(streak.restWeeksBanked);
+          const welcomeBack = await resolveWelcomeBackOffer({
+            sessions,
+            enrolment,
+            routine,
+            lastDayId,
+            nextDay: next?.day ?? (routine ? firstDayOfRoutine(routine) : null),
+            catalogue: routines,
+            isPro: subscription.isPro,
+          }).catch(() => null);
           if (!isCurrent) return;
           setData({
             featured,
@@ -232,6 +253,7 @@ export default function HomeScreen() {
             weekProgress,
             streak,
             hideStreak,
+            welcomeBack,
             challenge: pickHomeChallenge(challenges),
             progress,
           });
@@ -270,20 +292,127 @@ export default function HomeScreen() {
     router.push({ pathname: '/stretches/[id]', params: { id: routine.id } } as Href);
   }
 
-  async function startDay(day: RoutineDay) {
-    if (!data?.enrolment) return;
+  async function startDay(
+    day: RoutineDay,
+    options?: { enrolmentId?: string; easeBack?: boolean; welcomeBack?: boolean }
+  ) {
+    const enrolmentId = options?.enrolmentId ?? data?.enrolment?.id;
+    if (!enrolmentId) return;
     setRoutineMenuOpen(false);
     setRoutineMenuMode('actions');
     setIsStarting(true);
     try {
       await openRoutineLogger({
-        enrolmentId: data.enrolment.id,
+        enrolmentId,
         routineDayId: day.id,
         sourceProgrammeDayId: day.source_programme_day_id,
+        easeBack: options?.easeBack,
+        welcomeBack: options?.welcomeBack,
       });
     } finally {
       setIsStarting(false);
     }
+  }
+
+  async function startLighterSession() {
+    const offer = data?.welcomeBack;
+    if (!offer) return;
+    try {
+      if (data.enrolment && offer.nextDay) {
+        await startDay(offer.nextDay, { easeBack: true, welcomeBack: true });
+        return;
+      }
+      const created = await startRoutine(offer.starterRoutineId);
+      const started = await fetchRoutine(created.routine_id);
+      const day = started ? firstDayOfRoutine(started) : null;
+      if (!day) {
+        showDialog('Couldn’t start that session', 'Open Programmes and pick a routine when you’re ready.');
+        return;
+      }
+      await startDay(day, { enrolmentId: created.id, easeBack: true, welcomeBack: true });
+      setAttempt((count) => count + 1);
+    } catch (error) {
+      showDialog('Couldn’t start the session', describeRoutineError(error));
+    }
+  }
+
+  async function restartThisWeek() {
+    const offer = data?.welcomeBack;
+    if (!data?.enrolment || offer?.restartWeek == null || !offer.restartDay) return;
+    try {
+      await resetEnrolmentToWeek(data.enrolment.id, offer.restartWeek);
+      await startDay(offer.restartDay, { welcomeBack: true });
+      setAttempt((count) => count + 1);
+    } catch (error) {
+      showDialog('Couldn’t restart this week', describeRoutineError(error));
+    }
+  }
+
+  async function switchToLighterRoutine() {
+    const lighter = data?.welcomeBack?.lighterRoutine;
+    if (!lighter) return;
+    if (lighter.is_pro && !subscription.isPro) {
+      openPaywall('routine');
+      return;
+    }
+    try {
+      const created = await startRoutine(lighter.id);
+      const started = await fetchRoutine(created.routine_id);
+      const day = started ? firstDayOfRoutine(started) : null;
+      if (day) {
+        await startDay(day, { enrolmentId: created.id, easeBack: true, welcomeBack: true });
+      }
+      setAttempt((count) => count + 1);
+    } catch (error) {
+      showDialog('Couldn’t switch routine', describeRoutineError(error));
+    }
+  }
+
+  function openWelcomeBackOptions() {
+    const offer = data?.welcomeBack;
+    if (!offer) return;
+    const buttons: { text: string; style?: 'cancel' | 'default' | 'destructive'; onPress?: () => void }[] = [];
+    if (data?.enrolment && offer.restartDay && offer.restartWeek != null) {
+      buttons.push({
+        text: `Restart week ${offer.restartWeek}`,
+        onPress: () =>
+          showDialog(
+            `Restart week ${offer.restartWeek}?`,
+            'You’ll pick up this week from the first session. Your logged sessions stay.',
+            [
+              { text: 'Restart week', onPress: () => void restartThisWeek() },
+              { text: 'Not now', style: 'cancel' },
+            ]
+          ),
+      });
+    }
+    if (offer.lighterRoutine) {
+      buttons.push({
+        text: `Try ${offer.lighterRoutine.name}`,
+        onPress: () => void switchToLighterRoutine(),
+      });
+    }
+    if (data?.enrolment && data.next) {
+      buttons.push({
+        text: 'Start my usual session',
+        onPress: () => void startDay(data.next!.day, { welcomeBack: true }),
+      });
+    } else {
+      buttons.push({
+        text: 'Browse routines',
+        onPress: () => router.push('/programmes' as Href),
+      });
+    }
+    buttons.push({
+      text: 'Not now',
+      style: 'cancel',
+      onPress: () => {
+        void Promise.all([dismissWelcomeBack(), saveWelcomeBackPreview(false)]).then(() =>
+          setAttempt((count) => count + 1)
+        );
+      },
+    });
+    showDialog('Ease back in', 'Pick what feels doable today.', buttons);
   }
 
   function openSessionDetail() {
@@ -359,7 +488,7 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, challenge, progress } =
+  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, challenge, progress } =
     data;
   const inProgress = Boolean(activeSession);
   const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
@@ -395,7 +524,16 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {enrolment && next && !inProgress ? (
+        {welcomeBack && !inProgress ? (
+          <WelcomeBackCard
+            body={welcomeBack.body}
+            starting={isStarting}
+            onStartLighter={() => void startLighterSession()}
+            onSeeOptions={openWelcomeBackOptions}
+          />
+        ) : null}
+
+        {enrolment && next && !inProgress && !welcomeBack ? (
           <View style={[{ backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
             <View style={[styles.heroClip, { borderRadius: radius.xl }]}>
               <Pressable onPress={openSessionDetail} accessibilityRole="button">
@@ -446,7 +584,7 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {!enrolment && !inProgress ? (
+        {!enrolment && !inProgress && !welcomeBack ? (
           <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
             <Text style={[type.eyebrow, { color: colours.inkMuted }]}>No routine yet</Text>
             <Text style={[type.title2, { color: colours.ink, marginTop: spacing.sm }]}>Create a workout</Text>

@@ -1020,6 +1020,32 @@ export async function abandonActiveEnrolment(): Promise<void> {
   }
 }
 
+/**
+ * Moves the enrolment clock so she is on `weekNumber` this week.
+ * Used by welcome-back to restart the week she left, instead of skipping ahead.
+ * Upcoming planned sessions from this routine are cleared so the planner can refill.
+ */
+export async function resetEnrolmentToWeek(enrolmentId: string, weekNumber: number): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Sign in first.');
+  const week = Math.max(1, Math.floor(weekNumber));
+  const start = parseDate(todayDate());
+  start.setDate(start.getDate() - (week - 1) * 7);
+  const { error } = await supabase
+    .from('routine_enrolments')
+    .update({ start_date: todayDate(start) })
+    .eq('id', enrolmentId)
+    .eq('user_id', user.id)
+    .eq('status', 'active');
+  if (error) {
+    if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
+    throw new Error(error.message);
+  }
+  await clearUpcomingRoutinePlans(user.id);
+}
+
 export type EndRoutineResult = 'complete' | 'abandoned';
 
 /**

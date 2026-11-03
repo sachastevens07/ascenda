@@ -9,6 +9,7 @@ import { DestructiveTextButton, FreeBadge, ListRow, ProBadge, SegmentedThemePick
 import { useTheme, type ThemePreference } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
+import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
 import { useAuth } from '@/lib/auth';
 import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
 import { useDevTools } from '@/lib/devFlags';
@@ -77,6 +78,7 @@ export default function ProfileScreen() {
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [showAnswers, setShowAnswers] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
+  const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
   const tabBarHeight = useTabBarHeight();
   const email = session?.user.email ?? '';
   const displayName = answers?.display_name?.trim() || email.split('@')[0] || 'You';
@@ -94,6 +96,11 @@ export default function ProfileScreen() {
       fetchHideStreak()
         .then((hidden) => {
           if (isCurrent) setHideStreak(hidden);
+        })
+        .catch(() => {});
+      fetchWelcomeBackPreview()
+        .then((on) => {
+          if (isCurrent) setWelcomeBackPreview(on);
         })
         .catch(() => {});
       return () => {
@@ -387,6 +394,15 @@ export default function ProfileScreen() {
               const next =
                 DEV_OVERRIDES[(DEV_OVERRIDES.indexOf(subscription.devOverride) + 1) % DEV_OVERRIDES.length];
               subscription.setDevOverride(next);
+            }}
+          />
+          <SettingsRow
+            title="Preview welcome-back"
+            subtitle={welcomeBackPreview ? 'On. Home shows the welcome-back card.' : 'Off'}
+            onPress={() => {
+              const next = !welcomeBackPreview;
+              setWelcomeBackPreview(next);
+              saveWelcomeBackPreview(next).catch(() => setWelcomeBackPreview(!next));
             }}
           />
           <SettingsRow title="Restart 8-week block" onPress={() => void handleDevRestartBlock()} last />
