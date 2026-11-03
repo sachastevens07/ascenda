@@ -78,7 +78,7 @@ export function SetRow({
             keyboardType="decimal-pad"
             selectTextOnFocus
             placeholder={kgPlaceholder ?? 'kg'}
-            placeholderTextColor={colours.inkMuted}
+            placeholderTextColor={colours.inkSubtle}
             accessibilityLabel={`Set ${setNumber} weight in kilograms`}
             style={[
               styles.field,
@@ -116,7 +116,7 @@ export function SetRow({
         keyboardType="number-pad"
         selectTextOnFocus
         placeholder={repsPlaceholder ?? 'reps'}
-        placeholderTextColor={colours.inkMuted}
+        placeholderTextColor={colours.inkSubtle}
         accessibilityLabel={`Set ${setNumber} reps`}
         style={[
           styles.field,
@@ -139,12 +139,12 @@ export function SetRow({
         style={[
           styles.tick,
           {
-            borderColor: completed ? colours.success : colours.border,
+            borderColor: completed ? colours.success : colours.brand,
             backgroundColor: completed ? colours.success : colours.surface,
-            borderRadius: radius.sm,
+            borderRadius: radius.md,
           },
         ]}>
-        <Ionicons name="checkmark" size={18} color={completed ? colours.onBrand : colours.inkMuted} />
+        <Ionicons name="checkmark" size={22} color={completed ? colours.onBrand : colours.brand} />
       </Pressable>
     </View>
   );
@@ -194,12 +194,12 @@ export function RestTimerBar({
 
 const styles = StyleSheet.create({
   set: {
-    minHeight: 56,
+    minHeight: 64,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   setNum: {
     width: 28,
@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   tick: {
-    width: 28,
-    height: 28,
+    width: 48,
+    height: 48,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',

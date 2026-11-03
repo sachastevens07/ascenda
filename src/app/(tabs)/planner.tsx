@@ -50,6 +50,7 @@ import {
   type PlannerRange,
 } from '@/lib/planner';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
+import { openRoutineLogger } from '@/lib/startLogger';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | null;
@@ -259,14 +260,15 @@ export default function PlannerScreen() {
         showDialog('Start this from Home', 'Open Home to begin this routine session.');
         return;
       }
-      router.push({
-        pathname: '/routines/session',
-        params: {
-          routineId: range.enrolment.routine_id,
-          dayId: day.plan.routine_day_id,
+      setBusy(true);
+      try {
+        await openRoutineLogger({
           enrolmentId: range.enrolment.id,
-        },
-      } as Href);
+          routineDayId: day.plan.routine_day_id,
+        });
+      } finally {
+        setBusy(false);
+      }
       return;
     }
 

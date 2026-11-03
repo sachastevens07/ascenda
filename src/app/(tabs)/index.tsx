@@ -58,6 +58,7 @@ import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanPr
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import {
+  daysInWeek,
   describeRoutineError,
   endActiveEnrolment,
   fetchActiveEnrolment,
@@ -73,6 +74,7 @@ import {
   type RoutineEnrolment,
   type RoutineSummary,
 } from '@/lib/routines';
+import { openRoutineLogger } from '@/lib/startLogger';
 import {
   fetchActiveSession,
   fetchLastFinishedRoutineSession,
@@ -136,6 +138,8 @@ export default function HomeScreen() {
   const routineMenuRef = useRef<AnchorHandle>(null);
   const [routineMenuOpen, setRoutineMenuOpen] = useState(false);
   const [routineMenuAnchor, setRoutineMenuAnchor] = useState<AnchorRect | null>(null);
+  const [routineMenuMode, setRoutineMenuMode] = useState<'actions' | 'days'>('actions');
+  const [isStarting, setIsStarting] = useState(false);
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
 
@@ -250,16 +254,25 @@ export default function HomeScreen() {
     router.push({ pathname: '/stretches/[id]', params: { id: routine.id } } as Href);
   }
 
-  function openSessionDetail() {
-    if (!data?.enrolment || !data.next) return;
-    router.push({
-      pathname: '/routines/session',
-      params: {
-        routineId: data.enrolment.routine_id,
-        dayId: data.next.day.id,
+  async function startDay(day: RoutineDay) {
+    if (!data?.enrolment) return;
+    setRoutineMenuOpen(false);
+    setRoutineMenuMode('actions');
+    setIsStarting(true);
+    try {
+      await openRoutineLogger({
         enrolmentId: data.enrolment.id,
-      },
-    } as Href);
+        routineDayId: day.id,
+        sourceProgrammeDayId: day.source_programme_day_id,
+      });
+    } finally {
+      setIsStarting(false);
+    }
+  }
+
+  function openSessionDetail() {
+    if (!data?.next) return;
+    void startDay(data.next.day);
   }
 
   function continueSession() {
@@ -304,6 +317,7 @@ export default function HomeScreen() {
     if (!data?.enrolment) return;
     measureAnchor(routineMenuRef.current, (rect) => {
       setRoutineMenuAnchor(rect);
+      setRoutineMenuMode('actions');
       setRoutineMenuOpen(true);
     });
   }
@@ -329,12 +343,13 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, next, missingSql, activeSession, weekProgress, streak, challenge, progress } =
+  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, challenge, progress } =
     data;
   const inProgress = Boolean(activeSession);
   const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
   const showWeekCard = weekProgress.planned > 0 || streak.current > 0;
   const atCustomLimit = atFreeCustomWorkoutLimit(data.ownedWorkouts, subscription.isPro);
+  const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
   const nextThumb =
     enrolment && next && !inProgress ? sessionThumbnail(next.day, enrolment.routine) : null;
 
@@ -397,12 +412,18 @@ export default function HomeScreen() {
                     <IconButton
                       icon="ellipsis-horizontal"
                       variant="muted"
-                      accessibilityLabel="Switch or end this routine"
+                      accessibilityLabel="Session options"
                       onPress={openRoutineMenu}
                     />
                   </View>
                 </View>
-                <PrimaryButton label="Start session" onPress={openSessionDetail} style={{ marginTop: spacing.md }} />
+                <PrimaryButton
+                  label={isStarting ? 'Starting…' : 'Start session'}
+                  onPress={openSessionDetail}
+                  loading={isStarting}
+                  disabled={isStarting}
+                  style={{ marginTop: spacing.md }}
+                />
               </View>
             </View>
           </View>
@@ -558,26 +579,50 @@ export default function HomeScreen() {
         ) : null}
       </ScrollView>
 
-      <OverflowMenu visible={routineMenuOpen} anchor={routineMenuAnchor} onClose={() => setRoutineMenuOpen(false)}>
-        <MenuHeader
-          label={enrolment?.routine.name ?? 'Your routine'}
-          detail="Switch to another plan, or end this one. Your logged sessions stay."
-        />
-        <MenuRow
-          label="Switch routine"
-          onPress={() => {
-            setRoutineMenuOpen(false);
-            router.push('/programmes' as Href);
-          }}
-        />
-        <MenuRow
-          label="End routine"
-          danger
-          onPress={() => {
-            setRoutineMenuOpen(false);
-            requestEndRoutine();
-          }}
-        />
+      <OverflowMenu
+        visible={routineMenuOpen}
+        anchor={routineMenuAnchor}
+        onClose={() => {
+          setRoutineMenuOpen(false);
+          setRoutineMenuMode('actions');
+        }}>
+        {routineMenuMode === 'days' ? (
+          <>
+            <MenuHeader label="Do a different day" detail="Opens that day’s session. Your routine stays the same." />
+            {weekDays.map((day) => (
+              <MenuRow
+                key={day.id}
+                label={`Day ${day.day_number}: ${day.name}`}
+                onPress={() => void startDay(day)}
+              />
+            ))}
+          </>
+        ) : (
+          <>
+            <MenuHeader
+              label={enrolment?.routine.name ?? 'Your routine'}
+              detail="Switch to another plan, or end this one. Your logged sessions stay."
+            />
+            {weekDays.length > 1 ? (
+              <MenuRow label="Do a different day" onPress={() => setRoutineMenuMode('days')} />
+            ) : null}
+            <MenuRow
+              label="Switch routine"
+              onPress={() => {
+                setRoutineMenuOpen(false);
+                router.push('/programmes' as Href);
+              }}
+            />
+            <MenuRow
+              label="End routine"
+              danger
+              onPress={() => {
+                setRoutineMenuOpen(false);
+                requestEndRoutine();
+              }}
+            />
+          </>
+        )}
       </OverflowMenu>
     </View>
   );

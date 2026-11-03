@@ -31,6 +31,8 @@ export type ProgrammeExercise = {
   sets: number;
   rep_min: number;
   rep_max: number;
+  /** Rest after a ticked set. Missing on older programme / custom rows. */
+  rest_seconds?: number;
   exercise: SlotExercise;
   /** The programme's own exercise, when she has swapped it for `exercise`. */
   original?: SlotExercise;

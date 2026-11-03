@@ -9,11 +9,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **N5. Light theme default (3 Nov 2026).** Default is light. Profile → Appearance: Light / Dark / Match phone. Saved on the device and in `profiles.theme_preference`. Kit screens, tab bar, dialogs, menus, logger swap sheet and workout bar follow the choice. Unrestyled screens (sign-in, paywall, stretches, workouts, paths, challenges, exercise detail) stay on the old cream palette. No new libraries.
 
+**N3. Merge session detail into the logger (3 Nov 2026).** Home, Planner and routine detail open the logger directly. Swap, remove, add/remove set, change rep target, add exercise, and do a different day live in the logger. Timer starts on the first tick or Start timer. Leave with no ticks silently discards the session. Finish is disabled until a tick; Discard only shows after a tick. Tick buttons are 48 px plum outline, filling green when done. No SQL. No new libraries.
+
 ### In progress
 None.
 
 ### Next step
-**N3.** Merge the pre-workout screen into the logger.
+**N1.** Clear safety disclaimer.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -28,13 +30,18 @@ None.
 - `showDevTools` is on-device only (AsyncStorage). No `profiles` column.
 - N5 does not convert unrestyled screens to `useTheme()`, to avoid changing their light look.
 - Daily-quote toggle stays out of Appearance until N7.
+- N3 creates the session row immediately so logging still works; the UI timer and workout bar wait for a tick or Start timer. An empty row from a crash is discarded when she opens it and goes back.
+- N3 skips N2 fields (coach note, warm-up checklist, role, RIR, notes) and the MuscleWiki video player (M1). Thumbnails use existing photos, or an equipment icon if there is no photo (no letter placeholders).
+- Swap is available to everyone in the logger (it already was on the old pre-workout screen). Suggested-weight chips stay Pro.
+- Custom “Add exercise” still writes to the saved workout. Remove / sets / reps are today-only.
+- Rest bar still has −15 s as well as +15 s and Skip.
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
 - To turn tester tools on: Profile, scroll to **Version 1.0.0**, press and hold it until the dialog appears. Hold again to turn them off. (AGENTS.md suggested five long-presses; a single hold is what we shipped after phone testing.)
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. Group 2 next (N3).
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. Next **N1**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -61,7 +68,7 @@ S2 navigation (Profile as a tab) stays until **N6** moves Profile to the avatar 
 | **R1** Remove cycle notes | **Done** | Cycle UI gone. `supabase/remove_cycle_notes.sql` **not confirmed run**. |
 | **R2** New navigation | **Done**, then **S2** | Tabs are Home, Programmes, Planner, Activity, Profile. **N6** will change this again. |
 | **R3** Routines | **Done** | Six launch routines plus S10 extras. SQL **not confirmed run**. |
-| **R4** Home / routine / session detail | **Done**; session detail **superseded by N3** | Featured row, next-session card, routine detail, session detail still exists and still opens the logger. |
+| **R4** Home / routine / session detail | **Done**; session detail **merged in N3** | Featured row, next-session card, routine detail. `/routines/session` is a thin launcher into the logger. |
 | **R5** Custom workout builder | **Done** (cap in S1) | Free cap is 4 owned workouts. |
 | **R6** Planner | **Done** | Agenda, month toggle, move / rest / add custom. **D5** / **H1** restyle later. |
 | **R7** Gym unlocked | **Done** | Quiet Mode and level-up are off the screens. Dead files remain. |
@@ -115,13 +122,13 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 | Bug 3 Planner FABs | **Done** (single FAB) |
 | Bug 4 em dashes | **Done** in UI; D1 re-checks |
 
-`ThemeProvider` still follows the phone scheme even though `app.json` `userInterfaceStyle` is `light`. Kit screens use `useTheme()`; many others still import the static `colours` object (light palette).
+`ThemeProvider` defaults to light (N5). Kit screens use `useTheme()`; many others still import the static `colours` object (light palette).
 
 ### v2.2
 
 **Group 1:** D1 **done** (3 Nov 2026). N5 **done** (3 Nov 2026).
 
-**Group 2:** N3, N1, N4.
+**Group 2:** N3 **done** (3 Nov 2026). N1, N4.
 
 **Group 3:** H1 (ask first), H2, H3 (ask before a notifications library; `expo-notifications` is already in `app.json` / `package.json`), H4, H5, H6, H7, H8.
 
@@ -136,11 +143,11 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 `app.json` `userInterfaceStyle` is `light`. Dark tokens exist. Ask before font packages. Expo Go’s own floating menu cannot be gated from app code.
 
 - **Step 0. Foundations.** Light and dark palettes in `src/constants/theme.ts`. Core kit in `src/components/ui`. Dev-only Profile items sit behind `SHOW_DEV_TOOLS` (`EXPO_PUBLIC_SHOW_DEV_TOOLS=true` in `.env`).
-- **Step 1. Home.** Greeting, next-session hero, this-week ring, featured ImageCards, Stretch today. Coral **Start session** still opens session detail.
+- **Step 1. Home.** Greeting, next-session hero, this-week ring, featured ImageCards, Stretch today. **Start session** opens the logger (N3).
 - **Step 2. Programmes.** Underline Routines / Stretches / Exercises. Compact left-image cards. Current routine pinned.
 - **Step 3. Routine detail.** HeroImage, badges, week-by-week timeline, sticky Start.
-- **Step 4. Session detail.** Still in the tree at `src/app/routines/session.tsx`.
-- **Step 5. Logger.** Sticky header, SetRows, RestTimerBar, Finish / Discard.
+- **Step 4. Session detail.** Removed in N3. `src/app/routines/session.tsx` only starts the session and opens the logger. AGENTS.md / DESIGN.md Step 4 still describe the old screen.
+- **Step 5. Logger.** Sticky header, SetRows, RestTimerBar, Finish / Discard. N3 added today-only edits, Start timer, and silent discard.
 - **Step 6. Planner.** Week strip, sticky day headers, one FAB.
 - **Step 7. Activity.** Progress / Photos / Awards. Highlights 2×2. Medal families.
 - **Step 8. Profile.** Avatar, grouped lists. Old “Your programme” hidden. Units, rest-timer, privacy, terms and feedback rows are not shown yet.

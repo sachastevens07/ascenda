@@ -71,6 +71,7 @@ import {
   type RoutineWeek,
 } from '@/lib/routines';
 import { fetchLastFinishedRoutineSession } from '@/lib/sessions';
+import { openRoutineLogger } from '@/lib/startLogger';
 import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
@@ -287,16 +288,18 @@ export default function RoutineDetailScreen() {
     }
   }
 
-  function openNextSession() {
+  async function openNextSession() {
     if (!enrolment || !nextSession) return;
-    router.push({
-      pathname: '/routines/session',
-      params: {
-        routineId: enrolment.routine_id,
-        dayId: nextSession.day.id,
+    setIsStarting(true);
+    try {
+      await openRoutineLogger({
         enrolmentId: enrolment.id,
-      },
-    } as Href);
+        routineDayId: nextSession.day.id,
+        sourceProgrammeDayId: nextSession.day.source_programme_day_id,
+      });
+    } finally {
+      setIsStarting(false);
+    }
   }
 
   async function handleDuplicate() {

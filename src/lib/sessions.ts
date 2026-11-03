@@ -299,6 +299,31 @@ export async function startCustomSession(
   throw error;
 }
 
+/** Moves the clock to now so duration starts from the first tick or Start timer. */
+export async function markSessionStarted(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('sessions')
+    .update({ started_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+/** Points this in-progress session at another day of the current week. */
+export async function updateSessionRoutineDay(
+  id: string,
+  input: { routineDayId: string; sourceProgrammeDayId?: string | null }
+): Promise<void> {
+  const { error } = await supabase
+    .from('sessions')
+    .update({
+      routine_day_id: input.routineDayId,
+      programme_day_id: input.sourceProgrammeDayId ?? null,
+      exercise_swaps: {},
+    })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function saveSessionSwaps(
   id: string,
   exerciseSwaps: Record<string, string>

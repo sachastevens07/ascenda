@@ -26,6 +26,8 @@ export type Palette = {
   surfaceMuted: string;
   ink: string;
   inkMuted: string;
+  /** Placeholders and disabled copy. */
+  inkSubtle: string;
   brand: string;
   brandSoft: string;
   /** Coral. Small highlights only: eyebrows, streak flame, key numbers. */
@@ -46,6 +48,7 @@ export const light: Palette = {
   surfaceMuted: '#EDE6DC',
   ink: '#2C1810',
   inkMuted: '#7A6A60',
+  inkSubtle: '#A2979B',
   brand: '#5C3A4E',
   brandSoft: '#E8D5DF',
   accent: '#E07A5F',
@@ -65,6 +68,7 @@ export const dark: Palette = {
   surfaceMuted: '#3A2F28',
   ink: '#F6F1EA',
   inkMuted: '#B5A79C',
+  inkSubtle: '#7E7378',
   brand: '#C4A0B4',
   brandSoft: '#3D2A35',
   accent: '#E07A5F',

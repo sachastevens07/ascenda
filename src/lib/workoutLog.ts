@@ -56,6 +56,21 @@ export async function clearSessionPlan(sessionId: string): Promise<void> {
   await AsyncStorage.removeItem(sessionPlanKey(sessionId));
 }
 
+export const FALLBACK_REST_SECONDS = 90;
+
+export function sessionPlanFromDay(day: ProgrammeDay): SessionPlan {
+  return {
+    slots: day.exercises.map((item) => ({
+      position: item.position,
+      sets: item.sets,
+      rep_min: item.rep_min,
+      rep_max: item.rep_max,
+      rest_seconds: item.rest_seconds ?? FALLBACK_REST_SECONDS,
+      exercise: item.exercise,
+    })),
+  };
+}
+
 export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): ProgrammeDay {
   return {
     ...day,
@@ -67,8 +82,10 @@ export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): Programm
         sets: slot.sets,
         rep_min: slot.rep_min,
         rep_max: slot.rep_max,
+        rest_seconds: slot.rest_seconds,
         exercise: slot.exercise,
         original: swapped ? existing.exercise : existing?.original,
+        added: existing?.added,
       };
     }),
   };

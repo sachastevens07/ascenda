@@ -609,6 +609,7 @@ export function routineDayToProgrammeDay(day: RoutineDay): ProgrammeDay {
         sets: item.sets,
         rep_min: item.rep_min,
         rep_max: item.rep_max,
+        rest_seconds: item.rest_seconds,
         exercise: item.exercise,
       })
     ),
