@@ -8,7 +8,15 @@ export {
   TextButton,
 } from './Buttons';
 export { IconButton } from './IconButton';
-export { AchievementBadge, FreeBadge, LockedOverlay, ProBadge, ProMark } from './Badges';
+export {
+  AchievementBadge,
+  BadgeSheet,
+  BADGE_TIER_COLOURS,
+  FreeBadge,
+  LockedOverlay,
+  ProBadge,
+  ProMark,
+} from './Badges';
 export {
   Chip,
   EmptyState,

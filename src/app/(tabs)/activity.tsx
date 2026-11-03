@@ -19,6 +19,7 @@ import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AchievementBadge as BadgeMark,
+  BadgeSheet,
   DestructiveTextButton,
   HighlightTile,
   MenuRow,
@@ -41,6 +42,7 @@ import {
   getAchievementGroups,
   nextBadgeInGroup,
   type AchievementBadge,
+  type AchievementFamily,
 } from '@/lib/achievements';
 import {
   fetchFinishedSessionMeta,
@@ -135,7 +137,6 @@ const BAR_GAP = 8;
 const BAR_AREA_HEIGHT = 120;
 const MIN_BAR_SCALE = 4;
 
-const PREVIEW_IDS = ['session-1', 'gold-week', 'back-on-track'];
 const TABS = [
   { id: 'progress', label: 'Progress' },
   { id: 'achievements', label: 'Awards' },
@@ -152,39 +153,28 @@ function describeBest(best: PersonalBest): string {
   }
 }
 
-function pickBadges(badges: AchievementBadge[], ids: string[]): AchievementBadge[] {
-  const byId = new Map(badges.map((badge) => [badge.id, badge]));
-  return ids.flatMap((id) => {
-    const badge = byId.get(id);
-    return badge ? [badge] : [];
-  });
-}
-
 function hoursTileValue(seconds: number): string {
   if (seconds <= 0) return '0';
   return formatTrainingHours(seconds).replace(/ h$/, '');
 }
 
-function badgeIcon(id: string): IconName {
-  if (id.startsWith('session-')) return 'barbell-outline';
-  if (id === 'week-1' || id.startsWith('weeks-')) return 'calendar-outline';
-  if (id === 'gold-week') return 'sunny-outline';
-  if (id === 'back-on-track') return 'heart-outline';
-  if (id === 'consistent') return 'flame-outline';
-  if (id === 'stretch-habit') return 'leaf-outline';
-  if (id.startsWith('pb-')) return 'trophy-outline';
-  if (id.startsWith('routine-')) return 'ribbon-outline';
-  if (id.startsWith('weight-')) return 'barbell-outline';
-  if (id === 'equipment-barbell') return 'barbell-outline';
-  if (id === 'equipment-machine') return 'hardware-chip-outline';
-  if (id === 'equipment-cable') return 'git-network-outline';
-  if (id === 'equipment-dumbbell') return 'barbell-outline';
-  if (id === 'equipment-kettlebell') return 'fitness-outline';
-  if (id === 'equipment-band') return 'ellipse-outline';
-  if (id === 'equipment-bodyweight') return 'body-outline';
-  if (id.startsWith('zone-')) return 'location-outline';
-  if (id.startsWith('exercises-')) return 'sparkles-outline';
-  return 'medal-outline';
+function familyIcon(family: AchievementFamily): IconName {
+  switch (family) {
+    case 'firsts':
+      return 'sparkles-outline';
+    case 'sessions':
+      return 'barbell-outline';
+    case 'weeks':
+      return 'calendar-outline';
+    case 'pbs':
+      return 'trophy-outline';
+    case 'programmes':
+      return 'ribbon-outline';
+    case 'gym':
+      return 'walk-outline';
+    case 'weight':
+      return 'fitness-outline';
+  }
 }
 
 export default function ActivityScreen() {
@@ -204,6 +194,7 @@ export default function ActivityScreen() {
   const [showPhotos, setShowPhotos] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+  const [openBadge, setOpenBadge] = useState<AchievementBadge | null>(null);
   const showPhotosRef = useRef(showPhotos);
   showPhotosRef.current = showPhotos;
 
@@ -536,13 +527,6 @@ export default function ActivityScreen() {
               )}
             </View>
 
-            {data.hideAchievements ? null : (
-              <>
-                <SectionHeader title="Awards" actionLabel="Open" onAction={() => setTab('achievements')} />
-                <MedalRow badges={pickBadges(badges, PREVIEW_IDS)} />
-              </>
-            )}
-
             {isPro ? (
               <View style={card}>
                 <Text style={[type.title, { color: colours.ink }]}>Sessions per week</Text>
@@ -770,11 +754,30 @@ export default function ActivityScreen() {
             </Text>
           ) : (
             awardGroups.map((group) => (
-              <AwardGroup key={group.family} title={group.title} badges={group.badges} />
+              <AwardGroup
+                key={group.family}
+                title={group.title}
+                badges={group.badges}
+                onOpen={setOpenBadge}
+              />
             ))
           )
         ) : null}
       </ScrollView>
+
+      <BadgeSheet
+        visible={openBadge !== null}
+        title={openBadge?.title ?? ''}
+        body={openBadge?.detail ?? ''}
+        meta={
+          openBadge?.unlocked && openBadge.unlockedOn
+            ? `Earned ${formatShortDate(parseDate(openBadge.unlockedOn))}.`
+            : openBadge?.unlocked
+              ? 'Earned.'
+              : 'This one is still ahead.'
+        }
+        onClose={() => setOpenBadge(null)}
+      />
 
       <OverflowMenu visible={isPickerOpen} anchor={pickerAnchor} onClose={() => setIsPickerOpen(false)}>
         {liftOptions.map((option) => (
@@ -934,17 +937,39 @@ function RoutineReviewCard({
   );
 }
 
-function AwardGroup({ title, badges }: { title: string; badges: AchievementBadge[] }) {
+function AwardGroup({
+  title,
+  badges,
+  onOpen,
+}: {
+  title: string;
+  badges: AchievementBadge[];
+  onOpen: (badge: AchievementBadge) => void;
+}) {
+  const { colours, radius, shadow, type } = useTheme();
   const next = nextBadgeInGroup(badges);
   return (
-    <View style={styles.awardGroup}>
-      <SectionHeader title={title} />
-      <MedalRow badges={badges} nextId={next?.id ?? null} />
+    <View
+      style={[
+        styles.awardCard,
+        { backgroundColor: colours.surface, borderRadius: radius.xl },
+        shadow,
+      ]}>
+      <Text style={[type.title3, { color: colours.ink }]}>{title}</Text>
+      <MedalRow badges={badges} nextId={next?.id ?? null} onOpen={onOpen} />
     </View>
   );
 }
 
-function MedalRow({ badges, nextId = null }: { badges: AchievementBadge[]; nextId?: string | null }) {
+function MedalRow({
+  badges,
+  nextId = null,
+  onOpen,
+}: {
+  badges: AchievementBadge[];
+  nextId?: string | null;
+  onOpen: (badge: AchievementBadge) => void;
+}) {
   const { colours, type } = useTheme();
   return (
     <View style={styles.badgeGrid}>
@@ -954,14 +979,14 @@ function MedalRow({ badges, nextId = null }: { badges: AchievementBadge[]; nextI
           <Pressable
             key={badge.id}
             style={styles.badgeCell}
-            onPress={() => showBadgeDetail(badge)}
+            onPress={() => onOpen(badge)}
             accessibilityRole="button"
             accessibilityLabel={badge.unlocked ? badge.title : `${badge.title}, locked`}>
-            <BadgeMark unlocked={badge.unlocked} label={badge.title}>
+            <BadgeMark unlocked={badge.unlocked} label={badge.title} tier={badge.tier}>
               <Ionicons
-                name={badgeIcon(badge.id)}
-                size={22}
-                color={badge.unlocked ? colours.onAccent : colours.inkMuted}
+                name={familyIcon(badge.family)}
+                size={28}
+                color={badge.unlocked ? colours.onBrand : colours.inkMuted}
               />
             </BadgeMark>
             <Text
@@ -978,26 +1003,12 @@ function MedalRow({ badges, nextId = null }: { badges: AchievementBadge[]; nextI
             </Text>
             {progress ? (
               <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>{progress}</Text>
-            ) : badge.unlocked && badge.unlockedOn ? (
-              <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
-                {formatShortDate(parseDate(badge.unlockedOn))}
-              </Text>
             ) : null}
           </Pressable>
         );
       })}
     </View>
   );
-}
-
-function showBadgeDetail(badge: AchievementBadge): void {
-  const when =
-    badge.unlocked && badge.unlockedOn
-      ? `Earned ${formatShortDate(parseDate(badge.unlockedOn))}.`
-      : badge.unlocked
-        ? 'Earned.'
-        : 'Not earned yet.';
-  showDialog(badge.title, `${badge.detail} ${when}`);
 }
 
 function describeChange(history: { kg: number }[], assisted: boolean): string {
@@ -1208,9 +1219,9 @@ const styles = StyleSheet.create({
     minHeight: 36,
     paddingHorizontal: 0,
   },
-  awardGroup: {
+  awardCard: {
+    padding: 16,
     gap: 12,
-    marginTop: 8,
   },
   badgeGrid: {
     flexDirection: 'row',

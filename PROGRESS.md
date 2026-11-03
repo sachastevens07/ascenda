@@ -48,13 +48,14 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **H3** Planner-linked reminders after first session. Profile Notifications toggles. Copy is “X is ready when you are”. Reused `expo-notifications`.
 - **H4** What’s next in the last two weeks; on completion, Start on Monday.
 - **H5** PostHog EU, named events only, identify by user id + plan. No health/photos/free text.
-- **H6** Awards groups and hide-awards. Computed from history (no `achievement_definitions` tables). **D7** still owns tier rings.
+- **H6** Awards groups and hide-awards. Computed from history (no `achievement_definitions` tables). Tier rings and the badge sheet are **D7**.
 - **H7** Photos off by default; Profile → Privacy; card on Activity Progress only if on; no programme photo prompts; Show photos before signed URLs.
 - **H8** Challenges join with next Monday or next 1st; personal 28-day window; no countdown copy. App code is in. SQL rewrite is still **not confirmed run**.
 - **D2** Unique Pexels cover per strength routine and per stretch. Stretch photos are stretching, not gym lifts. Group studio / midriff covers replaced. Home featured row skips the active routine so it does not repeat the next-session card. Bundled files show without SQL; `coverForRoutine` prefers `cover-{routineId}` in `IMAGE_CATALOGUE`.
 - **D3** (3 Nov 2026) Home restyle: initials avatar (opens Profile), display greeting, 16:10 featured and stretch cards at 78% width, QuoteCard after the week card, WelcomeBackCard uses `accentSoft` + title2. 90 original quotes bundled; hide from the card ⋯ or Profile → Appearance. SQL: `supabase/quotes_d3.sql` (`profiles.hide_quote`). Learn article cards left for N6.
 - **D4** (3 Nov 2026) Routine and stretch detail share `DetailLayout`: hero, badge row, 2-line description + More, compact 4-stat strip, sticky plum button, safety line. Current routine shows a Week X of Y bar. Week rows list day names and ticks; checkpoint chip; phase headers. Stretch holds list with thumbnails. Stretch player: countdown ring, Pause primary, Skip as text, next-hold preview, End stretch in ⋯.
 - **D5** (3 Nov 2026) Planner: 32 px eyebrow day headers (“WED 4 NOV”), today stays a dark bar, empty days are header + only (no “Tap to add”), rest week banner full-bleed in the agenda (and at the top in month view). Session rows and reminder chips unchanged.
+- **D7** (3 Nov 2026) Awards: group cards, 72 px family icons, locked greyed, earned plum with bronze/silver/gold/platinum rings, progress only on the next badge in each group, tap opens a sheet. Duplicate Awards preview removed from Progress. Developer copy was already gone.
 
 ---
 
@@ -62,13 +63,15 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 **SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, and **`quotes_d3.sql`**. Hide-quote works on-device without SQL.
 
+**D6 skipped for now.** Sacha asked for D7 next. D6 (Activity Progress tab) is still unbuilt.
+
 ---
 
 ### Next step
 
-**D6. Activity Progress tab** (DESIGN.md 6.9): this week only with “See full plan”, hide empty charts, streak card. Do not start D7.
+**D6. Activity Progress tab** (DESIGN.md 6.9): this week only with “See full plan”, hide empty charts, streak card. Then D8. Do not start D8 until D6 is done, unless Sacha says otherwise.
 
-After D6: D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
+After D6: D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
 
 ---
 
@@ -109,6 +112,7 @@ After D6: D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
 - D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. Avatar opens the existing Profile tab until N6. No Learn cards yet. No display-serif font (system sans, same as the rest of the kit). Challenge card stays on Home after the quote.
 - D4: no new SQL. N2 copy blocks (who it's for, by the end, how it works, phase names, roles, lighter-week chips) wait for N2 data. Related Learn cards wait for N6. Skip on the last hold ends that hold; Finish saves. Pause is primary during a hold; Next hold / Finish after the ring completes.
 - D5: empty days have no extra row; tap the + (or the header) to add. Rest days still show a thin “Rest day” line. Rest week banner sits in the agenda at the first visible day of that week; month view keeps it under the week strip. No SQL.
+- D7: one icon per family (not per badge). First-time and gym “first equipment” badges have no tier ring. Numbered families use bronze → platinum. Locked sheet copy is “This one is still ahead.” No SQL. D6 was skipped on request.
 
 ---
 

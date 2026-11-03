@@ -1,8 +1,20 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/constants/theme';
+
+import { TextButton } from './Buttons';
+
+export const BADGE_TIER_COLOURS = {
+  bronze: '#B9805A',
+  silver: '#9BA3AB',
+  gold: '#C4A35A',
+  platinum: '#7E8FB8',
+} as const;
+
+export type BadgeTier = keyof typeof BADGE_TIER_COLOURS;
 
 export function ProBadge({
   locked = false,
@@ -69,38 +81,85 @@ export function FreeBadge({ style }: { style?: StyleProp<ViewStyle> }) {
 export function AchievementBadge({
   unlocked,
   label,
+  tier,
   mark,
   children,
   style,
 }: {
   unlocked: boolean;
   label: string;
-  /** Milestone number drawn in the medal, Sweat-style. */
+  tier?: BadgeTier | null;
+  /** Kept for older call sites; D7 uses a family icon instead of a number. */
   mark?: string;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours } = useTheme();
+  const ring = unlocked && tier ? BADGE_TIER_COLOURS[tier] : 'transparent';
+  const ink = unlocked ? colours.onBrand : colours.inkMuted;
   return (
     <View
       style={[
         styles.achievement,
         {
-          backgroundColor: unlocked ? colours.accent : colours.surfaceMuted,
-          borderWidth: unlocked ? 0 : 1,
-          borderColor: colours.border,
+          backgroundColor: unlocked ? colours.brand : colours.surfaceMuted,
+          borderWidth: unlocked && tier ? 4 : 0,
+          borderColor: ring,
         },
         style,
       ]}
       accessibilityLabel={unlocked ? label : `${label}, locked`}>
       {mark ? (
-        <Text style={[styles.markText, { color: unlocked ? colours.onAccent : colours.inkMuted }]}>{mark}</Text>
+        <Text style={[styles.markText, { color: ink }]}>{mark}</Text>
       ) : children ? (
         children
       ) : unlocked ? (
-        <Ionicons name="checkmark" size={14} color={colours.onAccent} />
-      ) : null}
+        <Ionicons name="checkmark" size={28} color={ink} />
+      ) : (
+        <Ionicons name="medal-outline" size={28} color={ink} />
+      )}
     </View>
+  );
+}
+
+export function BadgeSheet({
+  visible,
+  title,
+  body,
+  meta,
+  onClose,
+}: {
+  visible: boolean;
+  title: string;
+  body: string;
+  meta?: string;
+  onClose: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const { colours, type, radius, spacing, shadow } = useTheme();
+  return (
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      <View style={[styles.sheetOverlay, { backgroundColor: colours.overlay }]}>
+        <Pressable style={styles.sheetDismiss} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colours.surface,
+              borderRadius: radius.xl,
+              paddingBottom: Math.max(insets.bottom, 16),
+            },
+            shadow,
+          ]}>
+          <Text style={[type.title2, { color: colours.ink }]}>{title}</Text>
+          <Text style={[type.body, { color: colours.ink, marginTop: spacing.sm }]}>{body}</Text>
+          {meta ? (
+            <Text style={[type.caption, { color: colours.inkMuted, marginTop: spacing.sm }]}>{meta}</Text>
+          ) : null}
+          <TextButton label="Close" onPress={onClose} style={{ alignSelf: 'flex-start', marginTop: spacing.md }} />
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -204,5 +263,23 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
+  },
+  sheetOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  sheetDismiss: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  sheet: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    zIndex: 1,
   },
 });

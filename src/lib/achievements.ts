@@ -28,13 +28,33 @@ export type AchievementFamily =
   | 'weight'
   | 'gym';
 
+export type BadgeTier = 'bronze' | 'silver' | 'gold' | 'platinum';
+
 export type AchievementBadge = GymBadge & {
   family: AchievementFamily;
   /** Target for this badge, when it is part of a numbered family. */
   threshold?: number;
   /** Current value towards `threshold`. */
   progress?: number;
+  /** Numbered families only. First-time badges have no ring. */
+  tier?: BadgeTier;
 };
+
+const TIERS: BadgeTier[] = ['bronze', 'silver', 'gold', 'platinum'];
+
+function tierForIndex(index: number, total: number): BadgeTier {
+  if (total <= 1) return 'gold';
+  if (total <= 4) return TIERS[Math.min(index, TIERS.length - 1)];
+  const scaled = Math.floor((index / Math.max(1, total - 1)) * 3);
+  return TIERS[Math.min(3, scaled)];
+}
+
+function gymExerciseTier(threshold: number): BadgeTier {
+  if (threshold <= 1) return 'bronze';
+  if (threshold <= 5) return 'silver';
+  if (threshold <= 10) return 'gold';
+  return 'platinum';
+}
 
 export type AchievementGroup = {
   family: AchievementFamily;
@@ -128,7 +148,7 @@ function numbered(
   copy: (threshold: number) => { title: string; detail: string },
   unlockedOn: (threshold: number) => string | null
 ): AchievementBadge[] {
-  return thresholds.map((threshold) =>
+  return thresholds.map((threshold, index) =>
     badge(family, {
       id: `${idPrefix}-${threshold}`,
       ...copy(threshold),
@@ -136,6 +156,7 @@ function numbered(
       unlockedOn: value >= threshold ? unlockedOn(threshold) : null,
       threshold,
       progress: value,
+      tier: tierForIndex(index, thresholds.length),
     })
   );
 }
@@ -303,12 +324,18 @@ export function getAchievementGroups(input: {
     }),
   ];
 
-  const gymBadges: AchievementBadge[] = gym.badges.map((item) => ({
-    ...item,
-    family: 'gym' as const,
-    progress: item.id.startsWith('exercises-') ? gym.exerciseCount : undefined,
-    threshold: item.id.startsWith('exercises-') ? Number(item.id.slice('exercises-'.length)) : undefined,
-  }));
+  const gymBadges: AchievementBadge[] = gym.badges.map((item) => {
+    const threshold = item.id.startsWith('exercises-')
+      ? Number(item.id.slice('exercises-'.length))
+      : undefined;
+    return {
+      ...item,
+      family: 'gym' as const,
+      progress: threshold !== undefined ? gym.exerciseCount : undefined,
+      threshold,
+      tier: threshold !== undefined ? gymExerciseTier(threshold) : undefined,
+    };
+  });
 
   return [
     { family: 'firsts', title: 'First times', badges: firsts },
