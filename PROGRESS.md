@@ -9,7 +9,7 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **N5. Light theme default (3 Nov 2026).** Default is light. Profile → Appearance: Light / Dark / Match phone. Saved on the device and in `profiles.theme_preference`. Kit screens, tab bar, dialogs, menus, logger swap sheet and workout bar follow the choice. Unrestyled screens (sign-in, paywall, stretches, workouts, paths, challenges, exercise detail) stay on the old cream palette. No new libraries.
 
-**N3. Merge session detail into the logger (3 Nov 2026).** Home, Planner and routine detail open the logger directly. Swap, remove, add/remove set, change rep target, add exercise, and do a different day live in the logger. Timer starts on the first tick or Start timer. Leave with no ticks silently discards the session. Finish is disabled until a tick; Discard only shows after a tick. Tick buttons are 48 px plum outline, filling green when done. No SQL. No new libraries.
+**N3. Merge session detail into the logger (3 Nov 2026).** Home, Planner and routine detail open the logger directly. Swap, remove, add/remove set, and do a different day live in the logger. Rep targets stay as the routine wrote them. Add exercise is only on custom workouts, not routine sessions. Weighted sets need a weight before they can be ticked. Timer starts when the logger opens. Header ⋯ **End session** discards it. Finish is disabled until a tick; Discard only shows after a tick. Tick buttons are 48 px plum outline, filling green when done. No SQL. No new libraries.
 
 ### In progress
 None.
@@ -30,10 +30,10 @@ None.
 - `showDevTools` is on-device only (AsyncStorage). No `profiles` column.
 - N5 does not convert unrestyled screens to `useTheme()`, to avoid changing their light look.
 - Daily-quote toggle stays out of Appearance until N7.
-- N3 creates the session row immediately so logging still works; the UI timer and workout bar wait for a tick or Start timer. An empty row from a crash is discarded when she opens it and goes back.
+- N3 creates the session row immediately and starts the timer when the logger opens (phone testing: delayed start was confusing). Going back keeps the session (Continue on Home). Header ⋯ End session discards it.
 - N3 skips N2 fields (coach note, warm-up checklist, role, RIR, notes) and the MuscleWiki video player (M1). Thumbnails use existing photos, or an equipment icon if there is no photo (no letter placeholders).
 - Swap is available to everyone in the logger (it already was on the old pre-workout screen). Suggested-weight chips stay Pro.
-- Custom “Add exercise” still writes to the saved workout. Remove / sets / reps are today-only.
+- Custom “Add exercise” still writes to the saved workout. Routine sessions cannot add exercises. Rep targets are not editable in the logger. Weighted sets cannot be ticked until a weight is typed.
 - Rest bar still has −15 s as well as +15 s and Skip.
 
 ### Setup notes
@@ -147,7 +147,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 - **Step 2. Programmes.** Underline Routines / Stretches / Exercises. Compact left-image cards. Current routine pinned.
 - **Step 3. Routine detail.** HeroImage, badges, week-by-week timeline, sticky Start.
 - **Step 4. Session detail.** Removed in N3. `src/app/routines/session.tsx` only starts the session and opens the logger. AGENTS.md / DESIGN.md Step 4 still describe the old screen.
-- **Step 5. Logger.** Sticky header, SetRows, RestTimerBar, Finish / Discard. N3 added today-only edits, Start timer, and silent discard.
+- **Step 5. Logger.** Sticky header, SetRows, RestTimerBar, Finish / Discard. N3 added today-only edits. Timer starts on open. End session discards.
 - **Step 6. Planner.** Week strip, sticky day headers, one FAB.
 - **Step 7. Activity.** Progress / Photos / Awards. Highlights 2×2. Medal families.
 - **Step 8. Profile.** Avatar, grouped lists. Old “Your programme” hidden. Units, rest-timer, privacy, terms and feedback rows are not shown yet.

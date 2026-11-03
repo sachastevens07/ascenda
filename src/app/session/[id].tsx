@@ -1,11 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, Stack, useLocalSearchParams, useNavigation, type Href } from 'expo-router';
+import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -39,11 +38,8 @@ import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
 import {
-  DEFAULT_SLOT,
-  MAX_REPS,
   MAX_SETS,
   MAX_WORKOUT_EXERCISES,
-  MIN_REPS,
   MIN_SETS,
   STARTER_WORKOUT_ID,
   appendCustomWorkoutExercise,
@@ -90,7 +86,6 @@ import {
   fetchSession,
   fetchSessionSets,
   finishSession,
-  markSessionStarted,
   saveSessionSwaps,
   saveSet,
   updateSessionRoutineDay,
@@ -123,24 +118,12 @@ import {
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 type MenuMode = 'actions' | 'days';
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
-type BeforeRemoveEvent = {
-  preventDefault: () => void;
-  data: { action: object };
-};
-type StackNavigation = {
-  addListener: (event: 'beforeRemove', callback: (event: BeforeRemoveEvent) => void) => () => void;
-  dispatch: (action: object) => void;
-};
 
 function showRecords(kinds: RecordKind[]) {
   showDialog(
     kinds.length === 1 ? 'New personal best' : 'New personal bests',
     kinds.map((kind) => RECORD_LABELS[kind]).join('\n')
   );
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
 }
 
 function slotRestSeconds(item: ProgrammeExercise): number {
@@ -229,45 +212,8 @@ function SlotMenuButton({
   );
 }
 
-function Stepper({
-  label,
-  display,
-  onMinus,
-  onPlus,
-}: {
-  label: string;
-  display: string;
-  onMinus: () => void;
-  onPlus: () => void;
-}) {
-  const { colours, type, radius } = useTheme();
-  return (
-    <View style={styles.stepper}>
-      <Text style={[type.caption, { color: colours.inkMuted, marginBottom: 6 }]}>{label}</Text>
-      <View style={[styles.stepperControls, { backgroundColor: colours.bg, borderRadius: radius.full }]}>
-        <Pressable
-          onPress={onMinus}
-          style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
-          accessibilityRole="button"
-          accessibilityLabel={`Fewer ${label.toLowerCase()}`}>
-          <Text style={[type.title2, { color: colours.brand }]}>−</Text>
-        </Pressable>
-        <Text style={[type.body, { color: colours.ink, fontWeight: '700' }]}>{display}</Text>
-        <Pressable
-          onPress={onPlus}
-          style={({ pressed }) => [styles.stepperButton, pressed && styles.pressed]}
-          accessibilityRole="button"
-          accessibilityLabel={`More ${label.toLowerCase()}`}>
-          <Text style={[type.title2, { color: colours.brand }]}>+</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const navigation = useNavigation() as unknown as StackNavigation;
   const insets = useSafeAreaInsets();
   const { colours, type, spacing, radius, shadow } = useTheme();
   const { profile } = useProfile();
@@ -289,7 +235,6 @@ export default function SessionScreen() {
   const [isSavingWorkout, setIsSavingWorkout] = useState(false);
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
-  const [editSlot, setEditSlot] = useState<ProgrammeExercise | null>(null);
   const menuRef = useRef<AnchorHandle>(null);
   const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -297,22 +242,13 @@ export default function SessionScreen() {
   const [slotMenuItem, setSlotMenuItem] = useState<ProgrammeExercise | null>(null);
   const [slotMenuAnchor, setSlotMenuAnchor] = useState<AnchorRect | null>(null);
 
-  const workout = useWorkout();
-  const { restEndsAt } = workout;
+  const { restEndsAt, publish, startRest, stopRest, adjustRest, end } = useWorkout();
   const now = useNow(startedAt !== null, 500);
-  const keepSessionRef = useRef(false);
-  const leavingRef = useRef(false);
-  const doneSetsRef = useRef(0);
-  const emptyDayRef = useRef(true);
-  const customWorkoutIdRef = useRef<string | null>(null);
 
   const customWorkoutId = session?.custom_workout_id ?? null;
-  customWorkoutIdRef.current = customWorkoutId;
 
   const totalSets = day ? day.exercises.reduce((sum, item) => sum + item.sets, 0) : 0;
   const doneSets = Object.values(entries).filter((entry) => entry.completed).length;
-  doneSetsRef.current = doneSets;
-  emptyDayRef.current = (day?.exercises.length ?? 0) === 0;
 
   const weekDays = useMemo(
     () => (routine && weekNumber !== null ? daysInWeek(routine, weekNumber) : []),
@@ -342,8 +278,7 @@ export default function SessionScreen() {
         setPrevious(log.previous);
         setEntries(buildEntries(log.day, log.logged, log.previous, isPro));
         setBests(historyBests);
-        const hasTicks = log.logged.some((set) => set.completed);
-        setStartedAt(hasTicks ? new Date(log.session.started_at).getTime() : null);
+        setStartedAt(new Date(log.session.started_at).getTime());
         setLoadState('ready');
 
         if (log.session.routine_enrolment_id && log.session.routine_day_id) {
@@ -368,48 +303,15 @@ export default function SessionScreen() {
 
   useEffect(() => {
     if (!day || startedAt === null) return;
-    workout.publish({ sessionId: id, dayName: day.name, startedAt }, getNextSet(day, entries));
-  }, [id, day, entries, startedAt, workout]);
+    publish({ sessionId: id, dayName: day.name, startedAt }, getNextSet(day, entries));
+  }, [id, day, entries, startedAt, publish]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
-      if (keepSessionRef.current || leavingRef.current || doneSetsRef.current > 0) return;
-      event.preventDefault();
-      leavingRef.current = true;
-      const action = event.data.action;
-      (async () => {
-        try {
-          await discardSession(id);
-          await clearSessionPlan(id);
-          if (
-            customWorkoutIdRef.current &&
-            customWorkoutIdRef.current !== STARTER_WORKOUT_ID &&
-            emptyDayRef.current
-          ) {
-            await deleteCustomWorkout(customWorkoutIdRef.current).catch(() => {});
-          }
-        } catch {
-          // Still leave so she is not stuck on a broken session.
-        } finally {
-          workout.end();
-          navigation.dispatch(action);
-        }
-      })();
-    });
-    return unsubscribe;
-  }, [id, navigation, workout]);
+    ensureRestTimerPermission().catch(() => {});
+  }, []);
 
   async function persistPlan(nextDay: ProgrammeDay) {
     await saveSessionPlan(id, sessionPlanFromDay(nextDay));
-  }
-
-  async function startTimer() {
-    if (startedAt !== null) return;
-    const at = Date.now();
-    setStartedAt(at);
-    keepSessionRef.current = false;
-    await ensureRestTimerPermission().catch(() => {});
-    markSessionStarted(id).catch(() => {});
   }
 
   function updateEntry(key: string, change: Partial<SetEntry>) {
@@ -439,13 +341,14 @@ export default function SessionScreen() {
   function toggleSet(item: ProgrammeExercise, setNumber: number) {
     const key = setKey(item.exercise.id, setNumber);
     const current = entries[key];
+    if (!current) return;
     const completing = !current.completed;
-    if (completing) {
-      void startTimer();
-      workout.startRest(slotRestSeconds(item));
-    } else {
-      workout.stopRest();
+    if (completing && usesWeight(item.exercise.equipment) && parseWeight(current.weight) === null) {
+      showDialog('Add a weight first', 'Type the weight you used, then tick the set.');
+      return;
     }
+    if (completing) startRest(slotRestSeconds(item));
+    else stopRest();
     const next = { ...current, completed: completing };
     updateEntry(key, { completed: completing });
     persistSet(item, setNumber, next).catch(() => {
@@ -542,7 +445,7 @@ export default function SessionScreen() {
   }
 
   async function handleAddExercise(exercise: SlotExercise) {
-    if (!day) return;
+    if (!day || !customWorkoutId || customWorkoutId === STARTER_WORKOUT_ID) return;
     if (day.exercises.some((item) => item.exercise.id === exercise.id)) {
       showDialog('Already in this session', `${exercise.name} is already in the list.`);
       return;
@@ -553,16 +456,7 @@ export default function SessionScreen() {
     }
     setIsAdding(true);
     try {
-      const slot: ProgrammeExercise =
-        customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID
-          ? await appendCustomWorkoutExercise(customWorkoutId, exercise)
-          : {
-              position: (day.exercises.at(-1)?.position ?? 0) + 1,
-              ...DEFAULT_SLOT,
-              rest_seconds: DEFAULT_REST_SECONDS,
-              exercise,
-              added: true,
-            };
+      const slot = await appendCustomWorkoutExercise(customWorkoutId, exercise);
       const nextDay = { ...day, exercises: [...day.exercises, slot] };
       const [extra, extraBests] = await Promise.all([
         fetchPreviousSets([exercise.id], id).catch(() => ({})),
@@ -600,7 +494,6 @@ export default function SessionScreen() {
     };
     const nextItem = nextDay.exercises.find((item) => item.position === position);
     setDay(nextDay);
-    setEditSlot((current) => (current?.position === position && nextItem ? nextItem : current));
     if (nextItem) {
       setEntries((current) => {
         const next = { ...current };
@@ -638,7 +531,6 @@ export default function SessionScreen() {
           };
           setDay(nextDay);
           setSwapItem((current) => (current?.position === item.position ? null : current));
-          setEditSlot((current) => (current?.position === item.position ? null : current));
           setEntries((current) => {
             const next = { ...current };
             for (const key of Object.keys(next)) {
@@ -716,7 +608,6 @@ export default function SessionScreen() {
         setBests(nextBests);
         setEntries(buildEntries(programmeDay, logged, prev, isPro));
         setSwapItem(null);
-        setEditSlot(null);
       } catch (error) {
         showDialog(
           'Couldn’t switch day',
@@ -784,7 +675,6 @@ export default function SessionScreen() {
 
   async function finish() {
     if (!day || isFinishing || doneSets === 0) return;
-    keepSessionRef.current = true;
     setIsFinishing(true);
     try {
       const durationSeconds =
@@ -819,7 +709,7 @@ export default function SessionScreen() {
       });
       if (checkpointLines.length > 0) wins.unshift(...checkpointLines.slice(0, 2));
       if (finishedRoutine) wins.unshift('You finished the routine.');
-      workout.end();
+      end();
       if (finishedRoutine && enrolmentId) {
         router.replace({ pathname: '/routines/complete', params: { enrolmentId } } as Href);
         return;
@@ -832,7 +722,6 @@ export default function SessionScreen() {
         'Nice work. That’s another one done.';
       showDialog('Session saved', body);
     } catch {
-      keepSessionRef.current = false;
       setIsFinishing(false);
       showDialog('Couldn’t finish the session', 'Check your connection and try again.');
     }
@@ -856,7 +745,6 @@ export default function SessionScreen() {
 
   async function discard() {
     if (isFinishing) return;
-    keepSessionRef.current = true;
     setIsFinishing(true);
     try {
       await discardSession(id);
@@ -864,10 +752,9 @@ export default function SessionScreen() {
       if (customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID && day?.exercises.length === 0) {
         await deleteCustomWorkout(customWorkoutId).catch(() => {});
       }
-      workout.end();
+      end();
       router.back();
     } catch {
-      keepSessionRef.current = false;
       setIsFinishing(false);
       showDialog('Couldn’t discard the session', 'Check your connection and try again.');
     }
@@ -877,6 +764,17 @@ export default function SessionScreen() {
     showDialog('Discard this session?', 'Ticked sets from today will be deleted. Your history stays.', [
       { text: 'Discard', style: 'destructive', onPress: () => void discard() },
       { text: 'Keep it', style: 'cancel' },
+    ]);
+  }
+
+  function confirmEndSession() {
+    if (doneSets > 0) {
+      confirmDiscard();
+      return;
+    }
+    showDialog('End this session?', 'It won’t be saved. You can start again from Home.', [
+      { text: 'End session', style: 'destructive', onPress: () => void discard() },
+      { text: 'Keep going', style: 'cancel' },
     ]);
   }
 
@@ -946,7 +844,7 @@ export default function SessionScreen() {
     weekNumber !== null
       ? `Week ${weekNumber} · day ${day.day_number}`
       : null;
-  const canAddExercise = true;
+  const canAddExercise = Boolean(customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID);
 
   return (
     <KeyboardAvoidingView
@@ -977,20 +875,7 @@ export default function SessionScreen() {
                 {formatClock((now - startedAt) / 1000)}
               </Text>
             </View>
-          ) : (
-            <Pressable
-              onPress={() => void startTimer()}
-              style={({ pressed }) => [
-                styles.elapsed,
-                { backgroundColor: colours.brandSoft, borderRadius: radius.full },
-                pressed && styles.pressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Start timer">
-              <Ionicons name="stopwatch-outline" size={16} color={colours.brand} />
-              <Text style={[type.bodySm, { color: colours.brand, fontWeight: '700' }]}>Start timer</Text>
-            </Pressable>
-          )}
+          ) : null}
         </View>
       </View>
 
@@ -1143,9 +1028,9 @@ export default function SessionScreen() {
       {restEndsAt !== null ? (
         <RestTimerBar
           label={formatClock(restRemaining)}
-          onMinus={() => workout.adjustRest(-REST_ADJUST_SECONDS)}
-          onPlus={() => workout.adjustRest(REST_ADJUST_SECONDS)}
-          onSkip={workout.stopRest}
+          onMinus={() => adjustRest(-REST_ADJUST_SECONDS)}
+          onPlus={() => adjustRest(REST_ADJUST_SECONDS)}
+          onSkip={stopRest}
         />
       ) : null}
 
@@ -1207,8 +1092,7 @@ export default function SessionScreen() {
               danger
               onPress={() => {
                 closeMenu();
-                if (doneSets > 0) confirmDiscard();
-                else router.back();
+                confirmEndSession();
               }}
             />
           </>
@@ -1245,64 +1129,9 @@ export default function SessionScreen() {
                 setSlotMenuItem(null);
               }}
             />
-            <MenuRow
-              label="Change rep target"
-              onPress={() => {
-                setEditSlot(slotMenuItem);
-                setSlotMenuItem(null);
-              }}
-            />
           </>
         ) : null}
       </OverflowMenu>
-
-      <Modal
-        visible={editSlot !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setEditSlot(null)}>
-        <View style={[styles.sheetLayer, { backgroundColor: colours.overlay }]}>
-          <Pressable style={styles.sheetDismiss} onPress={() => setEditSlot(null)} accessibilityLabel="Close" />
-          <View
-            style={[
-              styles.sheet,
-              {
-                backgroundColor: colours.surface,
-                borderTopLeftRadius: 28,
-                borderTopRightRadius: 28,
-                paddingBottom: insets.bottom + 16,
-              },
-            ]}>
-            {editSlot ? (
-              <>
-                <Text style={[type.title3, { color: colours.ink }]}>{editSlot.exercise.name}</Text>
-                <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4, marginBottom: spacing.md }]}>
-                  {formatTargetLine(editSlot)}
-                </Text>
-                <Stepper
-                  label="Reps"
-                  display={
-                    editSlot.rep_min === editSlot.rep_max
-                      ? `${editSlot.rep_min}`
-                      : `${editSlot.rep_min} to ${editSlot.rep_max}`
-                  }
-                  onMinus={() =>
-                    updateSlot(editSlot.position, {
-                      rep_min: clamp(editSlot.rep_min - 1, MIN_REPS, editSlot.rep_max),
-                    })
-                  }
-                  onPlus={() =>
-                    updateSlot(editSlot.position, {
-                      rep_max: clamp(editSlot.rep_max + 1, editSlot.rep_min, MAX_REPS),
-                    })
-                  }
-                />
-                <PrimaryButton label="Done" onPress={() => setEditSlot(null)} style={{ marginTop: spacing.lg }} />
-              </>
-            ) : null}
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -1393,32 +1222,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
-  },
-  sheetLayer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  sheetDismiss: {
-    flex: 1,
-  },
-  sheet: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  stepper: {
-    gap: 4,
-  },
-  stepperControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    minHeight: 48,
-  },
-  stepperButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

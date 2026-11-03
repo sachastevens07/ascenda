@@ -299,15 +299,6 @@ export async function startCustomSession(
   throw error;
 }
 
-/** Moves the clock to now so duration starts from the first tick or Start timer. */
-export async function markSessionStarted(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('sessions')
-    .update({ started_at: new Date().toISOString() })
-    .eq('id', id);
-  if (error) throw error;
-}
-
 /** Points this in-progress session at another day of the current week. */
 export async function updateSessionRoutineDay(
   id: string,

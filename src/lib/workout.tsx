@@ -103,7 +103,6 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       }
       const log = await loadSessionLog(current.id, equipment);
       if (!isCurrent || !log || hasPublished.current) return;
-      if (!log.logged.some((set) => set.completed)) return;
       setActive({
         sessionId: current.id,
         dayName: log.day.name,
