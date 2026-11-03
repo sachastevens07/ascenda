@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import {
@@ -14,11 +15,20 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CoverPhoto } from '@/components/CoverPhoto';
 import { LineChart } from '@/components/LineChart';
-import { colours } from '@/constants/theme';
-import { coverForRoutine } from '@/lib/images';
+import {
+  Chip,
+  HeroImage,
+  IconButton,
+  ListRow,
+  PrimaryButton,
+  ProBadge,
+  SecondaryButton,
+  TextButton,
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, type StreakGoal } from '@/lib/activityStats';
+import { coverForRoutine, coverSources } from '@/lib/images';
 import {
   describeRecommendation,
   pickRecommendedRoutine,
@@ -111,6 +121,24 @@ const EQUIPMENT_COPY: Record<EquipmentAccess, string> = {
   home: 'Little or no kit: bodyweight and maybe a band.',
 };
 
+const GOAL_COPY: Record<Goal, string> = {
+  strength: 'Lift heavier on the big moves.',
+  glutes_legs: 'Build a stronger lower body.',
+  general: 'Feel fitter and more capable all round.',
+};
+
+const EXPERIENCE_COPY: Record<Experience, string> = {
+  new: 'Never, or hardly ever. That’s absolutely fine.',
+  some: 'I’ve used weights before, on and off.',
+  confident: 'I train regularly and know the main lifts.',
+};
+
+const LOCATION_COPY: Record<TrainingLocation, string> = {
+  gym: 'A gym with machines, free weights or both.',
+  home: 'Your own space, with whatever kit you have.',
+  both: 'Some days at the gym, some days at home.',
+};
+
 function withStoredLevel(draft: Draft): Draft {
   if (draft.confidence && draft.confidence_level === undefined) {
     return { ...draft, confidence_level: levelForConfidence(draft.confidence) };
@@ -151,8 +179,20 @@ function parseDisplayName(text: string): string | undefined {
   return trimmed;
 }
 
+function recommendationBullets(routine: RoutineSummary, answers: QuizAnswers): string[] {
+  return describeRecommendation(routine, answers)
+    .split('. ')
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return '';
+      return trimmed.endsWith('.') ? trimmed : `${trimmed}.`;
+    })
+    .filter(Boolean);
+}
+
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
+  const { colours, radius, type } = useTheme();
   const { profile, saveQuizAnswers, confirmAge, deleteAccount } = useProfile();
   const { isPro } = useSubscription();
   const [savedAnswers] = useState(() => getQuizAnswers(profile));
@@ -175,7 +215,7 @@ export default function OnboardingScreen() {
   const screenWidth = Dimensions.get('window').width;
 
   const flowIndex = FLOW_STEPS.indexOf(step as FlowStep);
-  const progress = flowIndex === -1 ? 0 : (flowIndex + 1) / FLOW_STEPS.length;
+  const progressCount = flowIndex === -1 ? 0 : flowIndex + 1;
 
   function moveTo(next: FlowStep | 'review', direction: 1 | -1) {
     setError(null);
@@ -223,6 +263,22 @@ export default function OnboardingScreen() {
     moveTo(FLOW_STEPS[index - 1], -1);
   }
 
+  function patchAnswer<K extends keyof QuizAnswers>(key: K, value: QuizAnswers[K]) {
+    setDraft((current) => {
+      const nextDraft = { ...current, [key]: value } as Draft;
+      if (key === 'confidence') {
+        nextDraft.confidence_level = levelForConfidence(value as Confidence);
+      }
+      if (key === 'training_location') {
+        const allowed = equipmentOptionsForLocation(value as TrainingLocation);
+        if (nextDraft.equipment && !allowed.includes(nextDraft.equipment)) {
+          nextDraft.equipment = undefined;
+        }
+      }
+      return nextDraft;
+    });
+  }
+
   function choose<K extends keyof QuizAnswers>(key: K, value: QuizAnswers[K], next?: FlowStep) {
     const nextDraft = { ...draft, [key]: value } as Draft;
     if (key === 'confidence') {
@@ -242,6 +298,31 @@ export default function OnboardingScreen() {
     if (next) moveTo(next, 1);
     else goNext(step as FlowStep);
   }
+
+  function confirmChoice() {
+    if (step === 'goal' && draft.goal !== undefined) choose('goal', draft.goal);
+    else if (step === 'experience' && draft.experience !== undefined) choose('experience', draft.experience);
+    else if (step === 'location' && draft.training_location !== undefined) {
+      choose('training_location', draft.training_location);
+    } else if (step === 'equipment' && draft.equipment !== undefined) choose('equipment', draft.equipment);
+    else if (step === 'comfort' && draft.confidence !== undefined) choose('confidence', draft.confidence);
+    else if (step === 'days' && draft.days_per_week !== undefined) choose('days_per_week', draft.days_per_week);
+    else if (step === 'minutes' && draft.session_minutes !== undefined) {
+      choose('session_minutes', draft.session_minutes);
+    } else if (step === 'streak' && draft.streak_goal_weeks !== undefined) {
+      choose('streak_goal_weeks', draft.streak_goal_weeks);
+    }
+  }
+
+  const choiceReady =
+    (step === 'goal' && draft.goal !== undefined) ||
+    (step === 'experience' && draft.experience !== undefined) ||
+    (step === 'location' && draft.training_location !== undefined) ||
+    (step === 'equipment' && draft.equipment !== undefined) ||
+    (step === 'comfort' && draft.confidence !== undefined) ||
+    (step === 'days' && draft.days_per_week !== undefined) ||
+    (step === 'minutes' && draft.session_minutes !== undefined) ||
+    (step === 'streak' && draft.streak_goal_weeks !== undefined);
 
   async function loadReveal(answers: QuizAnswers) {
     setRevealState('loading');
@@ -325,408 +406,460 @@ export default function OnboardingScreen() {
     }
   }
 
+  function continueBodyweight(skip: boolean) {
+    if (!skip && parseBodyweight(bodyweight) === undefined) {
+      setError(
+        `Enter a bodyweight between ${MIN_BODYWEIGHT_KG} and ${MAX_BODYWEIGHT_KG} kg, or skip it.`
+      );
+      return;
+    }
+    if (skip) setBodyweight('');
+    if (isEditing) moveTo('review', -1);
+    else goNext('bodyweight');
+  }
+
+  function continueName(skip: boolean) {
+    if (skip) {
+      setNameText('');
+      setDraft((current) => ({ ...current, display_name: '' }));
+      const next = withStoredLevel({ ...draft, display_name: '' });
+      if (!isEditing && isComplete(next)) void loadReveal(next);
+      if (isEditing) moveTo('review', -1);
+      else goNext('name');
+      return;
+    }
+    const parsed = parseDisplayName(nameText);
+    if (parsed === undefined) {
+      setError(`Names can be up to ${MAX_DISPLAY_NAME} characters.`);
+      return;
+    }
+    setDraft((current) => ({ ...current, display_name: parsed }));
+    if (isEditing) {
+      moveTo('review', -1);
+      return;
+    }
+    const next = withStoredLevel({ ...draft, display_name: parsed });
+    if (isComplete(next)) void loadReveal(next);
+    goNext('name');
+  }
+
+  function continueFocus() {
+    if ((draft.focus_areas?.length ?? 0) === 0) {
+      setError('Pick at least one area.');
+      return;
+    }
+    if (isEditing) moveTo('review', -1);
+    else goNext('focus');
+  }
+
   if (ageStep === 'ask' || ageStep === 'under-18') {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingTop: 64, paddingBottom: insets.bottom + 24 }]}>
+          contentContainerStyle={[styles.content, { paddingTop: 48, paddingBottom: 24 }]}
+          keyboardShouldPersistTaps="handled">
           {ageStep === 'ask' ? (
             <>
-              <Text style={styles.title}>Are you 18 or over?</Text>
-              <Text style={styles.subtitle}>Ascenda is for adults aged 18 and over.</Text>
-              {error && <Text style={styles.error}>{error}</Text>}
-              <Pressable
-                style={({ pressed }) => [styles.button, (pressed || isSaving) && styles.buttonPressed]}
-                onPress={handleConfirmAge}
-                disabled={isSaving}
-                accessibilityRole="button">
-                {isSaving ? (
-                  <ActivityIndicator color={colours.surface} />
-                ) : (
-                  <Text style={styles.buttonText}>Yes, I’m 18 or over</Text>
-                )}
-              </Pressable>
-              <Pressable
-                style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}
-                onPress={() => setAgeStep('under-18')}
-                disabled={isSaving}
-                accessibilityRole="button">
-                <Text style={styles.outlineButtonText}>No, I’m under 18</Text>
-              </Pressable>
+              <Text style={[type.display, { color: colours.ink }]}>Are you 18 or over?</Text>
+              <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                Ascenda is for adults aged 18 and over.
+              </Text>
             </>
           ) : (
             <>
-              <Text style={styles.title}>Thanks for being honest</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[type.display, { color: colours.ink }]}>Thanks for being honest</Text>
+              <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
                 Ascenda is for adults aged 18 and over, so we need to delete this account and
                 everything saved in it. We’d love to train with you when you’re 18.
               </Text>
-              {error && <Text style={styles.error}>{error}</Text>}
-              <Pressable
-                style={({ pressed }) => [styles.dangerButton, (pressed || isSaving) && styles.buttonPressed]}
-                onPress={handleDeleteAccount}
+            </>
+          )}
+          {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+        </ScrollView>
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+          {ageStep === 'ask' ? (
+            <>
+              <PrimaryButton
+                label="Yes, I’m 18 or over"
+                onPress={() => void handleConfirmAge()}
+                loading={isSaving}
                 disabled={isSaving}
-                accessibilityRole="button">
+              />
+              <SecondaryButton
+                label="No, I’m under 18"
+                onPress={() => setAgeStep('under-18')}
+                disabled={isSaving}
+              />
+            </>
+          ) : (
+            <>
+              <Pressable
+                onPress={() => void handleDeleteAccount()}
+                disabled={isSaving}
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.dangerFill,
+                  { backgroundColor: colours.danger, borderRadius: radius.full },
+                  (pressed || isSaving) && styles.pressed,
+                ]}>
                 {isSaving ? (
-                  <ActivityIndicator color={colours.surface} />
+                  <ActivityIndicator color={colours.onAccent} />
                 ) : (
-                  <Text style={styles.buttonText}>Delete my account</Text>
+                  <Text style={[type.button, { color: colours.onAccent }]}>Delete my account</Text>
                 )}
               </Pressable>
-              <Pressable
-                style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}
+              <SecondaryButton
+                label="Go back"
                 onPress={() => {
                   setError(null);
                   setAgeStep('ask');
                 }}
                 disabled={isSaving}
-                accessibilityRole="button">
-                <Text style={styles.outlineButtonText}>Go back</Text>
-              </Pressable>
+              />
             </>
           )}
-        </ScrollView>
+        </View>
       </View>
     );
   }
 
   const showBack = isEditing || step !== 'welcome';
+  const showProgress = step !== 'review';
+
+  const footer = (() => {
+    if (step === 'welcome') {
+      return <PrimaryButton label="Get started" onPress={() => goNext('welcome')} />;
+    }
+    if (step === 'insight-goal' || step === 'insight-gym' || step === 'insight-streak') {
+      return <PrimaryButton label="Continue" onPress={() => goNext(step)} />;
+    }
+    if (
+      step === 'goal' ||
+      step === 'experience' ||
+      step === 'location' ||
+      step === 'equipment' ||
+      step === 'comfort' ||
+      step === 'days' ||
+      step === 'minutes' ||
+      step === 'streak'
+    ) {
+      return <PrimaryButton label="Continue" onPress={confirmChoice} disabled={!choiceReady} />;
+    }
+    if (step === 'focus') {
+      return <PrimaryButton label="Continue" onPress={continueFocus} />;
+    }
+    if (step === 'bodyweight') {
+      return (
+        <>
+          <PrimaryButton label="Continue" onPress={() => continueBodyweight(false)} />
+          <TextButton label="Skip" onPress={() => continueBodyweight(true)} />
+        </>
+      );
+    }
+    if (step === 'name') {
+      return (
+        <>
+          <PrimaryButton label="Continue" onPress={() => continueName(false)} />
+          <TextButton label="Skip" onPress={() => continueName(true)} />
+        </>
+      );
+    }
+    if (step === 'reveal') {
+      return (
+        <PrimaryButton
+          label="See your plan"
+          onPress={() => void handleSave('paywall')}
+          loading={isSaving}
+          disabled={isSaving || revealState === 'loading'}
+        />
+      );
+    }
+    if (step === 'review') {
+      return (
+        <PrimaryButton
+          label="Save changes"
+          onPress={() => void handleSave('home')}
+          loading={isSaving}
+          disabled={isSaving}
+        />
+      );
+    }
+    return null;
+  })();
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
       <View style={styles.topBar}>
         {showBack ? (
-          <Pressable
-            onPress={goBack}
-            style={styles.backButton}
-            hitSlop={8}
-            accessibilityRole="button">
-            <Text style={styles.backText}>{isEditing && step === 'review' ? 'Cancel' : 'Back'}</Text>
-          </Pressable>
+          isEditing && step === 'review' ? (
+            <TextButton label="Cancel" onPress={goBack} />
+          ) : (
+            <IconButton icon="chevron-back" onPress={goBack} accessibilityLabel="Back" />
+          )
         ) : (
-          <View style={styles.backButton} />
+          <View style={styles.backSpacer} />
         )}
       </View>
-      {step !== 'review' && (
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+      {showProgress ? (
+        <View style={styles.segments} accessibilityRole="progressbar">
+          {FLOW_STEPS.map((id, index) => (
+            <View
+              key={id}
+              style={[
+                styles.segment,
+                {
+                  backgroundColor: index < progressCount ? colours.brand : colours.surfaceMuted,
+                  borderRadius: radius.full,
+                },
+              ]}
+            />
+          ))}
         </View>
-      )}
+      ) : null}
 
       <View style={styles.slideClip}>
-      <Animated.View style={[styles.slidePane, { transform: [{ translateX: slideX }] }]}>
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}
-        keyboardShouldPersistTaps="handled">
-        {step === 'welcome' && (
-          <>
-            <Text style={styles.welcome}>Welcome to Ascenda</Text>
-            <Text style={styles.title}>Let’s find a plan that fits you</Text>
-            <Text style={styles.subtitle}>
-              A few short questions. No weight-loss pressure, just a clear first session.
-            </Text>
-            <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-              onPress={() => goNext('welcome')}
-              accessibilityRole="button">
-              <Text style={styles.buttonText}>Get started</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => supabase.auth.signOut()}
-              style={styles.signOut}
-              accessibilityRole="button">
-              <Text style={styles.signOutText}>Not you? Sign out</Text>
-            </Pressable>
-          </>
-        )}
+        <Animated.View style={[styles.slidePane, { transform: [{ translateX: slideX }] }]}>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled">
+            {step === 'welcome' && (
+              <>
+                <Text style={[type.eyebrow, { color: colours.accent }]}>Welcome to Ascenda</Text>
+                <Text style={[type.display, { color: colours.ink, marginTop: 12 }]}>
+                  Let’s find a plan that fits you
+                </Text>
+                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                  A few short questions. No weight-loss pressure, just a clear first session.
+                </Text>
+                <TextButton label="Not you? Sign out" onPress={() => void supabase.auth.signOut()} style={styles.inlineAction} />
+              </>
+            )}
 
-        {step === 'goal' && (
-          <ChoiceStep
-            title="What’s your main goal?"
-            subtitle="You can change this any time."
-            options={GOALS.map((value) => ({
-              value,
-              label: GOAL_LABELS[value],
-              description: {
-                strength: 'Lift heavier on the big moves.',
-                glutes_legs: 'Build a stronger lower body.',
-                general: 'Feel fitter and more capable all round.',
-              }[value],
-            }))}
-            selected={draft.goal}
-            onChoose={(value) => choose('goal', value as Goal)}
-          />
-        )}
-
-        {step === 'insight-goal' && (
-          <InsightStep
-            title="A clear goal helps you walk in"
-            body="When you know what you’re there for, the next session is already decided. You can change this later."
-            onContinue={() => goNext('insight-goal')}
-          />
-        )}
-
-        {step === 'experience' && (
-          <ChoiceStep
-            title="How much lifting have you done?"
-            options={EXPERIENCE_LEVELS.map((value) => ({
-              value,
-              label: EXPERIENCE_LABELS[value],
-              description: {
-                new: "Never, or hardly ever. That’s absolutely fine.",
-                some: "I’ve used weights before, on and off.",
-                confident: 'I train regularly and know the main lifts.',
-              }[value],
-            }))}
-            selected={draft.experience}
-            onChoose={(value) => choose('experience', value as Experience)}
-          />
-        )}
-
-        {step === 'location' && (
-          <ChoiceStep
-            title="Where will you train?"
-            options={TRAINING_LOCATIONS.map((value) => ({
-              value,
-              label: TRAINING_LOCATION_LABELS[value],
-              description: {
-                gym: 'A gym with machines, free weights or both.',
-                home: 'Your own space, with whatever kit you have.',
-                both: 'Some days at the gym, some days at home.',
-              }[value],
-            }))}
-            selected={draft.training_location}
-            onChoose={(value) => choose('training_location', value as TrainingLocation)}
-          />
-        )}
-
-        {step === 'equipment' && (
-          <ChoiceStep
-            title="What kit can you use?"
-            subtitle="We’ll only recommend sessions that fit this."
-            options={equipmentOptionsForLocation(draft.training_location ?? 'both').map((value) => ({
-              value,
-              label: EQUIPMENT_ACCESS_LABELS[value],
-              description: EQUIPMENT_COPY[value],
-            }))}
-            selected={draft.equipment}
-            onChoose={(value) => choose('equipment', value as EquipmentAccess)}
-          />
-        )}
-
-        {step === 'insight-gym' && (
-          <InsightStep
-            title="You don’t need the whole gym on day one"
-            body="One quiet spot is a strong start. You can add machines and free weights when you’re ready."
-            onContinue={() => goNext('insight-gym')}
-          />
-        )}
-
-        {step === 'comfort' && (
-          <ChoiceStep
-            title="How do you feel in the weights room?"
-            subtitle="No wrong answers. This helps us keep the first weeks simple if you want that."
-            options={CONFIDENCE_LEVELS.map((value) => ({
-              value,
-              label: `${value}. ${CONFIDENCE_LABELS[value]}`,
-            }))}
-            selected={draft.confidence}
-            onChoose={(value) => choose('confidence', value as Confidence)}
-          />
-        )}
-
-        {step === 'days' && (
-          <ChoiceStep
-            title="How many days a week can you train?"
-            subtitle="Pick what feels realistic. Rest days help you get stronger too."
-            options={DAYS_PER_WEEK_OPTIONS.map((value) => ({
-              value,
-              label: formatDaysPerWeek(value),
-            }))}
-            selected={draft.days_per_week}
-            onChoose={(value) => choose('days_per_week', value as DaysPerWeek)}
-          />
-        )}
-
-        {step === 'minutes' && (
-          <ChoiceStep
-            title="How long should a session feel?"
-            subtitle="A guide for the plan, not a clock we judge you by."
-            options={SESSION_MINUTES_OPTIONS.map((value) => ({
-              value,
-              label: formatSessionMinutes(value),
-            }))}
-            selected={draft.session_minutes}
-            onChoose={(value) => choose('session_minutes', value as SessionMinutes)}
-          />
-        )}
-
-        {step === 'focus' && (
-          <FocusStep
-            selected={draft.focus_areas ?? []}
-            onChange={(focus_areas) => setDraft((current) => ({ ...current, focus_areas }))}
-            onContinue={() => {
-              if ((draft.focus_areas?.length ?? 0) === 0) {
-                setError('Pick at least one area.');
-                return;
-              }
-              if (isEditing) moveTo('review', -1);
-              else goNext('focus');
-            }}
-            error={error}
-          />
-        )}
-
-        {step === 'streak' && (
-          <ChoiceStep
-            title="Pick a finish line for your weekly streak"
-            subtitle="A week counts when you hit the sessions you planned. Choose how many weeks in a row you’d like to aim for. You can change this later."
-            options={STREAK_GOALS.map((value) => ({
-              value,
-              label: `${value} weeks`,
-            }))}
-            selected={draft.streak_goal_weeks}
-            onChoose={(value) => choose('streak_goal_weeks', value as StreakGoal)}
-          />
-        )}
-
-        {step === 'insight-streak' && (
-          <InsightStep
-            metric={`${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
-            title="Consistency is what moves the needle"
-            body={`People who stay consistent for ${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks are much more likely to still be training after that, and to feel at home with their plan. That’s all a streak is: a finish line you can see, not a test. A week counts when you hit your target.`}
-            onContinue={() => goNext('insight-streak')}
-          />
-        )}
-
-        {step === 'bodyweight' && (
-          <>
-            <Text style={styles.title}>Your bodyweight</Text>
-            <Text style={styles.subtitle}>
-              Optional. We only use it to show your strength relative to your bodyweight, like
-              lifting your own bodyweight. Never for BMI or any health score, and only you can see
-              it.
-            </Text>
-            <View style={styles.weightRow}>
-              <TextInput
-                style={styles.weightInput}
-                value={bodyweight}
-                onChangeText={setBodyweight}
-                keyboardType="decimal-pad"
-                placeholder="–"
-                placeholderTextColor={colours.textMuted}
-                returnKeyType="done"
-                accessibilityLabel="Bodyweight in kilograms"
+            {step === 'goal' && (
+              <ChoiceStep
+                title="What’s your main goal?"
+                subtitle="You can change this any time."
+                options={GOALS.map((value) => ({
+                  value,
+                  label: GOAL_LABELS[value],
+                  description: GOAL_COPY[value],
+                }))}
+                selected={draft.goal}
+                onChoose={(value) => patchAnswer('goal', value as Goal)}
               />
-              <Text style={styles.weightUnit}>kg</Text>
-            </View>
-            {error && <Text style={styles.error}>{error}</Text>}
-            <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-              onPress={() => {
-                if (parseBodyweight(bodyweight) === undefined) {
-                  setError(
-                    `Enter a bodyweight between ${MIN_BODYWEIGHT_KG} and ${MAX_BODYWEIGHT_KG} kg, or skip it.`
-                  );
-                  return;
-                }
-                if (isEditing) moveTo('review', -1);
-                else goNext('bodyweight');
-              }}
-              accessibilityRole="button">
-              <Text style={styles.buttonText}>Continue</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setBodyweight('');
-                if (isEditing) moveTo('review', -1);
-                else goNext('bodyweight');
-              }}
-              style={styles.signOut}
-              accessibilityRole="button">
-              <Text style={styles.signOutText}>Skip</Text>
-            </Pressable>
-          </>
-        )}
+            )}
 
-        {step === 'name' && (
-          <>
-            <Text style={styles.title}>What should we call you?</Text>
-            <Text style={styles.subtitle}>First name is perfect. You can skip this.</Text>
-            <TextInput
-              style={styles.nameInput}
-              value={nameText}
-              onChangeText={setNameText}
-              autoCapitalize="words"
-              maxLength={MAX_DISPLAY_NAME}
-              placeholder="Your name"
-              placeholderTextColor={colours.textMuted}
-              returnKeyType="done"
-              accessibilityLabel="Your name"
-            />
-            {error && <Text style={styles.error}>{error}</Text>}
-            <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-              onPress={() => {
-                const parsed = parseDisplayName(nameText);
-                if (parsed === undefined) {
-                  setError(`Names can be up to ${MAX_DISPLAY_NAME} characters.`);
-                  return;
-                }
-                setDraft((current) => ({ ...current, display_name: parsed }));
-                if (isEditing) {
-                  moveTo('review', -1);
-                  return;
-                }
-                const next = withStoredLevel({ ...draft, display_name: parsed });
-                if (isComplete(next)) void loadReveal(next);
-                goNext('name');
-              }}
-              accessibilityRole="button">
-              <Text style={styles.buttonText}>Continue</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setNameText('');
-                setDraft((current) => ({ ...current, display_name: '' }));
-                const next = withStoredLevel({ ...draft, display_name: '' });
-                if (!isEditing && isComplete(next)) void loadReveal(next);
-                if (isEditing) moveTo('review', -1);
-                else goNext('name');
-              }}
-              style={styles.signOut}
-              accessibilityRole="button">
-              <Text style={styles.signOutText}>Skip</Text>
-            </Pressable>
-          </>
-        )}
+            {step === 'insight-goal' && (
+              <InsightStep
+                title="A clear goal helps you walk in"
+                body="When you know what you’re there for, the next session is already decided. You can change this later."
+              />
+            )}
 
-        {step === 'reveal' && (
-          <RevealStep
-            answers={answersForRecommend}
-            recommended={recommended}
-            projection={projection}
-            loadState={revealState}
-            isSaving={isSaving}
-            error={error}
-            onContinue={() => void handleSave('paywall')}
-            onRetry={() => answersForRecommend && void loadReveal(answersForRecommend)}
-          />
-        )}
+            {step === 'experience' && (
+              <ChoiceStep
+                title="How much lifting have you done?"
+                options={EXPERIENCE_LEVELS.map((value) => ({
+                  value,
+                  label: EXPERIENCE_LABELS[value],
+                  description: EXPERIENCE_COPY[value],
+                }))}
+                selected={draft.experience}
+                onChoose={(value) => patchAnswer('experience', value as Experience)}
+              />
+            )}
 
-        {step === 'review' && (
-          <ReviewStep
-            draft={draft}
-            bodyweight={bodyweight}
-            nameText={nameText}
-            isSaving={isSaving}
-            error={error}
-            onJump={(next) => moveTo(next, 1)}
-            onSave={() => void handleSave('home')}
-          />
-        )}
-      </ScrollView>
-      </Animated.View>
+            {step === 'location' && (
+              <ChoiceStep
+                title="Where will you train?"
+                options={TRAINING_LOCATIONS.map((value) => ({
+                  value,
+                  label: TRAINING_LOCATION_LABELS[value],
+                  description: LOCATION_COPY[value],
+                }))}
+                selected={draft.training_location}
+                onChoose={(value) => patchAnswer('training_location', value as TrainingLocation)}
+              />
+            )}
+
+            {step === 'equipment' && (
+              <ChoiceStep
+                title="What kit can you use?"
+                subtitle="We’ll only recommend sessions that fit this."
+                options={equipmentOptionsForLocation(draft.training_location ?? 'both').map((value) => ({
+                  value,
+                  label: EQUIPMENT_ACCESS_LABELS[value],
+                  description: EQUIPMENT_COPY[value],
+                }))}
+                selected={draft.equipment}
+                onChoose={(value) => patchAnswer('equipment', value as EquipmentAccess)}
+              />
+            )}
+
+            {step === 'insight-gym' && (
+              <InsightStep
+                title="You don’t need the whole gym on day one"
+                body="One quiet spot is a strong start. You can add machines and free weights when you’re ready."
+              />
+            )}
+
+            {step === 'comfort' && (
+              <ChoiceStep
+                title="How do you feel in the weights room?"
+                subtitle="No wrong answers. This helps us keep the first weeks simple if you want that."
+                options={CONFIDENCE_LEVELS.map((value) => ({
+                  value,
+                  label: `${value}. ${CONFIDENCE_LABELS[value]}`,
+                }))}
+                selected={draft.confidence}
+                onChoose={(value) => patchAnswer('confidence', value as Confidence)}
+              />
+            )}
+
+            {step === 'days' && (
+              <ChoiceStep
+                title="How many days a week can you train?"
+                subtitle="Pick what feels realistic. Rest days help you get stronger too."
+                options={DAYS_PER_WEEK_OPTIONS.map((value) => ({
+                  value,
+                  label: formatDaysPerWeek(value),
+                }))}
+                selected={draft.days_per_week}
+                onChoose={(value) => patchAnswer('days_per_week', value as DaysPerWeek)}
+              />
+            )}
+
+            {step === 'minutes' && (
+              <ChoiceStep
+                title="How long should a session feel?"
+                subtitle="A guide for the plan, not a clock we judge you by."
+                options={SESSION_MINUTES_OPTIONS.map((value) => ({
+                  value,
+                  label: formatSessionMinutes(value),
+                }))}
+                selected={draft.session_minutes}
+                onChoose={(value) => patchAnswer('session_minutes', value as SessionMinutes)}
+              />
+            )}
+
+            {step === 'focus' && (
+              <FocusStep
+                selected={draft.focus_areas ?? []}
+                onChange={(focus_areas) => setDraft((current) => ({ ...current, focus_areas }))}
+                error={error}
+              />
+            )}
+
+            {step === 'streak' && (
+              <ChoiceStep
+                title="Pick a finish line for your weekly streak"
+                subtitle="A week counts when you hit the sessions you planned."
+                options={STREAK_GOALS.map((value) => ({
+                  value,
+                  label: `${value} weeks`,
+                }))}
+                selected={draft.streak_goal_weeks}
+                onChoose={(value) => patchAnswer('streak_goal_weeks', value as StreakGoal)}
+              />
+            )}
+
+            {step === 'insight-streak' && (
+              <InsightStep
+                metric={`${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
+                title="A finish line you can see"
+                body="That’s all a streak is: a number of weeks in a row hitting the sessions you planned, not a test. A week counts when you hit your target. You can change this later in Profile."
+              />
+            )}
+
+            {step === 'bodyweight' && (
+              <>
+                <Text style={[type.display, { color: colours.ink }]}>Your bodyweight</Text>
+                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                  Optional. We only use it to show your strength relative to your bodyweight, like
+                  lifting your own bodyweight. Never for BMI or any health score, and only you can see
+                  it.
+                </Text>
+                <View style={styles.weightRow}>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        flex: 1,
+                        color: colours.ink,
+                        backgroundColor: colours.surface,
+                        borderColor: colours.border,
+                        borderRadius: radius.md,
+                      },
+                    ]}
+                    value={bodyweight}
+                    onChangeText={setBodyweight}
+                    keyboardType="decimal-pad"
+                    placeholder="e.g. 65"
+                    placeholderTextColor={colours.inkMuted}
+                    returnKeyType="done"
+                    accessibilityLabel="Bodyweight in kilograms"
+                  />
+                  <Text style={[type.title3, { color: colours.inkMuted }]}>kg</Text>
+                </View>
+                {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+              </>
+            )}
+
+            {step === 'name' && (
+              <>
+                <Text style={[type.display, { color: colours.ink }]}>What should we call you?</Text>
+                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                  First name is perfect. You can skip this.
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      color: colours.ink,
+                      backgroundColor: colours.surface,
+                      borderColor: colours.border,
+                      borderRadius: radius.md,
+                      marginTop: 28,
+                    },
+                  ]}
+                  value={nameText}
+                  onChangeText={setNameText}
+                  autoCapitalize="words"
+                  maxLength={MAX_DISPLAY_NAME}
+                  placeholder="Your name"
+                  placeholderTextColor={colours.inkMuted}
+                  returnKeyType="done"
+                  accessibilityLabel="Your name"
+                />
+                {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+              </>
+            )}
+
+            {step === 'reveal' && (
+              <RevealStep
+                answers={answersForRecommend}
+                recommended={recommended}
+                projection={projection}
+                loadState={revealState}
+                error={error}
+                onRetry={() => answersForRecommend && void loadReveal(answersForRecommend)}
+              />
+            )}
+
+            {step === 'review' && (
+              <ReviewStep
+                draft={draft}
+                bodyweight={bodyweight}
+                nameText={nameText}
+                error={error}
+                onJump={(next) => moveTo(next, 1)}
+              />
+            )}
+          </ScrollView>
+          {footer ? (
+            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>{footer}</View>
+          ) : null}
+        </Animated.View>
       </View>
     </View>
   );
@@ -745,112 +878,81 @@ function ChoiceStep<T extends string | number>({
   selected: T | undefined;
   onChoose: (value: T) => void;
 }) {
+  const { colours, type } = useTheme();
+  const selectedOption = options.find((option) => option.value === selected);
   return (
     <>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-      <View style={styles.options}>
-        {options.map((option) => {
-          const isSelected = selected === option.value;
-          return (
-            <Pressable
-              key={String(option.value)}
-              onPress={() => onChoose(option.value)}
-              style={({ pressed }) => [
-                styles.option,
-                isSelected && styles.optionSelected,
-                pressed && styles.optionPressed,
-              ]}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: isSelected }}>
-              <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
-                {option.label}
-              </Text>
-              {option.description ? (
-                <Text style={styles.optionDescription}>{option.description}</Text>
-              ) : null}
-            </Pressable>
-          );
-        })}
+      <Text style={[type.display, { color: colours.ink }]}>{title}</Text>
+      {subtitle ? (
+        <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>{subtitle}</Text>
+      ) : null}
+      <View style={styles.chipCloud}>
+        {options.map((option) => (
+          <Chip
+            key={String(option.value)}
+            label={option.label}
+            selected={selected === option.value}
+            size="lg"
+            onPress={() => onChoose(option.value)}
+          />
+        ))}
       </View>
+      {selectedOption?.description ? (
+        <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 16 }]}>
+          {selectedOption.description}
+        </Text>
+      ) : null}
     </>
   );
 }
 
-function InsightStep({
-  title,
-  body,
-  metric,
-  onContinue,
-}: {
-  title: string;
-  body: string;
-  metric?: string;
-  onContinue: () => void;
-}) {
+function InsightStep({ title, body, metric }: { title: string; body: string; metric?: string }) {
+  const { colours, type } = useTheme();
   return (
-    <>
-      <Text style={styles.welcome}>A quick note</Text>
-      {metric ? <Text style={styles.metric}>{metric}</Text> : null}
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{body}</Text>
-      <Pressable
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        onPress={onContinue}
-        accessibilityRole="button">
-        <Text style={styles.buttonText}>Continue</Text>
-      </Pressable>
-    </>
+    <View style={styles.insight}>
+      <Ionicons name="checkmark-circle" size={56} color={colours.success} />
+      {metric ? (
+        <Text style={[type.number, { color: colours.accent, marginTop: 16 }]}>{metric}</Text>
+      ) : null}
+      <Text style={[type.display, { color: colours.ink, marginTop: 16, textAlign: 'center' }]}>{title}</Text>
+      <Text style={[type.body, { color: colours.inkMuted, marginTop: 12, textAlign: 'center' }]}>{body}</Text>
+    </View>
   );
 }
 
 function FocusStep({
   selected,
   onChange,
-  onContinue,
   error,
 }: {
   selected: FocusArea[];
   onChange: (next: FocusArea[]) => void;
-  onContinue: () => void;
   error: string | null;
 }) {
+  const { colours, type } = useTheme();
   return (
     <>
-      <Text style={styles.title}>Anything you want to focus on?</Text>
-      <Text style={styles.subtitle}>Pick as many as you like. This helps us explain why a plan fits.</Text>
-      <View style={styles.options}>
+      <Text style={[type.display, { color: colours.ink }]}>Anything you want to focus on?</Text>
+      <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+        Pick as many as you like. This helps us explain why a plan fits.
+      </Text>
+      <View style={styles.chipCloud}>
         {FOCUS_AREAS.map((value) => {
           const isSelected = selected.includes(value);
           return (
-            <Pressable
+            <Chip
               key={value}
+              label={FOCUS_AREA_LABELS[value]}
+              selected={isSelected}
+              size="lg"
               onPress={() =>
-                onChange(
-                  isSelected ? selected.filter((item) => item !== value) : [...selected, value]
-                )
+                onChange(isSelected ? selected.filter((item) => item !== value) : [...selected, value])
               }
-              style={({ pressed }) => [
-                styles.option,
-                isSelected && styles.optionSelected,
-                pressed && styles.optionPressed,
-              ]}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: isSelected }}>
-              <Text style={[styles.optionLabel, isSelected && styles.optionLabelSelected]}>
-                {FOCUS_AREA_LABELS[value]}
-              </Text>
-            </Pressable>
+            />
           );
         })}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
-      <Pressable
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        onPress={onContinue}
-        accessibilityRole="button">
-        <Text style={styles.buttonText}>Continue</Text>
-      </Pressable>
+      {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
     </>
   );
 }
@@ -860,48 +962,58 @@ function RevealStep({
   recommended,
   projection,
   loadState,
-  isSaving,
   error,
-  onContinue,
   onRetry,
 }: {
   answers: QuizAnswers | null;
   recommended: RoutineSummary | null;
   projection: LiftProjection | null;
   loadState: 'idle' | 'loading' | 'ready';
-  isSaving: boolean;
   error: string | null;
-  onContinue: () => void;
   onRetry: () => void;
 }) {
+  const { colours, radius, shadow, type } = useTheme();
+  const cover = recommended ? coverSources(coverForRoutine(recommended))[0] ?? null : null;
+  const why = recommended && answers ? recommendationBullets(recommended, answers) : [];
   return (
     <>
-      <Text style={styles.welcome}>Your plan is ready</Text>
+      <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 12 }]}>Your plan is ready</Text>
       {recommended ? (
-        <CoverPhoto
-          cover={coverForRoutine(recommended)}
-          letter={recommended.name.slice(0, 1)}
-          height={180}
-          radius={22}
-          style={styles.revealCover}
-        />
+        <View style={{ borderRadius: radius.lg, overflow: 'hidden', marginBottom: 16 }}>
+          <HeroImage
+            image={cover}
+            letter={recommended.name}
+            title={recommended.name}
+            eyebrow={recommended.is_pro ? 'Pro plan' : 'Free starter'}
+            height={220}
+          />
+        </View>
       ) : null}
-      <Text style={styles.title}>
+      {recommended?.is_pro ? <ProBadge locked compact style={{ alignSelf: 'flex-start', marginBottom: 8 }} /> : null}
+      <Text style={[type.display, { color: colours.ink }]}>
         {recommended ? recommended.name : 'Gym Confidence: 6 weeks'}
       </Text>
       {loadState === 'loading' ? (
-        <ActivityIndicator color={colours.accent} style={{ marginTop: 24 }} />
+        <ActivityIndicator color={colours.brand} style={{ marginTop: 24 }} />
       ) : recommended ? (
         <>
-          <Text style={styles.subtitle}>
+          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 8 }]}>
             {recommended.length_weeks} weeks · {formatDaysPerWeek(recommended.days_per_week)} a week
             · about {recommended.session_minutes} minutes
           </Text>
-          {answers ? (
-            <Text style={styles.subtitle}>{describeRecommendation(recommended, answers)}</Text>
+          {why.length > 0 ? (
+            <View style={styles.why}>
+              <Text style={[type.title3, { color: colours.ink, marginBottom: 8 }]}>Why this plan</Text>
+              {why.map((line) => (
+                <View key={line} style={styles.whyRow}>
+                  <Ionicons name="checkmark" size={18} color={colours.success} />
+                  <Text style={[type.body, { color: colours.ink, flex: 1 }]}>{line}</Text>
+                </View>
+              ))}
+            </View>
           ) : null}
           {recommended.is_pro ? (
-            <Text style={styles.subtitle}>
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 12 }]}>
               This one is Pro. If you don’t subscribe, we’ll start you on the free Gym Confidence
               plan, with the same first-session feeling.
             </Text>
@@ -909,20 +1021,18 @@ function RevealStep({
         </>
       ) : (
         <>
-          <Text style={styles.subtitle}>
+          <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
             We’ll start you on Gym Confidence: 6 weeks, the free beginner plan, unless we can load
             your match in a moment.
           </Text>
-          <Pressable onPress={onRetry} style={styles.signOut} accessibilityRole="button">
-            <Text style={styles.signOutText}>Try loading your plan again</Text>
-          </Pressable>
+          <TextButton label="Try loading your plan again" onPress={onRetry} style={styles.inlineAction} />
         </>
       )}
 
-      {projection && (
-        <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>{projection.exerciseName}</Text>
-          <Text style={styles.optionDescription}>
+      {projection ? (
+        <View style={[styles.chartCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+          <Text style={[type.title3, { color: colours.ink }]}>{projection.exerciseName}</Text>
+          <Text style={[type.caption, { color: colours.inkMuted }]}>
             Estimate, not a promise. If you hit the top of the rep range every other week, the
             progression rule looks like this.
           </Text>
@@ -933,23 +1043,12 @@ function RevealStep({
             height={180}
           />
         </View>
-      )}
+      ) : null}
 
-      <Text style={styles.disclaimer}>
+      <Text style={[type.caption, { color: colours.inkMuted, marginTop: 24 }]}>
         General fitness guidance, not medical advice. Stop if anything hurts.
       </Text>
-      {error && <Text style={styles.error}>{error}</Text>}
-      <Pressable
-        style={({ pressed }) => [styles.button, (pressed || isSaving) && styles.buttonPressed]}
-        onPress={onContinue}
-        disabled={isSaving || loadState === 'loading'}
-        accessibilityRole="button">
-        {isSaving ? (
-          <ActivityIndicator color={colours.surface} />
-        ) : (
-          <Text style={styles.buttonText}>See your plan</Text>
-        )}
-      </Pressable>
+      {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
     </>
   );
 }
@@ -958,19 +1057,16 @@ function ReviewStep({
   draft,
   bodyweight,
   nameText,
-  isSaving,
   error,
   onJump,
-  onSave,
 }: {
   draft: Draft;
   bodyweight: string;
   nameText: string;
-  isSaving: boolean;
   error: string | null;
   onJump: (step: FlowStep) => void;
-  onSave: () => void;
 }) {
+  const { colours, radius, shadow, type } = useTheme();
   const rows: { name: string; value: string; step: FlowStep }[] = [
     { name: 'Goal', value: draft.goal ? GOAL_LABELS[draft.goal] : '', step: 'goal' },
     {
@@ -1027,36 +1123,27 @@ function ReviewStep({
 
   return (
     <>
-      <Text style={styles.title}>Your answers</Text>
-      <Text style={styles.subtitle}>Tap an answer to change it.</Text>
-      <View style={styles.options}>
-        {rows.map((row) => (
-          <Pressable
-            key={row.name}
-            onPress={() => onJump(row.step)}
-            style={({ pressed }) => [styles.reviewRow, pressed && styles.optionPressed]}
-            accessibilityRole="button"
-            accessibilityHint={`Change your answer for ${row.name}`}>
-            <Text style={styles.reviewName}>{row.name}</Text>
-            <Text style={styles.reviewValue}>{row.value || 'Not set'}</Text>
-          </Pressable>
-        ))}
+      <Text style={[type.display, { color: colours.ink }]}>Your answers</Text>
+      <Text style={[type.body, { color: colours.inkMuted, marginTop: 8, marginBottom: 16 }]}>
+        Tap an answer to change it.
+      </Text>
+      <View style={[{ borderRadius: radius.lg }, shadow]}>
+        <View style={[styles.reviewCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+          {rows.map((row, index) => (
+            <ListRow
+              key={row.name}
+              title={row.name}
+              subtitle={row.value || 'Not set'}
+              onPress={() => onJump(row.step)}
+              style={index === rows.length - 1 ? { borderBottomWidth: 0 } : undefined}
+            />
+          ))}
+        </View>
       </View>
-      <Text style={styles.disclaimer}>
+      <Text style={[type.caption, { color: colours.inkMuted, marginTop: 24 }]}>
         General fitness guidance, not medical advice. Stop if anything hurts.
       </Text>
-      {error && <Text style={styles.error}>{error}</Text>}
-      <Pressable
-        style={({ pressed }) => [styles.button, (pressed || isSaving) && styles.buttonPressed]}
-        onPress={onSave}
-        disabled={isSaving}
-        accessibilityRole="button">
-        {isSaving ? (
-          <ActivityIndicator color={colours.surface} />
-        ) : (
-          <Text style={styles.buttonText}>Save changes</Text>
-        )}
-      </Pressable>
+      {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
     </>
   );
 }
@@ -1064,24 +1151,26 @@ function ReviewStep({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    minHeight: 56,
-  },
-  backButton: {
-    minWidth: 64,
+    paddingHorizontal: 12,
     minHeight: 48,
-    justifyContent: 'center',
   },
-  backText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.accent,
+  backSpacer: {
+    width: 40,
+    height: 40,
+  },
+  segments: {
+    flexDirection: 'row',
+    gap: 4,
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  segment: {
+    flex: 1,
+    height: 4,
   },
   slideClip: {
     flex: 1,
@@ -1090,80 +1179,21 @@ const styles = StyleSheet.create({
   slidePane: {
     flex: 1,
   },
-  metric: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: colours.accent,
-    marginBottom: 8,
-  },
-  progressTrack: {
-    height: 6,
-    marginHorizontal: 24,
-    borderRadius: 999,
-    backgroundColor: colours.border,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 999,
-    backgroundColor: colours.accent,
-  },
   content: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-  },
-  welcome: {
-    fontSize: 17,
-    color: colours.accent,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  subtitle: {
-    fontSize: 17,
-    lineHeight: 24,
-    color: colours.textMuted,
-    marginTop: 8,
-  },
-  options: {
-    marginTop: 28,
-    gap: 12,
-  },
-  option: {
-    minHeight: 64,
-    justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: colours.border,
-    backgroundColor: colours.surface,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
-  optionSelected: {
-    borderColor: colours.accent,
-    backgroundColor: colours.accentSoft,
+  chipCloud: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 28,
   },
-  optionPressed: {
-    opacity: 0.7,
-  },
-  optionLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  optionLabelSelected: {
-    color: colours.accent,
-  },
-  optionDescription: {
-    fontSize: 15,
-    lineHeight: 21,
-    color: colours.textMuted,
-    marginTop: 4,
+  insight: {
+    alignItems: 'center',
+    paddingTop: 32,
   },
   weightRow: {
     flexDirection: 'row',
@@ -1171,127 +1201,51 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 28,
   },
-  weightInput: {
-    flex: 1,
-    minHeight: 64,
-    paddingHorizontal: 20,
-    borderRadius: 18,
+  input: {
+    minHeight: 56,
+    paddingHorizontal: 16,
     borderWidth: 1.5,
-    borderColor: colours.border,
-    backgroundColor: colours.surface,
-    fontSize: 24,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  weightUnit: {
     fontSize: 20,
     fontWeight: '600',
-    color: colours.textMuted,
   },
-  nameInput: {
-    minHeight: 64,
-    marginTop: 28,
-    paddingHorizontal: 20,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: colours.border,
-    backgroundColor: colours.surface,
-    fontSize: 20,
-    fontWeight: '600',
-    color: colours.text,
+  why: {
+    marginTop: 20,
+    gap: 10,
   },
-  revealCover: {
-    marginTop: 16,
+  whyRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
   },
   chartCard: {
     marginTop: 24,
     padding: 16,
-    borderRadius: 22,
-    backgroundColor: colours.surface,
     gap: 8,
   },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.text,
+  reviewCard: {
+    overflow: 'hidden',
   },
-  reviewRow: {
-    minHeight: 64,
-    justifyContent: 'center',
+  footer: {
     paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 18,
-    backgroundColor: colours.surface,
+    paddingTop: 8,
+    gap: 8,
   },
-  reviewName: {
-    fontSize: 14,
-    color: colours.textMuted,
+  dangerFill: {
+    minHeight: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  reviewValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colours.text,
-    marginTop: 2,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    marginTop: 24,
+  inlineAction: {
+    alignSelf: 'flex-start',
+    marginTop: 20,
+    paddingHorizontal: 0,
   },
   error: {
     fontSize: 15,
     lineHeight: 21,
-    color: colours.accent,
     marginTop: 16,
   },
-  signOut: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    marginTop: 12,
-  },
-  signOutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colours.accent,
-  },
-  button: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accent,
-    marginTop: 24,
-  },
-  dangerButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.danger,
-    marginTop: 24,
-  },
-  outlineButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-    marginTop: 12,
-  },
-  outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  buttonPressed: {
+  pressed: {
     opacity: 0.8,
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.surface,
   },
 });

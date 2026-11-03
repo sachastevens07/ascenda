@@ -267,16 +267,20 @@ export function Chip({
   label,
   selected = false,
   onPress,
+  size = 'sm',
 }: {
   label: string;
   selected?: boolean;
   onPress?: () => void;
+  size?: 'sm' | 'lg';
 }) {
   const { colours, radius, type } = useTheme();
+  const large = size === 'lg';
   const inner = (
     <View
       style={[
         styles.chip,
+        large && styles.chipLg,
         {
           borderRadius: radius.full,
           backgroundColor: selected ? colours.brandSoft : colours.surfaceMuted,
@@ -284,7 +288,13 @@ export function Chip({
           borderColor: colours.brand,
         },
       ]}>
-      <Text style={[type.caption, { color: selected ? colours.brand : colours.ink }]}>{label}</Text>
+      <Text
+        style={[
+          large ? type.body : type.caption,
+          { color: selected ? colours.brand : colours.ink, fontWeight: selected ? '700' : '500' },
+        ]}>
+        {label}
+      </Text>
     </View>
   );
   if (!onPress) return inner;
@@ -342,6 +352,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  chipLg: {
+    minHeight: 44,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   heroFallback: {
     flex: 1,
