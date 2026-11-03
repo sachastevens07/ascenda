@@ -11,7 +11,7 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **N3. Merge session detail into the logger (3 Nov 2026).** Home, Planner and routine detail open the logger directly. Swap, remove, add/remove set, and do a different day live in the logger. Rep targets stay as the routine wrote them. Add exercise is only on custom workouts, not routine sessions. Weighted sets need a weight before they can be ticked. Timer starts when the logger opens. Header ⋯ **End session** discards it. Finish is disabled until a tick; Discard only shows after a tick. Tick buttons are 48 px plum outline, filling green when done. No SQL. No new libraries.
 
-**N1. Safety disclaimer (3 Nov 2026).** Full wording lives in `src/lib/disclaimer.ts` (version 1). Onboarding has a Train safely step after 18+, with a required checkbox. Existing users are asked again if the version does not match (after SQL is pasted). Profile → About → Safety and disclaimer. First-session sheet with four bullets before a new account’s first session. Routine and stretch detail pages have the one-line safety notice. Learn articles are left for N6. No new libraries.
+**N1. Safety disclaimer (3 Nov 2026).** Full wording lives in `src/lib/disclaimer.ts` (**version 2**). International: doctor, not GP; local emergency number, not 999. Onboarding has a Train safely step after 18+, with a required checkbox. Existing users are asked again if the version does not match (after SQL is pasted). Profile → About → Safety and disclaimer. First-session sheet with four bullets before a new account’s first session. Routine and stretch detail pages have the one-line safety notice. Learn articles are left for N6. No new libraries.
 
 ### In progress
 None.
@@ -44,6 +44,7 @@ None.
 - First-session sheet: “I understand” is required; tapping outside cancels and does not start. Includes stretch and custom starts. Accounts that already have a session skip it.
 - Learn article safety line is left for N6.
 - DESIGN.md 6.11 asks for a display serif on “Train safely”. Fonts are not bundled yet, so it uses `type.display` (system sans).
+- Disclaimer copy is international (v2). No GP, 999 or solicitor. AGENTS.md safety section matches. UK spelling elsewhere in the app is unchanged. C1 (DMCC) and Supabase region are separate and still UK/EU.
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.

@@ -243,7 +243,7 @@ Before starting: compare PROGRESS.md and the code against v2.0, v2.1 and this li
 - Profile → About → "Safety and disclaimer": full text.
 - Before her first ever session: a one-time sheet with the short version ("Train within your limits" summary, 4 bullets) and a link to the full text.
 - Routine detail pages and Learn articles: one small line at the bottom, "Train within your limits. Read the safety guidance", linking to the full text. No disclaimer on other screens.
-- I will have the wording checked by a solicitor; keep the text in one file so it's easy to update.
+- I will have the wording checked legally; keep the text in one file so it's easy to update. Write for any country: no GP, 999, solicitor, or other UK-only terms.
 
 **N4. More main goals, choose up to three**
 - Onboarding goal screen becomes multi-select chips, up to 3. The first one she picks is her main goal (show a small "Main" label on it; she can change which is main).
@@ -384,25 +384,27 @@ Rules for every task in this group:
 10. **Coaching notes:** one short note per day (what to focus on, how it should feel).
 11. **Safety:** conservative starting loads ("find a weight you could lift 3 more times"), no maximal testing for beginners, coach review before launch.
 
-## Safety disclaimer (full text, v1; to be checked by a solicitor)
+## Safety disclaimer (full text, v2; to be checked legally)
+Write for any country. Do not use GP, 999, solicitor, or other UK-only terms.
+
 > **Train safely with Ascenda**
 >
-> Ascenda gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor, physiotherapist or other qualified professional.
+> Ascenda gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor or other qualified health professional.
 >
-> **Check with your GP or a qualified professional before you start if you:**
-> - are pregnant, have given birth in the last year, or are trying to conceive
-> - have a heart condition, high blood pressure, diabetes, asthma or another long-term health condition
-> - have an injury, joint or back problem, or have had recent surgery
-> - take medication that affects your heart rate, blood pressure or balance
-> - have been told by a professional to limit exercise, or are unsure whether exercise is safe for you
+> **Check with a doctor or other qualified professional before you start if you:**
+> - Are pregnant, have given birth in the last year, or are trying to conceive
+> - Have a heart condition, high blood pressure, diabetes, asthma or another long-term health condition
+> - Have an injury, joint or back problem, or have had recent surgery
+> - Take medication that affects your heart rate, blood pressure or balance
+> - Have been told by a professional to limit exercise, or are unsure whether exercise is safe for you
 >
-> **Stop straight away and get medical help if you feel** chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call 999 (or your local emergency number).
+> **Stop straight away and get medical help.** Stop if you feel chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call your local emergency number.
 >
 > **Train within your limits.** Warm up, use weights you can lift with good form, and never train through pain. Suggested weights are estimates based on what you log, not personal prescriptions. Exercise demos and tips are for guidance only; if you're unsure how to do a movement, ask a qualified instructor at your gym.
 >
 > You choose how and when you train, and you're responsible for doing so safely.
 
-Short version (first-session sheet, 4 bullets): not medical advice; check with your GP first if you're pregnant, injured or have a health condition; stop and get help if you feel chest pain, dizziness or sharp pain; use weights you can lift with good form and never train through pain.
+Short version (first-session sheet, 4 bullets): This is general fitness information, not medical advice. Check with a doctor first if you are pregnant, injured or have a health condition. Stop and get help if you feel chest pain, dizziness or sharp pain. Use weights you can lift with good form, and never train through pain.
 
 ## Out of scope (do not build unless I ask)
 Video classes, open-ended AI chatbot, food/recipes (until the food phase), social feed or leaderboards (a private gym buddy is planned for later), wearable sync, gym-photo scanning, cycle tracking, BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
