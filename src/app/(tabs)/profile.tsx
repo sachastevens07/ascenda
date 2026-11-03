@@ -19,7 +19,7 @@ import {
   EQUIPMENT_ACCESS_LABELS,
   EXPERIENCE_LABELS,
   FOCUS_AREA_LABELS,
-  GOAL_LABELS,
+  formatGoalsLabel,
   TRAINING_LOCATION_LABELS,
   formatDaysPerWeek,
   formatSessionMinutes,
@@ -205,7 +205,7 @@ export default function ProfileScreen() {
   const answerRows = answers
     ? [
         { name: 'Name', value: answers.display_name || 'Not added' },
-        { name: 'Goal', value: GOAL_LABELS[answers.goal] },
+        { name: 'Goals', value: formatGoalsLabel(answers.main_goals ?? [answers.goal]) },
         { name: 'Experience', value: EXPERIENCE_LABELS[answers.experience] },
         { name: 'Where you train', value: TRAINING_LOCATION_LABELS[answers.training_location] },
         { name: 'Equipment', value: EQUIPMENT_ACCESS_LABELS[answers.equipment] },

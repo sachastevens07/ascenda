@@ -7,15 +7,120 @@ import { DISCLAIMER_VERSION } from '@/lib/disclaimer';
 import { recordLevelChange } from '@/lib/levelUp';
 import { supabase } from '@/lib/supabase';
 
-// Allowed values. Keep these lists in step with supabase/profiles.sql.
-export const GOALS = ['strength', 'glutes_legs', 'general'] as const;
+/** User-facing goals. Keep in step with supabase/main_goals.sql. */
+export const GOALS = [
+  'strength',
+  'muscle',
+  'glutes_legs',
+  'upper_body',
+  'toned',
+  'gym_confidence',
+  'stamina',
+  'mobility',
+  'posture',
+  'energy',
+  'wellbeing',
+  'longevity',
+  'return',
+  'lose_fat',
+] as const;
 export type Goal = (typeof GOALS)[number];
+export const MAX_MAIN_GOALS = 3;
+const LEGACY_GOALS = ['strength', 'glutes_legs', 'general'] as const;
+type LegacyGoal = (typeof LEGACY_GOALS)[number];
 
 export const GOAL_LABELS: Record<Goal, string> = {
-  strength: 'Get stronger',
+  strength: 'Build strength',
+  muscle: 'Build muscle',
   glutes_legs: 'Glutes and legs',
-  general: 'General fitness',
+  upper_body: 'Upper body strength',
+  toned: 'Feel toned and defined',
+  gym_confidence: 'Gym confidence',
+  stamina: 'Get fitter and improve stamina',
+  mobility: 'Mobility and flexibility',
+  posture: 'Better posture',
+  energy: 'More energy',
+  wellbeing: 'Stress relief and mental wellbeing',
+  longevity: 'Strong for life (bones and joints)',
+  return: 'Get back into training after a break',
+  lose_fat: 'Lose body fat',
 };
+
+export const GOAL_COPY: Record<Goal, string> = {
+  strength: 'Lift heavier on the big moves.',
+  muscle: 'Add muscle with steady strength work.',
+  glutes_legs: 'Build a stronger lower body.',
+  upper_body: 'Get stronger through your back, chest, shoulders and arms.',
+  toned: 'Feel capable and defined through strength training.',
+  gym_confidence: 'Feel at home in the gym, one session at a time.',
+  stamina: 'Feel fitter and more capable all round.',
+  mobility: 'Move more freely, with strength work that stays joint-friendly.',
+  posture: 'Build the strength that helps you sit and stand tall.',
+  energy: 'Leave sessions feeling more awake, not drained.',
+  wellbeing: 'Use training as a calm reset for your head.',
+  longevity: 'Look after bones and joints with sensible strength work.',
+  return: 'Ease back in without leaping to where you left off.',
+  lose_fat: 'We’ll point you to strength training. No calorie targets or weight-loss promises.',
+};
+
+export function parseGoal(value: unknown): Goal | null {
+  const raw = String(value);
+  if (raw === 'general') return 'stamina';
+  return (GOALS as readonly string[]).includes(raw) ? (raw as Goal) : null;
+}
+
+export function parseMainGoals(value: unknown): Goal[] {
+  const raw = Array.isArray(value) ? value : [];
+  const unique: Goal[] = [];
+  for (const item of raw) {
+    const goal = parseGoal(item);
+    if (goal && !unique.includes(goal)) unique.push(goal);
+    if (unique.length === MAX_MAIN_GOALS) break;
+  }
+  return unique;
+}
+
+/** First is always main. Used when the new column is missing. */
+export function toLegacyGoal(goal: Goal): LegacyGoal {
+  if (goal === 'glutes_legs') return 'glutes_legs';
+  if (goal === 'strength' || goal === 'muscle' || goal === 'upper_body' || goal === 'longevity') {
+    return 'strength';
+  }
+  return 'general';
+}
+
+export function formatGoalsLabel(goals: Goal[]): string {
+  if (goals.length === 0) return '';
+  return goals
+    .map((goal, index) => (index === 0 && goals.length > 1 ? `${GOAL_LABELS[goal]} (main)` : GOAL_LABELS[goal]))
+    .join(', ');
+}
+
+export function userGoalsFromAnswers(answers: { goal: Goal; main_goals?: Goal[] }): Goal[] {
+  if (answers.main_goals && answers.main_goals.length > 0) return answers.main_goals.slice(0, MAX_MAIN_GOALS);
+  return [answers.goal];
+}
+
+/** Tap to add, tap main to remove, tap another pick to make it main. */
+export function toggleMainGoal(
+  selected: Goal[],
+  value: Goal
+): { next: Goal[]; hint: string | null } {
+  const index = selected.indexOf(value);
+  if (index === 0) {
+    return { next: selected.slice(1), hint: null };
+  }
+  if (index > 0) {
+    return { next: [value, ...selected.filter((item) => item !== value)], hint: null };
+  }
+  if (selected.length >= MAX_MAIN_GOALS) {
+    return {
+      next: selected,
+      hint: 'You can pick up to three. Tap one to remove it first.',
+    };
+  }
+  return { next: [...selected, value], hint: null };
+}
 
 export const EXPERIENCE_LEVELS = ['new', 'some', 'confident'] as const;
 export type Experience = (typeof EXPERIENCE_LEVELS)[number];
@@ -120,6 +225,8 @@ export const FOCUS_AREA_LABELS: Record<FocusArea, string> = {
 
 export type QuizAnswers = {
   goal: Goal;
+  /** 1 to 3. First is her main goal. */
+  main_goals: Goal[];
   experience: Experience;
   days_per_week: DaysPerWeek;
   equipment: EquipmentAccess;
@@ -137,6 +244,7 @@ export type Profile = {
   user_id: string;
   goal: Goal | null;
   main_goal: Goal | null;
+  main_goals: Goal[];
   experience: Experience | null;
   days_per_week: DaysPerWeek | null;
   equipment: EquipmentAccess | null;
@@ -174,9 +282,10 @@ const ONBOARDING_V2_COLUMNS =
 const PROFILE_COLUMNS_V2 = `${PROFILE_COLUMNS}, ${ONBOARDING_V2_COLUMNS}`;
 const PROFILE_COLUMNS_THEME = `${PROFILE_COLUMNS_V2}, theme_preference`;
 const PROFILE_COLUMNS_DISCLAIMER = `${PROFILE_COLUMNS_THEME}, disclaimer_version, disclaimer_accepted_at`;
+const PROFILE_COLUMNS_GOALS = `${PROFILE_COLUMNS_DISCLAIMER}, main_goals`;
 
 function isMissingOnboardingV2(error: { message?: string; code?: string }): boolean {
-  return /main_goal|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
+  return /main_goal(?!s)|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
     `${error.code ?? ''} ${error.message ?? ''}`
   );
 }
@@ -189,6 +298,16 @@ function isMissingDisclaimer(error: { message?: string; code?: string }): boolea
   return /disclaimer_version|disclaimer_accepted_at/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
+function isMissingMainGoals(error: { message?: string; code?: string }): boolean {
+  return /main_goals/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isGoalConstraint(error: { message?: string; code?: string }): boolean {
+  return /profiles_goal_check|profiles_main_goal_check|profiles_main_goals_check/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
+}
+
 function parseDisclaimerVersion(value: unknown): number | null {
   if (value == null || value === '') return null;
   const version = Number(value);
@@ -196,14 +315,24 @@ function parseDisclaimerVersion(value: unknown): number | null {
 }
 
 function keepDisclaimer(next: Profile, previous: Profile | null | undefined): Profile {
-  if (next.disclaimer_ready) return next;
-  if (!previous) return next;
-  return {
-    ...next,
-    disclaimer_version: previous.disclaimer_version,
-    disclaimer_accepted_at: previous.disclaimer_accepted_at,
-    disclaimer_ready: previous.disclaimer_ready,
-  };
+  let result = next;
+  if (!next.disclaimer_ready && previous) {
+    result = {
+      ...result,
+      disclaimer_version: previous.disclaimer_version,
+      disclaimer_accepted_at: previous.disclaimer_accepted_at,
+      disclaimer_ready: previous.disclaimer_ready,
+    };
+  }
+  if (result.main_goals.length === 0 && previous && previous.main_goals.length > 0) {
+    result = {
+      ...result,
+      main_goals: previous.main_goals,
+      goal: previous.main_goals[0] ?? result.goal,
+      main_goal: previous.main_goals[0] ?? result.main_goal,
+    };
+  }
+  return result;
 }
 
 function parseFocusAreas(value: unknown): FocusArea[] {
@@ -232,7 +361,17 @@ export function trainingLocationFromEquipment(equipment: EquipmentAccess): Train
 }
 
 export function focusAreasFromGoal(goal: Goal): FocusArea[] {
-  return goal === 'glutes_legs' ? ['glutes', 'legs'] : ['full_body'];
+  if (goal === 'glutes_legs') return ['glutes', 'legs'];
+  if (goal === 'upper_body') return ['upper'];
+  return ['full_body'];
+}
+
+export function focusAreasFromGoals(goals: Goal[]): FocusArea[] {
+  const areas = new Set<FocusArea>();
+  for (const goal of goals) {
+    for (const area of focusAreasFromGoal(goal)) areas.add(area);
+  }
+  return areas.size > 0 ? [...areas] : ['full_body'];
 }
 
 export function equipmentOptionsForLocation(location: TrainingLocation): EquipmentAccess[] {
@@ -244,9 +383,14 @@ export function equipmentOptionsForLocation(location: TrainingLocation): Equipme
 /** numeric columns arrive as strings. */
 function toProfile(row: unknown, disclaimerReady = false): Profile {
   const profile = row as Profile;
+  const mainGoals = parseMainGoals(profile.main_goals);
+  const fallbackGoal = parseGoal(profile.main_goal) ?? parseGoal(profile.goal);
+  const goals = mainGoals.length > 0 ? mainGoals : fallbackGoal ? [fallbackGoal] : [];
   return {
     ...profile,
-    main_goal: profile.main_goal ?? profile.goal ?? null,
+    goal: goals[0] ?? null,
+    main_goal: goals[0] ?? null,
+    main_goals: goals,
     training_location: profile.training_location ?? null,
     session_minutes: parseSessionMinutes(profile.session_minutes),
     focus_areas: parseFocusAreas(profile.focus_areas),
@@ -299,6 +443,22 @@ async function selectOwnProfile(
 
 async function loadProfile(userId: string | null): Promise<LoadedProfile> {
   if (!userId) return { userId, profile: null, error: null };
+  const withGoals = await selectOwnProfile(userId, PROFILE_COLUMNS_GOALS);
+  if (!withGoals.error) {
+    return {
+      userId,
+      profile: withGoals.data ? toProfile(withGoals.data, true) : null,
+      error: null,
+    };
+  }
+  const missingGoalsOptional =
+    isMissingMainGoals(withGoals.error) ||
+    isMissingDisclaimer(withGoals.error) ||
+    isMissingThemePreference(withGoals.error) ||
+    isMissingOnboardingV2(withGoals.error);
+  if (!missingGoalsOptional) {
+    return { userId, profile: null, error: withGoals.error.message ?? 'Couldn’t load profile' };
+  }
   const withDisclaimer = await selectOwnProfile(userId, PROFILE_COLUMNS_DISCLAIMER);
   if (!withDisclaimer.error) {
     return {
@@ -369,9 +529,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!userId) throw new Error('You need to be signed in.');
       const previousLevel = loaded?.userId === userId ? loaded.profile?.confidence_level : null;
       const completedAt = new Date().toISOString();
+      const mainGoals = userGoalsFromAnswers(answers);
+      const main = mainGoals[0] ?? answers.goal;
+      const legacyGoal = toLegacyGoal(main);
       const legacy = {
         user_id: userId,
-        goal: answers.goal,
+        goal: legacyGoal,
         experience: answers.experience,
         days_per_week: answers.days_per_week,
         equipment: answers.equipment,
@@ -382,7 +545,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       };
       const payload = {
         ...legacy,
-        main_goal: answers.goal,
+        goal: main,
+        main_goal: main,
+        main_goals: mainGoals,
         training_location: answers.training_location,
         session_minutes: answers.session_minutes,
         focus_areas: answers.focus_areas,
@@ -390,16 +555,64 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         streak_goal_weeks: answers.streak_goal_weeks,
         display_name: answers.display_name.trim() || null,
       };
-      const full = await supabase.from('profiles').upsert(payload).select(PROFILE_COLUMNS_V2).single();
       const previous = loaded?.userId === userId ? loaded.profile : null;
-      if (full.error && isMissingOnboardingV2(full.error)) {
-        const base = await supabase.from('profiles').upsert(legacy).select(PROFILE_COLUMNS).single();
-        if (base.error) throw base.error;
-        setLoaded({ userId, profile: keepDisclaimer(toProfile(base.data), previous), error: null });
-      } else if (full.error) {
-        throw full.error;
+      const withGoals = await supabase.from('profiles').upsert(payload).select(PROFILE_COLUMNS_GOALS).single();
+      if (!withGoals.error) {
+        setLoaded({
+          userId,
+          profile: keepDisclaimer(toProfile(withGoals.data, true), previous),
+          error: null,
+        });
+      } else if (isGoalConstraint(withGoals.error) && !isMissingMainGoals(withGoals.error)) {
+        const retry = await supabase
+          .from('profiles')
+          .upsert({ ...payload, goal: legacyGoal, main_goal: legacyGoal })
+          .select(PROFILE_COLUMNS_GOALS)
+          .single();
+        if (retry.error) throw retry.error;
+        setLoaded({
+          userId,
+          profile: {
+            ...keepDisclaimer(toProfile(retry.data, true), previous),
+            main_goals: mainGoals,
+            goal: main,
+            main_goal: main,
+          },
+          error: null,
+        });
+      } else if (isMissingMainGoals(withGoals.error) || isMissingOnboardingV2(withGoals.error)) {
+        const { main_goals: _ignored, ...withoutGoals } = payload;
+        const v2Payload = { ...withoutGoals, goal: legacyGoal, main_goal: legacyGoal };
+        const full = await supabase.from('profiles').upsert(v2Payload).select(PROFILE_COLUMNS_V2).single();
+        if (full.error && isMissingOnboardingV2(full.error)) {
+          const base = await supabase.from('profiles').upsert(legacy).select(PROFILE_COLUMNS).single();
+          if (base.error) throw base.error;
+          setLoaded({
+            userId,
+            profile: {
+              ...keepDisclaimer(toProfile(base.data), previous),
+              main_goals: mainGoals,
+              goal: main,
+              main_goal: main,
+            },
+            error: null,
+          });
+        } else if (full.error) {
+          throw full.error;
+        } else {
+          setLoaded({
+            userId,
+            profile: {
+              ...keepDisclaimer(toProfile(full.data), previous),
+              main_goals: mainGoals,
+              goal: main,
+              main_goal: main,
+            },
+            error: null,
+          });
+        }
       } else {
-        setLoaded({ userId, profile: keepDisclaimer(toProfile(full.data), previous), error: null });
+        throw withGoals.error;
       }
       if (previousLevel && previousLevel !== answers.confidence_level) {
         await recordLevelChange(previousLevel, answers.confidence_level).catch(() => {});
@@ -524,12 +737,20 @@ export function useProfile(): ProfileState {
 /** The saved quiz answers, or null if the quiz hasn't been completed. */
 export function getQuizAnswers(profile: Profile | null): QuizAnswers | null {
   if (!profile?.onboarding_completed_at) return null;
-  const { goal, experience, days_per_week, equipment, confidence, confidence_level } = profile;
+  const goals =
+    profile.main_goals.length > 0
+      ? profile.main_goals
+      : profile.goal
+        ? [profile.goal]
+        : [];
+  const goal = goals[0];
+  const { experience, days_per_week, equipment, confidence, confidence_level } = profile;
   if (!goal || !experience || !days_per_week || !equipment || !confidence || !confidence_level) {
     return null;
   }
   return {
     goal,
+    main_goals: goals,
     experience,
     days_per_week,
     equipment,
@@ -538,7 +759,7 @@ export function getQuizAnswers(profile: Profile | null): QuizAnswers | null {
     training_location:
       profile.training_location ?? trainingLocationFromEquipment(equipment),
     session_minutes: profile.session_minutes ?? DEFAULT_SESSION_MINUTES,
-    focus_areas: profile.focus_areas.length > 0 ? profile.focus_areas : focusAreasFromGoal(goal),
+    focus_areas: profile.focus_areas.length > 0 ? profile.focus_areas : focusAreasFromGoals(goals),
     streak_goal_weeks: profile.streak_goal_weeks ?? DEFAULT_STREAK_GOAL,
     display_name: profile.display_name ?? '',
   };

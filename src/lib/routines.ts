@@ -1,4 +1,4 @@
-import type { QuizAnswers } from '@/lib/profile';
+import { userGoalsFromAnswers, type Goal, type QuizAnswers } from '@/lib/profile';
 import {
   SLOT_EXERCISE_COLUMNS,
   toSlotExercise,
@@ -495,6 +495,34 @@ export function firstDayOfRoutine(routine: Routine): RoutineDay | null {
   return days[0] ?? null;
 }
 
+function routineGoalsForUserGoal(goal: Goal): RoutineGoal[] {
+  switch (goal) {
+    case 'glutes_legs':
+      return ['glutes_legs'];
+    case 'gym_confidence':
+    case 'return':
+      return ['confidence'];
+    case 'strength':
+    case 'muscle':
+    case 'upper_body':
+    case 'longevity':
+    case 'lose_fat':
+      return ['strength'];
+    default:
+      return ['general'];
+  }
+}
+
+function scoreUserGoals(routine: RoutineSummary, answers: QuizAnswers): number {
+  const goals = userGoalsFromAnswers(answers);
+  let score = 0;
+  goals.forEach((goal, index) => {
+    const weight = index === 0 ? 4 : index === 1 ? 2 : 1;
+    if (routineGoalsForUserGoal(goal).includes(routine.goal)) score += weight;
+  });
+  return score;
+}
+
 function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   let score = 0;
   if (routine.equipment === answers.equipment) score += 5;
@@ -505,9 +533,8 @@ function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   if (dayGap === 0) score += 6;
   else if (dayGap === 1) score += 1;
 
-  if (routine.goal === answers.goal) score += 3;
+  score += scoreUserGoals(routine, answers);
   if (routine.goal === 'confidence' && answers.confidence <= 2) score += 4;
-  if (routine.goal === 'glutes_legs' && answers.goal === 'glutes_legs') score += 2;
 
   if (answers.experience === 'new' && routine.difficulty === 'beginner') score += 3;
   if (answers.experience === 'some' && routine.difficulty !== 'experienced') score += 2;

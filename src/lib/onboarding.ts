@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { GOAL_LABELS, type QuizAnswers } from '@/lib/profile';
+import { GOAL_LABELS, userGoalsFromAnswers, type Goal, type QuizAnswers } from '@/lib/profile';
 import { usesWeight } from '@/lib/programmes';
 import {
   fetchActiveEnrolment,
@@ -26,6 +26,24 @@ export async function consumeOnboardingPaywall(): Promise<string | null> {
   return value;
 }
 
+function recommendationMatchesGoal(
+  routineGoal: Routine['goal'] | RoutineSummary['goal'],
+  goal: Goal
+): boolean {
+  if (goal === 'glutes_legs') return routineGoal === 'glutes_legs';
+  if (goal === 'gym_confidence' || goal === 'return') return routineGoal === 'confidence';
+  if (
+    goal === 'strength' ||
+    goal === 'muscle' ||
+    goal === 'upper_body' ||
+    goal === 'longevity' ||
+    goal === 'lose_fat'
+  ) {
+    return routineGoal === 'strength';
+  }
+  return routineGoal === 'general';
+}
+
 export function pickRecommendedRoutine(
   routines: RoutineSummary[],
   answers: QuizAnswers
@@ -38,8 +56,12 @@ export function describeRecommendation(routine: RoutineSummary, answers: QuizAns
   if (routine.id === FREE_STARTER_ROUTINE_ID && (answers.experience === 'new' || answers.confidence <= 2)) {
     reasons.push('You said the gym still feels new, so this starts in one quiet spot.');
   }
-  if (routine.goal === answers.goal) {
-    reasons.push(`It matches your goal: ${GOAL_LABELS[answers.goal].toLowerCase()}.`);
+  const goals = userGoalsFromAnswers(answers);
+  const matching = goals.filter((goal) => recommendationMatchesGoal(routine.goal, goal));
+  if (matching[0] === goals[0]) {
+    reasons.push(`It matches your main goal: ${GOAL_LABELS[matching[0]].toLowerCase()}.`);
+  } else if (matching[0]) {
+    reasons.push(`It fits ${GOAL_LABELS[matching[0]].toLowerCase()}, one of your goals.`);
   }
   if (routine.days_per_week === answers.days_per_week) {
     reasons.push(

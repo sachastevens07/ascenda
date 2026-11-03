@@ -28,6 +28,7 @@ export {
   DisclaimerSheet,
   SafetyNotice,
 } from './Disclaimer';
+export { GoalChipGroup } from './GoalChipGroup';
 
 export {
   AnchoredMenu as OverflowMenu,

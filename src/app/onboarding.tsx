@@ -20,6 +20,7 @@ import {
   Chip,
   DisclaimerBody,
   DisclaimerCheckbox,
+  GoalChipGroup,
   HeroImage,
   IconButton,
   ListRow,
@@ -52,8 +53,8 @@ import {
   EXPERIENCE_LEVELS,
   FOCUS_AREA_LABELS,
   FOCUS_AREAS,
-  GOALS,
-  GOAL_LABELS,
+  GOAL_COPY,
+  formatGoalsLabel,
   MAX_BODYWEIGHT_KG,
   MAX_DISPLAY_NAME,
   MIN_BODYWEIGHT_KG,
@@ -127,12 +128,6 @@ const EQUIPMENT_COPY: Record<EquipmentAccess, string> = {
   home: 'Little or no kit: bodyweight and maybe a band.',
 };
 
-const GOAL_COPY: Record<Goal, string> = {
-  strength: 'Lift heavier on the big moves.',
-  glutes_legs: 'Build a stronger lower body.',
-  general: 'Feel fitter and more capable all round.',
-};
-
 const EXPERIENCE_COPY: Record<Experience, string> = {
   new: 'Never, or hardly ever. That’s absolutely fine.',
   some: 'I’ve used weights before, on and off.',
@@ -146,16 +141,24 @@ const LOCATION_COPY: Record<TrainingLocation, string> = {
 };
 
 function withStoredLevel(draft: Draft): Draft {
+  let next = draft;
   if (draft.confidence && draft.confidence_level === undefined) {
-    return { ...draft, confidence_level: levelForConfidence(draft.confidence) };
+    next = { ...next, confidence_level: levelForConfidence(draft.confidence) };
   }
-  return draft;
+  if ((!next.main_goals || next.main_goals.length === 0) && next.goal) {
+    next = { ...next, main_goals: [next.goal] };
+  }
+  if (next.main_goals && next.main_goals.length > 0) {
+    next = { ...next, goal: next.main_goals[0] };
+  }
+  return next;
 }
 
 function isComplete(draft: Draft): draft is QuizAnswers {
   const ready = withStoredLevel(draft);
   return (
     ready.goal !== undefined &&
+    (ready.main_goals?.length ?? 0) > 0 &&
     ready.experience !== undefined &&
     ready.days_per_week !== undefined &&
     ready.equipment !== undefined &&
@@ -315,8 +318,12 @@ export default function OnboardingScreen() {
   }
 
   function confirmChoice() {
-    if (step === 'goal' && draft.goal !== undefined) choose('goal', draft.goal);
-    else if (step === 'experience' && draft.experience !== undefined) choose('experience', draft.experience);
+    if (step === 'goal' && ((draft.main_goals?.length ?? 0) > 0 || draft.goal !== undefined)) {
+      if (isEditing) moveTo('review', -1);
+      else goNext('goal');
+      return;
+    }
+    if (step === 'experience' && draft.experience !== undefined) choose('experience', draft.experience);
     else if (step === 'location' && draft.training_location !== undefined) {
       choose('training_location', draft.training_location);
     } else if (step === 'equipment' && draft.equipment !== undefined) choose('equipment', draft.equipment);
@@ -330,7 +337,7 @@ export default function OnboardingScreen() {
   }
 
   const choiceReady =
-    (step === 'goal' && draft.goal !== undefined) ||
+    (step === 'goal' && ((draft.main_goals?.length ?? 0) > 0 || draft.goal !== undefined)) ||
     (step === 'experience' && draft.experience !== undefined) ||
     (step === 'location' && draft.training_location !== undefined) ||
     (step === 'equipment' && draft.equipment !== undefined) ||
@@ -696,17 +703,28 @@ export default function OnboardingScreen() {
             )}
 
             {step === 'goal' && (
-              <ChoiceStep
-                title="What’s your main goal?"
-                subtitle="You can change this any time."
-                options={GOALS.map((value) => ({
-                  value,
-                  label: GOAL_LABELS[value],
-                  description: GOAL_COPY[value],
-                }))}
-                selected={draft.goal}
-                onChoose={(value) => patchAnswer('goal', value as Goal)}
-              />
+              <>
+                <Text style={[type.display, { color: colours.ink }]}>What are you working towards?</Text>
+                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                  Pick up to 3. Your first pick is your main goal.
+                </Text>
+                <GoalChipGroup
+                  selected={draft.main_goals ?? (draft.goal ? [draft.goal] : [])}
+                  onChange={(next) => {
+                    setDraft((current) => ({
+                      ...current,
+                      main_goals: next,
+                      goal: next[0],
+                    }));
+                    setError(null);
+                  }}
+                />
+                {draft.main_goals?.[0] || draft.goal ? (
+                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 16 }]}>
+                    {GOAL_COPY[(draft.main_goals?.[0] ?? draft.goal) as Goal]}
+                  </Text>
+                ) : null}
+              </>
             )}
 
             {step === 'insight-goal' && (
@@ -1126,7 +1144,11 @@ function ReviewStep({
 }) {
   const { colours, radius, shadow, type } = useTheme();
   const rows: { name: string; value: string; step: FlowStep }[] = [
-    { name: 'Goal', value: draft.goal ? GOAL_LABELS[draft.goal] : '', step: 'goal' },
+    {
+      name: 'Goals',
+      value: formatGoalsLabel(draft.main_goals ?? (draft.goal ? [draft.goal] : [])),
+      step: 'goal',
+    },
     {
       name: 'Experience',
       value: draft.experience ? EXPERIENCE_LABELS[draft.experience] : '',
