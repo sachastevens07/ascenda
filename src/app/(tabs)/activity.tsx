@@ -34,7 +34,14 @@ import {
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { getAchievementBadges, type AchievementBadge } from '@/lib/achievements';
+import {
+  countEarnedAwards,
+  fetchHideAchievements,
+  formatBadgeProgress,
+  getAchievementGroups,
+  nextBadgeInGroup,
+  type AchievementBadge,
+} from '@/lib/achievements';
 import {
   fetchFinishedSessionMeta,
   fetchStreakGoal,
@@ -55,7 +62,7 @@ import {
   toIso,
   type WeekPlanProgress,
 } from '@/lib/planner';
-import { formatKg, usesWeight } from '@/lib/programmes';
+import { formatKg } from '@/lib/programmes';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   fetchProgressSets,
@@ -107,6 +114,7 @@ type ActivityData = {
   weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
   hideStreak: boolean;
+  hideAchievements: boolean;
   backOnTrack: boolean;
   backOnTrackAt: string | null;
   enrolment: RoutineEnrolment | null;
@@ -125,15 +133,7 @@ const BAR_GAP = 8;
 const BAR_AREA_HEIGHT = 120;
 const MIN_BAR_SCALE = 4;
 
-const SESSION_IDS = ['session-1', 'week-1', 'session-5', 'session-10', 'session-25', 'session-50'];
-const STREAK_IDS = ['streak-4', 'streak-8', 'streak-12'];
-const PB_IDS = ['pb-1'];
-const PROGRAMME_IDS = ['routine-1'];
-const SESSION_THRESHOLDS = [1, 5, 10, 25, 50];
-const STREAK_THRESHOLDS = [4, 8, 12];
-const WEIGHT_THRESHOLDS = [10_000, 100_000, 500_000, 1_000_000];
-const GYM_THRESHOLDS = [1, 5, 10, 25];
-const PREVIEW_IDS = ['session-1', 'session-5', 'session-10'];
+const PREVIEW_IDS = ['session-1', 'gold-week', 'back-on-track'];
 const TABS = [
   { id: 'progress', label: 'Progress' },
   { id: 'photos', label: 'Photos' },
@@ -151,18 +151,6 @@ function describeBest(best: PersonalBest): string {
   }
 }
 
-function formatTotalKg(kg: number): string {
-  const rounded = kg >= 100 ? Math.round(kg) : Number(kg.toFixed(1));
-  return `${rounded.toLocaleString('en-GB')} kg`;
-}
-
-function totalWeightLiftedKg(sets: ProgressSet[]): number {
-  return sets.reduce((sum, set) => {
-    if (!usesWeight(set.equipment) || set.weightKg === null) return sum;
-    return sum + Math.abs(set.weightKg) * set.reps;
-  }, 0);
-}
-
 function pickBadges(badges: AchievementBadge[], ids: string[]): AchievementBadge[] {
   const byId = new Map(badges.map((badge) => [badge.id, badge]));
   return ids.flatMap((id) => {
@@ -171,32 +159,21 @@ function pickBadges(badges: AchievementBadge[], ids: string[]): AchievementBadge
   });
 }
 
-function nextStep(value: number, thresholds: number[]): { label: string; ratio: number } | null {
-  if (thresholds.length === 0) return null;
-  const next = thresholds.find((step) => value < step) ?? thresholds[thresholds.length - 1];
-  const ratio = next === 0 ? 0 : Math.min(1, value / next);
-  return { label: `${Math.round(value).toLocaleString('en-GB')} / ${next.toLocaleString('en-GB')}`, ratio };
-}
-
 function hoursTileValue(seconds: number): string {
   if (seconds <= 0) return '0';
   return formatTrainingHours(seconds).replace(/ h$/, '');
 }
 
-function medalMark(id: string): string | null {
-  const numbered = id.match(/^(?:session|streak|exercises|pb|routine)-(\d+)$/);
-  if (numbered) return numbered[1];
-  if (id === 'week-1') return '1';
-  return null;
-}
-
 function badgeIcon(id: string): IconName {
   if (id.startsWith('session-')) return 'barbell-outline';
-  if (id === 'week-1') return 'calendar-outline';
+  if (id === 'week-1' || id.startsWith('weeks-')) return 'calendar-outline';
+  if (id === 'gold-week') return 'sunny-outline';
   if (id === 'back-on-track') return 'heart-outline';
-  if (id.startsWith('streak-')) return 'flame-outline';
+  if (id === 'consistent') return 'flame-outline';
+  if (id === 'stretch-habit') return 'leaf-outline';
   if (id.startsWith('pb-')) return 'trophy-outline';
   if (id.startsWith('routine-')) return 'ribbon-outline';
+  if (id.startsWith('weight-')) return 'barbell-outline';
   if (id === 'equipment-barbell') return 'barbell-outline';
   if (id === 'equipment-machine') return 'hardware-chip-outline';
   if (id === 'equipment-cable') return 'git-network-outline';
@@ -232,7 +209,7 @@ export default function ActivityScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, restWeeks, backOnTrack] =
+          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, restWeeks, backOnTrack] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
@@ -242,6 +219,7 @@ export default function ActivityScreen() {
               fetchLatestCompletedEnrolment().catch(() => null),
               fetchCompletedEnrolmentCount().catch(() => 0),
               fetchHideStreak().catch(() => false),
+              fetchHideAchievements().catch(() => false),
               fetchRestWeekStarts().catch(() => new Set<string>()),
               fetchBackOnTrack().catch(() => ({ unlocked: false, at: null as string | null })),
             ]);
@@ -273,6 +251,7 @@ export default function ActivityScreen() {
             weekProgress,
             streak,
             hideStreak,
+            hideAchievements,
             backOnTrack: backOnTrack.unlocked,
             backOnTrackAt: backOnTrack.at,
             enrolment,
@@ -412,7 +391,7 @@ export default function ActivityScreen() {
     data.sessions.filter(sessionCountsTowardStreak).map((session) => session.date)
   );
   const gym = getGymUnlocked(data.sets);
-  const badges = getAchievementBadges({
+  const awardGroups = getAchievementGroups({
     sessions: data.sessions,
     sets: data.sets,
     streak: data.streak,
@@ -421,12 +400,9 @@ export default function ActivityScreen() {
     backOnTrack: data.backOnTrack,
     backOnTrackAt: data.backOnTrackAt,
   });
+  const badges = awardGroups.flatMap((group) => group.badges);
   const comparePhotos = data.photos.filter((photo) => compareIds.includes(photo.id));
-  const liftedKg = totalWeightLiftedKg(data.sets);
-  const gymProgress = nextStep(gym.exerciseCount, GYM_THRESHOLDS);
-  const weightTarget = WEIGHT_THRESHOLDS.find((step) => liftedKg < step) ?? WEIGHT_THRESHOLDS[WEIGHT_THRESHOLDS.length - 1];
-  const weightProgress = nextStep(liftedKg, WEIGHT_THRESHOLDS);
-  const awardsEarned = badges.filter((badge) => badge.unlocked).length;
+  const awardsEarned = countEarnedAwards(badges);
   const card = [styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow];
 
   const highlights = (
@@ -540,8 +516,12 @@ export default function ActivityScreen() {
               )}
             </View>
 
-            <SectionHeader title="Awards" actionLabel="Open" onAction={() => setTab('achievements')} />
-            <MedalRow badges={pickBadges(badges, PREVIEW_IDS)} />
+            {data.hideAchievements ? null : (
+              <>
+                <SectionHeader title="Awards" actionLabel="Open" onAction={() => setTab('achievements')} />
+                <MedalRow badges={pickBadges(badges, PREVIEW_IDS)} />
+              </>
+            )}
 
             {isPro ? (
               <View style={card}>
@@ -752,52 +732,15 @@ export default function ActivityScreen() {
         ) : null}
 
         {tab === 'achievements' ? (
-          <>
-            {highlights}
-            <AwardGroup
-              title="Completed sessions"
-              progress={nextStep(data.sessions.length, SESSION_THRESHOLDS)}
-              badges={pickBadges(badges, SESSION_IDS)}
-            />
-            <AwardGroup
-              title="Weekly streaks"
-              progress={nextStep(data.streak.current, STREAK_THRESHOLDS)}
-              badges={pickBadges(badges, STREAK_IDS)}
-            />
-            <AwardGroup
-              title="Weight lifted"
-              progress={
-                weightProgress
-                  ? {
-                      label: `${formatTotalKg(liftedKg)} towards ${formatTotalKg(weightTarget)}`,
-                      ratio: weightProgress.ratio,
-                    }
-                  : null
-              }
-              badges={[]}
-              empty="Ticked weighted sets add up here. Badge tiers come next."
-            />
-            <AwardGroup
-              title="Personal bests"
-              progress={nextStep(bests.length, [1, 10, 50, 100])}
-              badges={pickBadges(badges, PB_IDS)}
-            />
-            <AwardGroup
-              title="Programmes"
-              progress={nextStep(
-                data.completedEnrolment ? Math.max(1, data.completedRoutines) : data.completedRoutines,
-                [1, 3, 10]
-              )}
-              badges={pickBadges(badges, PROGRAMME_IDS)}
-            />
-            <AwardGroup
-              title="Gym unlocked"
-              progress={
-                gymProgress ? { label: `${gymProgress.label} exercises`, ratio: gymProgress.ratio } : null
-              }
-              badges={gym.badges}
-            />
-          </>
+          data.hideAchievements ? (
+            <Text style={[type.body, { color: colours.inkMuted }]}>
+              Awards are hidden. You can turn them back on in Profile.
+            </Text>
+          ) : (
+            awardGroups.map((group) => (
+              <AwardGroup key={group.family} title={group.title} badges={group.badges} />
+            ))
+          )
         ) : null}
       </ScrollView>
 
@@ -959,52 +902,35 @@ function RoutineReviewCard({
   );
 }
 
-function AwardGroup({
-  title,
-  progress,
-  badges,
-  empty,
-}: {
-  title: string;
-  progress: { label: string; ratio: number } | null;
-  badges: AchievementBadge[];
-  empty?: string;
-}) {
-  const { type, colours } = useTheme();
+function AwardGroup({ title, badges }: { title: string; badges: AchievementBadge[] }) {
+  const next = nextBadgeInGroup(badges);
   return (
     <View style={styles.awardGroup}>
       <SectionHeader title={title} />
-      {progress ? (
-        <Text style={[type.caption, { color: colours.inkMuted, marginTop: -8 }]}>{progress.label}</Text>
-      ) : null}
-      {badges.length > 0 ? (
-        <>
-          <Text style={[type.caption, { color: colours.inkMuted }]}>Most recent</Text>
-          <MedalRow badges={badges} />
-        </>
-      ) : empty ? (
-        <Text style={[type.bodySm, { color: colours.inkMuted }]}>{empty}</Text>
-      ) : null}
+      <MedalRow badges={badges} nextId={next?.id ?? null} />
     </View>
   );
 }
 
-function MedalRow({ badges }: { badges: AchievementBadge[] }) {
+function MedalRow({ badges, nextId = null }: { badges: AchievementBadge[]; nextId?: string | null }) {
   const { colours, type } = useTheme();
   return (
     <View style={styles.badgeGrid}>
       {badges.map((badge) => {
-        const mark = medalMark(badge.id);
+        const progress = badge.id === nextId ? formatBadgeProgress(badge) : null;
         return (
-          <View key={badge.id} style={styles.badgeCell}>
-            <BadgeMark unlocked={badge.unlocked} label={badge.title} mark={mark ?? undefined}>
-              {mark ? null : (
-                <Ionicons
-                  name={badgeIcon(badge.id)}
-                  size={22}
-                  color={badge.unlocked ? colours.onAccent : colours.inkMuted}
-                />
-              )}
+          <Pressable
+            key={badge.id}
+            style={styles.badgeCell}
+            onPress={() => showBadgeDetail(badge)}
+            accessibilityRole="button"
+            accessibilityLabel={badge.unlocked ? badge.title : `${badge.title}, locked`}>
+            <BadgeMark unlocked={badge.unlocked} label={badge.title}>
+              <Ionicons
+                name={badgeIcon(badge.id)}
+                size={22}
+                color={badge.unlocked ? colours.onAccent : colours.inkMuted}
+              />
             </BadgeMark>
             <Text
               style={[
@@ -1018,14 +944,28 @@ function MedalRow({ badges }: { badges: AchievementBadge[] }) {
               numberOfLines={2}>
               {badge.title}
             </Text>
-            <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
-              {badge.unlocked ? '1/1' : '0/1'}
-            </Text>
-          </View>
+            {progress ? (
+              <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>{progress}</Text>
+            ) : badge.unlocked && badge.unlockedOn ? (
+              <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
+                {formatShortDate(parseDate(badge.unlockedOn))}
+              </Text>
+            ) : null}
+          </Pressable>
         );
       })}
     </View>
   );
+}
+
+function showBadgeDetail(badge: AchievementBadge): void {
+  const when =
+    badge.unlocked && badge.unlockedOn
+      ? `Earned ${formatShortDate(parseDate(badge.unlockedOn))}.`
+      : badge.unlocked
+        ? 'Earned.'
+        : 'Not earned yet.';
+  showDialog(badge.title, `${badge.detail} ${when}`);
 }
 
 function describeChange(history: { kg: number }[], assisted: boolean): string {

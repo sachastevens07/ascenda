@@ -35,6 +35,7 @@ import {
   setWeeklySummaryEnabled,
   type ReminderPrefs,
 } from '@/lib/reminders';
+import { fetchHideAchievements, saveHideAchievements } from '@/lib/achievements';
 import { isAnalyticsEnabled, track } from '@/lib/analytics';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
@@ -107,6 +108,7 @@ export default function ProfileScreen() {
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [showAnswers, setShowAnswers] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
+  const [hideAchievements, setHideAchievements] = useState(false);
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
   const [handOffPreview, setHandOffPreview] = useState(false);
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
@@ -131,6 +133,11 @@ export default function ProfileScreen() {
       fetchHideStreak()
         .then((hidden) => {
           if (isCurrent) setHideStreak(hidden);
+        })
+        .catch(() => {});
+      fetchHideAchievements()
+        .then((hidden) => {
+          if (isCurrent) setHideAchievements(hidden);
         })
         .catch(() => {});
       fetchWelcomeBackPreview()
@@ -414,6 +421,21 @@ export default function ProfileScreen() {
             setHideStreak(next);
             saveHideStreak(next).catch((error) => {
               setHideStreak(!next);
+              showDialog(
+                'Couldn’t save that',
+                error instanceof Error ? error.message : 'Check your connection and try again.'
+              );
+            });
+          }}
+        />
+        <SettingsRow
+          title="Show awards"
+          subtitle={hideAchievements ? 'Hidden on Activity' : 'Shown on Activity'}
+          onPress={() => {
+            const next = !hideAchievements;
+            setHideAchievements(next);
+            saveHideAchievements(next).catch((error) => {
+              setHideAchievements(!next);
               showDialog(
                 'Couldn’t save that',
                 error instanceof Error ? error.message : 'Check your connection and try again.'

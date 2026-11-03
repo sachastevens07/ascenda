@@ -25,11 +25,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **H5. PostHog retention analytics (3 Nov 2026).** Official `posthog-react-native` client. Named events only (onboarding, disclaimer, paywall, trial, session start/complete, set tick, missed week, rest week, streak repair, welcome-back, reminders, routine complete, next routine). Identify by Supabase user id and plan (`free` / `pro` / `trial`). No health data, photos or free text. No-op without an API key. Session replay and surveys off. `learn_article_opened` is a helper for N6. Dashboards are built in the PostHog EU project, not in the app. No SQL.
 
+**H6. Achievements rework (3 Nov 2026).** Awards tab groups: First times, Sessions (1/5/10/25/50/100/250), Weeks trained (4/12/26/52 lifetime), Personal bests (1/10/50), Programmes (1/3/10), Gym unlocked, Weight lifted (1,000 / 10,000 / 50,000 kg). First times include first session, first PB, first full week, Gold week, Back on track, Consistent (8-week run), Stretch habit (10 stretch sessions). Old 100k to 1M weight tiers and current-streak 4/8/12 badges are gone. Progress text only on the next locked badge in a group. Profile → Training → Show awards. `supabase/achievements_h6.sql` adds `profiles.hide_achievements`. D7 still owns tier rings. No new libraries.
+
 ### In progress
 None.
 
 ### Next step
-**H6** achievements rework. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
+**H7** progress photos locked down. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -68,7 +70,7 @@ None.
 - Away 3+ weeks offers a lighter routine, preferring Gym Confidence: 6 weeks. Pro lighter plans still open the paywall if she is on Free.
 - Back on track is repeatable as a session win; the Awards badge unlocks once. First unlock is stored in `milestones` if that table exists; repeats stay on-device.
 - Monday / 1st / start of term (1–14 Jan, Apr, Sep) only change the card line. They do not show the card to people who trained last week.
-- H5 now sends `welcome_back_shown` / `welcome_back_completed`. H6 will restyle the badge.
+- H5 now sends `welcome_back_shown` / `welcome_back_completed`. H6 shows Back on track in First times. D7 will restyle badge icons and tier rings.
 - H3 reuses `expo-notifications` already in the project (rest timer and trial-ending). No new library. Time picker is hourly chips (6 am to 9 pm) plus last-session hour, not a date-time wheel. AGENTS.md still says ask before a notifications library.
 - Session reminders start off until she taps Turn on or enables them in Profile. Weekly summary and offers also default off. Offers and news never send a push.
 - Sunday summary fires at 10:00 local time. Default session time is last finished session hour, else 6:00 pm.
@@ -93,8 +95,10 @@ None.
 - H5: copy `.env.example` keys into `.env`: `EXPO_PUBLIC_POSTHOG_API_KEY` (project token starting `phc_`, from PostHog → Project settings) and `EXPO_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com`. Restart Expo. The project API key is public by design; never put a personal API key in the app. Leave them empty and the app still opens with no events sent.
 - H5 tester: with tester tools on, Profile → Developer → **Send a test analytics event**. Then in PostHog → Activity look for `dev_test_event` (can take a few seconds). Sign in so events attach to your user id.
 - H5 dashboards (create once in the PostHog EU project): activation = people with 2+ `session_completed` in 7 days of first seen, and 3+ in 14 days; D1/D7/D30 retention on `Application Opened`; return after first miss = `planned_week_missed` then `session_completed`; routine completion = `routine_completed` / started; trial to paid = `trial_started` then person `plan` = `pro` without trial; C2 free path = `onboarding_completed` + `paywall_viewed` (reason `onboarding`) without `trial_started`, then `session_completed`, later `trial_started` or Pro.
+- Paste `supabase/achievements_h6.sql` so hide-awards follows her to a new phone. Until then it still works on this device (AsyncStorage). Workout history is never touched.
+- H6: badges are computed from sessions, sets, enrolments and the existing `milestones` Back on track row. No `achievement_definitions` / `user_achievements` tables (those were S6). First session / first PB also appear under Sessions and Personal bests. Weeks trained uses lifetime weeks, not the current run. Consistent uses the best run of 8, rest weeks allowed. Stretch habit counts finished stretch sessions, not only 10+ minute ones. Weight uses ticked weighted set volume. Gym unlocked badges stay as they were (equipment, zone, 1/5/10/25 exercises). D7 still needs bronze/silver/gold/platinum rings and a proper sheet. Photos stay as their own Activity tab until H7.
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. H4 **done**. H5 **done**. Next **H6**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. H4 **done**. H5 **done**. H6 **done**. Next **H7**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -147,7 +151,7 @@ Leftovers that are not a missing R task: Sign in with Apple, lbs setting (**D8**
 | **S3** Pro badge and locked previews | **Done** | `ProBadge` must still read `routine.is_pro`. |
 | **S4** Change or stop a routine | **Done** | Switch / End on routine detail and Home ⋯. |
 | **S5** Streak changes | **Done, superseded by H1** | Rest-week passes already removed in the UI. `supabase/remove_rest_passes.sql` **not run**. H1 brings planned rest weeks back (new columns, leftover rest_passes columns left in place). |
-| **S6** Tiered achievements | **Skipped, superseded by H6 / D7** | Current medals stay until H6/D7. |
+| **S6** Tiered achievements | **Skipped, superseded by H6 / D7** | H6 badge set is in. D7 still owns rings and the Awards visual pass. |
 | **S7** Sticky dates and anchored menus | **Done** | Keep. |
 | **S8** Stretches | **Done**; layout **D4** later | 7 stretch routines. Covers reuse gym photos (**D2**). `supabase/stretches.sql` **not run**. |
 | **S9** Paths, checkpoints, challenges, rings | **Done; partly superseded** | Photo prompts stay until **H7**. Challenges use fixed dates until **H8**. `supabase/paths.sql` **not run**. |
@@ -183,7 +187,7 @@ Leftovers that are not a missing R task: Sign in with Apple, lbs setting (**D8**
 
 **Group 2:** N3 **done** (3 Nov 2026). N1 **done**. N4 **done**.
 
-**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4 **done** (3 Nov 2026). H5 **done** (3 Nov 2026). H6, H7, H8.
+**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4 **done** (3 Nov 2026). H5 **done** (3 Nov 2026). H6 **done** (3 Nov 2026). H7, H8.
 
 **Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
 
@@ -277,7 +281,7 @@ Also still on the user's side:
 
 ## Next step
 
-**H6** achievements rework. **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
+**H7** progress photos locked down. **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped (replaced by H6). TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
 
 Still not built (later): Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready. PostHog (H5) is in the app; add the project key in `.env` and build the dashboards in PostHog.
 

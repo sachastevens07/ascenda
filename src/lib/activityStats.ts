@@ -64,6 +64,8 @@ export type WeeklyStreak = {
   lastWeek: StreakWeek | null;
   thisWeekStatus: StreakWeekStatus;
   goalReached: boolean;
+  /** Monday of the first gold week, if any. */
+  firstGoldMonday: string | null;
 };
 
 export function nextStreakGoal(goal: StreakGoal): StreakGoal | null {
@@ -316,6 +318,7 @@ export function getWeeklyStreak(
     lastWeek,
     thisWeekStatus,
     goalReached: countCurrentRun(history, thisMondayIso) >= goal,
+    firstGoldMonday: history.find((week) => week.status === 'gold')?.monday ?? null,
   };
 }
 
