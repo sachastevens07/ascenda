@@ -528,10 +528,12 @@ export default function ActivityScreen() {
             </View>
 
             {isPro ? (
-              <View style={card}>
-                <Text style={[type.title, { color: colours.ink }]}>Sessions per week</Text>
-                <WeeklyBars weeks={weeks} />
-              </View>
+              weeks.filter((week) => week.count > 0).length >= 2 ? (
+                <View style={card}>
+                  <Text style={[type.title, { color: colours.ink }]}>Sessions per week</Text>
+                  <WeeklyBars weeks={weeks} />
+                </View>
+              ) : null
             ) : (
               <ProCard
                 reason="charts"
@@ -540,7 +542,7 @@ export default function ActivityScreen() {
               />
             )}
 
-            {isPro && lift ? (
+            {isPro && lift && history.length >= 2 ? (
               <View style={card}>
                 <Text style={[type.title, { color: colours.ink }]}>
                   {lift.assisted ? 'Help over time' : 'Weight over time'}
@@ -813,67 +815,69 @@ function CurrentRoutineCard({
     ? Math.max(1, enrolment.routine.length_weeks * enrolment.routine.days_per_week)
     : 1;
   const doneDays = roadmap.reduce((count, item) => count + item.days.filter((day) => day.done).length, 0);
+  const currentWeek =
+    roadmap.find((item) => item.current) ?? roadmap.find((item) => item.weekNumber === week) ?? null;
+
+  function openPlan() {
+    if (enrolment) {
+      router.push({ pathname: '/routines/[id]', params: { id: enrolment.routine.id } } as Href);
+      return;
+    }
+    router.push('/(tabs)/programmes' as Href);
+  }
 
   return (
-    <Pressable
-      onPress={() => {
-        if (enrolment) {
-          router.push({ pathname: '/routines/[id]', params: { id: enrolment.routine.id } } as Href);
-          return;
-        }
-        router.push('/(tabs)/programmes' as Href);
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={enrolment ? enrolment.routine.name : 'Start a routine'}
-      style={({ pressed }) => [pressed && styles.pressed]}>
-      <View style={[{ borderRadius: radius.lg }, shadow]}>
-        <View style={[styles.routineCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
-          <View style={[styles.routineMark, { backgroundColor: colours.accent }]}>
-            <Ionicons name="barbell-outline" size={22} color={colours.onAccent} />
-          </View>
-          <View style={[styles.flex, styles.routineBody]}>
-            <View style={styles.routineTitleRow}>
-              <Text style={[type.body, { color: colours.ink, fontWeight: '700', flex: 1 }]} numberOfLines={1}>
-                {enrolment ? enrolment.routine.name : 'No routine yet'}
-              </Text>
-              {showProBadge ? <ProBadge locked compact /> : null}
+    <View>
+      <Pressable
+        onPress={openPlan}
+        accessibilityRole="button"
+        accessibilityLabel={enrolment ? enrolment.routine.name : 'Start a routine'}
+        style={({ pressed }) => [pressed && styles.pressed]}>
+        <View style={[{ borderRadius: radius.lg }, shadow]}>
+          <View style={[styles.routineCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+            <View style={[styles.routineMark, { backgroundColor: colours.brand }]}>
+              <Ionicons name="barbell-outline" size={22} color={colours.onBrand} />
             </View>
-            <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
-              {enrolment
-                ? `Week ${week} of ${enrolment.routine.length_weeks}`
-                : 'Start one from Programmes'}
-            </Text>
-            {enrolment ? <ProgressBar progress={doneDays / totalDays} style={{ marginTop: 8 }} /> : null}
+            <View style={[styles.flex, styles.routineBody]}>
+              <View style={styles.routineTitleRow}>
+                <Text style={[type.body, { color: colours.ink, fontWeight: '700', flex: 1 }]} numberOfLines={1}>
+                  {enrolment ? enrolment.routine.name : 'No routine yet'}
+                </Text>
+                {showProBadge ? <ProBadge locked compact /> : null}
+              </View>
+              <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
+                {enrolment
+                  ? `Week ${week} of ${enrolment.routine.length_weeks}`
+                  : 'Start one from Programmes'}
+              </Text>
+              {enrolment ? <ProgressBar progress={doneDays / totalDays} style={{ marginTop: 8 }} /> : null}
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={colours.brand} />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colours.accent} />
         </View>
-      </View>
-      {enrolment && isPro
-        ? roadmap.map((item) => (
-            <View key={item.weekNumber} style={[styles.roadmapWeek, { borderTopColor: colours.border }]}>
-              <Text
-                style={[
-                  type.bodySm,
-                  { color: item.current ? colours.brand : colours.ink, fontWeight: '600' },
-                ]}>
-                Week {item.weekNumber}
-                {item.current ? ' · now' : ''}
-                {item.checkpoint ? ' · checkpoint' : ''}
-              </Text>
-              {item.days.map((day) => (
-                <View key={day.id} style={styles.roadmapDay}>
-                  <Ionicons
-                    name={day.done ? 'checkmark-circle' : 'ellipse-outline'}
-                    size={16}
-                    color={day.done ? colours.success : colours.border}
-                  />
-                  <Text style={[type.caption, { color: colours.inkMuted }]}>{day.name}</Text>
-                </View>
-              ))}
+      </Pressable>
+      {enrolment && currentWeek ? (
+        <View style={[styles.roadmapWeek, { borderTopColor: colours.border }]}>
+          <Text style={[type.bodySm, { color: colours.brand, fontWeight: '600' }]}>
+            This week
+            {currentWeek.checkpoint ? ' · checkpoint' : ''}
+          </Text>
+          {currentWeek.days.map((day) => (
+            <View key={day.id} style={styles.roadmapDay}>
+              <Ionicons
+                name={day.done ? 'checkmark-circle' : 'ellipse-outline'}
+                size={16}
+                color={day.done ? colours.success : colours.border}
+              />
+              <Text style={[type.caption, { color: colours.inkMuted }]}>{day.name}</Text>
             </View>
-          ))
-        : null}
-    </Pressable>
+          ))}
+          <TextButton label="See full plan" onPress={openPlan} style={styles.inlineAction} />
+        </View>
+      ) : enrolment ? (
+        <TextButton label="See full plan" onPress={openPlan} style={styles.inlineAction} />
+      ) : null}
+    </View>
   );
 }
 

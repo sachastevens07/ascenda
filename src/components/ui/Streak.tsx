@@ -64,8 +64,6 @@ export function RestWeekBanner({ style }: { style?: StyleProp<ViewStyle> }) {
 
 export function StreakCard({ streak }: { streak: WeeklyStreak }) {
   const { colours, radius, shadow, type, spacing } = useTheme();
-  const goldLabel =
-    streak.goldWeeks === 1 ? '1 gold week' : `${streak.goldWeeks} gold weeks`;
   const runLabel =
     streak.current === 1 ? '1 week' : `${streak.current} weeks`;
   const trainedLabel =
@@ -85,6 +83,9 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
       <Text style={[type.title, { color: colours.ink, marginTop: 6 }]}>Current run {runLabel}</Text>
       <Text style={[type.body, { color: colours.inkMuted, marginTop: 4 }]}>
         Weeks trained {trainedLabel}
+      </Text>
+      <Text style={[type.body, { color: colours.inkMuted, marginTop: 2 }]}>
+        Gold weeks {streak.goldWeeks}
       </Text>
 
       <View
@@ -115,9 +116,10 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
 
       <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.md }]}>
         {restBankCopy(streak)}
-        {streak.goldWeeks > 0 ? ` · ${goldLabel}` : ''}
       </Text>
-      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 6 }]}>{describeStreak(streak)}</Text>
+      {streak.current === 0 ? (
+        <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 6 }]}>{describeStreak(streak)}</Text>
+      ) : null}
     </View>
   );
 }
