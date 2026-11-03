@@ -5,7 +5,7 @@ Handoff notes. Read `AGENTS.md` first, then this file. Current phase is **v2.2**
 Git: `main`. SQL is still pasted by hand; this repo cannot see the remote database. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise. S12 is already built. Ask before **H1**, and before adding any font or notifications library.
 
 ### Done
-**D1. Global design fixes (3 Nov 2026).** Runtime `showDevTools` (off by default; long-press Profile version five times). Primary buttons are plum `brand`. Tags are sentence case, max 2 per card, one line. Routines list is unique by id. Old `/programme` screen redirects to Programmes. Kept both One spot routines. No SQL. No new libraries.
+**D1. Global design fixes (3 Nov 2026).** Runtime `showDevTools` (off by default; long-press Profile version once). Primary buttons are plum `brand`. Tags are sentence case, max 2 per card, one line. Routines list is unique by id. Old `/programme` screen redirects to Programmes. Kept both One spot routines. No SQL. No new libraries.
 
 ### In progress
 None.
@@ -27,7 +27,7 @@ None.
 ### Setup notes
 - No migration to run.
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
-- To turn tester tools on: Profile, scroll to **Version 1.0.0**, long-press it five times within about 8 seconds.
+- To turn tester tools on: Profile, scroll to **Version 1.0.0**, press and hold it until the dialog appears. Hold again to turn them off. (AGENTS.md suggested five long-presses; a single hold is what we shipped after phone testing.)
 
 **v2.2 Group 1:** D1 **done**. N5 next.
 

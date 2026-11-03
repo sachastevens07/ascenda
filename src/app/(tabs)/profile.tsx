@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
@@ -69,7 +69,6 @@ export default function ProfileScreen() {
   const subscription = useSubscription();
   const { showDevTools, setShowDevTools } = useDevTools();
   const answers = getQuizAnswers(profile);
-  const versionPresses = useRef<number[]>([]);
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -173,11 +172,6 @@ export default function ProfileScreen() {
   }
 
   function handleVersionLongPress() {
-    const now = Date.now();
-    versionPresses.current = versionPresses.current.filter((time) => now - time < 8000);
-    versionPresses.current.push(now);
-    if (versionPresses.current.length < 5) return;
-    versionPresses.current = [];
     const next = !showDevTools;
     setShowDevTools(next);
     showDialog(
@@ -339,7 +333,8 @@ export default function ProfileScreen() {
 
       <Pressable
         onLongPress={handleVersionLongPress}
-        delayLongPress={400}
+        delayLongPress={500}
+        hitSlop={16}
         accessibilityRole="text"
         accessibilityLabel={`App version ${appVersion}`}
         style={styles.version}>
