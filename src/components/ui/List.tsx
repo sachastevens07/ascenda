@@ -105,41 +105,34 @@ export function ListRow({
 export function StickyDayHeader({
   title,
   today = false,
-  onRest,
   onAdd,
   style,
 }: {
   title: string;
   today?: boolean;
-  onRest?: () => void;
   onAdd?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, type } = useTheme();
   const ink = today ? colours.onBrand : colours.inkMuted;
-  return (
+  const body = (
     <View
       style={[
         styles.sticky,
-        today
-          ? { backgroundColor: colours.ink }
-          : { backgroundColor: colours.surfaceMuted, borderBottomColor: colours.border },
+        today ? { backgroundColor: colours.ink } : { backgroundColor: colours.surfaceMuted },
         style,
       ]}>
-      <Text style={[type.title3, { color: ink, flex: 1 }]} numberOfLines={1}>
+      <Text style={[type.eyebrow, { color: ink, flex: 1 }]} numberOfLines={1}>
         {title}
       </Text>
-      {onRest ? (
-        <Pressable onPress={onRest} accessibilityRole="button" accessibilityLabel="Rest day" hitSlop={8}>
-          <Ionicons name="moon-outline" size={22} color={ink} />
-        </Pressable>
-      ) : null}
-      {onAdd ? (
-        <Pressable onPress={onAdd} accessibilityRole="button" accessibilityLabel="Add workout" hitSlop={8}>
-          <Ionicons name="add" size={24} color={ink} />
-        </Pressable>
-      ) : null}
+      {onAdd ? <Ionicons name="add" size={18} color={ink} /> : null}
     </View>
+  );
+  if (!onAdd) return body;
+  return (
+    <Pressable onPress={onAdd} accessibilityRole="button" accessibilityLabel={`Add to ${title}`}>
+      {body}
+    </Pressable>
   );
 }
 
@@ -169,13 +162,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sticky: {
-    minHeight: 48,
+    height: 32,
     paddingHorizontal: 20,
-    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
     zIndex: 2,
     elevation: 3,
   },

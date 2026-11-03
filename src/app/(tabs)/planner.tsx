@@ -38,6 +38,7 @@ import {
   clearPlannerDay,
   describePlannerError,
   formatAgendaHeading,
+  formatStickyDayHeading,
   loadPlannerRange,
   monthsInHorizon,
   movePlannedSession,
@@ -566,8 +567,8 @@ export default function PlannerScreen() {
         </View>
       ) : (
         <>
-          {restWeekStarts.has(weekStartIso) ? (
-            <RestWeekBanner style={{ marginHorizontal: 16, marginBottom: 8 }} />
+          {viewMode === 'month' && restWeekStarts.has(weekStartIso) ? (
+            <RestWeekBanner style={{ marginBottom: 8, borderRadius: 0 }} />
           ) : null}
           {weekPlanned.length > 0 ? (
             <Text style={[type.caption, { color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }]}>
@@ -593,25 +594,37 @@ export default function PlannerScreen() {
           onScrollToIndexFailed={() => {}}
           contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}
           renderSectionHeader={({ section }) => (
-            <StickyDayHeader title={formatAgendaHeading(section.day)} today={section.day.isToday} />
-          )}
-          renderItem={({ item }) => (
-            <AgendaDay
-              day={item}
-              moving={movingId !== null && item.plan?.id === movingId}
-              reminderLabel={
-                reminderPrefs?.sessionReminders &&
-                item.plan?.status === 'planned' &&
-                !item.completed &&
-                (item.kind === 'routine' || item.kind === 'custom')
-                  ? formatReminderClock(reminderTimeForDay(item, reminderPrefs))
-                  : null
+            <DaySectionHeader
+              day={section.day}
+              restWeekLead={isRestWeekLead(section.day, agendaDays, restWeekStarts)}
+              onAdd={
+                section.day.kind === 'empty'
+                  ? (from) => openDay(section.day, from)
+                  : undefined
               }
-              onPress={(from) => openDay(item, from)}
-              onReminderPress={(from) => openReminderTime(item, from)}
-              disabled={busy}
             />
           )}
+          renderItem={({ item }) =>
+            item.kind === 'empty' ? (
+              <View />
+            ) : (
+              <AgendaDay
+                day={item}
+                moving={movingId !== null && item.plan?.id === movingId}
+                reminderLabel={
+                  reminderPrefs?.sessionReminders &&
+                  item.plan?.status === 'planned' &&
+                  !item.completed &&
+                  (item.kind === 'routine' || item.kind === 'custom')
+                    ? formatReminderClock(reminderTimeForDay(item, reminderPrefs))
+                    : null
+                }
+                onPress={(from) => openDay(item, from)}
+                onReminderPress={(from) => openReminderTime(item, from)}
+                disabled={busy}
+              />
+            )
+          }
           ListFooterComponent={
             <View style={styles.footer}>
               {!range.enrolment ? (
@@ -802,6 +815,43 @@ export default function PlannerScreen() {
   );
 }
 
+function weekStartIsoOf(iso: string): string {
+  return toIso(startOfWeekMonday(parseIsoDate(iso)));
+}
+
+function isRestWeekLead(
+  day: PlannerDayView,
+  agendaDays: PlannerDayView[],
+  restWeekStarts: Set<string>
+): boolean {
+  const start = weekStartIsoOf(day.iso);
+  if (!restWeekStarts.has(start)) return false;
+  const first = agendaDays.find((item) => weekStartIsoOf(item.iso) === start);
+  return first?.iso === day.iso;
+}
+
+function DaySectionHeader({
+  day,
+  restWeekLead,
+  onAdd,
+}: {
+  day: PlannerDayView;
+  restWeekLead: boolean;
+  onAdd?: (from: AnchorHandle | null) => void;
+}) {
+  const headerRef = useRef<AnchorHandle>(null);
+  return (
+    <View ref={headerRef} collapsable={false}>
+      {restWeekLead ? <RestWeekBanner style={{ borderRadius: 0 }} /> : null}
+      <StickyDayHeader
+        title={formatStickyDayHeading(day)}
+        today={day.isToday}
+        onAdd={onAdd ? () => onAdd(headerRef.current) : undefined}
+      />
+    </View>
+  );
+}
+
 function AgendaDay({
   day,
   moving,
@@ -820,7 +870,7 @@ function AgendaDay({
   const { colours, type, radius } = useTheme();
   const rowRef = useRef<AnchorHandle>(null);
   const chipRef = useRef<AnchorHandle>(null);
-  const quiet = day.kind === 'empty' || day.kind === 'rest';
+  const quiet = day.kind === 'rest';
   const eyebrow = day.kind === 'routine' ? 'Routine' : day.kind === 'custom' ? 'Custom' : undefined;
 
   return (
@@ -835,11 +885,9 @@ function AgendaDay({
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`${formatAgendaHeading(day)}. ${day.title ?? (day.kind === 'rest' ? 'Rest day' : 'Tap to add')}`}>
+      accessibilityLabel={`${formatAgendaHeading(day)}. ${day.title ?? (day.kind === 'rest' ? 'Rest day' : 'Nothing planned')}`}>
       {quiet ? (
-        <Text style={[type.bodySm, { color: colours.inkMuted }]}>
-          {day.kind === 'rest' ? 'Rest day' : 'Tap to add'}
-        </Text>
+        <Text style={[type.bodySm, { color: colours.inkMuted }]}>Rest day</Text>
       ) : (
         <ListRow
           eyebrow={eyebrow}
@@ -1041,10 +1089,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   quietRow: {
-    minHeight: 44,
+    minHeight: 36,
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 6,
   },
   sessionRow: {
     backgroundColor: 'transparent',

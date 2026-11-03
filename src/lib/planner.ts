@@ -223,6 +223,12 @@ export function formatAgendaHeading(day: PlannerDayView): string {
   return day.isToday ? `Today · ${label}` : label;
 }
 
+/** Compact sticky header: “Wed 4 Nov”. Eyebrow style uppercases it. */
+export function formatStickyDayHeading(day: PlannerDayView): string {
+  const date = parseIsoDate(day.iso);
+  return `${WEEKDAYS[date.getDay()]} ${day.dayNumber} ${MONTHS[date.getMonth()]}`;
+}
+
 export function formatWeekRange(weekStart: Date): string {
   const sunday = addDays(weekStart, 6);
   const sameMonth =
