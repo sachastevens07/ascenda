@@ -1,71 +1,122 @@
 # Progress
 
-Handoff notes for the next agent. Read `AGENTS.md` first (brief + working rules), then this file.
+Handoff notes. Read `AGENTS.md` first, then this file. Current phase is **v2.2** (design pass 2, retention and new features). `AGENTS.md` and `DESIGN.md` were copied from Downloads on 3 Nov 2026. `DESIGN.md` section 6 overrides earlier design notes where they disagree. Do not start gym-buddy, AI or food.
 
-`AGENTS.md` is the v2.1 brief (copied 2 Nov 2026). Current phase is **v2.1 (S1–S12)** once v2.0 and M1 are confirmed. Do not start AI or food. Older v1.0–v1.2 notes below are historical.
+Git: `main` at `2d6c01c` (Step 9 Onboarding). SQL is still pasted by hand; this repo cannot see the remote database. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise. S12 is already built.
 
-## Current status (checked against the code, 2 Nov 2026)
+**Next:** Group 1, **D1** then **N5**. Wait for approval of the Group 1 plan before writing code. Ask before **H1**, and before adding any font or notifications library.
 
-Git: `main` at `c0a910a` (“First backup commit”), working tree clean besides this handoff. R2–R11 landed in that backup, not as separate task commits. SQL is still pasted by hand; this repo cannot see the remote database.
+## Status reconciled (3 Nov 2026)
+
+Checked against `AGENTS.md`, `DESIGN.md` section 6, this file, the code and `git log --oneline -20`.
+
+### What v2.2 supersedes
+
+| Earlier task | What v2.2 does instead |
+| --- | --- |
+| **S5** streak rules (no rest-week passes; week only counts on full target) | **H1** rest weeks, gold weeks, repair, weeks trained. Confirm before building. |
+| **S6** tiered achievements (skipped; never built) | **H6** new badge set plus **D7** Awards visuals. |
+| **S9** start/end progress photo prompts | **H7** photos off by default, no prompts. |
+| **S9** challenges with fixed dates and countdowns | **H8** rolling Monday / 1st-of-month starts, no countdowns. |
+| **R4** session detail screen (and DESIGN Step 4) | **N3** merge into the logger. |
+| DESIGN Step 10 Paywall visual restyle | **C1** / **C2** later. Do not run the old one-screen-per-step plan as the current work. |
+| DESIGN 6.1 display serif and Learn tab | Not D1. Serif needs font approval. Learn tab is **N6**. |
+
+S2 navigation (Profile as a tab) stays until **N6** moves Profile to the avatar and adds Learn.
 
 ### v2.0 (R1–R11)
 
-| Task | Code | Notes |
+| Task | Status | Notes |
 | --- | --- | --- |
-| **R1** Remove cycle notes | **Done** | Cycle UI, export column, profile flags and `src/lib/cycle.ts` are gone. `supabase/cycle.sql` is a stub. `supabase/remove_cycle_notes.sql` is written and **not confirmed run**. |
-| **R2** New navigation | **Done, replaced by S2** | S2 added a Programmes tab. Tabs are now Home, Programmes, Planner, Activity, Profile. Library lives under Programmes → Exercises. The stack screen `src/app/library.tsx` remains for the workout editor. |
-| **R3** Routines | **Done** | Six launch routines in `supabase/routines.sql` and `src/lib/routines.ts`. Enrolments, tags, weeks/days/exercises. SQL **not confirmed run**. |
-| **R4** Home / routine / session detail | **Done** | Featured row, next-session card, routine detail, session detail → existing logger. Free users can open a Pro routine and see week 1 (S3). |
-| **R5** Custom workout builder | **Done** (cap fixed in S1) | Create / edit / duplicate / delete / add to planner. Free cap is 4 **owned** workouts; the shared starter does not count. Duplicate custom, duplicate-routine and save-from-routine all hit that cap (S1). |
-| **R6** Planner | **Done** | Agenda from today through ~3 months, month calendar toggle, move / rest / add custom. Feeds Activity “X of Y”. |
-| **R7** Gym unlocked | **Done** | Quiet Mode, level-up offers and the confidence card are off the screens. `confidence_history`, `quiet_mode`, `confidence_level` and `exercises.zone` stay in the DB. Dead files remain: `src/components/LevelUpCard.tsx`, `src/lib/levelUp.ts` (profile still writes history). Exercise detail is a first-time guide. Activity shows Gym unlocked badges. |
-| **R8** Activity tab | **Done** | Header (sessions, weighted lifts, hours), this week X of Y, weekly streak, Progress / Achievements, progress photos, post-session wins. `supabase/activity.sql` **not confirmed run**. Streak goal is edited in Profile (S5). Rest-week passes are gone (S5). |
-| **R9** Onboarding | **Done** | Short screens, insights, plan reveal, then a queued paywall. Existing users are not re-quizzed. `supabase/onboarding_v2.sql` **not confirmed run**. Notification permission is still asked by the rest timer, not after the first session. |
-| **R10** Paywall | **Done** | Entitlement `ascenda_pro`, yearly pre-selected, contextual `openPaywall(reason)`. Free Home row is the two starter routines. Swaps and progression stay Pro. Gold `ProBadge` is used on Pro surfaces (S3). |
-| **R11** Photos | **Done** | Fourteen Pexels covers in `assets/covers/` + `src/lib/images.ts` (six from R11, eight from S10). Fourteen exercise photos in `assets/exercises/` + `src/lib/exerciseMedia.ts`. Bundled files show even before `routine_covers.sql` / `exercise_media.sql` / `s10_routines.sql` are run. Those files are **not confirmed run**. |
+| **R1** Remove cycle notes | **Done** | Cycle UI gone. `supabase/remove_cycle_notes.sql` **not confirmed run**. |
+| **R2** New navigation | **Done**, then **S2** | Tabs are Home, Programmes, Planner, Activity, Profile. **N6** will change this again. |
+| **R3** Routines | **Done** | Six launch routines plus S10 extras. SQL **not confirmed run**. |
+| **R4** Home / routine / session detail | **Done**; session detail **superseded by N3** | Featured row, next-session card, routine detail, session detail still exists and still opens the logger. |
+| **R5** Custom workout builder | **Done** (cap in S1) | Free cap is 4 owned workouts. |
+| **R6** Planner | **Done** | Agenda, month toggle, move / rest / add custom. **D5** / **H1** restyle later. |
+| **R7** Gym unlocked | **Done** | Quiet Mode and level-up are off the screens. Dead files remain. |
+| **R8** Activity | **Done** | Restyled in DESIGN Step 7. **D6** / **D7** / **H7** will change tabs and Awards. |
+| **R9** Onboarding | **Done**; restyle **Step 9 done** | **N1** / **N4** still to do. Notification permission is still asked by the rest timer, not after the first session (**H3**). |
+| **R10** Paywall | **Done** in logic | Visual DESIGN Step 10 **not started**. **C1** / **C2** later. |
+| **R11** Photos | **Done**; **D2** not started | Fourteen Pexels covers. Stretch routines still reuse gym photos. |
 
-v2.0 leftover that is **not** a missing R task: PostHog, Sign in with Apple, lbs setting, EAS / TestFlight, email verification (now S12).
+Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, lbs setting (**D8**), EAS / TestFlight.
 
-### M1 MuscleWiki videos — **partly done** (do not treat as complete)
+### M1 MuscleWiki videos: **partly done**
 
-**Present:** `supabase/musclewiki.sql` (adds `musclewiki_id`, `mw_video_urls`, `mw_cached_at`); one-off match script `scripts/match-musclewiki.mjs`; apply script `scripts/apply-musclewiki-ids.mjs`; `scripts/musclewiki-matches.csv` with **55** approved ids; `supabase/musclewiki_ids.sql`.
+**Present:** `supabase/musclewiki.sql`; match/apply scripts; 55 approved ids; `supabase/musclewiki_ids.sql`.
 
-**Missing:** Supabase CLI, `supabase/config.toml`, `supabase/functions` (`mw-exercise`, `mw-media-token`), in-app tap-to-play player, media tokens. The app never reads `musclewiki_id`. No video library in the app.
-
-S1 does not depend on M1. The brief says to flag unfinished v2.0/M1 work before starting v2.1 — M1 is the unfinished one.
+**Missing:** Supabase CLI, `supabase/config.toml`, Edge Functions `mw-exercise` and `mw-media-token`, in-app tap-to-play player. The app never reads `musclewiki_id`. Logger still uses letter/photo placeholders. Do not treat M1 as complete. N3 asks for real thumbnails; that still depends on this.
 
 ### v2.1 (S1–S12)
 
-- **S1. Duplicate loophole — done (2 Nov 2026).** Owned custom workouts only count toward the free 4 (`is_starter = false`). Duplicate custom, Duplicate on routine detail (week 1 day 1) and Save as workout on session detail all use that cap. Free users cannot duplicate a Pro routine (paywall, no row). No new SQL. RLS still does not enforce the cap (Pro lives in RevenueCat).
-- **S2. Programmes tab — done (2 Nov 2026).** Tabs are Home, Programmes, Planner, Activity, Profile. Programmes has Routines / Stretches / Exercises. Stretches is filled in S8. Exercise library moved here; Home no longer has the library pill or the “week X of Y” plan banner (the next-session card still names the active routine). `/routines` redirects to Programmes. Workout editor still opens `/library`.
-- **S3. Pro badge and locked previews — done (2 Nov 2026).** Gold `ProBadge` (`src/components/ProBadge.tsx`) on routine cards, Pro buttons, Activity charts/roadmap/photos and Profile. Free users can open a Pro routine: cover, description, tags, plan details and week 1. Weeks 2+ stay collapsed behind a placeholder overlay and **Unlock with Pro**. Start / Duplicate still open the paywall. `fetchRoutine(id, { includeLockedWeeks })` always loads week/day structure; exercise rows for week 2+ of a Pro routine are queried only when `includeLockedWeeks` is true. Routine detail passes `includeLockedWeeks: isPro`. Logging, planner, Home enrolment and the roadmap keep the full fetch. No new SQL (Pro is RevenueCat, so RLS cannot gate by plan).
-- **S4. Change or stop a routine — done (2 Nov 2026).** Active routine detail has **Switch routine** (opens Programmes) and **End routine**. The Home next-session card has a ⋯ menu with the same actions. Ending confirms that history stays, then marks the enrolment complete if every session is logged, otherwise abandoned, and deletes upcoming `planned` routine days (custom workouts and finished days stay). Starting a different routine does the same end-then-start, with a paywall if the new plan is Pro and she’s free. No new SQL. Also resized the tab highlight to each tab’s layout (rounded rect, not a capsule) so Programmes is fully covered.
-- **S5. Streak changes — done (2 Nov 2026).** Activity no longer has streak-goal chips. Profile → Settings has **Edit streak goal** (4 / 8 / 12 weeks). Rest-week passes are gone: a week only counts if she hits the planner target. Stretch sessions of 10 minutes or more count toward the week and streak (not PBs or lifts). SQL `supabase/remove_rest_passes.sql` drops `rest_passes_used_month` and `rest_passes_month` and is **not run yet**.
-- **S6. Tiered achievements — skipped** (user asked to jump to S7). Leave the current badges as they are.
-- **S7. Planner sticky dates and dropdown animations — done (2 Nov 2026).** Planner agenda is a `SectionList` so each day’s date heading sticks, then is pushed up by the next day. Dropdowns (filter chips, planner day/FAB menus, Activity lift picker, session “Do a different day”, My workouts “Add to planner”, Home ⋯) open as an `AnchoredMenu` from the tapped control, using React Native `Animated` (no new library). Confirmations and the full-screen Add-exercise picker stay as they were. No new SQL.
-- **S8. Stretches — done (2 Nov 2026).** Seven stretch routines as `routines.type = 'stretch'` (3 free: Morning mobility 10 min, Desk stretch 8 min, After leg day 12 min; 4 Pro: Lower back, Full body, Upper body openers, Hip mobility). Timed holds in `routine_day_exercises.duration_seconds`, logged as `sessions.source = 'stretch'` with duration. No enrolment. Strength logger never opens for these. Programmes → Stretches lists them; detail + hold timer at `/stretches/[id]` and `/stretches/play`. Pro Start is paywalled; free users see the first 2 holds then Unlock with Pro (step rows are still fetched). Ten minutes or more counts toward the week and streak (S5); not PBs or lifts. Desk stretch is 8 minutes on purpose. Covers reuse the gym photos until dedicated stretch covers exist. SQL `supabase/stretches.sql` is **not run yet**. MuscleWiki: the 16 new stretch exercises have no `musclewiki_id`; the player still is not built, so holds show the 3 text cues.
-- **S9. Paths, checkpoints, challenges, rings — done (2 Nov 2026).** One Pro path “Gym to strong” (Gym Confidence → Full body → Lower-body focus → Upper / lower). Completing a step recommends the next. Checkpoint weeks: week 4 on 6-week plans, weeks 4 and 8 on 8-week plans; finish that week and the logger shows start vs now on 2–3 key lifts. Completing a routine opens a shareable card (numbers only, native Share, no new library) plus the richer Pro review. Two challenges: Quiet start (1–28 Nov 2026, live for testers) and New Year, Quiet Start (Jan 2027). Join, countdown, progress ring. Participant counts only when the join table has real rows. Routine cards and Home show progress rings. Pro users get a gentle start/end photo prompt, easy to dismiss for good. SQL `supabase/paths.sql` is **not run yet**.
-- **S10. Routine content — done (2 Nov 2026).** Strength catalogue is 14 (6 launch + 8 new), plus the 7 stretches from S8. New (all Pro, coach review still required): Full body 2 days (8w), Home strength (6w, bands/bodyweight), Upper body (6w), Glute builder (6w), Joint friendly (6w, machines), Four weeks strong (4w), Barbell strength (8w, experienced), One spot 2 days (8w, dumbbells). Eight Andrea Piacquadio Pexels covers in `assets/covers/` + `IMAGE_CATALOGUE`. Checkpoints: week 4, plus week 8 on 8-week plans. Free starters stay Gym Confidence and Full body. Featured scoring now weights an exact days-per-week match (and keeps one matching card in the Home row) so a 2-day quiz surfaces Full body 2 days / One spot 2 days. Free Home still only shows the two free 3-day starters. SQL `supabase/s10_routines.sql` is **not run yet**.
-- **S11. Remove em dashes — done (2 Nov 2026).** User-facing `—` replaced with a comma, full stop or colon (logger first-time line, session detail, onboarding, exercise “if taken”, unused LevelUpCard, Full body routine description). Achievements, stretches, S10 routines and exercise cues had none. Developer comments and this handoff file still use them. SQL `supabase/s11_copy.sql` updates the live Full body blurb and is **not run yet**.
-- **S12. Email verification — done (2 Nov 2026).** New sign-ups send a confirmation link (`emailRedirectTo` from `Linking.createURL('auth/callback')`). Tapping it opens the app and completes the session (PKCE code, token hash, or access/refresh). **Check your inbox** has resend and “Use a different email”. Unconfirmed sign-in sends her there too. Existing accounts stay signed in: we do not touch `email_confirmed_at`. Confirm email is a **dashboard toggle**, not SQL. Redirect URLs must include `womensstrength://**` and `exp://**` for Expo Go.
+| Task | Status | Notes |
+| --- | --- | --- |
+| **S1** Duplicate loophole | **Done** | Owned custom workouts only. RLS does not enforce the cap. |
+| **S2** Programmes tab | **Done** | Until **N6**. |
+| **S3** Pro badge and locked previews | **Done** | `ProBadge` must still read `routine.is_pro`. |
+| **S4** Change or stop a routine | **Done** | Switch / End on routine detail and Home ⋯. |
+| **S5** Streak changes | **Done, superseded by H1** | Rest-week passes already removed in the UI. `supabase/remove_rest_passes.sql` **not run**. H1 brings planned rest weeks back. |
+| **S6** Tiered achievements | **Skipped, superseded by H6 / D7** | Current medals stay until H6/D7. |
+| **S7** Sticky dates and anchored menus | **Done** | Keep. |
+| **S8** Stretches | **Done**; layout **D4** later | 7 stretch routines. Covers reuse gym photos (**D2**). `supabase/stretches.sql` **not run**. |
+| **S9** Paths, checkpoints, challenges, rings | **Done; partly superseded** | Photo prompts stay until **H7**. Challenges use fixed dates until **H8**. `supabase/paths.sql` **not run**. |
+| **S10** Routine content | **Done**; **N2** later | 14 strength + 7 stretch. `one-spot-6` and `one-spot-2` are two different slugs (D1 will check the “appears twice” report). `supabase/s10_routines.sql` **not run**. |
+| **S11** Remove em dashes | **Done**; **D1** re-checks | Remaining `—` in code are developer comments. `supabase/s11_copy.sql` **not run**. |
+| **S12** Email verification | **Done** | Dashboard confirm-email toggle still needed. v2.2 says S12 stays last; it is already built, so do not redo it. |
 
-### Visual redesign (DESIGN.md, approved 2 Nov 2026)
+### Visual redesign (DESIGN.md steps 0–10)
 
-Do one screen per step after Step 0. Visual only; do not change features, data or logic unless approved. Ask before adding font packages (Fraunces / DM Serif Display / Inter are not installed). `app.json` `userInterfaceStyle` stays `light` so existing screens do not mix with dark native chrome. Dark tokens exist for later steps.
+| Step | Status |
+| --- | --- |
+| 0 Foundations | **Done** |
+| 1 Home | **Done** (coral Start session; **D1** will switch to plum) |
+| 2 Programmes | **Done** |
+| 3 Routine detail | **Done** |
+| 4 Session detail | **Done**; **N3** will remove it |
+| 5 Logger | **Done**; **N3** will extend it |
+| 6 Planner | **Done** |
+| 7 Activity (Sweat restyle) | **Done**; **D6** / **D7** later |
+| 8 Profile | **Done**; **D8** later |
+| 9 Onboarding | **Done**; **N1** / **N4** later |
+| 10 Paywall visual | **Not started** (C1 / C2) |
+| Bug 1 Pro badge on Gym Confidence | **Done** (`routine.is_pro && !isPro`) |
+| Bug 2 old programme UI | **Partly done** (hidden on Profile; tables stay) |
+| Bug 3 Planner FABs | **Done** (single FAB) |
+| Bug 4 em dashes | **Done** in UI; D1 re-checks |
 
-- **Step 0. Foundations — done (2 Nov 2026).** Light and dark palettes, spacing, radius, shadow and type in `src/constants/theme.ts` (`useTheme()` / `ThemeProvider`). Existing screens still import the old `colours` object so they do not jump to the new palette yet. Core kit in `src/components/ui` (buttons, icon button, image/hero cards, list row, section header, chip, Pro/Free badges, locked overlay, progress ring/bar, stat tile, achievement badge, empty state, sticky day header, set row, rest timer bar). Overflow menus keep `AnchoredMenu` (S7). Dev-only Profile items, exercise upload hint, library error detail and the profile-load error string sit behind `SHOW_DEV_TOOLS` (`EXPO_PUBLIC_SHOW_DEV_TOOLS=true` in `.env`; Expo Go is always `__DEV__`). There is no in-app gear/Tools control; Expo Go’s own floating menu cannot be gated. Disclaimer copy remains on onboarding (plan reveal + review) and Profile only. No SQL.
-- **Step 1. Home — done (2 Nov 2026).** Greeting in `display`, next-session hero at the top (exercise thumbnail when we have one, coral **Start session** still opens session detail), this-week ring plus streak flame, featured ImageCards at 78% width with a peek, optional Stretch today row. Pro/Free badges only for free users. Other tabs still use the old `colours` palette. No new fonts. No SQL. Card shadows sit on an outer wrapper (even glow, not clipped by `overflow: hidden`).
-- **Step 2. Programmes — done (2 Nov 2026).** Underline Routines / Stretches / Exercises. Intro paragraphs gone. Horizontal tag chips (and muscle/equipment chips on Exercises). Compact left-image cards, whole card tappable, no “See more details”. Current routine is a pinned card with a ProgressBar; End routine lives in ⋯. Stretches use duration-first metadata. Path and challenge rows kept, restyled. Pro/Free badges only for free users. Same data and navigation as before.
-- **Step 3. Routine detail — done (2 Nov 2026).** Full-bleed HeroImage with overlaid title, translucent back/⋯, content sheet overlapping the image. Badges (Pro/Free for free users, Current), 2-line description with More, 2×3 stat grid with icons, week-by-week timeline with stage headers from `groupRoutinePhases` (e.g. One spot / Machines / Free weights). Weeks expand to day cards with a thumbnail and minutes; completed days ticked from existing enrolment sessions. Locked weeks use LockedOverlay. Sticky **Start routine** or **Start next session** if current (opens session detail). Duplicate / Switch / End live in ⋯. Start, duplicate, switch, end and paywall logic unchanged. No new fonts. No SQL.
-- **Step 4. Session detail — done (2 Nov 2026).** Eyebrow + `title1` name + metadata. Exercise ListRows with 56px thumbnails, compact `3 × 10-12` and last weight. “Find your starting weight” once at the top when a weighted lift has no history. Swap (Pro) and remove as IconButtons. Tap a row to edit sets/reps in a sheet (same steppers as before). Sticky coral **Start session**. Do a different day and Save as workout live in ⋯. Thumbnail still opens the exercise guide. Start, swap, remove, save and paywall logic unchanged. No new fonts. No SQL.
-- **Step 5. Logger — done (2 Nov 2026).** Sticky top: session name, sets ProgressBar, elapsed time. Exercise cards with thumbnail (play overlay, still opens the text guide; MuscleWiki player is not built), name, compact target, info icon. First-time guide copy is one tip banner per session, not on every exercise. SetRows with last-time placeholders, Pro suggested-weight chip, green tick and brandSoft when done. RestTimerBar pins above the bottom after a ticked set (−15s / +15s / Skip). Sticky **Finish session** plus **Discard**. Swap, add-exercise, save, rest, finish and discard logic unchanged. No new fonts. No SQL.
-- **Step 6. Planner — done (2 Nov 2026).** Display title, week strip (Mon–Sun circles with dots, chevrons to jump weeks, tap a day to scroll). StickyDayHeader: dark Today bar, muted headers for other days. Planned rows: ROUTINE/CUSTOM eyebrow, title, chevron, tick when done. Empty/rest days are quiet “Tap to add” / “Rest day” text, no circle or chevron. One FAB (+) outside the list. Month calendar restyled; add/move/rest menus unchanged. Cut the long helper lead. No new fonts. No SQL.
-- **Step 7. Activity — done (2 Nov 2026), restyled after Sweat screenshots (2 Nov 2026).** Tabs sit under the title: Progress / Photos / Awards, coral underline. Progress opens on a 2×2 Highlights grid (coral numbers, icon, chevron): sessions, hours, personal bests, awards earned. Current routine is a Sweat-style strip (coral mark, name, week, bar, chevron to the routine). Personal bests are compact goal rows. Awards preview shows three numbered medals and Open. Photos is its own tab (still hidden behind Show photos; Pro teaser if free). Awards tab repeats Highlights, then medal families on the cream background (numbered 72px circles, locked silver / earned coral, 0/1). No quote card, no weight-loss goals. ProBadge still reads `routine.is_pro`. Fetch, paywall, photo and chart logic unchanged. No new fonts. No SQL.
-- **Step 8. Profile — done (3 Nov 2026).** Avatar initials, name, email and plan badge at the top. Grouped settings lists: Plan and subscription (See Pro / Manage, current routine, My workouts), Training (streak goal), Your answers (collapsed, then Change answers), Data (export), About (disclaimer), Sign out. Old “Your programme” card and View programme are hidden (bug 2 UI hide only; `/programme` route and tables stay). Dev override and Restart 8-week block stay behind SHOW_DEV_TOOLS. Units, rest-timer default, privacy, terms and feedback rows are not shown yet: those features are not built. No new fonts. No SQL.
-- **Step 9. Onboarding — done (3 Nov 2026).** Segmented progress bar (one tick per flow step). Question copy in `display`. Answers as a wrapping chip cloud (large chips); selected chip shows its helper line. Sticky Continue on questions (select, then continue; editing still returns to review). Insights use a check icon; streak interstitial copy is only a finish-line explanation, no unsupported stat. Plan reveal: HeroImage, Why this plan bullets from the existing recommendation text, estimate chart, disclaimer. Age gate and review restyled; save, paywall queue, skip bodyweight/name and 18+ delete path unchanged. No new fonts. No SQL. Next: Step 10 Paywall.
-- **Bug 2 (old programme system) — UI hidden on Profile.** Home already reads enrolments. Do not drop `programmes` / `blocks` / `sessions.programme_day_id` yet. Do not auto-migrate over an active enrolment.
+`ThemeProvider` still follows the phone scheme even though `app.json` `userInterfaceStyle` is `light`. Kit screens use `useTheme()`; many others still import the static `colours` object (light palette).
 
-Do not start AI or food. Leftover **M1** / TestFlight still sit after this redesign unless asked otherwise.
+### v2.2 (all **not started** unless noted)
+
+**Group 1:** D1, N5.
+
+**Group 2:** N3, N1, N4.
+
+**Group 3:** H1 (ask first), H2, H3 (ask before a notifications library; `expo-notifications` is already in `app.json` / `package.json`), H4, H5, H6, H7, H8.
+
+**Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
+
+**Group 5:** N2, N6, N7.
+
+**Group 6:** C1, C2. S12 already done.
+
+### Visual redesign notes (kept)
+
+`app.json` `userInterfaceStyle` is `light`. Dark tokens exist. Ask before font packages. Expo Go’s own floating menu cannot be gated from app code.
+
+- **Step 0. Foundations.** Light and dark palettes in `src/constants/theme.ts`. Core kit in `src/components/ui`. Dev-only Profile items sit behind `SHOW_DEV_TOOLS` (`EXPO_PUBLIC_SHOW_DEV_TOOLS=true` in `.env`).
+- **Step 1. Home.** Greeting, next-session hero, this-week ring, featured ImageCards, Stretch today. Coral **Start session** still opens session detail.
+- **Step 2. Programmes.** Underline Routines / Stretches / Exercises. Compact left-image cards. Current routine pinned.
+- **Step 3. Routine detail.** HeroImage, badges, week-by-week timeline, sticky Start.
+- **Step 4. Session detail.** Still in the tree at `src/app/routines/session.tsx`.
+- **Step 5. Logger.** Sticky header, SetRows, RestTimerBar, Finish / Discard.
+- **Step 6. Planner.** Week strip, sticky day headers, one FAB.
+- **Step 7. Activity.** Progress / Photos / Awards. Highlights 2×2. Medal families.
+- **Step 8. Profile.** Avatar, grouped lists. Old “Your programme” hidden. Units, rest-timer, privacy, terms and feedback rows are not shown yet.
+- **Step 9. Onboarding.** Segmented progress, chip cloud, sticky Continue, plan reveal.
+
+Do not start gym-buddy, AI or food. Leftover **M1** / TestFlight sit unless asked otherwise.
 
 ## Done (historical)
 

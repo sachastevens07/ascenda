@@ -15,6 +15,7 @@ Target user: women aged 18–40 who lift or want to start, training 2–4 times 
 - **Free:** logging, full history, export, exercise library, up to 4 custom workouts (duplicates count towards the 4), 2 starter routines (including "Gym Confidence: 6 weeks") fully viewable, a few free stretch routines, the planner, activity stats header, weekly sessions count, weekly streak, basic achievements and post-session wins.
 - **Pro (£7.99/mo or £59.99/yr, 7-day trial, annual pre-selected):** all routines and stretch routines, programme paths, checkpoint weeks, completion rewards, challenges, the personalised routine recommendation, unlimited custom workouts, full progress charts, routine roadmap and end-of-routine review, progress photos, all achievements. Later: scoped AI features, then recipes.
 - **Pro routines on the free plan:** she can open them and see the cover, description, tags, plan details and week 1. Weeks 2 onwards are blurred with an "Unlock with Pro" button. She cannot start, duplicate or copy a Pro routine.
+- **Learn and daily quote (v2.2):** most Learn articles are free (they build trust and help acquisition); a few in-depth guides can be Pro. The daily quote is free for everyone.
 - Every Pro feature shows the same clear Pro badge (see Design direction).
 - The paywall appears straight after onboarding, when her recommended routine is revealed. Logging stays free forever.
 
@@ -36,7 +37,7 @@ Several of these are now being REMOVED or REPLACED (see phase v2.0). Read the ex
 
 NOT built (from old plans, now folded into v2.0): custom workout builder, 8-week blocks, roadmap, milestones, block review.
 
-### Phase v2.0 — redesign (CURRENT)
+### Phase v2.0 — redesign (mostly built; confirm status in PROGRESS.md)
 Build in this order, one task at a time. Each task modifies existing code where possible.
 
 **R1. Remove cycle notes**
@@ -124,8 +125,10 @@ Build in this order, one task at a time. Each task modifies existing code where 
 
 Milestone: TestFlight with 15–20 testers after R10, before any later phase.
 
-### Phase v2.1 — programmes and polish (NEXT, after v2.0 is complete)
+### Phase v2.1 — programmes and polish
 Build in this order, one task at a time. If any v2.0 task (R1–R11) or the MuscleWiki video task is unfinished, tell me before starting v2.1.
+
+**Superseded by v2.2 (read v2.2 before building these):** S5 streak rules are replaced by H1. S6 achievements are replaced by H6 and D7. The progress photo prompts in S9 are removed (see H7). S9 challenges must use rolling starts (H8). The session detail screen from R4 is removed and merged into the logger (N3).
 
 **S1. Fix the duplicate loophole**
 - Duplicating a routine or a custom workout creates a custom workout, so it counts towards the free limit of 4.
@@ -201,7 +204,165 @@ Build in this order, one task at a time. If any v2.0 task (R1–R11) or the Musc
 
 Milestone: TestFlight round 2 after S10, then App Store submission (target mid-December).
 
+### Phase v2.2 — design pass 2, retention and new features (CURRENT)
+Sources: DESIGN.md section 6 (design pass 2), my retention research (summarised in the rules below) and my own change requests.
+Before starting: compare PROGRESS.md and the code against v2.0, v2.1 and this list. Mark what's done, what's partly done and what this phase supersedes, then update PROGRESS.md and commit. Then build in the order below, one task per step, stopping after each so I can test on my phone. Ask before adding any library (fonts, notifications).
+
+**Group 1: quick wins**
+
+**D1. Global design fixes** (details in DESIGN.md 6.1)
+- Dev gear button: replace the `__DEV__` check with a separate setting `showDevTools`, off by default, toggled by a hidden gesture (e.g. long-press the app version in Profile 5 times). Screenshots from dev builds must look like production.
+- One primary button colour everywhere: `brand` (plum). Coral (`accent`) is only for small highlights (streak flame, eyebrows, key numbers).
+- Tags in sentence case ("Beginner friendly", not "Beginner-Friendly"); max 2 tags per card, on one line.
+- Remove duplicate routines in the list (e.g. "One spot 2 days" appears twice) and any leftover old-programme entries.
+- Find and remove all em dashes in UI and content.
+
+**N5. Light theme default, dark theme in settings**
+- Default theme is light for everyone, regardless of the phone's setting.
+- Profile → Settings → Appearance: Light (default), Dark, Match phone.
+- Store the choice on the device (and in `profiles.theme_preference` so it follows her to a new phone). Apply instantly without restart.
+
+**Group 2: the workout flow**
+
+**N3. Merge the pre-workout screen into the logger**
+- Remove the session detail screen (the one with sets/reps steppers, swap and remove before starting).
+- Tapping the next-session card or "Start session" opens the logger directly.
+- Everything that screen did now happens inside the logger, per exercise:
+  - swap (existing swap engine), remove, add a set, remove a set, change the rep target via a small "⋯" menu on the exercise card;
+  - "Add exercise" button at the end of the list;
+  - "Do a different day" in the logger header "⋯" menu (and in the Home card "⋯" menu);
+  - changes apply to today only, never to the routine.
+- The session timer starts when she ticks her first set (or taps "Start timer"), not when the screen opens, so browsing the session first doesn't distort time trained.
+- If she leaves without ticking any set, nothing is saved and no "discard" prompt is needed.
+- Logger improvements at the same time (DESIGN.md 6.3): last-time weight shown as placeholder in each kg cell, a suggested-weight chip when the progression rule says go up, bigger tick buttons in `brand` that fill `success` when done, rest timer bar after each ticked set, real exercise thumbnails (MuscleWiki) instead of letters.
+
+**N1. Clear safety disclaimer**
+- Replace the one-line disclaimer with the full text in the "Safety disclaimer" section below.
+- Onboarding: a dedicated screen showing the full text, with a required checkbox "I've read this and I'm 18 or over" before continuing. Store `profiles.disclaimer_version` and `disclaimer_accepted_at`.
+- If the disclaimer text changes (new version), show it again once on next open and ask her to accept.
+- Profile → About → "Safety and disclaimer": full text.
+- Before her first ever session: a one-time sheet with the short version ("Train within your limits" summary, 4 bullets) and a link to the full text.
+- Routine detail pages and Learn articles: one small line at the bottom, "Train within your limits. Read the safety guidance", linking to the full text. No disclaimer on other screens.
+- I will have the wording checked by a solicitor; keep the text in one file so it's easy to update.
+
+**N4. More main goals, choose up to three**
+- Onboarding goal screen becomes multi-select chips, up to 3. The first one she picks is her main goal (show a small "Main" label on it; she can change which is main).
+- Goal list: Build strength; Build muscle; Glutes and legs; Upper body strength; Feel toned and defined; Gym confidence; Get fitter and improve stamina; Mobility and flexibility; Better posture; More energy; Stress relief and mental wellbeing; Strong for life (bones and joints); Get back into training after a break; Lose body fat.
+- "Lose body fat": allowed as a goal, but the app only responds with strength routines and general Learn articles. No calorie targets, no weight-loss promises, no before/after framing.
+- Recommendation and "Featured for you" use all chosen goals, weighted towards the main one.
+- Profile → Your answers lets her edit goals.
+- Migration: `profiles.main_goal` becomes `main_goals text[]` (max 3, order matters); copy existing values across.
+
+**Group 3: habit and retention (from my research)**
+
+Rules for every task in this group:
+- Reward showing up and coming back, not volume or perfection.
+- Never send or show "you broke your streak" or any guilt copy. Use forward-looking copy ("New week, fresh start").
+- Training reminders and promotional messages are separate, separately toggled channels. Promotional pushes need their own opt-in.
+
+**H1. Streak rework** (replaces S5)
+- A week counts towards the streak if she does at least one session (strength or a 10+ minute stretch). A week where she hits her full weekly target is shown as a "gold week".
+- Planned rest weeks: she earns one rest week for every 4 counted weeks, banking up to 2. She can schedule one in advance in the Planner, or apply one after a missed week (prompted gently on the next Monday). A rest week keeps the streak alive.
+- Streak repair: if a week is missed and she has no rest week banked, doing one extra session the following week repairs it.
+- Always show "Weeks trained: 23" (lifetime total, never resets) alongside "Current run: 5 weeks", so progress never drops to zero.
+- Streak goal (set in onboarding, editable in Profile) is a milestone, not a test. Celebrate reaching it, then offer the next goal.
+- Profile setting to hide the streak entirely.
+- Data: `profiles.rest_weeks_banked`, a `streak_weeks` table or computed view (week_start, status: 'counted' | 'gold' | 'rest' | 'repaired' | 'missed').
+- Note: this replaces my earlier decision to remove rest-week passes, based on the research. Confirm with me before building.
+
+**H2. Welcome-back flow**
+- Trigger: she opens the app or finishes a session after missing at least one planned week.
+- Home shows a warm "Welcome back" card instead of the usual hero: "Good to see you. Here's a lighter session to ease back in."
+- Offer: a shorter version of her next session (fewer sets, suggested weights about 10% lower), or restart the current routine week, or switch to a lighter routine if she's been away 3+ weeks.
+- Finishing it earns a "Back on track" badge (repeatable, counts once per return).
+- Time re-engagement for fresh starts: Monday, the 1st of the month, start of term.
+
+**H3. Planner-linked reminders**
+- Ask for notification permission after her first completed session (already planned), with a short explanation.
+- Reminders are tied to sessions she has planned: she picks a time for each planned day (default: same time as her last session, or 6pm).
+- At most one reminder per planned day, plus an optional Sunday "Plan your week" summary. Nothing on rest days.
+- Copy is autonomy-supportive: "Full body A is ready when you are", never "Don't lose your streak".
+- Profile → Notifications: toggles for session reminders, weekly summary, and (separately) offers and news.
+- Ask before adding a notifications library (expo-notifications is the likely choice).
+
+**H4. Week-6 hand-off**
+- Two weeks before a routine ends, show "What's next" on Home and the routine page: the recommended next routine from her path and goals, with a preview.
+- On completion: checkpoint review (start vs end lifts), completion badge and card, then a one-tap "Start [next routine] on Monday".
+- Habits take months to form, so this transition must be smooth and never leave her with nothing planned.
+
+**H5. Retention analytics (PostHog)**
+- Events: onboarding_completed, disclaimer_accepted, paywall_viewed, trial_started, session_started, session_completed, set_ticked, planned_week_missed, rest_week_used, streak_repaired, welcome_back_shown, welcome_back_completed, reminder_sent, reminder_opened, routine_completed, next_routine_started, learn_article_opened.
+- Dashboards: activation (2+ sessions in first 7 days; 3+ in first 14), D1/D7/D30 retention, return rate after first missed week, routine completion rate, trial to paid.
+- Never send health data, body photos or free-text to PostHog.
+
+**H6. Achievements rework** (replaces S6)
+- Keep easy "first time" badges and Gym unlocked prominent.
+- Sessions: 1, 5, 10, 25, 50, 100, 250. Weeks trained (lifetime): 4, 12, 26, 52. Personal bests: 1, 10, 50. Programmes completed: 1, 3, 10.
+- Weight lifted: keep only 1,000 kg, 10,000 kg and 50,000 kg as fun milestones. Remove the 100k to 1M tiers (they reward volume).
+- Add: "Back on track" (welcome-back session completed), "Gold week" (first full-target week), "Consistent" (8 counted weeks in a run, rest weeks allowed), "Stretch habit" (10 stretch sessions).
+- Profile setting to hide achievements.
+- Visual design is D7.
+
+**H7. Progress photos locked down**
+- Move photos out of their own Activity tab into a card inside Progress.
+- Off by default; she switches them on in Profile → Privacy. No reminders or prompts to take photos (remove the start/end prompts from S9).
+- Never shown in summaries, completion cards, share images or notifications.
+- Keep: private bucket, signed URLs, explicit consent screen on first use, delete one or all.
+
+**H8. Challenges with rolling starts**
+- Challenges start on any Monday or the 1st of the month, not one fixed date. No countdown timers.
+- Never tie a challenge to a Pro discount or deadline.
+
+**Group 4: design pass on the remaining screens** (details in DESIGN.md section 6)
+
+**D2. Photo pass:** one distinct photo per routine and per stretch; stretch photos for stretches; no image repeated on one screen; follow the photo direction (no midriff-focused shots).
+**D3. Home:** shorter featured cards (two sections visible on screen), no repeated image, daily quote card (N7), welcome-back card slot (H2), profile avatar in the header (see N6 navigation).
+**D4. Routine and stretch detail pages share one layout:** hero, compact stats row, phase/stage headers, day previews, sticky primary button. Stretch player redesign (countdown ring, Pause primary, Skip as text, next-hold preview).
+**D5. Planner:** smaller grey day headers, thin empty-day rows with a small "+", rest weeks shown (H1).
+**D6. Activity Progress tab:** show this week only with "See full plan"; hide empty charts; streak card with weeks trained, current run and gold weeks (H1).
+**D7. Awards:** badge grid with icons, locked greyed, earned in colour with tier rings, next-tier progress only on the next badge in each group; remove developer copy ("Badge tiers come next") and duplicated highlight tiles.
+**D8. Profile:** use her onboarding name (not the email prefix); rows for Appearance, Notifications, Units, Privacy, Safety and disclaimer, Terms, Privacy policy, Contact, App version; tidy "My workouts" subtitle ("4 saved").
+**D9. Exercises list:** thumbnails (or at least equipment icons that differ) instead of the same placeholder on every row.
+
+**Group 5: content and new features**
+
+**N2. More sophisticated routines**
+- Every routine must meet the "Routine standard" below. Update existing routines first, then new ones.
+- Data changes (migrations): `routine_weeks` add phase_name, phase_goal, is_lighter_week; `routine_days` add focus, warmup (list of steps with duration or reps), coach_note, finisher (optional); `routine_day_exercises` add role ('main' | 'secondary' | 'accessory' | 'core' | 'finisher'), target_rir (reps in reserve), tempo (optional), progression_rule ('load' | 'reps' | 'time'), load_increment_kg, notes, alternative_exercise_ids, superset_group (optional).
+- Logger shows: warm-up checklist at the top, each exercise's role, target RIR as plain English ("stop with 2 reps left in the tank"), tempo if set, coach note for the day.
+- Routine detail shows: why this split works, who it's for, what she'll be able to do by the end, phases with goals, and the weekly structure.
+- All content reviewed by a qualified coach before launch; write it conservatively; keep it as data.
+
+**N6. Learn section**
+- New tab: **Learn**. Navigation becomes Home, Programmes, Planner, Activity, Learn. Profile moves to an avatar button in the top-left of Home (and the header of each tab), like the reference apps.
+- Content stored as data: `learn_articles` (id, slug, title, summary, category, read_minutes, cover_image_id, body_markdown, is_pro, sources (list of links), reviewed_by, reviewed_at, published_at, sort_order) and `learn_links` (article_id, routine_id or exercise_id) to show related articles on routine and exercise pages.
+- Categories: Getting started, Gym confidence, Technique, How programmes work, Recovery and sleep, Fuelling your training (general, no calorie targets or diets), Mindset and motivation, Myths busted.
+- Layout: featured article hero, category tiles, "Recommended for you" based on her goals, related articles at the bottom of routine and exercise pages, reading progress and "Mark as read".
+- Launch with about 15 articles (2 per category, 3 for Getting started), 2 to 5 minutes each, plain English, sources listed, coach-reviewed. Most free, a few in-depth guides Pro.
+- Content rules: no weight-loss promises, no calorie or macro targets, no body-shape language, no medical advice; any health claim needs a reputable source (NHS, peer-reviewed study, professional body).
+
+**N7. Daily motivational quote**
+- A small card on Home with one quote a day, the same for everyone that day (pick by date from the list).
+- Store in a `quotes` table (id, text, attribution, is_active). Write original quotes in the Ascenda voice (attribution "Ascenda"); only use quotes from other people if they are public domain or I approve them. No song lyrics.
+- Tone: calm, encouraging, strength and consistency focused. No guilt, no body or weight references.
+- Launch with at least 90 quotes so none repeat within three months. Profile setting to hide the quote.
+
+**Group 6: compliance and launch**
+
+**C1. Subscription compliance (UK DMCC Act, expected from January 2027; Apple guidelines)**
+- Paywall shows clearly: price, billing period, trial length, when she'll be charged, how to cancel.
+- Trial-ending reminder 2 days before conversion (push if allowed, plus an in-app banner).
+- Renewal reminders before annual renewal; easy "Manage subscription" route (opens Apple's subscription settings).
+- No countdown timers, fake urgency or back-to-back paywalls. The free path ("Continue with the free plan") is always clearly visible on the paywall.
+- I'll take legal advice on how the DMCC rules apply to App Store billing.
+
+**C2. Paywall timing test**
+- Keep the paywall after the plan reveal, but make "Start with the free plan" equally visible. Track (H5) whether users who start free and finish session 1 convert later. We'll decide on moving the paywall after TestFlight data.
+
+**S12 (email verification) stays last.**
+
 ### Later phases (do not build yet)
+**Gym buddy (after launch):** invite one friend; see each other's weekly progress (sessions, not weights); send a high five. Later small private groups. No public leaderboards, ever.
 **AI (after v2.0 is live and stable)**
 - A1. AI workout builder (Pro): picks only from our exercise library, filtered to her equipment and tags; structured JSON; server-side validation; weights from our progression rule; output opens as a custom workout.
 - A2. Scoped AI help (Pro): "Ask about this exercise" on each exercise detail, using its stored cues. Never medical, injury, pregnancy or diet advice; pain → stop and see a professional; labelled as AI-generated. An open-ended chatbot is NOT planned.
@@ -210,8 +371,41 @@ Milestone: TestFlight round 2 after S10, then App Store submission (target mid-D
 **Food (after everything else is built)**
 - Deferred. Planned categories (reworded later): strong and nourished, prep-ahead lunch, high-protein dinner, top 10 breakfasts, most-loved smoothies, one pot, busy mums, dinner in 30, prep-ahead breakfast, dinner, snack smarter, family friendly, high protein, lunch, holiday favourites. Recipes in multiple categories; prep time and servings on cards; ingredients, method and macros (calculated from a nutrition database, not guessed) inside; "not health or nutritional advice" disclaimer. Pro perk.
 
+## Routine standard (every routine must meet this)
+1. **A clear purpose:** who it's for, what she'll be able to do by the end, and why this split suits that goal (one short paragraph).
+2. **Phases:** 2 to 3 phases with names and goals (e.g. "Weeks 1 to 2: learn the movements", "Weeks 3 to 5: build", "Week 6: test"). 8-week routines include one lighter week (about 60 to 70% of normal sets) before the final checkpoint.
+3. **Sensible splits:** full body 2 or 3 days, upper/lower 4 days, glute-focused lower plus upper, push/pull/legs only for experienced users. Each day has a stated focus.
+4. **Session structure:** 5 to 10 minute warm-up (general plus movement-specific ramp-up sets for the first main lift), 1 to 2 main lifts, 2 to 3 secondary or accessory lifts, optional core or finisher. Realistic duration estimate.
+5. **Prescriptions:** sets, rep range, target RIR (beginners 2 to 3, intermediates 1 to 2), rest time by role (main 2 to 3 min, accessories 60 to 90 s), tempo only where it helps (e.g. 3-second lowering for learning).
+6. **Progression:** main lifts use double progression with a set load increment (dumbbells 1 to 2 kg, barbell 2.5 kg, machines one plate); accessories progress reps first; holds progress time. Rules are visible to the user in plain English.
+7. **Balance:** each week covers squat, hinge, push, pull, single-leg and core patterns (unless the routine is deliberately focused, which it must say).
+8. **Alternatives:** at least 2 swaps per exercise that keep the same pattern, including a one-spot or machine-free option where possible.
+9. **Checkpoints:** re-test 2 to 3 key lifts at the midpoint and the end, shown as start vs now.
+10. **Coaching notes:** one short note per day (what to focus on, how it should feel).
+11. **Safety:** conservative starting loads ("find a weight you could lift 3 more times"), no maximal testing for beginners, coach review before launch.
+
+## Safety disclaimer (full text, v1; to be checked by a solicitor)
+> **Train safely with Ascenda**
+>
+> Ascenda gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor, physiotherapist or other qualified professional.
+>
+> **Check with your GP or a qualified professional before you start if you:**
+> - are pregnant, have given birth in the last year, or are trying to conceive
+> - have a heart condition, high blood pressure, diabetes, asthma or another long-term health condition
+> - have an injury, joint or back problem, or have had recent surgery
+> - take medication that affects your heart rate, blood pressure or balance
+> - have been told by a professional to limit exercise, or are unsure whether exercise is safe for you
+>
+> **Stop straight away and get medical help if you feel** chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call 999 (or your local emergency number).
+>
+> **Train within your limits.** Warm up, use weights you can lift with good form, and never train through pain. Suggested weights are estimates based on what you log, not personal prescriptions. Exercise demos and tips are for guidance only; if you're unsure how to do a movement, ask a qualified instructor at your gym.
+>
+> You choose how and when you train, and you're responsible for doing so safely.
+
+Short version (first-session sheet, 4 bullets): not medical advice; check with your GP first if you're pregnant, injured or have a health condition; stop and get help if you feel chest pain, dizziness or sharp pain; use weights you can lift with good form and never train through pain.
+
 ## Out of scope (do not build unless I ask)
-Video classes, open-ended AI chatbot, food/recipes (until the food phase), social feed or leaderboards, wearable sync, gym-photo scanning, cycle tracking, BMI or body-fat estimates, deload weeks, XP points or arbitrary user levels, rest-week streak passes.
+Video classes, open-ended AI chatbot, food/recipes (until the food phase), social feed or leaderboards (a private gym buddy is planned for later), wearable sync, gym-photo scanning, cycle tracking, BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
 
 ## Data model
 Check the actual schema before changing anything. Existing tables include `profiles`, `exercises` (with `zone`), `programmes` / `programme_days` / `programme_exercises`, `sessions`, `sets`, `confidence_history`, and cycle-notes storage (to be removed in R1).
@@ -238,6 +432,15 @@ New or changed in v2.1:
 - `achievement_definitions`: id, family, tier, threshold, title, description; `user_achievements`: user_id, achievement_id, achieved_at (migrate existing `milestones`)
 - `sessions.source` gains 'stretch'
 
+New or changed in v2.2:
+- `profiles`: `main_goal` → `main_goals text[]` (max 3, first = main); add theme_preference ('light' | 'dark' | 'system', default 'light'), disclaimer_version, disclaimer_accepted_at, rest_weeks_banked (0 to 2), hide_streak, hide_achievements, hide_quote, photos_enabled (default false), reminder settings (session_reminders, weekly_summary, marketing_opt_in, default_reminder_time)
+- `streak_weeks` (or a computed view): user_id, week_start, status ('counted' | 'gold' | 'rest' | 'repaired' | 'missed')
+- `planned_sessions` addition: reminder_time
+- Routine detail fields per N2 (`routine_weeks`, `routine_days`, `routine_day_exercises`)
+- `learn_articles`, `learn_links`, `article_reads` (user_id, article_id, read_at)
+- `quotes`: id, text, attribution, is_active
+- Remove the session detail screen's separate state; today's changes (swaps, removed or added sets and exercises) live on the in-progress session
+
 ## Design direction
 - Lively and visual: photos on routines and Home, generous cards, but still calm and uncluttered.
 - Clear hierarchy: one main action per screen (e.g. the next-session card on Home).
@@ -247,10 +450,13 @@ New or changed in v2.1:
 - Units: kg by default, lbs option in settings. UK spelling.
 - Never use em dashes (—) in any user-facing text. Use commas, full stops, colons or "to" instead.
 - Pro features always carry the same Pro badge, so it's obvious what's paid.
-- Navigation (from v2.1): Home, Programmes (Routines / Stretches / Exercises), Planner, Activity, Profile.
+- Navigation (from v2.2): Home, Programmes (Routines / Stretches / Exercises), Planner, Activity, Learn. Profile opens from an avatar in the tab headers.
+- Light theme by default; dark theme is opt-in in settings.
+- One primary button colour (plum `brand`) across the app. Coral is for small highlights only.
+- DESIGN.md is the source of truth for tokens, components and screen layouts.
 
 ## Working rules for the AI
-- Current phase: v2.1 (S1–S12), once v2.0 (R1–R11) and the MuscleWiki video task are confirmed complete. Do not start later phases.
+- Current phase: v2.2. First reconcile v2.0, v2.1 and v2.2 against the code and PROGRESS.md, then build v2.2 in its listed order. Unfinished v2.1 tasks that aren't superseded go after Group 2 unless I say otherwise. Do not start later phases.
 - Read the existing code before changing anything; change only what the current task needs.
 - Build ONE task at a time, in order. Stop and tell me how to test it before moving on.
 - For any database change, write a migration, explain it, and wait for my confirmation. Never delete users' workout history (sessions and sets).
@@ -262,7 +468,8 @@ New or changed in v2.1:
 - Keep PROGRESS.md up to date after each task, then commit.
 
 ## Safety and compliance
-- Disclaimer: general fitness guidance, not medical advice; stop if anything hurts.
+- Disclaimer: use the full "Safety disclaimer" text above (N1); required acceptance in onboarding, stored with version and timestamp.
+- Streaks, reminders and achievements must never shame or pressure (see Group 3 rules).
 - Conservative progressions; coach review of all routines before launch.
 - 18+ only.
 - No BMI, body-fat estimates, health scores or weight-loss promises.

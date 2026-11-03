@@ -1,6 +1,6 @@
 # Ascenda design direction (v1)
 
-Status: approved (2 Nov 2026). Visual changes only. No features, data or logic change unless approved separately.
+Status: sections 1 to 5 approved and partly built. Section 6 (design pass 2, 3 November 2026) is the current work and overrides anything earlier that it contradicts. Feature and data changes are specified in AGENTS.md phase v2.2.
 
 References analysed: Female Fitness (Leap), Sweat, WEGLOW.
 Current screens analysed: Home, Programmes (Routines, Stretches), routine detail, session detail, logger, Planner, Activity (Progress, Achievements), Profile.
@@ -302,11 +302,7 @@ Step 3. Routine detail
 - Locked weeks for free users use LockedOverlay.
 - Sticky PrimaryButton: "Start routine" (or "Start next session" if current). Duplicate / Switch / End go in "⋯".
 
-Step 4. Session detail
-- Header: eyebrow, `title1` session name, metadata.
-- Exercise list as ListRows with thumbnails, "3 × 10-12", and last weight or "Find your starting weight" once at the top as a tip.
-- Swap and remove as icons; sets/reps editing opens on tap (sheet) rather than always-visible steppers.
-- Sticky PrimaryButton "Start session"; "Do a different day" and "Save as workout" in "⋯" or as TextButtons.
+Step 4. Session detail (REMOVED in design pass 2: merged into the logger, see 6.3)
 
 Step 5. Logger
 - Sticky top: session name, sets progress bar, elapsed time.
@@ -354,3 +350,109 @@ Step 10. Paywall
    - Proposed fix (needs approval before any change): (a) confirm in code which tables and screens still use it; (b) migrate any active old programme or block to an enrolment in the matching converted routine, keeping session history linked; (c) switch Home and Profile to read only from `routine_enrolments`; (d) remove the old UI and the "Restart 8-week block" dev item; (e) drop old columns/tables only after I confirm nothing reads them.
 3. **Repeated floating + buttons in the Planner.** Render a single FAB outside the list.
 4. **Em dashes in routine descriptions and any other copy.** Replace across all content and add a check (search for "—") before each commit.
+
+---
+
+## 6. Design pass 2 (from screenshots on 3 November 2026)
+
+What's working and should be kept: warm palette, Home hero next-session card, weekly ring with "Start a streak", routine hero with eyebrow, checkpoint labels, sticky bottom buttons, compact routine list rows, planner week strip with dots, single FAB, dark "Today" bar, Profile grouped sections, the floating "continue your stretch" mini bar.
+
+Each item below maps to a task in AGENTS.md (in brackets).
+
+### 6.1 Global (D1, N5)
+- **Dev tools:** the grey gear must not appear unless `showDevTools` is on (off by default, hidden gesture to enable). It currently covers "See all", "⋯" menus, tick buttons and filter chips.
+- **Primary buttons:** always `brand` plum fill with white text. Currently Home and routine detail use coral; logger and stretches use plum. Coral `accent` is only for eyebrows, streak flame, key numbers and small chips.
+- **Secondary buttons:** `brandSoft` fill or TextButton. Avoid outline buttons except for paired choices (e.g. Camera / Library).
+- **Tags and chips:** sentence case ("Beginner friendly", "Busy gym friendly"), max 2 per card, single line, truncate the rest. Filter chips keep "All" first.
+- **Eyebrows:** keep to 2 short words or shorten the goal label (e.g. "INTERMEDIATE · STRENGTH", not "BUILD STRENGTH" truncated).
+- **Theme:** light is the default whatever the phone's setting; dark only when chosen in Profile → Appearance (Light / Dark / Match phone).
+- **Typography:** add the display serif (needs approval of a font package) for: Home greeting, hero titles on routine/stretch/Learn pages, onboarding questions, paywall headline, completion screens. Everything else stays sans.
+- **Navigation:** five tabs: Home, Programmes, Planner, Activity, Learn. Profile is a 36 px avatar (initials) at the top-left of each tab's header; tapping opens Profile as a pushed screen.
+
+### 6.2 Photos (D2)
+- One distinct photo per routine and per stretch routine. No image repeated on the same screen (Home hero vs featured cards, list rows).
+- Stretch routines use stretching or mobility photos only (currently dumbbell photos).
+- Replace the midriff-focused group studio photo used on Home and "One spot 2 days".
+- Direction (unchanged from 3.6): real women, calm or mid-movement, natural warm light, faces relaxed, full or upper body, consistent warm grade.
+- Store every image's licence in `images.licence_source`.
+
+### 6.3 Logger (N3, replaces the session detail screen)
+- Entry: "Start session" or tapping the next-session card opens the logger directly. There is no separate pre-workout screen.
+- **Header:** back, session name (`title1`), eyebrow "WEEK 1 · DAY 1", sets progress bar, timer chip (shows "Not started" until the first tick or "Start timer"), header "⋯" menu: Do a different day, Save as workout, End session.
+- **Day card at the top (collapsible):** coach note for the day (N2) and warm-up checklist with ticks.
+- **Tip banner** shown once per session (keep the current one).
+- **Exercise card:**
+  - thumbnail (MuscleWiki still or video play button; never a letter placeholder), name (`title3`), role eyebrow ("MAIN LIFT", "ACCESSORY"), target line "3 × 10 to 12 · 2 reps in reserve · rest 90 s";
+  - icon buttons: info (guide), swap; "⋯" menu: Remove exercise, Add set, Remove set, Change rep target, Notes;
+  - SetRow: set number, kg cell with last time's weight as placeholder (`inkSubtle`), a "+2 kg" suggested chip when the progression rule says go up, reps cell, tick button 48 px in `brand` outline that fills `success` with a white tick when done; completed row gets `brandSoft` background.
+- **Rest timer bar:** slides up above the bottom bar after each tick: countdown, "+15 s", "Skip".
+- **End of list:** "Add exercise" SecondaryButton.
+- **Bottom bar:** PrimaryButton "Finish session" (disabled until at least one set is ticked) and TextButton "Discard" (only if something was ticked).
+
+### 6.4 Home (D3, H2, N7)
+- Order: header (avatar, greeting in display serif) → hero card (next session, or Welcome back card) → this-week card (ring, streak or "Start a streak", weeks trained) → daily quote → Featured for you → Stretch today → From Learn (2 article cards).
+- **Featured cards:** 16:10 image (not 4:5) so two sections fit on one screen; width 78% with peek.
+- **Hero image** must differ from every featured card image.
+- **QuoteCard:** `surface` card, small coral quote mark, quote in display serif 20/28, attribution `caption inkMuted`, "⋯" menu with "Hide daily quote". No share button at launch.
+- **WelcomeBackCard (H2):** replaces the hero when triggered. Soft `accentSoft` background, headline "Welcome back", one line, PrimaryButton "Start a lighter session", TextButton "See other options".
+
+### 6.5 Routine and stretch detail share one layout (D4, N2)
+- HeroImage with eyebrow and title (already done for routines; apply to stretches).
+- Below the hero: badge row, 2-line description with "More", then a **progress bar** "Week 1 of 8" if current (instead of the floating label).
+- **Stats row:** one horizontal row of 4 compact items (icon + value + label): weeks, days a week, minutes, level. Equipment and goal move into chips or the "Who it's for" block. Replaces the 2 x 3 tile grid.
+- **New blocks (N2):** "Who it's for" (2 to 3 bullets), "By the end you'll" (2 to 3 bullets), "How it works" (split, progression rule in one sentence each).
+- **Week by week:** grouped by phase headers ("Phase 1 · Learn the movements"), each week row shows day names ("Lower A · Upper A") and a tick per completed day; lighter week and checkpoint weeks get small chips. Expanding a day shows exercises with role and target.
+- Stretch pages: same, with "Holds" as the list (thumbnail, name, duration).
+- Sticky PrimaryButton (plum). Small line at the bottom: "Train within your limits. Read the safety guidance" (link).
+- Related Learn articles carousel at the bottom (N6).
+
+### 6.6 Stretch player (D4)
+- Large ProgressRing (160 to 200 px) counting down, time in `number` style in the centre.
+- Eyebrow "HOLD 1 OF 8", name `title1`, demo thumbnail or video above the ring.
+- Cues as 2 to 3 short lines.
+- PrimaryButton "Pause" / "Resume"; TextButton "Skip"; "Next: Child's pose · 45 s" preview row; "End stretch" inside "⋯".
+
+### 6.7 Programmes (D1, D9)
+- Routine rows: max 2 chips, single line, consistent row height; eyebrow not truncated.
+- Current routine card: make sure "⋯" is visible (move dev gear).
+- Exercises list: thumbnail per exercise (MuscleWiki still), or at least a different icon per equipment type (dumbbell, barbell, machine, cable, band, bodyweight, kettlebell) in its category colour.
+
+### 6.8 Planner (D5, H1)
+- Day headers smaller and quieter: `eyebrow` style "WED 4 NOV" in `inkMuted` on `surfaceMuted`, 32 px tall. Today keeps the dark bar.
+- Planned session rows: unchanged (eyebrow, title, subtitle, chevron).
+- Empty days: no "Tap to add" band. Show just the header with a small "+" on the right.
+- Rest weeks (H1) shown as a soft `accentSoft` banner across the week: "Planned rest week. Enjoy it."
+- Reminder time shown on each planned row as a small bell + time (H3); tap to change.
+
+### 6.9 Activity (D6, D7, H1, H6, H7)
+- Sub-tabs become **Progress** and **Awards** (Photos moves into Progress as a card, only shown if photos are switched on).
+- **Progress tab:**
+  - Highlights tiles (keep).
+  - StreakCard: "Current run 5 weeks" + "Weeks trained 23" + a row of the last 8 weeks as small circles (gold, counted, rest, missed shown neutral grey, never red) + rest weeks banked.
+  - Your routine: card with progress bar and only the current week's sessions, plus "See full plan".
+  - Personal bests list; charts (Pro). Hide "Sessions per week" until there are 2+ weeks of data.
+- **Awards tab (D7):**
+  - Remove duplicated Highlights tiles and developer copy ("Badge tiers come next", "Most recent", "0/1").
+  - Group cards: First times, Sessions, Weeks trained, Personal bests, Programmes, Gym unlocked, Weight lifted.
+  - 3-column grid of 72 px badge icons (an icon per family, not a number), earned in colour with tier ring (bronze, silver, gold, platinum), locked as `surfaceMuted` silhouettes.
+  - Only the next unearned badge in each group shows progress ("38 / 50").
+  - Tapping a badge opens a sheet: name, what it's for, date earned.
+
+### 6.10 Profile (D8)
+- Header: avatar, her onboarding name (not the email prefix), email, plan badge.
+- Sections: Plan and subscription · Training (streak goal, units, rest timer default, show streak, show achievements) · Appearance (theme, show daily quote) · Notifications (session reminders, weekly summary, offers and news) · Privacy (progress photos on/off, export data, delete account) · Your answers · About (Safety and disclaimer, Terms, Privacy policy, Contact us, App version).
+- "My workouts" row subtitle shows a count ("4 saved").
+- Sign out at the bottom; app version below it (hidden dev gesture lives here).
+
+### 6.11 Onboarding changes (N1, N4)
+- **Goals screen:** chip cloud, up to 3 selections; first selected shows a small "Main" label; helper line "Pick up to 3. Your first pick is your main goal." Disable further chips after 3 with a gentle hint.
+- **Safety screen:** display serif title "Train safely", the full disclaimer in a scrollable card, required checkbox "I've read this and I'm 18 or over", PrimaryButton "Continue" disabled until ticked.
+- Streak goal screen copy: frame as a milestone ("How many weeks would you like to aim for first?"), with 4 weeks pre-selected.
+
+### 6.12 Learn (N6)
+- **Learn tab:** header with avatar; display serif title "Learn"; featured article hero (image, category eyebrow, display title overlay, read time); category tiles in a 2-column grid (image with label overlay, like the reference); "Recommended for you" carousel; "Continue reading" row if she left an article midway.
+- **Article page:** HeroImage with title; meta row (category · 3 min read); body with comfortable reading width, `body` 17/26, headings `title2`, bullet lists, pull-quote style; "Sources" list at the end; related articles; "Mark as read"; safety line at the bottom.
+- **ArticleCard component:** 16:10 image, category eyebrow, `title3`, read time; Pro badge if Pro.
+
+### 6.13 New components to add
+QuoteCard, WelcomeBackCard, StreakCard (with week circles), RestWeekBanner, ReminderTimeChip, ArticleCard, CategoryTile, SafetyNotice (inline one-line link), DisclaimerSheet, GoalChipGroup (multi-select with max and "Main" label), SegmentedThemePicker.
