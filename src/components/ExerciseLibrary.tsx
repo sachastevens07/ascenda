@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip, ChipScroller, PrimaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
+import { useDevTools } from '@/lib/devFlags';
 import {
   EQUIPMENT,
   EQUIPMENT_LABELS,
@@ -54,6 +54,7 @@ export function ExerciseLibrary({
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 24;
   const { colours, radius, type } = useTheme();
+  const { showDevTools } = useDevTools();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
@@ -165,7 +166,7 @@ export function ExerciseLibrary({
           <Text style={[type.bodySm, { color: colours.inkMuted, textAlign: 'center', marginTop: 6 }]}>
             Check your connection and try again.
           </Text>
-          {SHOW_DEV_TOOLS && errorDetail ? (
+          {showDevTools && errorDetail ? (
             <Text style={[type.caption, { color: colours.inkMuted, textAlign: 'center', marginTop: 12 }]}>
               {errorDetail}
             </Text>

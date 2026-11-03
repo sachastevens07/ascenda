@@ -2,9 +2,34 @@
 
 Handoff notes. Read `AGENTS.md` first, then this file. Current phase is **v2.2** (design pass 2, retention and new features). `AGENTS.md` and `DESIGN.md` were copied from Downloads on 3 Nov 2026. `DESIGN.md` section 6 overrides earlier design notes where they disagree. Do not start gym-buddy, AI or food.
 
-Git: `main` at `2d6c01c` (Step 9 Onboarding). SQL is still pasted by hand; this repo cannot see the remote database. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise. S12 is already built.
+Git: `main`. SQL is still pasted by hand; this repo cannot see the remote database. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise. S12 is already built. Ask before **H1**, and before adding any font or notifications library.
 
-**Next:** Group 1, **D1** then **N5**. Wait for approval of the Group 1 plan before writing code. Ask before **H1**, and before adding any font or notifications library.
+### Done
+**D1. Global design fixes (3 Nov 2026).** Runtime `showDevTools` (off by default; long-press Profile version five times). Primary buttons are plum `brand`. Tags are sentence case, max 2 per card, one line. Routines list is unique by id. Old `/programme` screen redirects to Programmes. Kept both One spot routines. No SQL. No new libraries.
+
+### In progress
+None.
+
+### Next step
+**N5.** Light theme default, dark theme in settings.
+
+### Known bugs
+- Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
+- `one-spot-6` (“One spot: 6 weeks”) and `one-spot-2` (“One spot 2 days”) are two different plans and both still appear.
+- Bug 2: old programme tables still exist; Profile UI is hidden and `/programme` now redirects.
+
+### Decisions made
+- Keep both One spot routines.
+- Skip secondary-button restyle and eyebrow shortening (left for later screen passes).
+- Keep Restart 8-week block behind `showDevTools`.
+- `showDevTools` is on-device only (AsyncStorage). No `profiles` column.
+
+### Setup notes
+- No migration to run.
+- `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
+- To turn tester tools on: Profile, scroll to **Version 1.0.0**, long-press it five times within about 8 seconds.
+
+**v2.2 Group 1:** D1 **done**. N5 next.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -87,9 +112,9 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 
 `ThemeProvider` still follows the phone scheme even though `app.json` `userInterfaceStyle` is `light`. Kit screens use `useTheme()`; many others still import the static `colours` object (light palette).
 
-### v2.2 (all **not started** unless noted)
+### v2.2
 
-**Group 1:** D1, N5.
+**Group 1:** D1 **done** (3 Nov 2026). N5 **not started**.
 
 **Group 2:** N3, N1, N4.
 

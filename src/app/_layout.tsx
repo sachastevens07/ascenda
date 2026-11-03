@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { DialogProvider } from '@/components/Dialog';
 import { ThemeProvider, colours } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
-import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
+import { DevToolsProvider, useDevTools } from '@/lib/devFlags';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
 import { SubscriptionProvider } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
@@ -14,18 +14,20 @@ import { WorkoutProvider } from '@/lib/workout';
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <SubscriptionProvider>
-          <ProfileProvider>
-            <WorkoutProvider>
-              <StatusBar style="dark" />
-              <DialogProvider>
-                <RootNavigator />
-              </DialogProvider>
-            </WorkoutProvider>
-          </ProfileProvider>
-        </SubscriptionProvider>
-      </AuthProvider>
+      <DevToolsProvider>
+        <AuthProvider>
+          <SubscriptionProvider>
+            <ProfileProvider>
+              <WorkoutProvider>
+                <StatusBar style="dark" />
+                <DialogProvider>
+                  <RootNavigator />
+                </DialogProvider>
+              </WorkoutProvider>
+            </ProfileProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </DevToolsProvider>
     </ThemeProvider>
   );
 }
@@ -120,11 +122,12 @@ function RootNavigator() {
 }
 
 function ProfileError({ detail, onRetry }: { detail: string; onRetry: () => void }) {
+  const { showDevTools } = useDevTools();
   return (
     <View style={styles.error}>
       <Text style={styles.errorTitle}>We couldn't load your profile</Text>
       <Text style={styles.errorText}>Check your connection and try again.</Text>
-      {SHOW_DEV_TOOLS && <Text style={styles.errorDetail}>{detail}</Text>}
+      {showDevTools ? <Text style={styles.errorDetail}>{detail}</Text> : null}
       <Pressable
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
         onPress={onRetry}

@@ -85,7 +85,7 @@ export function ImageCard({
           ) : null}
           {tags.length > 0 ? (
             <View style={styles.tags}>
-              {tags.slice(0, 3).map((tag) => (
+              {tags.slice(0, 2).map((tag) => (
                 <Chip key={tag} label={tag} />
               ))}
             </View>
@@ -289,6 +289,7 @@ export function Chip({
         },
       ]}>
       <Text
+        numberOfLines={1}
         style={[
           large ? type.body : type.caption,
           { color: selected ? colours.brand : colours.ink, fontWeight: selected ? '700' : '500' },
@@ -342,9 +343,10 @@ const styles = StyleSheet.create({
   },
   tags: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     gap: 8,
     marginTop: 12,
+    overflow: 'hidden',
   },
   chip: {
     minHeight: 32,

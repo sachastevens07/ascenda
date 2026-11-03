@@ -18,7 +18,7 @@ export type Palette = {
   inkMuted: string;
   brand: string;
   brandSoft: string;
-  /** Coral. Small highlights and the Start-session CTA, never large fills. */
+  /** Coral. Small highlights only: eyebrows, streak flame, key numbers. */
   accent: string;
   onAccent: string;
   onBrand: string;

@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colours } from '@/constants/theme';
-import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
+import { useDevTools } from '@/lib/devFlags';
 import {
   EQUIPMENT_LABELS,
   EXERCISE_MEDIA_BUCKET,
@@ -38,6 +38,7 @@ export default function ExerciseScreen() {
   const mediaWidth = windowWidth - 40;
   const mediaHeight = Math.min(280, Math.round((mediaWidth * 3) / 4));
   const { profile } = useProfile();
+  const { showDevTools } = useDevTools();
   const answers = getQuizAnswers(profile);
   const [exercise, setExercise] = useState<Exercise | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -123,7 +124,7 @@ export default function ExerciseScreen() {
         <View style={[styles.media, styles.mediaPlaceholder, { width: mediaWidth, height: mediaHeight }]}>
           <Ionicons name="barbell-outline" size={48} color={colours.accent} />
           <Text style={styles.mediaPlaceholderText}>Demo image coming soon</Text>
-          {SHOW_DEV_TOOLS && (
+          {showDevTools && (
             <Text style={styles.mediaDevHint}>
               Upload {exercise.id}.jpg to the {EXERCISE_MEDIA_BUCKET} bucket
             </Text>

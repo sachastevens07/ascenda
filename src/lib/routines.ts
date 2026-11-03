@@ -581,9 +581,20 @@ export function collectRoutineTags(routines: RoutineSummary[]): string[] {
   return [...new Set(routines.flatMap((routine) => routine.tags))].sort((a, b) => a.localeCompare(b));
 }
 
-/** Title-case a stored tag such as "one spot" or "beginner-friendly". */
+/** Sentence-case a stored tag such as "one spot" or "beginner-friendly". */
 export function formatTagLabel(tag: string): string {
-  return tag.replace(/[A-Za-z]+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  const cleaned = tag.replace(/-/g, ' ').trim();
+  if (!cleaned) return tag;
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+}
+
+function uniqueById(routines: RoutineSummary[]): RoutineSummary[] {
+  const seen = new Set<string>();
+  return routines.filter((routine) => {
+    if (seen.has(routine.id)) return false;
+    seen.add(routine.id);
+    return true;
+  });
 }
 
 /** So R4 can reuse getWeightSuggestion() without a second progression path. */
@@ -619,7 +630,7 @@ export async function fetchRoutines(options?: { type?: RoutineType }): Promise<R
       if (isMissingRoutines(fallback.error)) return [];
       throw new Error(fallback.error.message);
     }
-    const list = ((fallback.data ?? []) as unknown as SummaryRow[]).map(toSummary);
+    const list = uniqueById(((fallback.data ?? []) as unknown as SummaryRow[]).map(toSummary));
     if (wanted === 'stretch') return [];
     return list;
   }
@@ -627,7 +638,7 @@ export async function fetchRoutines(options?: { type?: RoutineType }): Promise<R
     if (isMissingRoutines(withType.error)) return [];
     throw new Error(withType.error.message);
   }
-  const list = ((withType.data ?? []) as unknown as SummaryRow[]).map(toSummary);
+  const list = uniqueById(((withType.data ?? []) as unknown as SummaryRow[]).map(toSummary));
   if (!wanted) return list.filter((routine) => routine.type !== 'stretch');
   return list.filter((routine) => routine.type === wanted);
 }

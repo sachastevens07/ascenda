@@ -9,7 +9,7 @@ type ButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
-  /** Plum by default. Coral is the Start-session CTA only. */
+  /** Plum by default. Coral is not used for primary buttons. */
   tone?: 'brand' | 'accent';
 };
 

@@ -546,7 +546,6 @@ export default function SessionDetailScreen() {
         ]}>
         <PrimaryButton
           label="Start session"
-          tone="accent"
           loading={isStarting}
           disabled={busy || slots.length === 0}
           onPress={handleStart}

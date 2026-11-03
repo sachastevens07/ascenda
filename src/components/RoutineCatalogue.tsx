@@ -478,9 +478,10 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     gap: 8,
     marginTop: 8,
+    overflow: 'hidden',
   },
   filters: {
     marginHorizontal: -24,

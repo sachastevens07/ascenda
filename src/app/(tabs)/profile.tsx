@@ -1,6 +1,7 @@
+import Constants from 'expo-constants';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
@@ -9,7 +10,7 @@ import { useTheme } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import { useAuth } from '@/lib/auth';
 import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
-import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
+import { useDevTools } from '@/lib/devFlags';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import { openPaywall } from '@/lib/paywall';
 import { fetchProgramme, formatKg } from '@/lib/programmes';
@@ -66,7 +67,10 @@ export default function ProfileScreen() {
   const { session } = useAuth();
   const { profile, reload } = useProfile();
   const subscription = useSubscription();
+  const { showDevTools, setShowDevTools } = useDevTools();
   const answers = getQuizAnswers(profile);
+  const versionPresses = useRef<number[]>([]);
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
@@ -166,6 +170,22 @@ export default function ProfileScreen() {
         error instanceof Error ? error.message : 'Check your connection and try again.'
       );
     }
+  }
+
+  function handleVersionLongPress() {
+    const now = Date.now();
+    versionPresses.current = versionPresses.current.filter((time) => now - time < 8000);
+    versionPresses.current.push(now);
+    if (versionPresses.current.length < 5) return;
+    versionPresses.current = [];
+    const next = !showDevTools;
+    setShowDevTools(next);
+    showDialog(
+      next ? 'Tester tools are on' : 'Tester tools are off',
+      next
+        ? 'Developer rows are visible on this screen.'
+        : 'This screen now matches a production build.'
+    );
   }
 
   function requestEditStreakGoal() {
@@ -317,7 +337,18 @@ export default function ProfileScreen() {
         style={styles.signOut}
       />
 
-      {SHOW_DEV_TOOLS ? (
+      <Pressable
+        onLongPress={handleVersionLongPress}
+        delayLongPress={400}
+        accessibilityRole="text"
+        accessibilityLabel={`App version ${appVersion}`}
+        style={styles.version}>
+        <Text style={[type.caption, { color: colours.inkMuted, textAlign: 'center' }]}>
+          Version {appVersion}
+        </Text>
+      </Pressable>
+
+      {showDevTools ? (
         <SettingsGroup title="Developer">
           <SettingsRow
             title="Testing as"
@@ -423,5 +454,10 @@ const styles = StyleSheet.create({
   signOut: {
     alignSelf: 'center',
     marginTop: 4,
+  },
+  version: {
+    alignSelf: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
 });

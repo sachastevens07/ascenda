@@ -622,7 +622,6 @@ export default function RoutineDetailScreen() {
           ]}>
           <PrimaryButton
             label={isStarting ? 'Starting…' : stickyLabel}
-            tone={isCurrent ? 'accent' : 'brand'}
             loading={isStarting}
             disabled={busy}
             onPress={isCurrent ? openNextSession : requestStart}

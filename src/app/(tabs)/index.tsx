@@ -359,7 +359,7 @@ export default function HomeScreen() {
             <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.xs }]}>
               Finish or discard it before starting another.
             </Text>
-            <PrimaryButton label="Continue session" tone="accent" onPress={continueSession} style={{ marginTop: spacing.md }} />
+            <PrimaryButton label="Continue session" onPress={continueSession} style={{ marginTop: spacing.md }} />
           </View>
         ) : null}
 
@@ -402,7 +402,7 @@ export default function HomeScreen() {
                     />
                   </View>
                 </View>
-                <PrimaryButton label="Start session" tone="accent" onPress={openSessionDetail} style={{ marginTop: spacing.md }} />
+                <PrimaryButton label="Start session" onPress={openSessionDetail} style={{ marginTop: spacing.md }} />
               </View>
             </View>
           </View>

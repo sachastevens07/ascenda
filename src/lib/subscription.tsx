@@ -17,6 +17,7 @@ import Purchases, {
 } from 'react-native-purchases';
 
 import { useAuth } from '@/lib/auth';
+import { useDevTools } from '@/lib/devFlags';
 import { formatShortDate } from '@/lib/progress';
 import { Notifications } from '@/lib/restTimer';
 
@@ -162,6 +163,7 @@ async function updateTrialReminder(trialEndsAt: Date | null): Promise<void> {
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
+  const { showDevTools } = useDevTools();
   const userId = session?.user.id ?? null;
   const isAvailable = configureOnce();
   const [info, setInfo] = useState<CustomerInfo | null>(null);
@@ -169,7 +171,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [devOverride, setDevOverrideState] = useState<DevOverride>('off');
 
   useEffect(() => {
-    if (!__DEV__) return;
     AsyncStorage.getItem(DEV_OVERRIDE_KEY)
       .then((value) => {
         const stored = DEV_OVERRIDES.find((option) => option === value);
@@ -226,7 +227,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<SubscriptionState>(() => {
-    const status = (__DEV__ ? overrideStatus(devOverride) : null) ?? realStatus;
+    const status = (showDevTools ? overrideStatus(devOverride) : null) ?? realStatus;
     return {
       ...status,
       isLoading,
@@ -236,7 +237,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setDevOverride,
       applyCustomerInfo: setInfo,
     };
-  }, [realStatus, devOverride, isLoading, isAvailable, info, setDevOverride]);
+  }, [realStatus, devOverride, showDevTools, isLoading, isAvailable, info, setDevOverride]);
 
   return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;
 }
