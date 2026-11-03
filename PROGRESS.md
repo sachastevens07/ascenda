@@ -52,20 +52,21 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **H7** Photos off by default; Profile → Privacy; card on Activity Progress only if on; no programme photo prompts; Show photos before signed URLs.
 - **H8** Challenges join with next Monday or next 1st; personal 28-day window; no countdown copy. App code is in. SQL rewrite is still **not confirmed run**.
 - **D2** Unique Pexels cover per strength routine and per stretch. Stretch photos are stretching, not gym lifts. Group studio / midriff covers replaced. Home featured row skips the active routine so it does not repeat the next-session card. Bundled files show without SQL; `coverForRoutine` prefers `cover-{routineId}` in `IMAGE_CATALOGUE`.
+- **D3** (3 Nov 2026) Home restyle: initials avatar (opens Profile), display greeting, 16:10 featured and stretch cards at 78% width, QuoteCard after the week card, WelcomeBackCard uses `accentSoft` + title2. 90 original quotes bundled; hide from the card ⋯ or Profile → Appearance. SQL: `supabase/quotes_d3.sql` (`profiles.hide_quote`). Learn article cards left for N6.
 
 ---
 
 ### In progress
 
-**D2 SQL paste (blocked on Sacha).** App covers are in (`src/lib/images.ts`, `assets/covers/cover-*.jpg`, Home featured exclude). Paste `supabase/d2_covers.sql` when ready (also still waiting on `challenges_h8.sql`). Do not start D3 until she has checked the photos on her phone.
+**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, and **`quotes_d3.sql`**. Hide-quote works on-device without SQL.
 
 ---
 
 ### Next step
 
-**D3. Home** after Sacha has tested D2 (DESIGN.md 6.4). Do not start D4.
+**D4. Routine and stretch detail share one layout** (DESIGN.md 6.5 and 6.6). Do not start D5.
 
-After D3: D4, D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
+After D4: D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
 
 ---
 
@@ -103,6 +104,7 @@ After D3: D4, D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already buil
 - Primary buttons are plum. Coral is highlights only. Unrestyled screens stay cream until their design pass.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
 - Do not use native `Switch` under the pill tab bar; do not use `Modal` + `borderRadius: 999` for tall menus.
+- D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. Avatar opens the existing Profile tab until N6. No Learn cards yet. No display-serif font (system sans, same as the rest of the kit). Challenge card stays on Home after the quote.
 
 ---
 
@@ -127,7 +129,7 @@ Scan the QR with Expo Go. Use `--tunnel` if needed. Checks: `npx.cmd tsc --noEmi
 **SQL already run (confirmed):** `exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql`. User also reported (24 Oct) `routines.sql` and `planned_sessions.sql` pasted.
 
 **SQL to paste (not confirmed; app usually still opens):**
-`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), **`d2_covers.sql`**. Do not run `cycle.sql`.
+`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, **`quotes_d3.sql`**. Do not run `cycle.sql`.
 
 Agents cannot run SQL. Sacha pastes into Supabase > SQL Editor. Files are idempotent; the editor’s “destructive operations” warning is expected.
 

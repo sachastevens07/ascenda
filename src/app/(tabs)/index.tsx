@@ -29,6 +29,7 @@ import {
   PrimaryButton,
   ProMark,
   ProgressRing,
+  QuoteCard,
   SectionHeader,
   TextButton,
   WelcomeBackCard,
@@ -63,6 +64,7 @@ import {
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine, coverSources } from '@/lib/images';
 import { consumeOnboardingPaywall } from '@/lib/onboarding';
+import { fetchHideQuote, pickDailyQuote, saveHideQuote } from '@/lib/quotes';
 import { openPaywall } from '@/lib/paywall';
 import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanProgress } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
@@ -131,6 +133,7 @@ type HomeData = {
   weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
   hideStreak: boolean;
+  hideQuote: boolean;
   welcomeBack: WelcomeBackOffer | null;
   handOff: NextRoutineOffer | null;
   challenge: Challenge | null;
@@ -142,6 +145,13 @@ function greeting(name: string | null | undefined): string {
   const hello = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const first = name?.trim().split(/\s+/)[0];
   return first ? `${hello}, ${first}` : hello;
+}
+
+function initials(name: string | null | undefined): string {
+  const parts = name?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (parts.length === 0) return 'A';
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return `${parts[0].slice(0, 1)}${parts[1].slice(0, 1)}`.toUpperCase();
 }
 
 function coverImage(routine: Pick<RoutineSummary, 'id' | 'cover'>): ImageSourcePropType | null {
@@ -172,6 +182,7 @@ export default function HomeScreen() {
   const [routineMenuAnchor, setRoutineMenuAnchor] = useState<AnchorRect | null>(null);
   const [routineMenuMode, setRoutineMenuMode] = useState<'actions' | 'days'>('actions');
   const [isStarting, setIsStarting] = useState(false);
+  const [quoteHidden, setQuoteHidden] = useState(false);
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
 
@@ -201,6 +212,7 @@ export default function HomeScreen() {
             stretchRoutines,
             streakGoal,
             hideStreak,
+            hideQuote,
             restWeeks,
             completedEnrolment,
             handOffPreview,
@@ -216,6 +228,7 @@ export default function HomeScreen() {
             fetchStretchRoutines().catch(() => []),
             fetchStreakGoal().catch(() => DEFAULT_STREAK_GOAL),
             fetchHideStreak().catch(() => false),
+            fetchHideQuote().catch(() => false),
             fetchRestWeekStarts().catch(() => new Set<string>()),
             fetchLatestCompletedEnrolment().catch(() => null),
             fetchHandOffPreview().catch(() => false),
@@ -286,11 +299,13 @@ export default function HomeScreen() {
             weekProgress,
             streak,
             hideStreak,
+            hideQuote,
             welcomeBack,
             handOff,
             challenge: pickHomeChallenge(challenges),
             progress,
           });
+          setQuoteHidden(hideQuote);
           setLoadState('ready');
           if (!hideStreak) void maybeCelebrateStreakGoal(streak);
           void maybeTrackStreakRepair(streak);
@@ -517,6 +532,15 @@ export default function HomeScreen() {
     }
   }
 
+  function openProfile() {
+    router.navigate('/(tabs)/profile' as Href);
+  }
+
+  function hideQuote() {
+    setQuoteHidden(true);
+    saveHideQuote(true).catch(() => setQuoteHidden(false));
+  }
+
   function openRoutineMenu() {
     if (!data?.enrolment) return;
     measureAnchor(routineMenuRef.current, (rect) => {
@@ -549,6 +573,8 @@ export default function HomeScreen() {
 
   const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, handOff, challenge, progress } =
     data;
+  const quote = pickDailyQuote();
+  const showQuote = !quoteHidden;
   const inProgress = Boolean(activeSession);
   const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
   const showWeekCard =
@@ -561,7 +587,24 @@ export default function HomeScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
-        <Text style={[type.display, { color: colours.ink }]}>{greeting(profile?.display_name)}</Text>
+        <View style={styles.header}>
+          <Pressable
+            onPress={openProfile}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            style={({ pressed }) => [
+              styles.avatar,
+              { backgroundColor: colours.brandSoft, borderRadius: radius.full },
+              pressed && styles.pressed,
+            ]}>
+            <Text style={[type.caption, { color: colours.brand, fontWeight: '700' }]}>
+              {initials(profile?.display_name)}
+            </Text>
+          </Pressable>
+          <Text style={[type.display, { color: colours.ink, flex: 1 }]} numberOfLines={1}>
+            {greeting(profile?.display_name)}
+          </Text>
+        </View>
 
         {subscription.trialEndsAt && isTrialEndingSoon(subscription) ? (
           <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
@@ -719,6 +762,8 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
+        {showQuote ? <QuoteCard quote={quote} onHide={hideQuote} /> : null}
+
         {challenge ? (
           <Pressable
             onPress={() => router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)}
@@ -763,6 +808,7 @@ export default function HomeScreen() {
                   isPro={!subscription.isPro && routine.is_pro}
                   isFree={!subscription.isPro && !routine.is_pro}
                   locked={!subscription.isPro && routine.is_pro}
+                  imageAspectRatio={16 / 10}
                   progress={
                     progress[routine.id] ? progress[routine.id].done / progress[routine.id].target : undefined
                   }
@@ -869,8 +915,19 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingTop: 20,
-    gap: 20,
+    paddingTop: 12,
+    gap: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   centre: {
     flex: 1,

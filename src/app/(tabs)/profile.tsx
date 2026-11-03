@@ -38,6 +38,7 @@ import {
 import { fetchHideAchievements, saveHideAchievements } from '@/lib/achievements';
 import { confirmEnablePhotos, fetchPhotosEnabled, savePhotosEnabled } from '@/lib/progressPhotos';
 import { isAnalyticsEnabled, track } from '@/lib/analytics';
+import { fetchHideQuote, saveHideQuote } from '@/lib/quotes';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
 import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
@@ -110,6 +111,7 @@ export default function ProfileScreen() {
   const [showAnswers, setShowAnswers] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
   const [hideAchievements, setHideAchievements] = useState(false);
+  const [hideQuote, setHideQuote] = useState(false);
   const [photosEnabled, setPhotosEnabled] = useState(false);
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
   const [handOffPreview, setHandOffPreview] = useState(false);
@@ -140,6 +142,11 @@ export default function ProfileScreen() {
       fetchHideAchievements()
         .then((hidden) => {
           if (isCurrent) setHideAchievements(hidden);
+        })
+        .catch(() => {});
+      fetchHideQuote()
+        .then((hidden) => {
+          if (isCurrent) setHideQuote(hidden);
         })
         .catch(() => {});
       fetchPhotosEnabled()
@@ -463,6 +470,22 @@ export default function ProfileScreen() {
           <Text style={[type.bodySm, { color: colours.inkMuted, marginBottom: 10 }]}>Theme</Text>
           <SegmentedThemePicker value={preference} onChange={handleThemeChange} />
         </View>
+        <SettingsRow
+          title="Show daily quote"
+          subtitle={hideQuote ? 'Hidden on Home' : 'Shown on Home'}
+          onPress={() => {
+            const next = !hideQuote;
+            setHideQuote(next);
+            saveHideQuote(next).catch((error) => {
+              setHideQuote(!next);
+              showDialog(
+                'Couldn’t save that',
+                error instanceof Error ? error.message : 'Check your connection and try again.'
+              );
+            });
+          }}
+          last
+        />
       </SettingsGroup>
 
       {reminderPrefs ? (

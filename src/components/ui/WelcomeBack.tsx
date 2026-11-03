@@ -28,8 +28,10 @@ export function WelcomeBackCard({
         },
         style,
       ]}>
-      <Text style={[type.caption, { color: colours.accent, fontWeight: '700' }]}>Welcome back</Text>
-      <Text style={[type.title2, { color: colours.ink, marginTop: spacing.sm }]}>{body}</Text>
+      <Text style={[type.title2, { color: colours.ink }]}>Welcome back</Text>
+      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.sm }]} numberOfLines={1}>
+        {body}
+      </Text>
       <PrimaryButton
         label={starting ? 'Starting…' : 'Start a lighter session'}
         onPress={onStartLighter}

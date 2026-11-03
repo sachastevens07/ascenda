@@ -31,6 +31,7 @@ export {
 } from './Disclaimer';
 export { GoalChipGroup } from './GoalChipGroup';
 export { RestWeekBanner, StreakCard } from './Streak';
+export { QuoteCard } from './QuoteCard';
 export { WelcomeBackCard } from './WelcomeBack';
 export { WhatsNextCard } from './WhatsNext';
 
