@@ -33,7 +33,8 @@
           "photosPermission": "Add a private progress photo from your library.",
           "cameraPermission": "Take a private progress photo."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

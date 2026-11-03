@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { FinishedSessionMeta } from '@/lib/activityStats';
+import { track, trackOnce } from '@/lib/analytics';
 import { FREE_STARTER_ROUTINE_ID } from '@/lib/onboarding';
 import { parseIsoDate, startOfWeekMonday, toIso } from '@/lib/planner';
 import {
@@ -145,7 +146,7 @@ export async function resolveWelcomeBackOffer(input: {
   const restartDay =
     input.routine && restartWeek !== null ? (daysInWeek(input.routine, restartWeek)[0] ?? null) : null;
 
-  return {
+  const offer = {
     weeksAway,
     body: welcomeBackBody(now),
     restartWeek,
@@ -155,6 +156,8 @@ export async function resolveWelcomeBackOffer(input: {
     nextDay: input.nextDay ?? (input.routine ? firstDayOfRoutine(input.routine) : null),
     starterRoutineId: FREE_STARTER_ROUTINE_ID,
   };
+  void trackOnce(`welcome_back_shown:${toIso(startOfWeekMonday(now))}`, 'welcome_back_shown');
+  return offer;
 }
 
 export async function markWelcomeBackSession(sessionId: string): Promise<void> {
@@ -203,6 +206,7 @@ export async function fetchBackOnTrack(): Promise<{ unlocked: boolean; at: strin
 }
 
 export async function recordWelcomeBackCompleted(date: string): Promise<void> {
+  track('welcome_back_completed');
   const local = await readCompletedDates();
   if (!local.includes(date)) {
     local.push(date);

@@ -1,17 +1,23 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AcceptDisclaimerScreen } from '@/components/AcceptDisclaimerScreen';
 import { DialogProvider } from '@/components/Dialog';
 import { FirstSessionDisclaimerProvider } from '@/components/FirstSessionDisclaimer';
 import { ThemeProvider, useTheme } from '@/constants/theme';
+import {
+  identifyUser,
+  resetAnalytics,
+  startAnalytics,
+} from '@/lib/analytics';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { DevToolsProvider, useDevTools } from '@/lib/devFlags';
 import { needsDisclaimerAcceptance } from '@/lib/disclaimer';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
-import { SubscriptionProvider } from '@/lib/subscription';
+import { registerReminderAnalytics } from '@/lib/reminders';
+import { SubscriptionProvider, useSubscription } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
 import { WorkoutProvider } from '@/lib/workout';
 
@@ -21,6 +27,7 @@ export default function RootLayout() {
       <DevToolsProvider>
         <AuthProvider>
           <SubscriptionProvider>
+            <AnalyticsBootstrap />
             <ProfileProvider>
               <ThemeCloudSync />
               <ThemedStatusBar />
@@ -37,6 +44,31 @@ export default function RootLayout() {
       </DevToolsProvider>
     </ThemeProvider>
   );
+}
+
+function AnalyticsBootstrap() {
+  const { session, isLoading } = useAuth();
+  const { isPro, trialEndsAt } = useSubscription();
+  const hadUser = useRef(false);
+
+  useEffect(() => {
+    startAnalytics();
+    return registerReminderAnalytics();
+  }, []);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!session) {
+      if (hadUser.current) resetAnalytics();
+      hadUser.current = false;
+      return;
+    }
+    hadUser.current = true;
+    const plan = trialEndsAt ? 'trial' : isPro ? 'pro' : 'free';
+    identifyUser(session.user.id, plan);
+  }, [session, isLoading, isPro, trialEndsAt]);
+
+  return null;
 }
 
 function ThemedStatusBar() {

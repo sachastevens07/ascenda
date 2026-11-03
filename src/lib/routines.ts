@@ -1,3 +1,4 @@
+import { track } from '@/lib/analytics';
 import { userGoalsFromAnswers, type Goal, type QuizAnswers } from '@/lib/profile';
 import {
   SLOT_EXERCISE_COLUMNS,
@@ -1012,6 +1013,7 @@ export async function maybeCompleteEnrolment(enrolmentId: string): Promise<boole
     data: { user },
   } = await supabase.auth.getUser();
   if (user) await clearUpcomingRoutinePlans(user.id);
+  track('routine_completed', { routine_id: enrolment.routine_id });
   return true;
 }
 

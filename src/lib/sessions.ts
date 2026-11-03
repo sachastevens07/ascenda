@@ -1,3 +1,4 @@
+import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase';
 
 export type SessionSource = 'programme' | 'custom' | 'ai' | 'routine' | 'stretch';
@@ -188,7 +189,11 @@ export async function startSession(
     ...(blockId ? { block_id: blockId } : {}),
   };
   const { data, error } = await supabase.from('sessions').insert(payload).select(SESSION_COLUMNS).single();
-  if (!error) return toSession(data as Session)!;
+  if (!error) {
+    const session = toSession(data as Session)!;
+    track('session_started', { source: session.source });
+    return session;
+  }
   if (isMissingBlockColumn(error)) {
     const { block_id: _ignored, ...withoutBlock } = payload;
     const custom = await supabase
@@ -196,7 +201,11 @@ export async function startSession(
       .insert(withoutBlock)
       .select(SESSION_COLUMNS_CUSTOM)
       .single();
-    if (!custom.error) return toSession(custom.data as Session)!;
+    if (!custom.error) {
+      const session = toSession(custom.data as Session)!;
+      track('session_started', { source: session.source });
+      return session;
+    }
     if (!isMissingCustomSessionColumns(custom.error)) throw custom.error;
   } else if (!isMissingCustomSessionColumns(error)) {
     throw error;
@@ -211,7 +220,9 @@ export async function startSession(
     .select(SESSION_COLUMNS_LEGACY)
     .single();
   if (legacy.error) throw legacy.error;
-  return toSession(legacy.data as Session)!;
+  const session = toSession(legacy.data as Session)!;
+  track('session_started', { source: session.source });
+  return session;
 }
 
 export async function startRoutineSession(input: {
@@ -234,7 +245,10 @@ export async function startRoutineSession(input: {
     .insert(payload)
     .select(SESSION_COLUMNS_ROUTINES)
     .single();
-  if (!error) return toSession(data as Session)!;
+  if (!error) {
+    track('session_started', { source: 'routine' });
+    return toSession(data as Session)!;
+  }
   if (isMissingRoutineSessionColumns(error) || /source/i.test(error.message ?? '')) {
     if (input.sourceProgrammeDayId) {
       return startSession(input.sourceProgrammeDayId, exerciseSwaps);
@@ -257,7 +271,10 @@ export async function startStretchSession(routineDayId: string): Promise<Session
     .insert(payload)
     .select(SESSION_COLUMNS_ROUTINES)
     .single();
-  if (!error) return toSession(data as Session)!;
+  if (!error) {
+    track('session_started', { source: 'stretch' });
+    return toSession(data as Session)!;
+  }
   if (isMissingRoutineSessionColumns(error) || /source/i.test(error.message ?? '')) {
     throw new Error('Stretch sessions need supabase/stretches.sql run in the Supabase SQL editor.');
   }
@@ -276,14 +293,20 @@ export async function startCustomSession(
     exercise_swaps: exerciseSwaps,
   };
   const { data, error } = await supabase.from('sessions').insert(payload).select(SESSION_COLUMNS).single();
-  if (!error) return toSession(data as Session)!;
+  if (!error) {
+    track('session_started', { source: 'custom' });
+    return toSession(data as Session)!;
+  }
   if (isMissingBlockColumn(error)) {
     const custom = await supabase
       .from('sessions')
       .insert(payload)
       .select(SESSION_COLUMNS_CUSTOM)
       .single();
-    if (!custom.error) return toSession(custom.data as Session)!;
+    if (!custom.error) {
+      track('session_started', { source: 'custom' });
+      return toSession(custom.data as Session)!;
+    }
     if (isMissingCustomSessionColumns(custom.error)) {
       throw new Error(
         'Custom workouts need supabase/custom_workouts.sql run in the Supabase SQL editor.'
@@ -338,9 +361,11 @@ export async function finishSession(id: string, durationSeconds?: number): Promi
   if (error && payload.duration_seconds !== undefined && /duration_seconds/i.test(error.message)) {
     const retry = await supabase.from('sessions').update({ completed_at: completedAt }).eq('id', id);
     if (retry.error) throw retry.error;
+    track('session_completed');
     return;
   }
   if (error) throw error;
+  track('session_completed');
 }
 
 /** Deletes the session and every set logged in it. */
@@ -365,6 +390,7 @@ export async function saveSet(set: LoggedSet): Promise<void> {
     { onConflict: 'session_id,exercise_id,set_number' }
   );
   if (error) throw error;
+  if (set.completed) track('set_ticked');
 }
 
 /**

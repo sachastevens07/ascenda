@@ -16,6 +16,7 @@ import Purchases, {
   type PurchasesStoreProduct,
 } from 'react-native-purchases';
 
+import { trackOnce } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 import { useDevTools } from '@/lib/devFlags';
 import { formatShortDate } from '@/lib/progress';
@@ -220,6 +221,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     if (isLoading) return;
     updateTrialReminder(reminderAt === null ? null : new Date(reminderAt)).catch(() => {});
   }, [isLoading, reminderAt]);
+
+  useEffect(() => {
+    if (isLoading || !userId || !realStatus.trialEndsAt) return;
+    void trackOnce(`trial_started:${realStatus.trialEndsAt.toISOString()}`, 'trial_started');
+  }, [isLoading, userId, realStatus.trialEndsAt]);
 
   const setDevOverride = useCallback((value: DevOverride) => {
     setDevOverrideState(value);

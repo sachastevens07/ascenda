@@ -10,6 +10,7 @@ import {
   type StreakGoal,
   type WeeklyStreak,
 } from '@/lib/activityStats';
+import { track, trackOnce } from '@/lib/analytics';
 import { fetchPlannedCountsByWeek, toIso } from '@/lib/planner';
 import { supabase } from '@/lib/supabase';
 
@@ -97,10 +98,12 @@ export async function setRestWeek(monday: string): Promise<void> {
     const local = await readLocalRestWeeks();
     if (!local.includes(monday)) local.push(monday);
     await writeLocalRestWeeks(local);
+    track('rest_week_used');
     return;
   }
   const local = await readLocalRestWeeks();
   if (local.length > 0) await writeLocalRestWeeks(local.filter((item) => item !== monday));
+  track('rest_week_used');
 }
 
 export async function clearRestWeek(monday: string): Promise<void> {
@@ -148,6 +151,7 @@ export async function loadStreakSnapshot(fallbackTarget: number): Promise<Weekly
   );
   const streak = getWeeklyStreak(sessions, planned, fallbackTarget, goal, rest);
   void syncRestWeeksBanked(streak.restWeeksBanked);
+  void maybeTrackStreakRepair(streak);
   return streak;
 }
 
@@ -196,6 +200,7 @@ export async function maybePromptMissedWeek(
   } catch {
     return;
   }
+  track('planned_week_missed', { week_start: last.monday });
 
   if (streak.restWeeksBanked > 0) {
     showDialog(
@@ -225,6 +230,17 @@ export async function maybePromptMissedWeek(
     'New week, fresh start',
     'Do one extra session this week and last week still counts towards your run.'
   );
+}
+
+export async function maybeTrackStreakRepair(streak: WeeklyStreak): Promise<void> {
+  const seen = new Set<string>();
+  const weeks = [...streak.recent];
+  if (streak.lastWeek) weeks.push(streak.lastWeek);
+  for (const week of weeks) {
+    if (week.status !== 'repaired' || seen.has(week.monday)) continue;
+    seen.add(week.monday);
+    await trackOnce(`streak_repaired:${week.monday}`, 'streak_repaired', { week_start: week.monday });
+  }
 }
 
 export async function maybeCelebrateStreakGoal(streak: WeeklyStreak): Promise<void> {

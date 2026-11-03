@@ -46,7 +46,7 @@ import {
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import { getGymUnlocked } from '@/lib/gymUnlocked';
-import { fetchHideStreak, fetchRestWeekStarts, syncRestWeeksBanked } from '@/lib/streak';
+import { fetchHideStreak, fetchRestWeekStarts, maybeTrackStreakRepair, syncRestWeeksBanked } from '@/lib/streak';
 import { fetchBackOnTrack } from '@/lib/welcomeBack';
 import { openPaywall, type PaywallReason } from '@/lib/paywall';
 import {
@@ -259,6 +259,7 @@ export default function ActivityScreen() {
           const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
           const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, goal, restWeeks);
           void syncRestWeeksBanked(streak.restWeeksBanked);
+          void maybeTrackStreakRepair(streak);
           const review = completedEnrolment
             ? await fetchEnrolmentReview(completedEnrolment, sessions, sets).catch(() => null)
             : null;

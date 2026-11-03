@@ -1,6 +1,8 @@
 import { router, type Href } from 'expo-router';
 import type { PurchasesPackage } from 'react-native-purchases';
 
+import { track } from '@/lib/analytics';
+
 export const PAYWALL_REASONS = [
   'onboarding',
   'routine',
@@ -101,6 +103,7 @@ export function paywallCopy(reason: PaywallReason): PaywallCopy {
 }
 
 export function openPaywall(reason: PaywallReason = 'general'): void {
+  track('paywall_viewed', { reason });
   router.push({ pathname: '/paywall', params: { reason } } as Href);
 }
 

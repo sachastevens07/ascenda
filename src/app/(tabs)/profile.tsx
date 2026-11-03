@@ -35,6 +35,7 @@ import {
   setWeeklySummaryEnabled,
   type ReminderPrefs,
 } from '@/lib/reminders';
+import { isAnalyticsEnabled, track } from '@/lib/analytics';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
 import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
@@ -576,6 +577,24 @@ export default function ProfileScreen() {
                   showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
                 }
               });
+            }}
+          />
+          <SettingsRow
+            title="Send a test analytics event"
+            subtitle={isAnalyticsEnabled() ? 'Shows in PostHog live events' : 'No PostHog key in .env'}
+            onPress={() => {
+              if (!isAnalyticsEnabled()) {
+                showDialog(
+                  'PostHog is not set up',
+                  'Add EXPO_PUBLIC_POSTHOG_API_KEY to .env, then restart Expo. The app still works without it.'
+                );
+                return;
+              }
+              track('dev_test_event');
+              showDialog(
+                'Test event sent',
+                'Open PostHog, go to Activity, and look for dev_test_event. It can take a few seconds.'
+              );
             }}
           />
           <SettingsRow title="Restart 8-week block" onPress={() => void handleDevRestartBlock()} last />

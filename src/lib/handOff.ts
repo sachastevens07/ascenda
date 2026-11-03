@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { track } from '@/lib/analytics';
 import { FREE_STARTER_ROUTINE_ID } from '@/lib/onboarding';
 import { nextRoutineOnPath } from '@/lib/paths';
 import { addDays, startOfWeekMonday, toIso } from '@/lib/planner';
@@ -118,5 +119,6 @@ export async function resolveNextRoutineOffer(input: {
 export async function startNextRoutineOnMonday(routine: RoutineSummary, isPro: boolean): Promise<'started' | 'paywall'> {
   if (routine.is_pro && !isPro) return 'paywall';
   await startRoutine(routine.id, { startDate: upcomingMondayIso() });
+  track('next_routine_started', { routine_id: routine.id });
   return 'started';
 }

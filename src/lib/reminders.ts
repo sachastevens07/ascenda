@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
+import { track } from '@/lib/analytics';
 import {
   addDays,
   loadPlannerRange,
@@ -437,6 +438,34 @@ export async function maybeAskSessionReminders(): Promise<void> {
   } catch {
     askLock = false;
   }
+}
+
+export type ReminderAnalyticsKind = 'session' | 'weekly' | 'test' | 'trial';
+
+export function reminderKindFromIdentifier(id: string | undefined): ReminderAnalyticsKind | null {
+  if (!id) return null;
+  if (id.startsWith(SESSION_PREFIX)) return 'session';
+  if (id.startsWith(WEEKLY_PREFIX)) return 'weekly';
+  if (id === TEST_ID) return 'test';
+  if (id === 'trial-ending') return 'trial';
+  return null;
+}
+
+/** Listens for delivered and opened planner (and trial) reminders. Rest-timer alerts are ignored. */
+export function registerReminderAnalytics(): () => void {
+  if (!Notifications) return () => {};
+  const received = Notifications.addNotificationReceivedListener((notification) => {
+    const kind = reminderKindFromIdentifier(notification.request.identifier);
+    if (kind) track('reminder_sent', { type: kind });
+  });
+  const opened = Notifications.addNotificationResponseReceivedListener((response) => {
+    const kind = reminderKindFromIdentifier(response.notification.request.identifier);
+    if (kind) track('reminder_opened', { type: kind });
+  });
+  return () => {
+    received.remove();
+    opened.remove();
+  };
 }
 
 /** Tester helper: a sample session reminder in a few seconds. */

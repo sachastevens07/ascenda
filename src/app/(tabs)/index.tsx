@@ -47,6 +47,7 @@ import {
   fetchRestWeekStarts,
   maybeCelebrateStreakGoal,
   maybePromptMissedWeek,
+  maybeTrackStreakRepair,
   syncRestWeeksBanked,
 } from '@/lib/streak';
 import {
@@ -290,6 +291,7 @@ export default function HomeScreen() {
           });
           setLoadState('ready');
           if (!hideStreak) void maybeCelebrateStreakGoal(streak);
+          void maybeTrackStreakRepair(streak);
           void maybePromptMissedWeek(streak, () => setAttempt((count) => count + 1));
           void maybeAskSessionReminders();
           void syncPlannerReminders();

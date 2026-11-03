@@ -23,11 +23,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **H4. Week-6 hand-off (3 Nov 2026).** In the last two weeks of a routine, Home and the current routine page show a What’s next preview (path first, then goals). Starting it then only opens the next routine, so the current plan is not abandoned. After she finishes, the completion screen shows start vs now lifts, a Routine completed chip, the share card, and **Start on Monday**. That enrolment begins on the coming Monday (today, if today is Monday). Upcoming days from the finished plan are cleared. Tester preview is behind showDevTools. No SQL. No new libraries.
 
+**H5. PostHog retention analytics (3 Nov 2026).** Official `posthog-react-native` client. Named events only (onboarding, disclaimer, paywall, trial, session start/complete, set tick, missed week, rest week, streak repair, welcome-back, reminders, routine complete, next routine). Identify by Supabase user id and plan (`free` / `pro` / `trial`). No health data, photos or free text. No-op without an API key. Session replay and surveys off. `learn_article_opened` is a helper for N6. Dashboards are built in the PostHog EU project, not in the app. No SQL.
+
 ### In progress
 None.
 
 ### Next step
-**H5** retention analytics (PostHog). Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
+**H6** achievements rework. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -66,15 +68,16 @@ None.
 - Away 3+ weeks offers a lighter routine, preferring Gym Confidence: 6 weeks. Pro lighter plans still open the paywall if she is on Free.
 - Back on track is repeatable as a session win; the Awards badge unlocks once. First unlock is stored in `milestones` if that table exists; repeats stay on-device.
 - Monday / 1st / start of term (1–14 Jan, Apr, Sep) only change the card line. They do not show the card to people who trained last week.
-- H5 `welcome_back_shown` / `welcome_back_completed` events are left for H5. H6 will restyle the badge.
+- H5 now sends `welcome_back_shown` / `welcome_back_completed`. H6 will restyle the badge.
 - H3 reuses `expo-notifications` already in the project (rest timer and trial-ending). No new library. Time picker is hourly chips (6 am to 9 pm) plus last-session hour, not a date-time wheel. AGENTS.md still says ask before a notifications library.
 - Session reminders start off until she taps Turn on or enables them in Profile. Weekly summary and offers also default off. Offers and news never send a push.
 - Sunday summary fires at 10:00 local time. Default session time is last finished session hour, else 6:00 pm.
 - Reminder chips only show when session reminders are on, and never on rest days or completed days. D5 Planner restyle (smaller headers, empty-day +) was not done.
-- Rest-timer permission on logger open stays. H3 does not ask the OS again if that grant already exists. Notification taps open the app, not a specific screen. H5 `reminder_sent` / `reminder_opened` are left for H5.
+- Rest-timer permission on logger open stays. H3 does not ask the OS again if that grant already exists. Notification taps open the app, not a specific screen. H5 now sends `reminder_sent` / `reminder_opened` when a planner or trial reminder is delivered or opened (not when it is scheduled). Rest-timer alerts are ignored.
 - H4 “two weeks before a routine ends” is the last two calendar weeks of any length plan, not only 6-week routines. Preview (See this routine) while still enrolled; Start on Monday only after completion or with no active plan.
 - Next routine prefers the next unfinished step on a path (`paths.sql`). If that file is not run, or she is not on a path, it uses Featured-for-you scoring from her goals, then Gym Confidence: 6 weeks.
-- Start on Monday uses `routine_enrolments.start_date` on the coming Monday. If today is Monday, it starts today. Pro next routines still open the paywall. H5 `routine_completed` / `next_routine_started` are left for H5. End-of-programme photo prompt stays until H7.
+- Start on Monday uses `routine_enrolments.start_date` on the coming Monday. If today is Monday, it starts today. Pro next routines still open the paywall. H5 now sends `routine_completed` / `next_routine_started`. End-of-programme photo prompt stays until H7.
+- H5 uses `posthog-react-native` plus Expo peers (`expo-application`, `expo-device`, `expo-localization`; `expo-file-system` was already there). EU host `https://eu.i.posthog.com`. Env names `EXPO_PUBLIC_POSTHOG_API_KEY` and `EXPO_PUBLIC_POSTHOG_HOST`. Identify is the Supabase user uuid only (plus `env` and `plan`). Autocapture of touches and screens is off (no PostHogProvider). Lifecycle events stay on for D1/D7/D30. Session replay, surveys and PostHog push capture are off. Properties are allowlisted. `set_ticked` has no weight, reps or exercise id. `session_started` is skipped when she Continues an in-progress session. `trial_started` uses the real RevenueCat trial, not the tester override, once per trial end date. `paywall_viewed` fires from `openPaywall` with the reason enum. `learn_article_opened` is exported for N6. Dev builds still send events with `env: dev`. Existing trial users may emit one `trial_started` on first open after this build. Dashboards cannot be created from the app. C2 uses the existing events (onboarding then paywall then session, later trial or Pro) rather than a new `paywall_dismissed` event.
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
@@ -87,8 +90,11 @@ None.
 - Paste `supabase/reminders.sql` so reminder toggles and per-day times follow her to a new phone. Until then they still work on this device (AsyncStorage). Workout history is never touched.
 - H3 tester: with tester tools on, Profile → Developer → **Send a test reminder**. Lock the phone or leave the app; a sample “Full body A is ready when you are” should appear in about 8 seconds.
 - H4 tester: with tester tools on, Profile → Developer → **Preview what’s next**. Home and the current routine page show the next-plan card even if you are not in the last two weeks. Turn it off when you are done. Path names need `supabase/paths.sql`.
+- H5: copy `.env.example` keys into `.env`: `EXPO_PUBLIC_POSTHOG_API_KEY` (project token starting `phc_`, from PostHog → Project settings) and `EXPO_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com`. Restart Expo. The project API key is public by design; never put a personal API key in the app. Leave them empty and the app still opens with no events sent.
+- H5 tester: with tester tools on, Profile → Developer → **Send a test analytics event**. Then in PostHog → Activity look for `dev_test_event` (can take a few seconds). Sign in so events attach to your user id.
+- H5 dashboards (create once in the PostHog EU project): activation = people with 2+ `session_completed` in 7 days of first seen, and 3+ in 14 days; D1/D7/D30 retention on `Application Opened`; return after first miss = `planned_week_missed` then `session_completed`; routine completion = `routine_completed` / started; trial to paid = `trial_started` then person `plan` = `pro` without trial; C2 free path = `onboarding_completed` + `paywall_viewed` (reason `onboarding`) without `trial_started`, then `session_completed`, later `trial_started` or Pro.
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. H4 **done**. Next **H5**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. H4 **done**. H5 **done**. Next **H6**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -124,7 +130,7 @@ S2 navigation (Profile as a tab) stays until **N6** moves Profile to the avatar 
 | **R10** Paywall | **Done** in logic | Visual DESIGN Step 10 **not started**. **C1** / **C2** later. |
 | **R11** Photos | **Done**; **D2** not started | Fourteen Pexels covers. Stretch routines still reuse gym photos. |
 
-Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, lbs setting (**D8**), EAS / TestFlight.
+Leftovers that are not a missing R task: Sign in with Apple, lbs setting (**D8**), EAS / TestFlight. PostHog (**H5**) is done.
 
 ### M1 MuscleWiki videos: **partly done**
 
@@ -177,7 +183,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 
 **Group 2:** N3 **done** (3 Nov 2026). N1 **done**. N4 **done**.
 
-**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4 **done** (3 Nov 2026). H5, H6, H7, H8.
+**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4 **done** (3 Nov 2026). H5 **done** (3 Nov 2026). H6, H7, H8.
 
 **Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
 
@@ -271,9 +277,9 @@ Also still on the user's side:
 
 ## Next step
 
-**H5** retention analytics (PostHog). **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
+**H6** achievements rework. **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
 
-Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready.
+Still not built (later): Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready. PostHog (H5) is in the app; add the project key in `.env` and build the dashboards in PostHog.
 
 ## Known bugs / issues
 

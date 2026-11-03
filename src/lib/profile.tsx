@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 import { parseThemePreference, type ThemePreference } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, type StreakGoal } from '@/lib/activityStats';
+import { resetAnalytics, track } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 import { DISCLAIMER_VERSION } from '@/lib/disclaimer';
 import { recordLevelChange } from '@/lib/levelUp';
@@ -614,6 +615,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       } else {
         throw withGoals.error;
       }
+      if (!previous?.onboarding_completed_at) track('onboarding_completed');
       if (previousLevel && previousLevel !== answers.confidence_level) {
         await recordLevelChange(previousLevel, answers.confidence_level).catch(() => {});
       }
@@ -636,6 +638,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const deleteAccount = useCallback(async () => {
     const { error } = await supabase.rpc('delete_own_account');
     if (error) throw error;
+    resetAnalytics();
     await supabase.auth.signOut();
   }, []);
 
@@ -701,10 +704,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           error: null,
         });
       }
+      track('disclaimer_accepted', { version: DISCLAIMER_VERSION });
       return;
     }
     if (error) throw error;
     setLoaded({ userId, profile: toProfile(data, true), error: null });
+    track('disclaimer_accepted', { version: DISCLAIMER_VERSION });
   }, [userId, loaded]);
 
   const isLoading = loaded === null || loaded.userId !== userId;
