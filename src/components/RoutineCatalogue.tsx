@@ -30,8 +30,8 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
-  challengeCountdown,
   challengeStatus,
+  challengeTimingCopy,
   fetchChallenges,
   type Challenge,
 } from '@/lib/challenges';
@@ -225,7 +225,7 @@ export function RoutineCatalogue({
                   </View>
                   <Text style={[type.title3, { color: colours.ink, marginTop: spacing.sm }]}>{challenge.name}</Text>
                   <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
-                    {challengeCountdown(challenge)}
+                    {challengeTimingCopy(challenge)}
                   </Text>
                 </View>
               </View>

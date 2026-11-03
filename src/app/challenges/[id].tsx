@@ -10,18 +10,20 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { colours } from '@/constants/theme';
 import { fetchFinishedSessionMeta } from '@/lib/activityStats';
 import {
-  challengeCountdown,
   challengeProgress,
+  challengeRangeCopy,
   challengeStatus,
+  challengeTimingCopy,
   describeChallengeError,
   fetchChallenge,
+  formatStartOption,
   joinChallenge,
   missingChallengesMessage,
+  rollingStartOptions,
   type Challenge,
 } from '@/lib/challenges';
 import { coverForRoutine } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
-import { formatShortDate, parseDate } from '@/lib/progress';
 import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
@@ -66,21 +68,39 @@ export default function ChallengeDetailScreen() {
     }, [reload])
   );
 
-  async function handleJoin() {
+  async function joinWithStart(startDate: string) {
     if (!challenge) return;
-    if ((challenge.is_pro || challenge.routine.is_pro) && !subscription.isPro) {
-      openPaywall(challenge.is_pro ? 'challenge' : 'routine');
-      return;
-    }
     setJoining(true);
     try {
-      await joinChallenge(challenge.id);
+      await joinChallenge(challenge.id, startDate);
       await reload();
     } catch (error) {
       showDialog('Couldn’t join', describeChallengeError(error));
     } finally {
       setJoining(false);
     }
+  }
+
+  function handleJoin() {
+    if (!challenge) return;
+    if ((challenge.is_pro || challenge.routine.is_pro) && !subscription.isPro) {
+      openPaywall(challenge.is_pro ? 'challenge' : 'routine');
+      return;
+    }
+    const options = rollingStartOptions();
+    showDialog(
+      'Pick a start day',
+      'Four weeks from that day. You can start on a Monday or the 1st of the month.',
+      [
+        ...options.map((option) => ({
+          text: formatStartOption(option),
+          onPress: () => {
+            void joinWithStart(option.date);
+          },
+        })),
+        { text: 'Not now', style: 'cancel' as const },
+      ]
+    );
   }
 
   if (loadState !== 'ready' || !challenge) {
@@ -113,13 +133,11 @@ export default function ChallengeDetailScreen() {
       />
       <View style={styles.chipRow}>
         {challenge.is_pro ? <ProBadge /> : <Text style={styles.free}>Free to join</Text>}
-        <Text style={styles.status}>{challengeCountdown(challenge)}</Text>
+        <Text style={styles.status}>{challengeTimingCopy(challenge)}</Text>
       </View>
       <Text style={styles.title}>{challenge.name}</Text>
       <Text style={styles.body}>{challenge.description}</Text>
-      <Text style={styles.meta}>
-        {formatShortDate(parseDate(challenge.start_date))} to {formatShortDate(parseDate(challenge.end_date))}
-      </Text>
+      <Text style={styles.meta}>{challengeRangeCopy(challenge)}</Text>
       <Text style={styles.meta}>Routine: {challenge.routine.name}</Text>
       {challenge.participantCount > 0 ? (
         <Text style={styles.meta}>
@@ -135,11 +153,15 @@ export default function ChallengeDetailScreen() {
             {done}/{target}
           </Text>
         </ProgressRing>
-        <Text style={styles.body}>Sessions in this window, toward {target} over four weeks.</Text>
+        <Text style={styles.body}>
+          {challenge.joined
+            ? `Sessions in your four-week window, toward ${target}.`
+            : `Join, then sessions in your four-week window count toward ${target}.`}
+        </Text>
       </View>
 
       {status === 'ended' ? (
-        <Text style={styles.body}>This challenge has ended. Your sessions stay in Activity.</Text>
+        <Text style={styles.body}>Finished. Your sessions stay in Activity.</Text>
       ) : challenge.joined ? (
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}

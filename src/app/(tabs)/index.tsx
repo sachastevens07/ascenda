@@ -51,7 +51,7 @@ import {
   syncRestWeeksBanked,
 } from '@/lib/streak';
 import {
-  challengeCountdown,
+  challengeTimingCopy,
   fetchChallenges,
   pickHomeChallenge,
   type Challenge,
@@ -729,7 +729,9 @@ export default function HomeScreen() {
             accessibilityRole="button">
             <Text style={[type.eyebrow, { color: colours.accent }]}>Challenge</Text>
             <Text style={[type.title3, { color: colours.ink, marginTop: spacing.sm }]}>{challenge.name}</Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>{challengeCountdown(challenge)}</Text>
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+              {challengeTimingCopy(challenge)}
+            </Text>
           </Pressable>
         ) : null}
 
