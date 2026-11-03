@@ -27,11 +27,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **H6. Achievements rework (3 Nov 2026).** Awards tab groups: First times, Sessions (1/5/10/25/50/100/250), Weeks trained (4/12/26/52 lifetime), Personal bests (1/10/50), Programmes (1/3/10), Gym unlocked, Weight lifted (1,000 / 10,000 / 50,000 kg). First times include first session, first PB, first full week, Gold week, Back on track, Consistent (8-week run), Stretch habit (10 stretch sessions). Old 100k to 1M weight tiers and current-streak 4/8/12 badges are gone. Progress text only on the next locked badge in a group. Profile → Training → Show awards. `supabase/achievements_h6.sql` adds `profiles.hide_achievements`. D7 still owns tier rings. No new libraries.
 
+**H7. Progress photos locked down (3 Nov 2026).** Activity tabs are Progress and Awards. Photos live as a card on Progress, only after she switches them on in Profile → Privacy. Off by default (`profiles.photos_enabled`). First enable shows a consent dialog. No start/end programme photo prompts. Signed URLs load only after Show photos. Turning the setting off hides the card and does not delete stored photos. Completion/share cards stay numbers only. Delete one or all, compare two dates, private bucket and camera permission on add are unchanged. `supabase/photos_h7.sql`. No new libraries.
+
 ### In progress
 None.
 
 ### Next step
-**H7** progress photos locked down. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
+**H8** challenges with rolling starts. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -71,14 +73,15 @@ None.
 - Back on track is repeatable as a session win; the Awards badge unlocks once. First unlock is stored in `milestones` if that table exists; repeats stay on-device.
 - Monday / 1st / start of term (1–14 Jan, Apr, Sep) only change the card line. They do not show the card to people who trained last week.
 - H5 now sends `welcome_back_shown` / `welcome_back_completed`. H6 shows Back on track in First times. D7 will restyle badge icons and tier rings.
+- H7: photos stay off even if she already has files from R8. Turning the Profile toggle off hides the card; it does not delete photos. Consent is once per device (AsyncStorage), then later toggles skip it. Free users can switch the setting on, then see the existing Pro card (paywall from the card, not from the toggle). Delete-account stays for D8. Logger, progression, swaps, streaks and paywall copy were not changed.
 - H3 reuses `expo-notifications` already in the project (rest timer and trial-ending). No new library. Time picker is hourly chips (6 am to 9 pm) plus last-session hour, not a date-time wheel. AGENTS.md still says ask before a notifications library.
 - Session reminders start off until she taps Turn on or enables them in Profile. Weekly summary and offers also default off. Offers and news never send a push.
 - Sunday summary fires at 10:00 local time. Default session time is last finished session hour, else 6:00 pm.
 - Reminder chips only show when session reminders are on, and never on rest days or completed days. D5 Planner restyle (smaller headers, empty-day +) was not done.
 - Rest-timer permission on logger open stays. H3 does not ask the OS again if that grant already exists. Notification taps open the app, not a specific screen. H5 now sends `reminder_sent` / `reminder_opened` when a planner or trial reminder is delivered or opened (not when it is scheduled). Rest-timer alerts are ignored.
-- H4 “two weeks before a routine ends” is the last two calendar weeks of any length plan, not only 6-week routines. Preview (See this routine) while still enrolled; Start on Monday only after completion or with no active plan.
+- H4 “two weeks before a routine ends” is the last two calendar weeks of any length plan, not only 6-week routines. Preview (See this routine) while still enrolled; Start on Monday only after completion or with no active plan. End-of-programme photo prompts were removed in H7.
 - Next routine prefers the next unfinished step on a path (`paths.sql`). If that file is not run, or she is not on a path, it uses Featured-for-you scoring from her goals, then Gym Confidence: 6 weeks.
-- Start on Monday uses `routine_enrolments.start_date` on the coming Monday. If today is Monday, it starts today. Pro next routines still open the paywall. H5 now sends `routine_completed` / `next_routine_started`. End-of-programme photo prompt stays until H7.
+- Start on Monday uses `routine_enrolments.start_date` on the coming Monday. If today is Monday, it starts today. Pro next routines still open the paywall. H5 now sends `routine_completed` / `next_routine_started`. End-of-programme photo prompts were removed in H7.
 - H5 uses `posthog-react-native` plus Expo peers (`expo-application`, `expo-device`, `expo-localization`; `expo-file-system` was already there). EU host `https://eu.i.posthog.com`. Env names `EXPO_PUBLIC_POSTHOG_API_KEY` and `EXPO_PUBLIC_POSTHOG_HOST`. Identify is the Supabase user uuid only (plus `env` and `plan`). Autocapture of touches and screens is off (no PostHogProvider). Lifecycle events stay on for D1/D7/D30. Session replay, surveys and PostHog push capture are off. Properties are allowlisted. `set_ticked` has no weight, reps or exercise id. `session_started` is skipped when she Continues an in-progress session. `trial_started` uses the real RevenueCat trial, not the tester override, once per trial end date. `paywall_viewed` fires from `openPaywall` with the reason enum. `learn_article_opened` is exported for N6. Dev builds still send events with `env: dev`. Existing trial users may emit one `trial_started` on first open after this build. Dashboards cannot be created from the app. C2 uses the existing events (onboarding then paywall then session, later trial or Pro) rather than a new `paywall_dismissed` event.
 
 ### Setup notes
@@ -96,9 +99,10 @@ None.
 - H5 tester: with tester tools on, Profile → Developer → **Send a test analytics event**. Then in PostHog → Activity look for `dev_test_event` (can take a few seconds). Sign in so events attach to your user id.
 - H5 dashboards (create once in the PostHog EU project): activation = people with 2+ `session_completed` in 7 days of first seen, and 3+ in 14 days; D1/D7/D30 retention on `Application Opened`; return after first miss = `planned_week_missed` then `session_completed`; routine completion = `routine_completed` / started; trial to paid = `trial_started` then person `plan` = `pro` without trial; C2 free path = `onboarding_completed` + `paywall_viewed` (reason `onboarding`) without `trial_started`, then `session_completed`, later `trial_started` or Pro.
 - Paste `supabase/achievements_h6.sql` so hide-awards follows her to a new phone. Until then it still works on this device (AsyncStorage). Workout history is never touched.
-- H6: badges are computed from sessions, sets, enrolments and the existing `milestones` Back on track row. No `achievement_definitions` / `user_achievements` tables (those were S6). First session / first PB also appear under Sessions and Personal bests. Weeks trained uses lifetime weeks, not the current run. Consistent uses the best run of 8, rest weeks allowed. Stretch habit counts finished stretch sessions, not only 10+ minute ones. Weight uses ticked weighted set volume. Gym unlocked badges stay as they were (equipment, zone, 1/5/10/25 exercises). D7 still needs bronze/silver/gold/platinum rings and a proper sheet. Photos stay as their own Activity tab until H7.
+- H6: badges are computed from sessions, sets, enrolments and the existing `milestones` Back on track row. No `achievement_definitions` / `user_achievements` tables (those were S6). First session / first PB also appear under Sessions and Personal bests. Weeks trained uses lifetime weeks, not the current run. Consistent uses the best run of 8, rest weeks allowed. Stretch habit counts finished stretch sessions, not only 10+ minute ones. Weight uses ticked weighted set volume. Gym unlocked badges stay as they were (equipment, zone, 1/5/10/25 exercises). D7 still needs bronze/silver/gold/platinum rings and a proper sheet.
+- Paste `supabase/photos_h7.sql` so the photos-on setting follows her to a new phone. Until then it still works on this device (AsyncStorage). Default is off. Workout history and existing photo files are never touched.
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. H4 **done**. H5 **done**. H6 **done**. Next **H7**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. H4 **done**. H5 **done**. H6 **done**. H7 **done**. Next **H8**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -110,7 +114,7 @@ Checked against `AGENTS.md`, `DESIGN.md` section 6, this file, the code and `git
 | --- | --- |
 | **S5** streak rules (no rest-week passes; week only counts on full target) | **H1** rest weeks, gold weeks, repair, weeks trained. **Done** 3 Nov 2026. |
 | **S6** tiered achievements (skipped; never built) | **H6** new badge set plus **D7** Awards visuals. |
-| **S9** start/end progress photo prompts | **H7** photos off by default, no prompts. |
+| **S9** start/end progress photo prompts | **H7** photos off by default, no prompts. **Done** 3 Nov 2026. |
 | **S9** challenges with fixed dates and countdowns | **H8** rolling Monday / 1st-of-month starts, no countdowns. |
 | **R4** session detail screen (and DESIGN Step 4) | **N3** merge into the logger. |
 | DESIGN Step 10 Paywall visual restyle | **C1** / **C2** later. Do not run the old one-screen-per-step plan as the current work. |
@@ -129,7 +133,7 @@ S2 navigation (Profile as a tab) stays until **N6** moves Profile to the avatar 
 | **R5** Custom workout builder | **Done** (cap in S1) | Free cap is 4 owned workouts. |
 | **R6** Planner | **Done** | Agenda, month toggle, move / rest / add custom. Rest-week banner is in (H1). **D5** restyle later. |
 | **R7** Gym unlocked | **Done** | Quiet Mode and level-up are off the screens. Dead files remain. |
-| **R8** Activity | **Done** | Restyled in DESIGN Step 7. **D6** / **D7** / **H7** will change tabs and Awards. |
+| **R8** Activity | **Done** | Restyled in DESIGN Step 7. Photos tab removed in **H7**. **D6** / **D7** still restyle Progress and Awards. |
 | **R9** Onboarding | **Done**; restyle **Step 9 done**; **N1 done**; **N4 done**; **H3 done** | Rest timer still asks on logger open. H3 also explains reminders after the first finished session and only hits the OS prompt if permission is not already granted. |
 | **R10** Paywall | **Done** in logic | Visual DESIGN Step 10 **not started**. **C1** / **C2** later. |
 | **R11** Photos | **Done**; **D2** not started | Fourteen Pexels covers. Stretch routines still reuse gym photos. |
@@ -154,7 +158,7 @@ Leftovers that are not a missing R task: Sign in with Apple, lbs setting (**D8**
 | **S6** Tiered achievements | **Skipped, superseded by H6 / D7** | H6 badge set is in. D7 still owns rings and the Awards visual pass. |
 | **S7** Sticky dates and anchored menus | **Done** | Keep. |
 | **S8** Stretches | **Done**; layout **D4** later | 7 stretch routines. Covers reuse gym photos (**D2**). `supabase/stretches.sql` **not run**. |
-| **S9** Paths, checkpoints, challenges, rings | **Done; partly superseded** | Photo prompts stay until **H7**. Challenges use fixed dates until **H8**. `supabase/paths.sql` **not run**. |
+| **S9** Paths, checkpoints, challenges, rings | **Done; partly superseded** | Photo prompts removed in **H7**. Challenges use fixed dates until **H8**. `supabase/paths.sql` **not run**. |
 | **S10** Routine content | **Done**; **N2** later | 14 strength + 7 stretch. `one-spot-6` and `one-spot-2` are two different slugs (D1 will check the “appears twice” report). `supabase/s10_routines.sql` **not run**. |
 | **S11** Remove em dashes | **Done**; **D1** re-checks | Remaining `—` in code are developer comments. `supabase/s11_copy.sql` **not run**. |
 | **S12** Email verification | **Done** | Dashboard confirm-email toggle still needed. v2.2 says S12 stays last; it is already built, so do not redo it. |
@@ -187,7 +191,7 @@ Leftovers that are not a missing R task: Sign in with Apple, lbs setting (**D8**
 
 **Group 2:** N3 **done** (3 Nov 2026). N1 **done**. N4 **done**.
 
-**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4 **done** (3 Nov 2026). H5 **done** (3 Nov 2026). H6 **done** (3 Nov 2026). H7, H8.
+**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4 **done** (3 Nov 2026). H5 **done** (3 Nov 2026). H6 **done** (3 Nov 2026). H7 **done** (3 Nov 2026). H8.
 
 **Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
 
@@ -206,7 +210,7 @@ Leftovers that are not a missing R task: Sign in with Apple, lbs setting (**D8**
 - **Step 4. Session detail.** Removed in N3. `src/app/routines/session.tsx` only starts the session and opens the logger. AGENTS.md / DESIGN.md Step 4 still describe the old screen.
 - **Step 5. Logger.** Sticky header, SetRows, RestTimerBar, Finish / Discard. N3 added today-only edits. Timer starts on open. End session discards.
 - **Step 6. Planner.** Week strip, sticky day headers, one FAB.
-- **Step 7. Activity.** Progress / Photos / Awards. Highlights 2×2. Medal families.
+- **Step 7. Activity.** Progress / Awards (Photos tab removed in H7; photos are a Progress card if switched on). Highlights 2×2. Medal families.
 - **Step 8. Profile.** Avatar, grouped lists. Old “Your programme” hidden. Units, rest-timer, privacy, terms and feedback rows are not shown yet.
 - **Step 9. Onboarding.** Segmented progress, chip cloud, sticky Continue, plan reveal.
 
@@ -281,7 +285,7 @@ Also still on the user's side:
 
 ## Next step
 
-**H7** progress photos locked down. **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped (replaced by H6). TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
+**H8** challenges with rolling starts. **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped (replaced by H6). TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
 
 Still not built (later): Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready. PostHog (H5) is in the app; add the project key in `.env` and build the dashboards in PostHog.
 
@@ -308,7 +312,7 @@ Still not built (later): Sign in with Apple, lbs setting, EAS development build,
 - **S2 is done.** Tabs are Home, Programmes, Planner, Activity, Profile. Library is Programmes → Exercises. Home plan banner and library pill are gone.
 - **S5 needs `remove_rest_passes.sql`.** Without it the rest-pass columns sit unused; the app no longer reads them.
 - **S8 is done.** Programmes → Stretches. Needs `supabase/stretches.sql`. Without it the tab explains the file and Home still loads (`type` / `duration_seconds` queries fall back).
-- **S9 is done.** Paths, checkpoint weeks, completion card, challenges, progress rings, photo prompts. Needs `supabase/paths.sql`. Without it Home still loads; path/challenge cards stay empty.
+- **S9 is done.** Paths, checkpoint weeks, completion card, challenges, progress rings. Photo prompts were removed in H7. Needs `supabase/paths.sql`. Without it Home still loads; path/challenge cards stay empty.
 - **S10 is done.** 14 strength routines plus 7 stretches. Needs `supabase/s10_routines.sql`. Without it Programmes still shows the original six; new covers sit unused in `assets/covers/`.
 - **S11 is done.** No em dashes in user-facing app copy. Needs `supabase/s11_copy.sql` to fix the Full body description already in the database.
 - **S12 is done.** Inbox screen + deep-link sign-in. Confirm email is still **off** in the dashboard until the user turns it on. Existing test accounts are unchanged.

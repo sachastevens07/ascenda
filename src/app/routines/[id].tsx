@@ -52,7 +52,6 @@ import {
   type NextRoutineOffer,
 } from '@/lib/handOff';
 import { formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
-import { offerProgrammePhoto } from '@/lib/progressPhotos';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
   DIFFICULTY_LABELS,
@@ -317,7 +316,6 @@ export default function RoutineDetailScreen() {
       setEnrolment(next);
       const last = await fetchLastFinishedRoutineSession(next.id);
       setNextSession(getNextRoutineDay(routine, next, last?.routine_day_id ?? last?.programme_day_id ?? null));
-      if (subscription.isPro) void offerProgrammePhoto('start');
     } catch (error) {
       showDialog('Couldn’t start the routine', describeRoutineError(error));
     } finally {

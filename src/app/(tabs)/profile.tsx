@@ -36,6 +36,7 @@ import {
   type ReminderPrefs,
 } from '@/lib/reminders';
 import { fetchHideAchievements, saveHideAchievements } from '@/lib/achievements';
+import { confirmEnablePhotos, fetchPhotosEnabled, savePhotosEnabled } from '@/lib/progressPhotos';
 import { isAnalyticsEnabled, track } from '@/lib/analytics';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
@@ -109,6 +110,7 @@ export default function ProfileScreen() {
   const [showAnswers, setShowAnswers] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
   const [hideAchievements, setHideAchievements] = useState(false);
+  const [photosEnabled, setPhotosEnabled] = useState(false);
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
   const [handOffPreview, setHandOffPreview] = useState(false);
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
@@ -138,6 +140,11 @@ export default function ProfileScreen() {
       fetchHideAchievements()
         .then((hidden) => {
           if (isCurrent) setHideAchievements(hidden);
+        })
+        .catch(() => {});
+      fetchPhotosEnabled()
+        .then((on) => {
+          if (isCurrent) setPhotosEnabled(on);
         })
         .catch(() => {});
       fetchWelcomeBackPreview()
@@ -500,6 +507,48 @@ export default function ProfileScreen() {
         </SettingsGroup>
       ) : null}
 
+      <SettingsGroup title="Privacy">
+        <SettingsRow
+          title="Progress photos"
+          subtitle={
+            photosEnabled
+              ? 'On. Turning this off hides the card. Photos stay until you delete them.'
+              : 'Off. Switch on here if you want a private photo card on Activity.'
+          }
+          onPress={() => {
+            if (photosEnabled) {
+              setPhotosEnabled(false);
+              savePhotosEnabled(false).catch((error) => {
+                setPhotosEnabled(true);
+                showDialog(
+                  'Couldn’t save that',
+                  error instanceof Error ? error.message : 'Check your connection and try again.'
+                );
+              });
+              return;
+            }
+            confirmEnablePhotos(() => {
+              setPhotosEnabled(true);
+              savePhotosEnabled(true).catch((error) => {
+                setPhotosEnabled(false);
+                showDialog(
+                  'Couldn’t save that',
+                  error instanceof Error ? error.message : 'Check your connection and try again.'
+                );
+              });
+            });
+          }}
+        />
+        <SettingsRow
+          title={isExporting ? 'Preparing file…' : 'Export workout history'}
+          subtitle="Every set from finished sessions, as a spreadsheet."
+          onPress={() => {
+            if (!isExporting) void handleExport();
+          }}
+          last
+        />
+      </SettingsGroup>
+
       {answers ? (
         <SettingsGroup title="Your answers">
           <SettingsRow
@@ -522,17 +571,6 @@ export default function ProfileScreen() {
           ) : null}
         </SettingsGroup>
       ) : null}
-
-      <SettingsGroup title="Data">
-        <SettingsRow
-          title={isExporting ? 'Preparing file…' : 'Export workout history'}
-          subtitle="Every set from finished sessions, as a spreadsheet."
-          onPress={() => {
-            if (!isExporting) void handleExport();
-          }}
-          last
-        />
-      </SettingsGroup>
 
       <SettingsGroup title="About">
         <SettingsRow

@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router, type Href } from 'expo-router';
 
 import { showDialog } from '@/components/Dialog';
 import { supabase } from '@/lib/supabase';
@@ -134,33 +133,70 @@ export async function deleteAllProgressPhotos(photos: ProgressPhoto[]): Promise<
     .catch(() => {});
 }
 
-const PHOTO_PROMPT_KEY = 'photo-prompts-dismissed';
+const ENABLED_KEY = 'photos_enabled';
+const CONSENT_KEY = 'photos_consent_accepted';
 
-export async function arePhotoPromptsDismissed(): Promise<boolean> {
-  return (await AsyncStorage.getItem(PHOTO_PROMPT_KEY)) === '1';
+function isMissingEnabledColumn(error: { message?: string; code?: string } | null | undefined): boolean {
+  return /photos_enabled/i.test(`${error?.code ?? ''} ${error?.message ?? ''}`);
 }
 
-export async function dismissPhotoPrompts(): Promise<void> {
-  await AsyncStorage.setItem(PHOTO_PROMPT_KEY, '1');
+export async function fetchPhotosEnabled(): Promise<boolean> {
+  try {
+    const stored = await AsyncStorage.getItem(ENABLED_KEY);
+    const local = stored === '1';
+    const { data, error } = await supabase.from('profiles').select('photos_enabled').maybeSingle();
+    if (error) return local;
+    const value = (data as { photos_enabled?: boolean | null } | null)?.photos_enabled;
+    if (typeof value === 'boolean') {
+      if (local && !value) {
+        await savePhotosEnabled(true);
+        return true;
+      }
+      return value;
+    }
+    return local;
+  } catch {
+    return false;
+  }
 }
 
-/** Gentle, Pro-only. Easy to skip or turn off for good. */
-export async function offerProgrammePhoto(moment: 'start' | 'end'): Promise<void> {
-  if (await arePhotoPromptsDismissed()) return;
-  const title = moment === 'start' ? 'Optional start photo' : 'Optional end photo';
-  const message =
-    moment === 'start'
-      ? 'A private photo you can compare at the end of this plan. Never sent to AI. Skip any time.'
-      : 'A private photo to sit next to your start photo. Never sent to AI. Skip any time.';
-  showDialog(title, message, [
-    {
-      text: 'Open Activity',
-      onPress: () => router.push('/activity' as Href),
-    },
-    {
-      text: 'Don’t ask again',
-      onPress: () => void dismissPhotoPrompts(),
-    },
-    { text: 'Not now', style: 'cancel' },
-  ]);
+export async function savePhotosEnabled(enabled: boolean): Promise<void> {
+  await AsyncStorage.setItem(ENABLED_KEY, enabled ? '1' : '0');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase.from('profiles').update({ photos_enabled: enabled }).eq('user_id', user.id);
+  if (error && !isMissingEnabledColumn(error)) throw new Error(error.message);
+}
+
+async function hasPhotosConsent(): Promise<boolean> {
+  return (await AsyncStorage.getItem(CONSENT_KEY)) === '1';
+}
+
+async function acceptPhotosConsent(): Promise<void> {
+  await AsyncStorage.setItem(CONSENT_KEY, '1');
+}
+
+/** First time she turns photos on, she must accept the privacy copy. Later toggles skip it. */
+export function confirmEnablePhotos(onEnable: () => void): void {
+  void hasPhotosConsent().then((ok) => {
+    if (ok) {
+      onEnable();
+      return;
+    }
+    showDialog(
+      'Private progress photos',
+      'Photos stay in a private folder on your account. They are never sent to AI, never shown in summaries or share cards, and you can delete one or all at any time. Camera and library permission is only asked when you add a photo.',
+      [
+        {
+          text: 'Turn on',
+          onPress: () => {
+            void acceptPhotosConsent().then(onEnable);
+          },
+        },
+        { text: 'Not now', style: 'cancel' },
+      ]
+    );
+  });
 }

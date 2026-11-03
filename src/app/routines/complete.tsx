@@ -22,7 +22,6 @@ import { coverForRoutine, coverSources } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { fetchProgressSets } from '@/lib/progress';
-import { offerProgrammePhoto } from '@/lib/progressPhotos';
 import { describeRoutineError, fetchEnrolment, fetchRoutines } from '@/lib/routines';
 import { useSubscription } from '@/lib/subscription';
 
@@ -69,7 +68,6 @@ export default function RoutineCompleteScreen() {
       setReview(built);
       setNext(offer);
       setLoadState('ready');
-      if (subscription.isPro) void offerProgrammePhoto('end');
     })().catch(() => {
       if (isCurrent) setLoadState('error');
     });

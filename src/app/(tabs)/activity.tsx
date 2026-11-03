@@ -80,6 +80,7 @@ import {
   deleteAllProgressPhotos,
   deleteProgressPhoto,
   describePhotosError,
+  fetchPhotosEnabled,
   fetchProgressPhotos,
   uploadProgressPhoto,
   type ProgressPhoto,
@@ -105,7 +106,7 @@ import {
 import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
-type ActivityTab = 'progress' | 'photos' | 'achievements';
+type ActivityTab = 'progress' | 'achievements';
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type ActivityData = {
@@ -115,6 +116,7 @@ type ActivityData = {
   streak: WeeklyStreak;
   hideStreak: boolean;
   hideAchievements: boolean;
+  photosEnabled: boolean;
   backOnTrack: boolean;
   backOnTrackAt: string | null;
   enrolment: RoutineEnrolment | null;
@@ -136,7 +138,6 @@ const MIN_BAR_SCALE = 4;
 const PREVIEW_IDS = ['session-1', 'gold-week', 'back-on-track'];
 const TABS = [
   { id: 'progress', label: 'Progress' },
-  { id: 'photos', label: 'Photos' },
   { id: 'achievements', label: 'Awards' },
 ] as const;
 
@@ -203,13 +204,15 @@ export default function ActivityScreen() {
   const [showPhotos, setShowPhotos] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+  const showPhotosRef = useRef(showPhotos);
+  showPhotosRef.current = showPhotos;
 
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, restWeeks, backOnTrack] =
+          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, restWeeks, backOnTrack] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
@@ -220,15 +223,13 @@ export default function ActivityScreen() {
               fetchCompletedEnrolmentCount().catch(() => 0),
               fetchHideStreak().catch(() => false),
               fetchHideAchievements().catch(() => false),
+              fetchPhotosEnabled().catch(() => false),
               fetchRestWeekStarts().catch(() => new Set<string>()),
               fetchBackOnTrack().catch(() => ({ unlocked: false, at: null as string | null })),
             ]);
           const from = sessions[0]?.date ?? toIso(new Date());
-          const [plannedByWeek, photosResult, roadmap, completedRoutineSessions] = await Promise.all([
+          const [plannedByWeek, roadmap, completedRoutineSessions] = await Promise.all([
             fetchPlannedCountsByWeek(from, toIso(new Date())),
-            fetchProgressPhotos()
-              .then((photos) => ({ photos, error: null as string | null }))
-              .catch((error) => ({ photos: [] as ProgressPhoto[], error: describePhotosError(error) })),
             enrolment ? fetchRoutineRoadmap(enrolment).catch(() => []) : Promise.resolve([]),
             completedEnrolment
               ? countEnrolmentSessions(completedEnrolment.id).catch(() => 0)
@@ -245,6 +246,10 @@ export default function ActivityScreen() {
             ? await nextRoutineOnPath(completedEnrolment.routine_id).catch(() => null)
             : null;
           if (!isCurrent) return;
+          if (!photosEnabled) {
+            setShowPhotos(false);
+            setCompareIds([]);
+          }
           setData({
             sets,
             sessions,
@@ -252,6 +257,7 @@ export default function ActivityScreen() {
             streak,
             hideStreak,
             hideAchievements,
+            photosEnabled,
             backOnTrack: backOnTrack.unlocked,
             backOnTrackAt: backOnTrack.at,
             enrolment,
@@ -259,12 +265,26 @@ export default function ActivityScreen() {
             completedRoutineSessions,
             completedRoutines,
             roadmap,
-            photos: photosResult.photos,
-            photosError: photosResult.error,
+            photos: [],
+            photosError: null,
             review,
             nextPathRoutine: pathNext?.routine ?? null,
           });
           setLoadState('ready');
+          if (photosEnabled && isPro && showPhotosRef.current) {
+            try {
+              const photos = await fetchProgressPhotos();
+              if (isCurrent) {
+                setData((current) => (current ? { ...current, photos, photosError: null } : current));
+              }
+            } catch (error) {
+              if (isCurrent) {
+                setData((current) =>
+                  current ? { ...current, photosError: describePhotosError(error) } : current
+                );
+              }
+            }
+          }
         } catch {
           if (isCurrent) setLoadState((state) => (state === 'ready' ? state : 'error'));
         }
@@ -272,7 +292,7 @@ export default function ActivityScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [attempt, answers?.days_per_week])
+    }, [attempt, answers?.days_per_week, isPro])
   );
 
   async function reloadPhotos() {
@@ -580,6 +600,152 @@ export default function ActivityScreen() {
               </View>
             ) : null}
 
+            {data.photosEnabled ? (
+              isPro ? (
+                <>
+                  <SectionHeader title="Progress photos" />
+                  <View style={card}>
+                    <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                      Optional, private, and never sent to AI. Hidden until you choose to show them.
+                    </Text>
+                    {data.photosError ? (
+                      <Text style={[type.caption, { color: colours.inkMuted }]}>{data.photosError}</Text>
+                    ) : null}
+                    {showPhotos ? (
+                      <>
+                        <TextButton
+                          label="Hide photos"
+                          onPress={() => {
+                            setShowPhotos(false);
+                            setCompareIds([]);
+                            setData((current) =>
+                              current ? { ...current, photos: [], photosError: null } : current
+                            );
+                          }}
+                        />
+                        <View style={styles.photoActions}>
+                          <SecondaryButton
+                            label="Camera"
+                            onPress={() => void pickPhoto('camera')}
+                            disabled={isPhotoBusy}
+                            style={styles.photoAction}
+                          />
+                          <SecondaryButton
+                            label="Library"
+                            onPress={() => void pickPhoto('library')}
+                            disabled={isPhotoBusy}
+                            style={styles.photoAction}
+                          />
+                        </View>
+                        {isPhotoBusy ? <ActivityIndicator color={colours.brand} /> : null}
+                        {comparePhotos.length === 2 ? (
+                          <View style={styles.compareRow}>
+                            {comparePhotos.map((photo) => (
+                              <View key={photo.id} style={styles.flex}>
+                                {photo.url ? (
+                                  <Image
+                                    source={{ uri: photo.url }}
+                                    style={[
+                                      styles.compareImage,
+                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
+                                    ]}
+                                  />
+                                ) : (
+                                  <View
+                                    style={[
+                                      styles.compareImage,
+                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
+                                    ]}
+                                  />
+                                )}
+                                <Text style={[type.caption, { color: colours.inkMuted, marginTop: 6 }]}>
+                                  {formatShortDate(parseDate(photo.taken_on))}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        ) : null}
+                        {data.photos.length === 0 ? (
+                          <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                            No photos yet. Add one when you want.
+                          </Text>
+                        ) : (
+                          data.photos.map((photo) => {
+                            const selected = compareIds.includes(photo.id);
+                            return (
+                              <View key={photo.id} style={styles.photoRow}>
+                                {photo.url ? (
+                                  <Image
+                                    source={{ uri: photo.url }}
+                                    style={[
+                                      styles.photoThumb,
+                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
+                                    ]}
+                                  />
+                                ) : (
+                                  <View
+                                    style={[
+                                      styles.photoThumb,
+                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
+                                    ]}
+                                  />
+                                )}
+                                <View style={styles.flex}>
+                                  <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
+                                    {formatShortDate(parseDate(photo.taken_on))}
+                                  </Text>
+                                  <TextButton
+                                    label={selected ? 'Remove from compare' : 'Compare'}
+                                    onPress={() =>
+                                      setCompareIds((current) => {
+                                        if (current.includes(photo.id)) {
+                                          return current.filter((id) => id !== photo.id);
+                                        }
+                                        return current.length >= 2
+                                          ? [current[1], photo.id]
+                                          : [...current, photo.id];
+                                      })
+                                    }
+                                    style={styles.inlineAction}
+                                  />
+                                </View>
+                                <Pressable
+                                  onPress={() => confirmDeletePhoto(photo)}
+                                  accessibilityRole="button"
+                                  accessibilityLabel="Delete photo">
+                                  <Ionicons name="trash-outline" size={22} color={colours.inkMuted} />
+                                </Pressable>
+                              </View>
+                            );
+                          })
+                        )}
+                        {data.photos.length > 0 ? (
+                          <DestructiveTextButton
+                            label="Delete all photos"
+                            onPress={() => confirmDeleteAll(data.photos)}
+                          />
+                        ) : null}
+                      </>
+                    ) : (
+                      <TextButton
+                        label="Show photos"
+                        onPress={() => {
+                          setShowPhotos(true);
+                          void reloadPhotos();
+                        }}
+                      />
+                    )}
+                  </View>
+                </>
+              ) : (
+                <ProCard
+                  reason="photos"
+                  title="Progress photos"
+                  copy="With Pro, keep private photos on your account. Never sent to AI, and never shown in summaries or share cards."
+                />
+              )
+            ) : null}
+
             {isPro ? (
               <RoutineReviewCard
                 enrolment={data.completedEnrolment}
@@ -595,140 +761,6 @@ export default function ActivityScreen() {
               />
             ) : null}
           </>
-        ) : null}
-
-        {tab === 'photos' ? (
-          isPro ? (
-            <View style={card}>
-              <Text style={[type.bodySm, { color: colours.inkMuted }]}>
-                Optional, private, and never sent to AI. Hidden until you choose to show them.
-              </Text>
-              {data.photosError ? (
-                <Text style={[type.caption, { color: colours.inkMuted }]}>{data.photosError}</Text>
-              ) : null}
-              {showPhotos ? (
-                <>
-                  <TextButton
-                    label="Hide photos"
-                    onPress={() => {
-                      setShowPhotos(false);
-                      setCompareIds([]);
-                    }}
-                  />
-                  <View style={styles.photoActions}>
-                    <SecondaryButton
-                      label="Camera"
-                      onPress={() => void pickPhoto('camera')}
-                      disabled={isPhotoBusy}
-                      style={styles.photoAction}
-                    />
-                    <SecondaryButton
-                      label="Library"
-                      onPress={() => void pickPhoto('library')}
-                      disabled={isPhotoBusy}
-                      style={styles.photoAction}
-                    />
-                  </View>
-                  {isPhotoBusy ? <ActivityIndicator color={colours.brand} /> : null}
-                  {comparePhotos.length === 2 ? (
-                    <View style={styles.compareRow}>
-                      {comparePhotos.map((photo) => (
-                        <View key={photo.id} style={styles.flex}>
-                          {photo.url ? (
-                            <Image
-                              source={{ uri: photo.url }}
-                              style={[
-                                styles.compareImage,
-                                { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                              ]}
-                            />
-                          ) : (
-                            <View
-                              style={[
-                                styles.compareImage,
-                                { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                              ]}
-                            />
-                          )}
-                          <Text style={[type.caption, { color: colours.inkMuted, marginTop: 6 }]}>
-                            {formatShortDate(parseDate(photo.taken_on))}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  ) : null}
-                  {data.photos.length === 0 ? (
-                    <Text style={[type.bodySm, { color: colours.inkMuted }]}>
-                      No photos yet. Add one when you want.
-                    </Text>
-                  ) : (
-                    data.photos.map((photo) => {
-                      const selected = compareIds.includes(photo.id);
-                      return (
-                        <View key={photo.id} style={styles.photoRow}>
-                          {photo.url ? (
-                            <Image
-                              source={{ uri: photo.url }}
-                              style={[
-                                styles.photoThumb,
-                                { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                              ]}
-                            />
-                          ) : (
-                            <View
-                              style={[
-                                styles.photoThumb,
-                                { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                              ]}
-                            />
-                          )}
-                          <View style={styles.flex}>
-                            <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
-                              {formatShortDate(parseDate(photo.taken_on))}
-                            </Text>
-                            <TextButton
-                              label={selected ? 'Remove from compare' : 'Compare'}
-                              onPress={() =>
-                                setCompareIds((current) => {
-                                  if (current.includes(photo.id)) {
-                                    return current.filter((id) => id !== photo.id);
-                                  }
-                                  return current.length >= 2
-                                    ? [current[1], photo.id]
-                                    : [...current, photo.id];
-                                })
-                              }
-                              style={styles.inlineAction}
-                            />
-                          </View>
-                          <Pressable
-                            onPress={() => confirmDeletePhoto(photo)}
-                            accessibilityRole="button"
-                            accessibilityLabel="Delete photo">
-                            <Ionicons name="trash-outline" size={22} color={colours.inkMuted} />
-                          </Pressable>
-                        </View>
-                      );
-                    })
-                  )}
-                  {data.photos.length > 0 ? (
-                    <DestructiveTextButton
-                      label="Delete all photos"
-                      onPress={() => confirmDeleteAll(data.photos)}
-                    />
-                  ) : null}
-                </>
-              ) : (
-                <TextButton label="Show photos" onPress={() => setShowPhotos(true)} />
-              )}
-            </View>
-          ) : (
-            <ProCard
-              reason="photos"
-              title="Progress photos"
-              copy="With Pro, keep private photos on this phone account. They stay hidden until you tap Show photos."
-            />
-          )
         ) : null}
 
         {tab === 'achievements' ? (
