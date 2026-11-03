@@ -32,6 +32,8 @@ export type Palette = {
   brandSoft: string;
   /** Coral. Small highlights only: eyebrows, streak flame, key numbers. */
   accent: string;
+  /** Soft coral wash. Rest-week banner and similar highlights. */
+  accentSoft: string;
   onAccent: string;
   onBrand: string;
   pro: string;
@@ -52,6 +54,7 @@ export const light: Palette = {
   brand: '#5C3A4E',
   brandSoft: '#E8D5DF',
   accent: '#E07A5F',
+  accentSoft: '#F8E4DC',
   onAccent: '#FFFFFF',
   onBrand: '#FFFCF8',
   pro: '#C4A35A',
@@ -72,6 +75,7 @@ export const dark: Palette = {
   brand: '#C4A0B4',
   brandSoft: '#3D2A35',
   accent: '#E07A5F',
+  accentSoft: '#3A2A26',
   onAccent: '#FFFFFF',
   onBrand: '#1A1412',
   pro: '#C4A35A',

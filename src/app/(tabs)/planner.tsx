@@ -21,6 +21,7 @@ import {
   MenuRow,
   OverflowMenu,
   PrimaryButton,
+  RestWeekBanner,
   StickyDayHeader,
   TextButton,
   measureAnchor,
@@ -52,6 +53,7 @@ import {
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 import { openRoutineLogger } from '@/lib/startLogger';
+import { clearRestWeek, fetchRestWeekStarts, loadStreakSnapshot, setRestWeek } from '@/lib/streak';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | null;
@@ -83,13 +85,18 @@ export default function PlannerScreen() {
   const [busy, setBusy] = useState(false);
   const [didScrollToToday, setDidScrollToToday] = useState(false);
   const [weekStartIso, setWeekStartIso] = useState(() => toIso(startOfWeekMonday(new Date())));
+  const [restWeekStarts, setRestWeekStarts] = useState<Set<string>>(() => new Set());
 
   const horizon = useMemo(() => plannerHorizon(), []);
   const todayIso = toIso(new Date());
 
   const reload = useCallback(async () => {
-    const next = await loadPlannerRange(horizon.from, horizon.to);
+    const [next, rest] = await Promise.all([
+      loadPlannerRange(horizon.from, horizon.to),
+      fetchRestWeekStarts().catch(() => new Set<string>()),
+    ]);
     setRange(next);
+    setRestWeekStarts(rest);
     setLoadState('ready');
   }, [horizon.from, horizon.to]);
 
@@ -250,6 +257,70 @@ export default function PlannerScreen() {
     setPendingWorkout(null);
     setPickDayReason('rest');
     setSheet('pick-day');
+  }
+
+  async function handlePlanRestWeek() {
+    closeSheets();
+    const thisMonday = toIso(startOfWeekMonday(new Date()));
+    const viewedIsRest = restWeekStarts.has(weekStartIso);
+    if (weekStartIso < thisMonday) {
+      showDialog(
+        'Pick this week or a later one',
+        'Rest weeks can be planned ahead, not for weeks that have already finished.'
+      );
+      return;
+    }
+    if (viewedIsRest) {
+      showDialog(
+        'Cancel this rest week?',
+        'This week will need a session to keep your run going.',
+        [
+          {
+            text: 'Cancel rest week',
+            onPress: () => {
+              void runAction(() => clearRestWeek(weekStartIso), 'Couldn’t update that rest week');
+            },
+          },
+          { text: 'Keep it', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+    setBusy(true);
+    try {
+      const streak = await loadStreakSnapshot(3);
+      if (weekStartIso === thisMonday && streak.hitThisWeek) {
+        showDialog(
+          'This week already counts',
+          'You’ve already trained this week, so it stays as a training week.'
+        );
+        return;
+      }
+      if (streak.restWeeksBanked <= 0) {
+        showDialog(
+          'Rest weeks come after showing up',
+          'You’ll have a rest week after four weeks with a session. You can save up to two.'
+        );
+        return;
+      }
+      showDialog(
+        'Plan a rest week?',
+        'This week will keep your run going without a session. Planned workouts stay in the list if you still want them.',
+        [
+          {
+            text: 'Plan rest week',
+            onPress: () => {
+              void runAction(() => setRestWeek(weekStartIso), 'Couldn’t save that rest week');
+            },
+          },
+          { text: 'Not now', style: 'cancel' },
+        ]
+      );
+    } catch (error) {
+      showDialog('Couldn’t check rest weeks', describePlannerError(error));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleOpen(day: PlannerDayView) {
@@ -443,11 +514,18 @@ export default function PlannerScreen() {
           </Text>
           <TextButton label="Cancel" onPress={() => setMovingId(null)} />
         </View>
-      ) : weekPlanned.length > 0 ? (
-        <Text style={[type.caption, { color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }]}>
-          This week: {weekDone} of {weekPlanned.length} {weekPlanned.length === 1 ? 'workout' : 'workouts'}
-        </Text>
-      ) : null}
+      ) : (
+        <>
+          {restWeekStarts.has(weekStartIso) ? (
+            <RestWeekBanner style={{ marginHorizontal: 16, marginBottom: 8 }} />
+          ) : null}
+          {weekPlanned.length > 0 ? (
+            <Text style={[type.caption, { color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }]}>
+              This week: {weekDone} of {weekPlanned.length} {weekPlanned.length === 1 ? 'workout' : 'workouts'}
+            </Text>
+          ) : null}
+        </>
+      )}
 
       {viewMode === 'agenda' ? (
         <SectionList
@@ -536,6 +614,10 @@ export default function PlannerScreen() {
             <MenuHeader label="Add to your planner" detail="Pick what to add, then choose a day." />
             <MenuRow label="Add a custom workout" onPress={() => void startFabAddWorkout()} />
             <MenuRow label="Mark a rest day" onPress={startFabRest} />
+            <MenuRow
+              label={restWeekStarts.has(weekStartIso) ? 'Cancel rest week' : 'Plan a rest week'}
+              onPress={() => void handlePlanRestWeek()}
+            />
             <MenuRow
               label="My workouts"
               onPress={() => {

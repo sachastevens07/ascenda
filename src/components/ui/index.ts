@@ -29,6 +29,7 @@ export {
   SafetyNotice,
 } from './Disclaimer';
 export { GoalChipGroup } from './GoalChipGroup';
+export { RestWeekBanner, StreakCard } from './Streak';
 
 export {
   AnchoredMenu as OverflowMenu,

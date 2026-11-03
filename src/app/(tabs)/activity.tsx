@@ -27,6 +27,7 @@ import {
   ProgressBar,
   SecondaryButton,
   SectionHeader,
+  StreakCard,
   TextButton,
   measureAnchor,
   type AnchorHandle,
@@ -45,6 +46,7 @@ import {
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import { getGymUnlocked } from '@/lib/gymUnlocked';
+import { fetchHideStreak, fetchRestWeekStarts, syncRestWeeksBanked } from '@/lib/streak';
 import { openPaywall, type PaywallReason } from '@/lib/paywall';
 import {
   fetchPlannedCountsByWeek,
@@ -103,6 +105,7 @@ type ActivityData = {
   sessions: FinishedSessionMeta[];
   weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
+  hideStreak: boolean;
   enrolment: RoutineEnrolment | null;
   completedEnrolment: RoutineEnrolment | null;
   completedRoutineSessions: number;
@@ -225,7 +228,7 @@ export default function ActivityScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines] =
+          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, restWeeks] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
@@ -234,6 +237,8 @@ export default function ActivityScreen() {
               fetchActiveEnrolment().catch(() => null),
               fetchLatestCompletedEnrolment().catch(() => null),
               fetchCompletedEnrolmentCount().catch(() => 0),
+              fetchHideStreak().catch(() => false),
+              fetchRestWeekStarts().catch(() => new Set<string>()),
             ]);
           const from = sessions[0]?.date ?? toIso(new Date());
           const [plannedByWeek, photosResult, roadmap, completedRoutineSessions] = await Promise.all([
@@ -247,7 +252,8 @@ export default function ActivityScreen() {
               : Promise.resolve(0),
           ]);
           const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
-          const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, goal);
+          const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, goal, restWeeks);
+          void syncRestWeeksBanked(streak.restWeeksBanked);
           const review = completedEnrolment
             ? await fetchEnrolmentReview(completedEnrolment, sessions, sets).catch(() => null)
             : null;
@@ -260,6 +266,7 @@ export default function ActivityScreen() {
             sessions,
             weekProgress,
             streak,
+            hideStreak,
             enrolment,
             completedEnrolment,
             completedRoutineSessions,
@@ -488,6 +495,8 @@ export default function ActivityScreen() {
                 {data.weekProgress.planned === 1 ? 'workout' : 'workouts'}
               </Text>
             ) : null}
+
+            {data.hideStreak ? null : <StreakCard streak={data.streak} />}
 
             <SectionHeader title="Your routine" />
             <CurrentRoutineCard enrolment={data.enrolment} roadmap={data.roadmap} isPro={isPro} />

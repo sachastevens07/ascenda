@@ -8,6 +8,7 @@ import { useTabBarHeight } from '@/components/PillTabBar';
 import { DestructiveTextButton, FreeBadge, ListRow, ProBadge, SegmentedThemePicker } from '@/components/ui';
 import { useTheme, type ThemePreference } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
+import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { useAuth } from '@/lib/auth';
 import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
 import { useDevTools } from '@/lib/devFlags';
@@ -75,6 +76,7 @@ export default function ProfileScreen() {
   const [isExporting, setIsExporting] = useState(false);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [showAnswers, setShowAnswers] = useState(false);
+  const [hideStreak, setHideStreak] = useState(false);
   const tabBarHeight = useTabBarHeight();
   const email = session?.user.email ?? '';
   const displayName = answers?.display_name?.trim() || email.split('@')[0] || 'You';
@@ -89,6 +91,11 @@ export default function ProfileScreen() {
         .catch(() => {
           if (isCurrent) setEnrolment(null);
         });
+      fetchHideStreak()
+        .then((hidden) => {
+          if (isCurrent) setHideStreak(hidden);
+        })
+        .catch(() => {});
       return () => {
         isCurrent = false;
       };
@@ -191,7 +198,7 @@ export default function ProfileScreen() {
   function requestEditStreakGoal() {
     showDialog(
       'Streak goal',
-      'This is the finish line for your weekly streak. A week counts when you hit your target.',
+      'This is a finish line to aim for, not a test. A week counts when you train at least once. Hitting your plan makes it a gold week.',
       [
         ...STREAK_GOALS.map((goal) => ({
           text: `${goal} weeks`,
@@ -280,6 +287,21 @@ export default function ProfileScreen() {
       </SettingsGroup>
 
       <SettingsGroup title="Training">
+        <SettingsRow
+          title="Show streak"
+          subtitle={hideStreak ? 'Hidden on Home and Activity' : 'Shown on Home and Activity'}
+          onPress={() => {
+            const next = !hideStreak;
+            setHideStreak(next);
+            saveHideStreak(next).catch((error) => {
+              setHideStreak(!next);
+              showDialog(
+                'Couldn’t save that',
+                error instanceof Error ? error.message : 'Check your connection and try again.'
+              );
+            });
+          }}
+        />
         <SettingsRow
           title="Streak goal"
           subtitle={`${answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}

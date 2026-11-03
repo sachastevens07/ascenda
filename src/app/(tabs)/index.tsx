@@ -41,6 +41,13 @@ import {
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import {
+  fetchHideStreak,
+  fetchRestWeekStarts,
+  maybeCelebrateStreakGoal,
+  maybePromptMissedWeek,
+  syncRestWeeksBanked,
+} from '@/lib/streak';
+import {
   challengeCountdown,
   fetchChallenges,
   pickHomeChallenge,
@@ -101,6 +108,7 @@ type HomeData = {
   ownedWorkouts: number;
   weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
+  hideStreak: boolean;
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
 };
@@ -168,6 +176,8 @@ export default function HomeScreen() {
             sessions,
             stretchRoutines,
             streakGoal,
+            hideStreak,
+            restWeeks,
           ] = await Promise.all([
             fetchRoutines(),
             fetchActiveEnrolment(),
@@ -179,6 +189,8 @@ export default function HomeScreen() {
             fetchFinishedSessionMeta().catch(() => []),
             fetchStretchRoutines().catch(() => []),
             fetchStreakGoal().catch(() => DEFAULT_STREAK_GOAL),
+            fetchHideStreak().catch(() => false),
+            fetchRestWeekStarts().catch(() => new Set<string>()),
           ]);
           const missingSql = routines.length === 0;
           const featured = answers
@@ -205,7 +217,8 @@ export default function HomeScreen() {
             () => new Map<string, number>()
           );
           const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
-          const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, streakGoal);
+          const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, streakGoal, restWeeks);
+          void syncRestWeeksBanked(streak.restWeeksBanked);
           if (!isCurrent) return;
           setData({
             featured,
@@ -218,10 +231,13 @@ export default function HomeScreen() {
             ownedWorkouts,
             weekProgress,
             streak,
+            hideStreak,
             challenge: pickHomeChallenge(challenges),
             progress,
           });
           setLoadState('ready');
+          if (!hideStreak) void maybeCelebrateStreakGoal(streak);
+          void maybePromptMissedWeek(streak, () => setAttempt((count) => count + 1));
         } catch {
           if (isCurrent) setLoadState((state) => (state === 'ready' ? state : 'error'));
         }
@@ -343,11 +359,12 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, challenge, progress } =
+  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, challenge, progress } =
     data;
   const inProgress = Boolean(activeSession);
   const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
-  const showWeekCard = weekProgress.planned > 0 || streak.current > 0;
+  const showWeekCard =
+    weekProgress.planned > 0 || (!hideStreak && (streak.current > 0 || streak.weeksTrained > 0));
   const atCustomLimit = atFreeCustomWorkoutLimit(data.ownedWorkouts, subscription.isPro);
   const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
   const nextThumb =
@@ -472,16 +489,21 @@ export default function HomeScreen() {
               ) : (
                 <Text style={[type.title3, { color: colours.ink }]}>This week</Text>
               )}
-              <View style={styles.streakRow}>
-                <Ionicons name="flame" size={16} color={colours.accent} />
-                <Text style={[type.bodySm, { color: colours.accent, fontWeight: '700' }]}>
-                  {streak.current === 0
-                    ? 'Start a streak'
-                    : streak.current === 1
-                      ? '1-week streak'
-                      : `${streak.current}-week streak`}
-                </Text>
-              </View>
+              {hideStreak ? null : (
+                <View style={styles.streakBlock}>
+                  <View style={styles.streakRow}>
+                    <Ionicons name="flame" size={16} color={colours.accent} />
+                    <Text style={[type.bodySm, { color: colours.accent, fontWeight: '700' }]}>
+                      {streak.current === 0
+                        ? 'Start a streak'
+                        : `Current run: ${streak.current} ${streak.current === 1 ? 'week' : 'weeks'}`}
+                    </Text>
+                  </View>
+                  <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
+                    Weeks trained: {streak.weeksTrained}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         ) : null}
@@ -677,11 +699,13 @@ const styles = StyleSheet.create({
     gap: 16,
     padding: 20,
   },
+  streakBlock: {
+    marginTop: 6,
+  },
   streakRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 6,
   },
   flex: {
     flex: 1,

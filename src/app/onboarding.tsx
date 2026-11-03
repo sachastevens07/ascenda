@@ -831,7 +831,7 @@ export default function OnboardingScreen() {
             {step === 'streak' && (
               <ChoiceStep
                 title="Pick a finish line for your weekly streak"
-                subtitle="A week counts when you hit the sessions you planned."
+                subtitle="A week counts when you train at least once. Hitting your plan makes it a gold week."
                 options={STREAK_GOALS.map((value) => ({
                   value,
                   label: `${value} weeks`,
@@ -845,7 +845,7 @@ export default function OnboardingScreen() {
               <InsightStep
                 metric={`${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
                 title="A finish line you can see"
-                body="That’s all a streak is: a number of weeks in a row hitting the sessions you planned, not a test. A week counts when you hit your target. You can change this later in Profile."
+                body="That’s all a streak is: weeks in a row where you showed up, not a test. A week counts when you train at least once. Hitting your plan makes it a gold week. You can change this later in Profile."
               />
             )}
 

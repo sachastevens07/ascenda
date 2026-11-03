@@ -2,7 +2,7 @@
 
 Handoff notes. Read `AGENTS.md` first, then this file. Current phase is **v2.2** (design pass 2, retention and new features). `AGENTS.md` and `DESIGN.md` were copied from Downloads on 3 Nov 2026. `DESIGN.md` section 6 overrides earlier design notes where they disagree. Do not start gym-buddy, AI or food.
 
-Git: `main`. SQL is still pasted by hand; this repo cannot see the remote database. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise. S12 is already built. Ask before **H1**, and before adding any font or notifications library.
+Git: `main`. SQL is still pasted by hand; this repo cannot see the remote database. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise. S12 is already built. Ask before adding any font or notifications library.
 
 ### Done
 **D1. Global design fixes (3 Nov 2026).** Runtime `showDevTools` (off by default; long-press Profile version once). Primary buttons are plum `brand`. Tags are sentence case, max 2 per card, one line. Routines list is unique by id. Old `/programme` screen redirects to Programmes. Kept both One spot routines. No SQL. No new libraries.
@@ -15,11 +15,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **N4. Up to three goals (3 Nov 2026).** Onboarding goals are a chip cloud of 14 options; she can pick up to 3. The first pick is Main; tap another pick to make it main. Recommendation and Featured for you weight the main goal more. Profile → Your answers lists all picks. `main_goals text[]` is added; `goal` and `main_goal` stay for older queries. No new libraries.
 
+**H1. Streak rework (3 Nov 2026).** A week counts with one session (strength or a 10+ minute stretch). Hitting the planner target is a gold week. Rest weeks: earn 1 per 4 session weeks, bank up to 2, plan in the Planner or apply after a quiet week. An extra session the following week repairs a miss. Home and Activity always show weeks trained plus current run. Profile can hide the streak. `supabase/streak_h1.sql` adds `rest_weeks_banked`, `hide_streak` and `streak_weeks`. No new libraries. Logger, progression, swaps and paywall were not touched.
+
 ### In progress
 None.
 
 ### Next step
-Ask before **H1** (streak rework). Group 2 is done. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
+**H2** welcome-back flow. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -50,15 +52,17 @@ Ask before **H1** (streak rework). Group 2 is done. Unfinished v2.1 work that v2
 - N4 does not drop `profiles.goal` or `profiles.main_goal`. `main_goals` is the source of truth; the first value is copied onto those columns. Old `general` answers show as “Get fitter and improve stamina”.
 - Lose body fat is allowed. Featured / recommended routines still use strength (and never calorie or diet language).
 - N4 tap rules: tap to add; tap a selected non-main chip to make it main; tap Main to remove it. At 3, further chips dim and show a hint.
+- H1: gold weeks count towards earning rest weeks. Weeks trained counts only weeks with a session (empty rest weeks do not). Repair needs one extra session above this week’s target (`max(target, 1) + 1`). Hide streak hides Home streak copy and the Activity StreakCard; this-week X of Y stays. Reaching a streak goal offers the next finish line (4 → 8 → 12) and does not change it unless she taps it. Only rest rows are stored in `streak_weeks`; counted / gold / repaired / missed are computed. The quiet-week prompt can appear any day of the following week, not only Monday. `accentSoft` was added to the theme palette for the rest-week banner. D5 / D6 restyles were not done. AGENTS.md still says confirm before H1; this task was built after an explicit go-ahead.
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
 - Paste `supabase/disclaimer.sql` so acceptance is stored on her profile. Until then, onboarding still shows the safety step and the first-session sheet still appears, but existing users will not be asked again on next open.
 - Paste `supabase/main_goals.sql` so up to three goals save on her profile. Until then the app still opens and she can pick three, but only the mapped main goal (`strength` / `glutes_legs` / `general`) is stored. Extra picks are lost after a reload.
+- Paste `supabase/streak_h1.sql` so rest weeks and hide-streak follow her to a new phone. Until then rest weeks and hide streak still work on this device (AsyncStorage). Workout history is never touched.
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
 - To turn tester tools on: Profile, scroll to **Version 1.0.0**, press and hold it until the dialog appears. Hold again to turn them off. (AGENTS.md suggested five long-presses; a single hold is what we shipped after phone testing.)
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. Ask before **H1**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. Next **H2**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -68,7 +72,7 @@ Checked against `AGENTS.md`, `DESIGN.md` section 6, this file, the code and `git
 
 | Earlier task | What v2.2 does instead |
 | --- | --- |
-| **S5** streak rules (no rest-week passes; week only counts on full target) | **H1** rest weeks, gold weeks, repair, weeks trained. Confirm before building. |
+| **S5** streak rules (no rest-week passes; week only counts on full target) | **H1** rest weeks, gold weeks, repair, weeks trained. **Done** 3 Nov 2026. |
 | **S6** tiered achievements (skipped; never built) | **H6** new badge set plus **D7** Awards visuals. |
 | **S9** start/end progress photo prompts | **H7** photos off by default, no prompts. |
 | **S9** challenges with fixed dates and countdowns | **H8** rolling Monday / 1st-of-month starts, no countdowns. |
@@ -87,7 +91,7 @@ S2 navigation (Profile as a tab) stays until **N6** moves Profile to the avatar 
 | **R3** Routines | **Done** | Six launch routines plus S10 extras. SQL **not confirmed run**. |
 | **R4** Home / routine / session detail | **Done**; session detail **merged in N3** | Featured row, next-session card, routine detail. `/routines/session` is a thin launcher into the logger. |
 | **R5** Custom workout builder | **Done** (cap in S1) | Free cap is 4 owned workouts. |
-| **R6** Planner | **Done** | Agenda, month toggle, move / rest / add custom. **D5** / **H1** restyle later. |
+| **R6** Planner | **Done** | Agenda, month toggle, move / rest / add custom. Rest-week banner is in (H1). **D5** restyle later. |
 | **R7** Gym unlocked | **Done** | Quiet Mode and level-up are off the screens. Dead files remain. |
 | **R8** Activity | **Done** | Restyled in DESIGN Step 7. **D6** / **D7** / **H7** will change tabs and Awards. |
 | **R9** Onboarding | **Done**; restyle **Step 9 done**; **N1 done**; **N4 done** | Notification permission is still asked by the rest timer, not after the first session (**H3**). |
@@ -110,7 +114,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 | **S2** Programmes tab | **Done** | Until **N6**. |
 | **S3** Pro badge and locked previews | **Done** | `ProBadge` must still read `routine.is_pro`. |
 | **S4** Change or stop a routine | **Done** | Switch / End on routine detail and Home ⋯. |
-| **S5** Streak changes | **Done, superseded by H1** | Rest-week passes already removed in the UI. `supabase/remove_rest_passes.sql` **not run**. H1 brings planned rest weeks back. |
+| **S5** Streak changes | **Done, superseded by H1** | Rest-week passes already removed in the UI. `supabase/remove_rest_passes.sql` **not run**. H1 brings planned rest weeks back (new columns, leftover rest_passes columns left in place). |
 | **S6** Tiered achievements | **Skipped, superseded by H6 / D7** | Current medals stay until H6/D7. |
 | **S7** Sticky dates and anchored menus | **Done** | Keep. |
 | **S8** Stretches | **Done**; layout **D4** later | 7 stretch routines. Covers reuse gym photos (**D2**). `supabase/stretches.sql` **not run**. |
@@ -145,9 +149,9 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 
 **Group 1:** D1 **done** (3 Nov 2026). N5 **done** (3 Nov 2026).
 
-**Group 2:** N3 **done** (3 Nov 2026). N1, N4.
+**Group 2:** N3 **done** (3 Nov 2026). N1 **done**. N4 **done**.
 
-**Group 3:** H1 (ask first), H2, H3 (ask before a notifications library; `expo-notifications` is already in `app.json` / `package.json`), H4, H5, H6, H7, H8.
+**Group 3:** H1 **done** (3 Nov 2026). H2, H3 (ask before a notifications library; `expo-notifications` is already in `app.json` / `package.json`), H4, H5, H6, H7, H8.
 
 **Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
 
@@ -241,7 +245,7 @@ Also still on the user's side:
 
 ## Next step
 
-**M1 MuscleWiki videos**, still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
+**H2** welcome-back flow. Then H3 (ask before a notifications library). **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
 
 Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready.
 
