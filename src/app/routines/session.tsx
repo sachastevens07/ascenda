@@ -4,6 +4,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
 import { useTheme } from '@/constants/theme';
+import { isSessionStartCancelled } from '@/lib/firstSession';
 import { describeRoutineError, fetchRoutineDay } from '@/lib/routines';
 import { openLogger, startRoutineLogger } from '@/lib/startLogger';
 
@@ -46,6 +47,10 @@ export default function SessionLaunchScreen() {
         }
         openLogger(result.sessionId, true);
       } catch (error) {
+        if (isSessionStartCancelled(error)) {
+          router.back();
+          return;
+        }
         showDialog('Couldn’t start the session', describeRoutineError(error));
         router.back();
       }

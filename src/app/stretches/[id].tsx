@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
 import { ProBadge, ProMark } from '@/components/ProBadge';
+import { SafetyNotice } from '@/components/ui';
+import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { colours } from '@/constants/theme';
 import { coverForRoutine } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
@@ -76,6 +78,8 @@ export default function StretchDetailScreen() {
     }
     setIsStarting(true);
     try {
+      const allowed = await confirmFirstSessionSafety();
+      if (!allowed) return;
       const session = await beginStretchSession(dayId);
       workout.publish(
         {
@@ -210,6 +214,7 @@ export default function StretchDetailScreen() {
         </View>
       )}
 
+      <SafetyNotice />
       <Pressable
         style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
         onPress={() => void handleStart()}

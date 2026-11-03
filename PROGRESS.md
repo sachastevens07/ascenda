@@ -11,11 +11,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **N3. Merge session detail into the logger (3 Nov 2026).** Home, Planner and routine detail open the logger directly. Swap, remove, add/remove set, and do a different day live in the logger. Rep targets stay as the routine wrote them. Add exercise is only on custom workouts, not routine sessions. Weighted sets need a weight before they can be ticked. Timer starts when the logger opens. Header ⋯ **End session** discards it. Finish is disabled until a tick; Discard only shows after a tick. Tick buttons are 48 px plum outline, filling green when done. No SQL. No new libraries.
 
+**N1. Safety disclaimer (3 Nov 2026).** Full wording lives in `src/lib/disclaimer.ts` (version 1). Onboarding has a Train safely step after 18+, with a required checkbox. Existing users are asked again if the version does not match (after SQL is pasted). Profile → About → Safety and disclaimer. First-session sheet with four bullets before a new account’s first session. Routine and stretch detail pages have the one-line safety notice. Learn articles are left for N6. No new libraries.
+
 ### In progress
 None.
 
 ### Next step
-**N1.** Clear safety disclaimer.
+**N4.** More main goals, choose up to three.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -35,13 +37,21 @@ None.
 - Swap is available to everyone in the logger (it already was on the old pre-workout screen). Suggested-weight chips stay Pro.
 - Custom “Add exercise” still writes to the saved workout. Routine sessions cannot add exercises. Rep targets are not editable in the logger. Weighted sets cannot be ticked until a weight is typed.
 - Rest bar still has −15 s as well as +15 s and Skip.
+- N1 keeps the existing 18+ welcome gate (under-18 still deletes the account) and adds the safety checkbox as well.
+- Safety sits after welcome / 18+, before goals. Editing answers from Profile skips it.
+- If `supabase/disclaimer.sql` is not run, the app still opens. Onboarding safety and the first-session sheet still show. Existing users are not locked out.
+- After SQL is run, a null `disclaimer_version` shows the accept screen to existing users.
+- First-session sheet: “I understand” is required; tapping outside cancels and does not start. Includes stretch and custom starts. Accounts that already have a session skip it.
+- Learn article safety line is left for N6.
+- DESIGN.md 6.11 asks for a display serif on “Train safely”. Fonts are not bundled yet, so it uses `type.display` (system sans).
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
+- Paste `supabase/disclaimer.sql` so acceptance is stored on her profile. Until then, onboarding still shows the safety step and the first-session sheet still appears, but existing users will not be asked again on next open.
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
 - To turn tester tools on: Profile, scroll to **Version 1.0.0**, press and hold it until the dialog appears. Hold again to turn them off. (AGENTS.md suggested five long-presses; a single hold is what we shipped after phone testing.)
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. Next **N1**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. Next **N4**. Then ask before **H1**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -73,7 +83,7 @@ S2 navigation (Profile as a tab) stays until **N6** moves Profile to the avatar 
 | **R6** Planner | **Done** | Agenda, month toggle, move / rest / add custom. **D5** / **H1** restyle later. |
 | **R7** Gym unlocked | **Done** | Quiet Mode and level-up are off the screens. Dead files remain. |
 | **R8** Activity | **Done** | Restyled in DESIGN Step 7. **D6** / **D7** / **H7** will change tabs and Awards. |
-| **R9** Onboarding | **Done**; restyle **Step 9 done** | **N1** / **N4** still to do. Notification permission is still asked by the rest timer, not after the first session (**H3**). |
+| **R9** Onboarding | **Done**; restyle **Step 9 done**; **N1 done** | **N4** still to do. Notification permission is still asked by the rest timer, not after the first session (**H3**). |
 | **R10** Paywall | **Done** in logic | Visual DESIGN Step 10 **not started**. **C1** / **C2** later. |
 | **R11** Photos | **Done**; **D2** not started | Fourteen Pexels covers. Stretch routines still reuse gym photos. |
 
@@ -115,7 +125,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 | 6 Planner | **Done** |
 | 7 Activity (Sweat restyle) | **Done**; **D6** / **D7** later |
 | 8 Profile | **Done**; **D8** later |
-| 9 Onboarding | **Done**; **N1** / **N4** later |
+| 9 Onboarding | **Done**; **N1 done**; **N4** later |
 | 10 Paywall visual | **Not started** (C1 / C2) |
 | Bug 1 Pro badge on Gym Confidence | **Done** (`routine.is_pro && !isPro`) |
 | Bug 2 old programme UI | **Partly done** (hidden on Profile; tables stay) |

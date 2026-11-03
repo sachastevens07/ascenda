@@ -330,11 +330,11 @@ export default function ProfileScreen() {
       </SettingsGroup>
 
       <SettingsGroup title="About">
-        <View style={styles.about}>
-          <Text style={[type.bodySm, { color: colours.inkMuted }]}>
-            General fitness guidance, not medical advice. Stop if anything hurts.
-          </Text>
-        </View>
+        <SettingsRow
+          title="Safety and disclaimer"
+          onPress={() => router.push('/safety' as Href)}
+          last
+        />
       </SettingsGroup>
 
       <DestructiveTextButton
@@ -454,10 +454,6 @@ const styles = StyleSheet.create({
   },
   rowLast: {
     borderBottomWidth: 0,
-  },
-  about: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
   },
   appearance: {
     paddingHorizontal: 16,

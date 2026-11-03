@@ -25,6 +25,7 @@ import {
   OverflowMenu,
   PrimaryButton,
   ProBadge,
+  SafetyNotice,
   StatTile,
   TextButton,
   measureAnchor,
@@ -613,6 +614,7 @@ export default function RoutineDetailScreen() {
               </View>
             );
           })}
+          <SafetyNotice style={{ marginTop: spacing.md }} />
         </View>
       </ScrollView>
 

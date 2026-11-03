@@ -18,11 +18,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LineChart } from '@/components/LineChart';
 import {
   Chip,
+  DisclaimerBody,
+  DisclaimerCheckbox,
   HeroImage,
   IconButton,
   ListRow,
   PrimaryButton,
   ProBadge,
+  SafetyNotice,
   SecondaryButton,
   TextButton,
 } from '@/components/ui';
@@ -37,6 +40,7 @@ import {
   startOnboardingRoutine,
   type LiftProjection,
 } from '@/lib/onboarding';
+import { DISCLAIMER_VERSION } from '@/lib/disclaimer';
 import { formatKg } from '@/lib/programmes';
 import {
   CONFIDENCE_LABELS,
@@ -80,6 +84,7 @@ type Draft = Partial<QuizAnswers> & { focus_areas?: FocusArea[] };
 
 type FlowStep =
   | 'welcome'
+  | 'safety'
   | 'goal'
   | 'insight-goal'
   | 'experience'
@@ -98,6 +103,7 @@ type FlowStep =
 
 const FLOW_STEPS: FlowStep[] = [
   'welcome',
+  'safety',
   'goal',
   'insight-goal',
   'experience',
@@ -192,8 +198,8 @@ function recommendationBullets(routine: RoutineSummary, answers: QuizAnswers): s
 
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
-  const { colours, radius, type } = useTheme();
-  const { profile, saveQuizAnswers, confirmAge, deleteAccount } = useProfile();
+  const { colours, radius, type, shadow } = useTheme();
+  const { profile, saveQuizAnswers, confirmAge, deleteAccount, acceptDisclaimer } = useProfile();
   const { isPro } = useSubscription();
   const [savedAnswers] = useState(() => getQuizAnswers(profile));
   const isEditing = savedAnswers !== null;
@@ -206,6 +212,7 @@ export default function OnboardingScreen() {
   const [ageStep, setAgeStep] = useState<'pending' | 'ask' | 'under-18' | null>(
     isEditing || profile?.age_confirmed_at ? null : 'pending'
   );
+  const [safetyChecked, setSafetyChecked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recommended, setRecommended] = useState<RoutineSummary | null>(null);
@@ -246,6 +253,10 @@ export default function OnboardingScreen() {
       setAgeStep('ask');
       return;
     }
+    if (from === 'welcome' && profile?.disclaimer_version === DISCLAIMER_VERSION) {
+      moveTo('goal', 1);
+      return;
+    }
     moveTo(FLOW_STEPS[Math.min(index + 1, FLOW_STEPS.length - 1)], 1);
   }
 
@@ -260,6 +271,10 @@ export default function OnboardingScreen() {
     }
     const index = FLOW_STEPS.indexOf(step);
     if (index <= 0) return;
+    if (step === 'goal' && profile?.disclaimer_version === DISCLAIMER_VERSION) {
+      moveTo('welcome', -1);
+      return;
+    }
     moveTo(FLOW_STEPS[index - 1], -1);
   }
 
@@ -377,6 +392,20 @@ export default function OnboardingScreen() {
       else router.replace('/');
     } catch {
       setError("Sorry, we couldn't save your answers. Check your connection and try again.");
+      setIsSaving(false);
+    }
+  }
+
+  async function handleContinueSafety() {
+    if (!safetyChecked) return;
+    setIsSaving(true);
+    setError(null);
+    try {
+      await acceptDisclaimer();
+      setIsSaving(false);
+      goNext('safety');
+    } catch {
+      setError("Sorry, that didn't save. Check your connection and try again.");
       setIsSaving(false);
     }
   }
@@ -530,6 +559,16 @@ export default function OnboardingScreen() {
     if (step === 'welcome') {
       return <PrimaryButton label="Get started" onPress={() => goNext('welcome')} />;
     }
+    if (step === 'safety') {
+      return (
+        <PrimaryButton
+          label="Continue"
+          onPress={() => void handleContinueSafety()}
+          disabled={!safetyChecked}
+          loading={isSaving}
+        />
+      );
+    }
     if (step === 'insight-goal' || step === 'insight-gym' || step === 'insight-streak') {
       return <PrimaryButton label="Continue" onPress={() => goNext(step)} />;
     }
@@ -632,6 +671,27 @@ export default function OnboardingScreen() {
                   A few short questions. No weight-loss pressure, just a clear first session.
                 </Text>
                 <TextButton label="Not you? Sign out" onPress={() => void supabase.auth.signOut()} style={styles.inlineAction} />
+              </>
+            )}
+
+            {step === 'safety' && (
+              <>
+                <Text style={[type.display, { color: colours.ink }]}>Train safely</Text>
+                <View
+                  style={[
+                    styles.chartCard,
+                    { backgroundColor: colours.surface, borderRadius: radius.xl, marginTop: 16 },
+                    shadow,
+                  ]}>
+                  <DisclaimerBody hideTitle />
+                </View>
+                <View style={{ marginTop: 20 }}>
+                  <DisclaimerCheckbox
+                    checked={safetyChecked}
+                    onToggle={() => setSafetyChecked((value) => !value)}
+                  />
+                </View>
+                {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
               </>
             )}
 
@@ -1045,9 +1105,7 @@ function RevealStep({
         </View>
       ) : null}
 
-      <Text style={[type.caption, { color: colours.inkMuted, marginTop: 24 }]}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
+      <SafetyNotice style={{ marginTop: 24 }} />
       {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
     </>
   );
@@ -1140,9 +1198,7 @@ function ReviewStep({
           ))}
         </View>
       </View>
-      <Text style={[type.caption, { color: colours.inkMuted, marginTop: 24 }]}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
+      <SafetyNotice style={{ marginTop: 24 }} />
       {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
     </>
   );

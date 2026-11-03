@@ -1,6 +1,11 @@
 import { router, type Href } from 'expo-router';
 
 import { showDialog } from '@/components/Dialog';
+import {
+  confirmFirstSessionSafety,
+  isSessionStartCancelled,
+  SessionStartCancelled,
+} from '@/lib/firstSession';
 import { describeRoutineError, fetchRoutineDay, routineDayToProgrammeDay } from '@/lib/routines';
 import { fetchActiveSession, startRoutineSession } from '@/lib/sessions';
 import { saveSessionPlan, sessionPlanFromDay } from '@/lib/workoutLog';
@@ -15,6 +20,8 @@ export type StartLoggerInput = {
 export async function startRoutineLogger(
   input: StartLoggerInput
 ): Promise<{ sessionId: string; alreadyActive: boolean }> {
+  const allowed = await confirmFirstSessionSafety();
+  if (!allowed) throw new SessionStartCancelled();
   const active = await fetchActiveSession();
   if (active) return { sessionId: active.id, alreadyActive: true };
 
@@ -58,6 +65,7 @@ export async function openRoutineLogger(
     }
     openLogger(result.sessionId, options?.replace);
   } catch (error) {
+    if (isSessionStartCancelled(error)) return;
     showDialog('Couldn’t start the session', describeRoutineError(error));
   }
 }

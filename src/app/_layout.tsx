@@ -3,10 +3,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AcceptDisclaimerScreen } from '@/components/AcceptDisclaimerScreen';
 import { DialogProvider } from '@/components/Dialog';
+import { FirstSessionDisclaimerProvider } from '@/components/FirstSessionDisclaimer';
 import { ThemeProvider, useTheme } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { DevToolsProvider, useDevTools } from '@/lib/devFlags';
+import { needsDisclaimerAcceptance } from '@/lib/disclaimer';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
 import { SubscriptionProvider } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
@@ -23,7 +26,9 @@ export default function RootLayout() {
               <ThemedStatusBar />
               <WorkoutProvider>
                 <DialogProvider>
-                  <RootNavigator />
+                  <FirstSessionDisclaimerProvider>
+                    <RootNavigator />
+                  </FirstSessionDisclaimerProvider>
                 </DialogProvider>
               </WorkoutProvider>
             </ProfileProvider>
@@ -67,10 +72,15 @@ function RootNavigator() {
 
   const isOnboarded =
     getQuizAnswers(profile.profile) !== null && !!profile.profile?.age_confirmed_at;
+  const needsDisclaimerGate = isOnboarded && needsDisclaimerAcceptance(profile.profile);
+
+  if (session && needsDisclaimerGate) {
+    return <AcceptDisclaimerScreen />;
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!!session && isOnboarded}>
+      <Stack.Protected guard={!!session && isOnboarded && !needsDisclaimerGate}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="library"
@@ -130,8 +140,22 @@ function RootNavigator() {
           }}
         />
       </Stack.Protected>
-      <Stack.Protected guard={!!session}>
+      <Stack.Protected guard={!!session && needsDisclaimerGate}>
+        <Stack.Screen name="accept-disclaimer" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && !needsDisclaimerGate}>
         <Stack.Screen name="onboarding" />
+        <Stack.Screen
+          name="safety"
+          options={{
+            headerShown: true,
+            title: 'Safety and disclaimer',
+            headerBackTitle: 'Back',
+            headerTintColor: colours.brand,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+          }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="sign-in" />

@@ -49,6 +49,7 @@ import {
   type PlannerDayView,
   type PlannerRange,
 } from '@/lib/planner';
+import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 import { openRoutineLogger } from '@/lib/startLogger';
 
@@ -276,6 +277,8 @@ export default function PlannerScreen() {
 
     setBusy(true);
     try {
+      const allowed = await confirmFirstSessionSafety();
+      if (!allowed) return;
       const active = await fetchActiveSession();
       if (active) {
         showDialog(

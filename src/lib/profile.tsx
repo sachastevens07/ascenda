@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { parseThemePreference, type ThemePreference } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, type StreakGoal } from '@/lib/activityStats';
 import { useAuth } from '@/lib/auth';
+import { DISCLAIMER_VERSION } from '@/lib/disclaimer';
 import { recordLevelChange } from '@/lib/levelUp';
 import { supabase } from '@/lib/supabase';
 
@@ -159,6 +160,11 @@ export type Profile = {
   onboarding_completed_at: string | null;
   /** Null until supabase/theme_preference.sql is run, or she has not saved a choice. */
   theme_preference: ThemePreference | null;
+  /** Null until she accepts the current disclaimer, or the SQL has not been run. */
+  disclaimer_version: number | null;
+  disclaimer_accepted_at: string | null;
+  /** False until supabase/disclaimer.sql has been run. */
+  disclaimer_ready: boolean;
 };
 
 const PROFILE_COLUMNS =
@@ -167,6 +173,7 @@ const ONBOARDING_V2_COLUMNS =
   'main_goal, training_location, session_minutes, focus_areas, gym_comfort, streak_goal_weeks, display_name';
 const PROFILE_COLUMNS_V2 = `${PROFILE_COLUMNS}, ${ONBOARDING_V2_COLUMNS}`;
 const PROFILE_COLUMNS_THEME = `${PROFILE_COLUMNS_V2}, theme_preference`;
+const PROFILE_COLUMNS_DISCLAIMER = `${PROFILE_COLUMNS_THEME}, disclaimer_version, disclaimer_accepted_at`;
 
 function isMissingOnboardingV2(error: { message?: string; code?: string }): boolean {
   return /main_goal|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
@@ -176,6 +183,27 @@ function isMissingOnboardingV2(error: { message?: string; code?: string }): bool
 
 function isMissingThemePreference(error: { message?: string; code?: string }): boolean {
   return /theme_preference/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isMissingDisclaimer(error: { message?: string; code?: string }): boolean {
+  return /disclaimer_version|disclaimer_accepted_at/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function parseDisclaimerVersion(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const version = Number(value);
+  return Number.isFinite(version) ? version : null;
+}
+
+function keepDisclaimer(next: Profile, previous: Profile | null | undefined): Profile {
+  if (next.disclaimer_ready) return next;
+  if (!previous) return next;
+  return {
+    ...next,
+    disclaimer_version: previous.disclaimer_version,
+    disclaimer_accepted_at: previous.disclaimer_accepted_at,
+    disclaimer_ready: previous.disclaimer_ready,
+  };
 }
 
 function parseFocusAreas(value: unknown): FocusArea[] {
@@ -214,7 +242,7 @@ export function equipmentOptionsForLocation(location: TrainingLocation): Equipme
 }
 
 /** numeric columns arrive as strings. */
-function toProfile(row: unknown): Profile {
+function toProfile(row: unknown, disclaimerReady = false): Profile {
   const profile = row as Profile;
   return {
     ...profile,
@@ -230,6 +258,9 @@ function toProfile(row: unknown): Profile {
       : Number(profile.bodyweight_kg),
     quiet_mode: profile.quiet_mode === true,
     theme_preference: parseThemePreference(profile.theme_preference),
+    disclaimer_version: disclaimerReady ? parseDisclaimerVersion(profile.disclaimer_version) : null,
+    disclaimer_accepted_at: disclaimerReady ? (profile.disclaimer_accepted_at ?? null) : null,
+    disclaimer_ready: disclaimerReady,
   };
 }
 
@@ -253,6 +284,8 @@ type ProfileState = {
   setQuietMode: (enabled: boolean) => Promise<void>;
   /** Moves her level up or down and records it in confidence_history. */
   setConfidenceLevel: (level: Level) => Promise<void>;
+  /** Stores the current disclaimer version. No-ops the write if the SQL has not been run. */
+  acceptDisclaimer: () => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -266,6 +299,21 @@ async function selectOwnProfile(
 
 async function loadProfile(userId: string | null): Promise<LoadedProfile> {
   if (!userId) return { userId, profile: null, error: null };
+  const withDisclaimer = await selectOwnProfile(userId, PROFILE_COLUMNS_DISCLAIMER);
+  if (!withDisclaimer.error) {
+    return {
+      userId,
+      profile: withDisclaimer.data ? toProfile(withDisclaimer.data, true) : null,
+      error: null,
+    };
+  }
+  const missingOptional =
+    isMissingDisclaimer(withDisclaimer.error) ||
+    isMissingThemePreference(withDisclaimer.error) ||
+    isMissingOnboardingV2(withDisclaimer.error);
+  if (!missingOptional) {
+    return { userId, profile: null, error: withDisclaimer.error.message ?? 'Couldn’t load profile' };
+  }
   const withTheme = await selectOwnProfile(userId, PROFILE_COLUMNS_THEME);
   if (!withTheme.error) {
     return { userId, profile: withTheme.data ? toProfile(withTheme.data) : null, error: null };
@@ -343,14 +391,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         display_name: answers.display_name.trim() || null,
       };
       const full = await supabase.from('profiles').upsert(payload).select(PROFILE_COLUMNS_V2).single();
+      const previous = loaded?.userId === userId ? loaded.profile : null;
       if (full.error && isMissingOnboardingV2(full.error)) {
         const base = await supabase.from('profiles').upsert(legacy).select(PROFILE_COLUMNS).single();
         if (base.error) throw base.error;
-        setLoaded({ userId, profile: toProfile(base.data), error: null });
+        setLoaded({ userId, profile: keepDisclaimer(toProfile(base.data), previous), error: null });
       } else if (full.error) {
         throw full.error;
       } else {
-        setLoaded({ userId, profile: toProfile(full.data), error: null });
+        setLoaded({ userId, profile: keepDisclaimer(toProfile(full.data), previous), error: null });
       }
       if (previousLevel && previousLevel !== answers.confidence_level) {
         await recordLevelChange(previousLevel, answers.confidence_level).catch(() => {});
@@ -367,8 +416,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       .select(PROFILE_COLUMNS)
       .single();
     if (error) throw error;
-    setLoaded({ userId, profile: toProfile(data), error: null });
-  }, [userId]);
+    const previous = loaded?.userId === userId ? loaded.profile : null;
+    setLoaded({ userId, profile: keepDisclaimer(toProfile(data), previous), error: null });
+  }, [userId, loaded]);
 
   const deleteAccount = useCallback(async () => {
     const { error } = await supabase.rpc('delete_own_account');
@@ -386,9 +436,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select(PROFILE_COLUMNS)
         .single();
       if (error) throw error;
-      setLoaded({ userId, profile: toProfile(data), error: null });
+      const previous = loaded?.userId === userId ? loaded.profile : null;
+      setLoaded({ userId, profile: keepDisclaimer(toProfile(data), previous), error: null });
     },
-    [userId]
+    [userId, loaded]
   );
 
   const setConfidenceLevel = useCallback(
@@ -403,11 +454,45 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select(PROFILE_COLUMNS)
         .single();
       if (error) throw error;
-      setLoaded({ userId, profile: toProfile(data), error: null });
+      const previous = loaded?.userId === userId ? loaded.profile : null;
+      setLoaded({ userId, profile: keepDisclaimer(toProfile(data), previous), error: null });
       await recordLevelChange(from, level).catch(() => {});
     },
     [userId, loaded]
   );
+
+  const acceptDisclaimer = useCallback(async () => {
+    if (!userId) throw new Error('You need to be signed in.');
+    const acceptedAt = new Date().toISOString();
+    const payload = {
+      disclaimer_version: DISCLAIMER_VERSION,
+      disclaimer_accepted_at: acceptedAt,
+    };
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(payload)
+      .eq('user_id', userId)
+      .select(PROFILE_COLUMNS_DISCLAIMER)
+      .single();
+    if (error && isMissingDisclaimer(error)) {
+      const previous = loaded?.userId === userId ? loaded.profile : null;
+      if (previous) {
+        setLoaded({
+          userId,
+          profile: {
+            ...previous,
+            disclaimer_version: DISCLAIMER_VERSION,
+            disclaimer_accepted_at: acceptedAt,
+            disclaimer_ready: false,
+          },
+          error: null,
+        });
+      }
+      return;
+    }
+    if (error) throw error;
+    setLoaded({ userId, profile: toProfile(data, true), error: null });
+  }, [userId, loaded]);
 
   const isLoading = loaded === null || loaded.userId !== userId;
 
@@ -423,6 +508,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         deleteAccount,
         setQuietMode,
         setConfidenceLevel,
+        acceptDisclaimer,
       }}>
       {children}
     </ProfileContext.Provider>

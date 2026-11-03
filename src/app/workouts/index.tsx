@@ -32,6 +32,7 @@ import {
   describePlannerError,
   upcomingPlannerDays,
 } from '@/lib/planner';
+import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { openPaywall } from '@/lib/paywall';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 import { useSubscription } from '@/lib/subscription';
@@ -93,6 +94,8 @@ export default function WorkoutsScreen() {
     if (!requireCreateRoom()) return;
     setBusyId('blank');
     try {
+      const allowed = await confirmFirstSessionSafety();
+      if (!allowed) return;
       const active = await fetchActiveSession();
       if (active) {
         showDialog(
@@ -124,6 +127,8 @@ export default function WorkoutsScreen() {
   async function handleStart(workout: CustomWorkout) {
     setBusyId(workout.id);
     try {
+      const allowed = await confirmFirstSessionSafety();
+      if (!allowed) return;
       const active = await fetchActiveSession();
       if (active) {
         showDialog(

@@ -22,6 +22,12 @@ export {
 export { ChipScroller, ListRow, SectionHeader, StickyDayHeader } from './List';
 export { ProgressBar, ProgressRing } from './Progress';
 export { RestTimerBar, SetRow } from './Workout';
+export {
+  DisclaimerBody,
+  DisclaimerCheckbox,
+  DisclaimerSheet,
+  SafetyNotice,
+} from './Disclaimer';
 
 export {
   AnchoredMenu as OverflowMenu,
