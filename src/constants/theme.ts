@@ -1,13 +1,23 @@
-import { createContext, createElement, useContext, useMemo, type ReactNode } from 'react';
-import { useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { Appearance, useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
 
 /**
  * Design tokens from DESIGN.md (approved).
  * Serif display (Fraunces / DM Serif Display) and Inter are not bundled yet.
  * Ask before adding a font package. Until then, type styles use the system sans.
  *
- * Existing screens keep importing `colours` (the current palette) so this step
- * does not restyle them. New UI in `src/components/ui` uses `useTheme()`.
+ * Kit screens use `useTheme()`. A few unrestyled screens still import the static
+ * `colours` object and stay on the old cream palette until their design pass.
  */
 
 export type Palette = {
@@ -197,9 +207,27 @@ export const type = {
 };
 
 export type ColorSchemeName = 'light' | 'dark';
+export const THEME_PREFERENCES = ['light', 'dark', 'system'] as const;
+export type ThemePreference = (typeof THEME_PREFERENCES)[number];
+
+export const THEME_PREFERENCE_LABELS: Record<ThemePreference, string> = {
+  light: 'Light',
+  dark: 'Dark',
+  system: 'Match phone',
+};
+
+const THEME_STORAGE_KEY = 'theme_preference';
+
+export function parseThemePreference(value: unknown): ThemePreference | null {
+  return THEME_PREFERENCES.includes(value as ThemePreference) ? (value as ThemePreference) : null;
+}
 
 export type Theme = {
   scheme: ColorSchemeName;
+  preference: ThemePreference;
+  /** True once AsyncStorage has a saved choice. Cloud sync only fills an empty device. */
+  hasLocalPreference: boolean;
+  setPreference: (value: ThemePreference) => void;
   colours: Palette;
   spacing: typeof spacing;
   radius: typeof radius;
@@ -209,6 +237,9 @@ export type Theme = {
 
 const defaultTheme: Theme = {
   scheme: 'light',
+  preference: 'light',
+  hasLocalPreference: false,
+  setPreference: () => {},
   colours: light,
   spacing,
   radius,
@@ -218,19 +249,53 @@ const defaultTheme: Theme = {
 
 const ThemeContext = createContext<Theme>(defaultTheme);
 
+function resolveScheme(preference: ThemePreference, system: ColorSchemeName | null | undefined): ColorSchemeName {
+  if (preference === 'system') return system === 'dark' ? 'dark' : 'light';
+  return preference;
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
-  const scheme: ColorSchemeName = system === 'dark' ? 'dark' : 'light';
+  const [preference, setPreferenceState] = useState<ThemePreference>('light');
+  const [hasLocalPreference, setHasLocalPreference] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(THEME_STORAGE_KEY)
+      .then((value) => {
+        const stored = parseThemePreference(value);
+        if (stored) {
+          setPreferenceState(stored);
+          setHasLocalPreference(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (typeof Appearance.setColorScheme !== 'function') return;
+    Appearance.setColorScheme(preference === 'system' ? 'unspecified' : preference);
+  }, [preference]);
+
+  const setPreference = useCallback((value: ThemePreference) => {
+    setPreferenceState(value);
+    setHasLocalPreference(true);
+    AsyncStorage.setItem(THEME_STORAGE_KEY, value).catch(() => {});
+  }, []);
+
+  const scheme = resolveScheme(preference, system);
   const value = useMemo<Theme>(
     () => ({
       scheme,
+      preference,
+      hasLocalPreference,
+      setPreference,
       colours: scheme === 'dark' ? dark : light,
       spacing,
       radius,
       shadow: scheme === 'dark' ? darkShadow : lightShadow,
       type,
     }),
-    [scheme]
+    [scheme, preference, hasLocalPreference, setPreference]
   );
   return createElement(ThemeContext.Provider, { value }, children);
 }

@@ -5,26 +5,27 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PillTabBar, TabBarHeightProvider } from '@/components/PillTabBar';
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
-function tabIcon(filled: IoniconName, outline: IoniconName) {
-  return ({ focused }: { focused: boolean }) => (
-    <Ionicons
-      name={focused ? filled : outline}
-      size={24}
-      color={focused ? colours.accent : colours.textMuted}
-    />
-  );
-}
-
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { colours } = useTheme();
+
+  function tabIcon(filled: IoniconName, outline: IoniconName) {
+    return ({ focused }: { focused: boolean }) => (
+      <Ionicons
+        name={focused ? filled : outline}
+        size={24}
+        color={focused ? colours.brand : colours.inkMuted}
+      />
+    );
+  }
 
   return (
     <TabBarHeightProvider>
-      <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: colours.background }}>
+      <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: colours.bg }}>
         <TopTabs
           tabBarPosition="bottom"
           tabBar={(props) => <PillTabBar {...props} />}>

@@ -3,7 +3,7 @@ import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 import { EQUIPMENT_LABELS, ZONE_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import type { ProgrammeExercise, SlotExercise } from '@/lib/programmes';
@@ -50,6 +50,7 @@ export function SwapSheet({
   allowAlways = true,
   alwaysDetail = 'Replaces it in your programme',
 }: SwapSheetProps) {
+  const { colours } = useTheme();
   const [alternatives, setAlternatives] = useState<SlotExercise[]>([]);
   const [trySomethingNew, setTrySomethingNew] = useState<SlotExercise | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -152,13 +153,15 @@ export function SwapSheet({
       ) : loadState === 'loading' ? (
         <Pills>
           <Status>
-            <ActivityIndicator color={colours.accent} />
+            <ActivityIndicator color={colours.brand} />
           </Status>
         </Pills>
       ) : loadState === 'error' ? (
         <Pills>
           <Status>
-            <Text style={styles.status}>We couldn’t load alternatives. Try again.</Text>
+            <Text style={[styles.status, { color: colours.inkMuted }]}>
+              We couldn’t load alternatives. Try again.
+            </Text>
           </Status>
         </Pills>
       ) : (
@@ -191,7 +194,9 @@ export function SwapSheet({
           )}
           {alternatives.length === 0 && !trySomethingNew && !canRestore && (
             <Status>
-              <Text style={styles.status}>Nothing else for this muscle with your equipment.</Text>
+              <Text style={[styles.status, { color: colours.inkMuted }]}>
+                Nothing else for this muscle with your equipment.
+              </Text>
             </Status>
           )}
         </Pills>
@@ -214,7 +219,16 @@ function Pills({ children }: { children: ReactNode }) {
 }
 
 function Status({ children }: { children: ReactNode }) {
-  return <View style={styles.statusPill}>{children}</View>;
+  const { colours } = useTheme();
+  return (
+    <View
+      style={[
+        styles.statusPill,
+        { borderColor: colours.border, backgroundColor: colours.surface },
+      ]}>
+      {children}
+    </View>
+  );
 }
 
 function Pill({
@@ -232,23 +246,31 @@ function Pill({
   disabled?: boolean;
   onPress: () => void;
 }) {
+  const { colours } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [styles.pill, muted && styles.pillMuted, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.pill,
+        {
+          borderColor: colours.border,
+          backgroundColor: muted ? colours.bg : colours.surface,
+        },
+        pressed && styles.pressed,
+      ]}
       accessibilityRole="button">
       {icon ? (
-        <Ionicons name={icon} size={20} color={colours.accent} style={styles.icon} />
+        <Ionicons name={icon} size={20} color={colours.brand} style={styles.icon} />
       ) : (
         <View style={styles.icon} />
       )}
       <View style={styles.pillText}>
-        <Text style={styles.pillTitle} numberOfLines={1}>
+        <Text style={[styles.pillTitle, { color: colours.ink }]} numberOfLines={1}>
           {title}
         </Text>
         {detail ? (
-          <Text style={styles.pillDetail} numberOfLines={1}>
+          <Text style={[styles.pillDetail, { color: colours.inkMuted }]} numberOfLines={1}>
             {detail}
           </Text>
         ) : null}
@@ -271,15 +293,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colours.border,
-    backgroundColor: colours.surface,
   },
   icon: {
     width: 20,
     marginRight: 10,
-  },
-  pillMuted: {
-    backgroundColor: colours.background,
   },
   pillText: {
     flex: 1,
@@ -287,26 +304,21 @@ const styles = StyleSheet.create({
   pillTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: colours.text,
   },
   pillDetail: {
     fontSize: 13,
-    color: colours.textMuted,
     marginTop: 1,
   },
   statusPill: {
     height: OPTION_HEIGHT,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: colours.border,
-    backgroundColor: colours.surface,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
   status: {
     fontSize: 15,
-    color: colours.textMuted,
     textAlign: 'center',
   },
   pressed: {

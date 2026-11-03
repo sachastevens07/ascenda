@@ -7,29 +7,34 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 ### Done
 **D1. Global design fixes (3 Nov 2026).** Runtime `showDevTools` (off by default; long-press Profile version once). Primary buttons are plum `brand`. Tags are sentence case, max 2 per card, one line. Routines list is unique by id. Old `/programme` screen redirects to Programmes. Kept both One spot routines. No SQL. No new libraries.
 
+**N5. Light theme default (3 Nov 2026).** Default is light. Profile → Appearance: Light / Dark / Match phone. Saved on the device and in `profiles.theme_preference`. Kit screens, tab bar, dialogs, menus, logger swap sheet and workout bar follow the choice. Unrestyled screens (sign-in, paywall, stretches, workouts, paths, challenges, exercise detail) stay on the old cream palette. No new libraries.
+
 ### In progress
 None.
 
 ### Next step
-**N5.** Light theme default, dark theme in settings.
+**N3.** Merge the pre-workout screen into the logger.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
 - `one-spot-6` (“One spot: 6 weeks”) and `one-spot-2` (“One spot 2 days”) are two different plans and both still appear.
 - Bug 2: old programme tables still exist; Profile UI is hidden and `/programme` now redirects.
+- Dark theme does not restyle sign-in, paywall, stretches, workouts, paths, challenges or exercise detail yet.
 
 ### Decisions made
 - Keep both One spot routines.
 - Skip secondary-button restyle and eyebrow shortening (left for later screen passes).
 - Keep Restart 8-week block behind `showDevTools`.
 - `showDevTools` is on-device only (AsyncStorage). No `profiles` column.
+- N5 does not convert unrestyled screens to `useTheme()`, to avoid changing their light look.
+- Daily-quote toggle stays out of Appearance until N7.
 
 ### Setup notes
-- No migration to run.
+- Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
 - To turn tester tools on: Profile, scroll to **Version 1.0.0**, press and hold it until the dialog appears. Hold again to turn them off. (AGENTS.md suggested five long-presses; a single hold is what we shipped after phone testing.)
 
-**v2.2 Group 1:** D1 **done**. N5 next.
+**v2.2 Group 1:** D1 **done**. N5 **done**. Group 2 next (N3).
 
 ## Status reconciled (3 Nov 2026)
 
@@ -114,7 +119,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 
 ### v2.2
 
-**Group 1:** D1 **done** (3 Nov 2026). N5 **not started**.
+**Group 1:** D1 **done** (3 Nov 2026). N5 **done** (3 Nov 2026).
 
 **Group 2:** N3, N1, N4.
 

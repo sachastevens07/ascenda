@@ -5,8 +5,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type Vie
 
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
-import { DestructiveTextButton, FreeBadge, ListRow, ProBadge } from '@/components/ui';
-import { useTheme } from '@/constants/theme';
+import { DestructiveTextButton, FreeBadge, ListRow, ProBadge, SegmentedThemePicker } from '@/components/ui';
+import { useTheme, type ThemePreference } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import { useAuth } from '@/lib/auth';
 import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
@@ -24,6 +24,7 @@ import {
   formatDaysPerWeek,
   formatSessionMinutes,
   getQuizAnswers,
+  saveThemePreference,
   useProfile,
 } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
@@ -63,7 +64,7 @@ function initials(name: string, email: string | undefined): string {
 }
 
 export default function ProfileScreen() {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius, type, preference, setPreference } = useTheme();
   const { session } = useAuth();
   const { profile, reload } = useProfile();
   const subscription = useSubscription();
@@ -169,6 +170,11 @@ export default function ProfileScreen() {
         error instanceof Error ? error.message : 'Check your connection and try again.'
       );
     }
+  }
+
+  function handleThemeChange(value: ThemePreference) {
+    setPreference(value);
+    saveThemePreference(value).catch(() => {});
   }
 
   function handleVersionLongPress() {
@@ -280,6 +286,13 @@ export default function ProfileScreen() {
           onPress={requestEditStreakGoal}
           last
         />
+      </SettingsGroup>
+
+      <SettingsGroup title="Appearance">
+        <View style={styles.appearance}>
+          <Text style={[type.bodySm, { color: colours.inkMuted, marginBottom: 10 }]}>Theme</Text>
+          <SegmentedThemePicker value={preference} onChange={handleThemeChange} />
+        </View>
       </SettingsGroup>
 
       {answers ? (
@@ -443,6 +456,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   about: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  appearance: {
     paddingHorizontal: 16,
     paddingVertical: 16,
   },

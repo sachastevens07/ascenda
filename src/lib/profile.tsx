@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
+import { parseThemePreference, type ThemePreference } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, type StreakGoal } from '@/lib/activityStats';
 import { useAuth } from '@/lib/auth';
 import { recordLevelChange } from '@/lib/levelUp';
@@ -156,6 +157,8 @@ export type Profile = {
   /** When on, Today's session stays in zone 1 (Corner). See supabase/quiet_mode.sql. */
   quiet_mode: boolean;
   onboarding_completed_at: string | null;
+  /** Null until supabase/theme_preference.sql is run, or she has not saved a choice. */
+  theme_preference: ThemePreference | null;
 };
 
 const PROFILE_COLUMNS =
@@ -163,11 +166,16 @@ const PROFILE_COLUMNS =
 const ONBOARDING_V2_COLUMNS =
   'main_goal, training_location, session_minutes, focus_areas, gym_comfort, streak_goal_weeks, display_name';
 const PROFILE_COLUMNS_V2 = `${PROFILE_COLUMNS}, ${ONBOARDING_V2_COLUMNS}`;
+const PROFILE_COLUMNS_THEME = `${PROFILE_COLUMNS_V2}, theme_preference`;
 
 function isMissingOnboardingV2(error: { message?: string; code?: string }): boolean {
   return /main_goal|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
     `${error.code ?? ''} ${error.message ?? ''}`
   );
+}
+
+function isMissingThemePreference(error: { message?: string; code?: string }): boolean {
+  return /theme_preference/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
 function parseFocusAreas(value: unknown): FocusArea[] {
@@ -221,6 +229,7 @@ function toProfile(row: unknown): Profile {
       ? null
       : Number(profile.bodyweight_kg),
     quiet_mode: profile.quiet_mode === true,
+    theme_preference: parseThemePreference(profile.theme_preference),
   };
 }
 
@@ -257,12 +266,33 @@ async function selectOwnProfile(
 
 async function loadProfile(userId: string | null): Promise<LoadedProfile> {
   if (!userId) return { userId, profile: null, error: null };
+  const withTheme = await selectOwnProfile(userId, PROFILE_COLUMNS_THEME);
+  if (!withTheme.error) {
+    return { userId, profile: withTheme.data ? toProfile(withTheme.data) : null, error: null };
+  }
+  if (!isMissingThemePreference(withTheme.error) && !isMissingOnboardingV2(withTheme.error)) {
+    return { userId, profile: null, error: withTheme.error.message ?? 'Couldn’t load profile' };
+  }
   const full = await selectOwnProfile(userId, PROFILE_COLUMNS_V2);
   if (!full.error) return { userId, profile: full.data ? toProfile(full.data) : null, error: null };
   if (!isMissingOnboardingV2(full.error)) return { userId, profile: null, error: full.error.message ?? 'Couldn’t load profile' };
   const base = await selectOwnProfile(userId, PROFILE_COLUMNS);
   if (base.error) return { userId, profile: null, error: base.error.message ?? 'Couldn’t load profile' };
   return { userId, profile: base.data ? toProfile(base.data) : null, error: null };
+}
+
+/** Writes the Appearance choice. No-ops if she is signed out or the column is not in the database yet. */
+export async function saveThemePreference(preference: ThemePreference): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ theme_preference: preference })
+    .eq('user_id', user.id);
+  if (error && isMissingThemePreference(error)) return;
+  if (error) throw error;
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {

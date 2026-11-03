@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DialogProvider } from '@/components/Dialog';
-import { ThemeProvider, colours } from '@/constants/theme';
+import { ThemeProvider, useTheme } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { DevToolsProvider, useDevTools } from '@/lib/devFlags';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
@@ -18,8 +19,9 @@ export default function RootLayout() {
         <AuthProvider>
           <SubscriptionProvider>
             <ProfileProvider>
+              <ThemeCloudSync />
+              <ThemedStatusBar />
               <WorkoutProvider>
-                <StatusBar style="dark" />
                 <DialogProvider>
                   <RootNavigator />
                 </DialogProvider>
@@ -32,12 +34,31 @@ export default function RootLayout() {
   );
 }
 
+function ThemedStatusBar() {
+  const { scheme } = useTheme();
+  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
+}
+
+function ThemeCloudSync() {
+  const { profile, isLoading } = useProfile();
+  const { hasLocalPreference, setPreference } = useTheme();
+
+  useEffect(() => {
+    if (isLoading || hasLocalPreference) return;
+    const remote = profile?.theme_preference;
+    if (remote) setPreference(remote);
+  }, [hasLocalPreference, isLoading, profile?.theme_preference, setPreference]);
+
+  return null;
+}
+
 function RootNavigator() {
   const { session, isLoading } = useAuth();
   const profile = useProfile();
+  const { colours } = useTheme();
 
   if (isLoading || (session && profile.isLoading)) {
-    return <View style={styles.blank} />;
+    return <View style={[styles.blank, { backgroundColor: colours.bg }]} />;
   }
 
   if (session && profile.error) {
@@ -57,9 +78,9 @@ function RootNavigator() {
             headerShown: true,
             title: '',
             headerBackTitle: 'Back',
-            headerTintColor: colours.accent,
+            headerTintColor: colours.brand,
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.background },
+            headerStyle: { backgroundColor: colours.bg },
           }}
         />
         <Stack.Screen
@@ -68,9 +89,9 @@ function RootNavigator() {
             headerShown: true,
             title: '',
             headerBackTitle: 'Back',
-            headerTintColor: colours.accent,
+            headerTintColor: colours.brand,
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.background },
+            headerStyle: { backgroundColor: colours.bg },
           }}
         />
         <Stack.Screen
@@ -79,9 +100,9 @@ function RootNavigator() {
             headerShown: true,
             title: '',
             headerBackTitle: 'Home',
-            headerTintColor: colours.accent,
+            headerTintColor: colours.brand,
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.background },
+            headerStyle: { backgroundColor: colours.bg },
           }}
         />
         <Stack.Screen
@@ -90,9 +111,9 @@ function RootNavigator() {
             headerShown: true,
             title: '',
             headerBackTitle: 'Profile',
-            headerTintColor: colours.accent,
+            headerTintColor: colours.brand,
             headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.background },
+            headerStyle: { backgroundColor: colours.bg },
           }}
         />
         <Stack.Screen name="workouts" options={{ headerShown: false }} />
@@ -123,22 +144,27 @@ function RootNavigator() {
 
 function ProfileError({ detail, onRetry }: { detail: string; onRetry: () => void }) {
   const { showDevTools } = useDevTools();
+  const { colours, radius } = useTheme();
   return (
-    <View style={styles.error}>
-      <Text style={styles.errorTitle}>We couldn't load your profile</Text>
-      <Text style={styles.errorText}>Check your connection and try again.</Text>
-      {showDevTools ? <Text style={styles.errorDetail}>{detail}</Text> : null}
+    <View style={[styles.error, { backgroundColor: colours.bg }]}>
+      <Text style={[styles.errorTitle, { color: colours.ink }]}>We couldn't load your profile</Text>
+      <Text style={[styles.errorText, { color: colours.inkMuted }]}>Check your connection and try again.</Text>
+      {showDevTools ? <Text style={[styles.errorDetail, { color: colours.inkMuted }]}>{detail}</Text> : null}
       <Pressable
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.button,
+          { backgroundColor: colours.brand, borderRadius: radius.full },
+          pressed && styles.buttonPressed,
+        ]}
         onPress={onRetry}
         accessibilityRole="button">
-        <Text style={styles.buttonText}>Try again</Text>
+        <Text style={[styles.buttonText, { color: colours.onBrand }]}>Try again</Text>
       </Pressable>
       <Pressable
         style={styles.link}
         onPress={() => supabase.auth.signOut()}
         accessibilityRole="button">
-        <Text style={styles.linkText}>Sign out</Text>
+        <Text style={[styles.linkText, { color: colours.brand }]}>Sign out</Text>
       </Pressable>
     </View>
   );
@@ -147,37 +173,30 @@ function ProfileError({ detail, onRetry }: { detail: string; onRetry: () => void
 const styles = StyleSheet.create({
   blank: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   error: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colours.background,
   },
   errorTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colours.text,
   },
   errorText: {
     fontSize: 17,
-    color: colours.textMuted,
     marginTop: 8,
     marginBottom: 24,
   },
   errorDetail: {
     fontSize: 13,
-    color: colours.textMuted,
     marginTop: -12,
     marginBottom: 24,
   },
   button: {
     minHeight: 56,
-    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colours.accent,
   },
   buttonPressed: {
     opacity: 0.8,
@@ -185,7 +204,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: colours.surface,
   },
   link: {
     alignItems: 'center',
@@ -194,6 +212,5 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colours.accent,
   },
 });

@@ -3,7 +3,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { WorkoutBar } from '@/components/WorkoutBar';
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 
 const PILL_PADDING = 4;
 
@@ -38,6 +38,7 @@ export function PillTabBar({
   position,
   insets,
 }: PillTabBarProps) {
+  const { colours, shadow } = useTheme();
   const [tabFrames, setTabFrames] = useState<TabFrame[]>([]);
   const { setHeight } = useContext(TabBarHeightContext);
 
@@ -74,20 +75,24 @@ export function PillTabBar({
       pointerEvents="box-none"
       onLayout={(event) => setHeight(event.nativeEvent.layout.height)}>
       <WorkoutBar />
-      <View style={styles.pill}>
+      <View style={[styles.pill, { backgroundColor: colours.surface }, shadow]}>
         <View style={styles.pillInner}>
           {framesReady && (
             <Animated.View
               style={[
                 styles.indicator,
-                { width: baseWidth, transform: [{ translateX }, { scaleX }] },
+                {
+                  width: baseWidth,
+                  backgroundColor: colours.brandSoft,
+                  transform: [{ translateX }, { scaleX }],
+                },
               ]}
             />
           )}
           {state.routes.map((route, index) => {
             const { title, tabBarIcon } = descriptors[route.key].options;
             const focused = state.index === index;
-            const colour = focused ? colours.accent : colours.textMuted;
+            const colour = focused ? colours.brand : colours.inkMuted;
             const label = title ?? route.name;
 
             const onPress = () => {
@@ -142,12 +147,6 @@ const styles = StyleSheet.create({
     padding: PILL_PADDING,
     borderRadius: 28,
     overflow: 'hidden',
-    backgroundColor: colours.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
   },
   pillInner: {
     position: 'relative',
@@ -160,7 +159,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     borderRadius: 22,
-    backgroundColor: colours.accentSoft,
   },
   tab: {
     flexGrow: 1,

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 
 export type DialogButton = {
   text: string;
@@ -75,6 +75,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
  * another `Modal` (such as a bottom sheet), where provider dialogs can't appear on top.
  */
 export function DialogCard({ dialog, onClose }: { dialog: DialogOptions; onClose: () => void }) {
+  const { colours } = useTheme();
   const buttons = withDefaultButton(dialog);
   const actions = buttons.filter((button) => button.style !== 'cancel');
   const cancel = buttons.find((button) => button.style === 'cancel');
@@ -86,35 +87,43 @@ export function DialogCard({ dialog, onClose }: { dialog: DialogOptions; onClose
   }
 
   return (
-    <View style={styles.overlay}>
+    <View style={[styles.overlay, { backgroundColor: colours.overlay }]}>
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={dismiss ? () => press(dismiss) : undefined}
         accessibilityLabel="Close"
       />
-      <View style={styles.card} accessibilityRole="alert">
-        <Text style={styles.title}>{dialog.title}</Text>
-        {dialog.message ? <Text style={styles.message}>{dialog.message}</Text> : null}
+      <View style={[styles.card, { backgroundColor: colours.surface }]} accessibilityRole="alert">
+        <Text style={[styles.title, { color: colours.ink }]}>{dialog.title}</Text>
+        {dialog.message ? (
+          <Text style={[styles.message, { color: colours.inkMuted }]}>{dialog.message}</Text>
+        ) : null}
         <View style={styles.buttons}>
           {actions.map((button) => (
             <Pressable
               key={button.text}
               style={({ pressed }) => [
                 styles.button,
-                button.style === 'destructive' ? styles.destructiveButton : styles.primaryButton,
+                {
+                  backgroundColor: button.style === 'destructive' ? colours.danger : colours.brand,
+                },
                 pressed && styles.pressed,
               ]}
               onPress={() => press(button)}
               accessibilityRole="button">
-              <Text style={styles.primaryButtonText}>{button.text}</Text>
+              <Text style={[styles.primaryButtonText, { color: colours.onBrand }]}>{button.text}</Text>
             </Pressable>
           ))}
           {cancel && (
             <Pressable
-              style={({ pressed }) => [styles.button, styles.cancelButton, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.button,
+                { borderWidth: 1.5, borderColor: colours.brand, backgroundColor: colours.surface },
+                pressed && styles.pressed,
+              ]}
               onPress={() => press(cancel)}
               accessibilityRole="button">
-              <Text style={styles.cancelButtonText}>{cancel.text}</Text>
+              <Text style={[styles.cancelButtonText, { color: colours.brand }]}>{cancel.text}</Text>
             </Pressable>
           )}
         </View>
@@ -128,7 +137,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
   },
   card: {
     width: '100%',
@@ -136,17 +144,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     padding: 24,
     borderRadius: 28,
-    backgroundColor: colours.surface,
   },
   title: {
     fontSize: 21,
     fontWeight: '700',
-    color: colours.text,
   },
   message: {
     fontSize: 16,
     lineHeight: 23,
-    color: colours.textMuted,
     marginTop: 8,
   },
   buttons: {
@@ -160,26 +165,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
-  primaryButton: {
-    backgroundColor: colours.accent,
-  },
-  destructiveButton: {
-    backgroundColor: colours.danger,
-  },
   primaryButtonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: colours.surface,
-  },
-  cancelButton: {
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
   },
   cancelButtonText: {
     fontSize: 17,
     fontWeight: '700',
-    color: colours.accent,
   },
   pressed: {
     opacity: 0.7,

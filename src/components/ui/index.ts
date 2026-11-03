@@ -9,7 +9,16 @@ export {
 } from './Buttons';
 export { IconButton } from './IconButton';
 export { AchievementBadge, FreeBadge, LockedOverlay, ProBadge, ProMark } from './Badges';
-export { Chip, EmptyState, HeroImage, HighlightTile, ImageCard, StatTile, Tag } from './Cards';
+export {
+  Chip,
+  EmptyState,
+  HeroImage,
+  HighlightTile,
+  ImageCard,
+  SegmentedThemePicker,
+  StatTile,
+  Tag,
+} from './Cards';
 export { ChipScroller, ListRow, SectionHeader, StickyDayHeader } from './List';
 export { ProgressBar, ProgressRing } from './Progress';
 export { RestTimerBar, SetRow } from './Workout';

@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 
 export type AnchorRect = {
   x: number;
@@ -98,6 +98,8 @@ export function AnchoredMenu({
     };
   }, [anchor, minWidth]);
 
+  const { colours, shadow } = useTheme();
+
   if (!shown || !anchor) return null;
 
   const translateY = progress.interpolate({
@@ -116,12 +118,14 @@ export function AnchoredMenu({
         <Animated.View
           style={[
             styles.menu,
+            shadow,
             {
               top: layout.top,
               bottom: layout.bottom,
               left: layout.left,
               width: layout.width,
               maxHeight: layout.maxHeight,
+              backgroundColor: colours.surface,
               opacity: progress,
               transform: [{ translateY }],
             },
@@ -136,10 +140,11 @@ export function AnchoredMenu({
 }
 
 export function MenuHeader({ label, detail }: { label: string; detail?: string }) {
+  const { colours } = useTheme();
   return (
-    <View style={styles.header}>
-      <Text style={styles.headerLabel}>{label}</Text>
-      {detail ? <Text style={styles.headerDetail}>{detail}</Text> : null}
+    <View style={[styles.header, { borderBottomColor: colours.border }]}>
+      <Text style={[styles.headerLabel, { color: colours.ink }]}>{label}</Text>
+      {detail ? <Text style={[styles.headerDetail, { color: colours.inkMuted }]}>{detail}</Text> : null}
     </View>
   );
 }
@@ -157,21 +162,26 @@ export function MenuRow({
   danger?: boolean;
   detail?: string;
 }) {
+  const { colours } = useTheme();
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.row, { borderBottomColor: colours.border }, pressed && styles.pressed]}
       accessibilityRole="button"
       accessibilityState={{ selected }}>
       <View style={styles.rowTextWrap}>
         <Text
-          style={[styles.rowLabel, selected && styles.rowLabelOn, danger && styles.rowDanger]}
+          style={[
+            styles.rowLabel,
+            { color: danger ? colours.danger : selected ? colours.brand : colours.ink },
+            (selected || danger) && styles.rowLabelStrong,
+          ]}
           numberOfLines={2}>
           {label}
         </Text>
-        {detail ? <Text style={styles.rowDetail}>{detail}</Text> : null}
+        {detail ? <Text style={[styles.rowDetail, { color: colours.inkMuted }]}>{detail}</Text> : null}
       </View>
-      {selected ? <Ionicons name="checkmark" size={20} color={colours.accent} /> : null}
+      {selected ? <Ionicons name="checkmark" size={20} color={colours.brand} /> : null}
     </Pressable>
   );
 }
@@ -187,29 +197,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: colours.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.16,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
   },
   header: {
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
   },
   headerLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: colours.text,
   },
   headerDetail: {
     fontSize: 13,
     lineHeight: 18,
-    color: colours.textMuted,
     marginTop: 4,
   },
   row: {
@@ -220,26 +221,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
   },
   rowTextWrap: {
     flex: 1,
   },
   rowLabel: {
     fontSize: 16,
-    color: colours.text,
   },
-  rowLabelOn: {
+  rowLabelStrong: {
     fontWeight: '700',
-    color: colours.accent,
-  },
-  rowDanger: {
-    color: colours.danger,
-    fontWeight: '600',
   },
   rowDetail: {
     fontSize: 13,
-    color: colours.textMuted,
     marginTop: 2,
   },
   pressed: {

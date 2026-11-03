@@ -11,7 +11,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { useTheme } from '@/constants/theme';
+import { THEME_PREFERENCES, THEME_PREFERENCE_LABELS, useTheme, type ThemePreference } from '@/constants/theme';
 
 import { FreeBadge, ProBadge } from './Badges';
 import { ProgressRing } from './Progress';
@@ -308,6 +308,50 @@ export function Chip({
 
 export const Tag = Chip;
 
+export function SegmentedThemePicker({
+  value,
+  onChange,
+}: {
+  value: ThemePreference;
+  onChange: (value: ThemePreference) => void;
+}) {
+  const { colours, radius, type } = useTheme();
+  return (
+    <View
+      style={[
+        styles.themePicker,
+        { backgroundColor: colours.surfaceMuted, borderRadius: radius.full },
+      ]}>
+      {THEME_PREFERENCES.map((option) => {
+        const selected = option === value;
+        return (
+          <Pressable
+            key={option}
+            onPress={() => onChange(option)}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            style={[
+              styles.themeOption,
+              selected && { backgroundColor: colours.surface, borderRadius: radius.full },
+            ]}>
+            <Text
+              numberOfLines={1}
+              style={[
+                type.caption,
+                {
+                  color: selected ? colours.ink : colours.inkMuted,
+                  fontWeight: selected ? '700' : '500',
+                },
+              ]}>
+              {THEME_PREFERENCE_LABELS[option]}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   card: {
     overflow: 'hidden',
@@ -421,5 +465,17 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.92,
+  },
+  themePicker: {
+    flexDirection: 'row',
+    padding: 4,
+    gap: 2,
+  },
+  themeOption: {
+    flex: 1,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
   },
 });
