@@ -1,20 +1,18 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState, type ReactNode } from 'react';
+import { ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
-import { ProBadge, ProMark } from '@/components/ProBadge';
-import { colours } from '@/constants/theme';
+import { DestructiveTextButton, FreeBadge, ListRow, ProBadge } from '@/components/ui';
+import { useTheme } from '@/constants/theme';
+import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import { useAuth } from '@/lib/auth';
-import {
-  debugRestartBlock,
-  describeBlockPosition,
-  ensureActiveBlock,
-  missingBlocksMessage,
-  type TrainingBlock,
-} from '@/lib/blocks';
+import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
+import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
+import { openPaywall } from '@/lib/paywall';
+import { fetchProgramme, formatKg } from '@/lib/programmes';
 import {
   CONFIDENCE_LABELS,
   EQUIPMENT_ACCESS_LABELS,
@@ -27,11 +25,8 @@ import {
   getQuizAnswers,
   useProfile,
 } from '@/lib/profile';
-import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
-import { fetchProgramme, formatKg } from '@/lib/programmes';
-import { openPaywall } from '@/lib/paywall';
-import { currentEnrolmentWeek, fetchActiveEnrolment, type RoutineEnrolment } from '@/lib/routines';
 import { formatShortDate } from '@/lib/progress';
+import { currentEnrolmentWeek, fetchActiveEnrolment, type RoutineEnrolment } from '@/lib/routines';
 import {
   DEV_OVERRIDES,
   DEV_OVERRIDE_LABELS,
@@ -40,7 +35,6 @@ import {
   useSubscription,
   type ProStatus,
 } from '@/lib/subscription';
-import { SHOW_DEV_TOOLS } from '@/lib/devFlags';
 import { supabase } from '@/lib/supabase';
 
 function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
@@ -58,16 +52,28 @@ function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): 
     : `Ends on ${formatShortDate(expiresAt)}. Logging and your history stay free.`;
 }
 
+function initials(name: string, email: string | undefined): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  if (parts[0]?.length >= 2) return parts[0].slice(0, 2).toUpperCase();
+  if (parts[0]) return parts[0][0].toUpperCase();
+  const local = email?.split('@')[0] ?? '';
+  return local.slice(0, 2).toUpperCase() || '?';
+}
+
 export default function ProfileScreen() {
+  const { colours, radius, type } = useTheme();
   const { session } = useAuth();
   const { profile, reload } = useProfile();
   const subscription = useSubscription();
   const answers = getQuizAnswers(profile);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [block, setBlock] = useState<TrainingBlock | null>(null);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
+  const [showAnswers, setShowAnswers] = useState(false);
   const tabBarHeight = useTabBarHeight();
+  const email = session?.user.email ?? '';
+  const displayName = answers?.display_name?.trim() || email.split('@')[0] || 'You';
 
   useFocusEffect(
     useCallback(() => {
@@ -84,27 +90,6 @@ export default function ProfileScreen() {
       };
     }, [])
   );
-
-  useEffect(() => {
-    if (!subscription.isPro || !profile?.programme_id || !answers) {
-      setBlock(null);
-      return;
-    }
-    let isCurrent = true;
-    const programmeId = profile.programme_id;
-    const equipment = answers.equipment;
-    fetchProgramme(programmeId, equipment)
-      .then((programme) => (programme ? ensureActiveBlock(programme, 4, equipment) : null))
-      .then((next) => {
-        if (isCurrent) setBlock(next);
-      })
-      .catch(() => {
-        if (isCurrent) setBlock(null);
-      });
-    return () => {
-      isCurrent = false;
-    };
-  }, [subscription.isPro, profile?.programme_id, answers?.equipment]);
 
   async function handleSignOut() {
     setIsSigningOut(true);
@@ -160,10 +145,7 @@ export default function ProfileScreen() {
       await debugRestartBlock();
       if (!profile?.programme_id || !answers) return;
       const programme = await fetchProgramme(profile.programme_id, answers.equipment);
-      const next = programme
-        ? await ensureActiveBlock(programme, 4, answers.equipment)
-        : null;
-      setBlock(next);
+      const next = programme ? await ensureActiveBlock(programme, 4, answers.equipment) : null;
       if (!next) {
         showDialog('Couldn’t reset', missingBlocksMessage());
         return;
@@ -224,306 +206,222 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView
-      style={styles.scroll}
+      style={[styles.scroll, { backgroundColor: colours.bg }]}
       contentContainerStyle={[styles.container, { paddingBottom: tabBarHeight + 24 }]}>
-      <Text style={styles.title}>Profile</Text>
-      <Text style={styles.label}>Signed in as</Text>
-      {answers?.display_name ? <Text style={styles.email}>{answers.display_name}</Text> : null}
-      <Text style={styles.email}>{session?.user.email}</Text>
+      <Text style={[type.display, { color: colours.ink }]}>Profile</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Your plan</Text>
-        {subscription.isPro ? (
-          <View style={styles.planTitleRow}>
-            <Text style={[styles.cardTitle, styles.planTitle]}>Pro</Text>
-            <ProBadge />
+      <View style={styles.hero}>
+        <View style={[styles.avatar, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
+          <Text style={[styles.avatarLetters, { color: colours.brand }]}>
+            {initials(displayName, email)}
+          </Text>
+        </View>
+        <View style={styles.heroText}>
+          <View style={styles.nameRow}>
+            <Text style={[type.title, { color: colours.ink, flexShrink: 1 }]} numberOfLines={1}>
+              {displayName}
+            </Text>
+            {subscription.isPro ? (
+              <ProBadge compact />
+            ) : (
+              <FreeBadge style={{ backgroundColor: colours.brandSoft }} />
+            )}
           </View>
-        ) : (
-          <Text style={styles.cardTitle}>Free</Text>
-        )}
-        <Text style={styles.label}>{describePlan(subscription)}</Text>
-        <Pressable
-          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
+          {email ? (
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]} numberOfLines={1}>
+              {email}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+
+      <SettingsGroup title="Plan and subscription">
+        <SettingsRow
+          title={subscription.isPro ? 'Manage subscription' : 'See Pro'}
+          subtitle={describePlan(subscription)}
+          right={subscription.isPro ? undefined : <ProBadge locked compact />}
           onPress={subscription.isPro ? handleManageSubscription : () => openPaywall('general')}
-          accessibilityRole="button">
-          {subscription.isPro ? (
-            <Text style={styles.buttonText}>Manage subscription</Text>
-          ) : (
-            <ProMark locked textStyle={styles.buttonText}>
-              See Pro
-            </ProMark>
-          )}
-        </Pressable>
-        {SHOW_DEV_TOOLS && (
-          <Pressable
-            style={styles.link}
+        />
+        <SettingsRow
+          title={enrolment ? enrolment.routine.name : 'Browse routines'}
+          subtitle={
+            enrolment
+              ? `Week ${currentEnrolmentWeek(enrolment)} of ${enrolment.routine.length_weeks}`
+              : 'Start a routine and Home will use it next.'
+          }
+          onPress={() => router.push('/programmes' as Href)}
+        />
+        <SettingsRow
+          title="My workouts"
+          subtitle="Start empty from Home, or reopen a saved session."
+          onPress={() => router.push('/workouts' as Href)}
+          last
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title="Training">
+        <SettingsRow
+          title="Streak goal"
+          subtitle={`${answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
+          onPress={requestEditStreakGoal}
+          last
+        />
+      </SettingsGroup>
+
+      {answers ? (
+        <SettingsGroup title="Your answers">
+          <SettingsRow
+            title={showAnswers ? 'Hide answers' : 'Your answers'}
+            subtitle={showAnswers ? undefined : 'Name, goal, experience and more'}
+            onPress={() => setShowAnswers((open) => !open)}
+            last={!showAnswers}
+          />
+          {showAnswers
+            ? answerRows.map((row) => (
+                <SettingsRow key={row.name} title={row.name} subtitle={row.value} showChevron={false} />
+              ))
+            : null}
+          {showAnswers ? (
+            <SettingsRow
+              title="Change answers"
+              onPress={() => router.push('/onboarding')}
+              last
+            />
+          ) : null}
+        </SettingsGroup>
+      ) : null}
+
+      <SettingsGroup title="Data">
+        <SettingsRow
+          title={isExporting ? 'Preparing file…' : 'Export workout history'}
+          subtitle="Every set from finished sessions, as a spreadsheet."
+          onPress={() => {
+            if (!isExporting) void handleExport();
+          }}
+          last
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title="About">
+        <View style={styles.about}>
+          <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+            General fitness guidance, not medical advice. Stop if anything hurts.
+          </Text>
+        </View>
+      </SettingsGroup>
+
+      <DestructiveTextButton
+        label={isSigningOut ? 'Signing out…' : 'Sign out'}
+        onPress={() => void handleSignOut()}
+        disabled={isSigningOut}
+        style={styles.signOut}
+      />
+
+      {SHOW_DEV_TOOLS ? (
+        <SettingsGroup title="Developer">
+          <SettingsRow
+            title="Testing as"
+            subtitle={DEV_OVERRIDE_LABELS[subscription.devOverride]}
             onPress={() => {
-              const next = DEV_OVERRIDES[(DEV_OVERRIDES.indexOf(subscription.devOverride) + 1) % DEV_OVERRIDES.length];
+              const next =
+                DEV_OVERRIDES[(DEV_OVERRIDES.indexOf(subscription.devOverride) + 1) % DEV_OVERRIDES.length];
               subscription.setDevOverride(next);
             }}
-            accessibilityRole="button">
-            <Text style={styles.devText}>
-              Development only. Testing as: {DEV_OVERRIDE_LABELS[subscription.devOverride]} (tap to change)
-            </Text>
-          </Pressable>
-        )}
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Routines</Text>
-        <Text style={styles.label}>
-          {enrolment
-            ? `${enrolment.routine.name} · week ${currentEnrolmentWeek(enrolment)} of ${enrolment.routine.length_weeks}`
-            : 'Browse the catalogue and start one. Home will use this next.'}
-        </Text>
-        <Pressable
-          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-          onPress={() => router.push('/programmes' as Href)}
-          accessibilityRole="button">
-          <Text style={styles.buttonText}>{enrolment ? 'View routines' : 'Open routines'}</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>My workouts</Text>
-        <Text style={styles.label}>
-          Start empty from Home, or reopen a saved session. Free for everyone.
-        </Text>
-        <Pressable
-          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-          onPress={() => router.push('/workouts' as Href)}
-          accessibilityRole="button">
-          <Text style={styles.buttonText}>Open My workouts</Text>
-        </Pressable>
-      </View>
-
-      {profile?.programme && (
-        <View style={styles.card}>
-          <Text style={styles.label}>Your programme</Text>
-          <Text style={styles.cardTitle}>{profile.programme.name}</Text>
-          <Text style={styles.label}>
-            {formatDaysPerWeek(profile.programme.days_per_week)} a week
-          </Text>
-          {subscription.isPro && block && (
-            <Text style={styles.blockPosition}>{describeBlockPosition(block)}</Text>
-          )}
-          <Pressable
-            style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-            onPress={() => {
-              if (subscription.isPro) router.push('/programme');
-              else openPaywall('general');
-            }}
-            accessibilityRole="button">
-            {subscription.isPro ? (
-              <Text style={styles.buttonText}>View programme</Text>
-            ) : (
-              <ProMark locked textStyle={styles.buttonText}>
-                View programme with Pro
-              </ProMark>
-            )}
-          </Pressable>
-          {SHOW_DEV_TOOLS && (
-            <Pressable style={styles.devLink} onPress={handleDevRestartBlock} accessibilityRole="button">
-              <Text style={styles.devText}>Development only. Restart 8-week block</Text>
-            </Pressable>
-          )}
-        </View>
-      )}
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Settings</Text>
-        <Text style={styles.label}>
-          Streak goal is {answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks. A week counts when you hit your
-          target.
-        </Text>
-        <Pressable
-          style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-          onPress={requestEditStreakGoal}
-          accessibilityRole="button">
-          <Text style={styles.buttonText}>Edit streak goal</Text>
-        </Pressable>
-      </View>
-
-      {answers && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Your answers</Text>
-          {answerRows.map((row) => (
-            <View key={row.name} style={styles.row}>
-              <Text style={styles.label}>{row.name}</Text>
-              <Text style={styles.rowValue}>{row.value}</Text>
-            </View>
-          ))}
-          <Pressable
-            style={({ pressed }) => [styles.button, styles.cardButton, pressed && styles.buttonPressed]}
-            onPress={() => router.push('/onboarding')}
-            accessibilityRole="button">
-            <Text style={styles.buttonText}>Change answers</Text>
-          </Pressable>
-        </View>
-      )}
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Your data</Text>
-        <Text style={styles.label}>
-          Save every set from your finished sessions as a spreadsheet (Excel file) in a folder you choose,
-          such as Documents. It’s yours to keep.
-        </Text>
-        <Pressable
-          style={({ pressed }) => [styles.button, styles.cardButton, (pressed || isExporting) && styles.buttonPressed]}
-          onPress={handleExport}
-          disabled={isExporting}
-          accessibilityRole="button">
-          <Text style={styles.buttonText}>{isExporting ? 'Preparing file…' : 'Export workout history'}</Text>
-        </Pressable>
-      </View>
-
-      <Pressable
-        style={({ pressed }) => [styles.button, (pressed || isSigningOut) && styles.buttonPressed]}
-        onPress={handleSignOut}
-        disabled={isSigningOut}
-        accessibilityRole="button">
-        <Text style={styles.buttonText}>{isSigningOut ? 'Signing out…' : 'Sign out'}</Text>
-      </Pressable>
-
-      <Text style={styles.disclaimer}>
-        General fitness guidance, not medical advice. Stop if anything hurts.
-      </Text>
+          />
+          <SettingsRow title="Restart 8-week block" onPress={() => void handleDevRestartBlock()} last />
+        </SettingsGroup>
+      ) : null}
     </ScrollView>
+  );
+}
+
+function SettingsGroup({ title, children }: { title: string; children: ReactNode }) {
+  const { colours, radius, shadow, type } = useTheme();
+  return (
+    <View style={styles.group}>
+      <Text style={[type.eyebrow, { color: colours.inkMuted, marginBottom: 8, marginLeft: 4 }]}>{title}</Text>
+      <View style={[{ borderRadius: radius.lg }, shadow]}>
+        <View style={[styles.groupInner, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+          {children}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function SettingsRow({
+  last = false,
+  showChevron,
+  style,
+  ...props
+}: {
+  title: string;
+  subtitle?: string;
+  right?: ReactNode;
+  onPress?: () => void;
+  showChevron?: boolean;
+  last?: boolean;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <ListRow
+      {...props}
+      showChevron={showChevron ?? Boolean(props.onPress)}
+      style={[last ? styles.rowLast : null, style]}
+    />
   );
 }
 
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   container: {
-    padding: 24,
-    paddingTop: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: colours.text,
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 15,
-    color: colours.textMuted,
-  },
-  email: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colours.text,
-    marginTop: 4,
-    marginBottom: 32,
-  },
-  card: {
     padding: 20,
-    borderRadius: 18,
-    backgroundColor: colours.surface,
-    marginBottom: 24,
+    paddingTop: 32,
+    gap: 20,
   },
-  cardTitle: {
-    fontSize: 20,
+  hero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 4,
+  },
+  avatar: {
+    width: 72,
+    height: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarLetters: {
+    fontSize: 24,
     fontWeight: '700',
-    color: colours.text,
-    marginBottom: 8,
+    letterSpacing: 0.4,
   },
-  planTitleRow: {
+  heroText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
   },
-  planTitle: {
-    marginBottom: 0,
+  group: {
+    gap: 0,
   },
-  row: {
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colours.border,
+  groupInner: {
+    overflow: 'hidden',
   },
-  rowValue: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
-    marginTop: 2,
+  rowLast: {
+    borderBottomWidth: 0,
   },
-  button: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-  },
-  cardButton: {
-    marginTop: 20,
-  },
-  blockPosition: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colours.accent,
-    marginTop: 6,
-  },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-  link: {
-    alignItems: 'center',
-    paddingTop: 16,
-    paddingBottom: 4,
-  },
-  levelOption: {
-    marginTop: 12,
+  about: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colours.border,
-    backgroundColor: colours.background,
+    paddingVertical: 16,
   },
-  levelOptionSelected: {
-    borderColor: colours.accent,
-    backgroundColor: colours.accentSoft,
-  },
-  currentLevel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colours.accent,
-    marginBottom: 4,
-  },
-  levelLabel: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
-    marginBottom: 4,
-  },
-  levelLabelSelected: {
-    color: colours.accent,
-  },
-  devLink: {
-    alignItems: 'center',
-    paddingTop: 8,
-    paddingBottom: 4,
-  },
-  devText: {
-    fontSize: 14,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  disclaimer: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 24,
+  signOut: {
+    alignSelf: 'center',
+    marginTop: 4,
   },
 });
