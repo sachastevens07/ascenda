@@ -32,6 +32,7 @@ export {
 export { GoalChipGroup } from './GoalChipGroup';
 export { RestWeekBanner, StreakCard } from './Streak';
 export { WelcomeBackCard } from './WelcomeBack';
+export { WhatsNextCard } from './WhatsNext';
 
 export {
   AnchoredMenu as OverflowMenu,

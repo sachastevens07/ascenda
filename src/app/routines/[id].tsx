@@ -28,6 +28,7 @@ import {
   SafetyNotice,
   StatTile,
   TextButton,
+  WhatsNextCard,
   measureAnchor,
   type AnchorHandle,
   type AnchorRect,
@@ -43,7 +44,14 @@ import { EQUIPMENT_LABELS, MUSCLE_LABELS, type Equipment } from '@/lib/exercises
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine, coverSources } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
-import { formatDaysPerWeek } from '@/lib/profile';
+import {
+  fetchHandOffPreview,
+  isInHandoffWindow,
+  previewCopy,
+  resolveNextRoutineOffer,
+  type NextRoutineOffer,
+} from '@/lib/handOff';
+import { formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
 import { offerProgrammePhoto } from '@/lib/progressPhotos';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
@@ -55,6 +63,7 @@ import {
   endActiveEnrolment,
   fetchActiveEnrolment,
   fetchRoutine,
+  fetchRoutines,
   fetchRoutineRoadmap,
   firstDayOfRoutine,
   formatRestSeconds,
@@ -135,6 +144,8 @@ export default function RoutineDetailScreen() {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const { colours, type, spacing, shadow } = useTheme();
+  const { profile } = useProfile();
+  const answers = getQuizAnswers(profile);
   const subscription = useSubscription();
   const menuRef = useRef<AnchorHandle>(null);
   const [routine, setRoutine] = useState<Routine | null>(null);
@@ -151,6 +162,7 @@ export default function RoutineDetailScreen() {
   const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
+  const [handOff, setHandOff] = useState<NextRoutineOffer | null>(null);
 
   const heroHeight = Math.round(windowHeight * 0.45);
 
@@ -192,6 +204,22 @@ export default function RoutineDetailScreen() {
             setNextSession(null);
             setDoneDayIds(new Set());
           }
+          const isCurrentPlan = Boolean(next && active?.routine_id === next.id);
+          const preview = await fetchHandOffPreview().catch(() => false);
+          if (isCurrentPlan && active && (preview || isInHandoffWindow(active))) {
+            const catalogue = await fetchRoutines().catch(() => []);
+            const offer = await resolveNextRoutineOffer({
+              currentRoutineId: active.routine_id,
+              catalogue,
+              answers,
+              isPro: subscription.isPro,
+              mode: 'preview',
+            }).catch(() => null);
+            if (offer) offer.why = `${previewCopy(active)} ${offer.why}`.trim();
+            if (isCurrent) setHandOff(offer);
+          } else if (isCurrent) {
+            setHandOff(null);
+          }
           setLoadState(next ? 'ready' : 'not-found');
         })
         .catch((error) => {
@@ -202,7 +230,15 @@ export default function RoutineDetailScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [id, subscription.isLoading, subscription.isPro])
+    }, [
+      id,
+      answers?.goal,
+      answers?.experience,
+      answers?.equipment,
+      answers?.days_per_week,
+      subscription.isLoading,
+      subscription.isPro,
+    ])
   );
 
   function goBack() {
@@ -461,6 +497,20 @@ export default function RoutineDetailScreen() {
               />
             ))}
           </View>
+
+          {isCurrent && handOff ? (
+            <WhatsNextCard
+              title={handOff.routine.name}
+              body={handOff.why}
+              image={coverSources(coverForRoutine(handOff.routine))[0] ?? null}
+              locked={!subscription.isPro && handOff.routine.is_pro}
+              primaryLabel="See this routine"
+              onPrimary={() =>
+                router.push({ pathname: '/routines/[id]', params: { id: handOff.routine.id } } as Href)
+              }
+              style={[{ marginTop: spacing.lg }, shadow]}
+            />
+          ) : null}
 
           <Text style={[type.title2, { color: colours.ink, marginTop: spacing.lg, marginBottom: spacing.md }]}>
             Week by week

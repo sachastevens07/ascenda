@@ -32,6 +32,7 @@ import {
   SectionHeader,
   TextButton,
   WelcomeBackCard,
+  WhatsNextCard,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
@@ -71,6 +72,7 @@ import {
   describeRoutineError,
   endActiveEnrolment,
   fetchActiveEnrolment,
+  fetchLatestCompletedEnrolment,
   fetchRoutine,
   fetchRoutineProgressMap,
   fetchRoutines,
@@ -86,6 +88,14 @@ import {
   type RoutineEnrolment,
   type RoutineSummary,
 } from '@/lib/routines';
+import {
+  fetchHandOffPreview,
+  isInHandoffWindow,
+  previewCopy,
+  resolveNextRoutineOffer,
+  startNextRoutineOnMonday,
+  type NextRoutineOffer,
+} from '@/lib/handOff';
 import {
   dismissWelcomeBack,
   resolveWelcomeBackOffer,
@@ -121,6 +131,7 @@ type HomeData = {
   streak: WeeklyStreak;
   hideStreak: boolean;
   welcomeBack: WelcomeBackOffer | null;
+  handOff: NextRoutineOffer | null;
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
 };
@@ -190,6 +201,8 @@ export default function HomeScreen() {
             streakGoal,
             hideStreak,
             restWeeks,
+            completedEnrolment,
+            handOffPreview,
           ] = await Promise.all([
             fetchRoutines(),
             fetchActiveEnrolment(),
@@ -203,6 +216,8 @@ export default function HomeScreen() {
             fetchStreakGoal().catch(() => DEFAULT_STREAK_GOAL),
             fetchHideStreak().catch(() => false),
             fetchRestWeekStarts().catch(() => new Set<string>()),
+            fetchLatestCompletedEnrolment().catch(() => null),
+            fetchHandOffPreview().catch(() => false),
           ]);
           const missingSql = routines.length === 0;
           const featured = answers
@@ -241,6 +256,20 @@ export default function HomeScreen() {
             catalogue: routines,
             isPro: subscription.isPro,
           }).catch(() => null);
+          const inWindow = enrolment ? isInHandoffWindow(enrolment) : Boolean(completedEnrolment);
+          const showHandOff = handOffPreview || inWindow;
+          const handOff = showHandOff
+            ? await resolveNextRoutineOffer({
+                currentRoutineId: enrolment?.routine_id ?? completedEnrolment?.routine_id ?? null,
+                catalogue: routines,
+                answers,
+                isPro: subscription.isPro,
+                mode: enrolment ? 'preview' : 'start',
+              }).catch(() => null)
+            : null;
+          if (handOff && enrolment) {
+            handOff.why = `${previewCopy(enrolment)} ${handOff.why}`.trim();
+          }
           if (!isCurrent) return;
           setData({
             featured,
@@ -255,6 +284,7 @@ export default function HomeScreen() {
             streak,
             hideStreak,
             welcomeBack,
+            handOff,
             challenge: pickHomeChallenge(challenges),
             progress,
           });
@@ -348,6 +378,28 @@ export default function HomeScreen() {
       setAttempt((count) => count + 1);
     } catch (error) {
       showDialog('Couldn’t restart this week', describeRoutineError(error));
+    }
+  }
+
+  async function startNextFromHandOff() {
+    const offer = data?.handOff;
+    if (!offer) return;
+    if (offer.mode !== 'start') {
+      openRoutine(offer.routine);
+      return;
+    }
+    setIsStarting(true);
+    try {
+      const result = await startNextRoutineOnMonday(offer.routine, subscription.isPro);
+      if (result === 'paywall') {
+        openPaywall('routine');
+        return;
+      }
+      setAttempt((count) => count + 1);
+    } catch (error) {
+      showDialog('Couldn’t start that plan', describeRoutineError(error));
+    } finally {
+      setIsStarting(false);
     }
   }
 
@@ -491,7 +543,7 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, challenge, progress } =
+  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, handOff, challenge, progress } =
     data;
   const inProgress = Boolean(activeSession);
   const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
@@ -587,7 +639,21 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {!enrolment && !inProgress && !welcomeBack ? (
+        {handOff && !inProgress ? (
+          <WhatsNextCard
+            title={handOff.routine.name}
+            body={handOff.why}
+            image={coverImage(handOff.routine)}
+            locked={!subscription.isPro && handOff.routine.is_pro}
+            starting={isStarting && handOff.mode === 'start'}
+            primaryLabel={handOff.mode === 'start' ? `Start on ${handOff.mondayLabel}` : 'See this routine'}
+            onPrimary={() => void startNextFromHandOff()}
+            onSeeRoutine={handOff.mode === 'start' ? () => openRoutine(handOff.routine) : undefined}
+            style={shadow}
+          />
+        ) : null}
+
+        {!enrolment && !inProgress && !welcomeBack && !handOff ? (
           <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
             <Text style={[type.eyebrow, { color: colours.inkMuted }]}>No routine yet</Text>
             <Text style={[type.title2, { color: colours.ink, marginTop: spacing.sm }]}>Create a workout</Text>

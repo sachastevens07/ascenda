@@ -830,7 +830,10 @@ async function clearUpcomingRoutinePlans(userId: string): Promise<void> {
   }
 }
 
-export async function startRoutine(routineId: string): Promise<RoutineEnrolment> {
+export async function startRoutine(
+  routineId: string,
+  options?: { startDate?: string }
+): Promise<RoutineEnrolment> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -861,10 +864,14 @@ export async function startRoutine(routineId: string): Promise<RoutineEnrolment>
     await clearUpcomingRoutinePlans(user.id);
   }
 
+  const today = todayDate();
+  const requested = options?.startDate && /^\d{4}-\d{2}-\d{2}$/.test(options.startDate) ? options.startDate : today;
+  const startDate = requested >= today ? requested : today;
+
   const { error } = await supabase.from('routine_enrolments').insert({
     user_id: user.id,
     routine_id: routineId,
-    start_date: todayDate(),
+    start_date: startDate,
     status: 'active',
   });
   if (error) {
@@ -917,6 +924,7 @@ function toEnrolment(row: EnrolmentRow): RoutineEnrolment {
   };
 }
 
+/** Most recently finished enrolment, for the week-6 hand-off when she has no active plan. */
 export async function fetchLatestCompletedEnrolment(): Promise<RoutineEnrolment | null> {
   const { data, error } = await selectEnrolment((columns) =>
     supabase
@@ -1000,6 +1008,10 @@ export async function maybeCompleteEnrolment(enrolmentId: string): Promise<boole
   const target = enrolment.routine.length_weeks * enrolment.routine.days_per_week;
   if (done < target) return false;
   await completeActiveEnrolment();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) await clearUpcomingRoutinePlans(user.id);
   return true;
 }
 

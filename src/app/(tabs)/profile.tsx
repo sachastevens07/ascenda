@@ -36,6 +36,7 @@ import {
   type ReminderPrefs,
 } from '@/lib/reminders';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
+import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
 import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
 import { useAuth } from '@/lib/auth';
 import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
@@ -106,6 +107,7 @@ export default function ProfileScreen() {
   const [showAnswers, setShowAnswers] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
+  const [handOffPreview, setHandOffPreview] = useState(false);
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
   const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
   const [timeMenu, setTimeMenu] = useState(false);
@@ -133,6 +135,11 @@ export default function ProfileScreen() {
       fetchWelcomeBackPreview()
         .then((on) => {
           if (isCurrent) setWelcomeBackPreview(on);
+        })
+        .catch(() => {});
+      fetchHandOffPreview()
+        .then((on) => {
+          if (isCurrent) setHandOffPreview(on);
         })
         .catch(() => {});
       fetchReminderPrefs()
@@ -549,6 +556,15 @@ export default function ProfileScreen() {
               const next = !welcomeBackPreview;
               setWelcomeBackPreview(next);
               saveWelcomeBackPreview(next).catch(() => setWelcomeBackPreview(!next));
+            }}
+          />
+          <SettingsRow
+            title="Preview what’s next"
+            subtitle={handOffPreview ? 'On. Home and your current routine show the next-plan card.' : 'Off'}
+            onPress={() => {
+              const next = !handOffPreview;
+              setHandOffPreview(next);
+              saveHandOffPreview(next).catch(() => setHandOffPreview(!next));
             }}
           />
           <SettingsRow

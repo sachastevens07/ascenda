@@ -21,11 +21,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **H3. Planner-linked reminders (3 Nov 2026).** After her first finished session (or next open if she already has history), a dialog explains session reminders. Turn on asks OS permission only if the rest timer has not already been granted it. Profile → Notifications: session reminders, weekly summary, offers and news (stored only, nothing sent), default time. Planner planned rows show a bell + time when reminders are on; tap to pick a time. Copy is "X is ready when you are". Rest days and done days get nothing. Sunday 10:00 weekly summary if that toggle is on. Reused existing `expo-notifications`. `supabase/reminders.sql` adds profile columns and `planned_sessions.reminder_time`. Logger, progression, swaps and paywall were not changed beyond calling the reminder ask/sync after finish.
 
+**H4. Week-6 hand-off (3 Nov 2026).** In the last two weeks of a routine, Home and the current routine page show a What’s next preview (path first, then goals). Starting it then only opens the next routine, so the current plan is not abandoned. After she finishes, the completion screen shows start vs now lifts, a Routine completed chip, the share card, and **Start on Monday**. That enrolment begins on the coming Monday (today, if today is Monday). Upcoming days from the finished plan are cleared. Tester preview is behind showDevTools. No SQL. No new libraries.
+
 ### In progress
 None.
 
 ### Next step
-**H4** week-6 hand-off. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
+**H5** retention analytics (PostHog). Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -70,6 +72,9 @@ None.
 - Sunday summary fires at 10:00 local time. Default session time is last finished session hour, else 6:00 pm.
 - Reminder chips only show when session reminders are on, and never on rest days or completed days. D5 Planner restyle (smaller headers, empty-day +) was not done.
 - Rest-timer permission on logger open stays. H3 does not ask the OS again if that grant already exists. Notification taps open the app, not a specific screen. H5 `reminder_sent` / `reminder_opened` are left for H5.
+- H4 “two weeks before a routine ends” is the last two calendar weeks of any length plan, not only 6-week routines. Preview (See this routine) while still enrolled; Start on Monday only after completion or with no active plan.
+- Next routine prefers the next unfinished step on a path (`paths.sql`). If that file is not run, or she is not on a path, it uses Featured-for-you scoring from her goals, then Gym Confidence: 6 weeks.
+- Start on Monday uses `routine_enrolments.start_date` on the coming Monday. If today is Monday, it starts today. Pro next routines still open the paywall. H5 `routine_completed` / `next_routine_started` are left for H5. End-of-programme photo prompt stays until H7.
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
@@ -81,8 +86,9 @@ None.
 - H2 tester preview: with tester tools on, Profile → Developer → **Preview welcome-back**. Home then shows the card even if you trained last week. Turn it off, or finish a welcome-back session, or tap Not now.
 - Paste `supabase/reminders.sql` so reminder toggles and per-day times follow her to a new phone. Until then they still work on this device (AsyncStorage). Workout history is never touched.
 - H3 tester: with tester tools on, Profile → Developer → **Send a test reminder**. Lock the phone or leave the app; a sample “Full body A is ready when you are” should appear in about 8 seconds.
+- H4 tester: with tester tools on, Profile → Developer → **Preview what’s next**. Home and the current routine page show the next-plan card even if you are not in the last two weeks. Turn it off when you are done. Path names need `supabase/paths.sql`.
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. Next **H4**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. H4 **done**. Next **H5**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -171,7 +177,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 
 **Group 2:** N3 **done** (3 Nov 2026). N1 **done**. N4 **done**.
 
-**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4, H5, H6, H7, H8.
+**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4 **done** (3 Nov 2026). H5, H6, H7, H8.
 
 **Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
 
@@ -265,7 +271,7 @@ Also still on the user's side:
 
 ## Next step
 
-**H4** week-6 hand-off. **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
+**H5** retention analytics (PostHog). **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
 
 Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready.
 
