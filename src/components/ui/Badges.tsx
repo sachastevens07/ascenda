@@ -69,21 +69,37 @@ export function FreeBadge({ style }: { style?: StyleProp<ViewStyle> }) {
 export function AchievementBadge({
   unlocked,
   label,
+  mark,
   children,
   style,
 }: {
   unlocked: boolean;
   label: string;
+  /** Milestone number drawn in the medal, Sweat-style. */
+  mark?: string;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours } = useTheme();
   return (
     <View
-      style={[styles.achievement, { backgroundColor: unlocked ? colours.brand : colours.surfaceMuted }, style]}
+      style={[
+        styles.achievement,
+        {
+          backgroundColor: unlocked ? colours.accent : colours.surfaceMuted,
+          borderWidth: unlocked ? 0 : 1,
+          borderColor: colours.border,
+        },
+        style,
+      ]}
       accessibilityLabel={unlocked ? label : `${label}, locked`}>
-      {children}
-      {unlocked && !children ? <Ionicons name="checkmark" size={14} color={colours.onBrand} /> : null}
+      {mark ? (
+        <Text style={[styles.markText, { color: unlocked ? colours.onAccent : colours.inkMuted }]}>{mark}</Text>
+      ) : children ? (
+        children
+      ) : unlocked ? (
+        <Ionicons name="checkmark" size={14} color={colours.onAccent} />
+      ) : null}
     </View>
   );
 }
@@ -164,6 +180,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
+  },
+  markText: {
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   locked: {
     position: 'absolute',

@@ -39,7 +39,7 @@ export function SectionHeader({
       <Text style={[type.title, { color: colours.ink, flex: 1 }]}>{title}</Text>
       {actionLabel && onAction ? (
         <Pressable onPress={onAction} accessibilityRole="button" hitSlop={8}>
-          <Text style={[type.caption, { color: colours.brand, fontWeight: '700' }]}>{actionLabel}</Text>
+          <Text style={[type.bodySm, { color: colours.accent, fontWeight: '700' }]}>{actionLabel}</Text>
         </Pressable>
       ) : null}
     </View>

@@ -187,6 +187,56 @@ export function StatTile({
   );
 }
 
+/** 2×2 progress tile: coral number, icon, caption, optional chevron. */
+export function HighlightTile({
+  value,
+  label,
+  icon,
+  onPress,
+  style,
+}: {
+  value: string;
+  label: string;
+  icon: ComponentProps<typeof Ionicons>['name'];
+  onPress?: () => void;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { colours, radius, shadow, type } = useTheme();
+  const body = (
+    <View
+      style={[
+        styles.highlight,
+        { backgroundColor: colours.surface, borderRadius: radius.lg },
+        shadow,
+      ]}>
+      <View style={styles.highlightTop}>
+        <Text style={[styles.highlightValue, { color: colours.accent }]} numberOfLines={1}>
+          {value}
+        </Text>
+        <Ionicons name={icon} size={22} color={colours.accent} />
+      </View>
+      <View style={styles.highlightBottom}>
+        <Text style={[type.caption, { color: colours.inkMuted, flex: 1, marginRight: 8 }]} numberOfLines={2}>
+          {label}
+        </Text>
+        {onPress ? <Ionicons name="chevron-forward" size={16} color={colours.accent} /> : null}
+      </View>
+    </View>
+  );
+  if (!onPress) {
+    return <View style={[{ flex: 1 }, style]}>{body}</View>;
+  }
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${value} ${label}`}
+      style={({ pressed }) => [{ flex: 1 }, style, pressed && styles.pressed]}>
+      {body}
+    </Pressable>
+  );
+}
+
 export function EmptyState({
   icon = 'sparkles-outline',
   title,
@@ -310,6 +360,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 48,
     paddingBottom: 48,
+  },
+  highlight: {
+    padding: 16,
+    minHeight: 108,
+    justifyContent: 'space-between',
+  },
+  highlightTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  highlightValue: {
+    fontSize: 32,
+    fontWeight: '700',
+    lineHeight: 38,
+    flex: 1,
+  },
+  highlightBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
   },
   stat: {
     padding: 16,
