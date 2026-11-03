@@ -19,7 +19,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **R8** Activity header (sessions, lifts, time), this-week X of Y, Progress / Awards. Photos moved in **H7**.
 - **R9** Onboarding overhaul. **N1** safety and **N4** goals layered on. Notifications are asked after the first session (H3), not here.
 - **R10** Free vs Pro split, contextual `openPaywall(reason)`. Visual paywall restyle is **C1 / C2**, not started.
-- **R11** Pexels covers and 14 exercise photos. Stretch covers still reuse gym shots (**D2**).
+- **R11** Pexels covers and 14 exercise photos. Stretch covers were gym shots until **D2**.
 
 **M1 MuscleWiki videos: partly done.** Match SQL/scripts and 55 approved ids exist. Missing: Supabase CLI, Edge Functions `mw-exercise` / `mw-media-token`, in-app tap-to-play. App never reads `musclewiki_id`.
 
@@ -50,21 +50,22 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **H5** PostHog EU, named events only, identify by user id + plan. No health/photos/free text.
 - **H6** Awards groups and hide-awards. Computed from history (no `achievement_definitions` tables). **D7** still owns tier rings.
 - **H7** Photos off by default; Profile → Privacy; card on Activity Progress only if on; no programme photo prompts; Show photos before signed URLs.
-- **H8** Challenges join with next Monday or next 1st; personal 28-day window; no countdown copy. App code is in. SQL rewrite is in this commit (see In progress).
+- **H8** Challenges join with next Monday or next 1st; personal 28-day window; no countdown copy. App code is in. SQL rewrite is still **not confirmed run**.
+- **D2** Unique Pexels cover per strength routine and per stretch. Stretch photos are stretching, not gym lifts. Group studio / midriff covers replaced. Home featured row skips the active routine so it does not repeat the next-session card. Bundled files show without SQL; `coverForRoutine` prefers `cover-{routineId}` in `IMAGE_CATALOGUE`.
 
 ---
 
 ### In progress
 
-**H8 SQL paste (blocked on Sacha).** App code for rolling starts is committed (`src/lib/challenges.ts`, `src/app/challenges/[id].tsx`, Home, `RoutineCatalogue`). The first `supabase/challenges_h8.sql` failed when pasted (likely because `paths.sql` was never run, so `challenge_participants` did not exist). The file was rewritten to create those tables if missing (still needs `routines.sql` / `images`). **Sacha has not confirmed the new file runs.** If it errors again, take the exact SQL editor message before changing anything else. Do not start D2 until she is ready; the next *task* is D2.
+**D2 SQL paste (blocked on Sacha).** App covers are in (`src/lib/images.ts`, `assets/covers/cover-*.jpg`, Home featured exclude). Paste `supabase/d2_covers.sql` when ready (also still waiting on `challenges_h8.sql`). Do not start D3 until she has checked the photos on her phone.
 
 ---
 
 ### Next step
 
-**D2. Photo pass** (v2.2 Group 4, details in DESIGN.md 6). One distinct photo per routine and per stretch; stretch photos for stretches; no image repeated on one screen; no midriff-focused shots. Follow the usual 6-step task workflow in AGENTS.md. Do not start D3.
+**D3. Home** after Sacha has tested D2 (DESIGN.md 6.4). Do not start D4.
 
-After D2: D3, D4, D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
+After D3: D4, D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
 
 ---
 
@@ -80,6 +81,7 @@ After D2: D3, D4, D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already 
 - Swap dropdown spacing still reported uneven (not retested).
 - Confirm email off in the Supabase dashboard. Paywall real-store purchases need a development build (Expo Go uses the Test Store key).
 - No lbs setting yet (D8). No ESLint config (`npx expo lint` cannot run).
+- D2: Joint friendly still uses a cross-trainer photo; Barbell strength uses a dumbbell photo. Swap later if needed. Three stretch photographers are listed as “Pexels” until names are confirmed.
 
 ---
 
@@ -125,7 +127,7 @@ Scan the QR with Expo Go. Use `--tunnel` if needed. Checks: `npx.cmd tsc --noEmi
 **SQL already run (confirmed):** `exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql`. User also reported (24 Oct) `routines.sql` and `planned_sessions.sql` pasted.
 
 **SQL to paste (not confirmed; app usually still opens):**
-`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, **`challenges_h8.sql` (rewritten; paste the whole file)**. Do not run `cycle.sql`.
+`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), **`d2_covers.sql`**. Do not run `cycle.sql`.
 
 Agents cannot run SQL. Sacha pastes into Supabase > SQL Editor. Files are idempotent; the editor’s “destructive operations” warning is expected.
 

@@ -39,23 +39,23 @@ function entry(
 }
 
 /**
- * Local reference for routine covers. Add a row here when you add an `images` row.
+ * Local reference for routine and stretch covers. Add a row here when you add an `images` row.
  * To replace a photo: upload `{id}.jpg` to the `routine-covers` bucket and set `images.url`
  * to that public URL, or change `images.url` to any other licensed URL.
  */
 export const IMAGE_CATALOGUE: Record<string, ImageCatalogueEntry> = {
   'cover-gym-confidence-6': entry(
     'cover-gym-confidence-6',
-    'Woman holding a dumbbell in a bright gym',
-    'Andrea Piacquadio',
-    '3757376',
+    'Woman tying her trainers before a gym session',
+    'cottonbro studio',
+    '4753986',
     require('../../assets/covers/cover-gym-confidence-6.jpg')
   ),
   'cover-full-body-3': entry(
     'cover-full-body-3',
-    'Women lifting dumbbells together in a bright studio',
-    'Andrea Piacquadio',
-    '3768868',
+    'Woman swinging a kettlebell in a gym',
+    'Pixabay',
+    '416809',
     require('../../assets/covers/cover-full-body-3.jpg')
   ),
   'cover-one-spot-6': entry(
@@ -81,23 +81,23 @@ export const IMAGE_CATALOGUE: Record<string, ImageCatalogueEntry> = {
   ),
   'cover-lower-body-3': entry(
     'cover-lower-body-3',
-    'Women doing squats in a bright studio',
-    'Andrea Piacquadio',
-    '3775566',
+    'Woman lifting a barbell in a gym',
+    'Ali Alcántara',
+    '14591531',
     require('../../assets/covers/cover-lower-body-3.jpg')
   ),
   'cover-full-body-2': entry(
     'cover-full-body-2',
-    'Women training with dumbbells in a bright gym',
-    'Andrea Piacquadio',
-    '3768696',
+    'Woman training with suspension straps in a gym',
+    'Pixabay',
+    '414029',
     require('../../assets/covers/cover-full-body-2.jpg')
   ),
   'cover-home-strength-6': entry(
     'cover-home-strength-6',
-    'Woman training on a stability ball',
-    'Andrea Piacquadio',
-    '3757377',
+    'Woman squatting in a living room',
+    'MART PRODUCTION',
+    '8846119',
     require('../../assets/covers/cover-home-strength-6.jpg')
   ),
   'cover-upper-body-6': entry(
@@ -116,31 +116,80 @@ export const IMAGE_CATALOGUE: Record<string, ImageCatalogueEntry> = {
   ),
   'cover-joint-friendly-6': entry(
     'cover-joint-friendly-6',
-    'Woman sitting with a fit ball in a gym',
+    'Woman using a gym machine at an easy pace',
     'Andrea Piacquadio',
-    '3768593',
+    '3768916',
     require('../../assets/covers/cover-joint-friendly-6.jpg')
   ),
   'cover-short-cycle-4': entry(
     'cover-short-cycle-4',
-    'Women in a group dumbbell session',
-    'Andrea Piacquadio',
-    '863926',
+    'Woman holding a pair of dumbbells',
+    'Karolina Grabowska',
+    '4498294',
     require('../../assets/covers/cover-short-cycle-4.jpg')
   ),
   'cover-barbell-strength-8': entry(
     'cover-barbell-strength-8',
-    'Woman lifting weights in a gym',
-    'Andrea Piacquadio',
-    '3768162',
+    'Woman lifting dumbbells in a gym, smiling',
+    'Miguel González',
+    '14623703',
     require('../../assets/covers/cover-barbell-strength-8.jpg')
   ),
   'cover-one-spot-2': entry(
     'cover-one-spot-2',
-    'Women training with dumbbells in a bright studio',
-    'Andrea Piacquadio',
-    '3768690',
+    'Woman at a dumbbell rack in the gym',
+    'André Henrique',
+    '11191187',
     require('../../assets/covers/cover-one-spot-2.jpg')
+  ),
+  'cover-stretch-morning': entry(
+    'cover-stretch-morning',
+    'Woman stretching on a mat beside a sofa',
+    'Pexels',
+    '9004756',
+    require('../../assets/covers/cover-stretch-morning.jpg')
+  ),
+  'cover-stretch-desk': entry(
+    'cover-stretch-desk',
+    'Woman stretching her arm during a break at home',
+    'Pexels',
+    '7900045',
+    require('../../assets/covers/cover-stretch-desk.jpg')
+  ),
+  'cover-stretch-post-leg': entry(
+    'cover-stretch-post-leg',
+    'Woman in a seated hamstring stretch on a yoga mat',
+    'Pexels',
+    '6246255',
+    require('../../assets/covers/cover-stretch-post-leg.jpg')
+  ),
+  'cover-stretch-lower-back': entry(
+    'cover-stretch-lower-back',
+    'Woman in a child pose on a yoga mat',
+    'Vlada Karpovich',
+    '4534638',
+    require('../../assets/covers/cover-stretch-lower-back.jpg')
+  ),
+  'cover-stretch-full-body': entry(
+    'cover-stretch-full-body',
+    'Woman in a low lunge stretch on a yoga mat',
+    'Elina Fairytale',
+    '3823039',
+    require('../../assets/covers/cover-stretch-full-body.jpg')
+  ),
+  'cover-stretch-upper': entry(
+    'cover-stretch-upper',
+    'Two women stretching together on a yoga mat',
+    'Elina Fairytale',
+    '3822190',
+    require('../../assets/covers/cover-stretch-upper.jpg')
+  ),
+  'cover-stretch-hips': entry(
+    'cover-stretch-hips',
+    'Woman in a pigeon stretch on a yoga mat',
+    'Vlada Karpovich',
+    '4534662',
+    require('../../assets/covers/cover-stretch-hips.jpg')
   ),
 };
 
@@ -152,7 +201,19 @@ export function coverForRoutine(routine: {
 }
 
 export function resolveCover(cover: CoverImage | null, routineId?: string): CoverImage | null {
-  const id = cover?.id ?? (routineId ? `cover-${routineId}` : null);
+  const byRoutine = routineId ? `cover-${routineId}` : null;
+  const listedByRoutine = byRoutine ? IMAGE_CATALOGUE[byRoutine] : undefined;
+  if (listedByRoutine) {
+    const fromDb = cover?.id === listedByRoutine.id;
+    return {
+      id: listedByRoutine.id,
+      url: fromDb ? cover?.url ?? listedByRoutine.fallback_url : listedByRoutine.fallback_url,
+      storage_path: listedByRoutine.storage_path,
+      alt_text: (fromDb && cover?.alt_text) || listedByRoutine.alt_text,
+      licence_source: (fromDb && cover?.licence_source) || listedByRoutine.licence_source,
+    };
+  }
+  const id = cover?.id ?? byRoutine;
   const listed = id ? IMAGE_CATALOGUE[id] : undefined;
   if (!listed && !cover) return null;
   return {

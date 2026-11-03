@@ -576,9 +576,12 @@ export function pickFeaturedRoutines(
   routines: RoutineSummary[],
   answers: QuizAnswers,
   count = 4,
-  options?: { freeOnly?: boolean }
+  options?: { freeOnly?: boolean; excludeIds?: string[] }
 ): RoutineSummary[] {
-  const strength = routines.filter((routine) => routine.type !== 'stretch');
+  const excluded = new Set(options?.excludeIds ?? []);
+  const strength = routines.filter(
+    (routine) => routine.type !== 'stretch' && !excluded.has(routine.id)
+  );
   const pool = options?.freeOnly ? strength.filter((routine) => !routine.is_pro) : strength;
   const eligible = pool.filter((routine) => routine.is_featured_eligible);
   const rankedSource = eligible.length > 0 ? eligible : pool;

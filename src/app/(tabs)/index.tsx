@@ -224,10 +224,12 @@ export default function HomeScreen() {
           const featured = answers
             ? pickFeaturedRoutines(routines, answers, subscription.isPro ? 4 : 2, {
                 freeOnly: !subscription.isPro,
+                excludeIds: enrolment ? [enrolment.routine_id] : undefined,
               })
-            : subscription.isPro
-              ? routines.slice(0, 4)
-              : routines.filter((routine) => !routine.is_pro).slice(0, 2);
+            : (subscription.isPro
+                ? routines.slice(0, 4)
+                : routines.filter((routine) => !routine.is_pro).slice(0, 2)
+              ).filter((routine) => routine.id !== enrolment?.routine_id);
           const stretches = (subscription.isPro ? stretchRoutines : stretchRoutines.filter((item) => !item.is_pro)).slice(
             0,
             4

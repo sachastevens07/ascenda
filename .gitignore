@@ -40,3 +40,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# D2 photo staging (not used by the app)
+assets/covers/_candidates/
+assets/covers/_pick/
+assets/covers/_d2/
