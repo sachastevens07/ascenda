@@ -308,6 +308,38 @@ export function Chip({
 
 export const Tag = Chip;
 
+export function ReminderTimeChip({
+  timeLabel,
+  onPress,
+}: {
+  timeLabel: string;
+  onPress?: () => void;
+}) {
+  const { colours, radius, type } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={`Reminder ${timeLabel}`}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 4,
+          minHeight: 28,
+          paddingHorizontal: 8,
+          paddingVertical: 4,
+          backgroundColor: colours.surfaceMuted,
+          borderRadius: radius.full,
+        }}>
+        <Ionicons name="notifications-outline" size={12} color={colours.inkMuted} />
+        <Text style={[type.caption, { color: colours.ink, fontWeight: '600' }]}>{timeLabel}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
 export function SegmentedThemePicker({
   value,
   onChange,

@@ -63,6 +63,7 @@ import { coverForRoutine, coverSources } from '@/lib/images';
 import { consumeOnboardingPaywall } from '@/lib/onboarding';
 import { openPaywall } from '@/lib/paywall';
 import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanProgress } from '@/lib/planner';
+import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import {
@@ -260,6 +261,8 @@ export default function HomeScreen() {
           setLoadState('ready');
           if (!hideStreak) void maybeCelebrateStreakGoal(streak);
           void maybePromptMissedWeek(streak, () => setAttempt((count) => count + 1));
+          void maybeAskSessionReminders();
+          void syncPlannerReminders();
         } catch {
           if (isCurrent) setLoadState((state) => (state === 'ready' ? state : 'error'));
         }

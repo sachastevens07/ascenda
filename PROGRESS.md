@@ -19,11 +19,13 @@ Git: `main`. SQL is still pasted by hand; this repo cannot see the remote databa
 
 **H2. Welcome-back (3 Nov 2026).** After at least one full week without a session, Home replaces the next-session hero with a Welcome back card. Primary starts a lighter version of her next session (one fewer set, about 10% less load). Other options: restart this week of her plan, switch to a lighter routine if she has been away 3+ weeks, or start the usual session. Finishing any of those awards Back on track (once per return; the badge stays earned). Monday / 1st of the month / start of term only change the one-line copy. Tester preview is behind showDevTools. No SQL. No new libraries.
 
+**H3. Planner-linked reminders (3 Nov 2026).** After her first finished session (or next open if she already has history), a dialog explains session reminders. Turn on asks OS permission only if the rest timer has not already been granted it. Profile → Notifications: session reminders, weekly summary, offers and news (stored only, nothing sent), default time. Planner planned rows show a bell + time when reminders are on; tap to pick a time. Copy is "X is ready when you are". Rest days and done days get nothing. Sunday 10:00 weekly summary if that toggle is on. Reused existing `expo-notifications`. `supabase/reminders.sql` adds profile columns and `planned_sessions.reminder_time`. Logger, progression, swaps and paywall were not changed beyond calling the reminder ask/sync after finish.
+
 ### In progress
 None.
 
 ### Next step
-**H3** planner-linked reminders (ask before a notifications library). Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
+**H4** week-6 hand-off. Unfinished v2.1 work that v2.2 does not replace sits after Group 2 unless asked otherwise.
 
 ### Known bugs
 - Expo Go’s own grey floating menu cannot be hidden from app code. Our tester rows stay off until the version gesture.
@@ -63,6 +65,11 @@ None.
 - Back on track is repeatable as a session win; the Awards badge unlocks once. First unlock is stored in `milestones` if that table exists; repeats stay on-device.
 - Monday / 1st / start of term (1–14 Jan, Apr, Sep) only change the card line. They do not show the card to people who trained last week.
 - H5 `welcome_back_shown` / `welcome_back_completed` events are left for H5. H6 will restyle the badge.
+- H3 reuses `expo-notifications` already in the project (rest timer and trial-ending). No new library. Time picker is hourly chips (6 am to 9 pm) plus last-session hour, not a date-time wheel. AGENTS.md still says ask before a notifications library.
+- Session reminders start off until she taps Turn on or enables them in Profile. Weekly summary and offers also default off. Offers and news never send a push.
+- Sunday summary fires at 10:00 local time. Default session time is last finished session hour, else 6:00 pm.
+- Reminder chips only show when session reminders are on, and never on rest days or completed days. D5 Planner restyle (smaller headers, empty-day +) was not done.
+- Rest-timer permission on logger open stays. H3 does not ask the OS again if that grant already exists. Notification taps open the app, not a specific screen. H5 `reminder_sent` / `reminder_opened` are left for H5.
 
 ### Setup notes
 - Paste `supabase/theme_preference.sql` in the Supabase SQL editor so the choice follows her to a new phone. Until then it still works on this device.
@@ -72,8 +79,10 @@ None.
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` in `.env` is unused now; safe to delete.
 - To turn tester tools on: Profile, scroll to **Version 1.0.0**, press and hold it until the dialog appears. Hold again to turn them off. (AGENTS.md suggested five long-presses; a single hold is what we shipped after phone testing.)
 - H2 tester preview: with tester tools on, Profile → Developer → **Preview welcome-back**. Home then shows the card even if you trained last week. Turn it off, or finish a welcome-back session, or tap Not now.
+- Paste `supabase/reminders.sql` so reminder toggles and per-day times follow her to a new phone. Until then they still work on this device (AsyncStorage). Workout history is never touched.
+- H3 tester: with tester tools on, Profile → Developer → **Send a test reminder**. Lock the phone or leave the app; a sample “Full body A is ready when you are” should appear in about 8 seconds.
 
-**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. Next **H3**.
+**v2.2 Group 1:** D1 **done**. N5 **done**. **Group 2:** N3 **done**. N1 **done**. N4 **done**. **Group 3:** H1 **done**. H2 **done**. H3 **done**. Next **H4**.
 
 ## Status reconciled (3 Nov 2026)
 
@@ -105,7 +114,7 @@ S2 navigation (Profile as a tab) stays until **N6** moves Profile to the avatar 
 | **R6** Planner | **Done** | Agenda, month toggle, move / rest / add custom. Rest-week banner is in (H1). **D5** restyle later. |
 | **R7** Gym unlocked | **Done** | Quiet Mode and level-up are off the screens. Dead files remain. |
 | **R8** Activity | **Done** | Restyled in DESIGN Step 7. **D6** / **D7** / **H7** will change tabs and Awards. |
-| **R9** Onboarding | **Done**; restyle **Step 9 done**; **N1 done**; **N4 done** | Notification permission is still asked by the rest timer, not after the first session (**H3**). |
+| **R9** Onboarding | **Done**; restyle **Step 9 done**; **N1 done**; **N4 done**; **H3 done** | Rest timer still asks on logger open. H3 also explains reminders after the first finished session and only hits the OS prompt if permission is not already granted. |
 | **R10** Paywall | **Done** in logic | Visual DESIGN Step 10 **not started**. **C1** / **C2** later. |
 | **R11** Photos | **Done**; **D2** not started | Fourteen Pexels covers. Stretch routines still reuse gym photos. |
 
@@ -162,7 +171,7 @@ Leftovers that are not a missing R task: PostHog (**H5**), Sign in with Apple, l
 
 **Group 2:** N3 **done** (3 Nov 2026). N1 **done**. N4 **done**.
 
-**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 (ask before a notifications library; `expo-notifications` is already in `app.json` / `package.json`), H4, H5, H6, H7, H8.
+**Group 3:** H1 **done** (3 Nov 2026). H2 **done** (3 Nov 2026). H3 **done** (3 Nov 2026). H4, H5, H6, H7, H8.
 
 **Group 4:** D2, D3, D4, D5, D6, D7, D8, D9.
 
@@ -256,7 +265,7 @@ Also still on the user's side:
 
 ## Next step
 
-**H3** planner-linked reminders (ask before a notifications library). **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
+**H4** week-6 hand-off. **M1 MuscleWiki videos** is still unfinished (no Edge Functions, no in-app player). Do not start AI or food. S6 is still skipped. TestFlight is the next product milestone after the dashboard email-confirm toggle is on.
 
 Still not built (later): PostHog, Sign in with Apple, lbs setting, EAS development build, TestFlight. Email verification (S12) is in the app; turn Confirm email on in the dashboard when testers are ready.
 

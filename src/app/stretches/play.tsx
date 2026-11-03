@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { colours } from '@/constants/theme';
 import { STREAK_STRETCH_MIN_SECONDS } from '@/lib/activityStats';
+import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { formatClock } from '@/lib/workoutLog';
 import { discardSession, fetchSession, finishSession } from '@/lib/sessions';
 import {
@@ -113,6 +114,8 @@ export default function StretchPlayScreen() {
           : `That’s ${formatClock(elapsed)}. From 10 minutes, a stretch counts toward your week.`
       );
       router.replace('/programmes' as Href);
+      void maybeAskSessionReminders();
+      void syncPlannerReminders();
     } catch (error) {
       showDialog('Couldn’t save it', describeStretchError(error));
     } finally {

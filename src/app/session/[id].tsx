@@ -55,6 +55,7 @@ import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
 import { openPaywall } from '@/lib/paywall';
 import { markPlannerDateDone } from '@/lib/planner';
+import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   formatKg,
@@ -744,6 +745,8 @@ export default function SessionScreen() {
         [...wins.slice(0, 3), trained].filter(Boolean).join('\n') ||
         'Nice work. That’s another one done.';
       showDialog('Session saved', body);
+      void maybeAskSessionReminders();
+      void syncPlannerReminders();
     } catch {
       setIsFinishing(false);
       showDialog('Couldn’t finish the session', 'Check your connection and try again.');

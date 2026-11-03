@@ -1,13 +1,40 @@
 import Constants from 'expo-constants';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
-import { DestructiveTextButton, FreeBadge, ListRow, ProBadge, SegmentedThemePicker } from '@/components/ui';
+import {
+  DestructiveTextButton,
+  FreeBadge,
+  ListRow,
+  MenuHeader,
+  MenuRow,
+  OverflowMenu,
+  ProBadge,
+  SegmentedThemePicker,
+  measureAnchor,
+  type AnchorHandle,
+  type AnchorRect,
+} from '@/components/ui';
 import { useTheme, type ThemePreference } from '@/constants/theme';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
+import {
+  DEFAULT_REMINDER_TIME,
+  REMINDER_HOURS,
+  fetchLastSessionReminderTime,
+  fetchReminderPrefs,
+  formatReminderClock,
+  hourToReminderTime,
+  notificationsAvailable,
+  scheduleTestSessionReminder,
+  setDefaultReminderTime,
+  setMarketingOptIn,
+  setSessionRemindersEnabled,
+  setWeeklySummaryEnabled,
+  type ReminderPrefs,
+} from '@/lib/reminders';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
 import { useAuth } from '@/lib/auth';
@@ -79,6 +106,11 @@ export default function ProfileScreen() {
   const [showAnswers, setShowAnswers] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
+  const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
+  const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
+  const [timeMenu, setTimeMenu] = useState(false);
+  const [timeAnchor, setTimeAnchor] = useState<AnchorRect | null>(null);
+  const timeRowRef = useRef<AnchorHandle>(null);
   const tabBarHeight = useTabBarHeight();
   const email = session?.user.email ?? '';
   const displayName = answers?.display_name?.trim() || email.split('@')[0] || 'You';
@@ -101,6 +133,16 @@ export default function ProfileScreen() {
       fetchWelcomeBackPreview()
         .then((on) => {
           if (isCurrent) setWelcomeBackPreview(on);
+        })
+        .catch(() => {});
+      fetchReminderPrefs()
+        .then((prefs) => {
+          if (isCurrent) setReminderPrefs(prefs);
+        })
+        .catch(() => {});
+      fetchLastSessionReminderTime()
+        .then((time) => {
+          if (isCurrent) setLastSessionTime(time);
         })
         .catch(() => {});
       return () => {
@@ -191,6 +233,67 @@ export default function ProfileScreen() {
     saveThemePreference(value).catch(() => {});
   }
 
+  async function toggleSessionReminders() {
+    if (!reminderPrefs) return;
+    const next = !reminderPrefs.sessionReminders;
+    setReminderPrefs({ ...reminderPrefs, sessionReminders: next });
+    const ok = await setSessionRemindersEnabled(next).catch(() => false);
+    const latest = await fetchReminderPrefs().catch(() => null);
+    if (latest) setReminderPrefs(latest);
+    else if (!ok) setReminderPrefs({ ...reminderPrefs, sessionReminders: false });
+  }
+
+  async function toggleWeeklySummary() {
+    if (!reminderPrefs) return;
+    const next = !reminderPrefs.weeklySummary;
+    setReminderPrefs({ ...reminderPrefs, weeklySummary: next });
+    const ok = await setWeeklySummaryEnabled(next).catch(() => false);
+    const latest = await fetchReminderPrefs().catch(() => null);
+    if (latest) setReminderPrefs(latest);
+    else if (!ok) setReminderPrefs({ ...reminderPrefs, weeklySummary: false });
+  }
+
+  async function toggleMarketing() {
+    if (!reminderPrefs) return;
+    const next = !reminderPrefs.marketingOptIn;
+    setReminderPrefs({ ...reminderPrefs, marketingOptIn: next });
+    try {
+      await setMarketingOptIn(next);
+    } catch (error) {
+      setReminderPrefs({ ...reminderPrefs, marketingOptIn: !next });
+      showDialog(
+        'Couldn’t save that',
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    }
+  }
+
+  function openDefaultTimeMenu() {
+    measureAnchor(timeRowRef.current, (rect) => {
+      setTimeAnchor(rect);
+      setTimeMenu(true);
+    });
+  }
+
+  async function pickDefaultTime(time: string) {
+    setTimeMenu(false);
+    if (!reminderPrefs) return;
+    setReminderPrefs({ ...reminderPrefs, defaultTime: time });
+    try {
+      await setDefaultReminderTime(time);
+      const latest = await fetchReminderPrefs();
+      setReminderPrefs(latest);
+    } catch (error) {
+      showDialog(
+        'Couldn’t save that time',
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    }
+  }
+
+  const defaultTime = reminderPrefs?.defaultTime ?? DEFAULT_REMINDER_TIME;
+  const defaultTimeChoices = REMINDER_HOURS.map((hour) => hourToReminderTime(hour));
+
   function handleVersionLongPress() {
     const next = !showDevTools;
     setShowDevTools(next);
@@ -239,6 +342,7 @@ export default function ProfileScreen() {
     : [];
 
   return (
+    <View style={[styles.scroll, { backgroundColor: colours.bg }]}>
     <ScrollView
       style={[styles.scroll, { backgroundColor: colours.bg }]}
       contentContainerStyle={[styles.container, { paddingBottom: tabBarHeight + 24 }]}>
@@ -324,6 +428,48 @@ export default function ProfileScreen() {
         </View>
       </SettingsGroup>
 
+      {reminderPrefs ? (
+        <SettingsGroup title="Notifications">
+          <SettingsRow
+            title="Session reminders"
+            subtitle={
+              !notificationsAvailable()
+                ? 'Need a development build on this phone'
+                : reminderPrefs.sessionReminders
+                  ? 'On days you have something planned'
+                  : 'Off'
+            }
+            onPress={() => void toggleSessionReminders()}
+          />
+          <SettingsRow
+            title="Weekly summary"
+            subtitle={
+              reminderPrefs.weeklySummary
+                ? 'Sunday morning, when you are ready'
+                : 'A Sunday nudge to look at next week'
+            }
+            onPress={() => void toggleWeeklySummary()}
+          />
+          <SettingsRow
+            title="Offers and news"
+            subtitle={
+              reminderPrefs.marketingOptIn
+                ? 'On. Kept separate from training. Nothing is sent yet.'
+                : 'Kept separate from training. Nothing is sent yet.'
+            }
+            onPress={() => void toggleMarketing()}
+          />
+          <View ref={timeRowRef} collapsable={false}>
+            <SettingsRow
+              title="Default reminder time"
+              subtitle={formatReminderClock(defaultTime)}
+              onPress={openDefaultTimeMenu}
+              last
+            />
+          </View>
+        </SettingsGroup>
+      ) : null}
+
       {answers ? (
         <SettingsGroup title="Your answers">
           <SettingsRow
@@ -405,10 +551,42 @@ export default function ProfileScreen() {
               saveWelcomeBackPreview(next).catch(() => setWelcomeBackPreview(!next));
             }}
           />
+          <SettingsRow
+            title="Send a test reminder"
+            subtitle="A sample in about 8 seconds"
+            onPress={() => {
+              void scheduleTestSessionReminder().then((ok) => {
+                if (ok) {
+                  showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
+                }
+              });
+            }}
+          />
           <SettingsRow title="Restart 8-week block" onPress={() => void handleDevRestartBlock()} last />
         </SettingsGroup>
       ) : null}
     </ScrollView>
+    <OverflowMenu visible={timeMenu} anchor={timeAnchor} onClose={() => setTimeMenu(false)}>
+      <MenuHeader label="Default reminder time" detail="Used on planned days unless you pick a different time." />
+      {lastSessionTime ? (
+        <MenuRow
+          label={`Last session · ${formatReminderClock(lastSessionTime)}`}
+          selected={defaultTime === lastSessionTime}
+          onPress={() => void pickDefaultTime(lastSessionTime)}
+        />
+      ) : null}
+      {defaultTimeChoices
+        .filter((time) => time !== lastSessionTime)
+        .map((time) => (
+          <MenuRow
+            key={time}
+            label={formatReminderClock(time)}
+            selected={defaultTime === time}
+            onPress={() => void pickDefaultTime(time)}
+          />
+        ))}
+    </OverflowMenu>
+    </View>
   );
 }
 

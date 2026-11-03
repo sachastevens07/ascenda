@@ -17,6 +17,8 @@ export type PlannedSession = {
   routine_day_id: string | null;
   custom_workout_id: string | null;
   status: PlannedSessionStatus;
+  /** HH:MM. Null means use her default reminder time. */
+  reminder_time: string | null;
 };
 
 export type PlannerDayOption = {
@@ -76,7 +78,7 @@ const MONTHS_FULL = [
   'December',
 ] as const;
 
-/** Current month plus the next two — the agenda and month grid share this window. */
+/** Current month plus the next two: the agenda and month grid share this window. */
 export const PLANNER_MONTHS = 3;
 
 /** Mon = 0. Common gym patterns for each days-per-week count. */
@@ -91,10 +93,34 @@ const DEFAULT_TRAINING_DAYS: Record<number, number[]> = {
 };
 
 const PLAN_COLUMNS = 'id, date, routine_day_id, custom_workout_id, status';
+const PLAN_COLUMNS_REMINDERS = `${PLAN_COLUMNS}, reminder_time`;
+
+let planSelect = PLAN_COLUMNS_REMINDERS;
 
 function isMissingPlanner(error: { message?: string; code?: string }): boolean {
   const detail = `${error.code ?? ''} ${error.message ?? ''}`.toLowerCase();
   return error.code === '42P01' || error.code === 'PGRST205' || /planned_sessions/.test(detail);
+}
+
+function isMissingReminderTimeColumn(error: { message?: string; code?: string }): boolean {
+  return /reminder_time/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function parsePlanTime(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return `${pad(hours)}:${pad(minutes)}`;
+}
+
+function toPlannedSession(row: PlannedSession): PlannedSession {
+  return {
+    ...row,
+    reminder_time: parsePlanTime(row.reminder_time),
+  };
 }
 
 function isUniqueConflict(error: { message?: string; code?: string }): boolean {
@@ -251,7 +277,7 @@ async function insertPlan(row: {
     .select(PLAN_COLUMNS)
     .single();
   if (error) throwPlanner(error);
-  return data as PlannedSession;
+  return toPlannedSession(data as PlannedSession);
 }
 
 /** Next 14 days, starting today, so My workouts can pin a date without opening the week view. */
@@ -326,7 +352,7 @@ export async function movePlannedSession(id: string, toDate: string): Promise<vo
   if (sourceError) throwPlanner(sourceError);
   if (!source) throw new Error('That session is no longer on your planner.');
 
-  const from = source as PlannedSession;
+  const from = toPlannedSession(source as PlannedSession);
   if (from.date === toDate) return;
 
   const { data: destRows, error: destError } = await supabase
@@ -337,7 +363,7 @@ export async function movePlannedSession(id: string, toDate: string): Promise<vo
     .in('status', ['planned', 'rest']);
   if (destError) throwPlanner(destError);
 
-  const dest = (destRows?.[0] as PlannedSession | undefined) ?? null;
+  const dest = destRows?.[0] ? toPlannedSession(destRows[0] as PlannedSession) : null;
   if (!dest) {
     const { error } = await supabase.from('planned_sessions').update({ date: toDate }).eq('id', from.id);
     if (error) throwPlanner(error);
@@ -378,16 +404,34 @@ export async function markPlannerDateDone(date: string): Promise<void> {
   }
 }
 
+/** Saves a reminder clock for one planned day. No-op if the column is not in the database yet. */
+export async function updatePlannerReminderTime(id: string, time: string): Promise<void> {
+  const { error } = await supabase.from('planned_sessions').update({ reminder_time: time }).eq('id', id);
+  if (error) {
+    if (isMissingPlanner(error) || isMissingReminderTimeColumn(error)) {
+      planSelect = PLAN_COLUMNS;
+      return;
+    }
+    throwPlanner(error);
+  }
+}
+
 async function fetchPlansInRange(userId: string, from: string, to: string): Promise<PlannedSession[]> {
   const { data, error } = await supabase
     .from('planned_sessions')
-    .select(PLAN_COLUMNS)
+    .select(planSelect)
     .eq('user_id', userId)
     .gte('date', from)
     .lte('date', to)
     .order('date');
-  if (error) throwPlanner(error);
-  return (data ?? []) as PlannedSession[];
+  if (error) {
+    if (planSelect !== PLAN_COLUMNS && isMissingReminderTimeColumn(error)) {
+      planSelect = PLAN_COLUMNS;
+      return fetchPlansInRange(userId, from, to);
+    }
+    throwPlanner(error);
+  }
+  return (data ?? []).map((row) => toPlannedSession(row as unknown as PlannedSession));
 }
 
 async function fetchFinishedDatesInRange(from: string, to: string): Promise<Set<string>> {

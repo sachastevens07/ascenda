@@ -15,6 +15,7 @@ export {
   HeroImage,
   HighlightTile,
   ImageCard,
+  ReminderTimeChip,
   SegmentedThemePicker,
   StatTile,
   Tag,

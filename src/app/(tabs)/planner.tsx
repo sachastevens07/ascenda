@@ -21,6 +21,7 @@ import {
   MenuRow,
   OverflowMenu,
   PrimaryButton,
+  ReminderTimeChip,
   RestWeekBanner,
   StickyDayHeader,
   TextButton,
@@ -51,12 +52,25 @@ import {
   type PlannerRange,
 } from '@/lib/planner';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
+import {
+  DEFAULT_REMINDER_TIME,
+  REMINDER_HOURS,
+  fetchLastSessionReminderTime,
+  fetchReminderPrefs,
+  formatReminderClock,
+  hourToReminderTime,
+  maybeAskSessionReminders,
+  reminderTimeForDay,
+  setPlannedReminderTime,
+  syncPlannerReminders,
+  type ReminderPrefs,
+} from '@/lib/reminders';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 import { openRoutineLogger } from '@/lib/startLogger';
 import { clearRestWeek, fetchRestWeekStarts, loadStreakSnapshot, setRestWeek } from '@/lib/streak';
 
 type LoadState = 'loading' | 'error' | 'ready';
-type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | null;
+type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | 'reminder-time' | null;
 type PickDayReason = 'workout' | 'rest';
 type ViewMode = 'agenda' | 'month';
 type AgendaSection = { iso: string; day: PlannerDayView; data: PlannerDayView[] };
@@ -86,18 +100,26 @@ export default function PlannerScreen() {
   const [didScrollToToday, setDidScrollToToday] = useState(false);
   const [weekStartIso, setWeekStartIso] = useState(() => toIso(startOfWeekMonday(new Date())));
   const [restWeekStarts, setRestWeekStarts] = useState<Set<string>>(() => new Set());
+  const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
+  const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
 
   const horizon = useMemo(() => plannerHorizon(), []);
   const todayIso = toIso(new Date());
 
   const reload = useCallback(async () => {
-    const [next, rest] = await Promise.all([
+    const [next, rest, prefs, lastTime] = await Promise.all([
       loadPlannerRange(horizon.from, horizon.to),
       fetchRestWeekStarts().catch(() => new Set<string>()),
+      fetchReminderPrefs().catch(() => null),
+      fetchLastSessionReminderTime().catch(() => null),
     ]);
     setRange(next);
     setRestWeekStarts(rest);
+    setReminderPrefs(prefs);
+    setLastSessionTime(lastTime);
     setLoadState('ready');
+    void maybeAskSessionReminders();
+    void syncPlannerReminders();
   }, [horizon.from, horizon.to]);
 
   useFocusEffect(
@@ -236,6 +258,34 @@ export default function PlannerScreen() {
     if (!selectedDay?.plan) return;
     setMovingId(selectedDay.plan.id);
     closeSheets();
+  }
+
+  function openReminderTime(day: PlannerDayView, from?: AnchorHandle | null) {
+    if (!day.plan || day.plan.status !== 'planned') return;
+    setSelectedDay(day);
+    setMenuSource('day');
+    if (from) {
+      measureAnchor(from, (rect) => {
+        setAnchor(rect);
+        setSheet('reminder-time');
+      });
+      return;
+    }
+    setSheet('reminder-time');
+  }
+
+  async function handleReminderTime(time: string) {
+    if (!selectedDay?.plan) return;
+    await runAction(() => setPlannedReminderTime(selectedDay.plan!.id, time), 'Couldn’t save that time');
+  }
+
+  function reminderChoices(day: PlannerDayView): string[] {
+    const choices = REMINDER_HOURS.map((hour) => hourToReminderTime(hour));
+    if (lastSessionTime && !choices.includes(lastSessionTime)) choices.push(lastSessionTime);
+    choices.sort();
+    const current = reminderPrefs ? reminderTimeForDay(day, reminderPrefs) : DEFAULT_REMINDER_TIME;
+    if (!choices.includes(current)) choices.push(current);
+    return choices;
   }
 
   function handleAddPress() {
@@ -549,7 +599,16 @@ export default function PlannerScreen() {
             <AgendaDay
               day={item}
               moving={movingId !== null && item.plan?.id === movingId}
+              reminderLabel={
+                reminderPrefs?.sessionReminders &&
+                item.plan?.status === 'planned' &&
+                !item.completed &&
+                (item.kind === 'routine' || item.kind === 'custom')
+                  ? formatReminderClock(reminderTimeForDay(item, reminderPrefs))
+                  : null
+              }
               onPress={(from) => openDay(item, from)}
+              onReminderPress={(from) => openReminderTime(item, from)}
               disabled={busy}
             />
           )}
@@ -640,6 +699,17 @@ export default function PlannerScreen() {
             {selectedDay.plan && selectedDay.kind !== 'rest' && (
               <MenuRow label="Move to another day" onPress={startMove} />
             )}
+            {selectedDay.plan?.status === 'planned' &&
+            (selectedDay.kind === 'routine' || selectedDay.kind === 'custom') ? (
+              <MenuRow
+                label={
+                  reminderPrefs
+                    ? `Reminder · ${formatReminderClock(reminderTimeForDay(selectedDay, reminderPrefs))}`
+                    : 'Reminder time'
+                }
+                onPress={() => openReminderTime(selectedDay)}
+              />
+            ) : null}
             <MenuRow label="Add a custom workout" onPress={openWorkouts} />
             {selectedDay.kind !== 'rest' ? (
               <MenuRow label="Mark rest day" onPress={handleRest} />
@@ -676,6 +746,38 @@ export default function PlannerScreen() {
           </>
         ) : null}
 
+        {sheet === 'reminder-time' && selectedDay?.plan ? (
+          <>
+            <MenuHeader
+              label="Reminder time"
+              detail={`${selectedDay.title ?? 'This session'} · ${formatAgendaHeading(selectedDay)}`}
+            />
+            {lastSessionTime ? (
+              <MenuRow
+                label={`Last session · ${formatReminderClock(lastSessionTime)}`}
+                selected={
+                  reminderPrefs
+                    ? reminderTimeForDay(selectedDay, reminderPrefs) === lastSessionTime
+                    : false
+                }
+                onPress={() => void handleReminderTime(lastSessionTime)}
+              />
+            ) : null}
+            {reminderChoices(selectedDay)
+              .filter((time) => time !== lastSessionTime)
+              .map((time) => (
+                <MenuRow
+                  key={time}
+                  label={formatReminderClock(time)}
+                  selected={
+                    reminderPrefs ? reminderTimeForDay(selectedDay, reminderPrefs) === time : false
+                  }
+                  onPress={() => void handleReminderTime(time)}
+                />
+              ))}
+          </>
+        ) : null}
+
         {sheet === 'pick-day' ? (
           <>
             <MenuHeader
@@ -703,16 +805,21 @@ export default function PlannerScreen() {
 function AgendaDay({
   day,
   moving,
+  reminderLabel,
   onPress,
+  onReminderPress,
   disabled,
 }: {
   day: PlannerDayView;
   moving: boolean;
+  reminderLabel: string | null;
   onPress: (from: AnchorHandle | null) => void;
+  onReminderPress: (from: AnchorHandle | null) => void;
   disabled: boolean;
 }) {
   const { colours, type, radius } = useTheme();
   const rowRef = useRef<AnchorHandle>(null);
+  const chipRef = useRef<AnchorHandle>(null);
   const quiet = day.kind === 'empty' || day.kind === 'rest';
   const eyebrow = day.kind === 'routine' ? 'Routine' : day.kind === 'custom' ? 'Custom' : undefined;
 
@@ -752,6 +859,16 @@ function AgendaDay({
               ]}>
               {day.completed ? <Ionicons name="checkmark" size={14} color={colours.onBrand} /> : null}
             </View>
+          }
+          right={
+            reminderLabel ? (
+              <View ref={chipRef} collapsable={false}>
+                <ReminderTimeChip
+                  timeLabel={reminderLabel}
+                  onPress={() => onReminderPress(chipRef.current)}
+                />
+              </View>
+            ) : null
           }
         />
       )}
