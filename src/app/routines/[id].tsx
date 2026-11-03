@@ -1,23 +1,21 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
-import { useCallback, useRef, useState, type ComponentProps } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import {
   Chip,
+  DetailLayout,
   FreeBadge,
-  HeroImage,
   IconButton,
   LockedOverlay,
   MenuHeader,
@@ -25,8 +23,9 @@ import {
   OverflowMenu,
   PrimaryButton,
   ProBadge,
+  ProgressBar,
   SafetyNotice,
-  StatTile,
+  StatStrip,
   TextButton,
   WhatsNextCard,
   measureAnchor,
@@ -51,7 +50,7 @@ import {
   resolveNextRoutineOffer,
   type NextRoutineOffer,
 } from '@/lib/handOff';
-import { formatDaysPerWeek, getQuizAnswers, useProfile } from '@/lib/profile';
+import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
   DIFFICULTY_LABELS,
@@ -84,10 +83,6 @@ import { openRoutineLogger } from '@/lib/startLogger';
 import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
-type IoniconName = ComponentProps<typeof Ionicons>['name'];
-
-const SHEET_OVERLAP = 24;
-const SHEET_RADIUS = 28;
 
 function dominantEquipment(phase: RoutinePhase): Equipment | null {
   const counts = new Map<Equipment, number>();
@@ -120,8 +115,47 @@ function phaseLabel(phase: RoutinePhase, index: number, routine: Routine): strin
   } else if (equipment === 'band' || equipment === 'bodyweight') {
     stage = 'Minimal equipment';
   }
-  const prefix = `Stage ${index + 1}`;
-  return stage ? `${prefix}: ${stage}` : prefix;
+  const prefix = `Phase ${index + 1}`;
+  return stage ? `${prefix} · ${stage}` : prefix;
+}
+
+function weekDayNames(week: RoutineWeek): string {
+  return week.days.map((day) => day.name).join(' · ');
+}
+
+function WeekHeaderBody({
+  week,
+  doneDayIds,
+  showTicks,
+}: {
+  week: RoutineWeek;
+  doneDayIds: Set<string>;
+  showTicks: boolean;
+}) {
+  const { colours, type, spacing } = useTheme();
+  const ticks = week.days.filter((day) => doneDayIds.has(day.id)).length;
+  return (
+    <View style={styles.flex}>
+      <View style={styles.weekTitleRow}>
+        <Text style={[type.title3, { color: colours.ink, flex: 1 }]}>Week {week.week_number}</Text>
+        {week.is_checkpoint ? <Chip label="Checkpoint" /> : null}
+      </View>
+      <View style={[styles.weekMetaRow, { marginTop: 4 }]}>
+        <Text style={[type.bodySm, { color: colours.inkMuted, flex: 1 }]} numberOfLines={1}>
+          {weekDayNames(week)}
+        </Text>
+        {showTicks && ticks > 0 ? (
+          <View style={[styles.tickRow, { marginLeft: spacing.sm }]}>
+            {week.days.map((day) =>
+              doneDayIds.has(day.id) ? (
+                <Ionicons key={day.id} name="checkmark-circle" size={16} color={colours.success} />
+              ) : null
+            )}
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
 }
 
 function DayThumb({ day }: { day: RoutineDay }) {
@@ -141,7 +175,6 @@ function DayThumb({ day }: { day: RoutineDay }) {
 export default function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
   const { colours, type, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
@@ -162,8 +195,6 @@ export default function RoutineDetailScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
   const [handOff, setHandOff] = useState<NextRoutineOffer | null>(null);
-
-  const heroHeight = Math.round(windowHeight * 0.45);
 
   useFocusEffect(
     useCallback(() => {
@@ -407,51 +438,41 @@ export default function RoutineDetailScreen() {
       ? 'Start with Pro'
       : 'Start routine';
   const showSticky = !isCurrent || Boolean(nextSession);
-  const stats: { label: string; value: string; icon: IoniconName }[] = [
-    { label: 'Weeks', value: String(routine.length_weeks), icon: 'calendar-outline' },
-    { label: 'Days a week', value: formatDaysPerWeek(routine.days_per_week), icon: 'repeat-outline' },
-    { label: 'Minutes', value: `${routine.session_minutes} min`, icon: 'time-outline' },
-    { label: 'Level', value: DIFFICULTY_LABELS[routine.difficulty], icon: 'bar-chart-outline' },
-    { label: 'Equipment', value: ROUTINE_EQUIPMENT_LABELS[routine.equipment], icon: 'barbell-outline' },
-    { label: 'Goal', value: ROUTINE_GOAL_LABELS[routine.goal], icon: 'flag-outline' },
+  const currentWeek = enrolment && isCurrent ? currentEnrolmentWeek(enrolment) : 0;
+  const chips = [
+    ROUTINE_EQUIPMENT_LABELS[routine.equipment],
+    ROUTINE_GOAL_LABELS[routine.goal],
+    ...routine.tags.map((tag) => formatTagLabel(tag)),
   ];
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={{ paddingBottom: showSticky ? 16 : insets.bottom + 24 }}
-        showsVerticalScrollIndicator={false}>
-        <HeroImage
-          image={cover}
-          letter={routine.name}
-          title={routine.name}
-          eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · ${ROUTINE_GOAL_LABELS[routine.goal]}`}
-          height={heroHeight}>
-          <View style={[styles.heroBar, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
-            <IconButton icon="chevron-back" variant="overlay" accessibilityLabel="Back" onPress={goBack} />
-            <View ref={menuRef} collapsable={false}>
-              <IconButton
-                icon="ellipsis-horizontal"
-                variant="overlay"
-                accessibilityLabel="Routine options"
-                onPress={openMenu}
-              />
-            </View>
+      <DetailLayout
+        cover={cover}
+        letter={routine.name}
+        title={routine.name}
+        eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · ${ROUTINE_GOAL_LABELS[routine.goal]}`}
+        onBack={goBack}
+        menu={
+          <View ref={menuRef} collapsable={false}>
+            <IconButton
+              icon="ellipsis-horizontal"
+              variant="overlay"
+              accessibilityLabel="Routine options"
+              onPress={openMenu}
+            />
           </View>
-        </HeroImage>
-
-        <View
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: colours.bg,
-              marginTop: -SHEET_OVERLAP,
-              borderTopLeftRadius: SHEET_RADIUS,
-              borderTopRightRadius: SHEET_RADIUS,
-              paddingBottom: spacing.lg,
-            },
-          ]}>
+        }
+        sticky={
+          showSticky ? (
+            <PrimaryButton
+              label={isStarting ? 'Starting…' : stickyLabel}
+              loading={isStarting}
+              disabled={busy}
+              onPress={isCurrent ? openNextSession : requestStart}
+            />
+          ) : undefined
+        }>
           <View style={styles.badgeRow}>
             {!subscription.isPro ? routine.is_pro ? <ProBadge /> : <FreeBadge /> : null}
             {isCurrent ? <Chip label="Current" selected /> : null}
@@ -470,31 +491,32 @@ export default function RoutineDetailScreen() {
             />
           ) : null}
 
-          {routine.tags.length > 0 ? (
+          {chips.length > 0 ? (
             <View style={styles.tagRow}>
-              {routine.tags.map((tag) => (
-                <Chip key={tag} label={formatTagLabel(tag)} />
+              {chips.map((chip, index) => (
+                <Chip key={`${chip}-${index}`} label={chip} />
               ))}
             </View>
           ) : null}
 
           {isCurrent && enrolment ? (
-            <Text style={[type.caption, { color: colours.inkMuted, marginTop: spacing.md }]}>
-              Week {currentEnrolmentWeek(enrolment)} of {routine.length_weeks}
-            </Text>
+            <View style={styles.progressBlock}>
+              <Text style={[type.caption, { color: colours.inkMuted, marginBottom: 8 }]}>
+                Week {currentWeek} of {routine.length_weeks}
+              </Text>
+              <ProgressBar progress={routine.length_weeks > 0 ? currentWeek / routine.length_weeks : 0} />
+            </View>
           ) : null}
 
-          <View style={styles.statGrid}>
-            {stats.map((stat) => (
-              <StatTile
-                key={stat.label}
-                icon={stat.icon}
-                value={stat.value}
-                label={stat.label}
-                style={styles.statCell}
-              />
-            ))}
-          </View>
+          <StatStrip
+            style={{ marginTop: spacing.lg }}
+            items={[
+              { icon: 'calendar-outline', value: String(routine.length_weeks), label: 'Weeks' },
+              { icon: 'repeat-outline', value: String(routine.days_per_week), label: 'Days a week' },
+              { icon: 'time-outline', value: String(routine.session_minutes), label: 'Minutes' },
+              { icon: 'bar-chart-outline', value: DIFFICULTY_LABELS[routine.difficulty], label: 'Level' },
+            ]}
+          />
 
           {isCurrent && handOff ? (
             <WhatsNextCard
@@ -546,15 +568,11 @@ export default function RoutineDetailScreen() {
                           {weekLocked ? (
                             <>
                               <View style={styles.weekHeader}>
-                                <View style={styles.flex}>
-                                  <Text style={[type.title3, { color: colours.ink }]}>
-                                    Week {week.week_number}
-                                    {week.is_checkpoint ? ' · checkpoint' : ''}
-                                  </Text>
-                                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
-                                    {week.days.length} days
-                                  </Text>
-                                </View>
+                                <WeekHeaderBody
+                                  week={week}
+                                  doneDayIds={doneDayIds}
+                                  showTicks={isCurrent}
+                                />
                               </View>
                               <LockedOverlay
                                 onUnlock={() => openPaywall('routine')}
@@ -569,15 +587,11 @@ export default function RoutineDetailScreen() {
                               }}
                               style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
                               accessibilityRole="button">
-                              <View style={styles.flex}>
-                                <Text style={[type.title3, { color: colours.ink }]}>
-                                  Week {week.week_number}
-                                  {week.is_checkpoint ? ' · checkpoint' : ''}
-                                </Text>
-                                <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
-                                  {week.days.length} days
-                                </Text>
-                              </View>
+                              <WeekHeaderBody
+                                week={week}
+                                doneDayIds={doneDayIds}
+                                showTicks={isCurrent}
+                              />
                               <Ionicons
                                 name={weekOpen ? 'chevron-up' : 'chevron-down'}
                                 size={20}
@@ -663,24 +677,7 @@ export default function RoutineDetailScreen() {
             );
           })}
           <SafetyNotice style={{ marginTop: spacing.md }} />
-        </View>
-      </ScrollView>
-
-      {showSticky ? (
-        <View
-          style={[
-            styles.sticky,
-            { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12 },
-            shadow,
-          ]}>
-          <PrimaryButton
-            label={isStarting ? 'Starting…' : stickyLabel}
-            loading={isStarting}
-            disabled={busy}
-            onPress={isCurrent ? openNextSession : requestStart}
-          />
-        </View>
-      ) : null}
+      </DetailLayout>
 
       <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={() => setMenuOpen(false)}>
         <MenuHeader label={routine.name} detail="Copy this plan, or change the one you’re on." />
@@ -719,28 +716,11 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  scroll: {
-    flex: 1,
-  },
   centre: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-  },
-  heroBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-  },
-  sheet: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -760,16 +740,22 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 12,
   },
-  statGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 20,
+  progressBlock: {
+    marginTop: 16,
   },
-  statCell: {
-    width: '47%',
-    flexGrow: 1,
-    minWidth: '47%',
+  weekTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  weekMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tickRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   phase: {
     marginBottom: 8,
@@ -844,10 +830,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  sticky: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
   },
   pressed: {
     opacity: 0.8,

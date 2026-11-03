@@ -55,6 +55,14 @@ export function formatHold(seconds: number): string {
   return `${minutes} min ${rest} s`;
 }
 
+export function formatHoldShort(seconds: number): string {
+  if (seconds < 60) return `${seconds} s`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  if (rest === 0) return minutes === 1 ? '1 min' : `${minutes} min`;
+  return `${minutes} min ${rest} s`;
+}
+
 export type StretchPlayStep = {
   position: number;
   durationSeconds: number;

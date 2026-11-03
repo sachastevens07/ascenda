@@ -17,9 +17,11 @@ export {
   ImageCard,
   ReminderTimeChip,
   SegmentedThemePicker,
+  StatStrip,
   StatTile,
   Tag,
 } from './Cards';
+export { DetailLayout } from './DetailLayout';
 export { ChipScroller, ListRow, SectionHeader, StickyDayHeader } from './List';
 export { ProgressBar, ProgressRing } from './Progress';
 export { RestTimerBar, SetRow } from './Workout';

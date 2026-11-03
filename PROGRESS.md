@@ -53,6 +53,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **H8** Challenges join with next Monday or next 1st; personal 28-day window; no countdown copy. App code is in. SQL rewrite is still **not confirmed run**.
 - **D2** Unique Pexels cover per strength routine and per stretch. Stretch photos are stretching, not gym lifts. Group studio / midriff covers replaced. Home featured row skips the active routine so it does not repeat the next-session card. Bundled files show without SQL; `coverForRoutine` prefers `cover-{routineId}` in `IMAGE_CATALOGUE`.
 - **D3** (3 Nov 2026) Home restyle: initials avatar (opens Profile), display greeting, 16:10 featured and stretch cards at 78% width, QuoteCard after the week card, WelcomeBackCard uses `accentSoft` + title2. 90 original quotes bundled; hide from the card ⋯ or Profile → Appearance. SQL: `supabase/quotes_d3.sql` (`profiles.hide_quote`). Learn article cards left for N6.
+- **D4** (3 Nov 2026) Routine and stretch detail share `DetailLayout`: hero, badge row, 2-line description + More, compact 4-stat strip, sticky plum button, safety line. Current routine shows a Week X of Y bar. Week rows list day names and ticks; checkpoint chip; phase headers. Stretch holds list with thumbnails. Stretch player: countdown ring, Pause primary, Skip as text, next-hold preview, End stretch in ⋯.
 
 ---
 
@@ -64,9 +65,9 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 ### Next step
 
-**D4. Routine and stretch detail share one layout** (DESIGN.md 6.5 and 6.6). Do not start D5.
+**D5. Planner** (DESIGN.md 6.8): quieter day headers, thin empty-day rows with +, rest weeks. Do not start D6.
 
-After D4: D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
+After D5: D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
 
 ---
 
@@ -77,7 +78,7 @@ After D4: D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
 - Expo Go’s grey floating menu cannot be hidden from app code.
 - `one-spot-6` and `one-spot-2` are two different plans; both still show.
 - Old programme tables still exist; Profile UI hidden; `/programme` redirects to Programmes.
-- Dark theme does not restyle sign-in, paywall, stretches, workouts, paths, challenges or exercise detail.
+- Dark theme does not restyle sign-in, paywall, workouts, paths, challenges or exercise detail. Stretch detail and player now follow the theme.
 - M1 video player not built. Logger uses photos or equipment icons, not MuscleWiki video.
 - Swap dropdown spacing still reported uneven (not retested).
 - Confirm email off in the Supabase dashboard. Paywall real-store purchases need a development build (Expo Go uses the Test Store key).
@@ -105,6 +106,7 @@ After D4: D5, D6, D7, D8, D9, then N2, N6, N7, then C1, C2. S12 already built.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
 - Do not use native `Switch` under the pill tab bar; do not use `Modal` + `borderRadius: 999` for tall menus.
 - D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. Avatar opens the existing Profile tab until N6. No Learn cards yet. No display-serif font (system sans, same as the rest of the kit). Challenge card stays on Home after the quote.
+- D4: no new SQL. N2 copy blocks (who it's for, by the end, how it works, phase names, roles, lighter-week chips) wait for N2 data. Related Learn cards wait for N6. Skip on the last hold ends that hold; Finish saves. Pause is primary during a hold; Next hold / Finish after the ring completes.
 
 ---
 

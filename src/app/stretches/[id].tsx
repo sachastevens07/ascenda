@@ -1,23 +1,40 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
-import { ProBadge, ProMark } from '@/components/ProBadge';
-import { SafetyNotice } from '@/components/ui';
+import {
+  Chip,
+  DetailLayout,
+  FreeBadge,
+  LockedOverlay,
+  PrimaryButton,
+  ProBadge,
+  SafetyNotice,
+  StatStrip,
+  TextButton,
+} from '@/components/ui';
+import { useTheme } from '@/constants/theme';
+import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
-import { colours } from '@/constants/theme';
-import { coverForRoutine } from '@/lib/images';
+import { coverForRoutine, coverSources } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
-import { formatTagLabel, type Routine } from '@/lib/routines';
+import {
+  DIFFICULTY_LABELS,
+  ROUTINE_EQUIPMENT_LABELS,
+  ROUTINE_GOAL_LABELS,
+  formatTagLabel,
+  type Routine,
+  type RoutineDayExercise,
+} from '@/lib/routines';
 import {
   STRETCH_PREVIEW_STEPS,
   beginStretchSession,
   describeStretchError,
   fetchStretchRoutine,
   formatHold,
+  formatHoldShort,
   isSessionInProgressError,
   missingStretchesMessage,
   stretchSteps,
@@ -28,15 +45,31 @@ import { useWorkout } from '@/lib/workout';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
+function HoldThumb({ step }: { step: RoutineDayExercise }) {
+  const { colours, radius, type } = useTheme();
+  const photo = getExerciseImageSource(step.exercise);
+  return (
+    <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
+      {photo ? (
+        <Image source={photo} style={styles.photoFill} resizeMode="cover" />
+      ) : (
+        <Text style={[type.title3, { color: colours.brand }]}>{step.exercise.name.slice(0, 1)}</Text>
+      )}
+    </View>
+  );
+}
+
 export default function StretchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { colours, type, spacing } = useTheme();
   const subscription = useSubscription();
   const workout = useWorkout();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,6 +96,11 @@ export default function StretchDetailScreen() {
       };
     }, [id])
   );
+
+  function goBack() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/programmes' as Href);
+  }
 
   async function handleStart() {
     if (!routine) return;
@@ -120,11 +158,11 @@ export default function StretchDetailScreen() {
 
   if (loadState !== 'ready' || !routine) {
     return (
-      <View style={styles.centre}>
+      <View style={[styles.centre, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
         {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} />
+          <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={styles.message}>
+          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
             {loadState === 'not-found'
               ? 'We couldn’t find that stretch.'
               : (errorMessage ?? missingStretchesMessage())}
@@ -139,267 +177,163 @@ export default function StretchDetailScreen() {
   const visibleSteps = locked ? steps.slice(0, STRETCH_PREVIEW_STEPS) : steps;
   const hiddenCount = Math.max(0, steps.length - visibleSteps.length);
   const holdSeconds = totalHoldSeconds(steps);
+  const cover = coverSources(coverForRoutine(routine))[0] ?? null;
+  const showMore = routine.description.trim().length > 90;
+  const chips = [
+    ROUTINE_EQUIPMENT_LABELS[routine.equipment],
+    ROUTINE_GOAL_LABELS[routine.goal],
+    ...routine.tags.map((tag) => formatTagLabel(tag)),
+  ];
+  const stickyLabel = locked ? 'Start with Pro' : 'Start stretch';
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 32 }]}>
-      <CoverPhoto
-        cover={coverForRoutine(routine)}
-        letter={routine.name.slice(0, 1)}
-        height={220}
-        style={styles.cover}
+    <DetailLayout
+      cover={cover}
+      letter={routine.name}
+      title={routine.name}
+      eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · Stretch`}
+      onBack={goBack}
+      sticky={
+        <PrimaryButton
+          label={isStarting ? 'Starting…' : stickyLabel}
+          loading={isStarting}
+          disabled={isStarting}
+          onPress={() => void handleStart()}
+        />
+      }>
+      <View style={styles.badgeRow}>
+        {!subscription.isPro ? routine.is_pro ? <ProBadge /> : <FreeBadge /> : null}
+      </View>
+
+      <Text style={[type.body, { color: colours.ink }]} numberOfLines={descriptionOpen ? undefined : 2}>
+        {routine.description}
+      </Text>
+      {showMore ? (
+        <TextButton
+          label={descriptionOpen ? 'Less' : 'More'}
+          onPress={() => setDescriptionOpen((open) => !open)}
+          style={styles.more}
+        />
+      ) : null}
+
+      {chips.length > 0 ? (
+        <View style={styles.tagRow}>
+          {chips.map((chip, index) => (
+            <Chip key={`${chip}-${index}`} label={chip} />
+          ))}
+        </View>
+      ) : null}
+
+      <StatStrip
+        style={{ marginTop: spacing.lg }}
+        items={[
+          { icon: 'time-outline', value: String(routine.session_minutes), label: 'Minutes' },
+          { icon: 'body-outline', value: String(steps.length), label: 'Holds' },
+          { icon: 'timer-outline', value: formatHoldShort(holdSeconds), label: 'Time' },
+          { icon: 'bar-chart-outline', value: DIFFICULTY_LABELS[routine.difficulty], label: 'Level' },
+        ]}
       />
-      <View style={styles.chipRow}>
-        {routine.is_pro ? <ProBadge /> : <Text style={[styles.chip, styles.chipFree]}>Free</Text>}
-      </View>
-      <Text style={styles.title}>{routine.name}</Text>
-      <Text style={styles.body}>{routine.description}</Text>
-      <View style={styles.tagRow}>
-        {routine.tags.map((tag) => (
-          <Text key={tag} style={styles.tag}>
-            {formatTagLabel(tag)}
-          </Text>
-        ))}
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Session details</Text>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailName}>Length</Text>
-          <Text style={styles.detailValue}>About {routine.session_minutes} minutes</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailName}>Holds</Text>
-          <Text style={styles.detailValue}>
-            {steps.length} timed holds · {formatHold(holdSeconds)}
-          </Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailName}>Kit</Text>
-          <Text style={styles.detailValue}>A mat. A wall or doorway helps.</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailName}>Access</Text>
-          <Text style={styles.detailValue}>{routine.is_pro ? 'Pro' : 'Free'}</Text>
-        </View>
-      </View>
-
-      <Text style={styles.sectionTitle}>Holds</Text>
+      <Text style={[type.title2, { color: colours.ink, marginTop: spacing.lg, marginBottom: spacing.md }]}>
+        Holds
+      </Text>
       {visibleSteps.map((step) => (
         <Pressable
           key={`${step.position}-${step.exercise.id}`}
           onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: step.exercise.id } })}
-          style={({ pressed }) => [styles.stepRow, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.holdRow,
+            { backgroundColor: colours.surface, borderRadius: 16 },
+            pressed && styles.pressed,
+          ]}
           accessibilityRole="button">
+          <HoldThumb step={step} />
           <View style={styles.flex}>
-            <Text style={styles.stepName}>{step.exercise.name}</Text>
-            <Text style={styles.stepMeta}>{formatHold(step.duration_seconds ?? 30)}</Text>
+            <Text style={[type.title3, { color: colours.ink }]} numberOfLines={1}>
+              {step.exercise.name}
+            </Text>
+            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+              {formatHold(step.duration_seconds ?? 30)}
+            </Text>
           </View>
         </Pressable>
       ))}
-      {hiddenCount > 0 && (
-        <View style={styles.lockCard}>
-          <ProBadge locked />
-          <Text style={styles.lockTitle}>
-            {hiddenCount} more {hiddenCount === 1 ? 'hold' : 'holds'} with Pro
+      {hiddenCount > 0 ? (
+        <View
+          style={[
+            styles.lockCard,
+            { backgroundColor: colours.surface, borderRadius: 16, minHeight: 132 },
+          ]}>
+          <Text style={[type.title3, { color: colours.ink }]}>
+            {hiddenCount} more {hiddenCount === 1 ? 'hold' : 'holds'}
           </Text>
-          <Text style={styles.lockBody}>The free plan includes three stretch sessions in full.</Text>
-          <Pressable
-            style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-            onPress={() => openPaywall('stretch')}
-            accessibilityRole="button">
-            <Text style={styles.outlineButtonText}>Unlock with Pro</Text>
-          </Pressable>
+          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+            The free plan includes three stretch sessions in full.
+          </Text>
+          <LockedOverlay onUnlock={() => openPaywall('stretch')} label="Unlock with Pro" />
         </View>
-      )}
+      ) : null}
 
-      <SafetyNotice />
-      <Pressable
-        style={({ pressed }) => [styles.startButton, pressed && styles.pressed]}
-        onPress={() => void handleStart()}
-        disabled={isStarting}
-        accessibilityRole="button">
-        {locked && !isStarting ? (
-          <ProMark locked textStyle={styles.startButtonText}>
-            Start with Pro
-          </ProMark>
-        ) : (
-          <Text style={styles.startButtonText}>{isStarting ? 'Starting…' : 'Start stretch'}</Text>
-        )}
-      </Pressable>
-    </ScrollView>
+      <SafetyNotice style={{ marginTop: spacing.md }} />
+    </DetailLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-    backgroundColor: colours.background,
-  },
-  container: {
-    padding: 24,
-    paddingTop: 8,
-    gap: 12,
-  },
   centre: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colours.background,
   },
-  message: {
-    fontSize: 17,
-    lineHeight: 24,
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  cover: {
-    borderRadius: 22,
-    overflow: 'hidden',
-  },
-  chipRow: {
+  badgeRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
+    marginBottom: 12,
   },
-  chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  chipFree: {
-    color: colours.surface,
-    backgroundColor: colours.accent,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  body: {
-    fontSize: 16,
-    lineHeight: 23,
-    color: colours.textMuted,
+  more: {
+    alignSelf: 'flex-start',
+    minHeight: 36,
+    paddingHorizontal: 0,
   },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginTop: 12,
   },
-  tag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    overflow: 'hidden',
-    fontSize: 13,
-    fontWeight: '600',
-    color: colours.accent,
-    backgroundColor: colours.accentSoft,
-  },
-  card: {
-    padding: 20,
-    borderRadius: 22,
-    backgroundColor: colours.surface,
-    gap: 10,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  detailRow: {
+  holdRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: 12,
+    minHeight: 72,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
   },
-  detailName: {
-    fontSize: 15,
-    color: colours.textMuted,
-  },
-  detailValue: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: colours.text,
-    textAlign: 'right',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.text,
-    marginTop: 8,
-  },
-  stepRow: {
-    minHeight: 64,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 18,
-    backgroundColor: colours.surface,
+  thumb: {
+    width: 56,
+    height: 56,
+    overflow: 'hidden',
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  photoFill: {
+    width: '100%',
+    height: '100%',
   },
   flex: {
     flex: 1,
   },
-  stepName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  stepMeta: {
-    fontSize: 14,
-    color: colours.textMuted,
-    marginTop: 2,
-  },
   lockCard: {
-    padding: 20,
-    borderRadius: 22,
-    backgroundColor: colours.surface,
-    gap: 8,
-    alignItems: 'flex-start',
-  },
-  lockTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  lockBody: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colours.textMuted,
-  },
-  outlineButton: {
-    minHeight: 48,
-    paddingHorizontal: 18,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
+    overflow: 'hidden',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     marginTop: 4,
   },
-  outlineButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.accent,
-  },
-  startButton: {
-    minHeight: 60,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accent,
-    marginTop: 8,
-  },
-  startButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colours.surface,
-  },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.8,
   },
 });

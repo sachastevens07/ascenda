@@ -1,19 +1,20 @@
 import { Stack } from 'expo-router';
 
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 
 export default function StretchesLayout() {
+  const { colours } = useTheme();
   return (
     <Stack
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         title: '',
-        headerTintColor: colours.accent,
+        headerTintColor: colours.brand,
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: colours.background },
+        headerStyle: { backgroundColor: colours.bg },
       }}>
-      <Stack.Screen name="[id]" options={{ headerBackTitle: 'Stretches' }} />
-      <Stack.Screen name="play" options={{ headerBackTitle: 'Stretches', gestureEnabled: false }} />
+      <Stack.Screen name="[id]" />
+      <Stack.Screen name="play" options={{ gestureEnabled: false }} />
     </Stack>
   );
 }

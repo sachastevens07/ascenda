@@ -187,6 +187,32 @@ export function StatTile({
   );
 }
 
+/** Compact 4-up stats row for routine and stretch detail. */
+export function StatStrip({
+  items,
+  style,
+}: {
+  items: { icon: ComponentProps<typeof Ionicons>['name']; value: string; label: string }[];
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { colours, type, spacing } = useTheme();
+  return (
+    <View style={[styles.strip, style]}>
+      {items.slice(0, 4).map((item) => (
+        <View key={item.label} style={styles.stripItem}>
+          <Ionicons name={item.icon} size={16} color={colours.brand} />
+          <Text style={[type.title3, { color: colours.ink, marginTop: spacing.xs }]} numberOfLines={1}>
+            {item.value}
+          </Text>
+          <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]} numberOfLines={1}>
+            {item.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** 2×2 progress tile: coral number, icon, caption, optional chevron. */
 export function HighlightTile({
   value,
@@ -485,6 +511,16 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  strip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  stripItem: {
+    flex: 1,
+    alignItems: 'center',
+    minWidth: 0,
   },
   empty: {
     alignItems: 'center',
