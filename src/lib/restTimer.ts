@@ -1,7 +1,96 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 
-export const DEFAULT_REST_SECONDS = 90;
+import { supabase } from '@/lib/supabase';
+
+export const REST_TIMER_DEFAULTS = [60, 90, 120] as const;
+export type RestTimerDefault = (typeof REST_TIMER_DEFAULTS)[number];
+
+export const DEFAULT_REST_SECONDS: RestTimerDefault = 90;
 export const REST_ADJUST_SECONDS = 15;
+
+const REST_DEFAULT_KEY = 'rest_timer_default_seconds';
+
+let currentRestDefault: RestTimerDefault = DEFAULT_REST_SECONDS;
+const restListeners = new Set<(value: RestTimerDefault) => void>();
+
+function isRestTimerDefault(value: number): value is RestTimerDefault {
+  return (REST_TIMER_DEFAULTS as readonly number[]).includes(value);
+}
+
+function setCurrentRestDefault(value: RestTimerDefault) {
+  currentRestDefault = value;
+  restListeners.forEach((fn) => fn(value));
+}
+
+export function getDefaultRestSeconds(): number {
+  return currentRestDefault;
+}
+
+export function formatRestTimerDefault(seconds: number): string {
+  if (seconds === 60) return '1 minute';
+  if (seconds === 90) return '1 minute 30 seconds';
+  if (seconds === 120) return '2 minutes';
+  return `${seconds} seconds`;
+}
+
+export function useDefaultRestSeconds(): RestTimerDefault {
+  const [value, setValue] = useState(currentRestDefault);
+  useEffect(() => {
+    restListeners.add(setValue);
+    return () => {
+      restListeners.delete(setValue);
+    };
+  }, []);
+  return value;
+}
+
+function isMissingRestColumn(error: { message?: string; code?: string } | null | undefined): boolean {
+  return /rest_timer_seconds/i.test(`${error?.code ?? ''} ${error?.message ?? ''}`);
+}
+
+export async function hydrateDefaultRestSeconds(): Promise<RestTimerDefault> {
+  const value = await fetchDefaultRestSeconds();
+  setCurrentRestDefault(value);
+  return value;
+}
+
+export async function fetchDefaultRestSeconds(): Promise<RestTimerDefault> {
+  try {
+    const stored = await AsyncStorage.getItem(REST_DEFAULT_KEY);
+    const parsed = stored ? Number.parseInt(stored, 10) : Number.NaN;
+    const local = isRestTimerDefault(parsed) ? parsed : DEFAULT_REST_SECONDS;
+    const { data, error } = await supabase.from('profiles').select('rest_timer_seconds').maybeSingle();
+    if (error) {
+      setCurrentRestDefault(local);
+      return local;
+    }
+    const remote = (data as { rest_timer_seconds?: number | null } | null)?.rest_timer_seconds;
+    if (typeof remote === 'number' && isRestTimerDefault(remote)) {
+      setCurrentRestDefault(remote);
+      return remote;
+    }
+    setCurrentRestDefault(local);
+    return local;
+  } catch {
+    return currentRestDefault;
+  }
+}
+
+export async function saveDefaultRestSeconds(seconds: RestTimerDefault): Promise<void> {
+  setCurrentRestDefault(seconds);
+  await AsyncStorage.setItem(REST_DEFAULT_KEY, String(seconds));
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ rest_timer_seconds: seconds })
+    .eq('user_id', user.id);
+  if (error && !isMissingRestColumn(error)) throw new Error(error.message);
+}
 
 const CHANNEL_ID = 'rest-timer';
 

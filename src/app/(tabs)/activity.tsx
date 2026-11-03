@@ -106,6 +106,7 @@ import {
   type RoutineSummary,
 } from '@/lib/routines';
 import { useSubscription } from '@/lib/subscription';
+import { useWeightUnit } from '@/lib/units';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type ActivityTab = 'progress' | 'achievements';
@@ -180,6 +181,7 @@ function familyIcon(family: AchievementFamily): IconName {
 export default function ActivityScreen() {
   const tabBarHeight = useTabBarHeight();
   const { colours, radius, shadow, type } = useTheme();
+  useWeightUnit();
   const { isPro } = useSubscription();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);

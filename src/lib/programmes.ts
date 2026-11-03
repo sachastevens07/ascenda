@@ -2,6 +2,7 @@ import type { Equipment, Muscle, Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import { heaviestWeight, type LoggedSet } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
+import { formatWeight } from '@/lib/units';
 
 /** The exercise in a programme slot. */
 export type SlotExercise = {
@@ -190,9 +191,9 @@ export function usesWeight(equipment: Equipment): boolean {
   return equipment !== 'bodyweight' && equipment !== 'band';
 }
 
-/** "20 kg", "12.5 kg". */
+/** "20 kg", "44.1 lbs". Storage stays in kilograms. */
 export function formatKg(kg: number): string {
-  return `${Number(kg.toFixed(2))} kg`;
+  return formatWeight(kg);
 }
 
 /** What to aim for next time on an exercise (double progression). */

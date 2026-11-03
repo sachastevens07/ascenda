@@ -11,6 +11,7 @@ export function SetRow({
   weighted = true,
   weightLabel,
   kgPlaceholder,
+  weightUnit = 'kg',
   repsPlaceholder,
   suggestedLabel,
   recordLabel,
@@ -30,6 +31,7 @@ export function SetRow({
   weighted?: boolean;
   weightLabel?: string;
   kgPlaceholder?: string;
+  weightUnit?: 'kg' | 'lbs';
   repsPlaceholder?: string;
   suggestedLabel?: string;
   recordLabel?: string;
@@ -77,9 +79,9 @@ export function SetRow({
             editable={!!onChangeKg}
             keyboardType="decimal-pad"
             selectTextOnFocus
-            placeholder={kgPlaceholder ?? 'kg'}
+            placeholder={kgPlaceholder ?? weightUnit}
             placeholderTextColor={colours.inkSubtle}
-            accessibilityLabel={`Set ${setNumber} weight in kilograms`}
+            accessibilityLabel={`Set ${setNumber} weight in ${weightUnit === 'lbs' ? 'pounds' : 'kilograms'}`}
             style={[
               styles.field,
               type.body,

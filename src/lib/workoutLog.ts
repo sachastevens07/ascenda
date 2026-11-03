@@ -11,7 +11,9 @@ import {
   type SlotExercise,
 } from '@/lib/programmes';
 import { estimateOneRepMax, type ExerciseBests } from '@/lib/progress';
+import { getDefaultRestSeconds } from '@/lib/restTimer';
 import { fetchRoutineDay, routineDayToProgrammeDay } from '@/lib/routines';
+import { formatWeightInput as formatDisplayWeight, parseDisplayWeight } from '@/lib/units';
 import {
   fetchPreviousSets,
   fetchSession,
@@ -73,7 +75,7 @@ export function sessionPlanFromDay(day: ProgrammeDay, easeBack?: SessionEaseBack
       sets: item.sets,
       rep_min: item.rep_min,
       rep_max: item.rep_max,
-      rest_seconds: item.rest_seconds ?? FALLBACK_REST_SECONDS,
+      rest_seconds: item.rest_seconds ?? getDefaultRestSeconds(),
       exercise: item.exercise,
     })),
     easeBack,
@@ -146,8 +148,7 @@ export function setNumbers(item: ProgrammeExercise): number[] {
 }
 
 export function parseWeight(text: string): number | null {
-  const value = Number.parseFloat(text.replace(',', '.'));
-  return Number.isFinite(value) && value >= 0 ? value : null;
+  return parseDisplayWeight(text);
 }
 
 export function parseReps(text: string): number | null {
@@ -156,7 +157,7 @@ export function parseReps(text: string): number | null {
 }
 
 export function formatWeightInput(kg: number | null): string {
-  return kg === null ? '' : String(Number(kg.toFixed(2)));
+  return formatDisplayWeight(kg);
 }
 
 /**

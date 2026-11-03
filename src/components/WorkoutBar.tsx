@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '@/constants/theme';
 import { formatKg } from '@/lib/programmes';
+import { useWeightUnit } from '@/lib/units';
 import { useNow, useWorkout } from '@/lib/workout';
 import { formatClock, type NextSet } from '@/lib/workoutLog';
 
@@ -21,6 +22,7 @@ function describeSet(next: NextSet): string {
 /** Shown above the tabs while a workout is in progress. Tap to go back to it. */
 export function WorkoutBar() {
   const { colours } = useTheme();
+  useWeightUnit();
   const { active, nextSet, restEndsAt } = useWorkout();
   const now = useNow(active !== null, 500);
   if (!active) return null;

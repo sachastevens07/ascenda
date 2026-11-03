@@ -67,10 +67,11 @@ import {
 } from '@/lib/programmes';
 import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
-  DEFAULT_REST_SECONDS,
   REST_ADJUST_SECONDS,
   ensureRestTimerPermission,
+  getDefaultRestSeconds,
 } from '@/lib/restTimer';
+import { useWeightUnit } from '@/lib/units';
 import {
   daysInWeek,
   fetchActiveEnrolment,
@@ -130,7 +131,7 @@ function showRecords(kinds: RecordKind[]) {
 }
 
 function slotRestSeconds(item: ProgrammeExercise): number {
-  return item.rest_seconds && item.rest_seconds > 0 ? item.rest_seconds : DEFAULT_REST_SECONDS;
+  return item.rest_seconds && item.rest_seconds > 0 ? item.rest_seconds : getDefaultRestSeconds();
 }
 
 function formatTargetLine(item: ProgrammeExercise): string {
@@ -147,7 +148,7 @@ function lastSetPlaceholders(
   if (!sets || sets.length === 0) return {};
   const last = sets.find((set) => set.set_number === setNumber) ?? sets[sets.length - 1];
   return {
-    kg: weighted && last.weight_kg !== null ? String(Number(last.weight_kg.toFixed(2))) : undefined,
+    kg: weighted && last.weight_kg !== null ? formatWeightInput(last.weight_kg) : undefined,
     reps: last.reps !== null ? String(last.reps) : undefined,
   };
 }
@@ -219,6 +220,7 @@ export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { colours, type, spacing, radius, shadow } = useTheme();
+  const weightUnit = useWeightUnit();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
@@ -1018,6 +1020,7 @@ export default function SessionScreen() {
                     weighted={weighted}
                     weightLabel={item.exercise.equipment === 'band' ? 'Band' : 'Bodyweight'}
                     kgPlaceholder={placeholders.kg}
+                    weightUnit={weightUnit}
                     repsPlaceholder={placeholders.reps}
                     suggestedLabel={chip}
                     recordLabel={

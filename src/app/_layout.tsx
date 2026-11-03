@@ -18,7 +18,9 @@ import { needsDisclaimerAcceptance } from '@/lib/disclaimer';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
 import { registerReminderAnalytics } from '@/lib/reminders';
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription';
+import { hydrateDefaultRestSeconds } from '@/lib/restTimer';
 import { supabase } from '@/lib/supabase';
+import { hydrateWeightUnit } from '@/lib/units';
 import { WorkoutProvider } from '@/lib/workout';
 
 export default function RootLayout() {
@@ -30,6 +32,7 @@ export default function RootLayout() {
             <AnalyticsBootstrap />
             <ProfileProvider>
               <ThemeCloudSync />
+              <PrefsHydrate />
               <ThemedStatusBar />
               <WorkoutProvider>
                 <DialogProvider>
@@ -85,6 +88,17 @@ function ThemeCloudSync() {
     const remote = profile?.theme_preference;
     if (remote) setPreference(remote);
   }, [hasLocalPreference, isLoading, profile?.theme_preference, setPreference]);
+
+  return null;
+}
+
+function PrefsHydrate() {
+  const { session } = useAuth();
+
+  useEffect(() => {
+    void hydrateWeightUnit();
+    void hydrateDefaultRestSeconds();
+  }, [session?.user.id]);
 
   return null;
 }
@@ -182,6 +196,28 @@ function RootNavigator() {
           options={{
             headerShown: true,
             title: 'Safety and disclaimer',
+            headerBackTitle: 'Back',
+            headerTintColor: colours.brand,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+          }}
+        />
+        <Stack.Screen
+          name="terms"
+          options={{
+            headerShown: true,
+            title: 'Terms of use',
+            headerBackTitle: 'Back',
+            headerTintColor: colours.brand,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+          }}
+        />
+        <Stack.Screen
+          name="privacy"
+          options={{
+            headerShown: true,
+            title: 'Privacy policy',
             headerBackTitle: 'Back',
             headerTintColor: colours.brand,
             headerShadowVisible: false,

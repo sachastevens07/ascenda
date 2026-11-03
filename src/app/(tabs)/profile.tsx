@@ -38,8 +38,25 @@ import {
 import { fetchHideAchievements, saveHideAchievements } from '@/lib/achievements';
 import { confirmEnablePhotos, fetchPhotosEnabled, savePhotosEnabled } from '@/lib/progressPhotos';
 import { isAnalyticsEnabled, track } from '@/lib/analytics';
+import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
+import { CONTACT_EMAIL, openContactEmail } from '@/lib/legal';
 import { fetchHideQuote, saveHideQuote } from '@/lib/quotes';
+import {
+  REST_TIMER_DEFAULTS,
+  fetchDefaultRestSeconds,
+  formatRestTimerDefault,
+  saveDefaultRestSeconds,
+  type RestTimerDefault,
+} from '@/lib/restTimer';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
+import {
+  WEIGHT_UNITS,
+  fetchWeightUnit,
+  formatUnitName,
+  saveWeightUnit,
+  useWeightUnit,
+  type WeightUnit,
+} from '@/lib/units';
 import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
 import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
 import { useAuth } from '@/lib/auth';
@@ -89,24 +106,32 @@ function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): 
 }
 
 function initials(name: string, email: string | undefined): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-  if (parts[0]?.length >= 2) return parts[0].slice(0, 2).toUpperCase();
-  if (parts[0]) return parts[0][0].toUpperCase();
+  if (name && name !== 'You') {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    if (parts[0]?.length >= 2) return parts[0].slice(0, 2).toUpperCase();
+    if (parts[0]) return parts[0][0].toUpperCase();
+  }
   const local = email?.split('@')[0] ?? '';
   return local.slice(0, 2).toUpperCase() || '?';
+}
+
+function savedWorkoutsLabel(count: number): string {
+  return `${count} saved`;
 }
 
 export default function ProfileScreen() {
   const { colours, radius, type, preference, setPreference } = useTheme();
   const { session } = useAuth();
-  const { profile, reload } = useProfile();
+  const { profile, reload, deleteAccount } = useProfile();
   const subscription = useSubscription();
   const { showDevTools, setShowDevTools } = useDevTools();
   const answers = getQuizAnswers(profile);
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
+  const weightUnit = useWeightUnit();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [showAnswers, setShowAnswers] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
@@ -119,10 +144,12 @@ export default function ProfileScreen() {
   const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
   const [timeMenu, setTimeMenu] = useState(false);
   const [timeAnchor, setTimeAnchor] = useState<AnchorRect | null>(null);
+  const [savedWorkoutCount, setSavedWorkoutCount] = useState(0);
+  const [restDefault, setRestDefault] = useState<RestTimerDefault>(90);
   const timeRowRef = useRef<AnchorHandle>(null);
   const tabBarHeight = useTabBarHeight();
   const email = session?.user.email ?? '';
-  const displayName = answers?.display_name?.trim() || email.split('@')[0] || 'You';
+  const displayName = answers?.display_name?.trim() || 'You';
 
   useFocusEffect(
     useCallback(() => {
@@ -174,6 +201,21 @@ export default function ProfileScreen() {
           if (isCurrent) setLastSessionTime(time);
         })
         .catch(() => {});
+      fetchWeightUnit()
+        .then(() => {})
+        .catch(() => {});
+      fetchDefaultRestSeconds()
+        .then((seconds) => {
+          if (isCurrent) setRestDefault(seconds);
+        })
+        .catch(() => {});
+      countOwnedCustomWorkouts()
+        .then((count) => {
+          if (isCurrent) setSavedWorkoutCount(count);
+        })
+        .catch(() => {
+          if (isCurrent) setSavedWorkoutCount(0);
+        });
       return () => {
         isCurrent = false;
       };
@@ -348,6 +390,88 @@ export default function ProfileScreen() {
     );
   }
 
+  function requestEditUnits() {
+    showDialog(
+      'Units',
+      'Weights are stored in kilograms. This only changes how they look on screen.',
+      [
+        ...WEIGHT_UNITS.map((unit) => ({
+          text: formatUnitName(unit),
+          onPress: () => void handleSaveUnits(unit),
+        })),
+        { text: 'Not now', style: 'cancel' as const },
+      ]
+    );
+  }
+
+  async function handleSaveUnits(unit: WeightUnit) {
+    try {
+      await saveWeightUnit(unit);
+    } catch (error) {
+      showDialog(
+        'Couldn’t save that',
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    }
+  }
+
+  function requestEditRestTimer() {
+    showDialog(
+      'Rest timer default',
+      'Used when a set does not have its own rest time, such as a custom workout.',
+      [
+        ...REST_TIMER_DEFAULTS.map((seconds) => ({
+          text: formatRestTimerDefault(seconds),
+          onPress: () => void handleSaveRestDefault(seconds),
+        })),
+        { text: 'Not now', style: 'cancel' as const },
+      ]
+    );
+  }
+
+  async function handleSaveRestDefault(seconds: RestTimerDefault) {
+    setRestDefault(seconds);
+    try {
+      await saveDefaultRestSeconds(seconds);
+    } catch (error) {
+      showDialog(
+        'Couldn’t save that',
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    }
+  }
+
+  function requestDeleteAccount() {
+    showDialog(
+      'Delete your account?',
+      'This removes your account and the data stored with it, including sessions, photos and saved workouts. You can create a new account later if you want.',
+      [
+        { text: 'Delete account', style: 'destructive', onPress: () => void handleDeleteAccount() },
+        { text: 'Keep account', style: 'cancel' },
+      ]
+    );
+  }
+
+  async function handleDeleteAccount() {
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+    } catch (error) {
+      setIsDeleting(false);
+      showDialog(
+        'Couldn’t delete your account',
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    }
+  }
+
+  async function handleContact() {
+    const opened = await openContactEmail().catch(() => false);
+    if (!opened) {
+      showDialog('Couldn’t open email', `Write to ${CONTACT_EMAIL} from your mail app.`);
+    }
+  }
+
   const answerRows = answers
     ? [
         { name: 'Name', value: answers.display_name || 'Not added' },
@@ -420,13 +544,24 @@ export default function ProfileScreen() {
         />
         <SettingsRow
           title="My workouts"
-          subtitle="Start empty from Home, or reopen a saved session."
+          subtitle={savedWorkoutsLabel(savedWorkoutCount)}
           onPress={() => router.push('/workouts' as Href)}
           last
         />
       </SettingsGroup>
 
       <SettingsGroup title="Training">
+        <SettingsRow
+          title="Streak goal"
+          subtitle={`${answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
+          onPress={requestEditStreakGoal}
+        />
+        <SettingsRow title="Units" subtitle={formatUnitName(weightUnit)} onPress={requestEditUnits} />
+        <SettingsRow
+          title="Rest timer default"
+          subtitle={formatRestTimerDefault(restDefault)}
+          onPress={requestEditRestTimer}
+        />
         <SettingsRow
           title="Show streak"
           subtitle={hideStreak ? 'Hidden on Home and Activity' : 'Shown on Home and Activity'}
@@ -456,11 +591,6 @@ export default function ProfileScreen() {
               );
             });
           }}
-        />
-        <SettingsRow
-          title="Streak goal"
-          subtitle={`${answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
-          onPress={requestEditStreakGoal}
           last
         />
       </SettingsGroup>
@@ -568,6 +698,13 @@ export default function ProfileScreen() {
           onPress={() => {
             if (!isExporting) void handleExport();
           }}
+        />
+        <SettingsRow
+          title={isDeleting ? 'Deleting account…' : 'Delete account'}
+          subtitle="Removes your account and the data stored with it."
+          onPress={() => {
+            if (!isDeleting) requestDeleteAccount();
+          }}
           last
         />
       </SettingsGroup>
@@ -599,14 +736,17 @@ export default function ProfileScreen() {
         <SettingsRow
           title="Safety and disclaimer"
           onPress={() => router.push('/safety' as Href)}
-          last
         />
+        <SettingsRow title="Terms" onPress={() => router.push('/terms' as Href)} />
+        <SettingsRow title="Privacy policy" onPress={() => router.push('/privacy' as Href)} />
+        <SettingsRow title="Contact us" subtitle={CONTACT_EMAIL} onPress={() => void handleContact()} />
+        <SettingsRow title="App version" subtitle={appVersion} showChevron={false} last />
       </SettingsGroup>
 
       <DestructiveTextButton
         label={isSigningOut ? 'Signing out…' : 'Sign out'}
         onPress={() => void handleSignOut()}
-        disabled={isSigningOut}
+        disabled={isSigningOut || isDeleting}
         style={styles.signOut}
       />
 
