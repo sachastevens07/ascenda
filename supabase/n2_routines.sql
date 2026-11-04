@@ -397,8 +397,9 @@ set
 from public.routine_days d
 join public.routine_weeks w on w.id = d.routine_week_id
 join public.routines r on r.id = w.routine_id
-join public.exercises x on x.id = e.exercise_id
+cross join public.exercises x
 where e.routine_day_id = d.id
+  and x.id = e.exercise_id
   and r.id in (
     'gym-confidence-6', 'full-body-3', 'one-spot-6', 'busy-gym-6', 'upper-lower-4',
     'lower-body-3', 'full-body-2', 'home-strength-6', 'upper-body-6', 'glute-builder-6',
