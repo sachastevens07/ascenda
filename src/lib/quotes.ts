@@ -3,14 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 
 export type DailyQuote = {
+  id: string;
   text: string;
   attribution: string;
 };
 
 const HIDE_KEY = 'hide_quote';
 
-/** Original quotes in the Ascenda voice. N7 can move these into a `quotes` table later. */
-export const DAILY_QUOTES: DailyQuote[] = [
+const QUOTE_COPY: { text: string; attribution: string }[] = [
   { text: 'Showing up is the work. The rest follows.', attribution: 'Ascenda' },
   { text: 'Strong is a habit, not a mood.', attribution: 'Ascenda' },
   { text: 'One session is enough for today.', attribution: 'Ascenda' },
@@ -56,7 +56,7 @@ export const DAILY_QUOTES: DailyQuote[] = [
   { text: 'Coming back is a skill. You are practising it.', attribution: 'Ascenda' },
   { text: 'Lift with curiosity. See what you can do today.', attribution: 'Ascenda' },
   { text: 'The goal is not to impress the room. It is to finish.', attribution: 'Ascenda' },
-  { text: 'Soft days still count toward the week.', attribution: 'Ascenda' },
+  { text: 'Soft days still count towards the week.', attribution: 'Ascenda' },
   { text: 'You can be careful and still be strong.', attribution: 'Ascenda' },
   { text: 'Put the phone down. Pick the dumbbells up.', attribution: 'Ascenda' },
   { text: 'One more week of showing up changes the story.', attribution: 'Ascenda' },
@@ -103,15 +103,43 @@ export const DAILY_QUOTES: DailyQuote[] = [
   { text: 'Come as you are. Leave a little stronger.', attribution: 'Ascenda' },
 ];
 
+/** Original quotes in the Ascenda voice. Database rows win when `quotes` has been seeded. */
+export const DAILY_QUOTES: DailyQuote[] = QUOTE_COPY.map((item, index) => ({
+  id: `q-${String(index + 1).padStart(3, '0')}`,
+  text: item.text,
+  attribution: item.attribution,
+}));
+
 function isMissingHideColumn(error: { message?: string; code?: string } | null | undefined): boolean {
   return /hide_quote/i.test(`${error?.code ?? ''} ${error?.message ?? ''}`);
 }
 
+/** Active quotes from the database, or the bundled list if SQL has not been run. */
+export async function fetchDailyQuotes(): Promise<DailyQuote[]> {
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('id, text, attribution, is_active')
+    .eq('is_active', true)
+    .order('id', { ascending: true });
+  if (error || !data || data.length === 0) {
+    return DAILY_QUOTES;
+  }
+  const rows = (data as { id: string; text: string; attribution: string | null }[])
+    .map((row) => ({
+      id: row.id,
+      text: row.text.trim(),
+      attribution: (row.attribution ?? 'Ascenda').trim() || 'Ascenda',
+    }))
+    .filter((row) => row.id && row.text);
+  return rows.length > 0 ? rows : DAILY_QUOTES;
+}
+
 /** Same quote for everyone on the same UTC calendar day. */
-export function pickDailyQuote(now = new Date()): DailyQuote {
+export function pickDailyQuote(quotes: DailyQuote[] = DAILY_QUOTES, now = new Date()): DailyQuote {
+  const list = quotes.length > 0 ? quotes : DAILY_QUOTES;
   const day = Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86_400_000);
-  const index = ((day % DAILY_QUOTES.length) + DAILY_QUOTES.length) % DAILY_QUOTES.length;
-  return DAILY_QUOTES[index];
+  const index = ((day % list.length) + list.length) % list.length;
+  return list[index];
 }
 
 export async function fetchHideQuote(): Promise<boolean> {

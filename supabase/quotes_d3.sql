@@ -1,7 +1,7 @@
 -- v2.2 D3: hide the daily quote.
 -- Paste into Supabase > SQL Editor and click Run.
 -- Safe to run again. Never deletes sessions, sets or other profile fields.
--- The quotes themselves are bundled in the app for now. N7 can add a quotes table later.
+-- hide_quote only. N7’s quotes_n7.sql also adds this column plus the quotes table.
 
 alter table public.profiles
   add column if not exists hide_quote boolean;

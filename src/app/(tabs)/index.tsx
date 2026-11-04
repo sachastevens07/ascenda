@@ -66,7 +66,7 @@ import {
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine, coverSources } from '@/lib/images';
 import { consumeOnboardingPaywall } from '@/lib/onboarding';
-import { fetchHideQuote, pickDailyQuote, saveHideQuote } from '@/lib/quotes';
+import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { openPaywall } from '@/lib/paywall';
 import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanProgress } from '@/lib/planner';
@@ -142,6 +142,7 @@ type HomeData = {
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
   learn: LearnArticle[];
+  quotes: DailyQuote[];
 };
 
 function greeting(name: string | null | undefined): string {
@@ -213,6 +214,7 @@ export default function HomeScreen() {
             restWeeks,
             completedEnrolment,
             handOffPreview,
+            quotes,
           ] = await Promise.all([
             fetchRoutines(),
             fetchActiveEnrolment(),
@@ -229,6 +231,7 @@ export default function HomeScreen() {
             fetchRestWeekStarts().catch(() => new Set<string>()),
             fetchLatestCompletedEnrolment().catch(() => null),
             fetchHandOffPreview().catch(() => false),
+            fetchDailyQuotes().catch(() => DAILY_QUOTES),
           ]);
           const missingSql = routines.length === 0;
           const featured = answers
@@ -304,6 +307,7 @@ export default function HomeScreen() {
             challenge: pickHomeChallenge(challenges),
             progress,
             learn,
+            quotes,
           });
           setQuoteHidden(hideQuote);
           setLoadState('ready');
@@ -567,9 +571,9 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, handOff, challenge, progress, learn } =
+  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, handOff, challenge, progress, learn, quotes } =
     data;
-  const quote = pickDailyQuote();
+  const quote = pickDailyQuote(quotes);
   const showQuote = !quoteHidden;
   const inProgress = Boolean(activeSession);
   const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;

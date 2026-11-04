@@ -61,20 +61,21 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **D9** (4 Nov 2026) Exercises list: photo when we have one, otherwise a distinct equipment icon and colour (barbell, dumbbell, machine, cable, kettlebell, band, bodyweight). Shared `ExerciseThumb` on Programmes → Exercises, the add-exercise picker, the logger, and the exercise-detail fallback. MuscleWiki stills wait for M1. No SQL.
 - **N2** (4 Nov 2026) Routine standard on the 14 strength plans: who it's for, by the end, how it works, phases with goals, lighter-week chips, day focus, warm-up, coach note, role, RIR and tempo. Logger Today card has a warm-up checklist. Overlay fills this if SQL is missing; non-empty database copy wins. SQL: `supabase/n2_routines.sql`. Stretches and custom workouts are unchanged.
 - **N6** (4 Nov 2026) Learn tab with 16 bundled articles (3 Getting started, then the other categories; 3 Pro in-depth guides). Featured hero, category tiles, recommended-for-you, continue reading, mark as read, sources, safety line. Related cards on routine and exercise pages. Home “From Learn”. Profile is a pushed screen from the 36 px avatar on every tab. SQL: `supabase/learn_n6.sql` (tables, metadata, links, reads). Bodies stay in the app until a database body is set.
+- **N7** (4 Nov 2026) Daily quote on Home from a `quotes` table. 90 original Ascenda-voice quotes, same one worldwide by UTC date, no repeat for 90 days. Bundled list still shows if SQL is missing. Hide from the card ⋯ or Profile → Appearance. SQL: `supabase/quotes_n7.sql` (table, RLS, seed, and `profiles.hide_quote` if D3 was not pasted).
 
 ---
 
 ### In progress
 
-**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, and **`learn_n6.sql`**. Units, rest timer, hide-quote, N2 coaching copy and Learn articles work on-device without SQL.
+**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, and **`quotes_n7.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles and the daily quote work on-device without SQL. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7.
 
 ---
 
 ### Next step
 
-**N7. Daily motivational quote** (AGENTS.md Group 5). The Home quote card is already in from D3; N7 is the `quotes` table. Do not start C1.
+**C1. Subscription compliance** (AGENTS.md Group 6). Paywall copy: price, billing period, trial length, when she is charged, how to cancel. Trial-ending reminder 2 days before conversion. No countdown timers or fake urgency. “Continue with the free plan” stays clearly visible. Do not start C2.
 
-After N7: C1, C2. S12 already built.
+After C1: C2. S12 already built.
 
 ---
 
@@ -114,6 +115,7 @@ After N7: C1, C2. S12 already built.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
 - Do not use native `Switch` under the pill tab bar; do not use `Modal` + `borderRadius: 999` for tall menus.
 - D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. No display-serif font (system sans, same as the rest of the kit). Challenge card stays on Home after the quote.
+- N7: 90 original quotes, attribution “Ascenda” only. Database rows win when `quotes` is seeded; otherwise the bundled list. Index is UTC day modulo list length so everyone sees the same quote. No song lyrics, no body or weight-loss copy. `quotes_n7.sql` is idempotent.
 - D4: no new SQL. N2 copy blocks (who it's for, by the end, how it works, phase names, roles, lighter-week chips) wait for N2 data. Related Learn cards wait for N6. Skip on the last hold ends that hold; Finish saves. Pause is primary during a hold; Next hold / Finish after the ring completes.
 - D5: empty days have no extra row; tap the + (or the header) to add. Rest days still show a thin “Rest day” line. Rest week banner sits in the agenda at the first visible day of that week; month view keeps it under the week strip. No SQL.
 - D7: one icon per family (not per badge). First-time and gym “first equipment” badges have no tier ring. Numbered families use bronze → platinum. Locked sheet copy is “This one is still ahead.” No SQL.
@@ -146,7 +148,7 @@ Scan the QR with Expo Go. Use `--tunnel` if needed. Checks: `npx.cmd tsc --noEmi
 **SQL already run (confirmed):** `exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql`. User also reported (24 Oct) `routines.sql` and `planned_sessions.sql` pasted.
 
 **SQL to paste (not confirmed; app usually still opens):**
-`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, **`learn_n6.sql`**. Do not run `cycle.sql`.
+`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql` (optional if you paste `quotes_n7.sql`), `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**. Do not run `cycle.sql`.
 
 Agents cannot run SQL. Sacha pastes into Supabase > SQL Editor. Files are idempotent; the editor’s “destructive operations” warning is expected.
 
