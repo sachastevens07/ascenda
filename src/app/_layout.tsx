@@ -1,11 +1,15 @@
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AcceptDisclaimerScreen } from '@/components/AcceptDisclaimerScreen';
 import { DialogProvider } from '@/components/Dialog';
 import { FirstSessionDisclaimerProvider } from '@/components/FirstSessionDisclaimer';
+import { AppText } from '@/components/ui/AppText';
+import { fontAssets } from '@/constants/fonts';
 import { ThemeProvider, useTheme } from '@/constants/theme';
 import {
   identifyUser,
@@ -23,29 +27,46 @@ import { supabase } from '@/lib/supabase';
 import { hydrateWeightUnit } from '@/lib/units';
 import { WorkoutProvider } from '@/lib/workout';
 
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+function FontGate({ children }: { children: ReactNode }) {
+  const [loaded, error] = useFonts(fontAssets);
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [loaded, error]);
+
+  if (!loaded && !error) return null;
+  return children;
+}
+
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <DevToolsProvider>
-        <AuthProvider>
-          <SubscriptionProvider>
-            <AnalyticsBootstrap />
-            <ProfileProvider>
-              <ThemeCloudSync />
-              <PrefsHydrate />
-              <ThemedStatusBar />
-              <WorkoutProvider>
-                <DialogProvider>
-                  <FirstSessionDisclaimerProvider>
-                    <RootNavigator />
-                  </FirstSessionDisclaimerProvider>
-                </DialogProvider>
-              </WorkoutProvider>
-            </ProfileProvider>
-          </SubscriptionProvider>
-        </AuthProvider>
-      </DevToolsProvider>
-    </ThemeProvider>
+    <FontGate>
+      <ThemeProvider>
+        <DevToolsProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <AnalyticsBootstrap />
+              <ProfileProvider>
+                <ThemeCloudSync />
+                <PrefsHydrate />
+                <ThemedStatusBar />
+                <WorkoutProvider>
+                  <DialogProvider>
+                    <FirstSessionDisclaimerProvider>
+                      <RootNavigator />
+                    </FirstSessionDisclaimerProvider>
+                  </DialogProvider>
+                </WorkoutProvider>
+              </ProfileProvider>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </DevToolsProvider>
+      </ThemeProvider>
+    </FontGate>
   );
 }
 
@@ -241,9 +262,17 @@ function ProfileError({ detail, onRetry }: { detail: string; onRetry: () => void
   const { colours, radius } = useTheme();
   return (
     <View style={[styles.error, { backgroundColor: colours.bg }]}>
-      <Text style={[styles.errorTitle, { color: colours.ink }]}>We couldn't load your profile</Text>
-      <Text style={[styles.errorText, { color: colours.inkMuted }]}>Check your connection and try again.</Text>
-      {showDevTools ? <Text style={[styles.errorDetail, { color: colours.inkMuted }]}>{detail}</Text> : null}
+      <AppText variant="title2" style={{ color: colours.ink }}>
+        We couldn't load your profile
+      </AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 8, marginBottom: 24 }}>
+        Check your connection and try again.
+      </AppText>
+      {showDevTools ? (
+        <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: -12, marginBottom: 24 }}>
+          {detail}
+        </AppText>
+      ) : null}
       <Pressable
         style={({ pressed }) => [
           styles.button,
@@ -252,13 +281,17 @@ function ProfileError({ detail, onRetry }: { detail: string; onRetry: () => void
         ]}
         onPress={onRetry}
         accessibilityRole="button">
-        <Text style={[styles.buttonText, { color: colours.onBrand }]}>Try again</Text>
+        <AppText variant="bodyStrong" style={{ color: colours.onBrand }}>
+          Try again
+        </AppText>
       </Pressable>
       <Pressable
         style={styles.link}
         onPress={() => supabase.auth.signOut()}
         accessibilityRole="button">
-        <Text style={[styles.linkText, { color: colours.brand }]}>Sign out</Text>
+        <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+          Sign out
+        </AppText>
       </Pressable>
     </View>
   );
@@ -273,20 +306,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  errorText: {
-    fontSize: 17,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  errorDetail: {
-    fontSize: 13,
-    marginTop: -12,
-    marginBottom: 24,
-  },
   button: {
     minHeight: 56,
     alignItems: 'center',
@@ -295,16 +314,8 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.8,
   },
-  buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
-  },
   link: {
     alignItems: 'center',
     paddingVertical: 20,
-  },
-  linkText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

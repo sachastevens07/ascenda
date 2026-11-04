@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DisclaimerBody } from '@/components/ui/Disclaimer';
+import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
 
 /** Full safety guidance. Keep the wording in `src/lib/disclaimer.ts`. */
@@ -23,7 +24,7 @@ export default function SafetyScreen() {
           headerTintColor: colours.brand,
           headerShadowVisible: false,
           headerStyle: { backgroundColor: colours.bg },
-          headerTitleStyle: { color: colours.ink },
+          headerTitleStyle: { color: colours.ink, fontFamily: fonts.bold },
         }}
       />
       <DisclaimerBody />
