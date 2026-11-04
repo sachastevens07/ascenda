@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FilterSheet } from '@/components/FilterSheet';
+import { ExerciseThumb } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import { fetchExercisesForBuilder } from '@/lib/customWorkouts';
 import {
@@ -20,7 +21,6 @@ import {
   type Equipment,
   type Muscle,
 } from '@/lib/exercises';
-import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import type { SlotExercise } from '@/lib/programmes';
 
 type ZoneFilter = '1' | '2' | '3' | '4';
@@ -136,39 +136,23 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
           />
         </View>
         <ScrollView keyboardShouldPersistTaps="handled">
-          {filtered.map((exercise) => {
-            const photo = getExerciseImageSource(exercise);
-            return (
-              <Pressable
-                key={exercise.id}
-                onPress={() => onChoose(exercise)}
-                style={({ pressed }) => [styles.pickRow, pressed && styles.pressed]}
-                accessibilityRole="button">
-                <View style={styles.thumb}>
-                  {photo ? (
-                    <Image
-                      source={photo}
-                      style={styles.thumbImage}
-                      resizeMode="cover"
-                      accessibilityLabel=""
-                    />
-                  ) : (
-                    <View style={styles.thumbEmpty}>
-                      <Ionicons name="barbell-outline" size={18} color={colours.accent} />
-                    </View>
-                  )}
-                </View>
-                <View style={styles.flex}>
-                  <Text style={styles.pickName}>{exercise.name}</Text>
-                  <Text style={styles.meta}>
-                    {ZONE_LABELS[exercise.zone]} · {MUSCLE_LABELS[exercise.primary_muscle]} ·{' '}
-                    {EQUIPMENT_LABELS[exercise.equipment]}
-                  </Text>
-                </View>
-                <Ionicons name="add-circle-outline" size={24} color={colours.accent} />
-              </Pressable>
-            );
-          })}
+          {filtered.map((exercise) => (
+            <Pressable
+              key={exercise.id}
+              onPress={() => onChoose(exercise)}
+              style={({ pressed }) => [styles.pickRow, pressed && styles.pressed]}
+              accessibilityRole="button">
+              <ExerciseThumb exercise={exercise} size={48} />
+              <View style={styles.flex}>
+                <Text style={styles.pickName}>{exercise.name}</Text>
+                <Text style={styles.meta}>
+                  {ZONE_LABELS[exercise.zone]} · {MUSCLE_LABELS[exercise.primary_muscle]} ·{' '}
+                  {EQUIPMENT_LABELS[exercise.equipment]}
+                </Text>
+              </View>
+              <Ionicons name="add-circle-outline" size={24} color={colours.accent} />
+            </Pressable>
+          ))}
           {filtered.length === 0 && (
             <Text style={styles.emptyPick}>No exercises match. Try clearing a filter.</Text>
           )}
@@ -224,22 +208,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colours.border,
     gap: 10,
-  },
-  thumb: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: colours.accentSoft,
-  },
-  thumbImage: {
-    width: 48,
-    height: 48,
-  },
-  thumbEmpty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   flex: {
     flex: 1,

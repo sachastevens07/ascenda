@@ -1,9 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
-import { useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -19,6 +18,7 @@ import { ExercisePicker } from '@/components/ExercisePicker';
 import { SwapSheet } from '@/components/SwapSheet';
 import {
   EmptyState,
+  ExerciseThumb,
   IconButton,
   MenuHeader,
   MenuRow,
@@ -51,8 +51,6 @@ import {
   isProRoutineDuplicateError,
   replaceCustomWorkoutExercise,
 } from '@/lib/customWorkouts';
-import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
 import { openPaywall } from '@/lib/paywall';
 import { markPlannerDateDone } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
@@ -121,7 +119,6 @@ import { consumeWelcomeBackSession, recordWelcomeBackCompleted } from '@/lib/wel
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 type MenuMode = 'actions' | 'days';
-type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 function showRecords(kinds: RecordKind[]) {
   showDialog(
@@ -151,49 +148,6 @@ function lastSetPlaceholders(
     kg: weighted && last.weight_kg !== null ? formatWeightInput(last.weight_kg) : undefined,
     reps: last.reps !== null ? String(last.reps) : undefined,
   };
-}
-
-function equipmentIcon(equipment: Equipment): IoniconName {
-  switch (equipment) {
-    case 'barbell':
-      return 'barbell-outline';
-    case 'dumbbell':
-      return 'barbell-outline';
-    case 'machine':
-      return 'cog-outline';
-    case 'cable':
-      return 'git-network-outline';
-    case 'kettlebell':
-      return 'fitness-outline';
-    case 'band':
-      return 'resize-outline';
-    case 'bodyweight':
-      return 'body-outline';
-  }
-}
-
-function ExerciseThumb({ item }: { item: ProgrammeExercise }) {
-  const { colours, radius } = useTheme();
-  const photo = getExerciseImageSource(item.exercise);
-  return (
-    <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
-      {photo ? (
-        <Image source={photo} style={styles.photoFill} resizeMode="cover" />
-      ) : (
-        <Ionicons
-          name={equipmentIcon(item.exercise.equipment)}
-          size={22}
-          color={colours.brand}
-          accessibilityLabel={EQUIPMENT_LABELS[item.exercise.equipment]}
-        />
-      )}
-      {photo ? (
-        <View style={[styles.play, { backgroundColor: colours.overlay, borderRadius: radius.full }]}>
-          <Ionicons name="play" size={12} color={colours.onAccent} />
-        </View>
-      ) : null}
-    </View>
-  );
 }
 
 function SlotMenuButton({
@@ -945,7 +899,7 @@ export default function SessionScreen() {
                   style={({ pressed }) => [styles.exerciseHeader, pressed && styles.pressed]}
                   accessibilityRole="button"
                   accessibilityHint="Shows how to do this exercise">
-                  <ExerciseThumb item={item} />
+                  <ExerciseThumb exercise={item.exercise} showPlay />
                   <View style={styles.flex}>
                     <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
                       {item.exercise.name}
@@ -1222,26 +1176,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-  },
-  thumb: {
-    width: 56,
-    height: 56,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoFill: {
-    width: '100%',
-    height: '100%',
-  },
-  play: {
-    position: 'absolute',
-    right: 4,
-    bottom: 4,
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   flex: {
     flex: 1,

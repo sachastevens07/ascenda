@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { equipmentIconName } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import { useDevTools } from '@/lib/devFlags';
 import {
@@ -122,7 +124,12 @@ export default function ExerciseScreen() {
         </View>
       ) : (
         <View style={[styles.media, styles.mediaPlaceholder, { width: mediaWidth, height: mediaHeight }]}>
-          <Ionicons name="barbell-outline" size={48} color={colours.accent} />
+          <MaterialCommunityIcons
+            name={equipmentIconName(exercise.equipment)}
+            size={48}
+            color={colours.accent}
+            accessibilityLabel={EQUIPMENT_LABELS[exercise.equipment]}
+          />
           <Text style={styles.mediaPlaceholderText}>Demo image coming soon</Text>
           {showDevTools && (
             <Text style={styles.mediaDevHint}>

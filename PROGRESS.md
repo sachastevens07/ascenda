@@ -58,6 +58,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **D7** (3 Nov 2026) Awards: group cards, 72 px family icons, locked greyed, earned plum with bronze/silver/gold/platinum rings, progress only on the next badge in each group, tap opens a sheet. Duplicate Awards preview removed from Progress. Developer copy was already gone.
 - **D6** (3 Nov 2026) Activity Progress: Highlights kept. Streak card shows current run, weeks trained, gold weeks, 8 week dots and rest weeks banked. Your routine shows this week’s sessions plus “See full plan”. Sessions-per-week chart waits until 2+ weeks with sessions; weight chart waits until 2 logged points.
 - **D8** (3 Nov 2026) Profile: onboarding name (or “You”, never the email prefix), email, plan badge. Sections match DESIGN 6.10. My workouts shows “N saved”. Units kg/lbs, rest timer default 60/90/120 s, delete account. About: Safety, Terms, Privacy policy, Contact us, App version. Sign out then version (dev long-press). SQL: `supabase/profile_d8.sql`.
+- **D9** (4 Nov 2026) Exercises list: photo when we have one, otherwise a distinct equipment icon and colour (barbell, dumbbell, machine, cable, kettlebell, band, bodyweight). Shared `ExerciseThumb` on Programmes → Exercises, the add-exercise picker, the logger, and the exercise-detail fallback. MuscleWiki stills wait for M1. No SQL.
 
 ---
 
@@ -69,9 +70,9 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 ### Next step
 
-**D9. Exercises list** (DESIGN.md 6.9). Do not start N2.
+**N2. More sophisticated routines** (AGENTS.md Group 5). Do not start N6.
 
-After D9: N2, N6, N7, then C1, C2. S12 already built.
+After N2: N6, N7, then C1, C2. S12 already built.
 
 ---
 
@@ -83,7 +84,7 @@ After D9: N2, N6, N7, then C1, C2. S12 already built.
 - `one-spot-6` and `one-spot-2` are two different plans; both still show.
 - Old programme tables still exist; Profile UI hidden; `/programme` redirects to Programmes.
 - Dark theme does not restyle sign-in, paywall, workouts, paths, challenges or exercise detail. Stretch detail and player now follow the theme.
-- M1 video player not built. Logger uses photos or equipment icons, not MuscleWiki video.
+- M1 video player not built. Logger and the exercises list use photos or equipment icons, not MuscleWiki stills.
 - Swap dropdown spacing still reported uneven (not retested).
 - Confirm email off in the Supabase dashboard. Paywall real-store purchases need a development build (Expo Go uses the Test Store key).
 - No ESLint config (`npx expo lint` cannot run).
@@ -116,6 +117,7 @@ After D9: N2, N6, N7, then C1, C2. S12 already built.
 - D7: one icon per family (not per badge). First-time and gym “first equipment” badges have no tier ring. Numbered families use bronze → platinum. Locked sheet copy is “This one is still ahead.” No SQL.
 - D6: “2+ weeks of data” means two weeks that actually have a session, not two empty calendar weeks. Weight chart needs two logged points on the selected lift. Full roadmap stays on the routine page. Gentle streak copy only when the current run is 0. No SQL.
 - D8: missing onboarding name shows “You”, not the email prefix. Avatar initials still use the email if there is no name. Units convert at display only; sets stay in kg. Rest timer default fills in when a set has no prescribed rest (custom workouts); routine rest times stay as written. Terms/privacy are draft in-app copy, not live web pages. Contact mailto is `hello@ascenda.app` until a real address exists. App version is in About and again under Sign out for the hidden tester gesture.
+- D9 is DESIGN.md 6.7 (Programmes exercises list), not 6.9 (Activity). Icons use MaterialCommunityIcons from the existing `@expo/vector-icons` package so dumbbell, kettlebell and barbell actually look different. Cable uses the stretch sage teal; band uses the custom ochre. Only ~14 exercises have photos; the rest show the equipment icon. MuscleWiki thumbnails stay with M1.
 
 ---
 

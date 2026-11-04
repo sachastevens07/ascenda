@@ -30,6 +30,7 @@ export {
   Tag,
 } from './Cards';
 export { DetailLayout } from './DetailLayout';
+export { ExerciseThumb, equipmentIconColour, equipmentIconName } from './ExerciseThumb';
 export { ChipScroller, ListRow, SectionHeader, StickyDayHeader } from './List';
 export { ProgressBar, ProgressRing } from './Progress';
 export { RestTimerBar, SetRow } from './Workout';

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -13,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Chip, ChipScroller, PrimaryButton } from '@/components/ui';
+import { Chip, ChipScroller, ExerciseThumb, PrimaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { useDevTools } from '@/lib/devFlags';
 import {
@@ -26,7 +25,6 @@ import {
   type Exercise,
   type Muscle,
 } from '@/lib/exercises';
-import { getExerciseImageSource } from '@/lib/exerciseMedia';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -204,41 +202,25 @@ export function ExerciseLibrary({
               ) : null}
             </View>
           }
-          renderItem={({ item }) => {
-            const photo = getExerciseImageSource(item);
-            return (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.card,
-                  { backgroundColor: colours.surface, borderRadius: radius.lg },
-                  pressed && styles.cardPressed,
-                ]}
-                onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: item.id } })}
-                accessibilityRole="button">
-                <View style={[styles.thumb, { backgroundColor: colours.brandSoft, borderRadius: radius.md }]}>
-                  {photo ? (
-                    <Image
-                      source={photo}
-                      style={styles.thumbImage}
-                      resizeMode="cover"
-                      accessibilityLabel=""
-                    />
-                  ) : (
-                    <View style={styles.thumbEmpty}>
-                      <Ionicons name="barbell-outline" size={20} color={colours.brand} />
-                    </View>
-                  )}
-                </View>
-                <View style={styles.cardText}>
-                  <Text style={[type.title3, { color: colours.ink }]}>{item.name}</Text>
-                  <Text style={[type.bodySm, { color: colours.inkMuted }]}>
-                    {MUSCLE_LABELS[item.primary_muscle]} · {EQUIPMENT_LABELS[item.equipment]}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
-              </Pressable>
-            );
-          }}
+          renderItem={({ item }) => (
+            <Pressable
+              style={({ pressed }) => [
+                styles.card,
+                { backgroundColor: colours.surface, borderRadius: radius.lg },
+                pressed && styles.cardPressed,
+              ]}
+              onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: item.id } })}
+              accessibilityRole="button">
+              <ExerciseThumb exercise={item} />
+              <View style={styles.cardText}>
+                <Text style={[type.title3, { color: colours.ink }]}>{item.name}</Text>
+                <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                  {MUSCLE_LABELS[item.primary_muscle]} · {EQUIPMENT_LABELS[item.equipment]}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
+            </Pressable>
+          )}
         />
       )}
     </View>
@@ -282,20 +264,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 14,
-  },
-  thumb: {
-    width: 56,
-    height: 56,
-    overflow: 'hidden',
-  },
-  thumbImage: {
-    width: 56,
-    height: 56,
-  },
-  thumbEmpty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   cardPressed: {
     opacity: 0.7,
