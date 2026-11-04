@@ -23,6 +23,7 @@ import {
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
+  ArticleCard,
   IconButton,
   ImageCard,
   OverflowMenu,
@@ -31,6 +32,7 @@ import {
   ProgressRing,
   QuoteCard,
   SectionHeader,
+  TabAvatar,
   TextButton,
   WelcomeBackCard,
   WhatsNextCard,
@@ -65,6 +67,7 @@ import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine, coverSources } from '@/lib/images';
 import { consumeOnboardingPaywall } from '@/lib/onboarding';
 import { fetchHideQuote, pickDailyQuote, saveHideQuote } from '@/lib/quotes';
+import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { openPaywall } from '@/lib/paywall';
 import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanProgress } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
@@ -138,6 +141,7 @@ type HomeData = {
   handOff: NextRoutineOffer | null;
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
+  learn: LearnArticle[];
 };
 
 function greeting(name: string | null | undefined): string {
@@ -145,13 +149,6 @@ function greeting(name: string | null | undefined): string {
   const hello = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const first = name?.trim().split(/\s+/)[0];
   return first ? `${hello}, ${first}` : hello;
-}
-
-function initials(name: string | null | undefined): string {
-  const parts = name?.trim().split(/\s+/).filter(Boolean) ?? [];
-  if (parts.length === 0) return 'A';
-  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
-  return `${parts[0].slice(0, 1)}${parts[1].slice(0, 1)}`.toUpperCase();
 }
 
 function coverImage(routine: Pick<RoutineSummary, 'id' | 'cover'>): ImageSourcePropType | null {
@@ -286,6 +283,8 @@ export default function HomeScreen() {
           if (handOff && enrolment) {
             handOff.why = `${previewCopy(enrolment)} ${handOff.why}`.trim();
           }
+          const learnArticles = await fetchLearnArticles().catch(() => []);
+          const learn = recommendArticles(learnArticles, answers, { limit: 2 });
           if (!isCurrent) return;
           setData({
             featured,
@@ -304,6 +303,7 @@ export default function HomeScreen() {
             handOff,
             challenge: pickHomeChallenge(challenges),
             progress,
+            learn,
           });
           setQuoteHidden(hideQuote);
           setLoadState('ready');
@@ -532,10 +532,6 @@ export default function HomeScreen() {
     }
   }
 
-  function openProfile() {
-    router.navigate('/(tabs)/profile' as Href);
-  }
-
   function hideQuote() {
     setQuoteHidden(true);
     saveHideQuote(true).catch(() => setQuoteHidden(false));
@@ -571,7 +567,7 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, handOff, challenge, progress } =
+  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, handOff, challenge, progress, learn } =
     data;
   const quote = pickDailyQuote();
   const showQuote = !quoteHidden;
@@ -588,19 +584,7 @@ export default function HomeScreen() {
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         <View style={styles.header}>
-          <Pressable
-            onPress={openProfile}
-            accessibilityRole="button"
-            accessibilityLabel="Open profile"
-            style={({ pressed }) => [
-              styles.avatar,
-              { backgroundColor: colours.brandSoft, borderRadius: radius.full },
-              pressed && styles.pressed,
-            ]}>
-            <Text style={[type.caption, { color: colours.brand, fontWeight: '700' }]}>
-              {initials(profile?.display_name)}
-            </Text>
-          </Pressable>
+          <TabAvatar />
           <Text style={[type.display, { color: colours.ink, flex: 1 }]} numberOfLines={1}>
             {greeting(profile?.display_name)}
           </Text>
@@ -851,6 +835,25 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
+        {learn.length > 0 ? (
+          <View>
+            <SectionHeader
+              title="From Learn"
+              actionLabel="See all"
+              onAction={() => router.push('/(tabs)/learn' as Href)}
+            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carousel}
+              style={styles.carouselBleed}>
+              {learn.map((article) => (
+                <ArticleCard key={article.id} article={article} width={stretchWidth} />
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
+
         {enrolment && !next && !missingSql ? (
           <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
             <Text style={[type.bodySm, { color: colours.ink }]}>
@@ -922,12 +925,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   centre: {
     flex: 1,

@@ -2,12 +2,13 @@ import Constants from 'expo-constants';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   DestructiveTextButton,
   FreeBadge,
+  IconButton,
   ListRow,
   MenuHeader,
   MenuRow,
@@ -147,7 +148,7 @@ export default function ProfileScreen() {
   const [savedWorkoutCount, setSavedWorkoutCount] = useState(0);
   const [restDefault, setRestDefault] = useState<RestTimerDefault>(90);
   const timeRowRef = useRef<AnchorHandle>(null);
-  const tabBarHeight = useTabBarHeight();
+  const insets = useSafeAreaInsets();
   const email = session?.user.email ?? '';
   const displayName = answers?.display_name?.trim() || 'You';
 
@@ -498,8 +499,19 @@ export default function ProfileScreen() {
     <View style={[styles.scroll, { backgroundColor: colours.bg }]}>
     <ScrollView
       style={[styles.scroll, { backgroundColor: colours.bg }]}
-      contentContainerStyle={[styles.container, { paddingBottom: tabBarHeight + 24 }]}>
-      <Text style={[type.display, { color: colours.ink }]}>Profile</Text>
+      contentContainerStyle={[
+        styles.container,
+        { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 },
+      ]}>
+      <View style={styles.top}>
+        <IconButton
+          icon="chevron-back"
+          variant="muted"
+          accessibilityLabel="Back"
+          onPress={() => router.back()}
+        />
+        <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Profile</Text>
+      </View>
 
       <View style={styles.hero}>
         <View style={[styles.avatar, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
@@ -891,8 +903,12 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 20,
-    paddingTop: 32,
     gap: 20,
+  },
+  top: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   hero: {
     flexDirection: 'row',

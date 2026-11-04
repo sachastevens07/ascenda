@@ -45,6 +45,8 @@ export { RestWeekBanner, StreakCard } from './Streak';
 export { QuoteCard } from './QuoteCard';
 export { WelcomeBackCard } from './WelcomeBack';
 export { WhatsNextCard } from './WhatsNext';
+export { TabAvatar } from './TabAvatar';
+export { ArticleBody, ArticleCard, CategoryTile, RelatedLearn, openLearnArticle } from './Learn';
 
 export {
   AnchoredMenu as OverflowMenu,

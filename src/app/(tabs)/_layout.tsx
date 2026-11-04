@@ -46,8 +46,8 @@ export default function TabLayout() {
             options={{ title: 'Activity', tabBarIcon: tabIcon('stats-chart', 'stats-chart-outline') }}
           />
           <TopTabs.Screen
-            name="profile"
-            options={{ title: 'Profile', tabBarIcon: tabIcon('person', 'person-outline') }}
+            name="learn"
+            options={{ title: 'Learn', tabBarIcon: tabIcon('book', 'book-outline') }}
           />
         </TopTabs>
       </View>

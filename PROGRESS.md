@@ -10,7 +10,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 **v2.0**
 - **R1** Cycle notes removed. `supabase/remove_cycle_notes.sql` not confirmed run.
-- **R2 / S2** Tabs: Home, Programmes (Routines / Stretches / Exercises), Planner, Activity, Profile. **N6** will move Profile to an avatar and add Learn.
+- **R2 / S2 / N6** Tabs: Home, Programmes (Routines / Stretches / Exercises), Planner, Activity, Learn. Profile opens from the header avatar.
 - **R3** Routines as data (cover, tags, weeks/days/exercises, enrolments). Six launch plans plus S10 extras.
 - **R4** Home featured row, next-session card, routine detail. Session detail screen **removed in N3**; `/routines/session` only launches the logger.
 - **R5** Custom workout builder. Free cap 4 owned workouts (S1).
@@ -60,20 +60,21 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **D8** (3 Nov 2026) Profile: onboarding name (or “You”, never the email prefix), email, plan badge. Sections match DESIGN 6.10. My workouts shows “N saved”. Units kg/lbs, rest timer default 60/90/120 s, delete account. About: Safety, Terms, Privacy policy, Contact us, App version. Sign out then version (dev long-press). SQL: `supabase/profile_d8.sql`.
 - **D9** (4 Nov 2026) Exercises list: photo when we have one, otherwise a distinct equipment icon and colour (barbell, dumbbell, machine, cable, kettlebell, band, bodyweight). Shared `ExerciseThumb` on Programmes → Exercises, the add-exercise picker, the logger, and the exercise-detail fallback. MuscleWiki stills wait for M1. No SQL.
 - **N2** (4 Nov 2026) Routine standard on the 14 strength plans: who it's for, by the end, how it works, phases with goals, lighter-week chips, day focus, warm-up, coach note, role, RIR and tempo. Logger Today card has a warm-up checklist. Overlay fills this if SQL is missing; non-empty database copy wins. SQL: `supabase/n2_routines.sql`. Stretches and custom workouts are unchanged.
+- **N6** (4 Nov 2026) Learn tab with 16 bundled articles (3 Getting started, then the other categories; 3 Pro in-depth guides). Featured hero, category tiles, recommended-for-you, continue reading, mark as read, sources, safety line. Related cards on routine and exercise pages. Home “From Learn”. Profile is a pushed screen from the 36 px avatar on every tab. SQL: `supabase/learn_n6.sql` (tables, metadata, links, reads). Bodies stay in the app until a database body is set.
 
 ---
 
 ### In progress
 
-**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, and **`n2_routines.sql`**. Units, rest timer, hide-quote and N2 coaching copy work on-device without SQL.
+**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, and **`learn_n6.sql`**. Units, rest timer, hide-quote, N2 coaching copy and Learn articles work on-device without SQL.
 
 ---
 
 ### Next step
 
-**N6. Learn section** (AGENTS.md Group 5). Do not start N7.
+**N7. Daily motivational quote** (AGENTS.md Group 5). The Home quote card is already in from D3; N7 is the `quotes` table. Do not start C1.
 
-After N6: N7, then C1, C2. S12 already built.
+After N7: C1, C2. S12 already built.
 
 ---
 
@@ -112,7 +113,7 @@ After N6: N7, then C1, C2. S12 already built.
 - Primary buttons are plum. Coral is highlights only. Unrestyled screens stay cream until their design pass.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
 - Do not use native `Switch` under the pill tab bar; do not use `Modal` + `borderRadius: 999` for tall menus.
-- D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. Avatar opens the existing Profile tab until N6. No Learn cards yet. No display-serif font (system sans, same as the rest of the kit). Challenge card stays on Home after the quote.
+- D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. No display-serif font (system sans, same as the rest of the kit). Challenge card stays on Home after the quote.
 - D4: no new SQL. N2 copy blocks (who it's for, by the end, how it works, phase names, roles, lighter-week chips) wait for N2 data. Related Learn cards wait for N6. Skip on the last hold ends that hold; Finish saves. Pause is primary during a hold; Next hold / Finish after the ring completes.
 - D5: empty days have no extra row; tap the + (or the header) to add. Rest days still show a thin “Rest day” line. Rest week banner sits in the agenda at the first visible day of that week; month view keeps it under the week strip. No SQL.
 - D7: one icon per family (not per badge). First-time and gym “first equipment” badges have no tier ring. Numbered families use bronze → platinum. Locked sheet copy is “This one is still ahead.” No SQL.
@@ -120,6 +121,7 @@ After N6: N7, then C1, C2. S12 already built.
 - D8: missing onboarding name shows “You”, not the email prefix. Avatar initials still use the email if there is no name. Units convert at display only; sets stay in kg. Rest timer default fills in when a set has no prescribed rest (custom workouts); routine rest times stay as written. Terms/privacy are draft in-app copy, not live web pages. Contact mailto is `hello@ascenda.app` until a real address exists. App version is in About and again under Sign out for the hidden tester gesture.
 - D9 is DESIGN.md 6.7 (Programmes exercises list), not 6.9 (Activity). Icons use MaterialCommunityIcons from the existing `@expo/vector-icons` package so dumbbell, kettlebell and barbell actually look different. Cable uses the stretch sage teal; band uses the custom ochre. Only ~14 exercises have photos; the rest show the equipment icon. MuscleWiki thumbnails stay with M1.
 - N2: overlay fills empty coaching fields from `src/lib/routineStandard.ts`; a pasted `n2_routines.sql` value wins. Lighter weeks are labelled only (sets are not auto-reduced; coach review). Upper body 6 and Glute builder 6 say they are deliberately focused. Alternatives are stored as ids; the in-session swap engine is unchanged. Custom workouts have no Today / warm-up card. Stretch rows stay null.
+- N6: 16 articles in `src/lib/learnArticles.ts` so Learn works without SQL. Three Pro guides (double progression, sleep, protein). No calorie or macro targets. No new font. Article covers reuse existing licensed routine/stretch photos. Coach review still needed before launch. Reads sync to `article_reads` when SQL is pasted, and also live on-device. Profile is a stack screen with a back button, not a tab.
 
 ---
 
@@ -144,7 +146,7 @@ Scan the QR with Expo Go. Use `--tunnel` if needed. Checks: `npx.cmd tsc --noEmi
 **SQL already run (confirmed):** `exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql`. User also reported (24 Oct) `routines.sql` and `planned_sessions.sql` pasted.
 
 **SQL to paste (not confirmed; app usually still opens):**
-`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql`, `profile_d8.sql`, **`n2_routines.sql`**. Do not run `cycle.sql`.
+`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, **`learn_n6.sql`**. Do not run `cycle.sql`.
 
 Agents cannot run SQL. Sacha pastes into Supabase > SQL Editor. Files are idempotent; the editor’s “destructive operations” warning is expected.
 

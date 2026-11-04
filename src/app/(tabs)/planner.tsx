@@ -24,6 +24,7 @@ import {
   ReminderTimeChip,
   RestWeekBanner,
   StickyDayHeader,
+  TabAvatar,
   TextButton,
   measureAnchor,
   type AnchorHandle,
@@ -492,6 +493,7 @@ export default function PlannerScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <View style={[styles.top, { paddingTop: Math.max(insets.top, 16) + 8 }]}>
+        <TabAvatar />
         <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Planner</Text>
         <IconButton
           icon={viewMode === 'agenda' ? 'calendar-outline' : 'list-outline'}

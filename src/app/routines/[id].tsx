@@ -24,6 +24,7 @@ import {
   PrimaryButton,
   ProBadge,
   ProgressBar,
+  RelatedLearn,
   SafetyNotice,
   StatStrip,
   TextButton,
@@ -728,6 +729,7 @@ export default function RoutineDetailScreen() {
               </View>
             );
           })}
+          <RelatedLearn routineId={routine.id} style={{ marginTop: spacing.lg }} />
           <SafetyNotice style={{ marginTop: spacing.md }} />
       </DetailLayout>
 

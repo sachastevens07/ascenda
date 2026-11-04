@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ExerciseLibrary } from '@/components/ExerciseLibrary';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
+import { TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 
 const SECTIONS = [
@@ -33,7 +34,10 @@ export default function ProgrammesScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <View style={styles.header}>
-        <Text style={[type.display, { color: colours.ink }]}>Programmes</Text>
+        <View style={styles.titleRow}>
+          <TabAvatar />
+          <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Programmes</Text>
+        </View>
         <View
           style={[styles.tabRow, { borderBottomColor: colours.border }]}
           accessibilityRole="tablist">
@@ -82,7 +86,12 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   tabRow: {
     flexDirection: 'row',

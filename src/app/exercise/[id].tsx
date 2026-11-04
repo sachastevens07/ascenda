@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { equipmentIconName } from '@/components/ui';
+import { equipmentIconName, RelatedLearn } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import { useDevTools } from '@/lib/devFlags';
 import {
@@ -221,6 +221,8 @@ export default function ExerciseScreen() {
           ))
         )}
       </View>
+
+      <RelatedLearn exerciseId={exercise.id} />
 
     </ScrollView>
   );

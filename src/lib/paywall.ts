@@ -14,6 +14,7 @@ export const PAYWALL_REASONS = [
   'photos',
   'path',
   'challenge',
+  'learn',
   'general',
 ] as const;
 
@@ -75,6 +76,11 @@ const COPY: Record<PaywallReason, PaywallCopy> = {
     eyebrow: 'Challenge',
     title: 'Join with Pro',
     body: 'This challenge is part of Pro. Logging stays free. Join when you are ready.',
+  },
+  learn: {
+    eyebrow: 'Pro guide',
+    title: 'Read the in-depth guides',
+    body: 'Most Learn articles stay free. Pro opens the longer guides on progression, sleep and protein. Logging stays free either way.',
   },
   general: {
     eyebrow: 'Ascenda Pro',

@@ -29,6 +29,7 @@ import {
   SecondaryButton,
   SectionHeader,
   StreakCard,
+  TabAvatar,
   TextButton,
   measureAnchor,
   type AnchorHandle,
@@ -453,7 +454,10 @@ export default function ActivityScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <View style={styles.header}>
-        <Text style={[type.display, { color: colours.ink }]}>Activity</Text>
+        <View style={styles.titleRow}>
+          <TabAvatar />
+          <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Activity</Text>
+        </View>
         <View style={[styles.tabRow, { borderBottomColor: colours.border }]} accessibilityRole="tablist">
           {TABS.map((item) => {
             const selected = tab === item.id;
@@ -1082,7 +1086,12 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 32,
+    paddingTop: 12,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   content: {
     padding: 20,
