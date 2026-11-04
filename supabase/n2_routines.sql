@@ -394,11 +394,13 @@ set
       then '3-second lowering'
     else null
   end
-from public.routine_days d
-join public.routine_weeks w on w.id = d.routine_week_id
-join public.routines r on r.id = w.routine_id
-cross join public.exercises x
+from public.routine_days d,
+     public.routine_weeks w,
+     public.routines r,
+     public.exercises x
 where e.routine_day_id = d.id
+  and d.routine_week_id = w.id
+  and w.routine_id = r.id
   and x.id = e.exercise_id
   and r.id in (
     'gym-confidence-6', 'full-body-3', 'one-spot-6', 'busy-gym-6', 'upper-lower-4',
