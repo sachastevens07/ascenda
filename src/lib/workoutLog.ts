@@ -116,6 +116,13 @@ export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): Programm
         exercise: slot.exercise,
         original: swapped ? existing.exercise : existing?.original,
         added: existing?.added,
+        role: existing?.role,
+        target_rir: existing?.target_rir,
+        tempo: existing?.tempo,
+        progression_rule: existing?.progression_rule,
+        load_increment_kg: existing?.load_increment_kg,
+        notes: existing?.notes,
+        alternative_exercise_ids: existing?.alternative_exercise_ids,
       };
     }),
   };

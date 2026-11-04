@@ -59,20 +59,21 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **D6** (3 Nov 2026) Activity Progress: Highlights kept. Streak card shows current run, weeks trained, gold weeks, 8 week dots and rest weeks banked. Your routine shows this week’s sessions plus “See full plan”. Sessions-per-week chart waits until 2+ weeks with sessions; weight chart waits until 2 logged points.
 - **D8** (3 Nov 2026) Profile: onboarding name (or “You”, never the email prefix), email, plan badge. Sections match DESIGN 6.10. My workouts shows “N saved”. Units kg/lbs, rest timer default 60/90/120 s, delete account. About: Safety, Terms, Privacy policy, Contact us, App version. Sign out then version (dev long-press). SQL: `supabase/profile_d8.sql`.
 - **D9** (4 Nov 2026) Exercises list: photo when we have one, otherwise a distinct equipment icon and colour (barbell, dumbbell, machine, cable, kettlebell, band, bodyweight). Shared `ExerciseThumb` on Programmes → Exercises, the add-exercise picker, the logger, and the exercise-detail fallback. MuscleWiki stills wait for M1. No SQL.
+- **N2** (4 Nov 2026) Routine standard on the 14 strength plans: who it's for, by the end, how it works, phases with goals, lighter-week chips, day focus, warm-up, coach note, role, RIR and tempo. Logger Today card has a warm-up checklist. Overlay fills this if SQL is missing; non-empty database copy wins. SQL: `supabase/n2_routines.sql`. Stretches and custom workouts are unchanged.
 
 ---
 
 ### In progress
 
-**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, and **`profile_d8.sql`**. Units, rest timer and hide-quote work on-device without SQL.
+**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, and **`n2_routines.sql`**. Units, rest timer, hide-quote and N2 coaching copy work on-device without SQL.
 
 ---
 
 ### Next step
 
-**N2. More sophisticated routines** (AGENTS.md Group 5). Do not start N6.
+**N6. Learn section** (AGENTS.md Group 5). Do not start N7.
 
-After N2: N6, N7, then C1, C2. S12 already built.
+After N6: N7, then C1, C2. S12 already built.
 
 ---
 
@@ -118,6 +119,7 @@ After N2: N6, N7, then C1, C2. S12 already built.
 - D6: “2+ weeks of data” means two weeks that actually have a session, not two empty calendar weeks. Weight chart needs two logged points on the selected lift. Full roadmap stays on the routine page. Gentle streak copy only when the current run is 0. No SQL.
 - D8: missing onboarding name shows “You”, not the email prefix. Avatar initials still use the email if there is no name. Units convert at display only; sets stay in kg. Rest timer default fills in when a set has no prescribed rest (custom workouts); routine rest times stay as written. Terms/privacy are draft in-app copy, not live web pages. Contact mailto is `hello@ascenda.app` until a real address exists. App version is in About and again under Sign out for the hidden tester gesture.
 - D9 is DESIGN.md 6.7 (Programmes exercises list), not 6.9 (Activity). Icons use MaterialCommunityIcons from the existing `@expo/vector-icons` package so dumbbell, kettlebell and barbell actually look different. Cable uses the stretch sage teal; band uses the custom ochre. Only ~14 exercises have photos; the rest show the equipment icon. MuscleWiki thumbnails stay with M1.
+- N2: overlay fills empty coaching fields from `src/lib/routineStandard.ts`; a pasted `n2_routines.sql` value wins. Lighter weeks are labelled only (sets are not auto-reduced; coach review). Upper body 6 and Glute builder 6 say they are deliberately focused. Alternatives are stored as ids; the in-session swap engine is unchanged. Custom workouts have no Today / warm-up card. Stretch rows stay null.
 
 ---
 
@@ -142,7 +144,7 @@ Scan the QR with Expo Go. Use `--tunnel` if needed. Checks: `npx.cmd tsc --noEmi
 **SQL already run (confirmed):** `exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql`. User also reported (24 Oct) `routines.sql` and `planned_sessions.sql` pasted.
 
 **SQL to paste (not confirmed; app usually still opens):**
-`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql`, **`profile_d8.sql`**. Do not run `cycle.sql`.
+`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql`, `profile_d8.sql`, **`n2_routines.sql`**. Do not run `cycle.sql`.
 
 Agents cannot run SQL. Sacha pastes into Supabase > SQL Editor. Files are idempotent; the editor’s “destructive operations” warning is expected.
 

@@ -7,6 +7,17 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import {
+  briefForRoutine,
+  coachNoteForDay,
+  focusFromDayName,
+  phaseForWeek,
+  warmupForRoutine,
+  withExerciseCoaching,
+  type ExerciseRole,
+  type ProgressionRule,
+  type WarmupStep,
+} from '@/lib/routineStandard';
 import { supabase } from '@/lib/supabase';
 
 export const LAUNCH_ROUTINE_IDS = [
@@ -58,6 +69,10 @@ export type RoutineSummary = {
   source_programme_id: string | null;
   type: RoutineType;
   tags: string[];
+  audience: string[];
+  byTheEnd: string[];
+  splitNote: string | null;
+  progressionNote: string | null;
 };
 
 export type RoutineDayExercise = {
@@ -69,6 +84,14 @@ export type RoutineDayExercise = {
   /** Timed hold for stretch steps. Null on strength slots. */
   duration_seconds: number | null;
   exercise: SlotExercise;
+  role: ExerciseRole | null;
+  target_rir: number | null;
+  tempo: string | null;
+  progression_rule: ProgressionRule | null;
+  load_increment_kg: number | null;
+  notes: string | null;
+  alternative_exercise_ids: string[];
+  superset_group: string | null;
 };
 
 export type RoutineDay = {
@@ -76,6 +99,10 @@ export type RoutineDay = {
   day_number: number;
   name: string;
   source_programme_day_id: string | null;
+  focus: string | null;
+  warmup: WarmupStep[];
+  coach_note: string | null;
+  finisher: string | null;
   exercises: RoutineDayExercise[];
 };
 
@@ -83,6 +110,9 @@ export type RoutineWeek = {
   id: string;
   week_number: number;
   is_checkpoint: boolean;
+  phase_name: string | null;
+  phase_goal: string | null;
+  is_lighter_week: boolean;
   days: RoutineDay[];
 };
 
@@ -149,13 +179,22 @@ export function describeRoutineError(error: unknown): string {
 }
 
 const COVER_SELECT = 'id, url, storage_path, alt_text, licence_source';
+const N2_ROUTINE_COLUMNS =
+  'audience_bullets, by_the_end_bullets, split_note, progression_note';
 const SUMMARY_SELECT_BASE = `
   id, name, slug, description, goal, length_weeks, days_per_week, session_minutes,
   difficulty, equipment, is_pro, is_featured_eligible, sort_order, source_programme_id,
   cover:images (${COVER_SELECT}),
   routine_tags (tag)
 `;
+const SUMMARY_SELECT_N2 = `${SUMMARY_SELECT_BASE}, type, ${N2_ROUTINE_COLUMNS}`;
 const SUMMARY_SELECT = `${SUMMARY_SELECT_BASE}, type`;
+const DAY_EXERCISE_SELECT_N2 = `
+  position, sets, rep_min, rep_max, rest_seconds, duration_seconds,
+  role, target_rir, tempo, progression_rule, load_increment_kg, notes,
+  alternative_exercise_ids, superset_group,
+  exercise:exercises (${SLOT_EXERCISE_COLUMNS})
+`;
 const DAY_EXERCISE_SELECT = `
   position, sets, rep_min, rep_max, rest_seconds, duration_seconds,
   exercise:exercises (${SLOT_EXERCISE_COLUMNS})
@@ -163,6 +202,12 @@ const DAY_EXERCISE_SELECT = `
 const DAY_EXERCISE_SELECT_LEGACY = `
   position, sets, rep_min, rep_max, rest_seconds,
   exercise:exercises (${SLOT_EXERCISE_COLUMNS})
+`;
+const WEEK_NEST_N2 = `
+    id, week_number, is_checkpoint, phase_name, phase_goal, is_lighter_week,
+    routine_days (
+      id, day_number, name, source_programme_day_id, focus, warmup, coach_note, finisher
+    )
 `;
 const WEEK_NEST = `
     id, week_number, is_checkpoint,
@@ -182,6 +227,13 @@ const DETAIL_SELECT = `
     ${WEEK_NEST}
   )
 `;
+const EXERCISE_QUERY_SELECT_N2 = `
+  routine_day_id,
+  position, sets, rep_min, rep_max, rest_seconds, duration_seconds,
+  role, target_rir, tempo, progression_rule, load_increment_kg, notes,
+  alternative_exercise_ids, superset_group,
+  exercise:exercises (${SLOT_EXERCISE_COLUMNS})
+`;
 const EXERCISE_QUERY_SELECT = `
   routine_day_id,
   position, sets, rep_min, rep_max, rest_seconds, duration_seconds,
@@ -196,12 +248,17 @@ const EXERCISE_QUERY_SELECT_LEGACY = `
 type TagRow = { tag: string };
 type CoverRow = CoverImage | CoverImage[] | null;
 
-export type SummaryRow = Omit<RoutineSummary, 'cover' | 'tags'> & {
+export type SummaryRow = Omit<RoutineSummary, 'cover' | 'tags' | 'audience' | 'byTheEnd' | 'splitNote' | 'progressionNote'> & {
   cover: CoverRow;
   routine_tags: TagRow[] | null;
+  audience_bullets?: string[] | null;
+  by_the_end_bullets?: string[] | null;
+  split_note?: string | null;
+  progression_note?: string | null;
 };
 
-type DayRow = Omit<RoutineDay, 'exercises'> & {
+type DayRow = Omit<RoutineDay, 'exercises' | 'warmup'> & {
+  warmup?: unknown;
   routine_day_exercises?: (Omit<RoutineDayExercise, 'exercise'> & { exercise: SlotExercise })[] | null;
 };
 
@@ -239,6 +296,10 @@ function oneCover(cover: CoverRow): CoverImage | null {
 }
 
 export function toSummary(row: SummaryRow): RoutineSummary {
+  const type = row.type === 'stretch' ? 'stretch' : 'strength';
+  const brief = type === 'strength' ? briefForRoutine(row.id, row.difficulty) : null;
+  const audience = (row.audience_bullets ?? []).filter(Boolean);
+  const byTheEnd = (row.by_the_end_bullets ?? []).filter(Boolean);
   return {
     id: row.id,
     name: row.name,
@@ -255,36 +316,73 @@ export function toSummary(row: SummaryRow): RoutineSummary {
     is_featured_eligible: row.is_featured_eligible,
     sort_order: row.sort_order,
     source_programme_id: row.source_programme_id,
-    type: row.type === 'stretch' ? 'stretch' : 'strength',
+    type,
     tags: (row.routine_tags ?? []).map((item) => item.tag),
+    audience: audience.length > 0 ? audience : (brief?.audience ?? []),
+    byTheEnd: byTheEnd.length > 0 ? byTheEnd : (brief?.byTheEnd ?? []),
+    splitNote: row.split_note?.trim() || brief?.splitNote || null,
+    progressionNote: row.progression_note?.trim() || brief?.progressionNote || null,
   };
 }
 
-function toDay(row: DayRow): RoutineDay {
+function parseWarmup(value: unknown): WarmupStep[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((step) => {
+    if (!step || typeof step !== 'object' || typeof (step as WarmupStep).text !== 'string') return [];
+    const text = (step as WarmupStep).text.trim();
+    if (!text) return [];
+    const seconds = typeof (step as WarmupStep).seconds === 'number' ? (step as WarmupStep).seconds : undefined;
+    const reps = typeof (step as WarmupStep).reps === 'number' ? (step as WarmupStep).reps : undefined;
+    return [{ text, seconds, reps }];
+  });
+}
+
+function toDay(row: DayRow, routine?: Pick<RoutineSummary, 'id' | 'difficulty' | 'equipment' | 'type'>): RoutineDay {
+  const strength = !routine || routine.type !== 'stretch';
+  const difficulty = routine?.difficulty ?? 'beginner';
+  const warmup = parseWarmup(row.warmup);
+  const exercises = [...(row.routine_day_exercises ?? [])]
+    .sort((a, b) => a.position - b.position)
+    .map((item) => toDayExercise(item));
+  const coached =
+    strength
+      ? exercises.map((item) => withExerciseCoaching(item, exercises.length, difficulty))
+      : exercises;
   return {
     id: row.id,
     day_number: row.day_number,
     name: row.name,
     source_programme_day_id: row.source_programme_day_id,
-    exercises: [...(row.routine_day_exercises ?? [])]
-      .sort((a, b) => a.position - b.position)
-      .map(toDayExercise),
+    focus: row.focus?.trim() || (strength ? focusFromDayName(row.name) : null),
+    warmup:
+      warmup.length > 0 ? warmup : strength ? warmupForRoutine(routine?.id ?? '', routine?.equipment ?? 'full_gym') : [],
+    coach_note:
+      row.coach_note?.trim() || (strength ? coachNoteForDay(row.name, difficulty) : null),
+    finisher: row.finisher?.trim() || null,
+    exercises: coached,
   };
 }
 
 function toRoutine(row: DetailRow): Routine {
+  const summary = toSummary(row);
   return {
-    ...toSummary(row),
+    ...summary,
     weeks: [...(row.routine_weeks ?? [])]
       .sort((a, b) => a.week_number - b.week_number)
-      .map((week) => ({
-        id: week.id,
-        week_number: week.week_number,
-        is_checkpoint: Boolean(week.is_checkpoint),
-        days: [...(week.routine_days ?? [])]
-          .sort((a, b) => a.day_number - b.day_number)
-          .map(toDay),
-      })),
+      .map((week) => {
+        const phase = summary.type === 'strength' ? phaseForWeek(summary.id, summary.length_weeks, week.week_number) : null;
+        return {
+          id: week.id,
+          week_number: week.week_number,
+          is_checkpoint: Boolean(week.is_checkpoint),
+          phase_name: week.phase_name?.trim() || phase?.name || null,
+          phase_goal: week.phase_goal?.trim() || phase?.goal || null,
+          is_lighter_week: Boolean(week.is_lighter_week) || Boolean(phase?.lighter),
+          days: [...(week.routine_days ?? [])]
+            .sort((a, b) => a.day_number - b.day_number)
+            .map((day) => toDay(day, summary)),
+        };
+      }),
   };
 }
 
@@ -302,7 +400,9 @@ function dayIdsForPreview(routine: Routine, includeLockedWeeks: boolean): string
     .flatMap((week) => week.days.map((day) => day.id));
 }
 
-function toDayExercise(item: Omit<RoutineDayExercise, 'exercise'> & { exercise: SlotExercise }): RoutineDayExercise {
+function toDayExercise(
+  item: Omit<RoutineDayExercise, 'exercise'> & { exercise: SlotExercise }
+): RoutineDayExercise {
   return {
     position: item.position,
     sets: item.sets,
@@ -311,6 +411,14 @@ function toDayExercise(item: Omit<RoutineDayExercise, 'exercise'> & { exercise: 
     rest_seconds: item.rest_seconds,
     duration_seconds: item.duration_seconds ?? null,
     exercise: toSlotExercise(item.exercise),
+    role: item.role ?? null,
+    target_rir: item.target_rir ?? null,
+    tempo: item.tempo ?? null,
+    progression_rule: item.progression_rule ?? (item.duration_seconds ? 'time' : null),
+    load_increment_kg: item.load_increment_kg ?? null,
+    notes: item.notes ?? null,
+    alternative_exercise_ids: item.alternative_exercise_ids ?? [],
+    superset_group: item.superset_group ?? null,
   };
 }
 
@@ -328,13 +436,27 @@ function isMissingCheckpointColumn(error: { message?: string; code?: string }): 
   return /is_checkpoint/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
+function isMissingN2Column(error: { message?: string; code?: string }): boolean {
+  return /audience_bullets|by_the_end_bullets|split_note|progression_note|phase_name|phase_goal|is_lighter_week|coach_note|warmup|target_rir|progression_rule|load_increment_kg|alternative_exercise_ids|superset_group|\brole\b|\btempo\b|\bfocus\b|\bfinisher\b|\bnotes\b/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
+}
+
 async function fetchExercisesForDays(dayIds: string[]): Promise<Map<string, RoutineDayExercise[]>> {
   const byDay = new Map<string, RoutineDayExercise[]>();
   if (dayIds.length === 0) return byDay;
   let { data, error } = await supabase
     .from('routine_day_exercises')
-    .select(EXERCISE_QUERY_SELECT)
+    .select(EXERCISE_QUERY_SELECT_N2)
     .in('routine_day_id', dayIds);
+  if (error && isMissingN2Column(error)) {
+    const retry = await supabase
+      .from('routine_day_exercises')
+      .select(EXERCISE_QUERY_SELECT)
+      .in('routine_day_id', dayIds);
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
   if (error && isMissingDurationColumn(error)) {
     const retry = await supabase
       .from('routine_day_exercises')
@@ -366,10 +488,14 @@ function withDayExercises(routine: Routine, byDay: Map<string, RoutineDayExercis
     ...routine,
     weeks: routine.weeks.map((week) => ({
       ...week,
-      days: week.days.map((day) => ({
-        ...day,
-        exercises: byDay.get(day.id) ?? [],
-      })),
+      days: week.days.map((day) => {
+        const exercises = byDay.get(day.id) ?? day.exercises;
+        const coached =
+          routine.type === 'strength'
+            ? exercises.map((item) => withExerciseCoaching(item, exercises.length, routine.difficulty))
+            : exercises;
+        return { ...day, exercises: coached };
+      }),
     })),
   };
 }
@@ -398,6 +524,8 @@ export type RoutinePhase = {
   fromWeek: number;
   toWeek: number;
   days: RoutineDay[];
+  phaseName?: string | null;
+  phaseGoal?: string | null;
 };
 
 function weekFingerprint(days: RoutineDay[]): string {
@@ -414,15 +542,23 @@ function weekFingerprint(days: RoutineDay[]): string {
     .join('//');
 }
 
-/** Collapse consecutive weeks that use the same workouts (e.g. weeks 1–2). */
+/** Collapse consecutive weeks that share a phase name, else the same workouts. */
 export function groupRoutinePhases(weeks: RoutineWeek[]): RoutinePhase[] {
   const phases: RoutinePhase[] = [];
   for (const week of weeks) {
     const last = phases[phases.length - 1];
-    if (last && weekFingerprint(last.days) === weekFingerprint(week.days)) {
+    const sameName = Boolean(week.phase_name) && last?.phaseName === week.phase_name;
+    const sameWork = !week.phase_name && last && weekFingerprint(last.days) === weekFingerprint(week.days);
+    if (last && (sameName || sameWork)) {
       last.toWeek = week.week_number;
     } else {
-      phases.push({ fromWeek: week.week_number, toWeek: week.week_number, days: week.days });
+      phases.push({
+        fromWeek: week.week_number,
+        toWeek: week.week_number,
+        days: week.days,
+        phaseName: week.phase_name,
+        phaseGoal: week.phase_goal,
+      });
     }
   }
   return phases;
@@ -634,6 +770,10 @@ export function routineDayToProgrammeDay(day: RoutineDay): ProgrammeDay {
     id: day.id,
     day_number: day.day_number,
     name: day.name,
+    focus: day.focus,
+    warmup: day.warmup,
+    coach_note: day.coach_note,
+    finisher: day.finisher,
     exercises: day.exercises.map(
       (item): ProgrammeExercise => ({
         position: item.position,
@@ -642,6 +782,13 @@ export function routineDayToProgrammeDay(day: RoutineDay): ProgrammeDay {
         rep_max: item.rep_max,
         rest_seconds: item.rest_seconds,
         exercise: item.exercise,
+        role: item.role ?? undefined,
+        target_rir: item.target_rir ?? undefined,
+        tempo: item.tempo ?? undefined,
+        progression_rule: item.progression_rule ?? undefined,
+        load_increment_kg: item.load_increment_kg ?? undefined,
+        notes: item.notes ?? undefined,
+        alternative_exercise_ids: item.alternative_exercise_ids,
       })
     ),
   };
@@ -681,6 +828,7 @@ export async function fetchRoutine(
 ): Promise<Routine | null> {
   const includeLockedWeeks = options?.includeLockedWeeks ?? true;
   const attempts = [
+    `${SUMMARY_SELECT_N2}, routine_weeks (${WEEK_NEST_N2})`,
     `${SUMMARY_SELECT}, routine_weeks (${WEEK_NEST})`,
     `${SUMMARY_SELECT_BASE}, routine_weeks (${WEEK_NEST})`,
     `${SUMMARY_SELECT}, routine_weeks (${WEEK_NEST_LEGACY})`,
@@ -694,7 +842,11 @@ export async function fetchRoutine(
     error = result.error;
     if (!error) break;
     if (isMissingRoutines(error)) throw new Error(missingRoutinesMessage());
-    if (!isMissingTypeColumn(error) && !isMissingCheckpointColumn(error)) {
+    if (
+      !isMissingTypeColumn(error) &&
+      !isMissingCheckpointColumn(error) &&
+      !isMissingN2Column(error)
+    ) {
       throw new Error(error.message);
     }
   }
@@ -705,17 +857,60 @@ export async function fetchRoutine(
   return withDayExercises(routine, byDay);
 }
 
+type DayParentRoutine = Pick<RoutineSummary, 'id' | 'difficulty' | 'equipment' | 'type'>;
+
+type DayFetchRow = DayRow & {
+  week?: {
+    routine?: {
+      id: string;
+      difficulty: RoutineDifficulty;
+      equipment: RoutineEquipment;
+      type?: RoutineType | null;
+    } | null;
+  } | null;
+};
+
+const DAY_PARENT_SELECT = 'week:routine_weeks ( routine:routines (id, difficulty, equipment, type) )';
+const DAY_PARENT_SELECT_BASE = 'week:routine_weeks ( routine:routines (id, difficulty, equipment) )';
+
+function parentFromDayRow(row: DayFetchRow): DayParentRoutine | undefined {
+  const routine = row.week?.routine;
+  if (!routine?.id) return undefined;
+  return {
+    id: routine.id,
+    difficulty: routine.difficulty,
+    equipment: routine.equipment,
+    type: routine.type === 'stretch' ? 'stretch' : 'strength',
+  };
+}
+
 export async function fetchRoutineDay(id: string): Promise<RoutineDay | null> {
   let { data, error } = await supabase
     .from('routine_days')
-    .select(`id, day_number, name, source_programme_day_id, routine_day_exercises (${DAY_EXERCISE_SELECT})`)
+    .select(
+      `id, day_number, name, source_programme_day_id, focus, warmup, coach_note, finisher, ${DAY_PARENT_SELECT}, routine_day_exercises (${DAY_EXERCISE_SELECT_N2})`
+    )
     .eq('id', id)
     .maybeSingle();
+  if (
+    error &&
+    (isMissingN2Column(error) || isMissingDurationColumn(error) || isMissingTypeColumn(error))
+  ) {
+    const retry = await supabase
+      .from('routine_days')
+      .select(
+        `id, day_number, name, source_programme_day_id, ${DAY_PARENT_SELECT_BASE}, routine_day_exercises (${DAY_EXERCISE_SELECT})`
+      )
+      .eq('id', id)
+      .maybeSingle();
+    data = retry.data as typeof data;
+    error = retry.error;
+  }
   if (error && isMissingDurationColumn(error)) {
     const retry = await supabase
       .from('routine_days')
       .select(
-        `id, day_number, name, source_programme_day_id, routine_day_exercises (${DAY_EXERCISE_SELECT_LEGACY})`
+        `id, day_number, name, source_programme_day_id, ${DAY_PARENT_SELECT_BASE}, routine_day_exercises (${DAY_EXERCISE_SELECT_LEGACY})`
       )
       .eq('id', id)
       .maybeSingle();
@@ -726,7 +921,9 @@ export async function fetchRoutineDay(id: string): Promise<RoutineDay | null> {
     if (isMissingRoutines(error)) return null;
     throw new Error(error.message);
   }
-  return data ? toDay(data as unknown as DayRow) : null;
+  if (!data) return null;
+  const row = data as unknown as DayFetchRow;
+  return toDay(row, parentFromDayRow(row));
 }
 
 const ENROLMENT_SELECT = `id, user_id, routine_id, start_date, status, completed_at, routine:routines (${SUMMARY_SELECT})`;

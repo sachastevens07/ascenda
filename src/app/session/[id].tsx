@@ -63,6 +63,12 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import {
+  ROLE_LABELS,
+  formatRir,
+  formatWarmupStep,
+  type WarmupStep,
+} from '@/lib/routineStandard';
 import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
   REST_ADJUST_SECONDS,
@@ -134,7 +140,10 @@ function slotRestSeconds(item: ProgrammeExercise): number {
 function formatTargetLine(item: ProgrammeExercise): string {
   const reps =
     item.rep_min === item.rep_max ? `${item.rep_min}` : `${item.rep_min} to ${item.rep_max}`;
-  return `${item.sets} × ${reps} · ${formatRestSeconds(slotRestSeconds(item))}`;
+  const parts = [`${item.sets} × ${reps}`];
+  if (item.target_rir) parts.push(formatRir(item.target_rir));
+  parts.push(formatRestSeconds(slotRestSeconds(item)));
+  return parts.join(' · ');
 }
 
 function lastSetPlaceholders(
@@ -201,6 +210,8 @@ export default function SessionScreen() {
   const [menuMode, setMenuMode] = useState<MenuMode>('actions');
   const [slotMenuItem, setSlotMenuItem] = useState<ProgrammeExercise | null>(null);
   const [slotMenuAnchor, setSlotMenuAnchor] = useState<AnchorRect | null>(null);
+  const [coachOpen, setCoachOpen] = useState(true);
+  const [warmupDone, setWarmupDone] = useState<Record<number, boolean>>({});
 
   const { restEndsAt, publish, startRest, stopRest, adjustRest, end } = useWorkout();
   const now = useNow(startedAt !== null, 500);
@@ -235,6 +246,8 @@ export default function SessionScreen() {
         if (!isCurrent) return;
         setSession(log.session);
         setDay(log.day);
+        setWarmupDone({});
+        setCoachOpen(true);
         setPrevious(log.previous);
         setEaseBack(log.easeBack);
         setEntries(
@@ -874,6 +887,58 @@ export default function SessionScreen() {
           </View>
         ) : null}
 
+        {day.coach_note || (day.warmup && day.warmup.length > 0) || day.finisher ? (
+          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, padding: 14 }]}>
+            <Pressable
+              onPress={() => setCoachOpen((open) => !open)}
+              style={styles.cardHeader}
+              accessibilityRole="button"
+              accessibilityLabel={coachOpen ? 'Hide session notes' : 'Show session notes'}>
+              <View style={styles.flex}>
+                <Text style={[type.eyebrow, { color: colours.accent }]}>Today</Text>
+                <Text style={[type.title3, { color: colours.ink, marginTop: 4 }]}>
+                  {day.focus ?? 'Warm-up and focus'}
+                </Text>
+              </View>
+              <Ionicons name={coachOpen ? 'chevron-up' : 'chevron-down'} size={20} color={colours.brand} />
+            </Pressable>
+            {coachOpen ? (
+              <View style={{ gap: 10, marginTop: 8 }}>
+                {day.coach_note ? (
+                  <Text style={[type.body, { color: colours.ink }]}>{day.coach_note}</Text>
+                ) : null}
+                {(day.warmup ?? []).map((step: WarmupStep, index) => {
+                  const done = Boolean(warmupDone[index]);
+                  return (
+                    <Pressable
+                      key={`${step.text}-${index}`}
+                      onPress={() => setWarmupDone((current) => ({ ...current, [index]: !done }))}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: done }}>
+                      <Ionicons
+                        name={done ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={22}
+                        color={done ? colours.success : colours.inkMuted}
+                      />
+                      <Text
+                        style={[
+                          type.body,
+                          { color: colours.ink, flex: 1, textDecorationLine: done ? 'line-through' : 'none' },
+                        ]}>
+                        {formatWarmupStep(step)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+                {day.finisher ? (
+                  <Text style={[type.bodySm, { color: colours.inkMuted }]}>{day.finisher}</Text>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
         {day.exercises.length === 0 ? (
           <EmptyState
             icon="barbell-outline"
@@ -901,6 +966,11 @@ export default function SessionScreen() {
                   accessibilityHint="Shows how to do this exercise">
                   <ExerciseThumb exercise={item.exercise} showPlay />
                   <View style={styles.flex}>
+                    {item.role ? (
+                      <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 4 }]}>
+                        {ROLE_LABELS[item.role]}
+                      </Text>
+                    ) : null}
                     <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
                       {item.exercise.name}
                     </Text>
@@ -912,6 +982,11 @@ export default function SessionScreen() {
                     <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
                       {formatTargetLine(item)}
                     </Text>
+                    {item.tempo ? (
+                      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                        {item.tempo}
+                      </Text>
+                    ) : null}
                   </View>
                 </Pressable>
                 <IconButton

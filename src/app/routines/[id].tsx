@@ -40,6 +40,7 @@ import {
   isProRoutineDuplicateError,
 } from '@/lib/customWorkouts';
 import { EQUIPMENT_LABELS, MUSCLE_LABELS, type Equipment } from '@/lib/exercises';
+import { ROLE_LABELS, formatRir } from '@/lib/routineStandard';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine, coverSources } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
@@ -104,6 +105,7 @@ function dominantEquipment(phase: RoutinePhase): Equipment | null {
 }
 
 function phaseLabel(phase: RoutinePhase, index: number, routine: Routine): string {
+  if (phase.phaseName) return `Phase ${index + 1} · ${phase.phaseName}`;
   const equipment = dominantEquipment(phase);
   let stage = '';
   if (equipment === 'dumbbell' || equipment === 'kettlebell') {
@@ -139,6 +141,7 @@ function WeekHeaderBody({
       <View style={styles.weekTitleRow}>
         <Text style={[type.title3, { color: colours.ink, flex: 1 }]}>Week {week.week_number}</Text>
         {week.is_checkpoint ? <Chip label="Checkpoint" /> : null}
+        {week.is_lighter_week ? <Chip label="Lighter week" /> : null}
       </View>
       <View style={[styles.weekMetaRow, { marginTop: 4 }]}>
         <Text style={[type.bodySm, { color: colours.inkMuted, flex: 1 }]} numberOfLines={1}>
@@ -518,6 +521,40 @@ export default function RoutineDetailScreen() {
             ]}
           />
 
+          {routine.type === 'strength' && routine.audience.length > 0 ? (
+            <View style={{ marginTop: spacing.lg, gap: 8 }}>
+              <Text style={[type.title3, { color: colours.ink }]}>Who it’s for</Text>
+              {routine.audience.map((line) => (
+                <Text key={line} style={[type.body, { color: colours.ink }]}>
+                  {`\u2022 ${line}`}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+
+          {routine.type === 'strength' && routine.byTheEnd.length > 0 ? (
+            <View style={{ marginTop: spacing.lg, gap: 8 }}>
+              <Text style={[type.title3, { color: colours.ink }]}>By the end you’ll</Text>
+              {routine.byTheEnd.map((line) => (
+                <Text key={line} style={[type.body, { color: colours.ink }]}>
+                  {`\u2022 ${line}`}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+
+          {routine.type === 'strength' && (routine.splitNote || routine.progressionNote) ? (
+            <View style={{ marginTop: spacing.lg, gap: 8 }}>
+              <Text style={[type.title3, { color: colours.ink }]}>How it works</Text>
+              {routine.splitNote ? (
+                <Text style={[type.body, { color: colours.ink }]}>{routine.splitNote}</Text>
+              ) : null}
+              {routine.progressionNote ? (
+                <Text style={[type.body, { color: colours.ink }]}>{routine.progressionNote}</Text>
+              ) : null}
+            </View>
+          ) : null}
+
           {isCurrent && handOff ? (
             <WhatsNextCard
               title={handOff.routine.name}
@@ -544,10 +581,15 @@ export default function RoutineDetailScreen() {
             }
             return (
               <View key={`${phase.fromWeek}-${phase.toWeek}`} style={styles.phase}>
-                {phases.length > 1 ? (
-                  <Text style={[type.eyebrow, { color: colours.accent, marginBottom: spacing.sm }]}>
-                    {phaseLabel(phase, phaseIndex, routine)}
-                  </Text>
+                {phases.length > 1 || phase.phaseName ? (
+                  <View style={{ marginBottom: spacing.sm, gap: 4 }}>
+                    <Text style={[type.eyebrow, { color: colours.accent }]}>
+                      {phaseLabel(phase, phaseIndex, routine)}
+                    </Text>
+                    {phase.phaseGoal ? (
+                      <Text style={[type.bodySm, { color: colours.inkMuted }]}>{phase.phaseGoal}</Text>
+                    ) : null}
+                  </View>
                 ) : null}
                 {weeks.map((week) => {
                   const weekLocked = isRoutineWeekLocked(routine, week.week_number, subscription.isPro);
@@ -620,7 +662,8 @@ export default function RoutineDetailScreen() {
                                         {day.name}
                                       </Text>
                                       <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
-                                        Day {day.day_number} · {routine.session_minutes} min
+                                        {day.focus ? `${day.focus} · ` : `Day ${day.day_number} · `}
+                                        {routine.session_minutes} min
                                       </Text>
                                     </View>
                                     {done ? (
@@ -650,11 +693,20 @@ export default function RoutineDetailScreen() {
                                           ]}
                                           accessibilityRole="button">
                                           <View style={styles.flex}>
+                                            {item.role ? (
+                                              <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 4 }]}>
+                                                {ROLE_LABELS[item.role]}
+                                              </Text>
+                                            ) : null}
                                             <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
                                               {item.exercise.name}
                                             </Text>
                                             <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
-                                              {formatSetsAndReps(item)} · {formatRestSeconds(item.rest_seconds)}
+                                              {formatSetsAndReps(item)}
+                                              {item.target_rir
+                                                ? ` · ${formatRir(item.target_rir)}`
+                                                : ''}
+                                              {` · ${formatRestSeconds(item.rest_seconds)}`}
                                             </Text>
                                             <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
                                               {MUSCLE_LABELS[item.exercise.primary_muscle]} ·{' '}

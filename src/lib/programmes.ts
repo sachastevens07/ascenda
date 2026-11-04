@@ -1,6 +1,7 @@
 import type { Equipment, Muscle, Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import { heaviestWeight, type LoggedSet } from '@/lib/sessions';
+import type { ExerciseRole, ProgressionRule, WarmupStep } from '@/lib/routineStandard';
 import { supabase } from '@/lib/supabase';
 import { formatWeight } from '@/lib/units';
 
@@ -44,6 +45,13 @@ export type ProgrammeExercise = {
   candidates?: SlotExercise[];
   /** Extra slot that isn't in the programme (a level-up try added to the session). */
   added?: boolean;
+  role?: ExerciseRole;
+  target_rir?: number;
+  tempo?: string;
+  progression_rule?: ProgressionRule;
+  load_increment_kg?: number;
+  notes?: string;
+  alternative_exercise_ids?: string[];
 };
 
 export type ProgrammeDay = {
@@ -51,6 +59,10 @@ export type ProgrammeDay = {
   day_number: number;
   name: string;
   exercises: ProgrammeExercise[];
+  focus?: string | null;
+  warmup?: WarmupStep[];
+  coach_note?: string | null;
+  finisher?: string | null;
 };
 
 export type Programme = {
@@ -169,7 +181,11 @@ export async function fetchProgrammeDay(
   return data ? toProgrammeDay(data as unknown as ProgrammeDayRow, equipment) : null;
 }
 
-export function formatSetsAndReps({ sets, rep_min, rep_max }: ProgrammeExercise): string {
+export function formatSetsAndReps({
+  sets,
+  rep_min,
+  rep_max,
+}: Pick<ProgrammeExercise, 'sets' | 'rep_min' | 'rep_max'>): string {
   const reps = rep_min === rep_max ? `${rep_min}` : `${rep_min}–${rep_max}`;
   return `${sets} sets × ${reps} reps`;
 }
