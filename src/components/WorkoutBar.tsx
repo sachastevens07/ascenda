@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { formatKg } from '@/lib/programmes';
 import { useWeightUnit } from '@/lib/units';
@@ -57,27 +58,35 @@ export function WorkoutBar() {
         .join('. ')}>
       <View style={styles.row}>
         <View style={[styles.liveDot, { backgroundColor: colours.accent }]} />
-        <Text style={[styles.dayName, { color: colours.bg }]}>{active.dayName}</Text>
-        <Text style={[styles.elapsed, { color: colours.bg }]}>{elapsed}</Text>
+        <AppText variant="caption" style={[styles.dayName, { color: colours.bg }]}>
+          {active.dayName}
+        </AppText>
+        <AppText variant="caption" style={[styles.elapsed, { color: colours.bg }]}>
+          {elapsed}
+        </AppText>
         <Ionicons name="chevron-up" size={18} color={colours.bg} />
       </View>
 
       {nextSet ? (
         <>
-          <Text style={[styles.exercise, { color: colours.bg }]}>
-            <Text style={[styles.nextLabel, { color: colours.brandSoft }]}>Next: </Text>
+          <AppText variant="bodySm" style={{ color: colours.bg }}>
+            <AppText variant="bodySm" style={{ color: colours.brandSoft }}>
+              Next:{' '}
+            </AppText>
             {nextSet.exerciseName}
-          </Text>
+          </AppText>
           <View style={styles.row}>
-            <Text style={[styles.set, { color: colours.brandSoft }]}>{describeSet(nextSet)}</Text>
+            <AppText variant="bodySm" style={[styles.set, { color: colours.brandSoft }]}>
+              {describeSet(nextSet)}
+            </AppText>
             {rest && <RestPill time={rest} />}
           </View>
         </>
       ) : (
         <View style={styles.row}>
-          <Text style={[styles.set, { color: colours.brandSoft }]}>
+          <AppText variant="bodySm" style={[styles.set, { color: colours.brandSoft }]}>
             {active.source === 'stretch' ? 'Tap to continue your stretch.' : 'All sets done. Tap to finish.'}
-          </Text>
+          </AppText>
           {rest && <RestPill time={rest} />}
         </View>
       )}
@@ -89,8 +98,12 @@ function RestPill({ time }: { time: string }) {
   const { colours } = useTheme();
   return (
     <View style={[styles.rest, { backgroundColor: colours.brand }]}>
-      <Text style={[styles.restLabel, { color: colours.onBrand }]}>Rest</Text>
-      <Text style={[styles.restTime, { color: colours.onBrand }]}>{time}</Text>
+      <AppText variant="caption" style={{ color: colours.onBrand }}>
+        Rest
+      </AppText>
+      <AppText variant="bodySm" style={[styles.restTime, { color: colours.onBrand }]}>
+        {time}
+      </AppText>
     </View>
   );
 }
@@ -123,24 +136,12 @@ const styles = StyleSheet.create({
   },
   dayName: {
     flex: 1,
-    fontSize: 13,
-    fontWeight: '700',
   },
   elapsed: {
-    fontSize: 13,
-    fontWeight: '700',
     fontVariant: ['tabular-nums'],
-  },
-  exercise: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  nextLabel: {
-    fontWeight: '400',
   },
   set: {
     flex: 1,
-    fontSize: 14,
   },
   rest: {
     flexDirection: 'row',
@@ -150,13 +151,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 999,
   },
-  restLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
   restTime: {
-    fontSize: 15,
-    fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
 });

@@ -7,7 +7,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
   type ImageSourcePropType,
@@ -23,6 +22,7 @@ import {
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
+  AppText,
   ArticleCard,
   IconButton,
   ImageCard,
@@ -167,7 +167,7 @@ function sessionThumbnail(day: RoutineDay, routine: RoutineSummary): ImageSource
 export default function HomeScreen() {
   const tabBarHeight = useTabBarHeight();
   const { width } = useWindowDimensions();
-  const { colours, spacing, radius, shadow, type } = useTheme();
+  const { colours, spacing, radius, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const subscription = useSubscription();
@@ -557,9 +557,9 @@ export default function HomeScreen() {
           <ActivityIndicator color={colours.brand} />
         ) : (
           <>
-            <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+            <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
               We couldn’t load Home. Check your connection and try again.
-            </Text>
+            </AppText>
             <PrimaryButton
               label="Try again"
               onPress={() => setAttempt((count) => count + 1)}
@@ -589,27 +589,27 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         <View style={styles.header}>
           <TabAvatar />
-          <Text style={[type.display, { color: colours.ink, flex: 1 }]} numberOfLines={1}>
+          <AppText variant="display" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
             {greeting(profile?.display_name)}
-          </Text>
+          </AppText>
         </View>
 
         {subscription.trialEndsAt && isTrialEndingSoon(subscription) ? (
           <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-            <Text style={[type.bodySm, { color: colours.ink }]}>
+            <AppText variant="bodySm" style={{ color: colours.ink }}>
               Your free trial ends on {formatShortDate(subscription.trialEndsAt)}.
-            </Text>
+            </AppText>
             <TextButton label="Manage subscription" onPress={handleManageSubscription} style={{ alignSelf: 'flex-start' }} />
           </View>
         ) : null}
 
         {inProgress ? (
           <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-            <Text style={[type.eyebrow, { color: colours.accent }]}>In progress</Text>
-            <Text style={[type.title2, { color: colours.ink, marginTop: spacing.sm }]}>You have a session going</Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.xs }]}>
+            <AppText variant="eyebrow" style={{ color: colours.accent }}>In progress</AppText>
+            <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.sm }}>You have a session going</AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }}>
               Finish or discard it before starting another.
-            </Text>
+            </AppText>
             <PrimaryButton label="Continue session" onPress={continueSession} style={{ marginTop: spacing.md }} />
           </View>
         ) : null}
@@ -636,22 +636,22 @@ export default function HomeScreen() {
                       accessibilityLabel={next.day.name}
                     />
                   ) : (
-                    <Text style={[styles.heroLetter, { color: colours.brand }]}>{next.day.name.slice(0, 1)}</Text>
+                    <AppText variant="display" style={{ color: colours.brand }}>{next.day.name.slice(0, 1)}</AppText>
                   )}
                 </View>
               </Pressable>
               <View style={styles.heroBody}>
                 <View style={styles.heroHeading}>
                   <View style={styles.flex}>
-                    <Text style={[type.eyebrow, { color: colours.accent }]}>
+                    <AppText variant="eyebrow" style={{ color: colours.accent }}>
                       Week {next.weekNumber} · day {next.day.day_number}
-                    </Text>
+                    </AppText>
                     <Pressable onPress={openSessionDetail} accessibilityRole="button">
-                      <Text style={[type.title2, { color: colours.ink, marginTop: spacing.xs }]}>{next.day.name}</Text>
+                      <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.xs }}>{next.day.name}</AppText>
                     </Pressable>
-                    <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                    <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
                       {enrolment.routine.session_minutes} min · {next.day.exercises.length} exercises
-                    </Text>
+                    </AppText>
                   </View>
                   <View ref={routineMenuRef} collapsable={false}>
                     <IconButton
@@ -690,11 +690,11 @@ export default function HomeScreen() {
 
         {!enrolment && !inProgress && !welcomeBack && !handOff ? (
           <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-            <Text style={[type.eyebrow, { color: colours.inkMuted }]}>No routine yet</Text>
-            <Text style={[type.title2, { color: colours.ink, marginTop: spacing.sm }]}>Create a workout</Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.xs }]}>
+            <AppText variant="eyebrow" style={{ color: colours.inkMuted }}>No routine yet</AppText>
+            <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.sm }}>Create a workout</AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }}>
               Add exercises from the library, or pick a featured routine below.
-            </Text>
+            </AppText>
             {atCustomLimit ? (
               <Pressable
                 onPress={handleCreateWorkout}
@@ -704,7 +704,7 @@ export default function HomeScreen() {
                   pressed && styles.pressed,
                 ]}
                 accessibilityRole="button">
-                <ProMark locked textStyle={[type.button, { color: colours.onBrand }]}>
+                <ProMark locked textStyle={{ color: colours.onBrand }}>
                   Create with Pro
                 </ProMark>
               </Pressable>
@@ -718,32 +718,32 @@ export default function HomeScreen() {
         {showWeekCard ? (
           <View style={[styles.weekCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
             <ProgressRing progress={weekRatio} size={56} stroke={6}>
-              <Text style={[type.caption, { color: colours.ink, fontWeight: '700' }]}>
+              <AppText variant="caption" style={{ color: colours.ink }}>
                 {weekProgress.completed}/{weekProgress.planned || 0}
-              </Text>
+              </AppText>
             </ProgressRing>
             <View style={styles.flex}>
               {weekProgress.planned > 0 ? (
-                <Text style={[type.title3, { color: colours.ink }]}>
+                <AppText variant="title3" style={{ color: colours.ink }}>
                   {weekProgress.completed} of {weekProgress.planned}{' '}
                   {weekProgress.planned === 1 ? 'workout' : 'workouts'}
-                </Text>
+                </AppText>
               ) : (
-                <Text style={[type.title3, { color: colours.ink }]}>This week</Text>
+                <AppText variant="title3" style={{ color: colours.ink }}>This week</AppText>
               )}
               {hideStreak ? null : (
                 <View style={styles.streakBlock}>
                   <View style={styles.streakRow}>
                     <Ionicons name="flame" size={16} color={colours.accent} />
-                    <Text style={[type.bodySm, { color: colours.accent, fontWeight: '700' }]}>
+                    <AppText variant="bodySm" style={{ color: colours.accent }}>
                       {streak.current === 0
                         ? 'Start a streak'
                         : `Current run: ${streak.current} ${streak.current === 1 ? 'week' : 'weeks'}`}
-                    </Text>
+                    </AppText>
                   </View>
-                  <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
+                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
                     Weeks trained: {streak.weeksTrained}
-                  </Text>
+                  </AppText>
                 </View>
               )}
             </View>
@@ -762,11 +762,11 @@ export default function HomeScreen() {
               pressed && styles.pressed,
             ]}
             accessibilityRole="button">
-            <Text style={[type.eyebrow, { color: colours.accent }]}>Challenge</Text>
-            <Text style={[type.title3, { color: colours.ink, marginTop: spacing.sm }]}>{challenge.name}</Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+            <AppText variant="eyebrow" style={{ color: colours.accent }}>Challenge</AppText>
+            <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.sm }}>{challenge.name}</AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
               {challengeTimingCopy(challenge)}
-            </Text>
+            </AppText>
           </Pressable>
         ) : null}
 
@@ -778,7 +778,7 @@ export default function HomeScreen() {
           />
           {missingSql ? (
             <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-              <Text style={[type.bodySm, { color: colours.ink }]}>{missingRoutinesMessage()}</Text>
+              <AppText variant="bodySm" style={{ color: colours.ink }}>{missingRoutinesMessage()}</AppText>
             </View>
           ) : (
             <ScrollView
@@ -860,9 +860,9 @@ export default function HomeScreen() {
 
         {enrolment && !next && !missingSql ? (
           <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-            <Text style={[type.bodySm, { color: colours.ink }]}>
+            <AppText variant="bodySm" style={{ color: colours.ink }}>
               {describeRoutineError('This routine has no sessions yet.')}
-            </Text>
+            </AppText>
           </View>
         ) : null}
       </ScrollView>
@@ -951,10 +951,6 @@ const styles = StyleSheet.create({
   heroFill: {
     width: '100%',
     height: '100%',
-  },
-  heroLetter: {
-    fontSize: 48,
-    fontWeight: '700',
   },
   heroBody: {
     padding: 20,

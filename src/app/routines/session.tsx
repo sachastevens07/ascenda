@@ -1,8 +1,9 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
+import { AppText } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { isSessionStartCancelled } from '@/lib/firstSession';
 import { describeRoutineError, fetchRoutineDay } from '@/lib/routines';
@@ -15,7 +16,7 @@ export default function SessionLaunchScreen() {
     dayId?: string;
     enrolmentId?: string;
   }>();
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   const started = useRef(false);
 
   useEffect(() => {
@@ -69,7 +70,7 @@ export default function SessionLaunchScreen() {
         }}
       />
       <ActivityIndicator color={colours.brand} />
-      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 12 }]}>Opening your session…</Text>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 12 }}>Opening your session…</AppText>
     </View>
   );
 }

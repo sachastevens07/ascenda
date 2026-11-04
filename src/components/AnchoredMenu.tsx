@@ -8,10 +8,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 export type AnchorRect = {
@@ -143,8 +143,14 @@ export function MenuHeader({ label, detail }: { label: string; detail?: string }
   const { colours } = useTheme();
   return (
     <View style={[styles.header, { borderBottomColor: colours.border }]}>
-      <Text style={[styles.headerLabel, { color: colours.ink }]}>{label}</Text>
-      {detail ? <Text style={[styles.headerDetail, { color: colours.inkMuted }]}>{detail}</Text> : null}
+      <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+        {label}
+      </AppText>
+      {detail ? (
+        <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 4 }}>
+          {detail}
+        </AppText>
+      ) : null}
     </View>
   );
 }
@@ -170,16 +176,17 @@ export function MenuRow({
       accessibilityRole="button"
       accessibilityState={{ selected }}>
       <View style={styles.rowTextWrap}>
-        <Text
-          style={[
-            styles.rowLabel,
-            { color: danger ? colours.danger : selected ? colours.brand : colours.ink },
-            (selected || danger) && styles.rowLabelStrong,
-          ]}
+        <AppText
+          variant={selected || danger ? 'bodyStrong' : 'body'}
+          style={{ color: danger ? colours.danger : selected ? colours.brand : colours.ink }}
           numberOfLines={2}>
           {label}
-        </Text>
-        {detail ? <Text style={[styles.rowDetail, { color: colours.inkMuted }]}>{detail}</Text> : null}
+        </AppText>
+        {detail ? (
+          <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
+            {detail}
+          </AppText>
+        ) : null}
       </View>
       {selected ? <Ionicons name="checkmark" size={20} color={colours.brand} /> : null}
     </Pressable>
@@ -204,15 +211,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  headerLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  headerDetail: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
-  },
   row: {
     minHeight: 48,
     paddingHorizontal: 16,
@@ -224,16 +222,6 @@ const styles = StyleSheet.create({
   },
   rowTextWrap: {
     flex: 1,
-  },
-  rowLabel: {
-    fontSize: 16,
-  },
-  rowLabelStrong: {
-    fontWeight: '700',
-  },
-  rowDetail: {
-    fontSize: 13,
-    marginTop: 2,
   },
   pressed: {
     opacity: 0.7,

@@ -1,5 +1,6 @@
-import { Image, Text, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 import { ProBadge } from './Badges';
@@ -26,7 +27,7 @@ export function WhatsNextCard({
   onSeeRoutine?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, spacing, type } = useTheme();
+  const { colours, radius, spacing } = useTheme();
   return (
     <View
       style={[
@@ -42,11 +43,17 @@ export function WhatsNextCard({
       ) : null}
       <View style={{ padding: spacing.lg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={[type.caption, { color: colours.accent, fontWeight: '700' }]}>What’s next</Text>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            What’s next
+          </AppText>
           {locked ? <ProBadge compact /> : null}
         </View>
-        <Text style={[type.title2, { color: colours.ink, marginTop: spacing.sm }]}>{title}</Text>
-        <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.xs }]}>{body}</Text>
+        <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.sm }}>
+          {title}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }}>
+          {body}
+        </AppText>
         <PrimaryButton
           label={starting ? 'Starting…' : primaryLabel}
           onPress={onPrimary}

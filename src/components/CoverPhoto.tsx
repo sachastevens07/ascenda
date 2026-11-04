@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import {
   Image,
   StyleSheet,
-  Text,
   View,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import { coverSources } from '@/lib/images';
 import type { CoverImage } from '@/lib/routines';
@@ -39,7 +39,9 @@ export function CoverPhoto({
     <View style={[styles.frame, { height, borderRadius: radius }, style]}>
       {!ready && (
         <View style={styles.placeholder} accessibilityElementsHidden>
-          <Text style={styles.letter}>{letter}</Text>
+          <AppText variant="display" style={{ color: colours.accent }}>
+            {letter}
+          </AppText>
         </View>
       )}
       {source ? (
@@ -68,11 +70,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  letter: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colours.accent,
   },
   image: {
     width: '100%',

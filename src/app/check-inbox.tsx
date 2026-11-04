@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import { resendSignupEmail } from '@/lib/emailAuth';
 
@@ -45,16 +46,16 @@ export default function CheckInboxScreen() {
         styles.container,
         { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 24 },
       ]}>
-      <Text style={styles.title}>Check your inbox</Text>
-      <Text style={styles.subtitle}>
+      <AppText variant="display" style={styles.title}>Check your inbox</AppText>
+      <AppText variant="body" style={styles.subtitle}>
         {address
           ? `We’ve sent a link to ${address}. Open it on this phone to finish creating your account.`
           : 'We’ve sent a link to your email. Open it on this phone to finish creating your account.'}
-      </Text>
-      <Text style={styles.hint}>It can take a minute. Have a look in junk if you don’t see it.</Text>
+      </AppText>
+      <AppText variant="bodySm" style={styles.hint}>It can take a minute. Have a look in junk if you don’t see it.</AppText>
 
       {message ? (
-        <Text style={[styles.message, messageKind === 'error' && styles.messageError]}>{message}</Text>
+        <AppText variant="bodySm" style={[styles.message, messageKind === 'error' && styles.messageError]}>{message}</AppText>
       ) : null}
 
       <Pressable
@@ -65,7 +66,7 @@ export default function CheckInboxScreen() {
         {busy ? (
           <ActivityIndicator color={colours.surface} />
         ) : (
-          <Text style={styles.buttonText}>Resend email</Text>
+          <AppText variant="bodyStrong" style={styles.buttonText}>Resend email</AppText>
         )}
       </Pressable>
 
@@ -73,7 +74,7 @@ export default function CheckInboxScreen() {
         onPress={() => router.replace('/sign-in' as Href)}
         style={styles.switch}
         accessibilityRole="button">
-        <Text style={styles.switchText}>Use a different email</Text>
+        <AppText variant="bodyStrong" style={styles.switchText}>Use a different email</AppText>
       </Pressable>
     </ScrollView>
   );
@@ -89,26 +90,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
     color: colours.text,
   },
   subtitle: {
-    fontSize: 17,
     color: colours.textMuted,
     marginTop: 8,
-    lineHeight: 24,
   },
   hint: {
-    fontSize: 15,
     color: colours.textMuted,
     marginTop: 12,
     marginBottom: 28,
-    lineHeight: 21,
   },
   message: {
-    fontSize: 15,
-    lineHeight: 21,
     color: colours.text,
     marginBottom: 16,
   },
@@ -126,8 +119,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.surface,
   },
   switch: {
@@ -135,8 +126,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   switchText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.accent,
   },
 });

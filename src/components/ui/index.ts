@@ -1,5 +1,6 @@
 /** Shared visual kit for the redesign. Wire these in screen-by-screen; do not restyle old screens from here. */
 
+export { AppText, type AppTextProps } from './AppText';
 export {
   ButtonRow,
   DestructiveTextButton,

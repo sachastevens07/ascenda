@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 export type DialogButton = {
@@ -94,9 +95,13 @@ export function DialogCard({ dialog, onClose }: { dialog: DialogOptions; onClose
         accessibilityLabel="Close"
       />
       <View style={[styles.card, { backgroundColor: colours.surface }]} accessibilityRole="alert">
-        <Text style={[styles.title, { color: colours.ink }]}>{dialog.title}</Text>
+        <AppText variant="title2" style={{ color: colours.ink }}>
+          {dialog.title}
+        </AppText>
         {dialog.message ? (
-          <Text style={[styles.message, { color: colours.inkMuted }]}>{dialog.message}</Text>
+          <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 8 }}>
+            {dialog.message}
+          </AppText>
         ) : null}
         <View style={styles.buttons}>
           {actions.map((button) => (
@@ -111,7 +116,9 @@ export function DialogCard({ dialog, onClose }: { dialog: DialogOptions; onClose
               ]}
               onPress={() => press(button)}
               accessibilityRole="button">
-              <Text style={[styles.primaryButtonText, { color: colours.onBrand }]}>{button.text}</Text>
+              <AppText variant="bodyStrong" style={{ color: colours.onBrand }}>
+                {button.text}
+              </AppText>
             </Pressable>
           ))}
           {cancel && (
@@ -123,7 +130,9 @@ export function DialogCard({ dialog, onClose }: { dialog: DialogOptions; onClose
               ]}
               onPress={() => press(cancel)}
               accessibilityRole="button">
-              <Text style={[styles.cancelButtonText, { color: colours.brand }]}>{cancel.text}</Text>
+              <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+                {cancel.text}
+              </AppText>
             </Pressable>
           )}
         </View>
@@ -145,15 +154,6 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 28,
   },
-  title: {
-    fontSize: 21,
-    fontWeight: '700',
-  },
-  message: {
-    fontSize: 16,
-    lineHeight: 23,
-    marginTop: 8,
-  },
   buttons: {
     gap: 10,
     marginTop: 24,
@@ -164,14 +164,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-  },
-  primaryButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  cancelButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
   },
   pressed: {
     opacity: 0.7,

@@ -1,10 +1,10 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { Chip, PrimaryButton, TextButton, WhatsNextCard } from '@/components/ui';
+import { AppText, Chip, PrimaryButton, TextButton, WhatsNextCard } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { fetchFinishedSessionMeta, formatTrainingHours } from '@/lib/activityStats';
 import {
@@ -30,7 +30,7 @@ type LoadState = 'loading' | 'error' | 'ready';
 export default function RoutineCompleteScreen() {
   const { enrolmentId } = useLocalSearchParams<{ enrolmentId: string }>();
   const insets = useSafeAreaInsets();
-  const { colours, radius, spacing, type, shadow } = useTheme();
+  const { colours, radius, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const subscription = useSubscription();
@@ -112,9 +112,9 @@ export default function RoutineCompleteScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
             We couldn’t load that review.
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -127,33 +127,33 @@ export default function RoutineCompleteScreen() {
     <ScrollView
       style={[styles.scroll, { backgroundColor: colours.bg }]}
       contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 32, gap: spacing.md }]}>
-      <Text style={[type.caption, { color: colours.accent, fontWeight: '700' }]}>Routine complete</Text>
-      <Text style={[type.display, { color: colours.ink }]}>{review.enrolment.routine.name}</Text>
-      <Text style={[type.body, { color: colours.inkMuted }]}>That’s a full plan. Your history stays.</Text>
+      <AppText variant="eyebrow" style={{ color: colours.accent }}>Routine complete</AppText>
+      <AppText variant="display" style={{ color: colours.ink }}>{review.enrolment.routine.name}</AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted }}>That’s a full plan. Your history stays.</AppText>
       <Chip label="Routine completed" selected />
 
       <View
         style={[styles.card, { backgroundColor: colours.ink, borderRadius: radius.xl }]}
         accessibilityLabel="Completion card">
-        <Text style={[type.caption, { color: colours.accent, fontWeight: '700' }]}>Ascenda</Text>
-        <Text style={[type.title2, { color: colours.bg, marginTop: spacing.sm }]}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>Ascenda</AppText>
+        <AppText variant="title2" style={{ color: colours.bg, marginTop: spacing.sm }}>
           {review.enrolment.routine.name}
-        </Text>
-        <Text style={[type.title3, { color: colours.accent, marginTop: spacing.md }]}>
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.accent, marginTop: spacing.md }}>
           {review.sessions} {review.sessions === 1 ? 'session' : 'sessions'}
-        </Text>
-        <Text style={[type.title3, { color: colours.accent }]}>{formatTrainingHours(review.durationSeconds)}</Text>
-        <Text style={[type.title3, { color: colours.accent }]}>
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.accent }}>{formatTrainingHours(review.durationSeconds)}</AppText>
+        <AppText variant="title3" style={{ color: colours.accent }}>
           {review.personalBests} {review.personalBests === 1 ? 'personal best' : 'personal bests'}
-        </Text>
+        </AppText>
         {review.lifts.slice(0, 3).map((lift) => (
-          <Text key={lift.exerciseId} style={[type.body, { color: colours.bg, marginTop: spacing.xs }]}>
+          <AppText key={lift.exerciseId} variant="body" style={{ color: colours.bg, marginTop: spacing.xs }}>
             {formatLiftCompare(lift)}
-          </Text>
+          </AppText>
         ))}
-        <Text style={[type.caption, { color: colours.inkMuted, marginTop: spacing.md }]}>
+        <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
           No body data. Just the work.
-        </Text>
+        </AppText>
       </View>
 
       {locked ? (

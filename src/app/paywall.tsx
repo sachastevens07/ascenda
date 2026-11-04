@@ -6,13 +6,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import type { PurchasesPackage } from 'react-native-purchases';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { AppText } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import {
   FREE_ALWAYS,
@@ -152,9 +152,9 @@ export default function PaywallScreen() {
         </Pressable>
 
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-          <Text style={styles.eyebrow}>{copy.eyebrow}</Text>
-          <Text style={styles.title}>{copy.title}</Text>
-          <Text style={styles.body}>{copy.body}</Text>
+          <AppText variant="eyebrow" style={styles.eyebrow}>{copy.eyebrow}</AppText>
+          <AppText variant="display" style={styles.title}>{copy.title}</AppText>
+          <AppText variant="body" style={styles.body}>{copy.body}</AppText>
 
           <View style={styles.features}>
             {PRO_FEATURES.map((feature) => (
@@ -162,27 +162,27 @@ export default function PaywallScreen() {
                 <View style={styles.featureIcon}>
                   <Ionicons name={feature.icon} size={22} color={colours.accent} />
                 </View>
-                <Text style={styles.featureText}>{feature.text}</Text>
+                <AppText variant="body" style={styles.featureText}>{feature.text}</AppText>
               </View>
             ))}
           </View>
-          <Text style={styles.freeNote}>{FREE_ALWAYS}</Text>
+          <AppText variant="bodySm" style={styles.freeNote}>{FREE_ALWAYS}</AppText>
 
           {loadState === 'loading' ? (
             <ActivityIndicator color={colours.accent} style={styles.loading} />
           ) : loadState !== 'ready' ? (
             <View style={styles.notice}>
-              <Text style={styles.noticeText}>
+              <AppText variant="body" style={styles.noticeText}>
                 {loadState === 'error'
                   ? 'We couldn’t load the plans. Check your connection and try again.'
                   : 'Pro isn’t available to buy yet. Check back soon.'}
-              </Text>
+              </AppText>
               {loadState === 'error' && (
                 <Pressable
                   style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
                   onPress={() => setAttempt((count) => count + 1)}
                   accessibilityRole="button">
-                  <Text style={styles.outlineButtonText}>Try again</Text>
+                  <AppText variant="bodyStrong" style={styles.outlineButtonText}>Try again</AppText>
                 </Pressable>
               )}
             </View>
@@ -205,20 +205,20 @@ export default function PaywallScreen() {
                         color={colours.accent}
                       />
                       <View style={styles.flex}>
-                        <Text style={styles.planName}>{isAnnual ? 'Yearly' : 'Monthly'}</Text>
-                        <Text style={styles.planPrice}>
+                        <AppText variant="title3" style={styles.planName}>{isAnnual ? 'Yearly' : 'Monthly'}</AppText>
+                        <AppText variant="body" style={styles.planPrice}>
                           {item.product.priceString} a {periodName(item)}
-                        </Text>
+                        </AppText>
                         {isAnnual && item.product.pricePerMonthString && (
-                          <Text style={styles.planDetail}>
+                          <AppText variant="bodySm" style={styles.planDetail}>
                             Works out at {item.product.pricePerMonthString} a month
-                          </Text>
+                          </AppText>
                         )}
                       </View>
                       {isAnnual && (
-                        <Text style={styles.badge}>
+                        <AppText variant="caption" style={styles.badge}>
                           {annualSaving !== null ? `Save ${annualSaving}%` : 'Best value'}
-                        </Text>
+                        </AppText>
                       )}
                     </Pressable>
                   );
@@ -233,21 +233,21 @@ export default function PaywallScreen() {
                 {busy === 'buy' ? (
                   <ActivityIndicator color={colours.surface} />
                 ) : (
-                  <Text style={styles.buttonText}>
+                  <AppText variant="bodyStrong" style={styles.buttonText}>
                     {trialDays ? `Start ${trialDays}-day free trial` : 'Subscribe'}
-                  </Text>
+                  </AppText>
                 )}
               </Pressable>
 
               {selected && (
-                <Text style={styles.finePrint}>
+                <AppText variant="bodySm" style={styles.finePrint}>
                   {trialDays
                     ? `Free for ${trialDays} days, then ${selected.product.priceString} a ${periodName(selected)}. ` +
                       `We’ll remind you ${REMINDER_DAYS_BEFORE} days before your trial ends. ` +
                       `Cancel at least 24 hours before it ends in your ${STORE_NAME} settings.`
                     : `${selected.product.priceString} a ${periodName(selected)}, renewing automatically. ` +
                       `Cancel any time in your ${STORE_NAME} settings.`}
-                </Text>
+                </AppText>
               )}
             </>
           )}
@@ -258,13 +258,13 @@ export default function PaywallScreen() {
               onPress={handleRestore}
               disabled={busy !== null}
               accessibilityRole="button">
-              <Text style={styles.linkText}>
+              <AppText variant="bodyStrong" style={styles.linkText}>
                 {busy === 'restore' ? 'Restoring…' : 'Restore purchases'}
-              </Text>
+              </AppText>
             </Pressable>
           )}
           <Pressable style={styles.link} onPress={dismiss} accessibilityRole="button">
-            <Text style={styles.mutedLinkText}>Not now</Text>
+            <AppText variant="bodyStrong" style={styles.mutedLinkText}>Not now</AppText>
           </Pressable>
         </ScrollView>
       </View>
@@ -300,19 +300,13 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   eyebrow: {
-    fontSize: 15,
-    fontWeight: '700',
     color: colours.accent,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
     color: colours.text,
     marginTop: -8,
   },
   body: {
-    fontSize: 16,
-    lineHeight: 22,
     color: colours.textMuted,
     marginTop: -4,
   },
@@ -335,13 +329,9 @@ const styles = StyleSheet.create({
   },
   featureText: {
     flex: 1,
-    fontSize: 17,
-    lineHeight: 23,
     color: colours.text,
   },
   freeNote: {
-    fontSize: 15,
-    lineHeight: 21,
     color: colours.textMuted,
   },
   loading: {
@@ -354,8 +344,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.surface,
   },
   noticeText: {
-    fontSize: 16,
-    lineHeight: 22,
     color: colours.text,
   },
   plans: {
@@ -380,17 +368,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   planName: {
-    fontSize: 18,
-    fontWeight: '700',
     color: colours.text,
   },
   planPrice: {
-    fontSize: 16,
     color: colours.text,
     marginTop: 2,
   },
   planDetail: {
-    fontSize: 14,
     color: colours.textMuted,
     marginTop: 2,
   },
@@ -399,8 +383,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     overflow: 'hidden',
-    fontSize: 13,
-    fontWeight: '700',
     color: colours.surface,
     backgroundColor: colours.accent,
   },
@@ -412,8 +394,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.accent,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: '700',
     color: colours.surface,
   },
   outlineButton: {
@@ -426,13 +406,9 @@ const styles = StyleSheet.create({
     backgroundColor: colours.surface,
   },
   outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.accent,
   },
   finePrint: {
-    fontSize: 14,
-    lineHeight: 20,
     color: colours.textMuted,
     textAlign: 'center',
   },
@@ -444,13 +420,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   linkText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.accent,
   },
   mutedLinkText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.textMuted,
   },
 });

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DisclaimerBody, DisclaimerCheckbox } from '@/components/ui/Disclaimer';
+import { AppText } from '@/components/ui/AppText';
 import { PrimaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { useProfile } from '@/lib/profile';
@@ -10,7 +11,7 @@ import { useProfile } from '@/lib/profile';
 /** Shown on next open when the stored disclaimer version does not match the current text. */
 export function AcceptDisclaimerScreen() {
   const insets = useSafeAreaInsets();
-  const { colours, type, radius, spacing, shadow } = useTheme();
+  const { colours, radius, spacing, shadow } = useTheme();
   const { profile, acceptDisclaimer } = useProfile();
   const [checked, setChecked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,12 +37,14 @@ export function AcceptDisclaimerScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
-        <Text style={[type.display, { color: colours.ink }]}>Train safely</Text>
-        <Text style={[type.body, { color: colours.inkMuted, marginTop: spacing.sm }]}>
+        <AppText variant="display" style={{ color: colours.ink }}>
+          Train safely
+        </AppText>
+        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
           {updated
             ? 'The safety guidance has been updated. Please read it again before you continue.'
             : 'Please read this before you train.'}
-        </Text>
+        </AppText>
         <View
           style={[
             styles.card,
@@ -58,7 +61,9 @@ export function AcceptDisclaimerScreen() {
           <DisclaimerCheckbox checked={checked} onToggle={() => setChecked((value) => !value)} />
         </View>
         {error ? (
-          <Text style={[type.bodySm, { color: colours.danger, marginTop: spacing.md }]}>{error}</Text>
+          <AppText variant="bodySm" style={{ color: colours.danger, marginTop: spacing.md }}>
+            {error}
+          </AppText>
         ) : null}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>

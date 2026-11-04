@@ -8,13 +8,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { equipmentIconName, RelatedLearn } from '@/components/ui';
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import { useDevTools } from '@/lib/devFlags';
 import {
@@ -95,11 +95,11 @@ export default function ExerciseScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.accent} />
         ) : (
-          <Text style={styles.message}>
+          <AppText variant="body" style={styles.message}>
             {loadState === 'not-found'
               ? 'We couldn’t find that exercise.'
               : 'We couldn’t load this exercise. Check your connection and try again.'}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -130,52 +130,74 @@ export default function ExerciseScreen() {
             color={colours.accent}
             accessibilityLabel={EQUIPMENT_LABELS[exercise.equipment]}
           />
-          <Text style={styles.mediaPlaceholderText}>Demo image coming soon</Text>
+          <AppText variant="bodySm" style={styles.mediaPlaceholderText}>
+            Demo image coming soon
+          </AppText>
           {showDevTools && (
-            <Text style={styles.mediaDevHint}>
+            <AppText variant="caption" style={styles.mediaDevHint}>
               Upload {exercise.id}.jpg to the {EXERCISE_MEDIA_BUCKET} bucket
-            </Text>
+            </AppText>
           )}
         </View>
       )}
 
       <View style={styles.firstTime}>
-        <Text style={styles.firstTimeLabel}>First time</Text>
-        <Text style={styles.firstTimeCopy}>
+        <AppText variant="eyebrow" style={styles.firstTimeLabel}>
+          First time
+        </AppText>
+        <AppText variant="bodySm" style={styles.firstTimeCopy}>
           Where to find it, how to set it up, what to do, and a swap if it’s taken.
-        </Text>
+        </AppText>
       </View>
 
-      <Text style={styles.title}>{exercise.name}</Text>
+      <AppText variant="title1" style={styles.title}>
+        {exercise.name}
+      </AppText>
 
       <View style={styles.tags}>
-        <Text style={[styles.tag, styles.tagPrimary]}>{MUSCLE_LABELS[exercise.primary_muscle]}</Text>
+        <AppText variant="bodySm" style={[styles.tag, styles.tagPrimary]}>
+          {MUSCLE_LABELS[exercise.primary_muscle]}
+        </AppText>
         {exercise.secondary_muscles.map((muscle) => (
-          <Text key={muscle} style={styles.tag}>
+          <AppText key={muscle} variant="bodySm" style={styles.tag}>
             {MUSCLE_LABELS[muscle]}
-          </Text>
+          </AppText>
         ))}
-        <Text style={[styles.tag, styles.tagEquipment]}>{EQUIPMENT_LABELS[exercise.equipment]}</Text>
-        <Text style={styles.tag}>{ZONE_LABELS[exercise.zone]}</Text>
+        <AppText variant="bodySm" style={[styles.tag, styles.tagEquipment]}>
+          {EQUIPMENT_LABELS[exercise.equipment]}
+        </AppText>
+        <AppText variant="bodySm" style={styles.tag}>
+          {ZONE_LABELS[exercise.zone]}
+        </AppText>
       </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeading}>
           <Ionicons name="location-outline" size={20} color={colours.accent} />
-          <Text style={styles.cardTitle}>Where to find it</Text>
+          <AppText variant="title3" style={styles.cardTitle}>
+            Where to find it
+          </AppText>
         </View>
-        <Text style={styles.body}>{exercise.location_hint}</Text>
+        <AppText variant="body" style={styles.body}>
+          {exercise.location_hint}
+        </AppText>
       </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeading}>
           <Ionicons name="construct-outline" size={20} color={colours.accent} />
-          <Text style={styles.cardTitle}>How to set it up</Text>
+          <AppText variant="title3" style={styles.cardTitle}>
+            How to set it up
+          </AppText>
         </View>
         {setup.map((step, index) => (
           <View key={step} style={styles.cue}>
-            <Text style={styles.cueNumber}>{index + 1}</Text>
-            <Text style={[styles.body, styles.cueText]}>{step}</Text>
+            <AppText variant="bodySm" style={styles.cueNumber}>
+              {index + 1}
+            </AppText>
+            <AppText variant="body" style={[styles.body, styles.cueText]}>
+              {step}
+            </AppText>
           </View>
         ))}
       </View>
@@ -183,12 +205,18 @@ export default function ExerciseScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeading}>
           <Ionicons name="checkmark-circle-outline" size={20} color={colours.accent} />
-          <Text style={styles.cardTitle}>Form cues</Text>
+          <AppText variant="title3" style={styles.cardTitle}>
+            Form cues
+          </AppText>
         </View>
         {exercise.cues.map((cue, index) => (
           <View key={cue} style={styles.cue}>
-            <Text style={styles.cueNumber}>{index + 1}</Text>
-            <Text style={[styles.body, styles.cueText]}>{cue}</Text>
+            <AppText variant="bodySm" style={styles.cueNumber}>
+              {index + 1}
+            </AppText>
+            <AppText variant="body" style={[styles.body, styles.cueText]}>
+              {cue}
+            </AppText>
           </View>
         ))}
       </View>
@@ -196,13 +224,17 @@ export default function ExerciseScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeading}>
           <Ionicons name="swap-horizontal-outline" size={20} color={colours.accent} />
-          <Text style={styles.cardTitle}>If it’s taken</Text>
+          <AppText variant="title3" style={styles.cardTitle}>
+            If it’s taken
+          </AppText>
         </View>
-        <Text style={styles.body}>
+        <AppText variant="body" style={styles.body}>
           Pick one of these: same muscles, no need to wait. You can also swap from the logger.
-        </Text>
+        </AppText>
         {swaps.length === 0 ? (
-          <Text style={styles.muted}>We’ll suggest a swap here once the library has finished loading.</Text>
+          <AppText variant="bodySm" style={styles.muted}>
+            We’ll suggest a swap here once the library has finished loading.
+          </AppText>
         ) : (
           swaps.map((option) => (
             <Pressable
@@ -211,10 +243,12 @@ export default function ExerciseScreen() {
               style={({ pressed }) => [styles.swapRow, pressed && styles.pressed]}
               accessibilityRole="button">
               <View style={styles.flex}>
-                <Text style={styles.swapName}>{option.name}</Text>
-                <Text style={styles.muted}>
+                <AppText variant="bodyStrong" style={styles.swapName}>
+                  {option.name}
+                </AppText>
+                <AppText variant="bodySm" style={styles.muted}>
                   {EQUIPMENT_LABELS[option.equipment]} · {ZONE_LABELS[option.zone]}
-                </Text>
+                </AppText>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colours.textMuted} />
             </Pressable>
@@ -223,7 +257,6 @@ export default function ExerciseScreen() {
       </View>
 
       <RelatedLearn exerciseId={exercise.id} />
-
     </ScrollView>
   );
 }
@@ -245,7 +278,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
   message: {
-    fontSize: 17,
     color: colours.textMuted,
     textAlign: 'center',
   },
@@ -262,12 +294,9 @@ const styles = StyleSheet.create({
     backgroundColor: colours.accentSoft,
   },
   mediaPlaceholderText: {
-    fontSize: 15,
-    fontWeight: '600',
     color: colours.accent,
   },
   mediaDevHint: {
-    fontSize: 12,
     color: colours.textMuted,
     textAlign: 'center',
     paddingHorizontal: 16,
@@ -279,20 +308,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   firstTimeLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
     color: colours.accent,
   },
   firstTimeCopy: {
-    fontSize: 15,
-    lineHeight: 21,
     color: colours.text,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
     color: colours.text,
   },
   tags: {
@@ -305,8 +326,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
-    fontSize: 14,
-    fontWeight: '600',
     color: colours.textMuted,
     backgroundColor: colours.surface,
   },
@@ -330,18 +349,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
     color: colours.text,
   },
   body: {
-    fontSize: 17,
-    lineHeight: 25,
     color: colours.text,
   },
   muted: {
-    fontSize: 15,
-    lineHeight: 22,
     color: colours.textMuted,
   },
   cue: {
@@ -355,8 +368,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     textAlign: 'center',
     lineHeight: 28,
-    fontSize: 15,
-    fontWeight: '700',
     color: colours.accent,
     backgroundColor: colours.accentSoft,
   },
@@ -373,8 +384,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   swapName: {
-    fontSize: 16,
-    fontWeight: '700',
     color: colours.text,
   },
   flex: {

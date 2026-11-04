@@ -1,11 +1,12 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { ProBadge, ProMark } from '@/components/ProBadge';
 import { ProgressRing } from '@/components/ProgressRing';
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import { coverForRoutine } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
@@ -58,9 +59,9 @@ export default function PathDetailScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.accent} />
         ) : (
-          <Text style={styles.message}>
+          <AppText variant="body" style={styles.message}>
             {loadState === 'not-found' ? 'We couldn’t find that path.' : (errorMessage ?? missingPathsMessage())}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -91,12 +92,24 @@ export default function PathDetailScreen() {
         height={180}
         style={styles.cover}
       />
-      <View style={styles.chipRow}>{path.is_pro ? <ProBadge /> : <Text style={styles.free}>Free</Text>}</View>
-      <Text style={styles.title}>{path.name}</Text>
-      <Text style={styles.body}>{path.description}</Text>
-      <Text style={styles.meta}>
+      <View style={styles.chipRow}>
+        {path.is_pro ? (
+          <ProBadge />
+        ) : (
+          <AppText variant="caption" style={styles.free}>
+            Free
+          </AppText>
+        )}
+      </View>
+      <AppText variant="title1" style={styles.title}>
+        {path.name}
+      </AppText>
+      <AppText variant="body" style={styles.body}>
+        {path.description}
+      </AppText>
+      <AppText variant="bodySm" style={styles.meta}>
         {doneCount} of {path.steps.length} routines finished
-      </Text>
+      </AppText>
 
       {path.steps.map((step, index) => {
         const stepLocked = locked && step.order > 1;
@@ -111,14 +124,16 @@ export default function PathDetailScreen() {
               {index < path.steps.length - 1 ? <View style={styles.railLine} /> : null}
             </View>
             <View style={styles.flex}>
-              <Text style={styles.stepOrder}>
+              <AppText variant="eyebrow" style={styles.stepOrder}>
                 Step {step.order}
                 {step.done ? ' · done' : step.current ? ' · now' : ''}
-              </Text>
-              <Text style={styles.stepName}>{step.routine.name}</Text>
-              <Text style={styles.meta}>
+              </AppText>
+              <AppText variant="title3" style={styles.stepName}>
+                {step.routine.name}
+              </AppText>
+              <AppText variant="bodySm" style={styles.meta}>
                 {step.routine.length_weeks} weeks · {step.routine.days_per_week} days / week
-              </Text>
+              </AppText>
             </View>
             {stepLocked || step.routine.is_pro ? <ProBadge locked={stepLocked} compact /> : null}
           </Pressable>
@@ -141,10 +156,14 @@ export default function PathDetailScreen() {
             router.push({ pathname: '/routines/[id]', params: { id: path.nextRoutine!.id } } as Href)
           }
           accessibilityRole="button">
-          <Text style={styles.buttonText}>See {path.nextRoutine.name}</Text>
+          <AppText variant="bodyStrong" style={styles.buttonText}>
+            See {path.nextRoutine.name}
+          </AppText>
         </Pressable>
       ) : (
-        <Text style={styles.body}>You’ve finished every step on this path. That’s a big piece of work.</Text>
+        <AppText variant="body" style={styles.body}>
+          You’ve finished every step on this path. That’s a big piece of work.
+        </AppText>
       )}
     </ScrollView>
   );
@@ -168,8 +187,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
   message: {
-    fontSize: 17,
-    lineHeight: 24,
     color: colours.textMuted,
     textAlign: 'center',
   },
@@ -185,23 +202,16 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     overflow: 'hidden',
-    fontSize: 12,
-    fontWeight: '700',
     color: colours.surface,
     backgroundColor: colours.accent,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
     color: colours.text,
   },
   body: {
-    fontSize: 16,
-    lineHeight: 23,
     color: colours.textMuted,
   },
   meta: {
-    fontSize: 14,
     color: colours.textMuted,
   },
   step: {
@@ -226,15 +236,9 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   stepOrder: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
     color: colours.accent,
   },
   stepName: {
-    fontSize: 18,
-    fontWeight: '700',
     color: colours.text,
     marginTop: 2,
   },
@@ -247,8 +251,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.surface,
   },
   pressed: {

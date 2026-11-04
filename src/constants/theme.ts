@@ -11,10 +11,12 @@ import {
 } from 'react';
 import { Appearance, useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
 
+import { fonts } from '@/constants/fonts';
+
 /**
  * Design tokens from DESIGN.md (approved).
- * Serif display (Fraunces / DM Serif Display) and Inter are not bundled yet.
- * Ask before adding a font package. Until then, type styles use the system sans.
+ * Display serif is Fraunces; UI sans is Manrope. Each weight is a font family
+ * name (see `fonts`). Do not set `fontWeight` on text: it breaks on Android.
  *
  * Kit screens use `useTheme()`. A few unrestyled screens still import the static
  * `colours` object and stay on the old cream palette until their design pass.
@@ -151,68 +153,97 @@ const darkShadow: ShadowStyle = {
   elevation: 3,
 };
 
-/** System sans until a font package is approved. */
-export const type = {
-  display: {
-    fontSize: 34,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-    lineHeight: 40,
-  } satisfies TextStyle,
-  title1: {
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 34,
-  } satisfies TextStyle,
-  title2: {
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 28,
-  } satisfies TextStyle,
-  /** Same as title2; kept for screens already using `type.title`. */
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 28,
-  } satisfies TextStyle,
-  title3: {
-    fontSize: 18,
-    fontWeight: '700',
-    lineHeight: 24,
-  } satisfies TextStyle,
-  body: {
-    fontSize: 16,
-    fontWeight: '400',
-    lineHeight: 24,
-  } satisfies TextStyle,
-  bodySm: {
-    fontSize: 14,
-    fontWeight: '400',
-    lineHeight: 20,
-  } satisfies TextStyle,
-  caption: {
-    fontSize: 12,
-    fontWeight: '500',
-    lineHeight: 16,
-  } satisfies TextStyle,
-  eyebrow: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    lineHeight: 14,
-    textTransform: 'uppercase',
-  } satisfies TextStyle,
-  number: {
-    fontSize: 28,
-    fontWeight: '700',
-    lineHeight: 32,
-  } satisfies TextStyle,
-  button: {
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  } satisfies TextStyle,
+const display: TextStyle = {
+  fontFamily: fonts.display,
+  fontSize: 34,
+  lineHeight: 40,
+  letterSpacing: -0.3,
 };
+
+const displaySm: TextStyle = {
+  fontFamily: fonts.display,
+  fontSize: 26,
+  lineHeight: 32,
+  letterSpacing: -0.3,
+};
+
+const title1: TextStyle = {
+  fontFamily: fonts.bold,
+  fontSize: 28,
+  lineHeight: 34,
+};
+
+const title2: TextStyle = {
+  fontFamily: fonts.bold,
+  fontSize: 22,
+  lineHeight: 28,
+};
+
+const title3: TextStyle = {
+  fontFamily: fonts.semibold,
+  fontSize: 18,
+  lineHeight: 24,
+};
+
+const body: TextStyle = {
+  fontFamily: fonts.regular,
+  fontSize: 16,
+  lineHeight: 24,
+};
+
+const bodyStrong: TextStyle = {
+  fontFamily: fonts.semibold,
+  fontSize: 16,
+  lineHeight: 24,
+};
+
+const bodySm: TextStyle = {
+  fontFamily: fonts.regular,
+  fontSize: 14,
+  lineHeight: 20,
+};
+
+const caption: TextStyle = {
+  fontFamily: fonts.medium,
+  fontSize: 12,
+  lineHeight: 16,
+};
+
+const eyebrow: TextStyle = {
+  fontFamily: fonts.bold,
+  fontSize: 11,
+  lineHeight: 14,
+  letterSpacing: 1.4,
+  textTransform: 'uppercase',
+};
+
+const number: TextStyle = {
+  fontFamily: fonts.bold,
+  fontSize: 32,
+  lineHeight: 36,
+  fontVariant: ['tabular-nums'],
+};
+
+/** Type tokens from DESIGN.md 3.2. Apply via `AppText`, not `fontWeight`. */
+export const type = {
+  display,
+  displaySm,
+  title1,
+  title2,
+  /** Same as title2; kept for screens already using `type.title`. */
+  title: title2,
+  title3,
+  body,
+  bodyStrong,
+  bodySm,
+  caption,
+  eyebrow,
+  number,
+  /** Same as bodyStrong; kept for buttons already using `type.button`. */
+  button: bodyStrong,
+} as const;
+
+export type TypeVariant = keyof typeof type;
 
 export type ColorSchemeName = 'light' | 'dark';
 export const THEME_PREFERENCES = ['light', 'dark', 'system'] as const;

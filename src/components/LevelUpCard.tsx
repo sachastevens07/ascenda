@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import { ZONE_LABELS } from '@/lib/exercises';
 import {
@@ -39,12 +40,16 @@ export function LevelUpCard({
   if (quietMode && challenge.status === 'offered') {
     return (
       <View style={styles.card}>
-        <Text style={styles.kicker}>Optional</Text>
-        <Text style={styles.title}>A try is waiting</Text>
-        <Text style={styles.body}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          Optional
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.text }}>
+          A try is waiting
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.text }}>
           When you turn Quiet Mode off, you can try one exercise from the {zoneName.toLowerCase()}.
           Only if you feel like it.
-        </Text>
+        </AppText>
       </View>
     );
   }
@@ -52,26 +57,34 @@ export function LevelUpCard({
   if (challenge.status === 'ready' && upcoming) {
     return (
       <View style={styles.card}>
-        <Text style={styles.kicker}>When you’re ready</Text>
-        <Text style={styles.title}>Move up to {LEVEL_LABELS[upcoming]}?</Text>
-        <Text style={styles.body}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          When you’re ready
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.text }}>
+          Move up to {LEVEL_LABELS[upcoming]}?
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.text }}>
           You’ve done {challenge.exercise.name} twice. {LEVEL_LABELS[upcoming]} would add the{' '}
           {zoneName.toLowerCase()} to your usual sessions. You can stay here, or change your mind
           later from Profile.
-        </Text>
+        </AppText>
         <Pressable
           style={({ pressed }) => [styles.primary, (pressed || busy) && styles.pressed]}
           onPress={onLevelUp}
           disabled={busy}
           accessibilityRole="button">
-          <Text style={styles.primaryText}>Move to {LEVEL_LABELS[upcoming]}</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.surface }}>
+            Move to {LEVEL_LABELS[upcoming]}
+          </AppText>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.secondary, (pressed || busy) && styles.pressed]}
           onPress={onStay}
           disabled={busy}
           accessibilityRole="button">
-          <Text style={styles.secondaryText}>Stay at {LEVEL_LABELS[level]}</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.accent }}>
+            Stay at {LEVEL_LABELS[level]}
+          </AppText>
         </Pressable>
       </View>
     );
@@ -82,26 +95,34 @@ export function LevelUpCard({
   if (challenge.status === 'offered') {
     return (
       <View style={styles.card}>
-        <Text style={styles.kicker}>Optional</Text>
-        <Text style={styles.title}>Try something from the {zoneName.toLowerCase()}?</Text>
-        <Text style={styles.body}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          Optional
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.text }}>
+          Try something from the {zoneName.toLowerCase()}?
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.text }}>
           You’ve done four sessions at your level. This is only if you feel like it. No rush, and
           you can say no.
-        </Text>
+        </AppText>
         <ExerciseGuide exercise={challenge.exercise} />
         <Pressable
           style={({ pressed }) => [styles.primary, (pressed || busy) && styles.pressed]}
           onPress={onAccept}
           disabled={busy}
           accessibilityRole="button">
-          <Text style={styles.primaryText}>I’ll try it</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.surface }}>
+            I’ll try it
+          </AppText>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.secondary, (pressed || busy) && styles.pressed]}
           onPress={onDecline}
           disabled={busy}
           accessibilityRole="button">
-          <Text style={styles.secondaryText}>Not this time</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.accent }}>
+            Not this time
+          </AppText>
         </Pressable>
       </View>
     );
@@ -110,11 +131,15 @@ export function LevelUpCard({
   if (challenge.status === 'accepted') {
     return (
       <View style={styles.card}>
-        <Text style={styles.kicker}>In this session</Text>
-        <Text style={styles.title}>{challenge.exercise.name}</Text>
-        <Text style={styles.body}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          In this session
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.text }}>
+          {challenge.exercise.name}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.text }}>
           Added from the {zoneName.toLowerCase()}. Skip it if you’d rather stay with what you know.
-        </Text>
+        </AppText>
         <ExerciseGuide exercise={challenge.exercise} />
       </View>
     );
@@ -130,19 +155,29 @@ export function ExerciseGuide({ exercise }: { exercise: ChallengeExercise }) {
       <View style={styles.guideBlock}>
         <View style={styles.guideHeading}>
           <Ionicons name="location-outline" size={18} color={colours.accent} />
-          <Text style={styles.guideTitle}>Where to find it</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.text }}>
+            Where to find it
+          </AppText>
         </View>
-        <Text style={styles.guideBody}>{exercise.location_hint}</Text>
+        <AppText variant="bodySm" style={{ color: colours.text }}>
+          {exercise.location_hint}
+        </AppText>
       </View>
       <View style={styles.guideBlock}>
         <View style={styles.guideHeading}>
           <Ionicons name="checkmark-circle-outline" size={18} color={colours.accent} />
-          <Text style={styles.guideTitle}>What to do</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.text }}>
+            What to do
+          </AppText>
         </View>
         {exercise.cues.map((cue, index) => (
           <View key={cue} style={styles.cue}>
-            <Text style={styles.cueNumber}>{index + 1}</Text>
-            <Text style={styles.guideBody}>{cue}</Text>
+            <AppText variant="caption" style={styles.cueNumber}>
+              {index + 1}
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.text, flex: 1 }}>
+              {cue}
+            </AppText>
           </View>
         ))}
       </View>
@@ -156,23 +191,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     backgroundColor: colours.accentSoft,
     gap: 12,
-  },
-  kicker: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    color: colours.accent,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  body: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colours.text,
   },
   guide: {
     gap: 14,
@@ -188,17 +206,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  guideTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colours.text,
-  },
-  guideBody: {
-    flex: 1,
-    fontSize: 15,
-    lineHeight: 22,
-    color: colours.text,
-  },
   cue: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -211,8 +218,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     textAlign: 'center',
     lineHeight: 24,
-    fontSize: 13,
-    fontWeight: '700',
     color: colours.accent,
     backgroundColor: colours.accentSoft,
   },
@@ -223,11 +228,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colours.accent,
   },
-  primaryText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.surface,
-  },
   secondary: {
     minHeight: 56,
     borderRadius: 999,
@@ -236,11 +236,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colours.accent,
     backgroundColor: colours.surface,
-  },
-  secondaryText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colours.accent,
   },
   pressed: {
     opacity: 0.7,

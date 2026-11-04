@@ -1,5 +1,6 @@
-import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import {
   REST_BANK_CAP,
@@ -43,7 +44,7 @@ function weekLabel(week: StreakWeek): string {
 }
 
 export function RestWeekBanner({ style }: { style?: StyleProp<ViewStyle> }) {
-  const { colours, radius, type, spacing } = useTheme();
+  const { colours, radius, spacing } = useTheme();
   return (
     <View
       style={[
@@ -55,15 +56,15 @@ export function RestWeekBanner({ style }: { style?: StyleProp<ViewStyle> }) {
         },
         style,
       ]}>
-      <Text style={[type.bodySm, { color: colours.ink, fontWeight: '600' }]}>
+      <AppText variant="bodyStrong" style={{ color: colours.ink }}>
         Planned rest week. Enjoy it.
-      </Text>
+      </AppText>
     </View>
   );
 }
 
 export function StreakCard({ streak }: { streak: WeeklyStreak }) {
-  const { colours, radius, shadow, type, spacing } = useTheme();
+  const { colours, radius, shadow, spacing } = useTheme();
   const runLabel =
     streak.current === 1 ? '1 week' : `${streak.current} weeks`;
   const trainedLabel =
@@ -79,14 +80,18 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
         },
         shadow,
       ]}>
-      <Text style={[type.caption, { color: colours.accent, fontWeight: '700' }]}>Streak</Text>
-      <Text style={[type.title, { color: colours.ink, marginTop: 6 }]}>Current run {runLabel}</Text>
-      <Text style={[type.body, { color: colours.inkMuted, marginTop: 4 }]}>
+      <AppText variant="eyebrow" style={{ color: colours.accent }}>
+        Streak
+      </AppText>
+      <AppText variant="title2" style={{ color: colours.ink, marginTop: 6 }}>
+        Current run {runLabel}
+      </AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 4 }}>
         Weeks trained {trainedLabel}
-      </Text>
-      <Text style={[type.body, { color: colours.inkMuted, marginTop: 2 }]}>
+      </AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 2 }}>
         Gold weeks {streak.goldWeeks}
-      </Text>
+      </AppText>
 
       <View
         style={{
@@ -114,11 +119,13 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
         })}
       </View>
 
-      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.md }]}>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
         {restBankCopy(streak)}
-      </Text>
+      </AppText>
       {streak.current === 0 ? (
-        <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 6 }]}>{describeStreak(streak)}</Text>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
+          {describeStreak(streak)}
+        </AppText>
       ) : null}
     </View>
   );

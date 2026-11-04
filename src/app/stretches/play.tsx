@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, Text, Vibration, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Vibration, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import {
+  AppText,
   IconButton,
   MenuRow,
   OverflowMenu,
@@ -36,7 +37,7 @@ const RING_SIZE = 180;
 export default function StretchPlayScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const insets = useSafeAreaInsets();
-  const { colours, type, spacing, radius } = useTheme();
+  const { colours, spacing, radius } = useTheme();
   const workout = useWorkout();
   const menuRef = useRef<AnchorHandle>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -196,11 +197,11 @@ export default function StretchPlayScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
             {loadState === 'not-found'
               ? 'We couldn’t find that stretch session.'
               : 'Check your connection and try again.'}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -235,28 +236,28 @@ export default function StretchPlayScreen() {
         {photo ? (
           <Image source={photo} style={styles.photoFill} resizeMode="cover" accessibilityLabel={step.exercise.name} />
         ) : (
-          <Text style={[styles.letter, { color: colours.brand }]}>{step.exercise.name.slice(0, 1)}</Text>
+          <AppText variant="display" style={{ color: colours.brand }}>{step.exercise.name.slice(0, 1)}</AppText>
         )}
       </View>
 
-      <Text style={[type.eyebrow, { color: colours.accent, marginTop: spacing.md }]}>
+      <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: spacing.md }}>
         Hold {index + 1} of {steps.length}
-      </Text>
-      <Text style={[type.title1, { color: colours.ink, marginTop: spacing.xs }]}>{step.exercise.name}</Text>
+      </AppText>
+      <AppText variant="title1" style={{ color: colours.ink, marginTop: spacing.xs }}>{step.exercise.name}</AppText>
 
       <View style={styles.cues}>
         {cues.map((cue) => (
-          <Text key={cue} style={[type.bodySm, { color: colours.ink }]}>
+          <AppText key={cue} variant="bodySm" style={{ color: colours.ink }}>
             {cue}
-          </Text>
+          </AppText>
         ))}
       </View>
 
       <View style={styles.ringWrap}>
         <ProgressRing progress={ringProgress} size={RING_SIZE} stroke={10}>
-          <Text style={[type.number, { color: colours.ink, fontVariant: ['tabular-nums'] }]}>
+          <AppText variant="number" style={{ color: colours.ink, fontVariant: ['tabular-nums'] }}>
             {formatClock(remaining)}
-          </Text>
+          </AppText>
         </ProgressRing>
       </View>
 
@@ -278,13 +279,13 @@ export default function StretchPlayScreen() {
           <TextButton label="Skip" onPress={skipHold} disabled={isSaving} style={{ alignSelf: 'center' }} />
         )}
         {nextStep ? (
-          <Text style={[type.bodySm, { color: colours.inkMuted, textAlign: 'center', marginTop: spacing.sm }]}>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: spacing.sm }}>
             Next: {nextStep.exercise.name} · {formatHoldShort(nextStep.durationSeconds)}
-          </Text>
+          </AppText>
         ) : (
-          <Text style={[type.bodySm, { color: colours.inkMuted, textAlign: 'center', marginTop: spacing.sm }]}>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: spacing.sm }}>
             Last hold
-          </Text>
+          </AppText>
         )}
       </View>
 
@@ -334,10 +335,6 @@ const styles = StyleSheet.create({
   photoFill: {
     width: '100%',
     height: '100%',
-  },
-  letter: {
-    fontSize: 48,
-    fontWeight: '700',
   },
   cues: {
     marginTop: 12,

@@ -8,7 +8,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +16,7 @@ import { showDialog } from '@/components/Dialog';
 import { ExercisePicker } from '@/components/ExercisePicker';
 import { SwapSheet } from '@/components/SwapSheet';
 import {
+  AppText,
   EmptyState,
   ExerciseThumb,
   IconButton,
@@ -182,7 +182,7 @@ function SlotMenuButton({
 export default function SessionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { colours, type, spacing, radius, shadow } = useTheme();
+  const { colours, spacing, radius, shadow } = useTheme();
   const weightUnit = useWeightUnit();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
@@ -816,11 +816,11 @@ export default function SessionScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
             {loadState === 'not-found'
               ? 'This session isn’t here any more.'
               : 'We couldn’t load this session. Go back and try again.'}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -849,16 +849,16 @@ export default function SessionScreen() {
 
       <View style={[styles.stickyTop, { backgroundColor: colours.bg, borderBottomColor: colours.border }]}>
         {eyebrow ? (
-          <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 4 }]}>{eyebrow}</Text>
+          <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 4 }}>{eyebrow}</AppText>
         ) : null}
-        <Text style={[type.title1, { color: colours.ink }]} numberOfLines={1}>
+        <AppText variant="title1" style={{ color: colours.ink }} numberOfLines={1}>
           {day.name}
-        </Text>
+        </AppText>
         <View style={styles.headerMeta}>
           <View style={styles.flex}>
-            <Text style={[type.caption, { color: colours.inkMuted, marginBottom: 6 }]}>
+            <AppText variant="caption" style={{ color: colours.inkMuted, marginBottom: 6 }}>
               {doneSets} of {totalSets} sets
-            </Text>
+            </AppText>
             <ProgressBar progress={totalSets === 0 ? 0 : doneSets / totalSets} />
           </View>
           {startedAt !== null ? (
@@ -866,9 +866,9 @@ export default function SessionScreen() {
               style={[styles.elapsed, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}
               accessibilityLabel="Time since you started">
               <Ionicons name="stopwatch-outline" size={16} color={colours.brand} />
-              <Text style={[type.bodySm, { color: colours.brand, fontWeight: '700', fontVariant: ['tabular-nums'] }]}>
+              <AppText variant="bodySm" style={{ color: colours.brand, fontVariant: ['tabular-nums'] }}>
                 {formatClock((now - startedAt) / 1000)}
-              </Text>
+              </AppText>
             </View>
           ) : null}
         </View>
@@ -881,9 +881,9 @@ export default function SessionScreen() {
         {showGuideTip ? (
           <View style={[styles.tip, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
             <Ionicons name="information-circle-outline" size={20} color={colours.brand} />
-            <Text style={[type.bodySm, { color: colours.ink, flex: 1 }]}>
+            <AppText variant="bodySm" style={{ color: colours.ink, flex: 1 }}>
               First time on a lift? Tap the info icon for a quick guide.
-            </Text>
+            </AppText>
           </View>
         ) : null}
 
@@ -895,17 +895,17 @@ export default function SessionScreen() {
               accessibilityRole="button"
               accessibilityLabel={coachOpen ? 'Hide session notes' : 'Show session notes'}>
               <View style={styles.flex}>
-                <Text style={[type.eyebrow, { color: colours.accent }]}>Today</Text>
-                <Text style={[type.title3, { color: colours.ink, marginTop: 4 }]}>
+                <AppText variant="eyebrow" style={{ color: colours.accent }}>Today</AppText>
+                <AppText variant="title3" style={{ color: colours.ink, marginTop: 4 }}>
                   {day.focus ?? 'Warm-up and focus'}
-                </Text>
+                </AppText>
               </View>
               <Ionicons name={coachOpen ? 'chevron-up' : 'chevron-down'} size={20} color={colours.brand} />
             </Pressable>
             {coachOpen ? (
               <View style={{ gap: 10, marginTop: 8 }}>
                 {day.coach_note ? (
-                  <Text style={[type.body, { color: colours.ink }]}>{day.coach_note}</Text>
+                  <AppText variant="body" style={{ color: colours.ink }}>{day.coach_note}</AppText>
                 ) : null}
                 {(day.warmup ?? []).map((step: WarmupStep, index) => {
                   const done = Boolean(warmupDone[index]);
@@ -921,18 +921,16 @@ export default function SessionScreen() {
                         size={22}
                         color={done ? colours.success : colours.inkMuted}
                       />
-                      <Text
-                        style={[
-                          type.body,
-                          { color: colours.ink, flex: 1, textDecorationLine: done ? 'line-through' : 'none' },
-                        ]}>
+                      <AppText
+                        variant="body"
+                        style={{ color: colours.ink, flex: 1, textDecorationLine: done ? 'line-through' : 'none' }}>
                         {formatWarmupStep(step)}
-                      </Text>
+                      </AppText>
                     </Pressable>
                   );
                 })}
                 {day.finisher ? (
-                  <Text style={[type.bodySm, { color: colours.inkMuted }]}>{day.finisher}</Text>
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted }}>{day.finisher}</AppText>
                 ) : null}
               </View>
             ) : null}
@@ -967,25 +965,25 @@ export default function SessionScreen() {
                   <ExerciseThumb exercise={item.exercise} showPlay />
                   <View style={styles.flex}>
                     {item.role ? (
-                      <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 4 }]}>
+                      <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 4 }}>
                         {ROLE_LABELS[item.role]}
-                      </Text>
+                      </AppText>
                     ) : null}
-                    <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
+                    <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={2}>
                       {item.exercise.name}
-                    </Text>
+                    </AppText>
                     {item.original && equipment && exerciseFits(item.original, equipment) ? (
-                      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                         Instead of {item.original.name}
-                      </Text>
+                      </AppText>
                     ) : null}
-                    <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                    <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                       {formatTargetLine(item)}
-                    </Text>
+                    </AppText>
                     {item.tempo ? (
-                      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                         {item.tempo}
-                      </Text>
+                      </AppText>
                     ) : null}
                   </View>
                 </Pressable>

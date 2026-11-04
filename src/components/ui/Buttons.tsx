@@ -1,7 +1,9 @@
 import { type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useTheme } from '@/constants/theme';
+
+import { AppText } from './AppText';
 
 type ButtonProps = {
   label: string;
@@ -21,7 +23,7 @@ export function PrimaryButton({
   style,
   tone = 'brand',
 }: ButtonProps) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const fill = tone === 'accent' ? colours.accent : colours.brand;
   const ink = tone === 'accent' ? colours.onAccent : colours.onBrand;
   const busy = disabled || loading;
@@ -41,7 +43,9 @@ export function PrimaryButton({
       {loading ? (
         <ActivityIndicator color={ink} />
       ) : (
-        <Text style={[type.button, { color: ink }]}>{label}</Text>
+        <AppText variant="bodyStrong" style={{ color: ink }}>
+          {label}
+        </AppText>
       )}
     </Pressable>
   );
@@ -54,7 +58,7 @@ export function SecondaryButton({
   loading = false,
   style,
 }: Omit<ButtonProps, 'tone'>) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const busy = disabled || loading;
   return (
     <Pressable
@@ -77,7 +81,9 @@ export function SecondaryButton({
       {loading ? (
         <ActivityIndicator color={colours.brand} />
       ) : (
-        <Text style={[type.button, { color: colours.brand }]}>{label}</Text>
+        <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+          {label}
+        </AppText>
       )}
     </Pressable>
   );
@@ -89,7 +95,7 @@ export function TextButton({
   disabled = false,
   style,
 }: Omit<ButtonProps, 'tone' | 'loading'>) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -97,7 +103,9 @@ export function TextButton({
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       style={({ pressed }) => [styles.textWrap, pressed && !disabled && styles.pressed, disabled && styles.disabled, style]}>
-      <Text style={[type.button, { color: colours.brand }]}>{label}</Text>
+      <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+        {label}
+      </AppText>
     </Pressable>
   );
 }
@@ -108,7 +116,7 @@ export function DestructiveTextButton({
   disabled = false,
   style,
 }: Omit<ButtonProps, 'tone' | 'loading'>) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -116,7 +124,9 @@ export function DestructiveTextButton({
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       style={({ pressed }) => [styles.textWrap, pressed && !disabled && styles.pressed, disabled && styles.disabled, style]}>
-      <Text style={[type.button, { color: colours.danger }]}>{label}</Text>
+      <AppText variant="bodyStrong" style={{ color: colours.danger }}>
+        {label}
+      </AppText>
     </Pressable>
   );
 }

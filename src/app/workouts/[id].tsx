@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
@@ -14,7 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { ExercisePicker } from '@/components/ExercisePicker';
-import { colours } from '@/constants/theme';
+import { AppText } from '@/components/ui/AppText';
+import { colours, useTheme } from '@/constants/theme';
 import {
   DEFAULT_SLOT,
   MAX_REPS,
@@ -39,6 +39,7 @@ export default function WorkoutEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
   const insets = useSafeAreaInsets();
+  const { type } = useTheme();
   const { isPro } = useSubscription();
   const [name, setName] = useState('');
   const [slots, setSlots] = useState<WorkoutDraftSlot[]>([]);
@@ -148,11 +149,11 @@ export default function WorkoutEditorScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.accent} />
         ) : (
-          <Text style={styles.message}>
+          <AppText variant="body" style={styles.message}>
             {isNew
               ? missingCustomWorkoutsMessage()
               : 'We couldn’t load this workout.'}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -163,10 +164,14 @@ export default function WorkoutEditorScreen() {
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>{isNew ? 'Create workout' : 'Edit workout'}</Text>
-        <Text style={styles.label}>Name</Text>
+        <AppText variant="title1" style={styles.title}>
+          {isNew ? 'Create workout' : 'Edit workout'}
+        </AppText>
+        <AppText variant="bodySm" style={styles.label}>
+          Name
+        </AppText>
         <TextInput
-          style={styles.input}
+          style={[styles.input, type.bodyStrong, { fontVariant: ['tabular-nums'] }]}
           value={name}
           onChangeText={setName}
           placeholder="e.g. Corner full body"
@@ -179,10 +184,12 @@ export default function WorkoutEditorScreen() {
           <View key={`${slot.exercise.id}-${index}`} style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.flex}>
-                <Text style={styles.exerciseName}>{slot.exercise.name}</Text>
-                <Text style={styles.meta}>
+                <AppText variant="title3" style={styles.exerciseName}>
+                  {slot.exercise.name}
+                </AppText>
+                <AppText variant="bodySm" style={styles.meta}>
                   {ZONE_LABELS[slot.exercise.zone]} · {EQUIPMENT_LABELS[slot.exercise.equipment]}
-                </Text>
+                </AppText>
               </View>
               <Pressable
                 onPress={() => setSlots((current) => current.filter((_, i) => i !== index))}
@@ -242,7 +249,9 @@ export default function WorkoutEditorScreen() {
           style={({ pressed }) => [styles.outline, pressed && styles.pressed]}
           onPress={() => setPickerOpen(true)}
           accessibilityRole="button">
-          <Text style={styles.outlineText}>Add exercise</Text>
+          <AppText variant="bodyStrong" style={styles.outlineText}>
+            Add exercise
+          </AppText>
         </Pressable>
 
         <Pressable
@@ -250,7 +259,9 @@ export default function WorkoutEditorScreen() {
           onPress={() => router.push('/library')}
           accessibilityRole="button">
           <Ionicons name="barbell-outline" size={18} color={colours.accent} />
-          <Text style={styles.libraryLinkText}>Exercise library</Text>
+          <AppText variant="bodyStrong" style={styles.libraryLinkText}>
+            Exercise library
+          </AppText>
         </Pressable>
 
         <Pressable
@@ -258,9 +269,10 @@ export default function WorkoutEditorScreen() {
           onPress={handleSave}
           disabled={isSaving}
           accessibilityRole="button">
-          <Text style={styles.primaryText}>{isSaving ? 'Saving…' : 'Save workout'}</Text>
+          <AppText variant="bodyStrong" style={styles.primaryText}>
+            {isSaving ? 'Saving…' : 'Save workout'}
+          </AppText>
         </Pressable>
-
       </ScrollView>
 
       <ExercisePicker
@@ -288,7 +300,9 @@ function Stepper({
 }) {
   return (
     <View style={styles.stepper}>
-      <Text style={styles.stepperLabel}>{label}</Text>
+      <AppText variant="bodyStrong" style={styles.stepperLabel}>
+        {label}
+      </AppText>
       <View style={styles.stepperRow}>
         <Pressable
           onPress={() => onChange(Math.max(min, value - 1))}
@@ -298,7 +312,9 @@ function Stepper({
           accessibilityLabel={`Fewer ${label}`}>
           <Ionicons name="remove" size={22} color={value <= min ? colours.border : colours.accent} />
         </Pressable>
-        <Text style={styles.stepperValue}>{value}</Text>
+        <AppText variant="title3" style={styles.stepperValue}>
+          {value}
+        </AppText>
         <Pressable
           onPress={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
@@ -329,13 +345,9 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
     color: colours.text,
   },
   label: {
-    fontSize: 15,
-    fontWeight: '600',
     color: colours.textMuted,
   },
   input: {
@@ -345,7 +357,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colours.border,
     backgroundColor: colours.surface,
-    fontSize: 17,
     color: colours.text,
   },
   card: {
@@ -363,12 +374,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   exerciseName: {
-    fontSize: 18,
-    fontWeight: '700',
     color: colours.text,
   },
   meta: {
-    fontSize: 14,
     color: colours.textMuted,
     marginTop: 2,
   },
@@ -379,8 +387,6 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   stepperLabel: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.text,
   },
   stepperRow: {
@@ -399,8 +405,6 @@ const styles = StyleSheet.create({
   stepperValue: {
     minWidth: 28,
     textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '700',
     color: colours.text,
   },
   reorder: {
@@ -425,8 +429,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.surface,
   },
   outlineText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.accent,
   },
   libraryLink: {
@@ -437,8 +439,6 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   libraryLinkText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.accent,
   },
   primary: {
@@ -449,15 +449,12 @@ const styles = StyleSheet.create({
     backgroundColor: colours.accent,
   },
   primaryText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.surface,
   },
   pressed: {
     opacity: 0.7,
   },
   message: {
-    fontSize: 17,
     color: colours.textMuted,
     textAlign: 'center',
   },

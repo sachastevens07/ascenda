@@ -4,13 +4,13 @@ import {
   Image,
   Pressable,
   StyleSheet,
-  Text,
   View,
   type ImageSourcePropType,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { THEME_PREFERENCES, THEME_PREFERENCE_LABELS, useTheme, type ThemePreference } from '@/constants/theme';
 
 import { FreeBadge, ProBadge } from './Badges';
@@ -48,7 +48,7 @@ export function ImageCard({
   onPress,
   style,
 }: ImageCardProps) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const frame = (
     <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
       <View style={[styles.card, { borderRadius: radius.lg }]}>
@@ -61,7 +61,9 @@ export function ImageCard({
           {image ? (
             <Image source={image} style={styles.photoFill} resizeMode="cover" />
           ) : (
-            <Text style={[styles.letter, { color: colours.brand }]}>{(letter ?? title).slice(0, 1)}</Text>
+            <AppText variant="display" style={{ color: colours.brand }}>
+              {(letter ?? title).slice(0, 1)}
+            </AppText>
           )}
           {isPro || isFree ? (
             <View style={styles.badge}>
@@ -75,13 +77,13 @@ export function ImageCard({
           ) : null}
         </View>
         <View style={styles.body}>
-          <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
+          <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={2}>
             {title}
-          </Text>
+          </AppText>
           {subtitle ? (
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]} numberOfLines={2}>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }} numberOfLines={2}>
               {subtitle}
-            </Text>
+            </AppText>
           ) : null}
           {tags.length > 0 ? (
             <View style={styles.tags}>
@@ -125,26 +127,30 @@ export function HeroImage({
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   return (
     <View style={[{ height, backgroundColor: colours.surfaceMuted }, style]}>
       {image ? (
         <Image source={image} style={styles.photoFill} resizeMode="cover" />
       ) : (
         <View style={styles.heroFallback}>
-          <Text style={[styles.letterLarge, { color: colours.brand }]}>{(letter ?? title ?? 'A').slice(0, 1)}</Text>
+          <AppText variant="display" style={{ color: colours.brand }}>
+            {(letter ?? title ?? 'A').slice(0, 1)}
+          </AppText>
         </View>
       )}
       {title || eyebrow ? (
         <View style={styles.heroOverlay} pointerEvents="none">
           <View style={[styles.heroFade, { backgroundColor: colours.overlay }]}>
             {eyebrow ? (
-              <Text style={[type.eyebrow, { color: colours.onAccent, marginBottom: spacing.sm }]}>{eyebrow}</Text>
+              <AppText variant="eyebrow" style={{ color: colours.onAccent, marginBottom: spacing.sm }}>
+                {eyebrow}
+              </AppText>
             ) : null}
             {title ? (
-              <Text style={[type.display, { color: colours.onAccent }]} numberOfLines={2}>
+              <AppText variant="display" style={{ color: colours.onAccent }} numberOfLines={2}>
                 {title}
-              </Text>
+              </AppText>
             ) : null}
           </View>
         </View>
@@ -165,7 +171,7 @@ export function StatTile({
   icon?: ComponentProps<typeof Ionicons>['name'];
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   return (
     <View style={[styles.stat, { backgroundColor: colours.surface, borderRadius: radius.lg }, style]}>
       {icon ? (
@@ -173,16 +179,15 @@ export function StatTile({
           <Ionicons name={icon} size={16} color={colours.brand} />
         </View>
       ) : null}
-      <Text
-        style={[
-          icon ? type.title3 : type.display,
-          { color: colours.ink, marginTop: icon ? 8 : 0 },
-          !icon && { fontSize: 28, lineHeight: 34 },
-        ]}
+      <AppText
+        variant={icon ? 'title3' : 'number'}
+        style={{ color: colours.ink, marginTop: icon ? 8 : 0 }}
         numberOfLines={2}>
         {value}
-      </Text>
-      <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>{label}</Text>
+      </AppText>
+      <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
+        {label}
+      </AppText>
     </View>
   );
 }
@@ -195,18 +200,18 @@ export function StatStrip({
   items: { icon: ComponentProps<typeof Ionicons>['name']; value: string; label: string }[];
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   return (
     <View style={[styles.strip, style]}>
       {items.slice(0, 4).map((item) => (
         <View key={item.label} style={styles.stripItem}>
           <Ionicons name={item.icon} size={16} color={colours.brand} />
-          <Text style={[type.title3, { color: colours.ink, marginTop: spacing.xs }]} numberOfLines={1}>
+          <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.xs }} numberOfLines={1}>
             {item.value}
-          </Text>
-          <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]} numberOfLines={1}>
+          </AppText>
+          <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }} numberOfLines={1}>
             {item.label}
-          </Text>
+          </AppText>
         </View>
       ))}
     </View>
@@ -227,7 +232,7 @@ export function HighlightTile({
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const body = (
     <View
       style={[
@@ -236,15 +241,15 @@ export function HighlightTile({
         shadow,
       ]}>
       <View style={styles.highlightTop}>
-        <Text style={[styles.highlightValue, { color: colours.accent }]} numberOfLines={1}>
+        <AppText variant="number" style={{ color: colours.accent, flex: 1 }} numberOfLines={1}>
           {value}
-        </Text>
+        </AppText>
         <Ionicons name={icon} size={22} color={colours.accent} />
       </View>
       <View style={styles.highlightBottom}>
-        <Text style={[type.caption, { color: colours.inkMuted, flex: 1, marginRight: 8 }]} numberOfLines={2}>
+        <AppText variant="caption" style={{ color: colours.inkMuted, flex: 1, marginRight: 8 }} numberOfLines={2}>
           {label}
-        </Text>
+        </AppText>
         {onPress ? <Ionicons name="chevron-forward" size={16} color={colours.accent} /> : null}
       </View>
     </View>
@@ -276,13 +281,17 @@ export function EmptyState({
   action?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <View style={[styles.empty, style]}>
       <Ionicons name={icon} size={36} color={colours.brand} />
-      <Text style={[type.title, { color: colours.ink, textAlign: 'center', marginTop: 12 }]}>{title}</Text>
+      <AppText variant="title2" style={{ color: colours.ink, textAlign: 'center', marginTop: 12 }}>
+        {title}
+      </AppText>
       {body ? (
-        <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center', marginTop: 8 }]}>{body}</Text>
+        <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: 8 }}>
+          {body}
+        </AppText>
       ) : null}
       {action ? <View style={styles.emptyAction}>{action}</View> : null}
     </View>
@@ -300,7 +309,7 @@ export function Chip({
   onPress?: () => void;
   size?: 'sm' | 'lg';
 }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const large = size === 'lg';
   const inner = (
     <View
@@ -314,14 +323,12 @@ export function Chip({
           borderColor: colours.brand,
         },
       ]}>
-      <Text
+      <AppText
         numberOfLines={1}
-        style={[
-          large ? type.body : type.caption,
-          { color: selected ? colours.brand : colours.ink, fontWeight: selected ? '700' : '500' },
-        ]}>
+        variant={large ? 'body' : 'bodySm'}
+        style={{ color: selected ? colours.brand : colours.ink }}>
         {label}
-      </Text>
+      </AppText>
     </View>
   );
   if (!onPress) return inner;
@@ -341,7 +348,7 @@ export function ReminderTimeChip({
   timeLabel: string;
   onPress?: () => void;
 }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -360,7 +367,9 @@ export function ReminderTimeChip({
           borderRadius: radius.full,
         }}>
         <Ionicons name="notifications-outline" size={12} color={colours.inkMuted} />
-        <Text style={[type.caption, { color: colours.ink, fontWeight: '600' }]}>{timeLabel}</Text>
+        <AppText variant="caption" style={{ color: colours.ink }}>
+          {timeLabel}
+        </AppText>
       </View>
     </Pressable>
   );
@@ -373,7 +382,7 @@ export function SegmentedThemePicker({
   value: ThemePreference;
   onChange: (value: ThemePreference) => void;
 }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   return (
     <View
       style={[
@@ -392,17 +401,12 @@ export function SegmentedThemePicker({
               styles.themeOption,
               selected && { backgroundColor: colours.surface, borderRadius: radius.full },
             ]}>
-            <Text
+            <AppText
               numberOfLines={1}
-              style={[
-                type.caption,
-                {
-                  color: selected ? colours.ink : colours.inkMuted,
-                  fontWeight: selected ? '700' : '500',
-                },
-              ]}>
+              variant="caption"
+              style={{ color: selected ? colours.ink : colours.inkMuted }}>
               {THEME_PREFERENCE_LABELS[option]}
-            </Text>
+            </AppText>
           </Pressable>
         );
       })}
@@ -426,14 +430,6 @@ const styles = StyleSheet.create({
   photoFill: {
     width: '100%',
     height: '100%',
-  },
-  letter: {
-    fontSize: 42,
-    fontWeight: '700',
-  },
-  letterLarge: {
-    fontSize: 64,
-    fontWeight: '700',
   },
   ring: {
     position: 'absolute',
@@ -490,12 +486,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: 8,
-  },
-  highlightValue: {
-    fontSize: 32,
-    fontWeight: '700',
-    lineHeight: 38,
-    flex: 1,
   },
   highlightBottom: {
     flexDirection: 'row',

@@ -1,12 +1,13 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
 import { ProBadge, ProMark } from '@/components/ProBadge';
 import { ProgressRing } from '@/components/ProgressRing';
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import { fetchFinishedSessionMeta } from '@/lib/activityStats';
 import {
@@ -109,9 +110,9 @@ export default function ChallengeDetailScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.accent} />
         ) : (
-          <Text style={styles.message}>
+          <AppText variant="body" style={styles.message}>
             {loadState === 'not-found' ? 'We couldn’t find that challenge.' : missingChallengesMessage()}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -132,36 +133,54 @@ export default function ChallengeDetailScreen() {
         style={styles.cover}
       />
       <View style={styles.chipRow}>
-        {challenge.is_pro ? <ProBadge /> : <Text style={styles.free}>Free to join</Text>}
-        <Text style={styles.status}>{challengeTimingCopy(challenge)}</Text>
+        {challenge.is_pro ? (
+          <ProBadge />
+        ) : (
+          <AppText variant="caption" style={styles.free}>
+            Free to join
+          </AppText>
+        )}
+        <AppText variant="bodySm" style={styles.status}>
+          {challengeTimingCopy(challenge)}
+        </AppText>
       </View>
-      <Text style={styles.title}>{challenge.name}</Text>
-      <Text style={styles.body}>{challenge.description}</Text>
-      <Text style={styles.meta}>{challengeRangeCopy(challenge)}</Text>
-      <Text style={styles.meta}>Routine: {challenge.routine.name}</Text>
+      <AppText variant="title1" style={styles.title}>
+        {challenge.name}
+      </AppText>
+      <AppText variant="body" style={styles.body}>
+        {challenge.description}
+      </AppText>
+      <AppText variant="bodySm" style={styles.meta}>
+        {challengeRangeCopy(challenge)}
+      </AppText>
+      <AppText variant="bodySm" style={styles.meta}>
+        Routine: {challenge.routine.name}
+      </AppText>
       {challenge.participantCount > 0 ? (
-        <Text style={styles.meta}>
+        <AppText variant="bodySm" style={styles.meta}>
           {challenge.participantCount === 1
             ? '1 person has joined'
             : `${challenge.participantCount} people have joined`}
-        </Text>
+        </AppText>
       ) : null}
 
       <View style={styles.ringCard}>
         <ProgressRing progress={ratio} size={88} stroke={8}>
-          <Text style={styles.ringValue}>
+          <AppText variant="bodyStrong" style={styles.ringValue}>
             {done}/{target}
-          </Text>
+          </AppText>
         </ProgressRing>
-        <Text style={styles.body}>
+        <AppText variant="body" style={styles.body}>
           {challenge.joined
             ? `Sessions in your four-week window, toward ${target}.`
             : `Join, then sessions in your four-week window count toward ${target}.`}
-        </Text>
+        </AppText>
       </View>
 
       {status === 'ended' ? (
-        <Text style={styles.body}>Finished. Your sessions stay in Activity.</Text>
+        <AppText variant="body" style={styles.body}>
+          Finished. Your sessions stay in Activity.
+        </AppText>
       ) : challenge.joined ? (
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}
@@ -169,7 +188,9 @@ export default function ChallengeDetailScreen() {
             router.push({ pathname: '/routines/[id]', params: { id: challenge.routine.id } } as Href)
           }
           accessibilityRole="button">
-          <Text style={styles.buttonText}>Open {challenge.routine.name}</Text>
+          <AppText variant="bodyStrong" style={styles.buttonText}>
+            Open {challenge.routine.name}
+          </AppText>
         </Pressable>
       ) : (
         <Pressable
@@ -182,7 +203,9 @@ export default function ChallengeDetailScreen() {
               Join with Pro
             </ProMark>
           ) : (
-            <Text style={styles.buttonText}>{joining ? 'Joining…' : 'Join challenge'}</Text>
+            <AppText variant="bodyStrong" style={styles.buttonText}>
+              {joining ? 'Joining…' : 'Join challenge'}
+            </AppText>
           )}
         </Pressable>
       )}
@@ -208,8 +231,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
   message: {
-    fontSize: 17,
-    lineHeight: 24,
     color: colours.textMuted,
     textAlign: 'center',
   },
@@ -228,28 +249,19 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     overflow: 'hidden',
-    fontSize: 12,
-    fontWeight: '700',
     color: colours.surface,
     backgroundColor: colours.accent,
   },
   status: {
-    fontSize: 14,
-    fontWeight: '600',
     color: colours.accent,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
     color: colours.text,
   },
   body: {
-    fontSize: 16,
-    lineHeight: 23,
     color: colours.textMuted,
   },
   meta: {
-    fontSize: 15,
     color: colours.textMuted,
   },
   ringCard: {
@@ -261,8 +273,6 @@ const styles = StyleSheet.create({
     backgroundColor: colours.surface,
   },
   ringValue: {
-    fontSize: 16,
-    fontWeight: '700',
     color: colours.text,
   },
   button: {
@@ -274,8 +284,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.surface,
   },
   pressed: {

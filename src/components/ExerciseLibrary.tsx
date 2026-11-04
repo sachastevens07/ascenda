@@ -6,12 +6,12 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { Chip, ChipScroller, ExerciseThumb, PrimaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { useDevTools } from '@/lib/devFlags';
@@ -103,7 +103,11 @@ export function ExerciseLibrary({
   return (
     <View style={[styles.container, { backgroundColor: colours.bg }]}>
       <View style={[styles.header, !title && styles.headerTight]}>
-        {title ? <Text style={[type.display, { color: colours.ink }]}>{title}</Text> : null}
+        {title ? (
+          <AppText variant="display" style={{ color: colours.ink }}>
+            {title}
+          </AppText>
+        ) : null}
 
         <View
           style={[
@@ -112,7 +116,7 @@ export function ExerciseLibrary({
           ]}>
           <Ionicons name="search" size={20} color={colours.inkMuted} />
           <TextInput
-            style={[styles.searchInput, { color: colours.ink }]}
+            style={[styles.searchInput, type.bodyStrong, { color: colours.ink, fontVariant: ['tabular-nums'] }]}
             value={query}
             onChangeText={setQuery}
             placeholder="Search exercises"
@@ -160,14 +164,16 @@ export function ExerciseLibrary({
 
       {loadState === 'error' && (
         <View style={styles.centre}>
-          <Text style={[type.title3, { color: colours.ink, textAlign: 'center' }]}>We couldn’t load the library</Text>
-          <Text style={[type.bodySm, { color: colours.inkMuted, textAlign: 'center', marginTop: 6 }]}>
+          <AppText variant="title3" style={{ color: colours.ink, textAlign: 'center' }}>
+            We couldn’t load the library
+          </AppText>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: 6 }}>
             Check your connection and try again.
-          </Text>
+          </AppText>
           {showDevTools && errorDetail ? (
-            <Text style={[type.caption, { color: colours.inkMuted, textAlign: 'center', marginTop: 12 }]}>
+            <AppText variant="caption" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: 12 }}>
               {errorDetail}
-            </Text>
+            </AppText>
           ) : null}
           <PrimaryButton
             label="Try again"
@@ -190,13 +196,15 @@ export function ExerciseLibrary({
           refreshing={isRefreshing}
           onRefresh={refresh}
           ListHeaderComponent={
-            <Text style={[type.caption, { color: colours.inkMuted, marginTop: 8, marginBottom: 4 }]}>
+            <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 8, marginBottom: 4 }}>
               {filtered.length} {filtered.length === 1 ? 'exercise' : 'exercises'}
-            </Text>
+            </AppText>
           }
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Text style={[type.title3, { color: colours.ink, textAlign: 'center' }]}>No exercises match</Text>
+              <AppText variant="title3" style={{ color: colours.ink, textAlign: 'center' }}>
+                No exercises match
+              </AppText>
               {hasFilters ? (
                 <PrimaryButton label="Clear filters" onPress={clearFilters} style={{ marginTop: 16 }} />
               ) : null}
@@ -213,10 +221,12 @@ export function ExerciseLibrary({
               accessibilityRole="button">
               <ExerciseThumb exercise={item} />
               <View style={styles.cardText}>
-                <Text style={[type.title3, { color: colours.ink }]}>{item.name}</Text>
-                <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                <AppText variant="title3" style={{ color: colours.ink }}>
+                  {item.name}
+                </AppText>
+                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                   {MUSCLE_LABELS[item.primary_muscle]} · {EQUIPMENT_LABELS[item.equipment]}
-                </Text>
+                </AppText>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
             </Pressable>
@@ -249,7 +259,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 17,
     paddingVertical: 12,
   },
   list: {

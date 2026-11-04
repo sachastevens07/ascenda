@@ -1,8 +1,8 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ArticleCard } from '@/components/ui';
+import { AppText, ArticleCard } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
   LEARN_CATEGORY_LABELS,
@@ -14,7 +14,7 @@ import {
 
 export default function LearnCategoryScreen() {
   const { category: raw } = useLocalSearchParams<{ category: string }>();
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   const category = isLearnCategory(raw) ? raw : null;
   const [articles, setArticles] = useState<LearnArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,11 +46,11 @@ export default function LearnCategoryScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={[styles.content, { gap: spacing.md }]}>
-          <Text style={[type.body, { color: colours.inkMuted }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted }}>
             Short reads. Most are free. A few in-depth guides are Pro.
-          </Text>
+          </AppText>
           {articles.length === 0 ? (
-            <Text style={[type.body, { color: colours.inkMuted }]}>Nothing in this category yet.</Text>
+            <AppText variant="body" style={{ color: colours.inkMuted }}>Nothing in this category yet.</AppText>
           ) : (
             articles.map((article) => <ArticleCard key={article.id} article={article} />)
           )}

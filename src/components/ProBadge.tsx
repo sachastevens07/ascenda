@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 
 const GOLD_INK = '#FFF8E8';
@@ -20,7 +21,9 @@ export function ProBadge({
       style={[styles.badge, compact && styles.compact, style]}
       accessibilityLabel={locked ? 'Pro, locked' : 'Pro'}>
       {locked ? <Ionicons name="lock-closed" size={iconSize} color={GOLD_INK} /> : null}
-      <Text style={[styles.label, compact && styles.labelCompact]}>PRO</Text>
+      <AppText variant="eyebrow" style={{ color: GOLD_INK, letterSpacing: 0.6 }}>
+        PRO
+      </AppText>
     </View>
   );
 }
@@ -42,7 +45,9 @@ export function ProMark({
   return (
     <View style={[styles.mark, style]}>
       <ProBadge locked={locked} compact={compact} />
-      <Text style={textStyle}>{children}</Text>
+      <AppText variant="bodyStrong" style={textStyle}>
+        {children}
+      </AppText>
     </View>
   );
 }
@@ -60,15 +65,6 @@ const styles = StyleSheet.create({
   compact: {
     paddingHorizontal: 7,
     paddingVertical: 2,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    color: GOLD_INK,
-  },
-  labelCompact: {
-    fontSize: 10,
   },
   mark: {
     flexDirection: 'row',

@@ -6,13 +6,13 @@ import {
   Image,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import {
+  AppText,
   Chip,
   DetailLayout,
   FreeBadge,
@@ -135,19 +135,19 @@ function WeekHeaderBody({
   doneDayIds: Set<string>;
   showTicks: boolean;
 }) {
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   const ticks = week.days.filter((day) => doneDayIds.has(day.id)).length;
   return (
     <View style={styles.flex}>
       <View style={styles.weekTitleRow}>
-        <Text style={[type.title3, { color: colours.ink, flex: 1 }]}>Week {week.week_number}</Text>
+        <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>Week {week.week_number}</AppText>
         {week.is_checkpoint ? <Chip label="Checkpoint" /> : null}
         {week.is_lighter_week ? <Chip label="Lighter week" /> : null}
       </View>
       <View style={[styles.weekMetaRow, { marginTop: 4 }]}>
-        <Text style={[type.bodySm, { color: colours.inkMuted, flex: 1 }]} numberOfLines={1}>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, flex: 1 }} numberOfLines={1}>
           {weekDayNames(week)}
-        </Text>
+        </AppText>
         {showTicks && ticks > 0 ? (
           <View style={[styles.tickRow, { marginLeft: spacing.sm }]}>
             {week.days.map((day) =>
@@ -163,14 +163,14 @@ function WeekHeaderBody({
 }
 
 function DayThumb({ day }: { day: RoutineDay }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const photo = day.exercises[0] ? getExerciseImageSource(day.exercises[0].exercise) : null;
   return (
     <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
       {photo ? (
         <Image source={photo} style={styles.photoFill} resizeMode="cover" />
       ) : (
-        <Text style={[type.title3, { color: colours.brand }]}>{day.name.slice(0, 1)}</Text>
+        <AppText variant="title3" style={{ color: colours.brand }}>{day.name.slice(0, 1)}</AppText>
       )}
     </View>
   );
@@ -179,7 +179,7 @@ function DayThumb({ day }: { day: RoutineDay }) {
 export default function RoutineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { colours, type, spacing, shadow } = useTheme();
+  const { colours, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const subscription = useSubscription();
@@ -420,11 +420,11 @@ export default function RoutineDetailScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
             {loadState === 'not-found'
               ? 'We couldn’t find that routine.'
               : (errorMessage ?? missingRoutinesMessage())}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -482,11 +482,10 @@ export default function RoutineDetailScreen() {
             {isCurrent ? <Chip label="Current" selected /> : null}
           </View>
 
-          <Text
-            style={[type.body, { color: colours.ink }]}
+          <AppText variant="body" style={{ color: colours.ink }}
             numberOfLines={descriptionOpen ? undefined : 2}>
             {routine.description}
-          </Text>
+          </AppText>
           {showMore ? (
             <TextButton
               label={descriptionOpen ? 'Less' : 'More'}
@@ -505,9 +504,9 @@ export default function RoutineDetailScreen() {
 
           {isCurrent && enrolment ? (
             <View style={styles.progressBlock}>
-              <Text style={[type.caption, { color: colours.inkMuted, marginBottom: 8 }]}>
+              <AppText variant="caption" style={{ color: colours.inkMuted, marginBottom: 8 }}>
                 Week {currentWeek} of {routine.length_weeks}
-              </Text>
+              </AppText>
               <ProgressBar progress={routine.length_weeks > 0 ? currentWeek / routine.length_weeks : 0} />
             </View>
           ) : null}
@@ -524,34 +523,34 @@ export default function RoutineDetailScreen() {
 
           {routine.type === 'strength' && routine.audience.length > 0 ? (
             <View style={{ marginTop: spacing.lg, gap: 8 }}>
-              <Text style={[type.title3, { color: colours.ink }]}>Who it’s for</Text>
+              <AppText variant="title3" style={{ color: colours.ink }}>Who it’s for</AppText>
               {routine.audience.map((line) => (
-                <Text key={line} style={[type.body, { color: colours.ink }]}>
+                <AppText key={line} variant="body" style={{ color: colours.ink }}>
                   {`\u2022 ${line}`}
-                </Text>
+                </AppText>
               ))}
             </View>
           ) : null}
 
           {routine.type === 'strength' && routine.byTheEnd.length > 0 ? (
             <View style={{ marginTop: spacing.lg, gap: 8 }}>
-              <Text style={[type.title3, { color: colours.ink }]}>By the end you’ll</Text>
+              <AppText variant="title3" style={{ color: colours.ink }}>By the end you’ll</AppText>
               {routine.byTheEnd.map((line) => (
-                <Text key={line} style={[type.body, { color: colours.ink }]}>
+                <AppText key={line} variant="body" style={{ color: colours.ink }}>
                   {`\u2022 ${line}`}
-                </Text>
+                </AppText>
               ))}
             </View>
           ) : null}
 
           {routine.type === 'strength' && (routine.splitNote || routine.progressionNote) ? (
             <View style={{ marginTop: spacing.lg, gap: 8 }}>
-              <Text style={[type.title3, { color: colours.ink }]}>How it works</Text>
+              <AppText variant="title3" style={{ color: colours.ink }}>How it works</AppText>
               {routine.splitNote ? (
-                <Text style={[type.body, { color: colours.ink }]}>{routine.splitNote}</Text>
+                <AppText variant="body" style={{ color: colours.ink }}>{routine.splitNote}</AppText>
               ) : null}
               {routine.progressionNote ? (
-                <Text style={[type.body, { color: colours.ink }]}>{routine.progressionNote}</Text>
+                <AppText variant="body" style={{ color: colours.ink }}>{routine.progressionNote}</AppText>
               ) : null}
             </View>
           ) : null}
@@ -570,9 +569,9 @@ export default function RoutineDetailScreen() {
             />
           ) : null}
 
-          <Text style={[type.title2, { color: colours.ink, marginTop: spacing.lg, marginBottom: spacing.md }]}>
+          <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.lg, marginBottom: spacing.md }}>
             Week by week
-          </Text>
+          </AppText>
 
           {phases.map((phase, phaseIndex) => {
             const weeks: RoutineWeek[] = [];
@@ -584,11 +583,11 @@ export default function RoutineDetailScreen() {
               <View key={`${phase.fromWeek}-${phase.toWeek}`} style={styles.phase}>
                 {phases.length > 1 || phase.phaseName ? (
                   <View style={{ marginBottom: spacing.sm, gap: 4 }}>
-                    <Text style={[type.eyebrow, { color: colours.accent }]}>
+                    <AppText variant="eyebrow" style={{ color: colours.accent }}>
                       {phaseLabel(phase, phaseIndex, routine)}
-                    </Text>
+                    </AppText>
                     {phase.phaseGoal ? (
-                      <Text style={[type.bodySm, { color: colours.inkMuted }]}>{phase.phaseGoal}</Text>
+                      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>{phase.phaseGoal}</AppText>
                     ) : null}
                   </View>
                 ) : null}
@@ -659,13 +658,13 @@ export default function RoutineDetailScreen() {
                                     accessibilityRole="button">
                                     <DayThumb day={day} />
                                     <View style={styles.flex}>
-                                      <Text style={[type.title3, { color: colours.ink }]} numberOfLines={1}>
+                                      <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={1}>
                                         {day.name}
-                                      </Text>
-                                      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                      </AppText>
+                                      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                                         {day.focus ? `${day.focus} · ` : `Day ${day.day_number} · `}
                                         {routine.session_minutes} min
-                                      </Text>
+                                      </AppText>
                                     </View>
                                     {done ? (
                                       <Ionicons name="checkmark-circle" size={22} color={colours.success} />
@@ -695,24 +694,24 @@ export default function RoutineDetailScreen() {
                                           accessibilityRole="button">
                                           <View style={styles.flex}>
                                             {item.role ? (
-                                              <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 4 }]}>
+                                              <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 4 }}>
                                                 {ROLE_LABELS[item.role]}
-                                              </Text>
+                                              </AppText>
                                             ) : null}
-                                            <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
+                                            <AppText variant="bodyStrong" style={{ color: colours.ink }}>
                                               {item.exercise.name}
-                                            </Text>
-                                            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                            </AppText>
+                                            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                                               {formatSetsAndReps(item)}
                                               {item.target_rir
                                                 ? ` · ${formatRir(item.target_rir)}`
                                                 : ''}
                                               {` · ${formatRestSeconds(item.rest_seconds)}`}
-                                            </Text>
-                                            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+                                            </AppText>
+                                            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                                               {MUSCLE_LABELS[item.exercise.primary_muscle]} ·{' '}
                                               {EQUIPMENT_LABELS[item.exercise.equipment]}
-                                            </Text>
+                                            </AppText>
                                           </View>
                                           <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
                                         </Pressable>

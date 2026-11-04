@@ -1,11 +1,11 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ExerciseLibrary } from '@/components/ExerciseLibrary';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
-import { TabAvatar } from '@/components/ui';
+import { AppText, TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 
 const SECTIONS = [
@@ -18,7 +18,7 @@ type Section = (typeof SECTIONS)[number]['id'];
 
 export default function ProgrammesScreen() {
   const tabBarHeight = useTabBarHeight();
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   const params = useLocalSearchParams<{ section?: string | string[] }>();
   const requested = Array.isArray(params.section) ? params.section[0] : params.section;
   const [section, setSection] = useState<Section>(
@@ -36,7 +36,7 @@ export default function ProgrammesScreen() {
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <TabAvatar />
-          <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Programmes</Text>
+          <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Programmes</AppText>
         </View>
         <View
           style={[styles.tabRow, { borderBottomColor: colours.border }]}
@@ -50,13 +50,9 @@ export default function ProgrammesScreen() {
                 style={styles.tab}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}>
-                <Text
-                  style={[
-                    type.title3,
-                    { color: selected ? colours.ink : colours.inkMuted, fontWeight: selected ? '700' : '500' },
-                  ]}>
+                <AppText variant="title3" style={{ color: selected ? colours.ink : colours.inkMuted }}>
                   {item.label}
-                </Text>
+                </AppText>
                 <View
                   style={[
                     styles.underline,

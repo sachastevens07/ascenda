@@ -5,13 +5,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { ProBadge } from '@/components/ui/Badges';
 import { SectionHeader } from '@/components/ui/List';
 import { useTheme } from '@/constants/theme';
@@ -52,7 +52,7 @@ export function ArticleCard({
   style?: StyleProp<ViewStyle>;
   width?: number;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const { isPro } = useSubscription();
   const image = articleImage(article);
   return (
@@ -66,7 +66,9 @@ export function ArticleCard({
           {image ? (
             <Image source={image} style={styles.fill} resizeMode="cover" />
           ) : (
-            <Text style={[type.title, { color: colours.brand }]}>{article.title.slice(0, 1)}</Text>
+            <AppText variant="display" style={{ color: colours.brand }}>
+              {article.title.slice(0, 1)}
+            </AppText>
           )}
           {article.is_pro ? (
             <View style={styles.badge}>
@@ -75,13 +77,15 @@ export function ArticleCard({
           ) : null}
         </View>
         <View style={styles.cardBody}>
-          <Text style={[type.eyebrow, { color: colours.accent }]}>{LEARN_CATEGORY_LABELS[article.category]}</Text>
-          <Text style={[type.title3, { color: colours.ink, marginTop: 6 }]} numberOfLines={2}>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            {LEARN_CATEGORY_LABELS[article.category]}
+          </AppText>
+          <AppText variant="title3" style={{ color: colours.ink, marginTop: 6 }} numberOfLines={2}>
             {article.title}
-          </Text>
-          <Text style={[type.caption, { color: colours.inkMuted, marginTop: 6 }]}>
+          </AppText>
+          <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 6 }}>
             {formatReadMinutes(article.read_minutes)}
-          </Text>
+          </AppText>
         </View>
       </View>
     </Pressable>
@@ -95,7 +99,7 @@ export function CategoryTile({
   category: LearnCategory;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const image = learnImage(LEARN_CATEGORY_COVERS[category]);
   return (
     <Pressable
@@ -111,16 +115,16 @@ export function CategoryTile({
         <View style={[styles.fill, { backgroundColor: colours.brandSoft }]} />
       )}
       <View style={[styles.tileFade, { backgroundColor: colours.overlay }]}>
-        <Text style={[type.title3, { color: colours.onAccent }]} numberOfLines={2}>
+        <AppText variant="title3" style={{ color: colours.onAccent }} numberOfLines={2}>
           {LEARN_CATEGORY_LABELS[category]}
-        </Text>
+        </AppText>
       </View>
     </Pressable>
   );
 }
 
 export function ArticleBody({ markdown }: { markdown: string }) {
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   const blocks = parseArticleBody(markdown);
   return (
     <View style={{ gap: spacing.md }}>
@@ -128,9 +132,9 @@ export function ArticleBody({ markdown }: { markdown: string }) {
         const key = `${block.type}-${index}`;
         if (block.type === 'heading') {
           return (
-            <Text key={key} style={[type.title2, { color: colours.ink }]}>
+            <AppText key={key} variant="title2" style={{ color: colours.ink }}>
               {block.text}
-            </Text>
+            </AppText>
           );
         }
         if (block.type === 'quote') {
@@ -138,7 +142,9 @@ export function ArticleBody({ markdown }: { markdown: string }) {
             <View
               key={key}
               style={[styles.quote, { borderLeftColor: colours.accent, backgroundColor: colours.accentSoft }]}>
-              <Text style={[styles.articleText, { color: colours.ink }]}>{block.text}</Text>
+              <AppText variant="body" style={{ color: colours.ink }}>
+                {block.text}
+              </AppText>
             </View>
           );
         }
@@ -146,17 +152,17 @@ export function ArticleBody({ markdown }: { markdown: string }) {
           return (
             <View key={key} style={{ gap: 8 }}>
               {block.items.map((item) => (
-                <Text key={item} style={[styles.articleText, { color: colours.ink }]}>
+                <AppText key={item} variant="body" style={{ color: colours.ink }}>
                   {`\u2022 ${item}`}
-                </Text>
+                </AppText>
               ))}
             </View>
           );
         }
         return (
-          <Text key={key} style={[styles.articleText, { color: colours.ink }]}>
+          <AppText key={key} variant="body" style={{ color: colours.ink }}>
             {block.text}
-          </Text>
+          </AppText>
         );
       })}
     </View>
@@ -177,7 +183,7 @@ export function RelatedLearn({
   style?: StyleProp<ViewStyle>;
 }) {
   const { width } = useWindowDimensions();
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   const [items, setItems] = useState<LearnArticle[]>([]);
   const cardWidth = Math.min(260, width * 0.72);
 
@@ -213,9 +219,9 @@ export function RelatedLearn({
           <ArticleCard key={article.id} article={article} width={cardWidth} />
         ))}
       </ScrollView>
-      <Text style={[type.caption, { color: colours.inkMuted, marginTop: spacing.sm }]}>
+      <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
         Short reads to sit beside the session.
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -252,11 +258,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     paddingVertical: 12,
     paddingHorizontal: 14,
-  },
-  articleText: {
-    fontSize: 17,
-    lineHeight: 26,
-    fontWeight: '400',
   },
   pressed: {
     opacity: 0.8,

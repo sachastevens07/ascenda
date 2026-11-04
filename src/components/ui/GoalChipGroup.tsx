@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import {
   GOAL_LABELS,
@@ -17,7 +18,7 @@ export function GoalChipGroup({
   selected: Goal[];
   onChange: (next: Goal[]) => void;
 }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const [hint, setHint] = useState<string | null>(null);
   const atMax = selected.length >= MAX_MAIN_GOALS;
 
@@ -53,24 +54,21 @@ export function GoalChipGroup({
                 },
               ]}>
               {isMain ? (
-                <Text style={[type.caption, { color: colours.accent, fontWeight: '700' }]}>Main</Text>
+                <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                  Main
+                </AppText>
               ) : null}
-              <Text
-                style={[
-                  type.body,
-                  {
-                    color: isSelected ? colours.brand : colours.ink,
-                    fontWeight: isSelected ? '700' : '500',
-                  },
-                ]}>
+              <AppText variant={isSelected ? 'bodyStrong' : 'body'} style={{ color: isSelected ? colours.brand : colours.ink }}>
                 {GOAL_LABELS[value]}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
       </View>
       {hint ? (
-        <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 12 }]}>{hint}</Text>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 12 }}>
+          {hint}
+        </AppText>
       ) : null}
     </View>
   );

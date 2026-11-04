@@ -1,5 +1,6 @@
-import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 import { PrimaryButton, TextButton } from './Buttons';
@@ -17,7 +18,7 @@ export function WelcomeBackCard({
   onSeeOptions: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, spacing, type } = useTheme();
+  const { colours, radius, spacing } = useTheme();
   return (
     <View
       style={[
@@ -28,10 +29,12 @@ export function WelcomeBackCard({
         },
         style,
       ]}>
-      <Text style={[type.title2, { color: colours.ink }]}>Welcome back</Text>
-      <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.sm }]} numberOfLines={1}>
+      <AppText variant="title2" style={{ color: colours.ink }}>
+        Welcome back
+      </AppText>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.sm }} numberOfLines={1}>
         {body}
-      </Text>
+      </AppText>
       <PrimaryButton
         label={starting ? 'Starting…' : 'Start a lighter session'}
         onPress={onStartLighter}

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AnchoredMenu, MenuRow, measureAnchor, type AnchorHandle, type AnchorRect } from '@/components/AnchoredMenu';
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import type { DailyQuote } from '@/lib/quotes';
 
@@ -16,7 +17,7 @@ export function QuoteCard({
   onHide: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, spacing, shadow, type } = useTheme();
+  const { colours, radius, spacing, shadow } = useTheme();
   const menuRef = useRef<AnchorHandle>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState<AnchorRect | null>(null);
@@ -37,9 +38,9 @@ export function QuoteCard({
         style,
       ]}>
       <View style={styles.top}>
-        <Text style={[styles.mark, { color: colours.accent }]} accessibilityElementsHidden>
+        <AppText variant="displaySm" italic style={{ color: colours.accent, marginTop: -8 }} accessibilityElementsHidden>
           “
-        </Text>
+        </AppText>
         <View ref={menuRef} collapsable={false}>
           <IconButton
             icon="ellipsis-horizontal"
@@ -49,8 +50,12 @@ export function QuoteCard({
           />
         </View>
       </View>
-      <Text style={[styles.quote, { color: colours.ink }]}>{quote.text}</Text>
-      <Text style={[type.caption, { color: colours.inkMuted, marginTop: spacing.sm }]}>{quote.attribution}</Text>
+      <AppText variant="displaySm" italic style={{ color: colours.ink }}>
+        {quote.text}
+      </AppText>
+      <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+        {quote.attribution}
+      </AppText>
       <AnchoredMenu visible={menuOpen} anchor={anchor} onClose={() => setMenuOpen(false)}>
         <MenuRow
           label="Hide daily quote"
@@ -73,16 +78,5 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 4,
-  },
-  mark: {
-    fontSize: 36,
-    lineHeight: 40,
-    fontWeight: '700',
-    marginTop: -8,
-  },
-  quote: {
-    fontSize: 20,
-    lineHeight: 28,
-    fontWeight: '600',
   },
 });

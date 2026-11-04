@@ -205,21 +205,24 @@ Category colours (eyebrow labels in Planner and cards): Strength `brand`, Stretc
 
 ### 3.2 Typography
 
-- **Display font (serif):** one elegant serif for screen titles on Home, hero titles on routine pages, onboarding headlines, paywall headline and big achievement moments. Suggested: Fraunces or DM Serif Display. Needs `expo-font` plus a Google Fonts package; ask before adding.
-- **UI font (sans):** keep the current sans (or Inter if adding fonts is approved) for everything else.
+- **Display font (serif):** Fraunces (`@expo-google-fonts/fraunces`), weights 400 and 600, plus 400 italic for the daily quote. Used for Home greeting, hero titles, onboarding questions, paywall headline, completion screens, Learn titles and the quote card (`displaySm`, italic). Letter-spacing about -0.3. No faux bold or italics.
+- **UI font (sans):** Manrope (`@expo-google-fonts/manrope`), weights 400, 500, 600, 700 and 800. Everything else, including buttons, tab labels, chips, badges, logger set rows and kg/reps inputs.
+- Load all weights in the root layout with `useFonts`. Keep the splash screen up until they are ready. Each weight is a separate `fontFamily` (for example `Manrope_600SemiBold`). Never set `fontWeight` to pick a weight: that breaks on Android.
+- Apply fonts only through `AppText` (`variant` matches the tokens below) or the matching `type` token on `TextInput`.
 
-| Style | Font | Size / line | Weight | Use |
-|---|---|---|---|---|
-| `display` | Serif | 34 / 40 | Regular | Home title, hero titles, onboarding headlines |
-| `title1` | Sans | 28 / 34 | Bold | Screen titles (Programmes, Planner, Activity, Profile) |
-| `title2` | Sans | 22 / 28 | Semibold | Card titles on detail pages, section titles |
-| `title3` | Sans | 18 / 24 | Semibold | Card titles in lists, exercise names |
-| `body` | Sans | 16 / 22 | Regular | Body copy |
-| `bodyStrong` | Sans | 16 / 22 | Semibold | Emphasis, button text |
-| `bodySm` | Sans | 14 / 20 | Regular | Metadata, descriptions |
-| `caption` | Sans | 12 / 16 | Medium | Captions, tab labels |
-| `eyebrow` | Sans | 11 / 14 | Semibold, uppercase, letter-spacing 1.2 | Category labels, section kickers |
-| `number` | Sans | 32 / 36 | Bold, tabular figures | Stats, ring centres |
+| Token | Font | Size / line | Notes |
+|---|---|---|---|
+| `display` | Fraunces 400 | 34 / 40 | Home greeting, hero titles, onboarding questions, paywall headline, completion screens, Learn titles |
+| `displaySm` | Fraunces 400 | 26 / 32 | Section heroes, quote card (italic) |
+| `title1` | Manrope 700 | 28 / 34 | Screen titles |
+| `title2` | Manrope 700 | 22 / 28 | Section and card titles |
+| `title3` | Manrope 600 | 18 / 24 | List titles, exercise names |
+| `body` | Manrope 400 | 16 / 24 | Body copy |
+| `bodyStrong` | Manrope 600 | 16 / 24 | Buttons, emphasis |
+| `bodySm` | Manrope 400 | 14 / 20 | Metadata |
+| `caption` | Manrope 500 | 12 / 16 | Captions, tab labels |
+| `eyebrow` | Manrope 700 | 11 / 14 | Uppercase, letter-spacing 1.4 |
+| `number` | Manrope 700 | 32 / 36 | Stats, timers, ring centres; `fontVariant: ['tabular-nums']` |
 
 Metadata uses `·` as separator: "6 weeks · 3 days a week · 40 min".
 
@@ -366,7 +369,7 @@ Each item below maps to a task in AGENTS.md (in brackets).
 - **Tags and chips:** sentence case ("Beginner friendly", "Busy gym friendly"), max 2 per card, single line, truncate the rest. Filter chips keep "All" first.
 - **Eyebrows:** keep to 2 short words or shorten the goal label (e.g. "INTERMEDIATE · STRENGTH", not "BUILD STRENGTH" truncated).
 - **Theme:** light is the default whatever the phone's setting; dark only when chosen in Profile → Appearance (Light / Dark / Match phone).
-- **Typography:** add the display serif (needs approval of a font package) for: Home greeting, hero titles on routine/stretch/Learn pages, onboarding questions, paywall headline, completion screens. Everything else stays sans.
+- **Typography:** Fraunces for display moments (Home greeting, hero titles, onboarding questions, paywall headline, completion screens, Learn titles, quote card). Manrope for everything else. Tokens and loading rules are in 3.2.
 - **Navigation:** five tabs: Home, Programmes, Planner, Activity, Learn. Profile is a 36 px avatar (initials) at the top-left of each tab's header; tapping opens Profile as a pushed screen.
 
 ### 6.2 Photos (D2)

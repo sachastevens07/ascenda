@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import { describeTargetRange, type BlockTarget, type TrainingBlock } from '@/lib/blocks';
 
@@ -7,7 +8,9 @@ export function BlockTargets({ block }: { block: TrainingBlock }) {
   if (block.targets.length === 0) return null;
   return (
     <View style={styles.wrap}>
-      <Text style={styles.heading}>This block</Text>
+      <AppText variant="bodySm" style={{ color: colours.textMuted }}>
+        This block
+      </AppText>
       {block.targets.map((target) => (
         <TargetRow key={target.id} target={target} />
       ))}
@@ -20,8 +23,12 @@ function TargetRow({ target }: { target: BlockTarget }) {
   return (
     <View style={styles.row}>
       <View style={styles.copy}>
-        <Text style={styles.name}>{target.exercise.name}</Text>
-        <Text style={styles.range}>{describeTargetRange(target)}</Text>
+        <AppText variant="bodyStrong" style={{ color: colours.text }}>
+          {target.exercise.name}
+        </AppText>
+        <AppText variant="caption" style={{ color: colours.textMuted }}>
+          {describeTargetRange(target)}
+        </AppText>
       </View>
       <View style={styles.track} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: filled }}>
         <View style={[styles.fill, { width: `${filled}%` }]} />
@@ -35,25 +42,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 10,
   },
-  heading: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colours.textMuted,
-  },
   row: {
     gap: 6,
   },
   copy: {
     gap: 2,
-  },
-  name: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  range: {
-    fontSize: 13,
-    color: colours.textMuted,
   },
   track: {
     height: 8,

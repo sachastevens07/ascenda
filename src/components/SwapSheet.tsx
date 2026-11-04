@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { EQUIPMENT_LABELS, ZONE_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
@@ -159,9 +160,9 @@ export function SwapSheet({
       ) : loadState === 'error' ? (
         <Pills>
           <Status>
-            <Text style={[styles.status, { color: colours.inkMuted }]}>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center' }}>
               We couldn’t load alternatives. Try again.
-            </Text>
+            </AppText>
           </Status>
         </Pills>
       ) : (
@@ -194,9 +195,9 @@ export function SwapSheet({
           )}
           {alternatives.length === 0 && !trySomethingNew && !canRestore && (
             <Status>
-              <Text style={[styles.status, { color: colours.inkMuted }]}>
+              <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center' }}>
                 Nothing else for this muscle with your equipment.
-              </Text>
+              </AppText>
             </Status>
           )}
         </Pills>
@@ -266,13 +267,13 @@ function Pill({
         <View style={styles.icon} />
       )}
       <View style={styles.pillText}>
-        <Text style={[styles.pillTitle, { color: colours.ink }]} numberOfLines={1}>
+        <AppText variant="bodyStrong" style={{ color: colours.ink }} numberOfLines={1}>
           {title}
-        </Text>
+        </AppText>
         {detail ? (
-          <Text style={[styles.pillDetail, { color: colours.inkMuted }]} numberOfLines={1}>
+          <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 1 }} numberOfLines={1}>
             {detail}
-          </Text>
+          </AppText>
         ) : null}
       </View>
     </Pressable>
@@ -301,14 +302,6 @@ const styles = StyleSheet.create({
   pillText: {
     flex: 1,
   },
-  pillTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  pillDetail: {
-    fontSize: 13,
-    marginTop: 1,
-  },
   statusPill: {
     height: OPTION_HEIGHT,
     borderRadius: 999,
@@ -316,10 +309,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-  },
-  status: {
-    fontSize: 15,
-    textAlign: 'center',
   },
   pressed: {
     opacity: 0.7,

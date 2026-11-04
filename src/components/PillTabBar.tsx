@@ -1,8 +1,9 @@
 import type { MaterialTopTabBarProps } from 'expo-router/js-top-tabs';
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { WorkoutBar } from '@/components/WorkoutBar';
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 const PILL_PADDING = 4;
@@ -119,13 +120,14 @@ export function PillTabBar({
                 accessibilityState={{ selected: focused }}
                 accessibilityLabel={label}>
                 {tabBarIcon?.({ focused, color: colour })}
-                <Text
+                <AppText
+                  variant="caption"
                   style={[styles.label, { color: colour }]}
                   numberOfLines={1}
                   adjustsFontSizeToFit
                   minimumFontScale={0.65}>
                   {label}
-                </Text>
+                </AppText>
               </Pressable>
             );
           })}
@@ -173,8 +175,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   label: {
-    fontSize: 10,
-    fontWeight: '600',
     textAlign: 'center',
   },
 });

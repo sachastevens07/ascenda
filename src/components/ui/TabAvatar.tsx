@@ -1,6 +1,7 @@
 import { router, type Href } from 'expo-router';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -16,7 +17,7 @@ function initials(name: string | null | undefined, email: string | undefined): s
 }
 
 export function TabAvatar() {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const { profile } = useProfile();
   const { session } = useAuth();
   const answers = getQuizAnswers(profile);
@@ -33,7 +34,9 @@ export function TabAvatar() {
         { backgroundColor: colours.brandSoft, borderRadius: radius.full },
         pressed && styles.pressed,
       ]}>
-      <Text style={[type.caption, { color: colours.brand, fontWeight: '700' }]}>{initials(name, email)}</Text>
+      <AppText variant="caption" style={{ color: colours.brand }}>
+        {initials(name, email)}
+      </AppText>
     </Pressable>
   );
 }

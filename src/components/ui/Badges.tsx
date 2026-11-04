@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { Modal, Pressable, StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 import { TextButton } from './Buttons';
@@ -37,7 +38,9 @@ export function ProBadge({
       ]}
       accessibilityLabel={locked ? 'Pro, locked' : 'Pro'}>
       {locked ? <Ionicons name="lock-closed" size={iconSize} color={colours.onPro} /> : null}
-      <Text style={[styles.proLabel, { color: colours.onPro }, compact && styles.proLabelCompact]}>PRO</Text>
+      <AppText variant="eyebrow" style={{ color: colours.onPro, letterSpacing: 0.6 }}>
+        PRO
+      </AppText>
     </View>
   );
 }
@@ -58,7 +61,9 @@ export function ProMark({
   return (
     <View style={[styles.mark, style]}>
       <ProBadge locked={locked} compact={compact} />
-      <Text style={textStyle}>{children}</Text>
+      <AppText variant="bodyStrong" style={textStyle}>
+        {children}
+      </AppText>
     </View>
   );
 }
@@ -73,7 +78,9 @@ export function FreeBadge({ style }: { style?: StyleProp<ViewStyle> }) {
         style,
       ]}
       accessibilityLabel="Free">
-      <Text style={[styles.freeLabel, { color: colours.brand }]}>FREE</Text>
+      <AppText variant="eyebrow" style={{ color: colours.brand, letterSpacing: 0.6 }}>
+        FREE
+      </AppText>
     </View>
   );
 }
@@ -110,7 +117,9 @@ export function AchievementBadge({
       ]}
       accessibilityLabel={unlocked ? label : `${label}, locked`}>
       {mark ? (
-        <Text style={[styles.markText, { color: ink }]}>{mark}</Text>
+        <AppText variant="title2" style={{ color: ink }}>
+          {mark}
+        </AppText>
       ) : children ? (
         children
       ) : unlocked ? (
@@ -136,7 +145,7 @@ export function BadgeSheet({
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { colours, type, radius, spacing, shadow } = useTheme();
+  const { colours, radius, spacing, shadow } = useTheme();
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
       <View style={[styles.sheetOverlay, { backgroundColor: colours.overlay }]}>
@@ -151,10 +160,16 @@ export function BadgeSheet({
             },
             shadow,
           ]}>
-          <Text style={[type.title2, { color: colours.ink }]}>{title}</Text>
-          <Text style={[type.body, { color: colours.ink, marginTop: spacing.sm }]}>{body}</Text>
+          <AppText variant="title2" style={{ color: colours.ink }}>
+            {title}
+          </AppText>
+          <AppText variant="body" style={{ color: colours.ink, marginTop: spacing.sm }}>
+            {body}
+          </AppText>
           {meta ? (
-            <Text style={[type.caption, { color: colours.inkMuted, marginTop: spacing.sm }]}>{meta}</Text>
+            <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+              {meta}
+            </AppText>
           ) : null}
           <TextButton label="Close" onPress={onClose} style={{ alignSelf: 'flex-start', marginTop: spacing.md }} />
         </View>
@@ -172,7 +187,7 @@ export function LockedOverlay({
   label?: string;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   return (
     <View
       pointerEvents={onUnlock ? 'auto' : 'none'}
@@ -188,10 +203,14 @@ export function LockedOverlay({
           accessibilityRole="button"
           style={({ pressed }) => [styles.unlock, pressed && styles.pressed]}>
           <ProBadge locked compact />
-          <Text style={[type.button, { color: colours.onAccent }]}>{label}</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.onAccent }}>
+            {label}
+          </AppText>
         </Pressable>
       ) : (
-        <Text style={[type.caption, { color: colours.onAccent }]}>{label}</Text>
+        <AppText variant="caption" style={{ color: colours.onAccent }}>
+          {label}
+        </AppText>
       )}
     </View>
   );
@@ -209,14 +228,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 2,
   },
-  proLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  proLabelCompact: {
-    fontSize: 10,
-  },
   mark: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -227,11 +238,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  freeLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
   achievement: {
     width: 72,
     height: 72,
@@ -239,11 +245,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-  },
-  markText: {
-    fontSize: 22,
-    fontWeight: '700',
-    letterSpacing: 0.2,
   },
   locked: {
     position: 'absolute',

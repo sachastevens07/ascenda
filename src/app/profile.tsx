@@ -1,11 +1,12 @@
 import Constants from 'expo-constants';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import {
+  AppText,
   DestructiveTextButton,
   FreeBadge,
   IconButton,
@@ -122,7 +123,7 @@ function savedWorkoutsLabel(count: number): string {
 }
 
 export default function ProfileScreen() {
-  const { colours, radius, type, preference, setPreference } = useTheme();
+  const { colours, radius, preference, setPreference } = useTheme();
   const { session } = useAuth();
   const { profile, reload, deleteAccount } = useProfile();
   const subscription = useSubscription();
@@ -510,20 +511,20 @@ export default function ProfileScreen() {
           accessibilityLabel="Back"
           onPress={() => router.back()}
         />
-        <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Profile</Text>
+        <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Profile</AppText>
       </View>
 
       <View style={styles.hero}>
         <View style={[styles.avatar, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
-          <Text style={[styles.avatarLetters, { color: colours.brand }]}>
+          <AppText variant="title2" style={{ color: colours.brand, letterSpacing: 0.4 }}>
             {initials(displayName, email)}
-          </Text>
+          </AppText>
         </View>
         <View style={styles.heroText}>
           <View style={styles.nameRow}>
-            <Text style={[type.title, { color: colours.ink, flexShrink: 1 }]} numberOfLines={1}>
+            <AppText variant="title2" style={{ color: colours.ink, flexShrink: 1 }} numberOfLines={1}>
               {displayName}
-            </Text>
+            </AppText>
             {subscription.isPro ? (
               <ProBadge compact />
             ) : (
@@ -531,9 +532,9 @@ export default function ProfileScreen() {
             )}
           </View>
           {email ? (
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]} numberOfLines={1}>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }} numberOfLines={1}>
               {email}
-            </Text>
+            </AppText>
           ) : null}
         </View>
       </View>
@@ -609,7 +610,7 @@ export default function ProfileScreen() {
 
       <SettingsGroup title="Appearance">
         <View style={styles.appearance}>
-          <Text style={[type.bodySm, { color: colours.inkMuted, marginBottom: 10 }]}>Theme</Text>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginBottom: 10 }}>Theme</AppText>
           <SegmentedThemePicker value={preference} onChange={handleThemeChange} />
         </View>
         <SettingsRow
@@ -769,9 +770,9 @@ export default function ProfileScreen() {
         accessibilityRole="text"
         accessibilityLabel={`App version ${appVersion}`}
         style={styles.version}>
-        <Text style={[type.caption, { color: colours.inkMuted, textAlign: 'center' }]}>
+        <AppText variant="caption" style={{ color: colours.inkMuted, textAlign: 'center' }}>
           Version {appVersion}
-        </Text>
+        </AppText>
       </Pressable>
 
       {showDevTools ? (
@@ -861,10 +862,10 @@ export default function ProfileScreen() {
 }
 
 function SettingsGroup({ title, children }: { title: string; children: ReactNode }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   return (
     <View style={styles.group}>
-      <Text style={[type.eyebrow, { color: colours.inkMuted, marginBottom: 8, marginLeft: 4 }]}>{title}</Text>
+      <AppText variant="eyebrow" style={{ color: colours.inkMuted, marginBottom: 8, marginLeft: 4 }}>{title}</AppText>
       <View style={[{ borderRadius: radius.lg }, shadow]}>
         <View style={[styles.groupInner, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
           {children}
@@ -921,11 +922,6 @@ const styles = StyleSheet.create({
     height: 72,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  avatarLetters: {
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: 0.4,
   },
   heroText: {
     flex: 1,

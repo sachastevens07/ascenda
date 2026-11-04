@@ -9,7 +9,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type ScrollViewInstance,
 } from 'react-native';
@@ -19,6 +18,7 @@ import { LineChart } from '@/components/LineChart';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AchievementBadge as BadgeMark,
+  AppText,
   BadgeSheet,
   DestructiveTextButton,
   HighlightTile,
@@ -181,7 +181,7 @@ function familyIcon(family: AchievementFamily): IconName {
 
 export default function ActivityScreen() {
   const tabBarHeight = useTabBarHeight();
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   useWeightUnit();
   const { isPro } = useSubscription();
   const { profile } = useProfile();
@@ -379,9 +379,9 @@ export default function ActivityScreen() {
           <ActivityIndicator color={colours.brand} />
         ) : (
           <>
-            <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+            <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
               We couldn’t load your activity. Check your connection and try again.
-            </Text>
+            </AppText>
             <SecondaryButton
               label="Try again"
               onPress={() => {
@@ -421,7 +421,7 @@ export default function ActivityScreen() {
 
   const highlights = (
     <>
-      <Text style={[type.title, { color: colours.ink }]}>Highlights</Text>
+      <AppText variant="title2" style={{ color: colours.ink }}>Highlights</AppText>
       <View style={styles.highlightRow}>
         <HighlightTile
           value={String(totals.sessions)}
@@ -456,7 +456,7 @@ export default function ActivityScreen() {
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <TabAvatar />
-          <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Activity</Text>
+          <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Activity</AppText>
         </View>
         <View style={[styles.tabRow, { borderBottomColor: colours.border }]} accessibilityRole="tablist">
           {TABS.map((item) => {
@@ -468,16 +468,11 @@ export default function ActivityScreen() {
                 style={styles.tab}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}>
-                <Text
-                  style={[
-                    type.body,
-                    {
-                      color: selected ? colours.accent : colours.inkMuted,
-                      fontWeight: selected ? '700' : '500',
-                    },
-                  ]}>
+                <AppText
+                  variant={selected ? 'bodyStrong' : 'body'}
+                  style={{ color: selected ? colours.accent : colours.inkMuted }}>
                   {item.label}
-                </Text>
+                </AppText>
                 <View
                   style={[styles.underline, { backgroundColor: selected ? colours.accent : 'transparent' }]}
                 />
@@ -493,10 +488,10 @@ export default function ActivityScreen() {
             {highlights}
 
             {data.weekProgress.planned > 0 ? (
-              <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                 This week: {data.streak.doneThisWeek} of {data.weekProgress.planned}{' '}
                 {data.weekProgress.planned === 1 ? 'workout' : 'workouts'}
-              </Text>
+              </AppText>
             ) : null}
 
             {data.hideStreak ? null : <StreakCard streak={data.streak} />}
@@ -507,9 +502,9 @@ export default function ActivityScreen() {
             <SectionHeader title="Personal bests" />
             <View style={card}>
               {bests.length === 0 ? (
-                <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                   Finish a weighted session and your bests will land here.
-                </Text>
+                </AppText>
               ) : (
                 bests.map((best, index) => (
                   <View
@@ -522,12 +517,12 @@ export default function ActivityScreen() {
                       <Ionicons name="trophy-outline" size={18} color={colours.accent} />
                     </View>
                     <View style={styles.flex}>
-                      <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>{best.exerciseName}</Text>
-                      <Text style={[type.bodySm, { color: colours.accent, marginTop: 2 }]}>{describeBest(best)}</Text>
+                      <AppText variant="bodyStrong" style={{ color: colours.ink }}>{best.exerciseName}</AppText>
+                      <AppText variant="bodySm" style={{ color: colours.accent, marginTop: 2 }}>{describeBest(best)}</AppText>
                     </View>
-                    <Text style={[type.caption, { color: colours.inkMuted }]}>
+                    <AppText variant="caption" style={{ color: colours.inkMuted }}>
                       {formatShortDate(parseDate(best.date))}
-                    </Text>
+                    </AppText>
                   </View>
                 ))
               )}
@@ -536,7 +531,7 @@ export default function ActivityScreen() {
             {isPro ? (
               weeks.filter((week) => week.count > 0).length >= 2 ? (
                 <View style={card}>
-                  <Text style={[type.title, { color: colours.ink }]}>Sessions per week</Text>
+                  <AppText variant="title2" style={{ color: colours.ink }}>Sessions per week</AppText>
                   <WeeklyBars weeks={weeks} />
                 </View>
               ) : null
@@ -550,9 +545,9 @@ export default function ActivityScreen() {
 
             {isPro && lift && history.length >= 2 ? (
               <View style={card}>
-                <Text style={[type.title, { color: colours.ink }]}>
+                <AppText variant="title2" style={{ color: colours.ink }}>
                   {lift.assisted ? 'Help over time' : 'Weight over time'}
-                </Text>
+                </AppText>
                 <Pressable
                   ref={liftPickerRef}
                   collapsable={false}
@@ -569,9 +564,9 @@ export default function ActivityScreen() {
                   }}
                   accessibilityRole="button"
                   accessibilityLabel={`Lift: ${lift.exerciseName}. Change lift`}>
-                  <Text style={[type.body, { color: colours.brand, fontWeight: '700', flex: 1 }]} numberOfLines={1}>
+                  <AppText variant="bodyStrong" style={{ color: colours.brand, flex: 1 }} numberOfLines={1}>
                     {lift.exerciseName}
-                  </Text>
+                  </AppText>
                   <Ionicons
                     name={isPickerOpen ? 'chevron-up' : 'chevron-down'}
                     size={18}
@@ -586,9 +581,9 @@ export default function ActivityScreen() {
                   formatX={(x) => formatShortDate(new Date(x))}
                   formatY={(y) => `${Math.round(y)} kg`}
                 />
-                <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                   {describeChange(history, lift.assisted)}
-                </Text>
+                </AppText>
               </View>
             ) : null}
 
@@ -597,11 +592,11 @@ export default function ActivityScreen() {
                 <>
                   <SectionHeader title="Progress photos" />
                   <View style={card}>
-                    <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                    <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                       Optional, private, and never sent to AI. Hidden until you choose to show them.
-                    </Text>
+                    </AppText>
                     {data.photosError ? (
-                      <Text style={[type.caption, { color: colours.inkMuted }]}>{data.photosError}</Text>
+                      <AppText variant="caption" style={{ color: colours.inkMuted }}>{data.photosError}</AppText>
                     ) : null}
                     {showPhotos ? (
                       <>
@@ -650,17 +645,17 @@ export default function ActivityScreen() {
                                     ]}
                                   />
                                 )}
-                                <Text style={[type.caption, { color: colours.inkMuted, marginTop: 6 }]}>
+                                <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 6 }}>
                                   {formatShortDate(parseDate(photo.taken_on))}
-                                </Text>
+                                </AppText>
                               </View>
                             ))}
                           </View>
                         ) : null}
                         {data.photos.length === 0 ? (
-                          <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+                          <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                             No photos yet. Add one when you want.
-                          </Text>
+                          </AppText>
                         ) : (
                           data.photos.map((photo) => {
                             const selected = compareIds.includes(photo.id);
@@ -683,9 +678,9 @@ export default function ActivityScreen() {
                                   />
                                 )}
                                 <View style={styles.flex}>
-                                  <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>
+                                  <AppText variant="bodyStrong" style={{ color: colours.ink }}>
                                     {formatShortDate(parseDate(photo.taken_on))}
-                                  </Text>
+                                  </AppText>
                                   <TextButton
                                     label={selected ? 'Remove from compare' : 'Compare'}
                                     onPress={() =>
@@ -757,9 +752,9 @@ export default function ActivityScreen() {
 
         {tab === 'achievements' ? (
           data.hideAchievements ? (
-            <Text style={[type.body, { color: colours.inkMuted }]}>
+            <AppText variant="body" style={{ color: colours.inkMuted }}>
               Awards are hidden. You can turn them back on in Profile.
-            </Text>
+            </AppText>
           ) : (
             awardGroups.map((group) => (
               <AwardGroup
@@ -814,7 +809,7 @@ function CurrentRoutineCard({
   roadmap: RoadmapWeek[];
   isPro: boolean;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const showProBadge = Boolean(enrolment?.routine.is_pro && !isPro);
   const week = enrolment ? currentEnrolmentWeek(enrolment) : 0;
   const totalDays = enrolment
@@ -846,16 +841,16 @@ function CurrentRoutineCard({
             </View>
             <View style={[styles.flex, styles.routineBody]}>
               <View style={styles.routineTitleRow}>
-                <Text style={[type.body, { color: colours.ink, fontWeight: '700', flex: 1 }]} numberOfLines={1}>
+                <AppText variant="bodyStrong" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
                   {enrolment ? enrolment.routine.name : 'No routine yet'}
-                </Text>
+                </AppText>
                 {showProBadge ? <ProBadge locked compact /> : null}
               </View>
-              <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>
+              <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
                 {enrolment
                   ? `Week ${week} of ${enrolment.routine.length_weeks}`
                   : 'Start one from Programmes'}
-              </Text>
+              </AppText>
               {enrolment ? <ProgressBar progress={doneDays / totalDays} style={{ marginTop: 8 }} /> : null}
             </View>
             <Ionicons name="chevron-forward" size={18} color={colours.brand} />
@@ -864,10 +859,10 @@ function CurrentRoutineCard({
       </Pressable>
       {enrolment && currentWeek ? (
         <View style={[styles.roadmapWeek, { borderTopColor: colours.border }]}>
-          <Text style={[type.bodySm, { color: colours.brand, fontWeight: '600' }]}>
+          <AppText variant="bodySm" style={{ color: colours.brand }}>
             This week
             {currentWeek.checkpoint ? ' · checkpoint' : ''}
-          </Text>
+          </AppText>
           {currentWeek.days.map((day) => (
             <View key={day.id} style={styles.roadmapDay}>
               <Ionicons
@@ -875,7 +870,7 @@ function CurrentRoutineCard({
                 size={16}
                 color={day.done ? colours.success : colours.border}
               />
-              <Text style={[type.caption, { color: colours.inkMuted }]}>{day.name}</Text>
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>{day.name}</AppText>
             </View>
           ))}
           <TextButton label="See full plan" onPress={openPlan} style={styles.inlineAction} />
@@ -896,12 +891,12 @@ function ProCard({
   copy: string;
   reason: PaywallReason;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   return (
     <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
       <ProBadge locked />
-      <Text style={[type.title, { color: colours.ink }]}>{title}</Text>
-      <Text style={[type.bodySm, { color: colours.inkMuted }]}>{copy}</Text>
+      <AppText variant="title2" style={{ color: colours.ink }}>{title}</AppText>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>{copy}</AppText>
       <SecondaryButton label="See Pro" onPress={() => openPaywall(reason)} />
     </View>
   );
@@ -918,30 +913,30 @@ function RoutineReviewCard({
   review: EnrolmentReview | null;
   nextRoutine: RoutineSummary | null;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   if (!enrolment) return null;
   return (
     <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-      <Text style={[type.title, { color: colours.ink }]}>End-of-routine review</Text>
-      <Text style={[type.body, { color: colours.ink, fontWeight: '600' }]}>{enrolment.routine.name}</Text>
-      <Text style={[type.bodySm, { color: colours.inkMuted }]}>
+      <AppText variant="title2" style={{ color: colours.ink }}>End-of-routine review</AppText>
+      <AppText variant="bodyStrong" style={{ color: colours.ink }}>{enrolment.routine.name}</AppText>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
         You finished this plan
         {enrolment.completed_at
           ? ` on ${formatShortDate(parseDate(enrolment.completed_at.slice(0, 10)))}`
           : ''}
         . {review ? describeReview(review) : `${sessions} ${sessions === 1 ? 'session' : 'sessions'} logged.`}
-      </Text>
+      </AppText>
       {review?.lifts.map((lift) => (
-        <Text key={lift.exerciseId} style={[type.bodySm, { color: colours.inkMuted }]}>
+        <AppText key={lift.exerciseId} variant="bodySm" style={{ color: colours.inkMuted }}>
           {formatLiftCompare(lift)}
-        </Text>
+        </AppText>
       ))}
       {nextRoutine ? (
-        <Text style={[type.caption, { color: colours.inkMuted }]}>Next on your path: {nextRoutine.name}.</Text>
+        <AppText variant="caption" style={{ color: colours.inkMuted }}>Next on your path: {nextRoutine.name}.</AppText>
       ) : (
-        <Text style={[type.caption, { color: colours.inkMuted }]}>
+        <AppText variant="caption" style={{ color: colours.inkMuted }}>
           That’s a full routine. Start another when you’re ready.
-        </Text>
+        </AppText>
       )}
     </View>
   );
@@ -956,7 +951,7 @@ function AwardGroup({
   badges: AchievementBadge[];
   onOpen: (badge: AchievementBadge) => void;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const next = nextBadgeInGroup(badges);
   return (
     <View
@@ -965,7 +960,7 @@ function AwardGroup({
         { backgroundColor: colours.surface, borderRadius: radius.xl },
         shadow,
       ]}>
-      <Text style={[type.title3, { color: colours.ink }]}>{title}</Text>
+      <AppText variant="title3" style={{ color: colours.ink }}>{title}</AppText>
       <MedalRow badges={badges} nextId={next?.id ?? null} onOpen={onOpen} />
     </View>
   );
@@ -980,7 +975,7 @@ function MedalRow({
   nextId?: string | null;
   onOpen: (badge: AchievementBadge) => void;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <View style={styles.badgeGrid}>
       {badges.map((badge) => {
@@ -999,20 +994,18 @@ function MedalRow({
                 color={badge.unlocked ? colours.onBrand : colours.inkMuted}
               />
             </BadgeMark>
-            <Text
-              style={[
-                type.caption,
-                {
-                  color: badge.unlocked ? colours.ink : colours.inkMuted,
-                  textAlign: 'center',
-                  marginTop: 8,
-                },
-              ]}
+            <AppText
+              variant="caption"
+              style={{
+                color: badge.unlocked ? colours.ink : colours.inkMuted,
+                textAlign: 'center',
+                marginTop: 8,
+              }}
               numberOfLines={2}>
               {badge.title}
-            </Text>
+            </AppText>
             {progress ? (
-              <Text style={[type.caption, { color: colours.inkMuted, marginTop: 2 }]}>{progress}</Text>
+              <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>{progress}</AppText>
             ) : null}
           </Pressable>
         );
@@ -1039,7 +1032,7 @@ function describeChange(history: { kg: number }[], assisted: boolean): string {
 }
 
 function WeeklyBars({ weeks }: { weeks: WeekCount[] }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   const scrollRef = useRef<ScrollViewInstance>(null);
   const scale = Math.max(MIN_BAR_SCALE, ...weeks.map((week) => week.count));
   return (
@@ -1056,9 +1049,9 @@ function WeeklyBars({ weeks }: { weeks: WeekCount[] }) {
           <View key={week.weekStart.getTime()} style={styles.barColumn}>
             <View style={styles.barArea}>
               {week.count > 0 ? (
-                <Text style={[type.caption, { color: colours.accent, fontWeight: '700', marginBottom: 4 }]}>
+                <AppText variant="caption" style={{ color: colours.accent, marginBottom: 4 }}>
                   {week.count}
-                </Text>
+                </AppText>
               ) : null}
               <View
                 style={[
@@ -1070,9 +1063,9 @@ function WeeklyBars({ weeks }: { weeks: WeekCount[] }) {
                 ]}
               />
             </View>
-            <Text style={[styles.barLabel, type.caption, { color: colours.inkMuted }]} numberOfLines={1}>
+            <AppText variant="caption" style={[styles.barLabel, { color: colours.inkMuted }]} numberOfLines={1}>
               {isThisWeek ? 'Now' : showLabel ? formatShortDate(week.weekStart) : ''}
-            </Text>
+            </AppText>
           </View>
         );
       })}

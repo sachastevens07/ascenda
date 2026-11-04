@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -13,6 +13,7 @@ import {
 } from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
 import { ProMark } from '@/components/ProBadge';
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import {
   FREE_CUSTOM_WORKOUT_LIMIT,
@@ -222,11 +223,11 @@ export default function WorkoutsScreen() {
           <ActivityIndicator color={colours.accent} />
         ) : (
           <>
-            <Text style={styles.message}>
+            <AppText variant="body" style={styles.message}>
               {missingSql
                 ? missingCustomWorkoutsMessage()
                 : 'We couldn’t load your workouts. Check your connection and try again.'}
-            </Text>
+            </AppText>
             <Pressable
               style={({ pressed }) => [styles.button, pressed && styles.pressed]}
               onPress={() => {
@@ -234,7 +235,9 @@ export default function WorkoutsScreen() {
                 setAttempt((count) => count + 1);
               }}
               accessibilityRole="button">
-              <Text style={styles.buttonText}>Try again</Text>
+              <AppText variant="bodyStrong" style={styles.buttonText}>
+                Try again
+              </AppText>
             </Pressable>
           </>
         )}
@@ -248,17 +251,25 @@ export default function WorkoutsScreen() {
     <ScrollView
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
-      <Text style={styles.title}>My workouts</Text>
-      <Text style={styles.lead}>
+      <AppText variant="display" style={styles.title}>
+        My workouts
+      </AppText>
+      <AppText variant="body" style={styles.lead}>
         {isPro
           ? 'Create as many as you like. Start one, or add it to a day in the planner.'
           : `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts (${ownedCount} of ${FREE_CUSTOM_WORKOUT_LIMIT}). Duplicates count. The starter does not. Existing ones stay if a plan lapses.`}
-      </Text>
+      </AppText>
 
       <View style={styles.card}>
-        <Text style={styles.kicker}>New</Text>
-        <Text style={styles.cardTitle}>Create workout</Text>
-        <Text style={styles.cardMeta}>Name it, pick exercises, set sets and reps, then save.</Text>
+        <AppText variant="eyebrow" style={styles.kicker}>
+          New
+        </AppText>
+        <AppText variant="title2" style={styles.cardTitle}>
+          Create workout
+        </AppText>
+        <AppText variant="bodySm" style={styles.cardMeta}>
+          Name it, pick exercises, set sets and reps, then save.
+        </AppText>
         <Pressable
           style={({ pressed }) => [styles.primary, styles.islandButton, pressed && styles.pressed]}
           onPress={handleCreate}
@@ -269,7 +280,9 @@ export default function WorkoutsScreen() {
               Create with Pro
             </ProMark>
           ) : (
-            <Text style={styles.primaryText}>Create workout</Text>
+            <AppText variant="bodyStrong" style={styles.primaryText}>
+              Create workout
+            </AppText>
           )}
         </Pressable>
         <Pressable
@@ -277,9 +290,9 @@ export default function WorkoutsScreen() {
           onPress={handleStartBlank}
           disabled={busyId !== null}
           accessibilityRole="button">
-          <Text style={styles.linkText}>
+          <AppText variant="bodyStrong" style={styles.linkText}>
             {busyId === 'blank' ? 'Starting…' : 'Or start empty and add lifts as you go'}
-          </Text>
+          </AppText>
         </Pressable>
       </View>
 
@@ -297,9 +310,9 @@ export default function WorkoutsScreen() {
       )}
 
       {mine.length === 0 ? (
-        <Text style={styles.empty}>
+        <AppText variant="body" style={styles.empty}>
           Your saved workouts will show here. Create one, or copy the starter and change it.
-        </Text>
+        </AppText>
       ) : (
         mine.map((workout) => (
           <WorkoutCard
@@ -363,26 +376,38 @@ function WorkoutCard({
   const count = workout.exercises.length;
   return (
     <View style={styles.card}>
-      {workout.is_starter && <Text style={styles.kicker}>Starter</Text>}
-      <Text style={styles.cardTitle}>{workout.name}</Text>
-      <Text style={styles.cardMeta}>
+      {workout.is_starter && (
+        <AppText variant="eyebrow" style={styles.kicker}>
+          Starter
+        </AppText>
+      )}
+      <AppText variant="title2" style={styles.cardTitle}>
+        {workout.name}
+      </AppText>
+      <AppText variant="bodySm" style={styles.cardMeta}>
         {count} {count === 1 ? 'exercise' : 'exercises'}
-      </Text>
+      </AppText>
       <Pressable
         style={({ pressed }) => [styles.button, (pressed || busy) && styles.pressed]}
         onPress={onStart}
         disabled={busy}
         accessibilityRole="button">
-        <Text style={styles.buttonText}>{busy ? 'Starting…' : 'Start'}</Text>
+        <AppText variant="bodyStrong" style={styles.buttonText}>
+          {busy ? 'Starting…' : 'Start'}
+        </AppText>
       </Pressable>
       <View style={styles.actions}>
         {onEdit && (
           <Pressable onPress={onEdit} style={styles.link} accessibilityRole="button">
-            <Text style={styles.linkText}>Edit</Text>
+            <AppText variant="bodyStrong" style={styles.linkText}>
+              Edit
+            </AppText>
           </Pressable>
         )}
         <Pressable onPress={onDuplicate} style={styles.link} accessibilityRole="button">
-          <Text style={styles.linkText}>Duplicate</Text>
+          <AppText variant="bodyStrong" style={styles.linkText}>
+            Duplicate
+          </AppText>
         </Pressable>
         <Pressable
           ref={planRef}
@@ -390,11 +415,15 @@ function WorkoutCard({
           onPress={() => measureAnchor(planRef.current, onPlan)}
           style={styles.link}
           accessibilityRole="button">
-          <Text style={styles.linkText}>Add to planner</Text>
+          <AppText variant="bodyStrong" style={styles.linkText}>
+            Add to planner
+          </AppText>
         </Pressable>
         {onDelete && (
           <Pressable onPress={onDelete} style={styles.link} accessibilityRole="button">
-            <Text style={styles.dangerText}>Delete</Text>
+            <AppText variant="bodyStrong" style={styles.dangerText}>
+              Delete
+            </AppText>
           </Pressable>
         )}
       </View>
@@ -420,25 +449,17 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
     color: colours.text,
   },
   lead: {
-    fontSize: 16,
-    lineHeight: 23,
     color: colours.textMuted,
     marginTop: -8,
   },
   message: {
-    fontSize: 17,
-    lineHeight: 24,
     color: colours.textMuted,
     textAlign: 'center',
   },
   empty: {
-    fontSize: 16,
-    lineHeight: 23,
     color: colours.textMuted,
   },
   primary: {
@@ -452,8 +473,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   primaryText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.surface,
   },
   button: {
@@ -467,8 +486,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.accent,
   },
   card: {
@@ -477,20 +494,13 @@ const styles = StyleSheet.create({
     backgroundColor: colours.surface,
   },
   kicker: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
     color: colours.accent,
     marginBottom: 6,
   },
   cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
     color: colours.text,
   },
   cardMeta: {
-    fontSize: 15,
     color: colours.textMuted,
     marginTop: 4,
   },
@@ -505,13 +515,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   linkText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.accent,
   },
   dangerText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.danger,
   },
   pressed: {

@@ -1,8 +1,9 @@
 import * as Linking from 'expo-linking';
 import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
+import { AppText } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import { completeSessionFromUrl, describeAuthLinkError } from '@/lib/emailAuth';
 
@@ -31,13 +32,13 @@ export default function AuthCallbackScreen() {
   if (error) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>We couldn’t open that link</Text>
-        <Text style={styles.body}>{error}</Text>
+        <AppText variant="title2" style={styles.title}>We couldn’t open that link</AppText>
+        <AppText variant="body" style={styles.body}>{error}</AppText>
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
           onPress={() => router.replace('/sign-in' as Href)}
           accessibilityRole="button">
-          <Text style={styles.buttonText}>Back to sign in</Text>
+          <AppText variant="bodyStrong" style={styles.buttonText}>Back to sign in</AppText>
         </Pressable>
       </View>
     );
@@ -46,7 +47,7 @@ export default function AuthCallbackScreen() {
   return (
     <View style={styles.container}>
       <ActivityIndicator color={colours.accent} size="large" />
-      <Text style={styles.body}>Signing you in…</Text>
+      <AppText variant="body" style={styles.body}>Signing you in…</AppText>
     </View>
   );
 }
@@ -59,16 +60,12 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
     color: colours.text,
   },
   body: {
-    fontSize: 17,
     color: colours.textMuted,
     marginTop: 12,
     marginBottom: 28,
-    lineHeight: 24,
   },
   button: {
     minHeight: 56,
@@ -81,8 +78,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.surface,
   },
 });

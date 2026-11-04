@@ -34,7 +34,8 @@
           "cameraPermission": "Take a private progress photo."
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true

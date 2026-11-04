@@ -9,7 +9,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
@@ -17,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LineChart } from '@/components/LineChart';
 import {
+  AppText,
   Chip,
   DisclaimerBody,
   DisclaimerCheckbox,
@@ -496,21 +496,21 @@ export default function OnboardingScreen() {
           keyboardShouldPersistTaps="handled">
           {ageStep === 'ask' ? (
             <>
-              <Text style={[type.display, { color: colours.ink }]}>Are you 18 or over?</Text>
-              <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+              <AppText variant="display" style={{ color: colours.ink }}>Are you 18 or over?</AppText>
+              <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
                 Ascenda is for adults aged 18 and over.
-              </Text>
+              </AppText>
             </>
           ) : (
             <>
-              <Text style={[type.display, { color: colours.ink }]}>Thanks for being honest</Text>
-              <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+              <AppText variant="display" style={{ color: colours.ink }}>Thanks for being honest</AppText>
+              <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
                 Ascenda is for adults aged 18 and over, so we need to delete this account and
                 everything saved in it. We’d love to train with you when you’re 18.
-              </Text>
+              </AppText>
             </>
           )}
-          {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+          {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
         </ScrollView>
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           {ageStep === 'ask' ? (
@@ -541,7 +541,7 @@ export default function OnboardingScreen() {
                 {isSaving ? (
                   <ActivityIndicator color={colours.onAccent} />
                 ) : (
-                  <Text style={[type.button, { color: colours.onAccent }]}>Delete my account</Text>
+                  <AppText variant="bodyStrong" style={{ color: colours.onAccent }}>Delete my account</AppText>
                 )}
               </Pressable>
               <SecondaryButton
@@ -670,20 +670,20 @@ export default function OnboardingScreen() {
             keyboardShouldPersistTaps="handled">
             {step === 'welcome' && (
               <>
-                <Text style={[type.eyebrow, { color: colours.accent }]}>Welcome to Ascenda</Text>
-                <Text style={[type.display, { color: colours.ink, marginTop: 12 }]}>
+                <AppText variant="eyebrow" style={{ color: colours.accent }}>Welcome to Ascenda</AppText>
+                <AppText variant="display" style={{ color: colours.ink, marginTop: 12 }}>
                   Let’s find a plan that fits you
-                </Text>
-                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                </AppText>
+                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
                   A few short questions. No weight-loss pressure, just a clear first session.
-                </Text>
+                </AppText>
                 <TextButton label="Not you? Sign out" onPress={() => void supabase.auth.signOut()} style={styles.inlineAction} />
               </>
             )}
 
             {step === 'safety' && (
               <>
-                <Text style={[type.display, { color: colours.ink }]}>Train safely</Text>
+                <AppText variant="display" style={{ color: colours.ink }}>Train safely</AppText>
                 <View
                   style={[
                     styles.chartCard,
@@ -698,16 +698,16 @@ export default function OnboardingScreen() {
                     onToggle={() => setSafetyChecked((value) => !value)}
                   />
                 </View>
-                {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+                {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
               </>
             )}
 
             {step === 'goal' && (
               <>
-                <Text style={[type.display, { color: colours.ink }]}>What are you working towards?</Text>
-                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                <AppText variant="display" style={{ color: colours.ink }}>What are you working towards?</AppText>
+                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
                   Pick up to 3. Your first pick is your main goal.
-                </Text>
+                </AppText>
                 <GoalChipGroup
                   selected={draft.main_goals ?? (draft.goal ? [draft.goal] : [])}
                   onChange={(next) => {
@@ -720,9 +720,9 @@ export default function OnboardingScreen() {
                   }}
                 />
                 {draft.main_goals?.[0] || draft.goal ? (
-                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 16 }]}>
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 16 }}>
                     {GOAL_COPY[(draft.main_goals?.[0] ?? draft.goal) as Goal]}
-                  </Text>
+                  </AppText>
                 ) : null}
               </>
             )}
@@ -851,22 +851,24 @@ export default function OnboardingScreen() {
 
             {step === 'bodyweight' && (
               <>
-                <Text style={[type.display, { color: colours.ink }]}>Your bodyweight</Text>
-                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                <AppText variant="display" style={{ color: colours.ink }}>Your bodyweight</AppText>
+                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
                   Optional. We only use it to show your strength relative to your bodyweight, like
                   lifting your own bodyweight. Never for BMI or any health score, and only you can see
                   it.
-                </Text>
+                </AppText>
                 <View style={styles.weightRow}>
                   <TextInput
                     style={[
                       styles.input,
+                      type.bodyStrong,
                       {
                         flex: 1,
                         color: colours.ink,
                         backgroundColor: colours.surface,
                         borderColor: colours.border,
                         borderRadius: radius.md,
+                        fontVariant: ['tabular-nums'],
                       },
                     ]}
                     value={bodyweight}
@@ -877,27 +879,29 @@ export default function OnboardingScreen() {
                     returnKeyType="done"
                     accessibilityLabel="Bodyweight in kilograms"
                   />
-                  <Text style={[type.title3, { color: colours.inkMuted }]}>kg</Text>
+                  <AppText variant="title3" style={{ color: colours.inkMuted }}>kg</AppText>
                 </View>
-                {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+                {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
               </>
             )}
 
             {step === 'name' && (
               <>
-                <Text style={[type.display, { color: colours.ink }]}>What should we call you?</Text>
-                <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+                <AppText variant="display" style={{ color: colours.ink }}>What should we call you?</AppText>
+                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
                   First name is perfect. You can skip this.
-                </Text>
+                </AppText>
                 <TextInput
                   style={[
                     styles.input,
+                    type.bodyStrong,
                     {
                       color: colours.ink,
                       backgroundColor: colours.surface,
                       borderColor: colours.border,
                       borderRadius: radius.md,
                       marginTop: 28,
+                      fontVariant: ['tabular-nums'],
                     },
                   ]}
                   value={nameText}
@@ -909,7 +913,7 @@ export default function OnboardingScreen() {
                   returnKeyType="done"
                   accessibilityLabel="Your name"
                 />
-                {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+                {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
               </>
             )}
 
@@ -956,13 +960,13 @@ function ChoiceStep<T extends string | number>({
   selected: T | undefined;
   onChoose: (value: T) => void;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   const selectedOption = options.find((option) => option.value === selected);
   return (
     <>
-      <Text style={[type.display, { color: colours.ink }]}>{title}</Text>
+      <AppText variant="display" style={{ color: colours.ink }}>{title}</AppText>
       {subtitle ? (
-        <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>{subtitle}</Text>
+        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>{subtitle}</AppText>
       ) : null}
       <View style={styles.chipCloud}>
         {options.map((option) => (
@@ -976,24 +980,24 @@ function ChoiceStep<T extends string | number>({
         ))}
       </View>
       {selectedOption?.description ? (
-        <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 16 }]}>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 16 }}>
           {selectedOption.description}
-        </Text>
+        </AppText>
       ) : null}
     </>
   );
 }
 
 function InsightStep({ title, body, metric }: { title: string; body: string; metric?: string }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <View style={styles.insight}>
       <Ionicons name="checkmark-circle" size={56} color={colours.success} />
       {metric ? (
-        <Text style={[type.number, { color: colours.accent, marginTop: 16 }]}>{metric}</Text>
+        <AppText variant="number" style={{ color: colours.accent, marginTop: 16 }}>{metric}</AppText>
       ) : null}
-      <Text style={[type.display, { color: colours.ink, marginTop: 16, textAlign: 'center' }]}>{title}</Text>
-      <Text style={[type.body, { color: colours.inkMuted, marginTop: 12, textAlign: 'center' }]}>{body}</Text>
+      <AppText variant="display" style={{ color: colours.ink, marginTop: 16, textAlign: 'center' }}>{title}</AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12, textAlign: 'center' }}>{body}</AppText>
     </View>
   );
 }
@@ -1007,13 +1011,13 @@ function FocusStep({
   onChange: (next: FocusArea[]) => void;
   error: string | null;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <>
-      <Text style={[type.display, { color: colours.ink }]}>Anything you want to focus on?</Text>
-      <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+      <AppText variant="display" style={{ color: colours.ink }}>Anything you want to focus on?</AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
         Pick as many as you like. This helps us explain why a plan fits.
-      </Text>
+      </AppText>
       <View style={styles.chipCloud}>
         {FOCUS_AREAS.map((value) => {
           const isSelected = selected.includes(value);
@@ -1030,7 +1034,7 @@ function FocusStep({
           );
         })}
       </View>
-      {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+      {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
     </>
   );
 }
@@ -1050,12 +1054,12 @@ function RevealStep({
   error: string | null;
   onRetry: () => void;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const cover = recommended ? coverSources(coverForRoutine(recommended))[0] ?? null : null;
   const why = recommended && answers ? recommendationBullets(recommended, answers) : [];
   return (
     <>
-      <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 12 }]}>Your plan is ready</Text>
+      <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 12 }}>Your plan is ready</AppText>
       {recommended ? (
         <View style={{ borderRadius: radius.lg, overflow: 'hidden', marginBottom: 16 }}>
           <HeroImage
@@ -1068,52 +1072,52 @@ function RevealStep({
         </View>
       ) : null}
       {recommended?.is_pro ? <ProBadge locked compact style={{ alignSelf: 'flex-start', marginBottom: 8 }} /> : null}
-      <Text style={[type.display, { color: colours.ink }]}>
+      <AppText variant="display" style={{ color: colours.ink }}>
         {recommended ? recommended.name : 'Gym Confidence: 6 weeks'}
-      </Text>
+      </AppText>
       {loadState === 'loading' ? (
         <ActivityIndicator color={colours.brand} style={{ marginTop: 24 }} />
       ) : recommended ? (
         <>
-          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 8 }]}>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 8 }}>
             {recommended.length_weeks} weeks · {formatDaysPerWeek(recommended.days_per_week)} a week
             · about {recommended.session_minutes} minutes
-          </Text>
+          </AppText>
           {why.length > 0 ? (
             <View style={styles.why}>
-              <Text style={[type.title3, { color: colours.ink, marginBottom: 8 }]}>Why this plan</Text>
+              <AppText variant="title3" style={{ color: colours.ink, marginBottom: 8 }}>Why this plan</AppText>
               {why.map((line) => (
                 <View key={line} style={styles.whyRow}>
                   <Ionicons name="checkmark" size={18} color={colours.success} />
-                  <Text style={[type.body, { color: colours.ink, flex: 1 }]}>{line}</Text>
+                  <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>{line}</AppText>
                 </View>
               ))}
             </View>
           ) : null}
           {recommended.is_pro ? (
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 12 }]}>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 12 }}>
               This one is Pro. If you don’t subscribe, we’ll start you on the free Gym Confidence
               plan, with the same first-session feeling.
-            </Text>
+            </AppText>
           ) : null}
         </>
       ) : (
         <>
-          <Text style={[type.body, { color: colours.inkMuted, marginTop: 12 }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
             We’ll start you on Gym Confidence: 6 weeks, the free beginner plan, unless we can load
             your match in a moment.
-          </Text>
+          </AppText>
           <TextButton label="Try loading your plan again" onPress={onRetry} style={styles.inlineAction} />
         </>
       )}
 
       {projection ? (
         <View style={[styles.chartCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-          <Text style={[type.title3, { color: colours.ink }]}>{projection.exerciseName}</Text>
-          <Text style={[type.caption, { color: colours.inkMuted }]}>
+          <AppText variant="title3" style={{ color: colours.ink }}>{projection.exerciseName}</AppText>
+          <AppText variant="caption" style={{ color: colours.inkMuted }}>
             Estimate, not a promise. If you hit the top of the rep range every other week, the
             progression rule looks like this.
-          </Text>
+          </AppText>
           <LineChart
             points={projection.points.map((point) => ({ x: point.week, y: point.kg }))}
             formatX={(x) => `W${x}`}
@@ -1124,7 +1128,7 @@ function RevealStep({
       ) : null}
 
       <SafetyNotice style={{ marginTop: 24 }} />
-      {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+      {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
     </>
   );
 }
@@ -1142,7 +1146,7 @@ function ReviewStep({
   error: string | null;
   onJump: (step: FlowStep) => void;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const rows: { name: string; value: string; step: FlowStep }[] = [
     {
       name: 'Goals',
@@ -1203,10 +1207,10 @@ function ReviewStep({
 
   return (
     <>
-      <Text style={[type.display, { color: colours.ink }]}>Your answers</Text>
-      <Text style={[type.body, { color: colours.inkMuted, marginTop: 8, marginBottom: 16 }]}>
+      <AppText variant="display" style={{ color: colours.ink }}>Your answers</AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 8, marginBottom: 16 }}>
         Tap an answer to change it.
-      </Text>
+      </AppText>
       <View style={[{ borderRadius: radius.lg }, shadow]}>
         <View style={[styles.reviewCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
           {rows.map((row, index) => (
@@ -1221,7 +1225,7 @@ function ReviewStep({
         </View>
       </View>
       <SafetyNotice style={{ marginTop: 24 }} />
-      {error ? <Text style={[styles.error, { color: colours.danger }]}>{error}</Text> : null}
+      {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
     </>
   );
 }
@@ -1283,8 +1287,6 @@ const styles = StyleSheet.create({
     minHeight: 56,
     paddingHorizontal: 16,
     borderWidth: 1.5,
-    fontSize: 20,
-    fontWeight: '600',
   },
   why: {
     marginTop: 20,
@@ -1319,8 +1321,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   error: {
-    fontSize: 15,
-    lineHeight: 21,
     marginTop: 16,
   },
   pressed: {

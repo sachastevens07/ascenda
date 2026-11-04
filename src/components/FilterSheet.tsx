@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import {
   AnchoredMenu,
@@ -9,6 +9,7 @@ import {
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/AnchoredMenu';
+import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 
 export type FilterOption<T extends string> = {
@@ -66,9 +67,12 @@ export function FilterSheet<T extends string>({
         style={[styles.button, fill && styles.buttonFill, isActive && styles.buttonActive]}
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${selected?.label ?? allLabel}`}>
-        <Text style={[styles.buttonText, isActive && styles.buttonTextActive]} numberOfLines={1}>
+        <AppText
+          variant="bodyStrong"
+          style={[styles.buttonText, isActive && styles.buttonTextActive]}
+          numberOfLines={1}>
           {selected?.label ?? label}
-        </Text>
+        </AppText>
         <Ionicons
           name={isOpen ? 'chevron-up' : 'chevron-down'}
           size={18}
@@ -112,8 +116,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     flexShrink: 1,
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.text,
   },
   buttonTextActive: {

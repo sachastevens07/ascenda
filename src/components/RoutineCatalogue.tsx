@@ -6,13 +6,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   type ImageSourcePropType,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { AppText } from '@/components/ui/AppText';
 import {
   Chip,
   ChipScroller,
@@ -73,7 +73,7 @@ export function RoutineCatalogue({
 }) {
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
-  const { colours, spacing, radius, shadow, type } = useTheme();
+  const { colours, spacing, radius, shadow } = useTheme();
   const subscription = useSubscription();
   const [routines, setRoutines] = useState<RoutineSummary[]>([]);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
@@ -177,9 +177,9 @@ export function RoutineCatalogue({
         style={[styles.scroll, { backgroundColor: colours.bg }]}
         contentContainerStyle={[styles.container, { paddingBottom }]}>
         {showTitle ? (
-          <Text style={[type.display, { color: colours.ink, marginBottom: spacing.sm }]}>
+          <AppText variant="display" style={{ color: colours.ink, marginBottom: spacing.sm }}>
             {routineType === 'stretch' ? 'Stretches' : 'Routines'}
-          </Text>
+          </AppText>
         ) : null}
 
         {path && routineType === 'strength' ? (
@@ -196,13 +196,17 @@ export function RoutineCatalogue({
             <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
               <View style={[styles.block, { borderRadius: radius.lg }]}>
                 <View style={styles.rowBetween}>
-                  <Text style={[type.eyebrow, { color: colours.accent }]}>Path</Text>
+                  <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                    Path
+                  </AppText>
                   {path.is_pro && !subscription.isPro ? <ProBadge compact /> : null}
                 </View>
-                <Text style={[type.title3, { color: colours.ink, marginTop: spacing.sm }]}>{path.name}</Text>
-                <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.sm }}>
+                  {path.name}
+                </AppText>
+                <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
                   {path.steps.filter((step) => step.done).length} of {path.steps.length} routines finished
-                </Text>
+                </AppText>
               </View>
             </View>
           </Pressable>
@@ -220,13 +224,17 @@ export function RoutineCatalogue({
               <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
                 <View style={[styles.block, { borderRadius: radius.lg }]}>
                   <View style={styles.rowBetween}>
-                    <Text style={[type.eyebrow, { color: colours.accent }]}>Challenge</Text>
+                    <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                      Challenge
+                    </AppText>
                     {challenge.is_pro && !subscription.isPro ? <ProBadge compact /> : null}
                   </View>
-                  <Text style={[type.title3, { color: colours.ink, marginTop: spacing.sm }]}>{challenge.name}</Text>
-                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                  <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.sm }}>
+                    {challenge.name}
+                  </AppText>
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
                     {challengeTimingCopy(challenge)}
-                  </Text>
+                  </AppText>
                 </View>
               </View>
             </Pressable>
@@ -241,17 +249,19 @@ export function RoutineCatalogue({
                 accessibilityRole="button">
                 <Thumb image={coverImage(enrolment.routine)} letter={enrolment.routine.name} />
                 <View style={styles.pinCopy}>
-                  <Text style={[type.eyebrow, { color: colours.accent }]}>Current routine</Text>
-                  <Text style={[type.title3, { color: colours.ink, marginTop: 4 }]} numberOfLines={2}>
+                  <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                    Current routine
+                  </AppText>
+                  <AppText variant="title3" style={{ color: colours.ink, marginTop: 4 }} numberOfLines={2}>
                     {enrolment.routine.name}
-                  </Text>
-                  <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+                  </AppText>
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
                     {currentProgress
                       ? currentProgress.status === 'complete'
                         ? 'Finished'
                         : `${currentProgress.done} of ${currentProgress.target} sessions`
                       : `Week ${currentWeek} of ${enrolment.routine.length_weeks}`}
-                  </Text>
+                  </AppText>
                   <ProgressBar progress={currentBar} style={{ marginTop: 10 }} />
                 </View>
               </Pressable>
@@ -271,10 +281,12 @@ export function RoutineCatalogue({
 
         {loadState === 'error' ? (
           <View style={[styles.block, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
-            <Text style={[type.title3, { color: colours.ink }]}>Couldn’t load routines</Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.sm }]}>
+            <AppText variant="title3" style={{ color: colours.ink }}>
+              Couldn’t load routines
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
               {missingSql ? missingRoutinesMessage() : 'Check your connection and try again.'}
-            </Text>
+            </AppText>
             <PrimaryButton
               label="Try again"
               onPress={() => setAttempt((n) => n + 1)}
@@ -285,14 +297,14 @@ export function RoutineCatalogue({
 
         {loadState === 'ready' && missingSql ? (
           <View style={[styles.block, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-            <Text style={[type.title3, { color: colours.ink }]}>
+            <AppText variant="title3" style={{ color: colours.ink }}>
               {routineType === 'stretch' ? 'Stretches aren’t in the database yet' : 'Routines aren’t in the database yet'}
-            </Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: spacing.sm }]}>
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
               {routineType === 'stretch'
                 ? 'Stretch routines need supabase/stretches.sql run in the Supabase SQL editor.'
                 : missingRoutinesMessage()}
-            </Text>
+            </AppText>
           </View>
         ) : null}
 
@@ -359,7 +371,7 @@ function CatalogueCard({
   showBadges: boolean;
   onPress: () => void;
 }) {
-  const { colours, radius, shadow, type } = useTheme();
+  const { colours, radius, shadow } = useTheme();
   const image = coverImage(summary);
   const eyebrow = stretch
     ? formatTagLabel(summary.tags[0] ?? 'Stretch')
@@ -376,17 +388,17 @@ function CatalogueCard({
           <Thumb image={image} letter={summary.name} />
           <View style={styles.compactCopy}>
             <View style={styles.rowBetween}>
-              <Text style={[type.eyebrow, { color: colours.inkMuted, flex: 1 }]} numberOfLines={1}>
+              <AppText variant="eyebrow" style={{ color: colours.inkMuted, flex: 1 }} numberOfLines={1}>
                 {eyebrow}
-              </Text>
+              </AppText>
               {showBadges ? summary.is_pro ? <ProBadge compact /> : <FreeBadge /> : null}
             </View>
-            <Text style={[type.title3, { color: colours.ink, marginTop: 4 }]} numberOfLines={2}>
+            <AppText variant="title3" style={{ color: colours.ink, marginTop: 4 }} numberOfLines={2}>
               {summary.name}
-            </Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]} numberOfLines={1}>
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }} numberOfLines={1}>
               {meta}
-            </Text>
+            </AppText>
             {chips.length > 0 ? (
               <View style={styles.chipRow}>
                 {chips.map((tag) => (
@@ -408,7 +420,9 @@ function Thumb({ image, letter }: { image: ImageSourcePropType | null; letter: s
       {image ? (
         <Image source={image} style={styles.thumbFill} resizeMode="cover" accessibilityLabel="" />
       ) : (
-        <Text style={[styles.thumbLetter, { color: colours.brand }]}>{letter.slice(0, 1)}</Text>
+        <AppText variant="display" style={{ color: colours.brand }}>
+          {letter.slice(0, 1)}
+        </AppText>
       )}
     </View>
   );
@@ -466,10 +480,6 @@ const styles = StyleSheet.create({
   thumbFill: {
     width: '100%',
     height: '100%',
-  },
-  thumbLetter: {
-    fontSize: 28,
-    fontWeight: '700',
   },
   rowBetween: {
     flexDirection: 'row',

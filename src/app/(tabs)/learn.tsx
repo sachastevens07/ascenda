@@ -4,13 +4,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   useWindowDimensions,
 } from 'react-native';
 
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
+  AppText,
   ArticleCard,
   CategoryTile,
   HeroImage,
@@ -47,7 +47,7 @@ type LearnData = {
 export default function LearnScreen() {
   const tabBarHeight = useTabBarHeight();
   const { width } = useWindowDimensions();
-  const { colours, type, spacing, radius } = useTheme();
+  const { colours, radius } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const { isPro } = useSubscription();
@@ -94,7 +94,7 @@ export default function LearnScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         <View style={styles.header}>
           <TabAvatar />
-          <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Learn</Text>
+          <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>Learn</AppText>
         </View>
 
         {featured ? (
@@ -110,10 +110,10 @@ export default function LearnScreen() {
               height={200}
             />
             <View style={[styles.heroMeta, { backgroundColor: colours.surface }]}>
-              <Text style={[type.caption, { color: colours.inkMuted }]}>
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>
                 {formatReadMinutes(featured.read_minutes)}
                 {data?.readIds.has(featured.id) ? ' · Read' : ''}
-              </Text>
+              </AppText>
             </View>
           </Pressable>
         ) : null}

@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import {
+  AppText,
   ArticleBody,
   HeroImage,
   PrimaryButton,
@@ -30,7 +31,7 @@ type LoadState = 'loading' | 'missing' | 'ready';
 
 export default function LearnArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { colours, type, spacing, radius } = useTheme();
+  const { colours, spacing, radius } = useTheme();
   const { isPro } = useSubscription();
   const [article, setArticle] = useState<LearnArticle | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -68,9 +69,9 @@ export default function LearnArticleScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
             We could not find that article.
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -103,19 +104,19 @@ export default function LearnArticleScreen() {
       />
       <View style={styles.body}>
         <View style={styles.meta}>
-          <Text style={[type.caption, { color: colours.inkMuted }]}>
+          <AppText variant="caption" style={{ color: colours.inkMuted }}>
             {LEARN_CATEGORY_LABELS[article.category]} · {formatReadMinutes(article.read_minutes)}
-          </Text>
+          </AppText>
           {article.is_pro ? <ProBadge locked={locked} compact /> : null}
         </View>
-        <Text style={[type.body, { color: colours.inkMuted }]}>{article.summary}</Text>
+        <AppText variant="body" style={{ color: colours.inkMuted }}>{article.summary}</AppText>
 
         {locked ? (
           <View style={[styles.lock, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-            <Text style={[type.title3, { color: colours.ink }]}>This is a Pro guide</Text>
-            <Text style={[type.body, { color: colours.ink, marginTop: spacing.sm }]}>
+            <AppText variant="title3" style={{ color: colours.ink }}>This is a Pro guide</AppText>
+            <AppText variant="body" style={{ color: colours.ink, marginTop: spacing.sm }}>
               The full piece stays behind Pro. Logging and the rest of Learn stay free.
-            </Text>
+            </AppText>
             <PrimaryButton label="Unlock with Pro" onPress={() => openPaywall('learn')} style={{ marginTop: spacing.md }} />
           </View>
         ) : (
@@ -124,14 +125,14 @@ export default function LearnArticleScreen() {
 
         {!locked && article.sources.length > 0 ? (
           <View style={{ gap: 8, marginTop: spacing.lg }}>
-            <Text style={[type.title3, { color: colours.ink }]}>Sources</Text>
+            <AppText variant="title3" style={{ color: colours.ink }}>Sources</AppText>
             {article.sources.map((source) => (
               <Pressable
                 key={source.url}
                 onPress={() => void Linking.openURL(source.url)}
                 accessibilityRole="link"
                 accessibilityLabel={source.label}>
-                <Text style={[type.bodySm, { color: colours.brand, fontWeight: '600' }]}>{source.label}</Text>
+                <AppText variant="bodySm" style={{ color: colours.brand }}>{source.label}</AppText>
               </Pressable>
             ))}
           </View>

@@ -1,6 +1,6 @@
 # Progress
 
-Handoff for a new agent. Read `AGENTS.md` first, then `DESIGN.md` section 6. Current phase is **v2.2**. Do not start gym-buddy, AI or food. Build **one** v2.2 task at a time, in listed order; stop so Sacha can test on her phone. SQL is pasted by hand (this repo cannot see the remote database). Never delete sessions or sets. Ask before adding fonts or a notifications library (`expo-notifications` is already in the project).
+Handoff for a new agent. Read `AGENTS.md` first, then `DESIGN.md` section 6. Current phase is **v2.2**. Do not start gym-buddy, AI or food. Build **one** v2.2 task at a time, in listed order; stop so Sacha can test on her phone. SQL is pasted by hand (this repo cannot see the remote database). Never delete sessions or sets. Ask before adding fonts or a notifications library (`expo-notifications`, Fraunces and Manrope are already in the project).
 
 Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sacha.
 
@@ -62,6 +62,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **N2** (4 Nov 2026) Routine standard on the 14 strength plans: who it's for, by the end, how it works, phases with goals, lighter-week chips, day focus, warm-up, coach note, role, RIR and tempo. Logger Today card has a warm-up checklist. Overlay fills this if SQL is missing; non-empty database copy wins. SQL: `supabase/n2_routines.sql`. Stretches and custom workouts are unchanged.
 - **N6** (4 Nov 2026) Learn tab with 16 bundled articles (3 Getting started, then the other categories; 3 Pro in-depth guides). Featured hero, category tiles, recommended-for-you, continue reading, mark as read, sources, safety line. Related cards on routine and exercise pages. Home “From Learn”. Profile is a pushed screen from the 36 px avatar on every tab. SQL: `supabase/learn_n6.sql` (tables, metadata, links, reads). Bodies stay in the app until a database body is set.
 - **N7** (4 Nov 2026) Daily quote on Home from a `quotes` table. 90 original Ascenda-voice quotes, same one worldwide by UTC date, no repeat for 90 days. Bundled list still shows if SQL is missing. Hide from the card ⋯ or Profile → Appearance. SQL: `supabase/quotes_n7.sql` (table, RLS, seed, and `profiles.hide_quote` if D3 was not pasted).
+- **Typography** (4 Nov 2026) Fraunces (display) and Manrope (UI) app-wide. Tokens in `src/constants/theme.ts`, family names in `src/constants/fonts.ts`, applied through `AppText`. Splash stays up until fonts load. No SQL.
 
 ---
 
@@ -75,7 +76,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 **C1. Subscription compliance** (AGENTS.md Group 6). Paywall copy: price, billing period, trial length, when she is charged, how to cancel. Trial-ending reminder 2 days before conversion. No countdown timers or fake urgency. “Continue with the free plan” stays clearly visible. Do not start C2.
 
-After C1: C2. S12 already built.
+After C1: C2. S12 already built. Typography is done.
 
 ---
 
@@ -114,7 +115,8 @@ After C1: C2. S12 already built.
 - Primary buttons are plum. Coral is highlights only. Unrestyled screens stay cream until their design pass.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
 - Do not use native `Switch` under the pill tab bar; do not use `Modal` + `borderRadius: 999` for tall menus.
-- D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. No display-serif font (system sans, same as the rest of the kit). Challenge card stays on Home after the quote.
+- D3: quotes stay bundled until N7 (`quotes` table). Same quote worldwide by UTC date. Challenge card stays on Home after the quote. Display serif is now Fraunces (typography pass, 4 Nov 2026).
+- Typography: Fraunces 400 (and 400 italic on the quote card) for display / displaySm. Manrope 400–800 for everything else. Each weight is its own `fontFamily`; do not set `fontWeight`. `AppText` is the shared text component. TextInput uses `type` tokens (kg/reps use bodyStrong plus tabular numbers). Native stack headers use `fonts.bold`. Chart axis labels are SVG Text at caption size with Manrope Medium. Screen titles (Programmes, Planner, Activity, Profile) are title1; Home greeting, Learn title, heroes, onboarding, paywall, completion use display. Small week-ring centres stay caption so they fit. No new SQL.
 - N7: 90 original quotes, attribution “Ascenda” only. Database rows win when `quotes` is seeded; otherwise the bundled list. Index is UTC day modulo list length so everyone sees the same quote. No song lyrics, no body or weight-loss copy. `quotes_n7.sql` is idempotent.
 - D4: no new SQL. N2 copy blocks (who it's for, by the end, how it works, phase names, roles, lighter-week chips) wait for N2 data. Related Learn cards wait for N6. Skip on the last hold ends that hold; Finish saves. Pause is primary during a hold; Next hold / Finish after the ring completes.
 - D5: empty days have no extra row; tap the + (or the header) to add. Rest days still show a thin “Rest day” line. Rest week banner sits in the agenda at the first visible day of that week; month view keeps it under the week strip. No SQL.
@@ -143,7 +145,7 @@ Restart Expo after `.env` changes.
 
 **Start the app (Windows, one terminal):**
 `$env:NODE_OPTIONS="--use-system-ca"; npx.cmd expo start --clear`
-Scan the QR with Expo Go. Use `--tunnel` if needed. Checks: `npx.cmd tsc --noEmit`.
+Scan the QR with Expo Go. Use `--tunnel` if needed. After the typography pass, `--clear` is needed so the new fonts load. Checks: `npx.cmd tsc --noEmit`.
 
 **SQL already run (confirmed):** `exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql`. User also reported (24 Oct) `routines.sql` and `planned_sessions.sql` pasted.
 

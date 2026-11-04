@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppText } from '@/components/ui/AppText';
 import { PrimaryButton, TextButton } from '@/components/ui/Buttons';
 import { useTheme } from '@/constants/theme';
 import {
@@ -23,26 +24,26 @@ import {
 } from '@/lib/disclaimer';
 
 export function DisclaimerBody({ hideTitle = false }: { hideTitle?: boolean }) {
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   return (
     <View style={{ gap: spacing.md }}>
       {hideTitle ? null : (
-        <Text style={[type.title2, { color: colours.ink }]}>{DISCLAIMER_TITLE}</Text>
+        <AppText variant="title2" style={{ color: colours.ink }}>{DISCLAIMER_TITLE}</AppText>
       )}
-      <Text style={[type.body, { color: colours.ink }]}>{DISCLAIMER_INTRO}</Text>
-      <Text style={[type.title3, { color: colours.ink }]}>{DISCLAIMER_CHECK_HEADING}</Text>
+      <AppText variant="body" style={{ color: colours.ink }}>{DISCLAIMER_INTRO}</AppText>
+      <AppText variant="title3" style={{ color: colours.ink }}>{DISCLAIMER_CHECK_HEADING}</AppText>
       <View style={{ gap: 8 }}>
         {DISCLAIMER_CHECK_ITEMS.map((item) => (
-          <Text key={item} style={[type.body, { color: colours.ink }]}>
+          <AppText key={item} variant="body" style={{ color: colours.ink }}>
             {`\u2022 ${item}`}
-          </Text>
+          </AppText>
         ))}
       </View>
-      <Text style={[type.title3, { color: colours.ink }]}>{DISCLAIMER_STOP_HEADING}</Text>
-      <Text style={[type.body, { color: colours.ink }]}>{DISCLAIMER_STOP_BODY}</Text>
-      <Text style={[type.title3, { color: colours.ink }]}>{DISCLAIMER_LIMITS_HEADING}</Text>
-      <Text style={[type.body, { color: colours.ink }]}>{DISCLAIMER_LIMITS_BODY}</Text>
-      <Text style={[type.body, { color: colours.ink }]}>{DISCLAIMER_CLOSE}</Text>
+      <AppText variant="title3" style={{ color: colours.ink }}>{DISCLAIMER_STOP_HEADING}</AppText>
+      <AppText variant="body" style={{ color: colours.ink }}>{DISCLAIMER_STOP_BODY}</AppText>
+      <AppText variant="title3" style={{ color: colours.ink }}>{DISCLAIMER_LIMITS_HEADING}</AppText>
+      <AppText variant="body" style={{ color: colours.ink }}>{DISCLAIMER_LIMITS_BODY}</AppText>
+      <AppText variant="body" style={{ color: colours.ink }}>{DISCLAIMER_CLOSE}</AppText>
     </View>
   );
 }
@@ -54,7 +55,7 @@ export function DisclaimerCheckbox({
   checked: boolean;
   onToggle: () => void;
 }) {
-  const { colours, type, radius } = useTheme();
+  const { colours, radius } = useTheme();
   return (
     <Pressable
       onPress={onToggle}
@@ -73,23 +74,27 @@ export function DisclaimerCheckbox({
         ]}>
         {checked ? <Ionicons name="checkmark" size={16} color={colours.onBrand} /> : null}
       </View>
-      <Text style={[type.body, { color: colours.ink, flex: 1 }]}>{DISCLAIMER_CHECKBOX_LABEL}</Text>
+      <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>
+        {DISCLAIMER_CHECKBOX_LABEL}
+      </AppText>
     </Pressable>
   );
 }
 
 export function SafetyNotice({ style }: { style?: object }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <Pressable
       onPress={() => router.push('/safety' as Href)}
       accessibilityRole="link"
       accessibilityLabel={SAFETY_NOTICE_LABEL}
       style={({ pressed }) => [pressed && styles.pressed, style]}>
-      <Text style={[type.caption, { color: colours.inkMuted }]}>
+      <AppText variant="caption" style={{ color: colours.inkMuted }}>
         Train within your limits.{' '}
-        <Text style={{ color: colours.brand, fontWeight: '700' }}>Read the safety guidance</Text>
-      </Text>
+        <AppText variant="caption" style={{ color: colours.brand }}>
+          Read the safety guidance
+        </AppText>
+      </AppText>
     </Pressable>
   );
 }
@@ -104,7 +109,7 @@ export function DisclaimerSheet({
   onDismiss: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { colours, type, radius, spacing, shadow } = useTheme();
+  const { colours, radius, spacing, shadow } = useTheme();
   const [showFull, setShowFull] = useState(false);
 
   useEffect(() => {
@@ -130,7 +135,7 @@ export function DisclaimerSheet({
             },
             shadow,
           ]}>
-          <Text style={[type.title2, { color: colours.ink }]}>{FIRST_SESSION_TITLE}</Text>
+          <AppText variant="title2" style={{ color: colours.ink }}>{FIRST_SESSION_TITLE}</AppText>
           <ScrollView
             style={styles.sheetScroll}
             contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm }}
@@ -139,9 +144,9 @@ export function DisclaimerSheet({
               <DisclaimerBody />
             ) : (
               FIRST_SESSION_BULLETS.map((item) => (
-                <Text key={item} style={[type.body, { color: colours.ink }]}>
+                <AppText key={item} variant="body" style={{ color: colours.ink }}>
                   {`\u2022 ${item}`}
-                </Text>
+                </AppText>
               ))
             )}
           </ScrollView>

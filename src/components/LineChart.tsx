@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Line, Path, Text as SvgText } from 'react-native-svg';
 
+import { fonts } from '@/constants/fonts';
 import { colours } from '@/constants/theme';
 
 export type ChartPoint = { x: number; y: number };
@@ -65,6 +66,7 @@ export function LineChart({ points, formatX, formatY, height = 200 }: LineChartP
               key={`label-${value}`}
               x={PADDING.left - 8}
               y={toY(value) + 4}
+              fontFamily={fonts.medium}
               fontSize={12}
               fill={colours.textMuted}
               textAnchor="end">
@@ -87,6 +89,7 @@ export function LineChart({ points, formatX, formatY, height = 200 }: LineChartP
           <SvgText
             x={PADDING.left}
             y={height - 6}
+            fontFamily={fonts.medium}
             fontSize={12}
             fill={colours.textMuted}
             textAnchor="start">
@@ -96,6 +99,7 @@ export function LineChart({ points, formatX, formatY, height = 200 }: LineChartP
             <SvgText
               x={width - PADDING.right}
               y={height - 6}
+              fontFamily={fonts.medium}
               fontSize={12}
               fill={colours.textMuted}
               textAnchor="end">

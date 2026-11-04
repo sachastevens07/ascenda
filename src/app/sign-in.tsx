@@ -7,13 +7,13 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colours } from '@/constants/theme';
+import { AppText } from '@/components/ui';
+import { colours, useTheme } from '@/constants/theme';
 import { authRedirectUrl, isEmailNotConfirmed } from '@/lib/emailAuth';
 import { supabase } from '@/lib/supabase';
 
@@ -25,6 +25,7 @@ const MIN_PASSWORD_LENGTH = 6;
 
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
+  const { type } = useTheme();
   const [mode, setMode] = useState<Mode>('sign-in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -102,32 +103,32 @@ export default function SignInScreen() {
         ]}>
         {ageAnswer === 'under-18' ? (
           <>
-            <Text style={styles.title}>Thanks for stopping by</Text>
-            <Text style={styles.subtitle}>
+            <AppText variant="display" style={styles.title}>Thanks for stopping by</AppText>
+            <AppText variant="body" style={styles.subtitle}>
               Ascenda is for adults aged 18 and over, so we can’t create an account for you yet. We
               haven’t saved anything about you. We’d love to train with you when you’re 18.
-            </Text>
+            </AppText>
           </>
         ) : (
           <>
-            <Text style={styles.title}>Create your account</Text>
-            <Text style={styles.subtitle}>First, are you 18 or over?</Text>
+            <AppText variant="display" style={styles.title}>Create your account</AppText>
+            <AppText variant="body" style={styles.subtitle}>First, are you 18 or over?</AppText>
             <Pressable
               style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
               onPress={() => setAgeAnswer('adult')}
               accessibilityRole="button">
-              <Text style={styles.buttonText}>Yes, I’m 18 or over</Text>
+              <AppText variant="bodyStrong" style={styles.buttonText}>Yes, I’m 18 or over</AppText>
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}
               onPress={() => setAgeAnswer('under-18')}
               accessibilityRole="button">
-              <Text style={styles.outlineButtonText}>No, I’m under 18</Text>
+              <AppText variant="bodyStrong" style={styles.outlineButtonText}>No, I’m under 18</AppText>
             </Pressable>
           </>
         )}
         <Pressable onPress={switchMode} style={styles.switch} accessibilityRole="button">
-          <Text style={styles.switchText}>Already have an account? Sign in</Text>
+          <AppText variant="bodyStrong" style={styles.switchText}>Already have an account? Sign in</AppText>
         </Pressable>
       </ScrollView>
     );
@@ -143,13 +144,13 @@ export default function SignInScreen() {
           { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 24 },
         ]}
         keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>{isSignUp ? 'Create your account' : 'Welcome back'}</Text>
-        <Text style={styles.subtitle}>Walk in with a plan. Leave stronger.</Text>
+        <AppText variant="display" style={styles.title}>{isSignUp ? 'Create your account' : 'Welcome back'}</AppText>
+        <AppText variant="body" style={styles.subtitle}>Walk in with a plan. Leave stronger.</AppText>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Email</Text>
+          <AppText variant="bodySm" style={styles.label}>Email</AppText>
           <TextInput
-            style={styles.input}
+            style={[styles.input, type.bodyStrong, { fontVariant: ['tabular-nums'] }]}
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
@@ -165,9 +166,9 @@ export default function SignInScreen() {
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Password</Text>
+          <AppText variant="bodySm" style={styles.label}>Password</AppText>
           <TextInput
-            style={styles.input}
+            style={[styles.input, type.bodyStrong, { fontVariant: ['tabular-nums'] }]}
             value={password}
             onChangeText={setPassword}
             placeholder={isSignUp ? `At least ${MIN_PASSWORD_LENGTH} characters` : 'Your password'}
@@ -183,9 +184,9 @@ export default function SignInScreen() {
         </View>
 
         {message && (
-          <Text style={[styles.message, message.kind === 'error' && styles.messageError]}>
+          <AppText variant="bodySm" style={[styles.message, message.kind === 'error' && styles.messageError]}>
             {message.text}
-          </Text>
+          </AppText>
         )}
 
         <Pressable
@@ -196,14 +197,14 @@ export default function SignInScreen() {
           {isSubmitting ? (
             <ActivityIndicator color={colours.surface} />
           ) : (
-            <Text style={styles.buttonText}>{isSignUp ? 'Create account' : 'Sign in'}</Text>
+            <AppText variant="bodyStrong" style={styles.buttonText}>{isSignUp ? 'Create account' : 'Sign in'}</AppText>
           )}
         </Pressable>
 
         <Pressable onPress={switchMode} style={styles.switch} accessibilityRole="button">
-          <Text style={styles.switchText}>
+          <AppText variant="bodyStrong" style={styles.switchText}>
             {isSignUp ? 'Already have an account? Sign in' : 'New here? Create an account'}
-          </Text>
+          </AppText>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -220,12 +221,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
     color: colours.text,
   },
   subtitle: {
-    fontSize: 17,
     color: colours.textMuted,
     marginTop: 8,
     marginBottom: 36,
@@ -234,8 +232,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 15,
-    fontWeight: '600',
     color: colours.text,
     marginBottom: 8,
   },
@@ -246,12 +242,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colours.border,
     backgroundColor: colours.surface,
-    fontSize: 17,
     color: colours.text,
   },
   message: {
-    fontSize: 15,
-    lineHeight: 21,
     color: colours.text,
     marginBottom: 16,
   },
@@ -280,13 +273,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   outlineButtonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.accent,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '700',
     color: colours.surface,
   },
   switch: {
@@ -294,8 +283,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   switchText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colours.accent,
   },
 });

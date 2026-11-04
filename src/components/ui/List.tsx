@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 export function ChipScroller({
@@ -33,13 +34,17 @@ export function SectionHeader({
   onAction?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <View style={[styles.section, style]}>
-      <Text style={[type.title, { color: colours.ink, flex: 1 }]}>{title}</Text>
+      <AppText variant="title2" style={{ color: colours.ink, flex: 1 }}>
+        {title}
+      </AppText>
       {actionLabel && onAction ? (
         <Pressable onPress={onAction} accessibilityRole="button" hitSlop={8}>
-          <Text style={[type.bodySm, { color: colours.accent, fontWeight: '700' }]}>{actionLabel}</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.accent }}>
+            {actionLabel}
+          </AppText>
         </Pressable>
       ) : null}
     </View>
@@ -65,7 +70,7 @@ export function ListRow({
   showChevron?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   const inner = (
     <View
       style={[
@@ -76,15 +81,17 @@ export function ListRow({
       {left}
       <View style={styles.rowText}>
         {eyebrow ? (
-          <Text style={[type.eyebrow, { color: colours.accent, marginBottom: 2 }]}>{eyebrow}</Text>
+          <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 2 }}>
+            {eyebrow}
+          </AppText>
         ) : null}
-        <Text style={[type.title3, { color: colours.ink }]} numberOfLines={2}>
+        <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={2}>
           {title}
-        </Text>
+        </AppText>
         {subtitle ? (
-          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]} numberOfLines={2}>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }} numberOfLines={2}>
             {subtitle}
-          </Text>
+          </AppText>
         ) : null}
       </View>
       {right}
@@ -113,7 +120,7 @@ export function StickyDayHeader({
   onAdd?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   const ink = today ? colours.onBrand : colours.inkMuted;
   const body = (
     <View
@@ -122,9 +129,9 @@ export function StickyDayHeader({
         today ? { backgroundColor: colours.ink } : { backgroundColor: colours.surfaceMuted },
         style,
       ]}>
-      <Text style={[type.eyebrow, { color: ink, flex: 1 }]} numberOfLines={1}>
+      <AppText variant="eyebrow" style={{ color: ink, flex: 1 }} numberOfLines={1}>
         {title}
-      </Text>
+      </AppText>
       {onAdd ? <Ionicons name="add" size={18} color={ink} /> : null}
     </View>
   );

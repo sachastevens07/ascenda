@@ -1,10 +1,11 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import {
+  AppText,
   Chip,
   DetailLayout,
   FreeBadge,
@@ -46,14 +47,14 @@ import { useWorkout } from '@/lib/workout';
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
 function HoldThumb({ step }: { step: RoutineDayExercise }) {
-  const { colours, radius, type } = useTheme();
+  const { colours, radius } = useTheme();
   const photo = getExerciseImageSource(step.exercise);
   return (
     <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
       {photo ? (
         <Image source={photo} style={styles.photoFill} resizeMode="cover" />
       ) : (
-        <Text style={[type.title3, { color: colours.brand }]}>{step.exercise.name.slice(0, 1)}</Text>
+        <AppText variant="title3" style={{ color: colours.brand }}>{step.exercise.name.slice(0, 1)}</AppText>
       )}
     </View>
   );
@@ -62,7 +63,7 @@ function HoldThumb({ step }: { step: RoutineDayExercise }) {
 export default function StretchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { colours, type, spacing } = useTheme();
+  const { colours, spacing } = useTheme();
   const subscription = useSubscription();
   const workout = useWorkout();
   const [routine, setRoutine] = useState<Routine | null>(null);
@@ -162,11 +163,11 @@ export default function StretchDetailScreen() {
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
-          <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
             {loadState === 'not-found'
               ? 'We couldn’t find that stretch.'
               : (errorMessage ?? missingStretchesMessage())}
-          </Text>
+          </AppText>
         )}
       </View>
     );
@@ -205,9 +206,9 @@ export default function StretchDetailScreen() {
         {!subscription.isPro ? routine.is_pro ? <ProBadge /> : <FreeBadge /> : null}
       </View>
 
-      <Text style={[type.body, { color: colours.ink }]} numberOfLines={descriptionOpen ? undefined : 2}>
+      <AppText variant="body" style={{ color: colours.ink }} numberOfLines={descriptionOpen ? undefined : 2}>
         {routine.description}
-      </Text>
+      </AppText>
       {showMore ? (
         <TextButton
           label={descriptionOpen ? 'Less' : 'More'}
@@ -234,9 +235,9 @@ export default function StretchDetailScreen() {
         ]}
       />
 
-      <Text style={[type.title2, { color: colours.ink, marginTop: spacing.lg, marginBottom: spacing.md }]}>
+      <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.lg, marginBottom: spacing.md }}>
         Holds
-      </Text>
+      </AppText>
       {visibleSteps.map((step) => (
         <Pressable
           key={`${step.position}-${step.exercise.id}`}
@@ -249,12 +250,12 @@ export default function StretchDetailScreen() {
           accessibilityRole="button">
           <HoldThumb step={step} />
           <View style={styles.flex}>
-            <Text style={[type.title3, { color: colours.ink }]} numberOfLines={1}>
+            <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={1}>
               {step.exercise.name}
-            </Text>
-            <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 2 }]}>
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
               {formatHold(step.duration_seconds ?? 30)}
-            </Text>
+            </AppText>
           </View>
         </Pressable>
       ))}
@@ -264,12 +265,12 @@ export default function StretchDetailScreen() {
             styles.lockCard,
             { backgroundColor: colours.surface, borderRadius: 16, minHeight: 132 },
           ]}>
-          <Text style={[type.title3, { color: colours.ink }]}>
+          <AppText variant="title3" style={{ color: colours.ink }}>
             {hiddenCount} more {hiddenCount === 1 ? 'hold' : 'holds'}
-          </Text>
-          <Text style={[type.bodySm, { color: colours.inkMuted, marginTop: 4 }]}>
+          </AppText>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
             The free plan includes three stretch sessions in full.
-          </Text>
+          </AppText>
           <LockedOverlay onUnlock={() => openPaywall('stretch')} label="Unlock with Pro" />
         </View>
       ) : null}

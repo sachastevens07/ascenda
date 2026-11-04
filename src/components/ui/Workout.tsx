@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Pressable, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
 export function SetRow({
@@ -62,13 +63,15 @@ export function SetRow({
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={`Set ${setNumber}: new personal best. ${recordLabel}`}>
-          <Text style={[type.body, { color: colours.inkMuted, fontWeight: '700' }]}>{setNumber}</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.inkMuted }}>
+            {setNumber}
+          </AppText>
           <Ionicons name="trophy" size={14} color={colours.pro} />
         </Pressable>
       ) : (
-        <Text style={[type.body, { color: colours.inkMuted, fontWeight: '700', width: 24, textAlign: 'center' }]}>
+        <AppText variant="bodyStrong" style={{ color: colours.inkMuted, width: 24, textAlign: 'center' }}>
           {setNumber}
-        </Text>
+        </AppText>
       )}
       {weighted ? (
         <View style={styles.kgWrap}>
@@ -84,13 +87,14 @@ export function SetRow({
             accessibilityLabel={`Set ${setNumber} weight in ${weightUnit === 'lbs' ? 'pounds' : 'kilograms'}`}
             style={[
               styles.field,
-              type.body,
+              type.bodyStrong,
               {
                 color: colours.ink,
                 borderColor: completed ? colours.brandSoft : colours.border,
                 backgroundColor: colours.surface,
                 borderRadius: radius.md,
                 width: '100%',
+                fontVariant: ['tabular-nums'],
               },
             ]}
           />
@@ -101,14 +105,16 @@ export function SetRow({
               accessibilityRole={onSuggest ? 'button' : undefined}
               accessibilityLabel={suggestedLabel}
               style={[styles.chip, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
-              <Text style={[type.caption, { color: colours.brand, fontWeight: '700' }]}>{suggestedLabel}</Text>
+              <AppText variant="caption" style={{ color: colours.brand }}>
+                {suggestedLabel}
+              </AppText>
             </Pressable>
           ) : null}
         </View>
       ) : (
-        <Text style={[type.bodySm, { color: colours.inkMuted, flex: 1, textAlign: 'center' }]}>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, flex: 1, textAlign: 'center' }}>
           {weightLabel ?? 'Bodyweight'}
-        </Text>
+        </AppText>
       )}
       <TextInput
         value={reps}
@@ -123,12 +129,13 @@ export function SetRow({
         style={[
           styles.field,
           styles.flex,
-          type.body,
+          type.bodyStrong,
           {
             color: colours.ink,
             borderColor: completed ? colours.brandSoft : colours.border,
             backgroundColor: colours.surface,
             borderRadius: radius.md,
+            fontVariant: ['tabular-nums'],
           },
         ]}
       />
@@ -167,27 +174,37 @@ export function RestTimerBar({
   onSkip?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   return (
     <View style={[styles.rest, { backgroundColor: colours.surface, borderTopColor: colours.border }, style]}>
       <Ionicons name="stopwatch-outline" size={22} color={colours.accent} />
       <View style={styles.restCopy}>
-        <Text style={[type.caption, { color: colours.inkMuted }]}>{caption}</Text>
-        <Text style={[type.number, { color: colours.ink, fontVariant: ['tabular-nums'] }]}>{label}</Text>
+        <AppText variant="caption" style={{ color: colours.inkMuted }}>
+          {caption}
+        </AppText>
+        <AppText variant="number" style={{ color: colours.ink }}>
+          {label}
+        </AppText>
       </View>
       {onMinus ? (
         <Pressable onPress={onMinus} accessibilityRole="button" accessibilityLabel="Minus 15 seconds" hitSlop={8}>
-          <Text style={[type.button, { color: colours.brand }]}>-15s</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+            -15s
+          </AppText>
         </Pressable>
       ) : null}
       {onPlus ? (
         <Pressable onPress={onPlus} accessibilityRole="button" accessibilityLabel="Plus 15 seconds" hitSlop={8}>
-          <Text style={[type.button, { color: colours.brand }]}>+15s</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+            +15s
+          </AppText>
         </Pressable>
       ) : null}
       {onSkip ? (
         <Pressable onPress={onSkip} accessibilityRole="button" accessibilityLabel="Skip rest" hitSlop={8}>
-          <Text style={[type.button, { color: colours.inkMuted }]}>Skip</Text>
+          <AppText variant="bodyStrong" style={{ color: colours.inkMuted }}>
+            Skip
+          </AppText>
         </Pressable>
       ) : null}
     </View>
@@ -218,7 +235,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 10,
     textAlign: 'center',
-    fontWeight: '600',
   },
   flex: {
     flex: 1,

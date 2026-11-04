@@ -7,7 +7,6 @@ import {
   ScrollView,
   SectionList,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
+  AppText,
   IconButton,
   ListRow,
   MenuHeader,
@@ -82,7 +82,7 @@ const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
 export default function PlannerScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
-  const { colours, type, spacing, radius, shadow } = useTheme();
+  const { colours, spacing, radius, shadow } = useTheme();
   const agendaRef = useRef<SectionList<PlannerDayView, AgendaSection>>(null);
   const fabRef = useRef<AnchorHandle>(null);
   const [range, setRange] = useState<PlannerRange | null>(null);
@@ -475,7 +475,7 @@ export default function PlannerScreen() {
           <ActivityIndicator color={colours.brand} />
         ) : (
           <>
-            <Text style={[type.body, { color: colours.inkMuted, textAlign: 'center' }]}>{errorMessage}</Text>
+            <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>{errorMessage}</AppText>
             <PrimaryButton
               label="Try again"
               onPress={() => {
@@ -494,7 +494,7 @@ export default function PlannerScreen() {
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <View style={[styles.top, { paddingTop: Math.max(insets.top, 16) + 8 }]}>
         <TabAvatar />
-        <Text style={[type.display, { color: colours.ink, flex: 1 }]}>Planner</Text>
+        <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Planner</AppText>
         <IconButton
           icon={viewMode === 'agenda' ? 'calendar-outline' : 'list-outline'}
           variant="muted"
@@ -522,7 +522,7 @@ export default function PlannerScreen() {
               style={styles.stripDay}
               accessibilityRole="button"
               accessibilityLabel={day ? `${day.weekday} ${day.dayNumber}` : letter}>
-              <Text style={[type.caption, { color: colours.inkMuted }]}>{letter}</Text>
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>{letter}</AppText>
               <View
                 style={[
                   styles.stripCircle,
@@ -530,14 +530,14 @@ export default function PlannerScreen() {
                   day?.isToday && { backgroundColor: colours.ink },
                   selected && !day?.isToday && { borderWidth: 1.5, borderColor: colours.brand },
                 ]}>
-                <Text
+                <AppText
+                  variant="bodySm"
                   style={[
-                    type.bodySm,
-                    { fontWeight: '700', color: day?.isToday ? colours.onBrand : colours.ink },
+                    { color: day?.isToday ? colours.onBrand : colours.ink },
                     day?.isPast && !day.isToday && { color: colours.inkMuted },
                   ]}>
                   {day?.dayNumber ?? ''}
-                </Text>
+                </AppText>
               </View>
               <View
                 style={[
@@ -562,9 +562,9 @@ export default function PlannerScreen() {
             styles.moveBanner,
             { backgroundColor: colours.brandSoft, borderRadius: radius.lg },
           ]}>
-          <Text style={[type.bodySm, { color: colours.ink, fontWeight: '600', flex: 1 }]}>
+          <AppText variant="bodySm" style={{ color: colours.ink, flex: 1 }}>
             Tap a day to move {movingDay.title ?? 'this session'}.
-          </Text>
+          </AppText>
           <TextButton label="Cancel" onPress={() => setMovingId(null)} />
         </View>
       ) : (
@@ -573,9 +573,9 @@ export default function PlannerScreen() {
             <RestWeekBanner style={{ marginBottom: 8, borderRadius: 0 }} />
           ) : null}
           {weekPlanned.length > 0 ? (
-            <Text style={[type.caption, { color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }]}>
+            <AppText variant="caption" style={{ color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }}>
               This week: {weekDone} of {weekPlanned.length} {weekPlanned.length === 1 ? 'workout' : 'workouts'}
-            </Text>
+            </AppText>
           ) : null}
         </>
       )}
@@ -640,9 +640,9 @@ export default function PlannerScreen() {
         <ScrollView style={styles.agenda} contentContainerStyle={{ paddingBottom: tabBarHeight + 88 }}>
           <View style={styles.weekdayRow}>
             {CALENDAR_WEEKDAYS.map((label) => (
-              <Text key={label} style={[type.caption, styles.weekdayLabel, { color: colours.inkMuted }]}>
+              <AppText key={label} variant="eyebrow" style={[styles.weekdayLabel, { color: colours.inkMuted }]}>
                 {label}
-              </Text>
+              </AppText>
             ))}
           </View>
           {months.map((month) => (
@@ -869,7 +869,7 @@ function AgendaDay({
   onReminderPress: (from: AnchorHandle | null) => void;
   disabled: boolean;
 }) {
-  const { colours, type, radius } = useTheme();
+  const { colours, radius } = useTheme();
   const rowRef = useRef<AnchorHandle>(null);
   const chipRef = useRef<AnchorHandle>(null);
   const quiet = day.kind === 'rest';
@@ -889,7 +889,7 @@ function AgendaDay({
       accessibilityRole="button"
       accessibilityLabel={`${formatAgendaHeading(day)}. ${day.title ?? (day.kind === 'rest' ? 'Rest day' : 'Nothing planned')}`}>
       {quiet ? (
-        <Text style={[type.bodySm, { color: colours.inkMuted }]}>Rest day</Text>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted }}>Rest day</AppText>
       ) : (
         <ListRow
           eyebrow={eyebrow}
@@ -943,7 +943,7 @@ function MonthBlock({
   movingId: string | null;
   onPressDay: (iso: string, from: AnchorHandle | null) => void;
 }) {
-  const { colours, type } = useTheme();
+  const { colours } = useTheme();
   const first = startOfMonth(new Date(year, month, 1));
   const lead = (first.getDay() + 6) % 7;
   const lastDate = new Date(year, month + 1, 0).getDate();
@@ -955,7 +955,7 @@ function MonthBlock({
 
   return (
     <View style={styles.monthBlock}>
-      <Text style={[type.title1, { color: colours.ink, marginBottom: 12 }]}>{label}</Text>
+      <AppText variant="title1" style={{ color: colours.ink, marginBottom: 12 }}>{label}</AppText>
       <View style={styles.monthGrid}>
         {cells.map((iso, index) => {
           if (!iso) {
@@ -1001,7 +1001,7 @@ function MonthCell({
   isMoving: boolean;
   onPressDay: (iso: string, from: AnchorHandle | null) => void;
 }) {
-  const { colours, type, radius } = useTheme();
+  const { colours, radius } = useTheme();
   const cellRef = useRef<AnchorHandle>(null);
   return (
     <Pressable
@@ -1020,14 +1020,14 @@ function MonthCell({
             ? { borderWidth: 1.5, borderColor: colours.brand }
             : null,
         ]}>
-        <Text
+        <AppText
+          variant="bodySm"
           style={[
-            type.bodySm,
-            { fontWeight: '600', color: isToday ? colours.onBrand : colours.ink },
+            { color: isToday ? colours.onBrand : colours.ink },
             day?.isPast && !isToday && { color: colours.inkMuted },
           ]}>
           {day?.dayNumber ?? Number(iso.slice(8))}
-        </Text>
+        </AppText>
       </View>
       <View
         style={[styles.dot, { backgroundColor: hasWorkout ? colours.accent : 'transparent' }]}

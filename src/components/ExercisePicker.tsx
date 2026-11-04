@@ -1,11 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FilterSheet } from '@/components/FilterSheet';
+import { AppText } from '@/components/ui/AppText';
 import { ExerciseThumb } from '@/components/ui';
-import { colours } from '@/constants/theme';
+import { colours, type } from '@/constants/theme';
 import { fetchExercisesForBuilder } from '@/lib/customWorkouts';
 import {
   BUILDER_TAGS,
@@ -81,7 +82,9 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.picker, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }]}>
         <View style={styles.pickerHeader}>
-          <Text style={styles.pickerTitle}>Add exercise</Text>
+          <AppText variant="title2" style={{ color: colours.text }}>
+            Add exercise
+          </AppText>
           <Pressable onPress={onClose} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close">
             <Ionicons name="close" size={28} color={colours.text} />
           </Pressable>
@@ -89,7 +92,7 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
         <View style={styles.search}>
           <Ionicons name="search" size={20} color={colours.textMuted} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, type.bodyStrong, { fontVariant: ['tabular-nums'] }]}
             value={query}
             onChangeText={setQuery}
             placeholder="Search"
@@ -144,17 +147,21 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
               accessibilityRole="button">
               <ExerciseThumb exercise={exercise} size={48} />
               <View style={styles.flex}>
-                <Text style={styles.pickName}>{exercise.name}</Text>
-                <Text style={styles.meta}>
+                <AppText variant="bodyStrong" style={{ color: colours.text }}>
+                  {exercise.name}
+                </AppText>
+                <AppText variant="bodySm" style={{ color: colours.textMuted, marginTop: 2 }}>
                   {ZONE_LABELS[exercise.zone]} · {MUSCLE_LABELS[exercise.primary_muscle]} ·{' '}
                   {EQUIPMENT_LABELS[exercise.equipment]}
-                </Text>
+                </AppText>
               </View>
               <Ionicons name="add-circle-outline" size={24} color={colours.accent} />
             </Pressable>
           ))}
           {filtered.length === 0 && (
-            <Text style={styles.emptyPick}>No exercises match. Try clearing a filter.</Text>
+            <AppText variant="body" style={{ color: colours.textMuted, textAlign: 'center', marginTop: 24 }}>
+              No exercises match. Try clearing a filter.
+            </AppText>
           )}
         </ScrollView>
       </View>
@@ -174,11 +181,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  pickerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colours.text,
-  },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -192,7 +194,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 17,
     color: colours.text,
     paddingVertical: 12,
   },
@@ -211,22 +212,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  pickName: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: colours.text,
-  },
-  meta: {
-    fontSize: 14,
-    color: colours.textMuted,
-    marginTop: 2,
-  },
-  emptyPick: {
-    fontSize: 16,
-    color: colours.textMuted,
-    textAlign: 'center',
-    marginTop: 24,
   },
   pressed: {
     opacity: 0.7,
