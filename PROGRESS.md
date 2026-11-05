@@ -70,7 +70,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 ### In progress
 
-**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, and **`images_x1.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote and cover placeholders work on-device without SQL. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7.
+**SQL pastes (blocked on Sacha).** Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, **`images_x1.sql`**, and **`gym_experience_g1.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote, cover placeholders and the gym-experience question work on-device without SQL. The gym-experience answer only persists after `gym_experience_g1.sql`. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7.
 
 ---
 
@@ -78,7 +78,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **3. X1** done this pass. Wait for Sacha to say "next". Then **4. G1**.
+Current: **4. G1** done this pass. Wait for Sacha to say "next". Then **6. W1** (item 5, content loader, is already in).
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -92,7 +92,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **1. D1** Global design fixes (final-phase pass 5 Nov 2026). Dev tools are a long-press on the version. Primary buttons are plum only (no coral tone). Secondary buttons are `brandSoft` fill; outline is only for paired choices (Camera / Library, under-18). Tags are sentence case, max 2, one line. Eyebrows use a short goal word ("Intermediate · Strength"). `one-spot-6` and `one-spot-2` stay as two different plans. No user-facing em dashes.
 - [x] **2. N5** Light theme by default (final-phase pass 5 Nov 2026). Appearance: Light, Dark, Match phone from `content/microcopy`. Saved on the device and in `profiles.theme_preference`. Applies at once. Cloud fill waits until device storage has been read. Microcopy is bundled, not loaded by content:sync. SQL: `supabase/theme_preference.sql` (not confirmed run).
 - [x] **3. X1** Photo overhaul (5 Nov 2026). Covers resolve by `cover_image_slug` from `/content` via `content/images/catalogue.json`. Swap a photo by uploading `{slug}.jpg` to `routine-covers` and setting `images.url` and `images.licence_source`. Missing photos show a tidy placeholder. No image repeats on Home or Programmes. Learn category tiles and articles have their own slugs (they no longer reuse routine photos). SQL: `supabase/images_x1.sql` (not confirmed run). Logger, progression and swaps were not touched.
-- [ ] **4. G1** Gym-first changes. Not started.
+- [x] **4. G1** Gym-first (5 Nov 2026). Onboarding asks "How long have you been going to the gym?" (Not yet / Just started / On and off / Regularly) instead of where she trains. Recommendations use gym_experience with gym comfort and goals. `training_location` is still in the database and is only used to backfill gym_experience. Home strength is shown as "Days you can't get to the gym" and is never in Home featured. Learn categories were already gym-focused. App Store keywords: keep gym, lifting, beginner, glutes; do not add home workout or home gym terms. Draft listing is `content/app-store/listing.md`. SQL: `supabase/gym_experience_g1.sql` (not confirmed run). Logger, progression and swaps were not touched.
 - [x] **5. Content loader.** `npm run content:sync -- --dry-run` (5 Nov 2026). Reads `/content` and plans upserts by slug. Does not delete, and does not touch sessions, sets, enrolments or profiles. Onboarding, microcopy and `content/ai` are not loaded. Cardio, food, machine guides, warm-ups, single sessions, exercise guides and achievements are skipped until their tables exist. The publishable key cannot see catalogue rows (RLS), so this dry-run does not treat an empty read as an empty library. `routines.is_active` is not in the schema, so old routines are not marked inactive yet. No migration was added.
 
 ### Stage 2: The workout core
@@ -130,7 +130,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 ### Launch checkpoint
 - [ ] **30. TestFlight** with EAS. Not started.
 - [ ] **31. Sandbox** subscription states. Not started.
-- [ ] **32. Store readiness.** Not started. Draft listing is `content/app-store/listing.md`. In-app terms and privacy are drafts.
+- [ ] **32. Store readiness.** Not started. Draft listing is `content/app-store/listing.md` (gym-first: name and subtitle already say gym; keywords omit home workout / home gym). In-app terms and privacy are drafts.
 - [ ] **33. S12** Email verification UI and deep link are built. Confirm email is still off in the dashboard.
 - [ ] **34. App Store submit.** Not started.
 

@@ -86,6 +86,7 @@ import {
   firstDayOfRoutine,
   getNextRoutineDay,
   missingRoutinesMessage,
+  isGymBackupRoutine,
   pickFeaturedRoutines,
   resetEnrolmentToWeek,
   startRoutine,
@@ -241,8 +242,8 @@ export default function HomeScreen() {
                 excludeIds: enrolment ? [enrolment.routine_id] : undefined,
               })
             : (subscription.isPro
-                ? routines.slice(0, 4)
-                : routines.filter((routine) => !routine.is_pro).slice(0, 2)
+                ? routines.filter((routine) => !isGymBackupRoutine(routine)).slice(0, 4)
+                : routines.filter((routine) => !routine.is_pro && !isGymBackupRoutine(routine)).slice(0, 2)
               ).filter((routine) => routine.id !== enrolment?.routine_id);
           const stretches = (subscription.isPro ? stretchRoutines : stretchRoutines.filter((item) => !item.is_pro)).slice(
             0,

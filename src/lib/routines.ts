@@ -311,7 +311,7 @@ export function toSummary(row: SummaryRow): RoutineSummary {
   const byTheEnd = (row.by_the_end_bullets ?? []).filter(Boolean);
   return {
     id: row.id,
-    name: row.name,
+    name: displayRoutineName(row.id, row.name, row.equipment),
     slug: row.slug,
     description: row.description,
     cover: oneCover(row.cover),
@@ -669,9 +669,30 @@ function scoreUserGoals(routine: RoutineSummary, answers: QuizAnswers): number {
   return score;
 }
 
+export const GYM_BACKUP_ROUTINE_NAME = "Days you can't get to the gym";
+
+function displayRoutineName(id: string, name: string, equipment?: RoutineEquipment): string {
+  if (isGymBackupRoutine({ id, name, equipment: equipment ?? 'full_gym', type: 'strength' })) {
+    return GYM_BACKUP_ROUTINE_NAME;
+  }
+  return name;
+}
+
+/** Backup plans for days she cannot get to the gym. Never featured on Home. */
+export function isGymBackupRoutine(
+  routine: Pick<RoutineSummary, 'id' | 'name' | 'equipment' | 'type'>
+): boolean {
+  if (routine.type === 'stretch') return false;
+  if (routine.equipment === 'home') return true;
+  if (routine.id === 'home-strength-6') return true;
+  const name = routine.name.trim().toLowerCase();
+  return name === 'home strength' || name === GYM_BACKUP_ROUTINE_NAME.toLowerCase();
+}
+
 function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   let score = 0;
-  if (routine.equipment === answers.equipment) score += 5;
+  if (isGymBackupRoutine(routine)) score -= 8;
+  if (routine.equipment === answers.equipment && !isGymBackupRoutine(routine)) score += 5;
   else if (answers.equipment === 'full_gym') score += 2;
   else if (answers.equipment === 'dumbbells' && routine.equipment === 'full_gym') score += 1;
 
@@ -681,6 +702,20 @@ function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
 
   score += scoreUserGoals(routine, answers);
   if (routine.goal === 'confidence' && answers.confidence <= 2) score += 4;
+  if (
+    (answers.gym_experience === 'not_yet' || answers.gym_experience === 'just_started') &&
+    routine.goal === 'confidence'
+  ) {
+    score += 4;
+  }
+  if (
+    (answers.gym_experience === 'not_yet' || answers.gym_experience === 'just_started') &&
+    routine.difficulty === 'beginner'
+  ) {
+    score += 3;
+  }
+  if (answers.gym_experience === 'on_and_off' && routine.difficulty !== 'experienced') score += 2;
+  if (answers.gym_experience === 'regularly' && routine.difficulty !== 'beginner') score += 3;
 
   if (answers.experience === 'new' && routine.difficulty === 'beginner') score += 3;
   if (answers.experience === 'some' && routine.difficulty !== 'experienced') score += 2;
@@ -725,7 +760,8 @@ export function pickFeaturedRoutines(
 ): RoutineSummary[] {
   const excluded = new Set(options?.excludeIds ?? []);
   const strength = routines.filter(
-    (routine) => routine.type !== 'stretch' && !excluded.has(routine.id)
+    (routine) =>
+      routine.type !== 'stretch' && !excluded.has(routine.id) && !isGymBackupRoutine(routine)
   );
   const pool = options?.freeOnly ? strength.filter((routine) => !routine.is_pro) : strength;
   const eligible = pool.filter((routine) => routine.is_featured_eligible);

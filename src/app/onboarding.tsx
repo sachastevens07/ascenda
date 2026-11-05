@@ -58,10 +58,9 @@ import {
   MAX_BODYWEIGHT_KG,
   MAX_DISPLAY_NAME,
   MIN_BODYWEIGHT_KG,
+  GYM_EXPERIENCE_LABELS,
+  GYM_EXPERIENCE_LEVELS,
   SESSION_MINUTES_OPTIONS,
-  TRAINING_LOCATION_LABELS,
-  TRAINING_LOCATIONS,
-  equipmentOptionsForLocation,
   formatDaysPerWeek,
   formatSessionMinutes,
   getQuizAnswers,
@@ -75,7 +74,7 @@ import {
   type Goal,
   type QuizAnswers,
   type SessionMinutes,
-  type TrainingLocation,
+  type GymExperience,
 } from '@/lib/profile';
 import { fetchRoutine, fetchRoutines, type RoutineSummary } from '@/lib/routines';
 import { useSubscription } from '@/lib/subscription';
@@ -89,7 +88,7 @@ type FlowStep =
   | 'goal'
   | 'insight-goal'
   | 'experience'
-  | 'location'
+  | 'gym_experience'
   | 'equipment'
   | 'insight-gym'
   | 'comfort'
@@ -108,7 +107,7 @@ const FLOW_STEPS: FlowStep[] = [
   'goal',
   'insight-goal',
   'experience',
-  'location',
+  'gym_experience',
   'equipment',
   'insight-gym',
   'comfort',
@@ -124,8 +123,8 @@ const FLOW_STEPS: FlowStep[] = [
 
 const EQUIPMENT_COPY: Record<EquipmentAccess, string> = {
   full_gym: 'Barbells, machines, cables and dumbbells.',
-  dumbbells: 'A set of dumbbells, and maybe a bench.',
-  home: 'Little or no kit: bodyweight and maybe a band.',
+  dumbbells: 'A dumbbell rack at the gym, and maybe a bench.',
+  home: 'Bands and bodyweight, for days you cannot get to the gym.',
 };
 
 const EXPERIENCE_COPY: Record<Experience, string> = {
@@ -134,10 +133,11 @@ const EXPERIENCE_COPY: Record<Experience, string> = {
   confident: 'I train regularly and know the main lifts.',
 };
 
-const LOCATION_COPY: Record<TrainingLocation, string> = {
-  gym: 'A gym with machines, free weights or both.',
-  home: 'Your own space, with whatever kit you have.',
-  both: 'Some days at the gym, some days at home.',
+const GYM_EXPERIENCE_COPY: Record<GymExperience, string> = {
+  not_yet: 'I have not walked in yet. That is a good time to start.',
+  just_started: 'The first weeks. We will keep sessions simple.',
+  on_and_off: 'You know a gym, and you are coming back.',
+  regularly: 'You already train. We will match that.',
 };
 
 function withStoredLevel(draft: Draft): Draft {
@@ -164,7 +164,7 @@ function isComplete(draft: Draft): draft is QuizAnswers {
     ready.equipment !== undefined &&
     ready.confidence !== undefined &&
     ready.confidence_level !== undefined &&
-    ready.training_location !== undefined &&
+    ready.gym_experience !== undefined &&
     ready.session_minutes !== undefined &&
     (ready.focus_areas?.length ?? 0) > 0 &&
     ready.streak_goal_weeks !== undefined &&
@@ -287,12 +287,6 @@ export default function OnboardingScreen() {
       if (key === 'confidence') {
         nextDraft.confidence_level = levelForConfidence(value as Confidence);
       }
-      if (key === 'training_location') {
-        const allowed = equipmentOptionsForLocation(value as TrainingLocation);
-        if (nextDraft.equipment && !allowed.includes(nextDraft.equipment)) {
-          nextDraft.equipment = undefined;
-        }
-      }
       return nextDraft;
     });
   }
@@ -301,12 +295,6 @@ export default function OnboardingScreen() {
     const nextDraft = { ...draft, [key]: value } as Draft;
     if (key === 'confidence') {
       nextDraft.confidence_level = levelForConfidence(value as Confidence);
-    }
-    if (key === 'training_location') {
-      const allowed = equipmentOptionsForLocation(value as TrainingLocation);
-      if (nextDraft.equipment && !allowed.includes(nextDraft.equipment)) {
-        nextDraft.equipment = undefined;
-      }
     }
     setDraft(nextDraft);
     if (isEditing) {
@@ -324,8 +312,8 @@ export default function OnboardingScreen() {
       return;
     }
     if (step === 'experience' && draft.experience !== undefined) choose('experience', draft.experience);
-    else if (step === 'location' && draft.training_location !== undefined) {
-      choose('training_location', draft.training_location);
+    else if (step === 'gym_experience' && draft.gym_experience !== undefined) {
+      choose('gym_experience', draft.gym_experience);
     } else if (step === 'equipment' && draft.equipment !== undefined) choose('equipment', draft.equipment);
     else if (step === 'comfort' && draft.confidence !== undefined) choose('confidence', draft.confidence);
     else if (step === 'days' && draft.days_per_week !== undefined) choose('days_per_week', draft.days_per_week);
@@ -339,7 +327,7 @@ export default function OnboardingScreen() {
   const choiceReady =
     (step === 'goal' && ((draft.main_goals?.length ?? 0) > 0 || draft.goal !== undefined)) ||
     (step === 'experience' && draft.experience !== undefined) ||
-    (step === 'location' && draft.training_location !== undefined) ||
+    (step === 'gym_experience' && draft.gym_experience !== undefined) ||
     (step === 'equipment' && draft.equipment !== undefined) ||
     (step === 'comfort' && draft.confidence !== undefined) ||
     (step === 'days' && draft.days_per_week !== undefined) ||
@@ -584,7 +572,7 @@ export default function OnboardingScreen() {
     if (
       step === 'goal' ||
       step === 'experience' ||
-      step === 'location' ||
+      step === 'gym_experience' ||
       step === 'equipment' ||
       step === 'comfort' ||
       step === 'days' ||
@@ -749,24 +737,24 @@ export default function OnboardingScreen() {
               />
             )}
 
-            {step === 'location' && (
+            {step === 'gym_experience' && (
               <ChoiceStep
-                title="Where will you train?"
-                options={TRAINING_LOCATIONS.map((value) => ({
+                title="How long have you been going to the gym?"
+                options={GYM_EXPERIENCE_LEVELS.map((value) => ({
                   value,
-                  label: TRAINING_LOCATION_LABELS[value],
-                  description: LOCATION_COPY[value],
+                  label: GYM_EXPERIENCE_LABELS[value],
+                  description: GYM_EXPERIENCE_COPY[value],
                 }))}
-                selected={draft.training_location}
-                onChoose={(value) => patchAnswer('training_location', value as TrainingLocation)}
+                selected={draft.gym_experience}
+                onChoose={(value) => patchAnswer('gym_experience', value as GymExperience)}
               />
             )}
 
             {step === 'equipment' && (
               <ChoiceStep
-                title="What kit can you use?"
-                subtitle="We’ll only recommend sessions that fit this."
-                options={equipmentOptionsForLocation(draft.training_location ?? 'both').map((value) => ({
+                title="What kit can you use at the gym?"
+                subtitle="We recommend gym sessions that fit this. Backup sessions for days you cannot get there live in Programmes."
+                options={(['full_gym', 'dumbbells', 'home'] as EquipmentAccess[]).map((value) => ({
                   value,
                   label: EQUIPMENT_ACCESS_LABELS[value],
                   description: EQUIPMENT_COPY[value],
@@ -1161,9 +1149,9 @@ function ReviewStep({
       step: 'experience',
     },
     {
-      name: 'Where you train',
-      value: draft.training_location ? TRAINING_LOCATION_LABELS[draft.training_location] : '',
-      step: 'location',
+      name: 'Gym experience',
+      value: draft.gym_experience ? GYM_EXPERIENCE_LABELS[draft.gym_experience] : '',
+      step: 'gym_experience',
     },
     {
       name: 'Equipment',

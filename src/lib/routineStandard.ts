@@ -170,17 +170,17 @@ export const ROUTINE_BRIEFS: Record<string, RoutineBrief> = {
   },
   'home-strength-6': {
     audience: [
-      'Training at home with bands and bodyweight',
-      'Small space, no gym required',
+      'Days you cannot get to the gym',
+      'Bands and bodyweight, in a small space',
       'Three sessions a week',
     ],
     byTheEnd: [
-      'Have a band and bodyweight full-body session you can do anywhere',
+      'Have a band and bodyweight full-body session for days you cannot get to the gym',
       'Know how to make a move harder with tempo or a stronger band',
       'Have six weeks of showing up without kit anxiety',
     ],
     splitNote:
-      'Full body at home. The week still covers squat, hinge, push, pull, single-leg and core using bands and the floor.',
+      'A gym backup: full body with bands and the floor. The week still covers squat, hinge, push, pull, single-leg and core.',
     progressionNote:
       'Add reps first, then a stronger band or a slower lower. Holds get a few extra seconds when they feel solid.',
   },

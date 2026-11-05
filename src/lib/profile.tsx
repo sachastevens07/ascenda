@@ -146,8 +146,8 @@ export type EquipmentAccess = (typeof EQUIPMENT_ACCESS)[number];
 
 export const EQUIPMENT_ACCESS_LABELS: Record<EquipmentAccess, string> = {
   full_gym: 'A full gym',
-  dumbbells: 'Dumbbells only',
-  home: 'At home',
+  dumbbells: 'Dumbbells at the gym',
+  home: "Days I can't get to the gym",
 };
 
 export const CONFIDENCE_LEVELS = [1, 2, 3, 4, 5] as const;
@@ -199,6 +199,16 @@ export const TRAINING_LOCATION_LABELS: Record<TrainingLocation, string> = {
   both: 'Both',
 };
 
+export const GYM_EXPERIENCE_LEVELS = ['not_yet', 'just_started', 'on_and_off', 'regularly'] as const;
+export type GymExperience = (typeof GYM_EXPERIENCE_LEVELS)[number];
+
+export const GYM_EXPERIENCE_LABELS: Record<GymExperience, string> = {
+  not_yet: 'Not yet',
+  just_started: 'Just started',
+  on_and_off: 'On and off',
+  regularly: 'Regularly',
+};
+
 export const SESSION_MINUTES_OPTIONS = [30, 45, 60] as const;
 export type SessionMinutes = (typeof SESSION_MINUTES_OPTIONS)[number];
 export const DEFAULT_SESSION_MINUTES: SessionMinutes = 45;
@@ -233,7 +243,7 @@ export type QuizAnswers = {
   equipment: EquipmentAccess;
   confidence: Confidence;
   confidence_level: Level;
-  training_location: TrainingLocation;
+  gym_experience: GymExperience;
   session_minutes: SessionMinutes;
   focus_areas: FocusArea[];
   streak_goal_weeks: StreakGoal;
@@ -250,6 +260,7 @@ export type Profile = {
   days_per_week: DaysPerWeek | null;
   equipment: EquipmentAccess | null;
   training_location: TrainingLocation | null;
+  gym_experience: GymExperience | null;
   session_minutes: SessionMinutes | null;
   focus_areas: FocusArea[];
   confidence: Confidence | null;
@@ -284,6 +295,7 @@ const PROFILE_COLUMNS_V2 = `${PROFILE_COLUMNS}, ${ONBOARDING_V2_COLUMNS}`;
 const PROFILE_COLUMNS_THEME = `${PROFILE_COLUMNS_V2}, theme_preference`;
 const PROFILE_COLUMNS_DISCLAIMER = `${PROFILE_COLUMNS_THEME}, disclaimer_version, disclaimer_accepted_at`;
 const PROFILE_COLUMNS_GOALS = `${PROFILE_COLUMNS_DISCLAIMER}, main_goals`;
+const PROFILE_COLUMNS_G1 = `${PROFILE_COLUMNS_GOALS}, gym_experience`;
 
 function isMissingOnboardingV2(error: { message?: string; code?: string }): boolean {
   return /main_goal(?!s)|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
@@ -301,6 +313,34 @@ function isMissingDisclaimer(error: { message?: string; code?: string }): boolea
 
 function isMissingMainGoals(error: { message?: string; code?: string }): boolean {
   return /main_goals/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isMissingGymExperience(error: { message?: string; code?: string }): boolean {
+  return /gym_experience/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function parseGymExperience(value: unknown): GymExperience | null {
+  return (GYM_EXPERIENCE_LEVELS as readonly string[]).includes(String(value))
+    ? (value as GymExperience)
+    : null;
+}
+
+/** Map old where-you-train answers onto gym_experience. Home means she has not been going. */
+export function gymExperienceFromLegacy(
+  location: TrainingLocation | null | undefined,
+  experience: Experience | null | undefined
+): GymExperience {
+  if (location === 'home') return 'not_yet';
+  if (location === 'both') return 'on_and_off';
+  if (location === 'gym') {
+    if (experience === 'new') return 'just_started';
+    if (experience === 'confident') return 'regularly';
+    return 'on_and_off';
+  }
+  if (experience === 'new') return 'just_started';
+  if (experience === 'confident') return 'regularly';
+  if (experience === 'some') return 'on_and_off';
+  return 'just_started';
 }
 
 function isGoalConstraint(error: { message?: string; code?: string }): boolean {
@@ -393,6 +433,9 @@ function toProfile(row: unknown, disclaimerReady = false): Profile {
     main_goal: goals[0] ?? null,
     main_goals: goals,
     training_location: profile.training_location ?? null,
+    gym_experience:
+      parseGymExperience(profile.gym_experience) ??
+      gymExperienceFromLegacy(profile.training_location, profile.experience),
     session_minutes: parseSessionMinutes(profile.session_minutes),
     focus_areas: parseFocusAreas(profile.focus_areas),
     gym_comfort: profile.gym_comfort ?? profile.confidence ?? null,
@@ -444,6 +487,27 @@ async function selectOwnProfile(
 
 async function loadProfile(userId: string | null): Promise<LoadedProfile> {
   if (!userId) return { userId, profile: null, error: null };
+  const withGymExperience = await selectOwnProfile(userId, PROFILE_COLUMNS_G1);
+  if (!withGymExperience.error) {
+    return {
+      userId,
+      profile: withGymExperience.data ? toProfile(withGymExperience.data, true) : null,
+      error: null,
+    };
+  }
+  if (
+    !isMissingGymExperience(withGymExperience.error) &&
+    !isMissingMainGoals(withGymExperience.error) &&
+    !isMissingDisclaimer(withGymExperience.error) &&
+    !isMissingThemePreference(withGymExperience.error) &&
+    !isMissingOnboardingV2(withGymExperience.error)
+  ) {
+    return {
+      userId,
+      profile: null,
+      error: withGymExperience.error.message ?? 'Couldn’t load profile',
+    };
+  }
   const withGoals = await selectOwnProfile(userId, PROFILE_COLUMNS_GOALS);
   if (!withGoals.error) {
     return {
@@ -549,7 +613,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         goal: main,
         main_goal: main,
         main_goals: mainGoals,
-        training_location: answers.training_location,
+        gym_experience: answers.gym_experience,
         session_minutes: answers.session_minutes,
         focus_areas: answers.focus_areas,
         gym_comfort: answers.confidence,
@@ -557,18 +621,86 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         display_name: answers.display_name.trim() || null,
       };
       const previous = loaded?.userId === userId ? loaded.profile : null;
-      const withGoals = await supabase.from('profiles').upsert(payload).select(PROFILE_COLUMNS_GOALS).single();
-      if (!withGoals.error) {
+      const withGymExperience = await supabase.from('profiles').upsert(payload).select(PROFILE_COLUMNS_G1).single();
+      if (!withGymExperience.error) {
         setLoaded({
           userId,
-          profile: keepDisclaimer(toProfile(withGoals.data, true), previous),
+          profile: keepDisclaimer(toProfile(withGymExperience.data, true), previous),
           error: null,
         });
-      } else if (isGoalConstraint(withGoals.error) && !isMissingMainGoals(withGoals.error)) {
+      } else if (isMissingGymExperience(withGymExperience.error)) {
+        const { gym_experience: _ignoredExperience, ...withoutExperience } = payload;
+        const withGoals = await supabase.from('profiles').upsert(withoutExperience).select(PROFILE_COLUMNS_GOALS).single();
+        if (withGoals.error && !(isGoalConstraint(withGoals.error) && !isMissingMainGoals(withGoals.error))) {
+          if (isMissingMainGoals(withGoals.error) || isMissingOnboardingV2(withGoals.error)) {
+            const { main_goals: _ignored, ...withoutGoals } = withoutExperience;
+            const v2Payload = { ...withoutGoals, goal: legacyGoal, main_goal: legacyGoal };
+            const full = await supabase.from('profiles').upsert(v2Payload).select(PROFILE_COLUMNS_V2).single();
+            if (full.error && isMissingOnboardingV2(full.error)) {
+              const base = await supabase.from('profiles').upsert(legacy).select(PROFILE_COLUMNS).single();
+              if (base.error) throw base.error;
+              setLoaded({
+                userId,
+                profile: {
+                  ...keepDisclaimer(toProfile(base.data), previous),
+                  main_goals: mainGoals,
+                  goal: main,
+                  main_goal: main,
+                  gym_experience: answers.gym_experience,
+                },
+                error: null,
+              });
+            } else if (full.error) {
+              throw full.error;
+            } else {
+              setLoaded({
+                userId,
+                profile: {
+                  ...keepDisclaimer(toProfile(full.data), previous),
+                  main_goals: mainGoals,
+                  goal: main,
+                  main_goal: main,
+                  gym_experience: answers.gym_experience,
+                },
+                error: null,
+              });
+            }
+          } else {
+            throw withGoals.error;
+          }
+        } else if (withGoals.error && isGoalConstraint(withGoals.error) && !isMissingMainGoals(withGoals.error)) {
+          const retry = await supabase
+            .from('profiles')
+            .upsert({ ...withoutExperience, goal: legacyGoal, main_goal: legacyGoal })
+            .select(PROFILE_COLUMNS_GOALS)
+            .single();
+          if (retry.error) throw retry.error;
+          setLoaded({
+            userId,
+            profile: {
+              ...keepDisclaimer(toProfile(retry.data, true), previous),
+              main_goals: mainGoals,
+              goal: main,
+              main_goal: main,
+              gym_experience: answers.gym_experience,
+            },
+            error: null,
+          });
+        } else if (!withGoals.error) {
+          setLoaded({
+            userId,
+            profile: {
+              ...keepDisclaimer(toProfile(withGoals.data, true), previous),
+              gym_experience: answers.gym_experience,
+            },
+            error: null,
+          });
+        }
+      } else if (isGoalConstraint(withGymExperience.error) && !isMissingMainGoals(withGymExperience.error)) {
         const retry = await supabase
           .from('profiles')
           .upsert({ ...payload, goal: legacyGoal, main_goal: legacyGoal })
-          .select(PROFILE_COLUMNS_GOALS)
+          .select(PROFILE_COLUMNS_G1)
           .single();
         if (retry.error) throw retry.error;
         setLoaded({
@@ -581,7 +713,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           },
           error: null,
         });
-      } else if (isMissingMainGoals(withGoals.error) || isMissingOnboardingV2(withGoals.error)) {
+      } else if (isMissingMainGoals(withGymExperience.error) || isMissingOnboardingV2(withGymExperience.error)) {
         const { main_goals: _ignored, ...withoutGoals } = payload;
         const v2Payload = { ...withoutGoals, goal: legacyGoal, main_goal: legacyGoal };
         const full = await supabase.from('profiles').upsert(v2Payload).select(PROFILE_COLUMNS_V2).single();
@@ -613,7 +745,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           });
         }
       } else {
-        throw withGoals.error;
+        throw withGymExperience.error;
       }
       if (!previous?.onboarding_completed_at) track('onboarding_completed');
       if (previousLevel && previousLevel !== answers.confidence_level) {
@@ -761,8 +893,8 @@ export function getQuizAnswers(profile: Profile | null): QuizAnswers | null {
     equipment,
     confidence,
     confidence_level,
-    training_location:
-      profile.training_location ?? trainingLocationFromEquipment(equipment),
+    gym_experience:
+      profile.gym_experience ?? gymExperienceFromLegacy(profile.training_location, experience),
     session_minutes: profile.session_minutes ?? DEFAULT_SESSION_MINUTES,
     focus_areas: profile.focus_areas.length > 0 ? profile.focus_areas : focusAreasFromGoals(goals),
     streak_goal_weeks: profile.streak_goal_weeks ?? DEFAULT_STREAK_GOAL,

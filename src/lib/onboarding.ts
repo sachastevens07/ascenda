@@ -53,7 +53,13 @@ export function pickRecommendedRoutine(
 
 export function describeRecommendation(routine: RoutineSummary, answers: QuizAnswers): string {
   const reasons: string[] = [];
-  if (routine.id === FREE_STARTER_ROUTINE_ID && (answers.experience === 'new' || answers.confidence <= 2)) {
+  if (
+    routine.id === FREE_STARTER_ROUTINE_ID &&
+    (answers.gym_experience === 'not_yet' ||
+      answers.gym_experience === 'just_started' ||
+      answers.experience === 'new' ||
+      answers.confidence <= 2)
+  ) {
     reasons.push('You said the gym still feels new, so this starts in one quiet spot.');
   }
   const goals = userGoalsFromAnswers(answers);
@@ -70,11 +76,16 @@ export function describeRecommendation(routine: RoutineSummary, answers: QuizAns
         : `It’s ${answers.days_per_week} days a week, like you asked.`
     );
   }
-  if (answers.experience === 'new' && routine.difficulty === 'beginner') {
+  if (
+    (answers.experience === 'new' ||
+      answers.gym_experience === 'not_yet' ||
+      answers.gym_experience === 'just_started') &&
+    routine.difficulty === 'beginner'
+  ) {
     reasons.push('The sessions stay beginner-friendly.');
   }
-  if (routine.equipment === answers.equipment) {
-    reasons.push('It uses the kit you said you have.');
+  if (routine.equipment === answers.equipment && routine.equipment !== 'home') {
+    reasons.push('It uses the kit you said you have at the gym.');
   }
   if (answers.session_minutes && Math.abs(routine.session_minutes - answers.session_minutes) <= 15) {
     reasons.push(`Sessions are about ${routine.session_minutes} minutes.`);
