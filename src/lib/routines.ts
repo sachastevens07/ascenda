@@ -19,6 +19,7 @@ import {
   type ProgressionRule,
   type WarmupStep,
 } from '@/lib/routineStandard';
+import { parseSessionType, type SessionType } from '@/lib/sessionTypes';
 import { supabase } from '@/lib/supabase';
 
 export const LAUNCH_ROUTINE_IDS = [
@@ -104,6 +105,8 @@ export type RoutineDay = {
   warmup: WarmupStep[];
   coach_note: string | null;
   finisher: string | null;
+  sessionType: SessionType;
+  day_key: string | null;
   exercises: RoutineDayExercise[];
 };
 
@@ -212,6 +215,12 @@ const DAY_EXERCISE_SELECT_LEGACY = `
   position, sets, rep_min, rep_max, rest_seconds,
   exercise:exercises (${SLOT_EXERCISE_COLUMNS})
 `;
+const WEEK_NEST_W1 = `
+    id, week_number, is_checkpoint, phase_name, phase_goal, is_lighter_week,
+    routine_days (
+      id, day_number, name, source_programme_day_id, focus, warmup, coach_note, finisher, type, day_key
+    )
+`;
 const WEEK_NEST_N2 = `
     id, week_number, is_checkpoint, phase_name, phase_goal, is_lighter_week,
     routine_days (
@@ -266,8 +275,10 @@ export type SummaryRow = Omit<RoutineSummary, 'cover' | 'tags' | 'audience' | 'b
   progression_note?: string | null;
 };
 
-type DayRow = Omit<RoutineDay, 'exercises' | 'warmup'> & {
+type DayRow = Omit<RoutineDay, 'exercises' | 'warmup' | 'sessionType' | 'day_key'> & {
   warmup?: unknown;
+  type?: string | null;
+  day_key?: string | null;
   routine_day_exercises?: (Omit<RoutineDayExercise, 'exercise'> & { exercise: SlotExercise })[] | null;
 };
 
@@ -368,6 +379,8 @@ function toDay(row: DayRow, routine?: Pick<RoutineSummary, 'id' | 'difficulty' |
     coach_note:
       row.coach_note?.trim() || (strength ? coachNoteForDay(row.name, difficulty) : null),
     finisher: row.finisher?.trim() || null,
+    sessionType: parseSessionType(row.type, strength ? 'strength' : 'recovery'),
+    day_key: row.day_key?.trim() || null,
     exercises: coached,
   };
 }
@@ -447,6 +460,12 @@ function isMissingCheckpointColumn(error: { message?: string; code?: string }): 
 
 function isMissingN2Column(error: { message?: string; code?: string }): boolean {
   return /audience_bullets|by_the_end_bullets|split_note|progression_note|phase_name|phase_goal|is_lighter_week|coach_note|warmup|target_rir|progression_rule|load_increment_kg|alternative_exercise_ids|superset_group|\brole\b|\btempo\b|\bfocus\b|\bfinisher\b|\bnotes\b/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
+}
+
+function isMissingW1Column(error: { message?: string; code?: string }): boolean {
+  return /day_key|routine_days\.type|Could not find the 'type' column of 'routine_days'/i.test(
     `${error.code ?? ''} ${error.message ?? ''}`
   );
 }
@@ -875,6 +894,7 @@ export async function fetchRoutine(
   await hydrateImages();
   const includeLockedWeeks = options?.includeLockedWeeks ?? true;
   const attempts = [
+    `${SUMMARY_SELECT_N2}, routine_weeks (${WEEK_NEST_W1})`,
     `${SUMMARY_SELECT_N2}, routine_weeks (${WEEK_NEST_N2})`,
     `${SUMMARY_SELECT}, routine_weeks (${WEEK_NEST})`,
     `${SUMMARY_SELECT_BASE}, routine_weeks (${WEEK_NEST})`,
@@ -892,7 +912,8 @@ export async function fetchRoutine(
     if (
       !isMissingTypeColumn(error) &&
       !isMissingCheckpointColumn(error) &&
-      !isMissingN2Column(error)
+      !isMissingN2Column(error) &&
+      !isMissingW1Column(error)
     ) {
       throw new Error(error.message);
     }
@@ -935,13 +956,16 @@ export async function fetchRoutineDay(id: string): Promise<RoutineDay | null> {
   let { data, error } = await supabase
     .from('routine_days')
     .select(
-      `id, day_number, name, source_programme_day_id, focus, warmup, coach_note, finisher, ${DAY_PARENT_SELECT}, routine_day_exercises (${DAY_EXERCISE_SELECT_N2})`
+      `id, day_number, name, source_programme_day_id, focus, warmup, coach_note, finisher, type, day_key, ${DAY_PARENT_SELECT}, routine_day_exercises (${DAY_EXERCISE_SELECT_N2})`
     )
     .eq('id', id)
     .maybeSingle();
   if (
     error &&
-    (isMissingN2Column(error) || isMissingDurationColumn(error) || isMissingTypeColumn(error))
+    (isMissingN2Column(error) ||
+      isMissingDurationColumn(error) ||
+      isMissingTypeColumn(error) ||
+      isMissingW1Column(error))
   ) {
     const retry = await supabase
       .from('routine_days')

@@ -1,4 +1,5 @@
 import { track } from '@/lib/analytics';
+import { parseSessionType, sessionTypeFromSource, type SessionType } from '@/lib/sessionTypes';
 import { supabase } from '@/lib/supabase';
 
 export type SessionSource = 'programme' | 'custom' | 'ai' | 'routine' | 'stretch';
@@ -18,6 +19,8 @@ export type Session = {
   block_id: string | null;
   routine_enrolment_id: string | null;
   routine_day_id: string | null;
+  /** Strength, cardio or recovery. Defaults from source until W1 SQL is pasted. */
+  type: SessionType;
 };
 
 /** One row of the `sets` table. */
@@ -52,6 +55,14 @@ function isMissingCustomSessionColumns(error: { message?: string; code?: string 
   return /source|custom_workout_id/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
+function isMissingSessionTypeColumn(error: { message?: string; code?: string }): boolean {
+  return /Could not find the 'type' column of 'sessions'|column sessions\.type/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
+}
+
+const SESSION_COLUMNS_ROUTINES_W1 = `${SESSION_COLUMNS_ROUTINES}, type`;
+
 function toSession(row: Session | null): Session | null {
   if (!row) return null;
   return {
@@ -62,7 +73,26 @@ function toSession(row: Session | null): Session | null {
     routine_enrolment_id: row.routine_enrolment_id ?? null,
     routine_day_id: row.routine_day_id ?? null,
     exercise_swaps: row.exercise_swaps ?? {},
+    type: parseSessionType(row.type, sessionTypeFromSource(row.source ?? 'programme')),
   };
+}
+
+type SessionWriteResult = {
+  data: unknown;
+  error: { message?: string; code?: string } | null;
+};
+
+async function insertSessionRow(
+  payload: Record<string, unknown>,
+  columns: string
+): Promise<SessionWriteResult> {
+  const type = parseSessionType(payload.type, sessionTypeFromSource(payload.source as string));
+  const withType = { ...payload, type };
+  const typedColumns = columns.includes(' type') || columns.endsWith('type') ? columns : `${columns}, type`;
+  const first = await supabase.from('sessions').insert(withType).select(typedColumns).single();
+  if (!first.error || !isMissingSessionTypeColumn(first.error)) return first;
+  const { type: _ignored, ...withoutType } = withType;
+  return supabase.from('sessions').insert(withoutType).select(columns).single();
 }
 
 /** Today's date on the phone, as YYYY-MM-DD. */
@@ -88,6 +118,13 @@ type SessionQueryResult = {
 async function selectSession(
   run: (columns: string) => PromiseLike<SessionQueryResult>
 ): Promise<Session | null> {
+  const withType = await run(SESSION_COLUMNS_ROUTINES_W1);
+  if (!withType.error) return toSession(withType.data as Session | null);
+  if (!isMissingSessionTypeColumn(withType.error)) {
+    if (!isMissingRoutineSessionColumns(withType.error) && !isMissingBlockColumn(withType.error)) {
+      if (!isMissingCustomSessionColumns(withType.error)) throw withType.error;
+    }
+  }
   const routines = await run(SESSION_COLUMNS_ROUTINES);
   if (!routines.error) return toSession(routines.data as Session | null);
   if (!isMissingRoutineSessionColumns(routines.error) && !isMissingBlockColumn(routines.error)) {
@@ -188,7 +225,7 @@ export async function startSession(
     source: 'programme' as const,
     ...(blockId ? { block_id: blockId } : {}),
   };
-  const { data, error } = await supabase.from('sessions').insert(payload).select(SESSION_COLUMNS).single();
+  const { data, error } = await insertSessionRow(payload, SESSION_COLUMNS);
   if (!error) {
     const session = toSession(data as Session)!;
     track('session_started', { source: session.source });
@@ -230,6 +267,7 @@ export async function startRoutineSession(input: {
   routineDayId: string;
   sourceProgrammeDayId?: string | null;
   exerciseSwaps?: Record<string, string>;
+  sessionType?: SessionType;
 }): Promise<Session> {
   const exerciseSwaps = input.exerciseSwaps ?? {};
   const payload = {
@@ -239,12 +277,9 @@ export async function startRoutineSession(input: {
     source: 'routine' as const,
     routine_enrolment_id: input.enrolmentId,
     routine_day_id: input.routineDayId,
+    type: input.sessionType ?? 'strength',
   };
-  const { data, error } = await supabase
-    .from('sessions')
-    .insert(payload)
-    .select(SESSION_COLUMNS_ROUTINES)
-    .single();
+  const { data, error } = await insertSessionRow(payload, SESSION_COLUMNS_ROUTINES);
   if (!error) {
     track('session_started', { source: 'routine' });
     return toSession(data as Session)!;
@@ -265,12 +300,9 @@ export async function startStretchSession(routineDayId: string): Promise<Session
     exercise_swaps: {} as Record<string, string>,
     source: 'stretch' as const,
     routine_day_id: routineDayId,
+    type: 'recovery' as const,
   };
-  const { data, error } = await supabase
-    .from('sessions')
-    .insert(payload)
-    .select(SESSION_COLUMNS_ROUTINES)
-    .single();
+  const { data, error } = await insertSessionRow(payload, SESSION_COLUMNS_ROUTINES);
   if (!error) {
     track('session_started', { source: 'stretch' });
     return toSession(data as Session)!;
@@ -291,16 +323,18 @@ export async function startCustomSession(
     source: 'custom' as const,
     date: localDate(),
     exercise_swaps: exerciseSwaps,
+    type: 'strength' as const,
   };
-  const { data, error } = await supabase.from('sessions').insert(payload).select(SESSION_COLUMNS).single();
+  const { data, error } = await insertSessionRow(payload, SESSION_COLUMNS);
   if (!error) {
     track('session_started', { source: 'custom' });
     return toSession(data as Session)!;
   }
   if (isMissingBlockColumn(error)) {
+    const { type: _ignored, ...withoutType } = payload;
     const custom = await supabase
       .from('sessions')
-      .insert(payload)
+      .insert(withoutType)
       .select(SESSION_COLUMNS_CUSTOM)
       .single();
     if (!custom.error) {

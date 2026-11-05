@@ -33,6 +33,7 @@ export async function startRoutineLogger(
     enrolmentId: input.enrolmentId,
     routineDayId: input.routineDayId,
     sourceProgrammeDayId: input.sourceProgrammeDayId ?? day?.source_programme_day_id,
+    sessionType: day?.sessionType,
   });
   if (day) {
     let plan = sessionPlanFromDay(routineDayToProgrammeDay(day));

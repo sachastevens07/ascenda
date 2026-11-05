@@ -180,6 +180,160 @@ function clampMinutes(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
+function mapBlockType(raw: string): 'warmup' | 'strength' | 'cardio' | 'cooldown' | 'stretch' | null {
+  if (raw === 'cardio_finisher' || raw === 'cardio') return 'cardio';
+  if (raw === 'warmup' || raw === 'strength' || raw === 'cooldown' || raw === 'stretch') return raw;
+  return null;
+}
+
+function loadById(relativePath: string, key: string, idField = 'id'): Map<string, Json> {
+  const map = new Map<string, Json>();
+  try {
+    const file = readJson(relativePath);
+    for (const item of asArray(file[key])) {
+      const id = text(item[idField]) || text(item.slug);
+      if (id) map.set(id, item);
+    }
+  } catch {
+    /* folder may be missing in a partial checkout */
+  }
+  return map;
+}
+
+function finisherSlug(schedule: Json, dayKey: string, weekNumber: number): string | null {
+  const variants = ['fine', 'avoid', 'love'];
+  let slots: Json[] = [];
+  for (const name of variants) {
+    const list = asArray(schedule[name]);
+    if (list.length > 0) {
+      slots = list;
+      if (name === 'fine') break;
+    }
+  }
+  const slot = slots.find((item) => text(item.day_key) === dayKey && text(item.type) === 'strength');
+  if (!slot) return null;
+  const skip = Array.isArray(slot.finisher_skip_weeks)
+    ? (slot.finisher_skip_weeks as unknown[]).filter((value): value is number => typeof value === 'number')
+    : [];
+  if (skip.includes(weekNumber)) return null;
+  return text(slot.finisher) || null;
+}
+
+type StructureCounts = {
+  weeks: number;
+  days: number;
+  blocks: number;
+  warmup: number;
+  strength: number;
+  cardio: number;
+  cooldown: number;
+  stretch: number;
+  exercises: number;
+  supportDays: number;
+  scheduleVariants: number;
+  missingWarmupTemplates: number;
+  missingCardioSessions: number;
+};
+
+function emptyCounts(): StructureCounts {
+  return {
+    weeks: 0,
+    days: 0,
+    blocks: 0,
+    warmup: 0,
+    strength: 0,
+    cardio: 0,
+    cooldown: 0,
+    stretch: 0,
+    exercises: 0,
+    supportDays: 0,
+    scheduleVariants: 0,
+    missingWarmupTemplates: 0,
+    missingCardioSessions: 0,
+  };
+}
+
+function addCounts(target: StructureCounts, extra: StructureCounts): void {
+  for (const key of Object.keys(target) as (keyof StructureCounts)[]) {
+    target[key] += extra[key];
+  }
+}
+
+function planStrengthRoutine(
+  file: Json,
+  templates: Map<string, Json>,
+  cardio: Map<string, Json>
+): StructureCounts {
+  const counts = emptyCounts();
+  const weeks = asArray(file.weeks);
+  const phases = asArray(file.phases);
+  const schedule = (file.weekly_schedule ?? {}) as Json;
+  counts.weeks = weeks.length;
+  counts.supportDays = asArray(file.support_days).length;
+  counts.scheduleVariants = ['avoid', 'fine', 'love'].filter((name) => asArray(schedule[name]).length > 0).length;
+
+  for (const week of weeks) {
+    const weekNumber = num(week.week) ?? 0;
+    const phaseNumber = num(week.phase);
+    const phase =
+      phases.find((item) => num(item.number) === phaseNumber) ??
+      phases.find((item) => asArray(item.weeks).some((value) => num(value) === weekNumber));
+    const days = asArray(phase?.days);
+    counts.days += days.length;
+    for (const day of days) {
+      const dayKey = text(day.key);
+      const names = asArray(day.blocks).map((item) => (typeof item === 'string' ? item : text(item)));
+      const finisher = names.includes('cardio_finisher') || names.includes('cardio')
+        ? finisherSlug(schedule, dayKey, weekNumber)
+        : null;
+      for (const name of names) {
+        const blockType = mapBlockType(name);
+        if (!blockType) continue;
+        if (blockType === 'cardio' && !finisher) continue;
+        counts.blocks += 1;
+        counts[blockType] += 1;
+        if (blockType === 'warmup') {
+          const templateId = text(day.warmup_id);
+          if (templateId && !templates.has(templateId)) counts.missingWarmupTemplates += 1;
+        }
+        if (blockType === 'cooldown') {
+          const templateId = text(day.cooldown_id);
+          if (templateId && !templates.has(templateId)) counts.missingWarmupTemplates += 1;
+        }
+        if (blockType === 'cardio' && finisher && !cardio.has(finisher)) {
+          counts.missingCardioSessions += 1;
+        }
+      }
+      counts.exercises += asArray(day.exercises).length;
+    }
+  }
+  return counts;
+}
+
+function planStretchRoutine(body: Json): StructureCounts {
+  const counts = emptyCounts();
+  counts.weeks = 1;
+  counts.days = 1;
+  counts.blocks = 1;
+  counts.stretch = 1;
+  counts.exercises = asArray(body.steps).length;
+  return counts;
+}
+
+function planAllRoutineStructure(): StructureCounts {
+  const templates = loadById('warmups-cooldowns/warmups-cooldowns.json', 'templates');
+  const cardio = loadById('cardio/cardio-sessions.json', 'cardio_sessions', 'slug');
+  const totals = emptyCounts();
+  const files = readdirSync(join(CONTENT, 'routines')).filter((name) => name.endsWith('.json'));
+  for (const file of files) {
+    addCounts(totals, planStrengthRoutine(readJson(join('routines', file)), templates, cardio));
+  }
+  for (const body of asArray(readJson('stretches/stretch-routines.json').stretch_routines)) {
+    addCounts(totals, planStretchRoutine(body));
+  }
+  return totals;
+}
+
 function preview(items: string[], total: number): string {
   if (items.length === 0) return '';
   return items.join(', ') + (total > items.length ? '…' : '');
@@ -292,10 +446,10 @@ async function main(): Promise<void> {
 
   line('No table in the current schema, skipped');
   const deferred = [
-    ['content/cardio', 'cardio sessions (W2)'],
+    ['content/cardio', 'cardio library table is W2; finisher fields are stored on cardio blocks now'],
     ['content/food', 'recipes and collections (F2)'],
     ['content/machine-guides', 'machine guides (W4)'],
-    ['content/warmups-cooldowns', 'warm-up and cool-down blocks (G2)'],
+    ['content/warmups-cooldowns', 'player UI is G2; template steps are copied onto warmup/cooldown blocks now'],
     ['content/single-sessions', 'single sessions (X3)'],
     ['content/exercise-guides', 'guide copy itself. Cues and location_hint are used to plan new exercise inserts'],
     ['content/achievements', 'achievement definitions (H6 is still computed in the app)'],
@@ -491,8 +645,12 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
 
   const typeProbe = await probe(client, 'routines', 'type');
   const activeProbe = await probe(client, 'routines', 'is_active');
+  const scheduleProbe = await probe(client, 'routines', 'support_days, weekly_schedule');
+  const dayTypeProbe = await probe(client, 'routine_days', 'type, day_key');
+  const blocksProbe = await probe(client, 'routine_day_blocks', 'id, routine_day_id, sort_order, block_type');
   const hasType = typeProbe === null;
   const hasActive = activeProbe === null;
+  const structure = planAllRoutineStructure();
   const remote = await fetchAll<RoutineRow>(
     client,
     'routines',
@@ -511,13 +669,27 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   }
   line(`  is_active column: ${hasActive ? 'present' : 'missing (paste supabase/routines_is_active.sql)'}`);
   line(`  type column: ${hasType ? 'present' : `not confirmed (${typeProbe ?? 'unknown'})`}`);
+  line(`  support_days / weekly_schedule columns: ${scheduleProbe ? `missing (paste supabase/session_blocks_w1.sql)` : 'present'}`);
+  line(`  routine_days.type / day_key: ${dayTypeProbe ? `missing (${dayTypeProbe})` : 'present'}`);
+  line(`  routine_day_blocks: ${blocksProbe ? `missing (paste supabase/session_blocks_w1.sql)` : 'present'}`);
+  line(`  Planned weeks: ${structure.weeks}`);
+  line(`  Planned days: ${structure.days} (strength days from phases; cardio and recovery days stay in weekly_schedule until W5/W6)`);
+  line(`  Planned blocks: ${structure.blocks} (warmup ${structure.warmup}, strength ${structure.strength}, cardio ${structure.cardio}, cooldown ${structure.cooldown}, stretch ${structure.stretch})`);
+  line(`  Planned strength exercise slots: ${structure.exercises}`);
+  line(`  support_days rows: ${structure.supportDays}. weekly_schedule variants: ${structure.scheduleVariants} (avoid / fine / love).`);
+  if (structure.missingWarmupTemplates > 0) {
+    line(`  Warm-up or cool-down template ids not in content/warmups-cooldowns: ${structure.missingWarmupTemplates}`);
+  }
+  if (structure.missingCardioSessions > 0) {
+    line(`  Finisher slugs not in content/cardio: ${structure.missingCardioSessions}`);
+  }
 
   if (hiddenNote('routines', remote.error, remote.hidden)) {
     line(`  Plan when a service role can read: upsert ${content.length - unmappedGoals.length - badDifficulty.length} catalogue rows by slug (id = slug).`);
     line('  Stretch rows use type = stretch. Strength rows use type = strength.');
+    line('  Then upsert weeks, days, blocks and exercise slots. Store support_days and weekly_schedule jsonb on the routine.');
     line('  Old routines whose slug is not in /content would be set is_active = false. No delete.');
-    line('  Do not live-run that flip until week/day rows load (W1). New /content routines have no sessions in the database yet.');
-    line('  Week, phase, block, step and weekly_schedule data is not loaded. Those columns are W1 / G2 / N2.');
+    line('  Do not live-run that flip until you confirm a live sync: the new slugs are extra rows, and hiding the current 14 plans would leave the logger with nothing to train from.');
     line();
     return;
   }
@@ -546,8 +718,7 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   if (wouldInsert.length > 0) {
     line(`  New slugs: ${wouldInsert.map((item) => item.slug).join(', ')}`);
   }
-  line('  Do not live-run the is_active flip until week/day rows load (W1). New /content routines have no sessions in the database yet.');
-  line('  Week, phase, block, step and weekly_schedule data is not loaded. Those columns are W1 / G2 / N2.');
+  line('  Do not live-run the is_active flip until you confirm a live sync: the new slugs are extra rows, and hiding the current 14 plans would leave the logger with nothing to train from.');
   line();
 }
 
