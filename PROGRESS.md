@@ -74,7 +74,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 ### Next step
 
-Roadmap item **3. X1 photo overhaul**, after the content loader (item 5) is in. Wait for Sacha to say "next". Do not start G1 or W1 until then.
+Wait for Sacha to say "next". First open item is **3. X1 photo overhaul** (partly done: covers and `images.licence_source` already exist). Do not start G1 or W1 until then.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -89,7 +89,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **2. N5** Light theme by default. Appearance: Light, Dark, Match phone.
 - [ ] **3. X1** Photo overhaul. Partly done: `images.licence_source` exists, and D2 gave each routine and stretch its own cover. No separate X1 pass.
 - [ ] **4. G1** Gym-first changes. Not started.
-- [ ] **5. Content loader.** Step B. Not started in this section until `npm run content:sync` exists.
+- [x] **5. Content loader.** `npm run content:sync -- --dry-run` (5 Nov 2026). Reads `/content` and plans upserts by slug. Does not delete, and does not touch sessions, sets, enrolments or profiles. Onboarding, microcopy and `content/ai` are not loaded. Cardio, food, machine guides, warm-ups, single sessions, exercise guides and achievements are skipped until their tables exist. The publishable key cannot see catalogue rows (RLS), so this dry-run does not treat an empty read as an empty library. `routines.is_active` is not in the schema, so old routines are not marked inactive yet. No migration was added.
 
 ### Stage 2: The workout core
 - [ ] **6. W1** Session types and blocks. Not started. `/content` routines already use warmup, strength, cardio and cooldown. The app still logs a flat exercise list.
@@ -234,6 +234,8 @@ Proposal when M1 (revised) starts: add a new WorkoutX id column in a migration S
 - `EXPO_PUBLIC_SHOW_DEV_TOOLS` unused; safe to ignore
 
 Restart Expo after `.env` changes.
+
+**Content sync (dry-run, writes nothing):** `npm.cmd run content:sync -- --dry-run`
 
 **Start the app (Windows, one terminal):**
 `$env:NODE_OPTIONS="--use-system-ca"; npx.cmd expo start --clear`
