@@ -23,17 +23,45 @@ const EXERCISE_EQUIPMENT = new Set([
   'band',
   'bodyweight',
 ]);
-const ROUTINE_GOALS = new Set(['strength', 'glutes_legs', 'general', 'confidence']);
-const LEARN_CATEGORIES = new Set([
-  'getting_started',
-  'gym_confidence',
-  'technique',
-  'programmes',
-  'recovery',
-  'fuelling',
-  'mindset',
-  'myths',
+const PRIMARY_MUSCLES = new Set([
+  'glutes',
+  'quads',
+  'hamstrings',
+  'adductors',
+  'calves',
+  'chest',
+  'back',
+  'shoulders',
+  'biceps',
+  'triceps',
+  'core',
 ]);
+const ROUTINE_DIFFICULTIES = new Set(['beginner', 'intermediate', 'experienced']);
+const LEARN_CATEGORY_MAP: Record<string, string> = {
+  getting_started: 'getting_started',
+  gym_confidence: 'gym_confidence',
+  technique: 'technique',
+  programmes: 'programmes',
+  how_programmes_work: 'programmes',
+  recovery: 'recovery',
+  recovery_and_sleep: 'recovery',
+  fuelling: 'fuelling',
+  mindset: 'mindset',
+  myths: 'myths',
+};
+const ROUTINE_GOAL_MAP: Record<string, string> = {
+  strength: 'strength',
+  glutes_legs: 'glutes_legs',
+  general: 'general',
+  confidence: 'confidence',
+  gym_confidence: 'confidence',
+  build_strength: 'strength',
+  glutes_and_legs: 'glutes_legs',
+  upper_body_strength: 'strength',
+  fitness_stamina: 'general',
+  strong_for_life: 'general',
+  back_to_training: 'confidence',
+};
 
 type Json = Record<string, unknown>;
 
@@ -48,7 +76,18 @@ type RoutineRow = {
   id: string;
   slug: string;
   name: string;
-  goal?: string;
+  type?: string | null;
+};
+
+type ImageRow = { id: string; url: string | null };
+type QuoteRow = { id: string; text: string; attribution: string | null; is_active: boolean | null };
+type LearnRow = { id: string; slug: string; title: string; category: string };
+
+type Guide = {
+  slug: string;
+  primary: string | null;
+  cues: string[];
+  location: string;
 };
 
 function loadEnv(file: string): void {
@@ -77,6 +116,10 @@ function text(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+function num(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
 function norm(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
 }
@@ -89,6 +132,59 @@ function hostOf(url: string): string {
   }
 }
 
+function quoteId(sortOrder: number): string {
+  return `q-${String(sortOrder).padStart(3, '0')}`;
+}
+
+function mapMuscle(raw: string): string | null {
+  const n = norm(raw);
+  if (PRIMARY_MUSCLES.has(n)) return n;
+  if (n.includes('glute')) return 'glutes';
+  if (n.includes('quad')) return 'quads';
+  if (n.includes('hamstring')) return 'hamstrings';
+  if (n.includes('adductor')) return 'adductors';
+  if (n.includes('calf')) return 'calves';
+  if (n.includes('chest') || n.includes('pec')) return 'chest';
+  if (n.includes('back') || n.includes('lat') || n.includes('trap')) return 'back';
+  if (n.includes('shoulder') || n.includes('deltoid')) return 'shoulders';
+  if (n.includes('bicep')) return 'biceps';
+  if (n.includes('tricep')) return 'triceps';
+  if (n.includes('core') || n.includes('oblique') || n.includes('ab')) return 'core';
+  return null;
+}
+
+function mapRoutineGoal(raw: string): string | null {
+  return ROUTINE_GOAL_MAP[raw] ?? null;
+}
+
+function mapLearnCategory(raw: string): string | null {
+  return LEARN_CATEGORY_MAP[raw] ?? null;
+}
+
+function mapRoutineEquipment(summary: string, tags: string[]): 'full_gym' | 'dumbbells' | 'home' {
+  const blob = `${summary} ${tags.join(' ')}`.toLowerCase();
+  if (blob.includes("can't get to the gym") || blob.includes('cannot get to the gym')) return 'home';
+  if (/\b(machine|barbell|cable|full gym)\b/.test(blob)) return 'full_gym';
+  if (blob.includes('dumbbell')) return 'dumbbells';
+  return 'full_gym';
+}
+
+function mapDifficulty(level: string): string | null {
+  if (ROUTINE_DIFFICULTIES.has(level)) return level;
+  if (level === 'advanced') return 'experienced';
+  if (level === 'beginner_to_intermediate') return 'beginner';
+  return null;
+}
+
+function clampMinutes(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
+
+function preview(items: string[], total: number): string {
+  if (items.length === 0) return '';
+  return items.join(', ') + (total > items.length ? '…' : '');
+}
+
 async function probe(client: SupabaseClient, table: string, columns: string): Promise<string | null> {
   const { error } = await client.from(table).select(columns).limit(1);
   return error ? error.message : null;
@@ -98,19 +194,70 @@ async function fetchAll<T extends Record<string, unknown>>(
   client: SupabaseClient,
   table: string,
   columns: string
-): Promise<{ rows: T[]; error: string | null }> {
+): Promise<{ rows: T[]; error: string | null; hidden: boolean }> {
   const rows: T[] = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await client.from(table).select(columns).range(from, from + 999);
-    if (error) return { rows, error: error.message };
+    if (error) return { rows, error: error.message, hidden: false };
     const page = (data ?? []) as T[];
     rows.push(...page);
-    if (page.length < 1000) return { rows, error: null };
+    if (page.length < 1000) {
+      return { rows, error: null, hidden: rows.length === 0 };
+    }
   }
 }
 
 function line(message = ''): void {
   console.log(message);
+}
+
+function hiddenNote(table: string, error: string | null, hidden: boolean): boolean {
+  if (error) {
+    line(`  Remote read failed: ${error}`);
+    return true;
+  }
+  if (hidden) {
+    line(`  Remote returned 0 rows and no error.`);
+    line(`  Select on ${table} is granted to signed-in users only, so this key cannot see existing rows.`);
+    line('  Those 0 rows do not mean the table is empty. No write is planned from this read.');
+    return true;
+  }
+  return false;
+}
+
+function loadGuides(): Map<string, Guide> {
+  const files = ['lower-body.json', 'upper-body.json', 'core-and-carries.json'];
+  const map = new Map<string, Guide>();
+  for (const file of files) {
+    const body = readJson(join('exercise-guides', file));
+    for (const item of asArray(body.guides)) {
+      const slug = text(item.slug);
+      const muscles = Array.isArray(item.primary_muscles)
+        ? (item.primary_muscles as unknown[]).map((value) => String(value))
+        : [];
+      const cues = Array.isArray(item.form_cues)
+        ? (item.form_cues as unknown[]).map((value) => String(value).trim()).filter(Boolean)
+        : [];
+      map.set(slug, {
+        slug,
+        primary: muscles.map((value) => mapMuscle(value)).find((value) => value) ?? null,
+        cues: cues.slice(0, 3),
+        location: text(item.where_to_find).trim(),
+      });
+    }
+  }
+  return map;
+}
+
+function canInsertExercise(item: Json, guide: Guide | undefined): boolean {
+  const equipment = text(item.equipment);
+  return Boolean(
+    guide &&
+      guide.primary &&
+      guide.cues.length === 3 &&
+      guide.location &&
+      EXERCISE_EQUIPMENT.has(equipment)
+  );
 }
 
 async function main(): Promise<void> {
@@ -134,6 +281,7 @@ async function main(): Promise<void> {
   line(`Remote: ${hostOf(url)}`);
   line('Key: publishable. This run only reads. It does not write.');
   line('User tables (sessions, sets, enrolments, profiles) are not touched.');
+  line('Upsert by slug. Never delete rows. Old routines not in /content would be set is_active = false.');
   line();
 
   line('Not loaded (by design)');
@@ -149,7 +297,7 @@ async function main(): Promise<void> {
     ['content/machine-guides', 'machine guides (W4)'],
     ['content/warmups-cooldowns', 'warm-up and cool-down blocks (G2)'],
     ['content/single-sessions', 'single sessions (X3)'],
-    ['content/exercise-guides', 'first-time guides (loaded with N2 once a column or table exists)'],
+    ['content/exercise-guides', 'guide copy itself. Cues and location_hint are used to plan new exercise inserts'],
     ['content/achievements', 'achievement definitions (H6 is still computed in the app)'],
   ];
   for (const [folder, why] of deferred) line(`  ${folder}: ${why}`);
@@ -177,15 +325,10 @@ async function reportImages(client: SupabaseClient): Promise<void> {
     line();
     return;
   }
-  const remote = await fetchAll<{ id: string; url: string | null }>(client, 'images', 'id, url');
-  if (remote.error || remote.rows.length === 0) {
-    if (remote.error) line(`  Remote read failed: ${remote.error}`);
-    else {
-      line('  Remote returned 0 rows and no error.');
-      line('  Select is granted to signed-in users only, so this key may not see images.');
-    }
-    line(`  Would insert ${images.length} slugs with empty url and licence_source.`);
-    line('  Existing url and licence_source are never overwritten.');
+  const remote = await fetchAll<ImageRow>(client, 'images', 'id, url');
+  if (hiddenNote('images', remote.error, remote.hidden)) {
+    line(`  Plan when a service role can read: upsert ${images.length} slugs with empty url and licence_source.`);
+    line('  Existing url and licence_source are never overwritten. alt_text can update.');
     line();
     return;
   }
@@ -202,30 +345,39 @@ async function reportImages(client: SupabaseClient): Promise<void> {
 async function reportExercises(client: SupabaseClient): Promise<void> {
   line('exercises  ←  content/exercises/strength-catalogue.json');
   const catalogue = asArray(readJson('exercises/strength-catalogue.json').exercises);
+  const extra = asArray(readJson('routines/strong-foundations-6-weeks.json').exercise_catalogue);
+  const bySlug = new Map<string, Json>();
+  for (const item of [...catalogue, ...extra]) {
+    const slug = text(item.slug);
+    if (slug && !bySlug.has(slug)) bySlug.set(slug, item);
+  }
+  const items = [...bySlug.values()];
+  const guides = loadGuides();
   const zoneError = await probe(client, 'exercises', 'id, name, equipment, zone');
   const columns = zoneError && /zone/i.test(zoneError) ? 'id, name, equipment' : 'id, name, equipment, zone';
   const remote = await fetchAll<ExerciseRow>(client, 'exercises', columns);
-  if (remote.error || remote.rows.length === 0) {
-    line(`  Content rows: ${catalogue.length}`);
-    if (remote.error) line(`  Remote read failed: ${remote.error}`);
-    else {
-      line('  Remote returned 0 rows and no error.');
-      line('  Select is granted to signed-in users only, so this key cannot see the library. Those 0 rows do not mean the table is empty.');
-    }
-    line('  No insert or update is planned. A real diff needs a signed-in session or a service role key.');
-    line('  When that read works: match slug to id, else match name and keep the existing id so session history stays linked.');
-    line('  New exercises stay blocked until primary_muscle, 3 cues and location_hint can be filled from the guides.');
+
+  line(`  Content rows: ${items.length} (${catalogue.length} catalogue, plus any extra from routine files)`);
+  line(`  Guides keyed by slug: ${guides.size}`);
+
+  if (hiddenNote('exercises', remote.error, remote.hidden)) {
+    const ready = items.filter((item) => canInsertExercise(item, guides.get(text(item.slug))));
+    const blocked = items.length - ready.length;
+    line('  When a service role can read: match slug to id, else match name and keep the existing id so session history stays linked.');
+    line(`  New rows ready to insert (guide supplies primary_muscle, 3 cues, location_hint): ${ready.length}`);
+    line(`  New rows still blocked (missing guide fields or equipment check): ${blocked}`);
+    line('  Not written from the catalogue: pattern, alternatives, media. MuscleWiki columns are left as they are.');
     line();
     return;
   }
 
-  const byId = new Map(remote.rows.map((row) => [row.id, row]));
-  const byName = new Map<string, ExerciseRow[]>();
+  const remoteById = new Map(remote.rows.map((row) => [row.id, row]));
+  const remoteByName = new Map<string, ExerciseRow[]>();
   for (const row of remote.rows) {
     const key = norm(row.name);
-    const list = byName.get(key) ?? [];
+    const list = remoteByName.get(key) ?? [];
     list.push(row);
-    byName.set(key, list);
+    remoteByName.set(key, list);
   }
 
   let matchedSlug = 0;
@@ -233,23 +385,28 @@ async function reportExercises(client: SupabaseClient): Promise<void> {
   let unchanged = 0;
   let wouldUpdate = 0;
   let wouldInsert = 0;
+  let insertBlocked = 0;
   const relinks: string[] = [];
   const badEquipment: string[] = [];
   const insertSlugs: string[] = [];
+  const blockedSlugs: string[] = [];
 
-  for (const item of catalogue) {
+  for (const item of items) {
     const slug = text(item.slug);
     const name = text(item.name);
     const equipment = text(item.equipment);
-    const bySlug = byId.get(slug);
-    const named = byName.get(norm(name)) ?? [];
-    const row = bySlug ?? named[0];
+    const row = remoteById.get(slug) ?? (remoteByName.get(norm(name)) ?? [])[0];
     if (!row) {
-      wouldInsert += 1;
-      if (insertSlugs.length < 12) insertSlugs.push(slug);
+      if (canInsertExercise(item, guides.get(slug))) {
+        wouldInsert += 1;
+        if (insertSlugs.length < 12) insertSlugs.push(slug);
+      } else {
+        insertBlocked += 1;
+        if (blockedSlugs.length < 12) blockedSlugs.push(slug);
+      }
       continue;
     }
-    if (bySlug) matchedSlug += 1;
+    if (remoteById.has(slug)) matchedSlug += 1;
     else {
       matchedName += 1;
       relinks.push(`${slug} → keep id ${row.id} (matched by name "${row.name}")`);
@@ -258,24 +415,23 @@ async function reportExercises(client: SupabaseClient): Promise<void> {
     if (!equipmentOk) badEquipment.push(`${slug}: ${equipment || '(blank)'}`);
     const nameChanged = row.name !== name;
     const equipmentChanged = equipmentOk && row.equipment !== equipment;
-    const zoneChanged =
-      'zone' in row &&
-      typeof item.zone === 'number' &&
-      row.zone !== item.zone;
+    const zoneChanged = 'zone' in row && typeof item.zone === 'number' && row.zone !== item.zone;
     if (nameChanged || equipmentChanged || zoneChanged) wouldUpdate += 1;
     else unchanged += 1;
   }
 
-  line(`  Content rows: ${catalogue.length}`);
   line(`  Remote rows: ${remote.rows.length}`);
   line(`  Matched by slug (id): ${matchedSlug}`);
   line(`  Matched by name, existing id kept: ${matchedName}`);
   line(`  Would update name, equipment or zone: ${wouldUpdate}`);
   line(`  Unchanged: ${unchanged}`);
-  line(`  Would insert: ${wouldInsert}`);
-  line('  Inserts blocked. exercises.name is not enough: primary_muscle, exactly 3 cues and location_hint are required, and those live in the exercise guides.');
+  line(`  Would insert (guide-backed): ${wouldInsert}`);
+  line(`  Inserts blocked (need primary_muscle, 3 cues, location_hint): ${insertBlocked}`);
   if (insertSlugs.length > 0) {
-    line(`  New slugs (first ${insertSlugs.length}): ${insertSlugs.join(', ')}${wouldInsert > insertSlugs.length ? '…' : ''}`);
+    line(`  New slugs (first ${insertSlugs.length}): ${preview(insertSlugs, wouldInsert)}`);
+  }
+  if (blockedSlugs.length > 0) {
+    line(`  Blocked slugs (first ${blockedSlugs.length}): ${preview(blockedSlugs, insertBlocked)}`);
   }
   if (relinks.length > 0) {
     line('  History stays on the existing id:');
@@ -290,51 +446,108 @@ async function reportExercises(client: SupabaseClient): Promise<void> {
 }
 
 async function reportRoutines(client: SupabaseClient): Promise<void> {
-  line('routines  ←  content/routines/*.json');
+  line('routines  ←  content/routines/*.json and content/stretches/stretch-routines.json');
   const files = readdirSync(join(CONTENT, 'routines')).filter((name) => name.endsWith('.json'));
-  const content = files.map((file) => {
+  const strength = files.map((file) => {
     const body = readJson(join('routines', file)).routine as Json;
+    const tags = asArray(body.tags).map((item) => text(item)).filter(Boolean);
+    const displayTags = asArray(body.display_tags).map((item) => text(item)).filter(Boolean);
     return {
       slug: text(body.slug),
       name: text(body.name),
       goal: text(body.goal),
+      mappedGoal: mapRoutineGoal(text(body.goal)),
+      difficulty: mapDifficulty(text(body.level)),
+      type: text(body.type) === 'stretch' ? 'stretch' : 'strength',
+      description: text(body.short_description),
+      lengthWeeks: num(body.length_weeks),
+      daysPerWeek: num(body.days_per_week),
+      sessionMinutes: num(body.session_minutes),
+      equipment: mapRoutineEquipment(text(body.equipment_summary), tags),
+      cover: text(body.cover_image_slug),
+      featured: text(body.equipment_summary).toLowerCase().includes("can't get to the gym") ? false : true,
+      tags: (displayTags.length > 0 ? displayTags : tags).slice(0, 2),
     };
   });
-  const remote = await fetchAll<RoutineRow>(client, 'routines', 'id, slug, name, goal');
+  const stretches = asArray(readJson('stretches/stretch-routines.json').stretch_routines).map((body) => ({
+    slug: text(body.slug),
+    name: text(body.name),
+    goal: 'general',
+    mappedGoal: 'general',
+    difficulty: 'beginner',
+    type: 'stretch',
+    description: text(body.short_description),
+    lengthWeeks: 1,
+    daysPerWeek: 1,
+    sessionMinutes: clampMinutes(num(body.duration_minutes) ?? 10, 5, 120),
+    equipment: 'full_gym' as const,
+    cover: text(body.cover_image_slug),
+    featured: true,
+    tags: asArray(body.display_tags).map((item) => text(item)).filter(Boolean).slice(0, 2),
+  }));
+  const content = [...strength, ...stretches];
+  const unmappedGoals = strength.filter((item) => !item.mappedGoal);
+  const badDifficulty = content.filter((item) => !item.difficulty);
+
+  const typeProbe = await probe(client, 'routines', 'type');
   const activeProbe = await probe(client, 'routines', 'is_active');
+  const hasType = typeProbe === null;
   const hasActive = activeProbe === null;
-  if (remote.error || remote.rows.length === 0) {
-    line(`  Content routines: ${content.length}`);
-    if (remote.error) line(`  Remote read failed: ${remote.error}`);
-    else {
-      line('  Remote returned 0 rows and no error.');
-      line('  Select is granted to signed-in users only, so this key cannot see routines. Those 0 rows do not mean the table is empty.');
-    }
-    line(`  is_active column: ${hasActive ? 'present' : `not confirmed (${activeProbe ?? 'no rows to check'})`}`);
-    line('  No routine would be marked inactive, and no routine row would be upserted, from this read.');
-    line(`  ${content.filter((item) => !ROUTINE_GOALS.has(item.goal)).length} of ${content.length} content goals are outside the current check (${[...ROUTINE_GOALS].join(', ')}).`);
-    line('  Week, phase, block and weekly_schedule data is not loaded. Those columns are W1.');
+  const remote = await fetchAll<RoutineRow>(
+    client,
+    'routines',
+    hasType ? 'id, slug, name, type' : 'id, slug, name'
+  );
+
+  line(`  Content strength routines: ${strength.length}`);
+  line(`  Content stretch routines: ${stretches.length}`);
+  line(`  Goal mapping: ${strength.length - unmappedGoals.length} of ${strength.length} map onto strength | glutes_legs | general | confidence`);
+  line('  Difficulty map: beginner_to_intermediate → beginner, advanced → experienced.');
+  if (unmappedGoals.length > 0) {
+    line(`  Unmapped goals (row upsert skipped): ${unmappedGoals.map((item) => `${item.slug}=${item.goal}`).join(', ')}`);
+  }
+  if (badDifficulty.length > 0) {
+    line(`  Unmapped difficulty (row upsert skipped): ${badDifficulty.map((item) => item.slug).join(', ')}`);
+  }
+  line(`  is_active column: ${hasActive ? 'present' : 'missing (paste supabase/routines_is_active.sql)'}`);
+  line(`  type column: ${hasType ? 'present' : `not confirmed (${typeProbe ?? 'unknown'})`}`);
+
+  if (hiddenNote('routines', remote.error, remote.hidden)) {
+    line(`  Plan when a service role can read: upsert ${content.length - unmappedGoals.length - badDifficulty.length} catalogue rows by slug (id = slug).`);
+    line('  Stretch rows use type = stretch. Strength rows use type = strength.');
+    line('  Old routines whose slug is not in /content would be set is_active = false. No delete.');
+    line('  Do not live-run that flip until week/day rows load (W1). New /content routines have no sessions in the database yet.');
+    line('  Week, phase, block, step and weekly_schedule data is not loaded. Those columns are W1 / G2 / N2.');
     line();
     return;
   }
+
   const contentSlugs = new Set(content.map((item) => item.slug));
   const stale = remote.rows.filter((row) => !contentSlugs.has(row.slug) && !contentSlugs.has(row.id));
-  const goalBlocked = content.filter((item) => !ROUTINE_GOALS.has(item.goal));
+  const existing = new Set(remote.rows.flatMap((row) => [row.slug, row.id]));
+  const wouldInsert = content.filter(
+    (item) => item.mappedGoal && item.difficulty && !existing.has(item.slug)
+  );
+  const wouldUpdate = content.filter(
+    (item) => item.mappedGoal && item.difficulty && existing.has(item.slug)
+  );
 
-  line(`  Content routines: ${content.length}`);
   line(`  Remote routines: ${remote.rows.length}`);
-  line(`  is_active column: ${hasActive ? 'present' : 'missing'}`);
+  line(`  Would insert catalogue rows: ${wouldInsert.length}`);
+  line(`  Would update catalogue rows: ${wouldUpdate.length}`);
   if (hasActive) {
     line(`  Would set is_active = false on ${stale.length} routine(s) whose slug is not in /content. No delete.`);
   } else {
-    line(`  Would set is_active = false on ${stale.length} routine(s) not in /content, but the column does not exist.`);
-    line('  No migration is included. Say if you want one. Nothing is deleted.');
+    line(`  Would set is_active = false on ${stale.length} routine(s) not in /content, after supabase/routines_is_active.sql.`);
   }
   if (stale.length > 0) {
     line(`  Not in /content: ${stale.map((row) => row.slug || row.id).join(', ')}`);
   }
-  line(`  Row upsert skipped for ${goalBlocked.length} of ${content.length}. Content goals are not in the current check (${[...ROUTINE_GOALS].join(', ')}).`);
-  line('  Week, phase, block and weekly_schedule data is not loaded. Those columns are W1.');
+  if (wouldInsert.length > 0) {
+    line(`  New slugs: ${wouldInsert.map((item) => item.slug).join(', ')}`);
+  }
+  line('  Do not live-run the is_active flip until week/day rows load (W1). New /content routines have no sessions in the database yet.');
+  line('  Week, phase, block, step and weekly_schedule data is not loaded. Those columns are W1 / G2 / N2.');
   line();
 }
 
@@ -349,10 +562,50 @@ async function reportQuotes(client: SupabaseClient): Promise<void> {
     line();
     return;
   }
-  const sample = quotes[0];
-  const idKind = sample ? typeof sample.id : 'none';
-  line(`  Content id type: ${idKind}. The live seed uses text ids such as q-001, and quotes have no slug.`);
-  line('  Upserting these ids would add a second list beside the current seed. Skipped until a later step agrees the id.');
+
+  const remote = await fetchAll<QuoteRow>(client, 'quotes', 'id, text, attribution, is_active');
+  if (hiddenNote('quotes', remote.error, remote.hidden)) {
+    line('  Plan: upsert by q-NNN from sort_order (not the numeric content id), so the app order matches /content.');
+    line('  Match existing rows by text first and keep that id. Deactivate leftovers with is_active = false. No delete.');
+    line();
+    return;
+  }
+
+  const byId = new Map(remote.rows.map((row) => [row.id, row]));
+  const byText = new Map(remote.rows.map((row) => [norm(row.text), row]));
+  const keep = new Set<string>();
+  let matchedText = 0;
+  let matchedId = 0;
+  let wouldInsert = 0;
+  let wouldUpdate = 0;
+
+  for (const item of quotes) {
+    const preferred = quoteId(num(item.sort_order) ?? 0);
+    const body = text(item.text);
+    const byExactText = byText.get(norm(body));
+    const row = byExactText ?? byId.get(preferred);
+    if (!row) {
+      wouldInsert += 1;
+      keep.add(preferred);
+      continue;
+    }
+    keep.add(row.id);
+    if (byExactText) matchedText += 1;
+    else matchedId += 1;
+    const nextActive = item.is_active !== false;
+    if (row.text !== body || (row.attribution ?? 'Ascenda') !== (text(item.attribution) || 'Ascenda') || row.is_active !== nextActive) {
+      wouldUpdate += 1;
+    }
+  }
+  const stale = remote.rows.filter((row) => !keep.has(row.id));
+
+  line(`  Remote rows: ${remote.rows.length}`);
+  line(`  Matched by text, existing id kept: ${matchedText}`);
+  line(`  Matched by q-NNN from sort_order: ${matchedId}`);
+  line(`  Would insert: ${wouldInsert}`);
+  line(`  Would update text, attribution or is_active: ${wouldUpdate}`);
+  line(`  Would set is_active = false on ${stale.length} leftover quote(s). No delete.`);
+  line('  Numeric content ids are never written. sort_order is not a column yet, so q-NNN follows sort_order.');
   line();
 }
 
@@ -363,21 +616,44 @@ async function reportLearn(client: SupabaseClient): Promise<void> {
   const categories = asArray(file.categories).map((item) => text(item.id));
   const error = await probe(client, 'learn_articles', 'id, slug, title, category');
   line(`  Content articles: ${articles.length}`);
+  line(`  Content categories: ${categories.join(', ')}`);
   if (error) {
     line(`  Table not usable: ${error}`);
     line('  Skipped. The app still uses the bundled 16 articles.');
     line();
     return;
   }
-  const unknown = [...new Set(articles.map((item) => text(item.category)))].filter(
-    (category) => category && !LEARN_CATEGORIES.has(category)
-  );
-  line(`  Content categories: ${categories.join(', ')}`);
+
+  const mapped = articles.map((item) => ({
+    slug: text(item.slug),
+    category: mapLearnCategory(text(item.category)),
+    raw: text(item.category),
+  }));
+  const unknown = [...new Set(mapped.filter((item) => !item.category).map((item) => item.raw))];
+  const ready = mapped.filter((item) => item.category);
+  const remote = await fetchAll<LearnRow>(client, 'learn_articles', 'id, slug, title, category');
+  const linksProbe = await probe(client, 'learn_links', 'article_id, routine_id, exercise_id');
+
   if (unknown.length > 0) {
-    line(`  Upsert skipped. These categories are not in the current check: ${unknown.join(', ')}.`);
+    line(`  Unmapped categories: ${unknown.join(', ')}`);
   } else {
-    line(`  Would upsert ${articles.length} articles by slug. Bodies stay as written in /content.`);
+    line('  Category map: how_programmes_work → programmes, recovery_and_sleep → recovery.');
   }
+
+  if (hiddenNote('learn_articles', remote.error, remote.hidden)) {
+    line(`  Plan when a service role can read: upsert ${ready.length} articles by slug (id = slug). Bodies stay as written in /content.`);
+    line(`  learn_links: ${linksProbe ? `skipped (${linksProbe})` : 'related_routines and related_exercises would insert missing pairs. Existing links are not deleted.'}`);
+    line();
+    return;
+  }
+
+  const existing = new Set(remote.rows.flatMap((row) => [row.slug, row.id]));
+  const insert = ready.filter((item) => !existing.has(item.slug)).length;
+  const update = ready.filter((item) => existing.has(item.slug)).length;
+  line(`  Remote articles: ${remote.rows.length}`);
+  line(`  Would insert: ${insert}`);
+  line(`  Would update: ${update}`);
+  line(`  learn_links: ${linksProbe ? `skipped (${linksProbe})` : 'related_routines and related_exercises would insert missing pairs. Existing links are not deleted.'}`);
   line();
 }
 
@@ -392,7 +668,8 @@ async function reportChallenges(client: SupabaseClient): Promise<void> {
     line();
     return;
   }
-  line('  Upsert skipped. The live table requires start_date and end_date. /content has neither: the window is stored on the join (H8).');
+  line('  Upsert skipped. The live table requires start_date, end_date and routine_id.');
+  line('  /content has none of those: the window lives on the join (H8), and a challenge runs alongside any routine.');
   line('  Existing challenge rows are left as they are. No countdown fields are added.');
   line();
 }
