@@ -143,6 +143,14 @@ export const ROUTINE_GOAL_LABELS: Record<RoutineGoal, string> = {
   confidence: 'Gym confidence',
 };
 
+/** Short goal word for eyebrows so they stay two tokens (e.g. "Intermediate · Strength"). */
+export const ROUTINE_GOAL_EYEBROWS: Record<RoutineGoal, string> = {
+  strength: 'Strength',
+  glutes_legs: 'Glutes',
+  general: 'Stronger',
+  confidence: 'Confidence',
+};
+
 export const ROUTINE_EQUIPMENT_LABELS: Record<RoutineEquipment, string> = {
   full_gym: 'Full gym',
   dumbbells: 'Dumbbells',

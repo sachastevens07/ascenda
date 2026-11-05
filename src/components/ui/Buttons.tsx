@@ -11,8 +11,8 @@ type ButtonProps = {
   disabled?: boolean;
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
-  /** Plum by default. Coral is not used for primary buttons. */
-  tone?: 'brand' | 'accent';
+  /** Outline only for paired choices such as Camera / Library. */
+  appearance?: 'soft' | 'outline';
 };
 
 export function PrimaryButton({
@@ -21,11 +21,10 @@ export function PrimaryButton({
   disabled = false,
   loading = false,
   style,
-  tone = 'brand',
 }: ButtonProps) {
   const { colours, radius } = useTheme();
-  const fill = tone === 'accent' ? colours.accent : colours.brand;
-  const ink = tone === 'accent' ? colours.onAccent : colours.onBrand;
+  const fill = colours.brand;
+  const ink = colours.onBrand;
   const busy = disabled || loading;
   return (
     <Pressable
@@ -57,9 +56,11 @@ export function SecondaryButton({
   disabled = false,
   loading = false,
   style,
-}: Omit<ButtonProps, 'tone'>) {
+  appearance = 'soft',
+}: ButtonProps) {
   const { colours, radius } = useTheme();
   const busy = disabled || loading;
+  const outline = appearance === 'outline';
   return (
     <Pressable
       onPress={onPress}
@@ -69,10 +70,10 @@ export function SecondaryButton({
       style={({ pressed }) => [
         styles.base,
         {
-          backgroundColor: colours.surface,
+          backgroundColor: outline ? colours.surface : colours.brandSoft,
           borderRadius: radius.full,
-          borderWidth: 1.5,
-          borderColor: colours.brand,
+          borderWidth: outline ? 1.5 : 0,
+          borderColor: outline ? colours.brand : 'transparent',
         },
         pressed && !busy && styles.pressed,
         busy && styles.disabled,
@@ -94,7 +95,7 @@ export function TextButton({
   onPress,
   disabled = false,
   style,
-}: Omit<ButtonProps, 'tone' | 'loading'>) {
+}: Omit<ButtonProps, 'loading' | 'appearance'>) {
   const { colours } = useTheme();
   return (
     <Pressable
@@ -115,7 +116,7 @@ export function DestructiveTextButton({
   onPress,
   disabled = false,
   style,
-}: Omit<ButtonProps, 'tone' | 'loading'>) {
+}: Omit<ButtonProps, 'loading' | 'appearance'>) {
   const { colours } = useTheme();
   return (
     <Pressable

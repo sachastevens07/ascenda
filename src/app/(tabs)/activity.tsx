@@ -613,12 +613,14 @@ export default function ActivityScreen() {
                         <View style={styles.photoActions}>
                           <SecondaryButton
                             label="Camera"
+                            appearance="outline"
                             onPress={() => void pickPhoto('camera')}
                             disabled={isPhotoBusy}
                             style={styles.photoAction}
                           />
                           <SecondaryButton
                             label="Library"
+                            appearance="outline"
                             onPress={() => void pickPhoto('library')}
                             disabled={isPhotoBusy}
                             style={styles.photoAction}

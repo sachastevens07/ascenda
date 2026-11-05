@@ -57,6 +57,7 @@ import { formatSetsAndReps } from '@/lib/programmes';
 import {
   DIFFICULTY_LABELS,
   ROUTINE_EQUIPMENT_LABELS,
+  ROUTINE_GOAL_EYEBROWS,
   ROUTINE_GOAL_LABELS,
   currentEnrolmentWeek,
   describeRoutineError,
@@ -455,7 +456,7 @@ export default function RoutineDetailScreen() {
         cover={cover}
         letter={routine.name}
         title={routine.name}
-        eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · ${ROUTINE_GOAL_LABELS[routine.goal]}`}
+        eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[routine.goal]}`}
         onBack={goBack}
         menu={
           <View ref={menuRef} collapsable={false}>

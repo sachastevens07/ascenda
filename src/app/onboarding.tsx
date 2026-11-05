@@ -523,6 +523,7 @@ export default function OnboardingScreen() {
               />
               <SecondaryButton
                 label="No, I’m under 18"
+                appearance="outline"
                 onPress={() => setAgeStep('under-18')}
                 disabled={isSaving}
               />
@@ -546,6 +547,7 @@ export default function OnboardingScreen() {
               </Pressable>
               <SecondaryButton
                 label="Go back"
+                appearance="outline"
                 onPress={() => {
                   setError(null);
                   setAgeStep('ask');

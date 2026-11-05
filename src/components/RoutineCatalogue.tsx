@@ -40,7 +40,7 @@ import { openPaywall } from '@/lib/paywall';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
   DIFFICULTY_LABELS,
-  ROUTINE_GOAL_LABELS,
+  ROUTINE_GOAL_EYEBROWS,
   collectRoutineTags,
   formatTagLabel,
   endActiveEnrolment,
@@ -375,7 +375,7 @@ function CatalogueCard({
   const image = coverImage(summary);
   const eyebrow = stretch
     ? formatTagLabel(summary.tags[0] ?? 'Stretch')
-    : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_LABELS[summary.goal]}`;
+    : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[summary.goal]}`;
   const meta = stretch
     ? `${summary.session_minutes} min`
     : `${summary.length_weeks} weeks · ${summary.days_per_week} days / week`;

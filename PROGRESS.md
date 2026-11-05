@@ -1,8 +1,10 @@
 # Progress
 
-Handoff for a new agent. Read `AGENTS.md` first, then `DESIGN.md` section 6. Current phase is **v2.2**. Do not start gym-buddy, AI or food. Build **one** v2.2 task at a time, in listed order; stop so Sacha can test on her phone. SQL is pasted by hand (this repo cannot see the remote database). Never delete sessions or sets. Ask before adding fonts or a notifications library (`expo-notifications`, Fraunces and Manrope are already in the project).
+Handoff for a new agent. Read `AGENTS.md` first, then `DESIGN.md` sections 6, 8 and 9. Current work is the **Roadmap to completion** below. Do not start gym-buddy, AI or food. Build **one** roadmap item at a time; stop so Sacha can test on her phone. SQL is pasted by hand (this repo cannot see the remote database). Never delete sessions or sets. Ask before adding fonts or a notifications library (`expo-notifications`, Fraunces and Manrope are already in the project).
 
-Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sacha.
+**Briefs replaced 5 Nov 2026** from `AGENTS_2.md` and `DESIGN_2.md`. MuscleWiki mentions were switched to exercise media (WorkoutX). The safety disclaimer stays the international v2 already in the app (no GP, 999 or solicitor). Hard paywall, product vision, Group 7 (X1 to X7), G1/G2, v2.3 to v2.5 and DESIGN section 9 are now in the project files.
+
+Git: `main`, ahead of origin. User is Sacha.
 
 ---
 
@@ -38,7 +40,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **S12** Email verification UI + deep link. Dashboard Confirm email still **off**. v2.2 says S12 stays last; it is already built, do not redo it.
 
 **v2.2 Group 1–3 (all 3 Nov 2026)**
-- **D1** Tester tools behind `showDevTools` (long-press Profile version once). Primary buttons plum `brand`. Tags sentence case, max 2. Unique routine ids.
+- **D1** Tester tools behind `showDevTools` (long-press Profile version once). Primary buttons plum `brand` only. Secondary buttons `brandSoft` (outline for paired choices). Tags sentence case, max 2, one line. Short goal eyebrows. Unique routine ids.
 - **N5** Default theme light. Profile → Appearance: Light / Dark / Match phone. `profiles.theme_preference`.
 - **N3** Next-session / Start session opens the logger. Swap, remove, add/remove set, different day live there. Timer starts on open. End session discards. No add-exercise on routine sessions. Weighted sets need a weight.
 - **N1** Full safety text in `src/lib/disclaimer.ts` (v2, international). Onboarding checkbox, re-prompt on version change, Profile About, first-session sheet, one-line on routine/stretch detail.
@@ -74,7 +76,9 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 ### Next step
 
-Wait for Sacha to say "next". First open item is **3. X1 photo overhaul** (partly done: covers and `images.licence_source` already exist). Do not start G1 or W1 until then.
+**Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
+
+Current: **1. D1** done this pass. Wait for Sacha to say "next". Then **2. N5**.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -85,7 +89,7 @@ C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as fut
 Checked against the code and this file on 5 Nov 2026. Ticked items are in the app. Notes say what is only partly there. `/content` is the source of truth and is not loaded yet.
 
 ### Stage 1: Look and feel
-- [x] **1. D1** Global design fixes. Dev tools are a long-press on the version. Primary buttons are plum. Tags are sentence case. No duplicate routine ids.
+- [x] **1. D1** Global design fixes (final-phase pass 5 Nov 2026). Dev tools are a long-press on the version. Primary buttons are plum only (no coral tone). Secondary buttons are `brandSoft` fill; outline is only for paired choices (Camera / Library, under-18). Tags are sentence case, max 2, one line. Eyebrows use a short goal word ("Intermediate · Strength"). `one-spot-6` and `one-spot-2` stay as two different plans. No user-facing em dashes.
 - [x] **2. N5** Light theme by default. Appearance: Light, Dark, Match phone.
 - [ ] **3. X1** Photo overhaul. Partly done: `images.licence_source` exists, and D2 gave each routine and stretch its own cover. No separate X1 pass.
 - [ ] **4. G1** Gym-first changes. Not started.

@@ -1,6 +1,6 @@
 # Ascenda design direction (v1)
 
-Status: sections 1 to 5 approved and partly built. Section 6 (design pass 2, 3 November 2026) is the current work and overrides anything earlier that it contradicts. Feature and data changes are specified in AGENTS.md phase v2.2.
+Status: sections 1 to 5 approved and partly built. Later sections override earlier ones where they disagree (section 9, hard paywall, overrides all Pro badge and locked preview guidance). Feature and data changes are specified in AGENTS.md.
 
 References analysed: Female Fitness (Leap), Sweat, WEGLOW.
 Current screens analysed: Home, Programmes (Routines, Stretches), routine detail, session detail, logger, Planner, Activity (Progress, Achievements), Profile.
@@ -205,24 +205,21 @@ Category colours (eyebrow labels in Planner and cards): Strength `brand`, Stretc
 
 ### 3.2 Typography
 
-- **Display font (serif):** Fraunces (`@expo-google-fonts/fraunces`), weights 400 and 600, plus 400 italic for the daily quote. Used for Home greeting, hero titles, onboarding questions, paywall headline, completion screens, Learn titles and the quote card (`displaySm`, italic). Letter-spacing about -0.3. No faux bold or italics.
-- **UI font (sans):** Manrope (`@expo-google-fonts/manrope`), weights 400, 500, 600, 700 and 800. Everything else, including buttons, tab labels, chips, badges, logger set rows and kg/reps inputs.
-- Load all weights in the root layout with `useFonts`. Keep the splash screen up until they are ready. Each weight is a separate `fontFamily` (for example `Manrope_600SemiBold`). Never set `fontWeight` to pick a weight: that breaks on Android.
-- Apply fonts only through `AppText` (`variant` matches the tokens below) or the matching `type` token on `TextInput`.
+- **Display font (serif):** one elegant serif for screen titles on Home, hero titles on routine pages, onboarding headlines, paywall headline and big achievement moments. Suggested: Fraunces or DM Serif Display. Needs `expo-font` plus a Google Fonts package; ask before adding.
+- **UI font (sans):** keep the current sans (or Inter if adding fonts is approved) for everything else.
 
-| Token | Font | Size / line | Notes |
-|---|---|---|---|
-| `display` | Fraunces 400 | 34 / 40 | Home greeting, hero titles, onboarding questions, paywall headline, completion screens, Learn titles |
-| `displaySm` | Fraunces 400 | 26 / 32 | Section heroes, quote card (italic) |
-| `title1` | Manrope 700 | 28 / 34 | Screen titles |
-| `title2` | Manrope 700 | 22 / 28 | Section and card titles |
-| `title3` | Manrope 600 | 18 / 24 | List titles, exercise names |
-| `body` | Manrope 400 | 16 / 24 | Body copy |
-| `bodyStrong` | Manrope 600 | 16 / 24 | Buttons, emphasis |
-| `bodySm` | Manrope 400 | 14 / 20 | Metadata |
-| `caption` | Manrope 500 | 12 / 16 | Captions, tab labels |
-| `eyebrow` | Manrope 700 | 11 / 14 | Uppercase, letter-spacing 1.4 |
-| `number` | Manrope 700 | 32 / 36 | Stats, timers, ring centres; `fontVariant: ['tabular-nums']` |
+| Style | Font | Size / line | Weight | Use |
+|---|---|---|---|---|
+| `display` | Serif | 34 / 40 | Regular | Home title, hero titles, onboarding headlines |
+| `title1` | Sans | 28 / 34 | Bold | Screen titles (Programmes, Planner, Activity, Profile) |
+| `title2` | Sans | 22 / 28 | Semibold | Card titles on detail pages, section titles |
+| `title3` | Sans | 18 / 24 | Semibold | Card titles in lists, exercise names |
+| `body` | Sans | 16 / 22 | Regular | Body copy |
+| `bodyStrong` | Sans | 16 / 22 | Semibold | Emphasis, button text |
+| `bodySm` | Sans | 14 / 20 | Regular | Metadata, descriptions |
+| `caption` | Sans | 12 / 16 | Medium | Captions, tab labels |
+| `eyebrow` | Sans | 11 / 14 | Semibold, uppercase, letter-spacing 1.2 | Category labels, section kickers |
+| `number` | Sans | 32 / 36 | Bold, tabular figures | Stats, ring centres |
 
 Metadata uses `·` as separator: "6 weeks · 3 days a week · 40 min".
 
@@ -369,7 +366,7 @@ Each item below maps to a task in AGENTS.md (in brackets).
 - **Tags and chips:** sentence case ("Beginner friendly", "Busy gym friendly"), max 2 per card, single line, truncate the rest. Filter chips keep "All" first.
 - **Eyebrows:** keep to 2 short words or shorten the goal label (e.g. "INTERMEDIATE · STRENGTH", not "BUILD STRENGTH" truncated).
 - **Theme:** light is the default whatever the phone's setting; dark only when chosen in Profile → Appearance (Light / Dark / Match phone).
-- **Typography:** Fraunces for display moments (Home greeting, hero titles, onboarding questions, paywall headline, completion screens, Learn titles, quote card). Manrope for everything else. Tokens and loading rules are in 3.2.
+- **Typography:** add the display serif (needs approval of a font package) for: Home greeting, hero titles on routine/stretch/Learn pages, onboarding questions, paywall headline, completion screens. Everything else stays sans.
 - **Navigation:** five tabs: Home, Programmes, Planner, Activity, Learn. Profile is a 36 px avatar (initials) at the top-left of each tab's header; tapping opens Profile as a pushed screen.
 
 ### 6.2 Photos (D2)
@@ -459,3 +456,206 @@ Each item below maps to a task in AGENTS.md (in brackets).
 
 ### 6.13 New components to add
 QuoteCard, WelcomeBackCard, StreakCard (with week circles), RestWeekBanner, ReminderTimeChip, ArticleCard, CategoryTile, SafetyNotice (inline one-line link), DisclaimerSheet, GoalChipGroup (multi-select with max and "Main" label), SegmentedThemePicker.
+
+---
+
+## 7. The complete week and Food (AGENTS.md v2.3 and v2.4)
+
+### 7.1 Session types
+- Three types, each with a category colour used in eyebrows, planner rows, rings and icons:
+  - Strength: `brand` (plum), icon dumbbell.
+  - Cardio: `#C8644F` deep coral (darker than `accent` so it reads as text), icon heart or treadmill.
+  - Recovery: `#4F8A86` sage teal (already the stretch colour), icon leaf or stretch figure.
+- Weekly ring (Home, Activity): one main ring for total sessions; below it, three small counts with type icons ("2 strength · 1 cardio · 1 recovery").
+
+### 7.2 Blocks inside a session (G2, W1)
+- The logger shows blocks in order as collapsible sections with an eyebrow header: "WARM-UP · 5 MIN", "STRENGTH", "CARDIO FINISHER · 10 MIN", "COOL-DOWN · 5 MIN".
+- Warm-up and cool-down: compact list of moves with durations; "Start warm-up" opens the timed player (stretch player components); "Skip" TextButton on the header. A completed block collapses with a `success` tick.
+- Cardio finisher: a card with machine thumbnail, "10 min · bike · effort 6/10", "Start" opens the cardio player.
+
+### 7.3 Cardio player (W3)
+- Top: machine name eyebrow, session title (`title1`), "First time on the bike?" link to the machine guide.
+- Centre: large ProgressRing with elapsed or remaining time (`number` style, 56 to 64 px), current interval label ("EASY · 2:00") and next interval preview.
+- Settings card: "Aim for: speed 5 km/h · incline 8%" (or level, resistance), and effort target "Should feel 5 to 6 out of 10: you can still chat".
+- Controls: PrimaryButton Pause / Resume; TextButton Skip interval; "⋯" End session.
+- Finish sheet: minutes (pre-filled), optional settings steppers, effort picker 1 to 10 as a row of tappable dots with labels at 2, 5, 8, PrimaryButton "Save".
+- Keep the screen awake during cardio and show a lock-screen-friendly timer (if the library allows).
+
+### 7.4 Machine guides (W4)
+- Page layout: HeroImage of the machine in a gym, eyebrow "MACHINE GUIDE", title.
+- Sections as numbered steps with small illustrations or photos: Find it, Set it up, Start, While you're on it, Stop safely, Etiquette.
+- "Beginner settings" card with suggested ranges.
+- Footer: SafetyNotice line.
+
+### 7.5 Train tab (renamed Programmes, F1)
+- Segmented control: Routines · Cardio · Stretches · Exercises.
+- Routine rows add a small type summary under the metadata: "3 strength · 1 cardio · 1 recovery".
+- Cardio tab: rows with machine thumbnail, title, "25 min · steady · treadmill", Pro badge where relevant; filter chips by machine and style.
+
+### 7.6 Planner
+- Rows show the type eyebrow in its colour (STRENGTH, CARDIO, RECOVERY).
+- Optional sessions (weekend cardio) show an "OPTIONAL" chip in `surfaceMuted`.
+
+### 7.7 Routine detail
+- "Your week" strip under the stats row: Mon to Sun circles with type icons, so the weekly shape is visible at a glance.
+- Day rows show type icon, day name and duration; expanding shows its blocks.
+
+### 7.8 Food tab (F1 to F3)
+- Header: avatar, display serif title "Food", search icon, Favourites heart.
+- Meal-type tiles: horizontal carousel of tall tiles with a food photo and a display serif label (Breakfast, Lunch, Dinner, Snacks, Smoothies), in the style of the reference app but in Ascenda colours.
+- Collections: SectionHeader + "See all" + carousel of RecipeCards, one carousel per collection.
+- "Fuel for today" card at the top if today has a training session (F4).
+- Empty or loading states use soft placeholders, never blank boxes.
+
+### 7.9 RecipeCard and recipe page
+- RecipeCard: 4:3 food photo (`lg` radius), heart top-right on a translucent circle, Pro badge top-left if Pro, eyebrow meal type, `title3` title (2 lines max), `bodySm inkMuted` "Prep 15 min · Serves 2".
+- Recipe page:
+  - HeroImage with title overlaid; heart and "⋯" (Add to shopping list, Share) on the hero.
+  - Meta row: prep, cook, servings with a stepper that scales quantities.
+  - Dietary tag chips and an "Allergens" line.
+  - Ingredients: ListRows with tick boxes, quantity in `bodyStrong`, ingredient in `body`.
+  - Method: numbered steps, each a short paragraph with a step number circle.
+  - Nutrition per serving: collapsible card (calories, protein, carbs, fat, fibre) unless hidden in settings.
+  - Disclaimer: small `bodySm inkMuted` paragraph at the bottom.
+- Photography: bright, natural light, top-down or 45°, consistent warm grade, real dish matching the recipe.
+
+### 7.10 Shopping list (F5)
+- Grouped by aisle with sticky aisle headers (same pattern as Planner day headers), tick boxes, swipe to delete, "Clear ticked" TextButton, recipe chips at the top showing which recipes are included.
+
+### 7.11 New components
+SessionTypeIcon, TypeRing (main ring plus type counts), BlockSection (collapsible with eyebrow header), CardioPlayer, EffortPicker, MachineGuide, WeekShapeStrip, MealTypeTile, RecipeCard, IngredientRow, MethodStep, NutritionCard, ShoppingListRow.
+
+---
+
+## 8. Reference-led redesign (4 November 2026; AGENTS.md Group 7)
+
+References: WEGLOW (home, programmes, workouts, nutrition, recipe lists), a women's fitness app onboarding, Hevy (logger).
+What to take: warmth, smiling women, depth of sections, colourful food photography, varied engaging onboarding inputs, Hevy's fast and flexible logging.
+What not to take: weight-loss predictions, BMI, height and body-type pickers, invented user counts or reviews, ads, countdown offers, calorie-based recipe collections, trainer personas we don't have.
+
+### 8.1 Photography (X1)
+- Mood: bright, warm, airy. Natural daylight, light walls and floors, plants, clean gyms and studios.
+- People: women only, smiling, many looking towards the camera (welcoming) and some candid mid-movement; mix of ages (18 to 40s), body sizes and ethnicities; fitted activewear, not underwear-like; no midriff-focused crops, no men in frame, no dark or moody gyms.
+- Grade: warm, slightly lifted shadows, soft contrast; same grade across every image.
+- Crops: hero images 4:5 or 3:4 with space for overlaid text; cards 16:10 or 4:3; tiles 1:1.
+- Food: bright, colourful, top-down or 45 degrees, real dish matching the recipe, light or wooden surfaces.
+
+### 8.2 Home (X2)
+1. **Header:** avatar (left), search and calendar icons (right).
+2. **Welcome hero:** full-bleed photo of a smiling woman (about 45% of screen height), display serif headline, one short line, PrimaryButton. States: first visit ("Welcome to Ascenda" / "Start your first session"), normal (next session), welcome back (H2), rest day ("Rest day. Fancy a 10-minute stretch?").
+3. **This week card:** segmented Workouts | Meals (Meals appears once Food exists); week strip Mon to Sun with today filled in `brand` and dots on planned days; below it today's planned session as a photo card with title and time, or an empty state (image, "Nothing planned today", "Explore programmes").
+4. **Daily quote** (QuoteCard).
+5. **Featured for you** carousel (ImageCards with smiling-women photos).
+6. **Challenge card:** image left, eyebrow "CHALLENGE", title, "Starts any Monday", TextButton "Join".
+7. **Refer a friend banner:** `accentSoft` background, display serif title "Train with a friend", one line about the offer, white pill button "Share your link", photo of a smiling woman with a phone on the right, dismiss "×".
+8. **Your week so far:** 2 x 2 StatTiles (sessions, PBs, minutes, awards) with a small "Share" pill that creates a share image.
+9. **Awards preview:** the 3 most recent or next badges, "See all".
+10. **Stretch today** carousel.
+11. **Personalised for you:** mixed carousel of Learn articles (and recipes later), with an "Article" or "Recipe" chip.
+
+### 8.3 Programmes browse (X3)
+- Segmented control at the top: Routines · Stretches · Exercises (later Cardio).
+- **Routines** becomes a browse page:
+  1. Current routine card (if any), compact with progress bar.
+  2. **Recommended for you:** large photo card (4:3) with title and metadata overlaid on a gradient, type icons, Pro badge if Pro.
+  3. **Build my plan:** wide `brandSoft` pill button with a sparkle or search icon.
+  4. **Training styles:** grid of photo tiles with labels overlaid (Gym confidence wide tile on top, then 2-column: Strength, Glutes and legs, Upper body, Full body, Cardio, Stretch and recovery, Busy gym, Days you can't get to the gym). Each opens a filtered list.
+  5. Carousels with SectionHeader and "See all": Start here, Popular (only once real data exists), Pro programmes, Single sessions (3:4 portrait cards with play button and duration).
+- Card overlays: small type icons top-left (strength, cardio, recovery), "New" chip where relevant, Pro badge, title and "6 weeks · 3 days" on the gradient.
+- No trainer row for now. A "Coach reviewed" chip can appear on reviewed content.
+
+### 8.4 Logger (X4)
+- **Header row:** chevron-down (minimise), "Log session" or the session name, live timer, PrimaryButton "Finish" (small, top right).
+- **Stats row:** Duration · Volume (kg) · Sets, in `caption` labels with `title3` values; optional small muscle map on the right (later).
+- **Exercise card:**
+  - Row 1: 40 px thumbnail (exercise media (WorkoutX) still), exercise name in `title3` `brand` (tap for guide), role eyebrow above it, "⋯" on the right (Swap, Remove, Change target, Reorder, Superset later).
+  - Row 2 chips: "Rest: 1 min 30 s" (tap opens a picker; saved per exercise) and "Note" (opens a short text sheet; saved per exercise and shown in `inkMuted` under the name next time).
+  - Target line: "3 × 10 to 12 · 2 reps in reserve".
+  - Table header (`eyebrow`): SET · PREVIOUS · KG · REPS · ✓.
+  - Rows: set number (or "W" chip for warm-up sets), previous in `inkMuted` ("8 kg × 10"), kg and reps cells (`surfaceMuted`, 44 px tall, numeric keypad), tick button 44 px. Done rows get `brandSoft` fill and a `success` tick. Suggested weight chip ("+1 kg") sits next to the kg cell on the first working set.
+  - "+ Add set" full-width TextButton row in `surfaceMuted`.
+- **Reorder:** long-press an exercise card to lift it (slight scale and shadow, haptic), drag to a new position; collapsed cards while dragging.
+- **Bottom of list:** PrimaryButton "+ Add exercise"; secondary row: "Session settings" and "Discard" (`danger` text).
+- **Minimised bar:** dark `surfaceInverse` pill above the tab bar on every screen: session name, timer, "Resume".
+- **PB moment:** when a set beats a PB, the row briefly glows `accentSoft`, a small "New PB" chip appears and a light haptic fires. No confetti explosions.
+
+### 8.5 Onboarding v2 (X5)
+- **Shell:** back chevron, thin progress bar at the top (`brand`), question in display serif (28/34) centred or left-aligned consistently, optional helper card with an icon ("Why we ask"), sticky PrimaryButton "Continue" (disabled until answered). Screen transitions slide and fade (250 ms); selections give a light haptic and a gentle scale bounce.
+- **Input types to mix:** icon cards (single or multi-select), wheel picker, big number selector, slider with labelled stops, agree/disagree statement cards (5-point: Strongly disagree to Strongly agree, shown as tappable pills or a thumbs scale), photo cards (machines), day pills, time picker, text field.
+- **Screen order:**
+  1. Welcome (full-bleed smiling woman, display title, "Let's build your plan", Continue)
+  2. Name (text field)
+  3. Age (wheel picker 18 to 80; if under 18, a kind exit screen)
+  4. Main goals (icon cards, up to 3, first is "Main")
+  5. Insight (animated): first estimate, "Your first milestone: around week 6", with a simple animated timeline
+  6. Gym experience (icon cards: Not yet, Just started, On and off, Regularly)
+  7. How you feel in the gym (slider with five labelled stops from "Nervous" to "At home")
+  8. Statement: "I'm not sure what to do when I get to the gym"
+  9. Statement: "I feel like people are watching me"
+  10. Insight: "You're not alone" with a real, sourced statistic (e.g. the 2025 Gymshark survey of UK women) and how Ascenda helps (first-time guides, one-spot sessions)
+  11. Statement: "I find it hard to stay motivated on my own"
+  12. Statement: "I've started and stopped before"
+  13. Insight: "Plans beat willpower" style encouragement plus how reminders and the planner help (no invented numbers)
+  14. Machines you've used before (photo cards, multi-select; feeds Gym unlocked baseline)
+  15. How you feel about cardio (icon cards)
+  16. Days per week (big number selector 2 to 5) and which days (day pills)
+  17. Session length (chips: 30, 45, 60 min)
+  18. Weekly streak goal (cards: 4, 8, 12 weeks; 4 pre-selected)
+  19. Reminder time (time picker; permission asked later)
+  20. Optional bodyweight (skippable, "Only used for your own strength stats")
+  21. Building your plan (animated checklist: "Matching your goals", "Choosing your routine", "Setting starting weights", "Planning your week"; about 3 seconds)
+  22. Plan reveal: recommended routine hero, "Why this plan" bullets from her answers, recalculated milestone timeline ("Based on 3 days a week: first milestone around week 5"), labelled estimate
+  23. Safety disclaimer acceptance (N1)
+  24. Paywall (C1), then first session
+- **Milestone timeline component:** horizontal or vertical timeline with 3 to 4 milestones (confidence, first machine, strength gain, routine complete), animated in; numbers come from the calculation, never fixed.
+- **Copy tone:** warm, confident, "we've got you"; no "lose weight fast", no body talk, no fake urgency.
+
+### 8.6 Recipe list pages (X7)
+- Header: back, display serif title (e.g. "Breakfast"), search field.
+- Filter chips (outline style, horizontal scroll): High protein, High fibre, Vegetarian, Vegan, Dairy free, Quick.
+- List rows: 96 px square photo (`md` radius) with a heart on a translucent circle, title in `title3` (2 lines), tag and prep time "High protein · 10 min" in `bodySm inkMuted`, chevron.
+
+### 8.7 Refer a friend screen (X6)
+- HeroImage of two smiling women training together, display serif title "Train with a friend", the offer in two lines, her code in a large copyable chip, PrimaryButton "Share your link" (native share sheet), "How it works" three steps, terms link, list of her referrals with status.
+
+### 8.8 New components
+WelcomeHero (state-based), WeekStripCard, ReferralBanner, ShareStatsCard, StyleTile, OverlayImageCard, SingleSessionCard, ExerciseLogCard (Hevy-style), RestChip, NoteChip, DraggableExerciseList, MinimisedSessionBar, PBGlow, OnboardingShell, IconChoiceCard, WheelPicker, LabelledSlider, StatementScale, PhotoChoiceCard, DayPills, MilestoneTimeline, BuildingPlanAnimation, RecipeListRow, FilterChipBar.
+
+---
+
+## 9. Hard paywall (4 November 2026; AGENTS.md "Pricing and access", P1, C3)
+
+This section overrides anything earlier about Pro badges, FreeBadges, LockedOverlay and locked previews. Inside the app there are no Pro badges or locks: a subscriber or trial user sees everything.
+
+### 9.1 Components to remove or repurpose
+- Remove from in-app screens: ProBadge, FreeBadge, LockedOverlay, "Unlock with Pro" buttons, free-limit messages.
+- Keep the `pro` gold token for the paywall's "Best value" tag and the plan status chip in Profile only.
+
+### 9.2 Paywall screen
+- Full-screen sheet, close "×" top-left (always visible, 44 px tap target).
+- HeroImage (smiling woman in a bright gym), display serif headline personalised to her plan: "Your 6-week Gym Confidence plan is ready".
+- Benefits card (`surface`, 4 rows with icons): "Your full plan, week by week"; "Guides for every machine, so nothing feels unfamiliar"; "Track lifts and see yourself get stronger"; one rotating per phase as features ship (cardio, recipes, "Scan any machine").
+- Plan options as two large selectable cards (`xl` radius):
+  - Annual (pre-selected, `brand` border and `brandSoft` fill): "Annual", "7 days free, then £59.99 a year", "About £5 a month" in `bodySm`, a `pro` gold tag "Best value" (only if true).
+  - Monthly: "Monthly", "£9.99 a month", no trial line.
+- PrimaryButton (plum): "Start my free trial" (annual) or "Subscribe" (monthly).
+- Under the button, `bodySm inkMuted`: "Cancel anytime in Settings. We'll remind you 2 days before your trial ends."
+- Footer links: Restore purchases · Terms · Privacy.
+- Prices always come from RevenueCat (localised), never hard-coded.
+- No countdowns, no "only today", no second paywall when closed.
+
+### 9.3 Locked home (no subscription or trial)
+- Header with avatar (Profile still opens).
+- Hero card: her plan cover photo, eyebrow "YOUR PLAN", display serif routine name, 3 "Why this plan" bullets, the milestone timeline (compact).
+- PrimaryButton "Start your 7-day free trial" (opens the paywall).
+- Card: Refer a friend (same as Home banner).
+- If she has history (lapsed): StatTiles (sessions, PBs, weeks trained) with "See your history" TextButton (read-only Activity) and "Export your data" link. Headline changes to "Welcome back, [name]".
+- Tab bar stays visible; tapping any tab shows this same screen (no error states, no blank screens).
+
+### 9.4 Trial and status cues
+- Last 2 days of trial: a slim `accentSoft` banner on Home: "Your trial ends on Thu. You can manage it in Settings." Dismissible.
+- Billing grace period: slim banner "There's a problem with your payment. Update it in Settings to keep access."
+- Profile → Plan and subscription: status chip (Trial · ends 12 Nov / Active · renews 4 Nov 2027 / Expired), Manage subscription, Restore purchases.
+
+### 9.5 Onboarding tie-in
+- Onboarding screens (AGENTS.md X5) end: plan reveal → safety disclaimer → paywall (9.2). The plan reveal should be the most polished screen in the app, because it's what she's deciding to pay for.
