@@ -13,6 +13,7 @@ import {
 
 import { AppText } from '@/components/ui/AppText';
 import { ProBadge } from '@/components/ui/Badges';
+import { CoverPlaceholder } from '@/components/ui/Cards';
 import { SectionHeader } from '@/components/ui/List';
 import { useTheme } from '@/constants/theme';
 import { trackLearnArticleOpened } from '@/lib/analytics';
@@ -66,9 +67,7 @@ export function ArticleCard({
           {image ? (
             <Image source={image} style={styles.fill} resizeMode="cover" />
           ) : (
-            <AppText variant="display" style={{ color: colours.brand }}>
-              {article.title.slice(0, 1)}
-            </AppText>
+            <CoverPlaceholder />
           )}
           {article.is_pro ? (
             <View style={styles.badge}>
@@ -112,7 +111,7 @@ export function CategoryTile({
       {image ? (
         <Image source={image} style={styles.fill} resizeMode="cover" />
       ) : (
-        <View style={[styles.fill, { backgroundColor: colours.brandSoft }]} />
+        <CoverPlaceholder />
       )}
       <View style={[styles.tileFade, { backgroundColor: colours.overlay }]}>
         <AppText variant="title3" style={{ color: colours.onAccent }} numberOfLines={2}>

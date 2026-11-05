@@ -1,5 +1,6 @@
 import type { ImageSourcePropType } from 'react-native';
 
+import catalogue from '../../content/images/catalogue.json';
 import type { CoverImage } from '@/lib/routines';
 import { supabase } from '@/lib/supabase';
 
@@ -193,15 +194,109 @@ export const IMAGE_CATALOGUE: Record<string, ImageCatalogueEntry> = {
   ),
 };
 
-export function coverForRoutine(routine: {
-  id: string;
-  cover: CoverImage | null;
-}): CoverImage | null {
-  return resolveCover(routine.cover, routine.id);
+export type ContentImageKind = (typeof catalogue.images)[number]['kind'];
+
+export type ContentImage = {
+  slug: string;
+  kind: ContentImageKind;
+  alt_text: string;
+};
+
+export const CONTENT_IMAGES: ContentImage[] = catalogue.images as ContentImage[];
+
+const CONTENT_BY_SLUG = new Map(CONTENT_IMAGES.map((item) => [item.slug, item]));
+
+export function contentImage(slug: string | null | undefined): ContentImage | undefined {
+  return slug ? CONTENT_BY_SLUG.get(slug) : undefined;
 }
 
-export function resolveCover(cover: CoverImage | null, routineId?: string): CoverImage | null {
-  const byRoutine = routineId ? `cover-${routineId}` : null;
+export function contentSlugForTitle(title: string, kind?: ContentImageKind): string | null {
+  const needle = title.trim().toLowerCase();
+  if (!needle) return null;
+  const match = CONTENT_IMAGES.find(
+    (item) => (!kind || item.kind === kind) && item.alt_text.trim().toLowerCase() === needle
+  );
+  return match?.slug ?? null;
+}
+
+let imageRows = new Map<string, CoverImage>();
+let imagesHydrated = false;
+
+export async function hydrateImages(): Promise<void> {
+  if (imagesHydrated) return;
+  const { data, error } = await supabase
+    .from('images')
+    .select('id, url, storage_path, alt_text, licence_source');
+  if (error || !data) return;
+  imageRows = new Map(
+    (data as CoverImage[]).flatMap((row) => (row.id ? [[row.id, row] as const] : []))
+  );
+  imagesHydrated = true;
+}
+
+function cachedImage(slug: string): CoverImage | null {
+  return imageRows.get(slug) ?? null;
+}
+
+function coverFromSlug(slug: string, cover: CoverImage | null): CoverImage {
+  const listed = IMAGE_CATALOGUE[slug];
+  const content = CONTENT_BY_SLUG.get(slug);
+  const cached = cachedImage(slug);
+  return {
+    id: slug,
+    url: cover?.url ?? cached?.url ?? listed?.fallback_url ?? null,
+    storage_path: cover?.storage_path ?? cached?.storage_path ?? listed?.storage_path ?? `${slug}.jpg`,
+    alt_text: cover?.alt_text || cached?.alt_text || listed?.alt_text || content?.alt_text || '',
+    licence_source: cover?.licence_source ?? cached?.licence_source ?? listed?.licence_source ?? null,
+  };
+}
+
+export function coverForRoutine(routine: {
+  id: string;
+  slug?: string;
+  name?: string;
+  type?: 'strength' | 'stretch';
+  cover: CoverImage | null;
+}): CoverImage | null {
+  const kind = routine.type === 'stretch' ? 'stretch' : 'routine';
+  const fromDb = routine.cover?.id && CONTENT_BY_SLUG.has(routine.cover.id) ? routine.cover.id : null;
+  const fromSlug = routine.slug
+    ? CONTENT_BY_SLUG.has(`${routine.slug}-cover`)
+      ? `${routine.slug}-cover`
+      : CONTENT_BY_SLUG.has(routine.slug)
+        ? routine.slug
+        : null
+    : null;
+  const fromName = routine.name ? contentSlugForTitle(routine.name, kind) : null;
+  return resolveCover(routine.cover, fromDb ?? fromSlug ?? fromName ?? routine.id);
+}
+
+export function coverForChallenge(challenge: {
+  name: string;
+  cover: CoverImage | null;
+  routine: {
+    id: string;
+    slug?: string;
+    name?: string;
+    type?: 'strength' | 'stretch';
+    cover: CoverImage | null;
+  };
+}): CoverImage | null {
+  const slug = contentSlugForTitle(challenge.name, 'challenge');
+  if (slug) return resolveCover(challenge.cover, slug);
+  if (challenge.cover) return resolveCover(challenge.cover);
+  return coverForRoutine(challenge.routine);
+}
+
+export function resolveCover(cover: CoverImage | null, slugOrRoutineId?: string): CoverImage | null {
+  if (slugOrRoutineId && CONTENT_BY_SLUG.has(slugOrRoutineId)) {
+    const fromDb = cover?.id === slugOrRoutineId ? cover : cachedImage(slugOrRoutineId);
+    return coverFromSlug(slugOrRoutineId, fromDb);
+  }
+  if (cover?.id && (CONTENT_BY_SLUG.has(cover.id) || IMAGE_CATALOGUE[cover.id])) {
+    return coverFromSlug(cover.id, cover);
+  }
+  const byRoutine = slugOrRoutineId ? `cover-${slugOrRoutineId}` : null;
   const listedByRoutine = byRoutine ? IMAGE_CATALOGUE[byRoutine] : undefined;
   if (listedByRoutine) {
     const fromDb = cover?.id === listedByRoutine.id;
@@ -213,16 +308,12 @@ export function resolveCover(cover: CoverImage | null, routineId?: string): Cove
       licence_source: (fromDb && cover?.licence_source) || listedByRoutine.licence_source,
     };
   }
-  const id = cover?.id ?? byRoutine;
+  const id = cover?.id ?? byRoutine ?? slugOrRoutineId ?? null;
+  if (id && CONTENT_BY_SLUG.has(id)) return coverFromSlug(id, cover);
   const listed = id ? IMAGE_CATALOGUE[id] : undefined;
-  if (!listed && !cover) return null;
-  return {
-    id: id ?? cover?.id ?? '',
-    url: cover?.url ?? null,
-    storage_path: cover?.storage_path ?? listed?.storage_path ?? null,
-    alt_text: cover?.alt_text || listed?.alt_text || '',
-    licence_source: cover?.licence_source ?? listed?.licence_source ?? null,
-  };
+  if (!listed && !cover && !id) return null;
+  if (id) return coverFromSlug(id, cover);
+  return cover;
 }
 
 export function publicCoverUrl(storagePath: string): string | null {
@@ -240,9 +331,24 @@ export function coverSources(cover: CoverImage | null): ImageSourcePropType[] {
   if (swapped && resolved.url) sources.push({ uri: resolved.url });
   if (listed?.asset) sources.push(listed.asset);
   if (!swapped && resolved.url) sources.push({ uri: resolved.url });
-  if (resolved.storage_path) {
+  if (listed && resolved.storage_path) {
     const stored = publicCoverUrl(resolved.storage_path);
     if (stored) sources.push({ uri: stored });
   }
   return sources;
+}
+
+export function imageSourceForSlug(slug: string | null | undefined): ImageSourcePropType | null {
+  if (!slug) return null;
+  return coverSources(coverFromSlug(slug, null))[0] ?? null;
+}
+
+/** First unused photo for this screen, or null so the caller can show a placeholder. */
+export function takeCoverSource(cover: CoverImage | null, used: Set<string>): ImageSourcePropType | null {
+  const resolved = resolveCover(cover);
+  const sources = coverSources(resolved);
+  if (!resolved?.id || sources.length === 0) return null;
+  if (used.has(resolved.id)) return null;
+  used.add(resolved.id);
+  return sources[0];
 }

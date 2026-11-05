@@ -1,4 +1,5 @@
 import { track } from '@/lib/analytics';
+import { hydrateImages } from '@/lib/images';
 import { userGoalsFromAnswers, type Goal, type QuizAnswers } from '@/lib/profile';
 import {
   SLOT_EXERCISE_COLUMNS,
@@ -803,6 +804,7 @@ export function routineDayToProgrammeDay(day: RoutineDay): ProgrammeDay {
 }
 
 export async function fetchRoutines(options?: { type?: RoutineType }): Promise<RoutineSummary[]> {
+  await hydrateImages();
   const wanted = options?.type;
   const withType = await supabase
     .from('routines')
@@ -834,6 +836,7 @@ export async function fetchRoutine(
   id: string,
   options?: FetchRoutineOptions
 ): Promise<Routine | null> {
+  await hydrateImages();
   const includeLockedWeeks = options?.includeLockedWeeks ?? true;
   const attempts = [
     `${SUMMARY_SELECT_N2}, routine_weeks (${WEEK_NEST_N2})`,

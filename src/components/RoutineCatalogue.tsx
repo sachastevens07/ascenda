@@ -16,6 +16,7 @@ import { AppText } from '@/components/ui/AppText';
 import {
   Chip,
   ChipScroller,
+  CoverPlaceholder,
   FreeBadge,
   IconButton,
   MenuHeader,
@@ -35,7 +36,7 @@ import {
   fetchChallenges,
   type Challenge,
 } from '@/lib/challenges';
-import { coverForRoutine, coverSources } from '@/lib/images';
+import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
@@ -58,8 +59,11 @@ import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
-function coverImage(routine: Pick<RoutineSummary, 'id' | 'cover'>): ImageSourcePropType | null {
-  return coverSources(coverForRoutine(routine))[0] ?? null;
+function uniqueCover(
+  routine: Pick<RoutineSummary, 'id' | 'slug' | 'name' | 'type' | 'cover'>,
+  used: Set<string>
+): ImageSourcePropType | null {
+  return takeCoverSource(coverForRoutine(routine), used);
 }
 
 export function RoutineCatalogue({
@@ -170,6 +174,7 @@ export function RoutineCatalogue({
       : enrolment
         ? currentWeek / enrolment.routine.length_weeks
         : 0;
+  const usedPhotos = new Set<string>();
 
   return (
     <>
@@ -229,12 +234,17 @@ export function RoutineCatalogue({
                     </AppText>
                     {challenge.is_pro && !subscription.isPro ? <ProBadge compact /> : null}
                   </View>
-                  <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.sm }}>
-                    {challenge.name}
-                  </AppText>
-                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-                    {challengeTimingCopy(challenge)}
-                  </AppText>
+                  <View style={styles.challengeRow}>
+                    <Thumb image={takeCoverSource(coverForChallenge(challenge), usedPhotos)} letter={challenge.name} />
+                    <View style={styles.flex}>
+                      <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={2}>
+                        {challenge.name}
+                      </AppText>
+                      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                        {challengeTimingCopy(challenge)}
+                      </AppText>
+                    </View>
+                  </View>
                 </View>
               </View>
             </Pressable>
@@ -247,7 +257,7 @@ export function RoutineCatalogue({
                 onPress={() => openDetails(enrolment.routine)}
                 style={styles.pinMain}
                 accessibilityRole="button">
-                <Thumb image={coverImage(enrolment.routine)} letter={enrolment.routine.name} />
+                <Thumb image={uniqueCover(enrolment.routine, new Set())} letter={enrolment.routine.name} />
                 <View style={styles.pinCopy}>
                   <AppText variant="eyebrow" style={{ color: colours.accent }}>
                     Current routine
@@ -330,6 +340,7 @@ export function RoutineCatalogue({
               summary={summary}
               stretch={routineType === 'stretch'}
               showBadges={!subscription.isPro}
+              usedPhotos={usedPhotos}
               onPress={() => openDetails(summary)}
             />
           ))}
@@ -364,15 +375,17 @@ function CatalogueCard({
   summary,
   stretch,
   showBadges,
+  usedPhotos,
   onPress,
 }: {
   summary: RoutineSummary;
   stretch: boolean;
   showBadges: boolean;
+  usedPhotos: Set<string>;
   onPress: () => void;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const image = coverImage(summary);
+  const image = uniqueCover(summary, usedPhotos);
   const eyebrow = stretch
     ? formatTagLabel(summary.tags[0] ?? 'Stretch')
     : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[summary.goal]}`;
@@ -420,9 +433,7 @@ function Thumb({ image, letter }: { image: ImageSourcePropType | null; letter: s
       {image ? (
         <Image source={image} style={styles.thumbFill} resizeMode="cover" accessibilityLabel="" />
       ) : (
-        <AppText variant="display" style={{ color: colours.brand }}>
-          {letter.slice(0, 1)}
-        </AppText>
+        <CoverPlaceholder />
       )}
     </View>
   );
@@ -476,6 +487,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   thumbFill: {
     width: '100%',
@@ -485,6 +497,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  challengeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginTop: 12,
+  },
+  flex: {
+    flex: 1,
   },
   chipRow: {
     flexDirection: 'row',

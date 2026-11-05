@@ -20,6 +20,7 @@ export {
 } from './Badges';
 export {
   Chip,
+  CoverPlaceholder,
   EmptyState,
   HeroImage,
   HighlightTile,

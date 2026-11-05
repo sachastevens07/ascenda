@@ -16,6 +16,18 @@ import { THEME_PREFERENCES, THEME_PREFERENCE_LABELS, useTheme, type ThemePrefere
 import { FreeBadge, ProBadge } from './Badges';
 import { ProgressRing } from './Progress';
 
+/** Soft block shown until a licensed photo is uploaded for that slug. */
+export function CoverPlaceholder() {
+  const { colours } = useTheme();
+  return (
+    <View
+      style={[styles.placeholder, { backgroundColor: colours.surfaceMuted }]}
+      accessibilityElementsHidden>
+      <Ionicons name="image-outline" size={28} color={colours.inkSubtle} />
+    </View>
+  );
+}
+
 type ImageCardProps = {
   title: string;
   subtitle?: string;
@@ -61,9 +73,7 @@ export function ImageCard({
           {image ? (
             <Image source={image} style={styles.photoFill} resizeMode="cover" />
           ) : (
-            <AppText variant="display" style={{ color: colours.brand }}>
-              {(letter ?? title).slice(0, 1)}
-            </AppText>
+            <CoverPlaceholder />
           )}
           {isPro || isFree ? (
             <View style={styles.badge}>
@@ -129,15 +139,11 @@ export function HeroImage({
 }) {
   const { colours, spacing } = useTheme();
   return (
-    <View style={[{ height, backgroundColor: colours.surfaceMuted }, style]}>
+    <View style={[{ height, backgroundColor: colours.surfaceMuted, overflow: 'hidden' }, style]}>
       {image ? (
         <Image source={image} style={styles.photoFill} resizeMode="cover" />
       ) : (
-        <View style={styles.heroFallback}>
-          <AppText variant="display" style={{ color: colours.brand }}>
-            {(letter ?? title ?? 'A').slice(0, 1)}
-          </AppText>
-        </View>
+        <CoverPlaceholder />
       )}
       {title || eyebrow ? (
         <View style={styles.heroOverlay} pointerEvents="none">
@@ -419,6 +425,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   photo: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  placeholder: {
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
   },

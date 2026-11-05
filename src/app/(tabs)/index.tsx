@@ -24,6 +24,7 @@ import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AppText,
   ArticleCard,
+  CoverPlaceholder,
   IconButton,
   ImageCard,
   OverflowMenu,
@@ -64,7 +65,7 @@ import {
   countOwnedCustomWorkouts,
 } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { coverForRoutine, coverSources } from '@/lib/images';
+import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { consumeOnboardingPaywall } from '@/lib/onboarding';
 import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
@@ -152,16 +153,16 @@ function greeting(name: string | null | undefined): string {
   return first ? `${hello}, ${first}` : hello;
 }
 
-function coverImage(routine: Pick<RoutineSummary, 'id' | 'cover'>): ImageSourcePropType | null {
-  return coverSources(coverForRoutine(routine))[0] ?? null;
-}
-
-function sessionThumbnail(day: RoutineDay, routine: RoutineSummary): ImageSourcePropType | null {
+function sessionThumbnail(
+  day: RoutineDay,
+  routine: RoutineSummary,
+  used: Set<string>
+): ImageSourcePropType | null {
   for (const slot of day.exercises) {
     const photo = getExerciseImageSource(slot.exercise);
     if (photo) return photo;
   }
-  return coverImage(routine);
+  return takeCoverSource(coverForRoutine(routine), used);
 }
 
 export default function HomeScreen() {
@@ -581,8 +582,11 @@ export default function HomeScreen() {
     weekProgress.planned > 0 || (!hideStreak && (streak.current > 0 || streak.weeksTrained > 0));
   const atCustomLimit = atFreeCustomWorkoutLimit(data.ownedWorkouts, subscription.isPro);
   const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
+  const usedPhotos = new Set<string>();
   const nextThumb =
-    enrolment && next && !inProgress ? sessionThumbnail(next.day, enrolment.routine) : null;
+    enrolment && next && !inProgress ? sessionThumbnail(next.day, enrolment.routine, usedPhotos) : null;
+  const handOffImage = handOff ? takeCoverSource(coverForRoutine(handOff.routine), usedPhotos) : null;
+  const challengeCover = challenge ? takeCoverSource(coverForChallenge(challenge), usedPhotos) : null;
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -636,7 +640,7 @@ export default function HomeScreen() {
                       accessibilityLabel={next.day.name}
                     />
                   ) : (
-                    <AppText variant="display" style={{ color: colours.brand }}>{next.day.name.slice(0, 1)}</AppText>
+                    <CoverPlaceholder />
                   )}
                 </View>
               </Pressable>
@@ -678,7 +682,7 @@ export default function HomeScreen() {
           <WhatsNextCard
             title={handOff.routine.name}
             body={handOff.why}
-            image={coverImage(handOff.routine)}
+            image={handOffImage}
             locked={!subscription.isPro && handOff.routine.is_pro}
             starting={isStarting && handOff.mode === 'start'}
             primaryLabel={handOff.mode === 'start' ? `Start on ${handOff.mondayLabel}` : 'See this routine'}
@@ -762,7 +766,19 @@ export default function HomeScreen() {
               pressed && styles.pressed,
             ]}
             accessibilityRole="button">
-            <AppText variant="eyebrow" style={{ color: colours.accent }}>Challenge</AppText>
+            {challengeCover ? (
+              <Image
+                source={challengeCover}
+                style={[styles.challengePhoto, { borderRadius: radius.md }]}
+                resizeMode="cover"
+                accessibilityLabel={challenge.name}
+              />
+            ) : (
+              <View style={[styles.challengePhoto, { borderRadius: radius.md, overflow: 'hidden' }]}>
+                <CoverPlaceholder />
+              </View>
+            )}
+            <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: spacing.sm }}>Challenge</AppText>
             <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.sm }}>{challenge.name}</AppText>
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
               {challengeTimingCopy(challenge)}
@@ -791,7 +807,7 @@ export default function HomeScreen() {
                   key={routine.id}
                   title={routine.name}
                   subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
-                  image={coverImage(routine)}
+                  image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
                   letter={routine.name.slice(0, 1)}
                   isPro={!subscription.isPro && routine.is_pro}
                   isFree={!subscription.isPro && !routine.is_pro}
@@ -825,7 +841,7 @@ export default function HomeScreen() {
                   key={routine.id}
                   title={routine.name}
                   subtitle={`${routine.session_minutes} min`}
-                  image={coverImage(routine)}
+                  image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
                   letter={routine.name.slice(0, 1)}
                   isPro={!subscription.isPro && routine.is_pro}
                   isFree={!subscription.isPro && !routine.is_pro}
@@ -951,6 +967,11 @@ const styles = StyleSheet.create({
   heroFill: {
     width: '100%',
     height: '100%',
+  },
+  challengePhoto: {
+    width: '100%',
+    aspectRatio: 16 / 10,
+    overflow: 'hidden',
   },
   heroBody: {
     padding: 20,

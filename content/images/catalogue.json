@@ -1,0 +1,1070 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Image slugs for X1. id in public.images is this slug. Swap a photo by uploading {slug}.jpg to the routine-covers bucket and setting images.url and images.licence_source. Do not edit screens.",
+    "Slugs come from cover_image_slug and image_slug in /content. Extra hero and Learn category rows are listed here because those screens have no slug field yet.",
+    "url and licence_source stay empty until Sacha sources the photo. The app shows a placeholder until then."
+  ],
+  "images": [
+    {
+      "slug": "cardio-bike-finisher-10",
+      "kind": "cardio",
+      "alt_text": "Bike finisher: 10 minutes"
+    },
+    {
+      "slug": "cardio-bike-intervals-30-60",
+      "kind": "cardio",
+      "alt_text": "Bike intervals: 30 on, 60 easy"
+    },
+    {
+      "slug": "cardio-cardio-sampler-30",
+      "kind": "cardio",
+      "alt_text": "Cardio sampler: 30 minutes"
+    },
+    {
+      "slug": "cardio-cross-trainer-intervals",
+      "kind": "cardio",
+      "alt_text": "Cross-trainer intervals: 2 and 1"
+    },
+    {
+      "slug": "cardio-cross-trainer-steady-20",
+      "kind": "cardio",
+      "alt_text": "Cross-trainer: 20 minutes"
+    },
+    {
+      "slug": "cardio-easy-bike-20",
+      "kind": "cardio",
+      "alt_text": "Easy bike: 20 minutes"
+    },
+    {
+      "slug": "cardio-hill-walk-intervals",
+      "kind": "cardio",
+      "alt_text": "Hill walk intervals"
+    },
+    {
+      "slug": "cardio-incline-walk-20",
+      "kind": "cardio",
+      "alt_text": "Incline walk: 20 minutes"
+    },
+    {
+      "slug": "cardio-incline-walk-finisher-10",
+      "kind": "cardio",
+      "alt_text": "Incline walk finisher: 10 minutes"
+    },
+    {
+      "slug": "cardio-rower-finisher-8",
+      "kind": "cardio",
+      "alt_text": "Rowing finisher: 8 rounds"
+    },
+    {
+      "slug": "cardio-rower-pyramid",
+      "kind": "cardio",
+      "alt_text": "Rowing pyramid"
+    },
+    {
+      "slug": "cardio-rower-steady-15",
+      "kind": "cardio",
+      "alt_text": "Learn to row: 15 minutes"
+    },
+    {
+      "slug": "cardio-stair-climber-starter-10",
+      "kind": "cardio",
+      "alt_text": "Stair climber starter: 10 minutes"
+    },
+    {
+      "slug": "cardio-treadmill-intervals-1-2",
+      "kind": "cardio",
+      "alt_text": "Treadmill intervals: 1 on, 2 easy"
+    },
+    {
+      "slug": "cardio-walk-and-talk-30",
+      "kind": "cardio",
+      "alt_text": "Easy walk: 30 minutes"
+    },
+    {
+      "slug": "challenge-28-days-of-stretch",
+      "kind": "challenge",
+      "alt_text": "28 Days of Stretch"
+    },
+    {
+      "slug": "challenge-four-weeks-strong",
+      "kind": "challenge",
+      "alt_text": "Four Weeks Strong"
+    },
+    {
+      "slug": "challenge-quiet-start",
+      "kind": "challenge",
+      "alt_text": "Quiet Start"
+    },
+    {
+      "slug": "challenge-the-gym-explorer",
+      "kind": "challenge",
+      "alt_text": "The Gym Explorer"
+    },
+    {
+      "slug": "collection-after-leg-day",
+      "kind": "collection",
+      "alt_text": "After leg day"
+    },
+    {
+      "slug": "collection-before-an-evening-session",
+      "kind": "collection",
+      "alt_text": "Before an evening session"
+    },
+    {
+      "slug": "collection-busy-days",
+      "kind": "collection",
+      "alt_text": "Busy days"
+    },
+    {
+      "slug": "collection-dinner-in-30",
+      "kind": "collection",
+      "alt_text": "Dinner in 30"
+    },
+    {
+      "slug": "collection-dinners",
+      "kind": "collection",
+      "alt_text": "Dinners"
+    },
+    {
+      "slug": "collection-family-friendly",
+      "kind": "collection",
+      "alt_text": "Family friendly"
+    },
+    {
+      "slug": "collection-gym-bag-snacks",
+      "kind": "collection",
+      "alt_text": "Gym bag snacks"
+    },
+    {
+      "slug": "collection-high-protein",
+      "kind": "collection",
+      "alt_text": "High protein"
+    },
+    {
+      "slug": "collection-high-protein-dinners",
+      "kind": "collection",
+      "alt_text": "High-protein dinners"
+    },
+    {
+      "slug": "collection-lunches",
+      "kind": "collection",
+      "alt_text": "Lunches"
+    },
+    {
+      "slug": "collection-one-pot",
+      "kind": "collection",
+      "alt_text": "One pot"
+    },
+    {
+      "slug": "collection-prep-ahead-breakfasts",
+      "kind": "collection",
+      "alt_text": "Prep-ahead breakfasts"
+    },
+    {
+      "slug": "collection-prep-ahead-lunches",
+      "kind": "collection",
+      "alt_text": "Prep-ahead lunches"
+    },
+    {
+      "slug": "collection-seasonal-favourites",
+      "kind": "collection",
+      "alt_text": "Autumn and winter favourites"
+    },
+    {
+      "slug": "collection-smoothies",
+      "kind": "collection",
+      "alt_text": "Smoothie favourites"
+    },
+    {
+      "slug": "collection-snacks",
+      "kind": "collection",
+      "alt_text": "Snacks that keep you going"
+    },
+    {
+      "slug": "collection-strong-and-nourished",
+      "kind": "collection",
+      "alt_text": "Strong and nourished"
+    },
+    {
+      "slug": "collection-ten-breakfasts",
+      "kind": "collection",
+      "alt_text": "Ten breakfasts to start with"
+    },
+    {
+      "slug": "hero-home",
+      "kind": "hero",
+      "alt_text": "Home welcome hero"
+    },
+    {
+      "slug": "hero-paywall",
+      "kind": "hero",
+      "alt_text": "Paywall hero"
+    },
+    {
+      "slug": "learn-caffeine-and-training",
+      "kind": "learn",
+      "alt_text": "Caffeine and training"
+    },
+    {
+      "slug": "learn-cardio-or-weights",
+      "kind": "learn",
+      "alt_text": "Myth: cardio or weights, you have to choose"
+    },
+    {
+      "slug": "learn-choosing-your-starting-weight",
+      "kind": "learn",
+      "alt_text": "How to choose your starting weight"
+    },
+    {
+      "slug": "learn-coming-back-after-a-break",
+      "kind": "learn",
+      "alt_text": "Missed a week? Here's how to come back"
+    },
+    {
+      "slug": "learn-eating-enough-to-train",
+      "kind": "learn",
+      "alt_text": "Eating enough to train well"
+    },
+    {
+      "slug": "learn-feeling-watched",
+      "kind": "learn",
+      "alt_text": "Feeling watched? Why most people aren't looking"
+    },
+    {
+      "slug": "learn-first-time-in-the-free-weights-area",
+      "kind": "learn",
+      "alt_text": "Your first time in the free-weights area"
+    },
+    {
+      "slug": "learn-gym-etiquette",
+      "kind": "learn",
+      "alt_text": "Gym etiquette: the unwritten rules"
+    },
+    {
+      "slug": "learn-how-to-brace-your-core",
+      "kind": "learn",
+      "alt_text": "How to brace your core when you lift"
+    },
+    {
+      "slug": "learn-how-to-breathe-while-you-lift",
+      "kind": "learn",
+      "alt_text": "How to breathe while you lift"
+    },
+    {
+      "slug": "learn-how-to-read-your-plan",
+      "kind": "learn",
+      "alt_text": "How to read your plan: sets, reps and rest"
+    },
+    {
+      "slug": "learn-how-to-share-equipment",
+      "kind": "learn",
+      "alt_text": "How to share equipment (and ask \"how many sets have you got left?\")"
+    },
+    {
+      "slug": "learn-how-to-squat-with-confidence",
+      "kind": "learn",
+      "alt_text": "How to squat with confidence"
+    },
+    {
+      "slug": "learn-hydration",
+      "kind": "learn",
+      "alt_text": "Staying hydrated in the gym"
+    },
+    {
+      "slug": "learn-motivation-vs-habits",
+      "kind": "learn",
+      "alt_text": "Motivation comes and goes. Habits stay"
+    },
+    {
+      "slug": "learn-progressive-overload",
+      "kind": "learn",
+      "alt_text": "Progressive overload, simply explained"
+    },
+    {
+      "slug": "learn-protein-for-training",
+      "kind": "learn",
+      "alt_text": "Protein and training: the basics"
+    },
+    {
+      "slug": "learn-reps-in-reserve",
+      "kind": "learn",
+      "alt_text": "Reps in reserve: how hard should a set feel?"
+    },
+    {
+      "slug": "learn-rest-days-and-recovery",
+      "kind": "learn",
+      "alt_text": "Rest days: why they count too"
+    },
+    {
+      "slug": "learn-sets-reps-and-rest",
+      "kind": "learn",
+      "alt_text": "Why sets, reps and rest change between exercises"
+    },
+    {
+      "slug": "learn-sleep-and-strength",
+      "kind": "learn",
+      "alt_text": "Sleep: your most underrated training tool"
+    },
+    {
+      "slug": "learn-sore-after-training",
+      "kind": "learn",
+      "alt_text": "Sore after training? What's normal and what isn't"
+    },
+    {
+      "slug": "learn-supplements-basics",
+      "kind": "learn",
+      "alt_text": "Supplements: what has evidence and what doesn't"
+    },
+    {
+      "slug": "learn-the-hip-hinge",
+      "kind": "learn",
+      "alt_text": "The hip hinge: the move behind deadlifts and hip thrusts"
+    },
+    {
+      "slug": "learn-the-wins-that-matter",
+      "kind": "learn",
+      "alt_text": "The wins that matter most"
+    },
+    {
+      "slug": "learn-toning-vs-building",
+      "kind": "learn",
+      "alt_text": "Myth: you need to 'tone' instead of build"
+    },
+    {
+      "slug": "learn-warm-ups-and-cool-downs",
+      "kind": "learn",
+      "alt_text": "Warm-ups and cool-downs: why they're worth five minutes"
+    },
+    {
+      "slug": "learn-what-to-eat-before-and-after-training",
+      "kind": "learn",
+      "alt_text": "What to eat before and after training"
+    },
+    {
+      "slug": "learn-what-to-wear-and-bring",
+      "kind": "learn",
+      "alt_text": "What to wear and bring to the gym"
+    },
+    {
+      "slug": "learn-when-the-machine-is-taken",
+      "kind": "learn",
+      "alt_text": "What to do when the machine you need is taken"
+    },
+    {
+      "slug": "learn-when-your-appetite-is-low",
+      "kind": "learn",
+      "alt_text": "Eating well when your appetite is low"
+    },
+    {
+      "slug": "learn-why-routines-have-phases",
+      "kind": "learn",
+      "alt_text": "Why your routine has phases"
+    },
+    {
+      "slug": "learn-will-lifting-make-me-bulky",
+      "kind": "learn",
+      "alt_text": "Myth: lifting weights will make me bulky"
+    },
+    {
+      "slug": "learn-your-first-gym-session",
+      "kind": "learn",
+      "alt_text": "Your first gym session, step by step"
+    },
+    {
+      "slug": "learn-category-fuelling",
+      "kind": "learn_category",
+      "alt_text": "Fuelling your training"
+    },
+    {
+      "slug": "learn-category-getting-started",
+      "kind": "learn_category",
+      "alt_text": "Getting started"
+    },
+    {
+      "slug": "learn-category-gym-confidence",
+      "kind": "learn_category",
+      "alt_text": "Gym confidence"
+    },
+    {
+      "slug": "learn-category-how-programmes-work",
+      "kind": "learn_category",
+      "alt_text": "How programmes work"
+    },
+    {
+      "slug": "learn-category-mindset",
+      "kind": "learn_category",
+      "alt_text": "Mindset and motivation"
+    },
+    {
+      "slug": "learn-category-myths",
+      "kind": "learn_category",
+      "alt_text": "Myths busted"
+    },
+    {
+      "slug": "learn-category-recovery-and-sleep",
+      "kind": "learn_category",
+      "alt_text": "Recovery and sleep"
+    },
+    {
+      "slug": "learn-category-technique",
+      "kind": "learn_category",
+      "alt_text": "Technique"
+    },
+    {
+      "slug": "machine-assisted-pull-up",
+      "kind": "machine",
+      "alt_text": "Assisted pull-up machine"
+    },
+    {
+      "slug": "machine-bike",
+      "kind": "machine",
+      "alt_text": "Exercise bike"
+    },
+    {
+      "slug": "machine-cable",
+      "kind": "machine",
+      "alt_text": "Cable machine"
+    },
+    {
+      "slug": "machine-calf-raise",
+      "kind": "machine",
+      "alt_text": "Calf raise machine"
+    },
+    {
+      "slug": "machine-chest-press",
+      "kind": "machine",
+      "alt_text": "Chest press machine"
+    },
+    {
+      "slug": "machine-cross-trainer",
+      "kind": "machine",
+      "alt_text": "Cross-trainer"
+    },
+    {
+      "slug": "machine-hack-squat",
+      "kind": "machine",
+      "alt_text": "Hack squat"
+    },
+    {
+      "slug": "machine-hip-abduction",
+      "kind": "machine",
+      "alt_text": "Hip abduction and adduction machine"
+    },
+    {
+      "slug": "machine-hip-thrust",
+      "kind": "machine",
+      "alt_text": "Hip thrust machine"
+    },
+    {
+      "slug": "machine-lat-pulldown",
+      "kind": "machine",
+      "alt_text": "Lat pulldown"
+    },
+    {
+      "slug": "machine-leg-curl",
+      "kind": "machine",
+      "alt_text": "Leg curl (seated or lying)"
+    },
+    {
+      "slug": "machine-leg-extension",
+      "kind": "machine",
+      "alt_text": "Leg extension"
+    },
+    {
+      "slug": "machine-leg-press",
+      "kind": "machine",
+      "alt_text": "Leg press"
+    },
+    {
+      "slug": "machine-pec-deck",
+      "kind": "machine",
+      "alt_text": "Pec deck and rear delt machine"
+    },
+    {
+      "slug": "machine-rower",
+      "kind": "machine",
+      "alt_text": "Rowing machine"
+    },
+    {
+      "slug": "machine-seated-row",
+      "kind": "machine",
+      "alt_text": "Seated cable row"
+    },
+    {
+      "slug": "machine-shoulder-press",
+      "kind": "machine",
+      "alt_text": "Shoulder press machine"
+    },
+    {
+      "slug": "machine-smith",
+      "kind": "machine",
+      "alt_text": "Smith machine"
+    },
+    {
+      "slug": "machine-squat-rack",
+      "kind": "machine",
+      "alt_text": "Squat rack"
+    },
+    {
+      "slug": "machine-stair-climber",
+      "kind": "machine",
+      "alt_text": "Stair climber"
+    },
+    {
+      "slug": "machine-treadmill",
+      "kind": "machine",
+      "alt_text": "Treadmill"
+    },
+    {
+      "slug": "equip-barbell",
+      "kind": "onboarding",
+      "alt_text": "equip-barbell"
+    },
+    {
+      "slug": "equip-cables",
+      "kind": "onboarding",
+      "alt_text": "equip-cables"
+    },
+    {
+      "slug": "equip-chest-press",
+      "kind": "onboarding",
+      "alt_text": "equip-chest-press"
+    },
+    {
+      "slug": "equip-dumbbells",
+      "kind": "onboarding",
+      "alt_text": "equip-dumbbells"
+    },
+    {
+      "slug": "equip-lat-pulldown",
+      "kind": "onboarding",
+      "alt_text": "equip-lat-pulldown"
+    },
+    {
+      "slug": "equip-leg-press",
+      "kind": "onboarding",
+      "alt_text": "equip-leg-press"
+    },
+    {
+      "slug": "equip-rack",
+      "kind": "onboarding",
+      "alt_text": "equip-rack"
+    },
+    {
+      "slug": "equip-smith",
+      "kind": "onboarding",
+      "alt_text": "equip-smith"
+    },
+    {
+      "slug": "equip-treadmill",
+      "kind": "onboarding",
+      "alt_text": "equip-treadmill"
+    },
+    {
+      "slug": "onboarding-insight-goals",
+      "kind": "onboarding",
+      "alt_text": "Great choices, {name}"
+    },
+    {
+      "slug": "onboarding-insight-not-alone",
+      "kind": "onboarding",
+      "alt_text": "You're not alone"
+    },
+    {
+      "slug": "onboarding-insight-plans",
+      "kind": "onboarding",
+      "alt_text": "Plans beat willpower"
+    },
+    {
+      "slug": "onboarding-welcome",
+      "kind": "onboarding",
+      "alt_text": "Feel at home in the gym"
+    },
+    {
+      "slug": "recipe-apple-cinnamon-bircher",
+      "kind": "recipe",
+      "alt_text": "Apple and cinnamon bircher"
+    },
+    {
+      "slug": "recipe-avocado-eggs-on-sourdough",
+      "kind": "recipe",
+      "alt_text": "Avocado and eggs on sourdough"
+    },
+    {
+      "slug": "recipe-baked-feta-bean-pasta",
+      "kind": "recipe",
+      "alt_text": "Baked feta and white bean pasta"
+    },
+    {
+      "slug": "recipe-banana-blueberry-oat-muffins",
+      "kind": "recipe",
+      "alt_text": "Banana and blueberry oat muffins"
+    },
+    {
+      "slug": "recipe-beef-broccoli-noodles",
+      "kind": "recipe",
+      "alt_text": "Beef and broccoli noodles"
+    },
+    {
+      "slug": "recipe-beef-burrito-bowls",
+      "kind": "recipe",
+      "alt_text": "Beef burrito bowls"
+    },
+    {
+      "slug": "recipe-berry-overnight-oats",
+      "kind": "recipe",
+      "alt_text": "Berry overnight oats"
+    },
+    {
+      "slug": "recipe-berry-yoghurt-smoothie",
+      "kind": "recipe",
+      "alt_text": "Berry and yoghurt smoothie"
+    },
+    {
+      "slug": "recipe-black-bean-sweet-potato-tacos",
+      "kind": "recipe",
+      "alt_text": "Black bean and sweet potato tacos"
+    },
+    {
+      "slug": "recipe-blueberry-baked-oats",
+      "kind": "recipe",
+      "alt_text": "Blueberry baked oats"
+    },
+    {
+      "slug": "recipe-blueberry-oat-smoothie",
+      "kind": "recipe",
+      "alt_text": "Blueberry oat smoothie"
+    },
+    {
+      "slug": "recipe-breakfast-burritos",
+      "kind": "recipe",
+      "alt_text": "Prep-ahead breakfast burritos"
+    },
+    {
+      "slug": "recipe-chicken-caesar-wraps",
+      "kind": "recipe",
+      "alt_text": "Chicken Caesar-style wraps"
+    },
+    {
+      "slug": "recipe-chicken-fajita-traybake",
+      "kind": "recipe",
+      "alt_text": "Chicken fajita traybake"
+    },
+    {
+      "slug": "recipe-chicken-quinoa-prep-bowls",
+      "kind": "recipe",
+      "alt_text": "Chicken and quinoa prep bowls"
+    },
+    {
+      "slug": "recipe-chickpea-spinach-curry",
+      "kind": "recipe",
+      "alt_text": "Chickpea and spinach curry"
+    },
+    {
+      "slug": "recipe-chilli-bean-sweet-potatoes",
+      "kind": "recipe",
+      "alt_text": "Chilli bean jacket sweet potatoes"
+    },
+    {
+      "slug": "recipe-chilli-lime-edamame",
+      "kind": "recipe",
+      "alt_text": "Chilli and lime edamame"
+    },
+    {
+      "slug": "recipe-chocolate-banana-recovery-smoothie",
+      "kind": "recipe",
+      "alt_text": "Chocolate banana smoothie"
+    },
+    {
+      "slug": "recipe-coconut-fish-curry",
+      "kind": "recipe",
+      "alt_text": "Coconut fish curry"
+    },
+    {
+      "slug": "recipe-cottage-cheese-crispbreads",
+      "kind": "recipe",
+      "alt_text": "Cottage cheese crispbreads"
+    },
+    {
+      "slug": "recipe-cottage-cheese-tomato-toast",
+      "kind": "recipe",
+      "alt_text": "Cottage cheese and tomato toast"
+    },
+    {
+      "slug": "recipe-crispy-tofu-noodles",
+      "kind": "recipe",
+      "alt_text": "Crispy tofu and veg noodles"
+    },
+    {
+      "slug": "recipe-egg-salad-sandwiches",
+      "kind": "recipe",
+      "alt_text": "Creamy egg salad sandwiches"
+    },
+    {
+      "slug": "recipe-garlic-prawn-pasta",
+      "kind": "recipe",
+      "alt_text": "Garlic prawn and tomato pasta"
+    },
+    {
+      "slug": "recipe-greek-yoghurt-power-bowl",
+      "kind": "recipe",
+      "alt_text": "Greek yoghurt crunch bowl"
+    },
+    {
+      "slug": "recipe-green-mango-smoothie",
+      "kind": "recipe",
+      "alt_text": "Green mango smoothie"
+    },
+    {
+      "slug": "recipe-gym-bag-snack-box",
+      "kind": "recipe",
+      "alt_text": "Gym bag snack box"
+    },
+    {
+      "slug": "recipe-halloumi-couscous-salad",
+      "kind": "recipe",
+      "alt_text": "Halloumi and herby couscous salad"
+    },
+    {
+      "slug": "recipe-halloumi-veg-traybake",
+      "kind": "recipe",
+      "alt_text": "Halloumi and chickpea traybake"
+    },
+    {
+      "slug": "recipe-hummus-veg-pots",
+      "kind": "recipe",
+      "alt_text": "Hummus and veg pots"
+    },
+    {
+      "slug": "recipe-lentil-feta-salad",
+      "kind": "recipe",
+      "alt_text": "Lentil, feta and tomato salad"
+    },
+    {
+      "slug": "recipe-lentil-mushroom-bolognese",
+      "kind": "recipe",
+      "alt_text": "Lentil and mushroom bolognese"
+    },
+    {
+      "slug": "recipe-mango-chia-pudding",
+      "kind": "recipe",
+      "alt_text": "Mango chia pudding"
+    },
+    {
+      "slug": "recipe-one-pot-bean-rice",
+      "kind": "recipe",
+      "alt_text": "One-pot smoky bean and rice"
+    },
+    {
+      "slug": "recipe-one-pot-chicken-orzo",
+      "kind": "recipe",
+      "alt_text": "One-pot lemony chicken orzo"
+    },
+    {
+      "slug": "recipe-peanut-butter-apple-slices",
+      "kind": "recipe",
+      "alt_text": "Apple slices with peanut butter"
+    },
+    {
+      "slug": "recipe-peanut-butter-banana-porridge",
+      "kind": "recipe",
+      "alt_text": "Peanut butter banana porridge"
+    },
+    {
+      "slug": "recipe-peanut-butter-banana-smoothie",
+      "kind": "recipe",
+      "alt_text": "Peanut butter banana smoothie"
+    },
+    {
+      "slug": "recipe-peanut-butter-energy-balls",
+      "kind": "recipe",
+      "alt_text": "Peanut butter energy balls"
+    },
+    {
+      "slug": "recipe-peanut-noodle-jars",
+      "kind": "recipe",
+      "alt_text": "Peanut noodle salad jars"
+    },
+    {
+      "slug": "recipe-pesto-cod-quinoa",
+      "kind": "recipe",
+      "alt_text": "Pesto cod with roasted veg and quinoa"
+    },
+    {
+      "slug": "recipe-prawn-avocado-salad",
+      "kind": "recipe",
+      "alt_text": "Prawn, avocado and sweetcorn salad"
+    },
+    {
+      "slug": "recipe-red-lentil-soup",
+      "kind": "recipe",
+      "alt_text": "Spiced red lentil soup"
+    },
+    {
+      "slug": "recipe-roasted-tomato-bean-soup",
+      "kind": "recipe",
+      "alt_text": "Roasted tomato and white bean soup"
+    },
+    {
+      "slug": "recipe-salmon-potato-traybake",
+      "kind": "recipe",
+      "alt_text": "Salmon, potato and broccoli traybake"
+    },
+    {
+      "slug": "recipe-salmon-rice-bowl",
+      "kind": "recipe",
+      "alt_text": "Salmon rice bowl"
+    },
+    {
+      "slug": "recipe-smashed-chickpea-wraps",
+      "kind": "recipe",
+      "alt_text": "Smashed chickpea wraps"
+    },
+    {
+      "slug": "recipe-smoked-salmon-scrambled-eggs",
+      "kind": "recipe",
+      "alt_text": "Smoked salmon and scrambled eggs"
+    },
+    {
+      "slug": "recipe-smoky-beans-on-toast",
+      "kind": "recipe",
+      "alt_text": "Smoky homemade beans on toast"
+    },
+    {
+      "slug": "recipe-smoky-roasted-chickpeas",
+      "kind": "recipe",
+      "alt_text": "Smoky roasted chickpeas"
+    },
+    {
+      "slug": "recipe-spinach-feta-omelette",
+      "kind": "recipe",
+      "alt_text": "Spinach and feta omelette"
+    },
+    {
+      "slug": "recipe-tofu-scramble",
+      "kind": "recipe",
+      "alt_text": "Turmeric tofu scramble"
+    },
+    {
+      "slug": "recipe-tuna-sweetcorn-pasta-salad",
+      "kind": "recipe",
+      "alt_text": "Tuna and sweetcorn pasta salad"
+    },
+    {
+      "slug": "recipe-turkey-chilli",
+      "kind": "recipe",
+      "alt_text": "Turkey and bean chilli"
+    },
+    {
+      "slug": "recipe-turkey-cottage-pie",
+      "kind": "recipe",
+      "alt_text": "Turkey cottage pie with sweet potato mash"
+    },
+    {
+      "slug": "recipe-turkey-hummus-pittas",
+      "kind": "recipe",
+      "alt_text": "Turkey and hummus pittas"
+    },
+    {
+      "slug": "recipe-turkey-meatballs",
+      "kind": "recipe",
+      "alt_text": "Turkey meatballs in tomato sauce"
+    },
+    {
+      "slug": "recipe-veg-egg-fried-rice",
+      "kind": "recipe",
+      "alt_text": "Veggie egg fried rice"
+    },
+    {
+      "slug": "recipe-veggie-egg-muffins",
+      "kind": "recipe",
+      "alt_text": "Veggie egg muffins"
+    },
+    {
+      "slug": "recipe-yoghurt-berry-pot",
+      "kind": "recipe",
+      "alt_text": "Yoghurt and berry pot"
+    },
+    {
+      "slug": "recipe-yoghurt-chicken-skewers",
+      "kind": "recipe",
+      "alt_text": "Spiced yoghurt chicken with pittas"
+    },
+    {
+      "slug": "busy-gym-cover",
+      "kind": "routine",
+      "alt_text": "Busy Gym? No Problem"
+    },
+    {
+      "slug": "glute-challenge-cover",
+      "kind": "routine",
+      "alt_text": "30-Day Glute Challenge"
+    },
+    {
+      "slug": "glutes-legs-cover",
+      "kind": "routine",
+      "alt_text": "Glutes and Legs in 8 Weeks"
+    },
+    {
+      "slug": "higher-ground-cover",
+      "kind": "routine",
+      "alt_text": "Higher Ground"
+    },
+    {
+      "slug": "machines-cover",
+      "kind": "routine",
+      "alt_text": "Machines Made Easy"
+    },
+    {
+      "slug": "quick-ascent-cover",
+      "kind": "routine",
+      "alt_text": "Quick Ascent"
+    },
+    {
+      "slug": "strength-and-stamina-cover",
+      "kind": "routine",
+      "alt_text": "Strength and Stamina"
+    },
+    {
+      "slug": "strong-and-fit-cover",
+      "kind": "routine",
+      "alt_text": "Strong and Fit in 8 Weeks"
+    },
+    {
+      "slug": "strong-for-life-cover",
+      "kind": "routine",
+      "alt_text": "Strong for Life"
+    },
+    {
+      "slug": "strong-foundations-cover",
+      "kind": "routine",
+      "alt_text": "Strong Foundations in 6 Weeks"
+    },
+    {
+      "slug": "summit-cover",
+      "kind": "routine",
+      "alt_text": "Summit"
+    },
+    {
+      "slug": "the-climb-cover",
+      "kind": "routine",
+      "alt_text": "The Climb in 8 Weeks"
+    },
+    {
+      "slug": "two-day-start-cover",
+      "kind": "routine",
+      "alt_text": "The Two-Day Start"
+    },
+    {
+      "slug": "upper-body-cover",
+      "kind": "routine",
+      "alt_text": "Upper Body Strong in 6 Weeks"
+    },
+    {
+      "slug": "welcome-back-cover",
+      "kind": "routine",
+      "alt_text": "Welcome Back: 4-Week Restart"
+    },
+    {
+      "slug": "arms-cover",
+      "kind": "single",
+      "alt_text": "Arms and Shoulders"
+    },
+    {
+      "slug": "back-shoulders-cover",
+      "kind": "single",
+      "alt_text": "Back and Shoulders"
+    },
+    {
+      "slug": "bodyweight-cover",
+      "kind": "single",
+      "alt_text": "Bodyweight Anywhere"
+    },
+    {
+      "slug": "core-cover",
+      "kind": "single",
+      "alt_text": "Core Strength"
+    },
+    {
+      "slug": "first-session-cover",
+      "kind": "single",
+      "alt_text": "Your First Gym Session"
+    },
+    {
+      "slug": "full-body-30-cover",
+      "kind": "single",
+      "alt_text": "Full Body in 30"
+    },
+    {
+      "slug": "glute-focus-cover",
+      "kind": "single",
+      "alt_text": "Glute Focus"
+    },
+    {
+      "slug": "home-dumbbell-cover",
+      "kind": "single",
+      "alt_text": "Home Dumbbell Full Body"
+    },
+    {
+      "slug": "lower-strength-cover",
+      "kind": "single",
+      "alt_text": "Lower Body Strength"
+    },
+    {
+      "slug": "machine-circuit-cover",
+      "kind": "single",
+      "alt_text": "Machine Circuit"
+    },
+    {
+      "slug": "one-spot-cover",
+      "kind": "single",
+      "alt_text": "One Spot Full Body"
+    },
+    {
+      "slug": "upper-express-cover",
+      "kind": "single",
+      "alt_text": "Upper Body Express"
+    },
+    {
+      "slug": "after-leg-day-cover",
+      "kind": "stretch",
+      "alt_text": "After Leg Day"
+    },
+    {
+      "slug": "back-unwind-cover",
+      "kind": "stretch",
+      "alt_text": "Back Unwind"
+    },
+    {
+      "slug": "desk-reset-cover",
+      "kind": "stretch",
+      "alt_text": "Desk Reset"
+    },
+    {
+      "slug": "happy-hips-cover",
+      "kind": "stretch",
+      "alt_text": "Happy Hips"
+    },
+    {
+      "slug": "morning-mobility-cover",
+      "kind": "stretch",
+      "alt_text": "Morning Mobility"
+    },
+    {
+      "slug": "recovery-flow-cover",
+      "kind": "stretch",
+      "alt_text": "Full-Body Recovery Flow"
+    },
+    {
+      "slug": "shoulders-cover",
+      "kind": "stretch",
+      "alt_text": "Shoulders and Upper Back"
+    },
+    {
+      "slug": "wind-down-cover",
+      "kind": "stretch",
+      "alt_text": "Wind Down"
+    }
+  ]
+}

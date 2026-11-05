@@ -155,6 +155,7 @@ async function main(): Promise<void> {
   for (const [folder, why] of deferred) line(`  ${folder}: ${why}`);
   line();
 
+  await reportImages(client);
   await reportExercises(client);
   await reportRoutines(client);
   await reportQuotes(client);
@@ -163,6 +164,39 @@ async function main(): Promise<void> {
 
   line();
   line('Nothing was written.');
+}
+
+async function reportImages(client: SupabaseClient): Promise<void> {
+  line('images  ←  content/images/catalogue.json');
+  const images = asArray(readJson('images/catalogue.json').images);
+  const error = await probe(client, 'images', 'id, url, storage_path, alt_text, licence_source');
+  line(`  Content slugs: ${images.length}`);
+  if (error) {
+    line(`  Table not usable: ${error}`);
+    line('  Paste supabase/images_x1.sql first. The app shows placeholders until then.');
+    line();
+    return;
+  }
+  const remote = await fetchAll<{ id: string; url: string | null }>(client, 'images', 'id, url');
+  if (remote.error || remote.rows.length === 0) {
+    if (remote.error) line(`  Remote read failed: ${remote.error}`);
+    else {
+      line('  Remote returned 0 rows and no error.');
+      line('  Select is granted to signed-in users only, so this key may not see images.');
+    }
+    line(`  Would insert ${images.length} slugs with empty url and licence_source.`);
+    line('  Existing url and licence_source are never overwritten.');
+    line();
+    return;
+  }
+  const byId = new Set(remote.rows.map((row) => row.id));
+  const missing = images.filter((item) => !byId.has(text(item.slug)));
+  const withUrl = remote.rows.filter((row) => row.url).length;
+  line(`  Remote rows: ${remote.rows.length}`);
+  line(`  Remote rows with a url: ${withUrl}`);
+  line(`  Would insert: ${missing.length}`);
+  line('  Would update alt_text only. url and licence_source stay as they are.');
+  line();
 }
 
 async function reportExercises(client: SupabaseClient): Promise<void> {

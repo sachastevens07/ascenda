@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImageSourcePropType } from 'react-native';
 
-import { IMAGE_CATALOGUE } from '@/lib/images';
+import { contentImage, contentSlugForTitle, hydrateImages, imageSourceForSlug } from '@/lib/images';
 import { LEARN_ARTICLES, LEARN_LINKS } from '@/lib/learnArticles';
 import { userGoalsFromAnswers, type Goal, type QuizAnswers } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
@@ -31,14 +31,14 @@ export const LEARN_CATEGORY_LABELS: Record<LearnCategory, string> = {
 };
 
 export const LEARN_CATEGORY_COVERS: Record<LearnCategory, string> = {
-  getting_started: 'cover-gym-confidence-6',
-  gym_confidence: 'cover-one-spot-6',
-  technique: 'cover-full-body-3',
-  programmes: 'cover-short-cycle-4',
-  recovery: 'cover-stretch-morning',
-  fuelling: 'cover-home-strength-6',
-  mindset: 'cover-one-spot-2',
-  myths: 'cover-joint-friendly-6',
+  getting_started: 'learn-category-getting-started',
+  gym_confidence: 'learn-category-gym-confidence',
+  technique: 'learn-category-technique',
+  programmes: 'learn-category-how-programmes-work',
+  recovery: 'learn-category-recovery-and-sleep',
+  fuelling: 'learn-category-fuelling',
+  mindset: 'learn-category-mindset',
+  myths: 'learn-category-myths',
 };
 
 export type LearnSource = {
@@ -100,7 +100,7 @@ function toArticle(row: Partial<LearnArticle> & { id: string }): LearnArticle | 
     summary: row.summary?.trim() || bundled?.summary || '',
     category,
     read_minutes: row.read_minutes ?? bundled?.read_minutes ?? 3,
-    cover_image_id: row.cover_image_id || bundled?.cover_image_id || LEARN_CATEGORY_COVERS[category],
+    cover_image_id: learnCoverSlug(row.cover_image_id, bundled?.cover_image_id, row.slug?.trim() || bundled?.slug || row.id, title),
     body_markdown: body,
     is_pro: row.is_pro ?? bundled?.is_pro ?? false,
     sources: row.sources && row.sources.length > 0 ? row.sources : (bundled?.sources ?? []),
@@ -120,13 +120,27 @@ function isMissingLearn(error: { message?: string; code?: string }): boolean {
   );
 }
 
+function learnCoverSlug(
+  fromRow: string | undefined,
+  fromBundled: string | undefined,
+  slug: string,
+  title: string
+): string {
+  const fromTitle = contentSlugForTitle(title, 'learn');
+  if (fromTitle) return fromTitle;
+  if (fromRow && contentImage(fromRow)) return fromRow;
+  const prefixed = slug.startsWith('learn-') ? slug : `learn-${slug}`;
+  if (contentImage(prefixed)) return prefixed;
+  if (fromBundled && contentImage(fromBundled)) return fromBundled;
+  return prefixed;
+}
+
 export function learnImage(coverImageId: string | null | undefined): ImageSourcePropType | null {
-  if (!coverImageId) return null;
-  return IMAGE_CATALOGUE[coverImageId]?.asset ?? null;
+  return imageSourceForSlug(coverImageId);
 }
 
 export function articleImage(article: Pick<LearnArticle, 'cover_image_id' | 'category'>): ImageSourcePropType | null {
-  return learnImage(article.cover_image_id) ?? learnImage(LEARN_CATEGORY_COVERS[article.category]);
+  return learnImage(article.cover_image_id);
 }
 
 export function formatReadMinutes(minutes: number): string {
@@ -139,6 +153,7 @@ export function isLearnCategory(value: string | undefined): value is LearnCatego
 
 /** Overlay: bundled articles always show. Database rows win when body or title is set. */
 export async function fetchLearnArticles(): Promise<LearnArticle[]> {
+  await hydrateImages();
   const bundled = LEARN_ARTICLES.map((item) => toArticle(item)).filter((item): item is LearnArticle => Boolean(item));
   const { data, error } = await supabase
     .from('learn_articles')

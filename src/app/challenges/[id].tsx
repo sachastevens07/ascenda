@@ -23,7 +23,7 @@ import {
   rollingStartOptions,
   type Challenge,
 } from '@/lib/challenges';
-import { coverForRoutine } from '@/lib/images';
+import { coverForChallenge } from '@/lib/images';
 import { openPaywall } from '@/lib/paywall';
 import { useSubscription } from '@/lib/subscription';
 
@@ -127,7 +127,7 @@ export default function ChallengeDetailScreen() {
       style={styles.scroll}
       contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 32 }]}>
       <CoverPhoto
-        cover={coverForRoutine({ id: challenge.routine.id, cover: challenge.cover ?? challenge.routine.cover })}
+        cover={coverForChallenge(challenge)}
         letter={challenge.name.slice(0, 1)}
         height={180}
         style={styles.cover}

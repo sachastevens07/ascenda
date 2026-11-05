@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sessionCountsTowardStreak, sessionDurationSeconds, type FinishedSessionMeta } from '@/lib/activityStats';
 import { addDays, startOfWeekMonday, toIso } from '@/lib/planner';
 import { formatShortDate } from '@/lib/progress';
+import { hydrateImages } from '@/lib/images';
 import {
   describeRoutineError,
   toSummary,
@@ -283,6 +284,7 @@ async function toChallenge(row: ChallengeRow, userId: string | null, joins: Join
 }
 
 export async function fetchChallenges(): Promise<Challenge[]> {
+  await hydrateImages();
   const {
     data: { user },
   } = await supabase.auth.getUser();

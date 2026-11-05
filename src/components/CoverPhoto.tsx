@@ -7,8 +7,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { AppText } from '@/components/ui/AppText';
-import { colours } from '@/constants/theme';
+import { CoverPlaceholder } from '@/components/ui/Cards';
+import { useTheme } from '@/constants/theme';
 import { coverSources } from '@/lib/images';
 import type { CoverImage } from '@/lib/routines';
 
@@ -25,6 +25,7 @@ export function CoverPhoto({
   radius?: number;
   style?: StyleProp<ViewStyle>;
 }) {
+  const { colours } = useTheme();
   const sources = coverSources(cover);
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
@@ -36,14 +37,8 @@ export function CoverPhoto({
   }, [cover?.id, cover?.url, cover?.storage_path]);
 
   return (
-    <View style={[styles.frame, { height, borderRadius: radius }, style]}>
-      {!ready && (
-        <View style={styles.placeholder} accessibilityElementsHidden>
-          <AppText variant="display" style={{ color: colours.accent }}>
-            {letter}
-          </AppText>
-        </View>
-      )}
+    <View style={[styles.frame, { height, borderRadius: radius, backgroundColor: colours.surfaceMuted }, style]}>
+      {!ready ? <CoverPlaceholder /> : null}
       {source ? (
         <Image
           source={source}
@@ -64,12 +59,7 @@ export function CoverPhoto({
 const styles = StyleSheet.create({
   frame: {
     overflow: 'hidden',
-    backgroundColor: colours.accentSoft,
-  },
-  placeholder: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'relative',
   },
   image: {
     width: '100%',
