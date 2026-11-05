@@ -21,7 +21,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **R10** Free vs Pro split, contextual `openPaywall(reason)`. Visual paywall restyle is **C1 / C2**, not started.
 - **R11** Pexels covers and 14 exercise photos. Stretch covers were gym shots until **D2**.
 
-**M1 MuscleWiki videos: partly done.** Match SQL/scripts and 55 approved ids exist. Missing: Supabase CLI, Edge Functions `mw-exercise` / `mw-media-token`, in-app tap-to-play. App never reads `musclewiki_id`.
+**M1 exercise media (WorkoutX): not started.** The old MuscleWiki match files are listed under Roadmap to completion. The app does not read them.
 
 **v2.1**
 - **S1** Duplicate loophole closed (create / duplicate / save-from-routine all count; Pro routines cannot be copied on Free).
@@ -58,7 +58,7 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 - **D7** (3 Nov 2026) Awards: group cards, 72 px family icons, locked greyed, earned plum with bronze/silver/gold/platinum rings, progress only on the next badge in each group, tap opens a sheet. Duplicate Awards preview removed from Progress. Developer copy was already gone.
 - **D6** (3 Nov 2026) Activity Progress: Highlights kept. Streak card shows current run, weeks trained, gold weeks, 8 week dots and rest weeks banked. Your routine shows this week’s sessions plus “See full plan”. Sessions-per-week chart waits until 2+ weeks with sessions; weight chart waits until 2 logged points.
 - **D8** (3 Nov 2026) Profile: onboarding name (or “You”, never the email prefix), email, plan badge. Sections match DESIGN 6.10. My workouts shows “N saved”. Units kg/lbs, rest timer default 60/90/120 s, delete account. About: Safety, Terms, Privacy policy, Contact us, App version. Sign out then version (dev long-press). SQL: `supabase/profile_d8.sql`.
-- **D9** (4 Nov 2026) Exercises list: photo when we have one, otherwise a distinct equipment icon and colour (barbell, dumbbell, machine, cable, kettlebell, band, bodyweight). Shared `ExerciseThumb` on Programmes → Exercises, the add-exercise picker, the logger, and the exercise-detail fallback. MuscleWiki stills wait for M1. No SQL.
+- **D9** (4 Nov 2026) Exercises list: photo when we have one, otherwise a distinct equipment icon and colour (barbell, dumbbell, machine, cable, kettlebell, band, bodyweight). Shared `ExerciseThumb` on Programmes → Exercises, the add-exercise picker, the logger, and the exercise-detail fallback. Exercise media (WorkoutX) stills wait for M1 (revised). No SQL.
 - **N2** (4 Nov 2026) Routine standard on the 14 strength plans: who it's for, by the end, how it works, phases with goals, lighter-week chips, day focus, warm-up, coach note, role, RIR and tempo. Logger Today card has a warm-up checklist. Overlay fills this if SQL is missing; non-empty database copy wins. SQL: `supabase/n2_routines.sql`. Stretches and custom workouts are unchanged.
 - **N6** (4 Nov 2026) Learn tab with 16 bundled articles (3 Getting started, then the other categories; 3 Pro in-depth guides). Featured hero, category tiles, recommended-for-you, continue reading, mark as read, sources, safety line. Related cards on routine and exercise pages. Home “From Learn”. Profile is a pushed screen from the 36 px avatar on every tab. SQL: `supabase/learn_n6.sql` (tables, metadata, links, reads). Bodies stay in the app until a database body is set.
 - **N7** (4 Nov 2026) Daily quote on Home from a `quotes` table. 90 original Ascenda-voice quotes, same one worldwide by UTC date, no repeat for 90 days. Bundled list still shows if SQL is missing. Hide from the card ⋯ or Profile → Appearance. SQL: `supabase/quotes_n7.sql` (table, RLS, seed, and `profiles.hide_quote` if D3 was not pasted).
@@ -74,9 +74,101 @@ Git: `main`, ahead of origin. HEAD before this handoff: `be1ad05` H8. User is Sa
 
 ### Next step
 
-**C1. Subscription compliance** (AGENTS.md Group 6). Paywall copy: price, billing period, trial length, when she is charged, how to cancel. Trial-ending reminder 2 days before conversion. No countdown timers or fake urgency. “Continue with the free plan” stays clearly visible. Do not start C2.
+Roadmap item **3. X1 photo overhaul**, after the content loader (item 5) is in. Wait for Sacha to say "next". Do not start G1 or W1 until then.
 
-After C1: C2. S12 already built. Typography is done.
+C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
+
+---
+
+## Roadmap to completion
+
+Checked against the code and this file on 5 Nov 2026. Ticked items are in the app. Notes say what is only partly there. `/content` is the source of truth and is not loaded yet.
+
+### Stage 1: Look and feel
+- [x] **1. D1** Global design fixes. Dev tools are a long-press on the version. Primary buttons are plum. Tags are sentence case. No duplicate routine ids.
+- [x] **2. N5** Light theme by default. Appearance: Light, Dark, Match phone.
+- [ ] **3. X1** Photo overhaul. Partly done: `images.licence_source` exists, and D2 gave each routine and stretch its own cover. No separate X1 pass.
+- [ ] **4. G1** Gym-first changes. Not started.
+- [ ] **5. Content loader.** Step B. Not started in this section until `npm run content:sync` exists.
+
+### Stage 2: The workout core
+- [ ] **6. W1** Session types and blocks. Not started. `/content` routines already use warmup, strength, cardio and cooldown. The app still logs a flat exercise list.
+- [ ] **7. N3 + X4** Logger. Partly done: N3 opens the logger directly (swap, remove, add/remove set, different day). Not the Hevy layout (Previous column, per-exercise rest and note, drag to reorder, minimised bar, WorkoutX thumbnails).
+- [ ] **8. G2** Warm-up and cool-down blocks. Partly done: N2 shows a warm-up checklist. `content/warmups-cooldowns` is not loaded. No cool-down player.
+- [ ] **9. M1 (revised)** WorkoutX exercise media. Not started. See "MuscleWiki to retire" below. Do not drop those columns without a confirmed migration.
+- [ ] **10. N2** Routine standard. Partly done: the 14 legacy strength plans have coaching fields in the app. The 15 routines, catalogue and guides in `/content` are not loaded.
+
+### Stage 3: Onboarding and money
+- [x] **11. N4** Up to three goals, first is Main. Current onboarding, not `content/onboarding`.
+- [x] **12. N1** Full safety disclaimer, version 2, international wording.
+- [ ] **13. P1** Hard paywall. Not started. The app is still Free vs Pro with badges, locks and the 4-workout cap. S1 and S3 are built and will be removed here. One entitlement: `ascenda_pro`.
+- [ ] **14. X5** Onboarding v2 from `content/onboarding/onboarding.json`. Not started.
+- [ ] **15. C3** Paywall screen, locked home, trial, grace and expired states. Not started. The current paywall is the freemium screen.
+- [ ] **16. C1** Subscription compliance. Partly done: a local trial-ending reminder exists. Price, billing period, charge date, cancel path and renewal reminders are not the C1 screen.
+- [x] **17. S4** Switch routine and End routine. History is kept.
+
+### Stage 4: Habit and retention
+- [x] **18. H1** Streak rework is in the app (weeks trained, current run, gold weeks, rest weeks, repair). Partly against the new rule: Y still comes from the planner, not her onboarding days-per-week. Cardio does not count yet.
+- [x] **19. H2** Welcome-back card and Back on track. The content routine `welcome-back-4-week-restart` is not loaded.
+- [x] **20. H3** Planner reminders. `expo-notifications` was already in the project.
+- [x] **21. H4** What's next, then Start on Monday.
+- [ ] **22. H6** Achievements. Partly done: the Awards tab matches the old H6 list and is computed from history. `content/achievements` is not loaded.
+- [ ] **23. H7 + H8** Photos are locked down (H7 done). Challenges roll from Monday or the 1st in the app (H8 done). `content/challenges` is not loaded. `challenges_h8.sql` is not confirmed run.
+- [ ] **24. H5** PostHog events are in the app. Dashboards are not created in PostHog yet.
+
+### Stage 5: Depth and discovery
+- [ ] **25. X2** Home with all sections. Partly done: D3 (avatar, quote, welcome-back, featured cards, From Learn). Not the full X2 section list.
+- [ ] **26. X3** Programmes browse and single sessions. Not started. `content/single-sessions` and the new stretch file are not loaded.
+- [x] **27. D2 to D9** Design fixes are in. D9 thumbnails are photos or equipment icons, not WorkoutX.
+- [ ] **28. N6 + N7** Partly done: Learn has 16 bundled articles (content has 34). Daily quote works from 90 bundled quotes (content has more). Hide quote is in Profile.
+- [ ] **29. X6** Refer a friend. Not started. Check Apple offer types before building.
+
+### Launch checkpoint
+- [ ] **30. TestFlight** with EAS. Not started.
+- [ ] **31. Sandbox** subscription states. Not started.
+- [ ] **32. Store readiness.** Not started. Draft listing is `content/app-store/listing.md`. In-app terms and privacy are drafts.
+- [ ] **33. S12** Email verification UI and deep link are built. Confirm email is still off in the dashboard.
+- [ ] **34. App Store submit.** Not started.
+
+### Stage 6: The complete week
+- [ ] **35. W2 + W3** Cardio sessions and player. Not started.
+- [ ] **36. W4** Machine guides. Not started.
+- [ ] **37. AI1** Scan a machine. Not started.
+- [ ] **38. W5 to W7** Recovery days, weekly schedules, weekly ring. Not started.
+- [ ] **39. AI5** Monthly recap. Not started.
+
+### Stage 7: Food
+- [ ] **40. F1** Food tab and new navigation. Not started.
+- [ ] **41. F2 + F3 + X7** Recipes. Not started. Nutrition stays hidden until `nutrition_calc.py` fills it.
+- [ ] **42. F4 to F6** Suggestions, favourites, shopping list, fuelling articles. Not started.
+- [ ] **43. AI6** What can I cook? Not started.
+
+### Stage 8: The rest of Ascenda AI
+- [ ] **44. AI2** Busy gym fix. Not started.
+- [ ] **45. AI3** Build me a session. Not started. Do not use WorkoutX's generator.
+- [ ] **46. AI4** Ask Ascenda. Not started.
+- [ ] **47. AI7** AI messaging and fair-use limits. Not started.
+
+After launch, not in this build: price experiments, Gym buddy.
+
+### MuscleWiki to retire (do not drop columns yet)
+
+No Edge Functions and no app reads. These files exist:
+
+- `supabase/musclewiki.sql` adds `exercises.musclewiki_id`, `mw_video_urls`, `mw_cached_at`
+- `supabase/musclewiki_ids.sql` sets 55 approved ids
+- `scripts/match-musclewiki.mjs`, `scripts/apply-musclewiki-ids.mjs`, `scripts/musclewiki-matches.csv`
+
+Proposal when M1 (revised) starts: add a new WorkoutX id column in a migration Sacha confirms. Point `getExerciseMedia()` at that. Leave the MuscleWiki columns in place until she confirms a later migration to drop them. Do not delete the match files until that migration is agreed. The app never called MuscleWiki, so nothing in the logger has to be swapped before the new player exists.
+
+### Decisions for this phase
+
+- Hard paywall, one entitlement `ascenda_pro`. S1, S3 and C2 are skipped from here (S1 and S3 already exist and come out in P1).
+- Weekly target Y = onboarding days per week. Strength, cardio, and a stretch or recovery session of 10+ minutes all count. One session counts the week. Hitting Y is a gold week.
+- Rest weeks stay (H1): one per 4 counted weeks, bank up to 2.
+- Exercise media is WorkoutX, only through `getExerciseMedia()`.
+- Ask before adding any library.
+- `/content` is used as written. Do not rewrite it or hard-code it.
 
 ---
 
@@ -88,7 +180,7 @@ After C1: C2. S12 already built. Typography is done.
 - `one-spot-6` and `one-spot-2` are two different plans; both still show.
 - Old programme tables still exist; Profile UI hidden; `/programme` redirects to Programmes.
 - Dark theme does not restyle sign-in, paywall, workouts, paths, challenges or exercise detail. Stretch detail and player now follow the theme.
-- M1 video player not built. Logger and the exercises list use photos or equipment icons, not MuscleWiki stills.
+- M1 (revised) is not built. Logger and the exercises list use photos or equipment icons, not exercise media (WorkoutX).
 - Swap dropdown spacing still reported uneven (not retested).
 - Confirm email off in the Supabase dashboard. Paywall real-store purchases need a development build (Expo Go uses the Test Store key).
 - No ESLint config (`npx expo lint` cannot run).
@@ -123,7 +215,7 @@ After C1: C2. S12 already built. Typography is done.
 - D7: one icon per family (not per badge). First-time and gym “first equipment” badges have no tier ring. Numbered families use bronze → platinum. Locked sheet copy is “This one is still ahead.” No SQL.
 - D6: “2+ weeks of data” means two weeks that actually have a session, not two empty calendar weeks. Weight chart needs two logged points on the selected lift. Full roadmap stays on the routine page. Gentle streak copy only when the current run is 0. No SQL.
 - D8: missing onboarding name shows “You”, not the email prefix. Avatar initials still use the email if there is no name. Units convert at display only; sets stay in kg. Rest timer default fills in when a set has no prescribed rest (custom workouts); routine rest times stay as written. Terms/privacy are draft in-app copy, not live web pages. Contact mailto is `hello@ascenda.app` until a real address exists. App version is in About and again under Sign out for the hidden tester gesture.
-- D9 is DESIGN.md 6.7 (Programmes exercises list), not 6.9 (Activity). Icons use MaterialCommunityIcons from the existing `@expo/vector-icons` package so dumbbell, kettlebell and barbell actually look different. Cable uses the stretch sage teal; band uses the custom ochre. Only ~14 exercises have photos; the rest show the equipment icon. MuscleWiki thumbnails stay with M1.
+- D9 is DESIGN.md 6.7 (Programmes exercises list), not 6.9 (Activity). Icons use MaterialCommunityIcons from the existing `@expo/vector-icons` package so dumbbell, kettlebell and barbell actually look different. Cable uses the stretch sage teal; band uses the custom ochre. Only ~14 exercises have photos; the rest show the equipment icon. Exercise media (WorkoutX) thumbnails stay with M1 (revised).
 - N2: overlay fills empty coaching fields from `src/lib/routineStandard.ts`; a pasted `n2_routines.sql` value wins. Lighter weeks are labelled only (sets are not auto-reduced; coach review). Upper body 6 and Glute builder 6 say they are deliberately focused. Alternatives are stored as ids; the in-session swap engine is unchanged. Custom workouts have no Today / warm-up card. Stretch rows stay null.
 - N6: 16 articles in `src/lib/learnArticles.ts` so Learn works without SQL. Three Pro guides (double progression, sleep, protein). No calorie or macro targets. No new font. Article covers reuse existing licensed routine/stretch photos. Coach review still needed before launch. Reads sync to `article_reads` when SQL is pasted, and also live on-device. Profile is a stack screen with a back button, not a tab.
 

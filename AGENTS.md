@@ -135,17 +135,22 @@ Build in this order, one task at a time. Each task modifies existing code where 
 - Keep a consistent visual style (lighting, colour grading). Compress images and serve from Supabase storage; use placeholders while loading.
 - Add a simple `images` reference so photos can be swapped without code changes.
 
-**M1. MuscleWiki exercise videos (female model)**
+**M1 (revised): WorkoutX exercise media**
 
-- Exercise demos come from the MuscleWiki API (stream-only). Rules: API key only as a Supabase Edge Function secret (`MUSCLEWIKI_API_KEY`), never in the app or `.env`; never download or cache video files; exercise text/metadata may be cached for up to 30 days; use the video URLs the API returns; the app plays `<video_url>?token=<media token>` minted by our Edge Function (one token per session); never log video URLs or tokens.
-- Pieces: `exercises.musclewiki_id`, `mw_video_urls`, `mw_cached_at`; a one-off match script (reviewed by me); Edge Functions `mw-exercise` and `mw-media-token` (authenticated, rate-limited); tap-to-play thumbnail with front/side toggle, no autoplay, fallback to text cues on any error including 429.
-- This needs the Supabase CLI and a `supabase/functions` folder, which don't exist yet; set them up when starting this task.
+- Exercise demo videos and images come from the WorkoutX API, female models where available.
+- The API key is a Supabase Edge Function secret (`WORKOUTX_API_KEY`), never in the app or `.env`. The app never calls WorkoutX directly: an authenticated, rate-limited Edge Function returns the media for an exercise.
+- All media goes through one provider-agnostic function in the app, `getExerciseMedia(exerciseId)`, so we can change provider later without touching screens.
+- Match our exercises (`content/exercises/strength-catalogue.json`) to WorkoutX exercises with a one-off match script. Store the WorkoutX id on each exercise. Show me the unmatched and doubtful matches to review.
+- Tap-to-play thumbnail, no autoplay, front and side views if WorkoutX provides them, and a fallback to the text cues in the exercise guide on any error, including rate limits.
+- Don't use WorkoutX's AI workout generator: Ascenda's own AI3 builds sessions from our library.
+- Never log media URLs or keys. Track media usage so we can see how close we are to the plan's limit.
+- WorkoutX terms: [PASTE WHAT WORKOUTX CONFIRMED: caching allowed or not and for how long, attribution required, licence covers commercial app use, monthly media views on my plan]
 
 Milestone: TestFlight with 15–20 testers after R10, before any later phase.
 
 ### Phase v2.1 — programmes and polish
 
-Build in this order, one task at a time. If any v2.0 task (R1–R11) or the MuscleWiki video task is unfinished, tell me before starting v2.1.
+Build in this order, one task at a time. If any v2.0 task (R1–R11) or the exercise media (WorkoutX) task is unfinished, tell me before starting v2.1.
 
 **Superseded by v2.2 (read v2.2 before building these):** S5 streak rules are replaced by H1. S6 achievements are replaced by H6 and D7. The progress photo prompts in S9 are removed (see H7). S9 challenges must use rolling starts (H8). The session detail screen from R4 is removed and merged into the logger (N3).
 
@@ -203,7 +208,7 @@ Build in this order, one task at a time. If any v2.0 task (R1–R11) or the Musc
 
 - Stretch routines stored as data like routines (same tables or a `type` field: 'strength' | 'stretch').
 - 5–20 minute sessions, organised by area and occasion (e.g. full body, hips, lower back, post-leg day, desk stretch, morning mobility).
-- Timed holds rather than sets and reps: each step has duration_seconds and a demo (MuscleWiki where available; check coverage first and list any gaps).
+- Timed holds rather than sets and reps: each step has duration_seconds and a demo (exercise media (WorkoutX) where available; check coverage first and list any gaps).
 - Logged as sessions with source 'stretch' and duration, counting towards the streak per S5.
 - 6–8 stretch routines at launch; 2–3 free, the rest Pro.
 
@@ -220,7 +225,7 @@ Build in this order, one task at a time. If any v2.0 task (R1–R11) or the Musc
 
 - Add routines as data until there are 12–15 strength routines plus the 6–8 stretch routines from S8.
 - Cover a range: beginner, gym confidence, glutes & legs, upper body, full body, minimal equipment, 2/3/4 days per week, 4/6/8 weeks.
-- Each needs: cover photo, description, tags, week-by-week plan, MuscleWiki video matches, and a coach review before launch.
+- Each needs: cover photo, description, tags, week-by-week plan, exercise media (WorkoutX) matches, and a coach review before launch.
 - Target after launch: add 2–4 routines a month, working towards 30.
 
 **S11. Remove em dashes**
@@ -269,7 +274,7 @@ Before starting: compare PROGRESS.md and the code against v2.0, v2.1 and this li
   - changes apply to today only, never to the routine.
 - The session timer starts when she ticks her first set (or taps "Start timer"), not when the screen opens, so browsing the session first doesn't distort time trained.
 - If she leaves without ticking any set, nothing is saved and no "discard" prompt is needed.
-- Logger improvements at the same time (DESIGN.md 6.3): last-time weight shown as placeholder in each kg cell, a suggested-weight chip when the progression rule says go up, bigger tick buttons in `brand` that fill `success` when done, rest timer bar after each ticked set, real exercise thumbnails (MuscleWiki) instead of letters.
+- Logger improvements at the same time (DESIGN.md 6.3): last-time weight shown as placeholder in each kg cell, a suggested-weight chip when the progression rule says go up, bigger tick buttons in `brand` that fill `success` when done, rest timer bar after each ticked set, real exercise thumbnails (exercise media (WorkoutX)) instead of letters.
 
 **N1. Clear safety disclaimer**
 
@@ -522,7 +527,7 @@ New or changed in v2.2:
 
 ## Working rules for the AI
 
-- Current phase: v2.2. First reconcile v2.0, v2.1 and v2.2 against the code and PROGRESS.md, then build v2.2 in its listed order. Unfinished v2.1 tasks that aren't superseded go after Group 2 unless I say otherwise. Do not start later phases.
+- Current work is the Roadmap to completion in PROGRESS.md. v2.0, v2.1 and v2.2 below are the spec history. Do not rebuild a roadmap item marked done. Do not start gym buddy or price experiments.
 - Read the existing code before changing anything; change only what the current task needs.
 - Build ONE task at a time, in order. Stop and tell me how to test it before moving on.
 - For any database change, write a migration, explain it, and wait for my confirmation. Never delete users' workout history (sessions and sets).

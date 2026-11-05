@@ -385,7 +385,7 @@ Each item below maps to a task in AGENTS.md (in brackets).
 - **Day card at the top (collapsible):** coach note for the day (N2) and warm-up checklist with ticks.
 - **Tip banner** shown once per session (keep the current one).
 - **Exercise card:**
-  - thumbnail (MuscleWiki still or video play button; never a letter placeholder), name (`title3`), role eyebrow ("MAIN LIFT", "ACCESSORY"), target line "3 × 10 to 12 · 2 reps in reserve · rest 90 s";
+  - thumbnail (exercise media (WorkoutX) still or video play button; never a letter placeholder), name (`title3`), role eyebrow ("MAIN LIFT", "ACCESSORY"), target line "3 × 10 to 12 · 2 reps in reserve · rest 90 s";
   - icon buttons: info (guide), swap; "⋯" menu: Remove exercise, Add set, Remove set, Change rep target, Notes;
   - SetRow: set number, kg cell with last time's weight as placeholder (`inkSubtle`), a "+2 kg" suggested chip when the progression rule says go up, reps cell, tick button 48 px in `brand` outline that fills `success` with a white tick when done; completed row gets `brandSoft` background.
 - **Rest timer bar:** slides up above the bottom bar after each tick: countdown, "+15 s", "Skip".
@@ -418,7 +418,7 @@ Each item below maps to a task in AGENTS.md (in brackets).
 ### 6.7 Programmes (D1, D9)
 - Routine rows: max 2 chips, single line, consistent row height; eyebrow not truncated.
 - Current routine card: make sure "⋯" is visible (move dev gear).
-- Exercises list: thumbnail per exercise (MuscleWiki still), or at least a different icon per equipment type (dumbbell, barbell, machine, cable, band, bodyweight, kettlebell) in its category colour.
+- Exercises list: thumbnail per exercise (exercise media (WorkoutX) still), or at least a different icon per equipment type (dumbbell, barbell, machine, cable, band, bodyweight, kettlebell) in its category colour.
 
 ### 6.8 Planner (D5, H1)
 - Day headers smaller and quieter: `eyebrow` style "WED 4 NOV" in `inkMuted` on `surfaceMuted`, 32 px tall. Today keeps the dark bar.
