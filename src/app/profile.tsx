@@ -21,6 +21,7 @@ import {
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme, type ThemePreference } from '@/constants/theme';
+import { appearanceSectionTitle } from '@/lib/copy';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import {
   DEFAULT_REMINDER_TIME,
@@ -608,7 +609,7 @@ export default function ProfileScreen() {
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Appearance">
+      <SettingsGroup title={appearanceSectionTitle}>
         <View style={styles.appearance}>
           <AppText variant="bodySm" style={{ color: colours.inkMuted, marginBottom: 10 }}>Theme</AppText>
           <SegmentedThemePicker value={preference} onChange={handleThemeChange} />

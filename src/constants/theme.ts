@@ -12,6 +12,7 @@ import {
 import { Appearance, useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
 
 import { fonts } from '@/constants/fonts';
+import { appearanceLabels } from '@/lib/copy';
 
 /**
  * Design tokens from DESIGN.md (approved).
@@ -249,11 +250,7 @@ export type ColorSchemeName = 'light' | 'dark';
 export const THEME_PREFERENCES = ['light', 'dark', 'system'] as const;
 export type ThemePreference = (typeof THEME_PREFERENCES)[number];
 
-export const THEME_PREFERENCE_LABELS: Record<ThemePreference, string> = {
-  light: 'Light',
-  dark: 'Dark',
-  system: 'Match phone',
-};
+export const THEME_PREFERENCE_LABELS: Record<ThemePreference, string> = appearanceLabels;
 
 const THEME_STORAGE_KEY = 'theme_preference';
 
@@ -264,6 +261,8 @@ export function parseThemePreference(value: unknown): ThemePreference | null {
 export type Theme = {
   scheme: ColorSchemeName;
   preference: ThemePreference;
+  /** True once AsyncStorage has been read. Cloud sync waits for this. */
+  hasHydrated: boolean;
   /** True once AsyncStorage has a saved choice. Cloud sync only fills an empty device. */
   hasLocalPreference: boolean;
   setPreference: (value: ThemePreference) => void;
@@ -277,6 +276,7 @@ export type Theme = {
 const defaultTheme: Theme = {
   scheme: 'light',
   preference: 'light',
+  hasHydrated: false,
   hasLocalPreference: false,
   setPreference: () => {},
   colours: light,
@@ -297,6 +297,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
   const [preference, setPreferenceState] = useState<ThemePreference>('light');
   const [hasLocalPreference, setHasLocalPreference] = useState(false);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_STORAGE_KEY)
@@ -307,7 +308,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           setHasLocalPreference(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setHasHydrated(true));
   }, []);
 
   useEffect(() => {
@@ -326,6 +328,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     () => ({
       scheme,
       preference,
+      hasHydrated,
       hasLocalPreference,
       setPreference,
       colours: scheme === 'dark' ? dark : light,
@@ -334,7 +337,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       shadow: scheme === 'dark' ? darkShadow : lightShadow,
       type,
     }),
-    [scheme, preference, hasLocalPreference, setPreference]
+    [scheme, preference, hasHydrated, hasLocalPreference, setPreference]
   );
   return createElement(ThemeContext.Provider, { value }, children);
 }

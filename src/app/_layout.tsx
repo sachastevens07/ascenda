@@ -102,13 +102,13 @@ function ThemedStatusBar() {
 
 function ThemeCloudSync() {
   const { profile, isLoading } = useProfile();
-  const { hasLocalPreference, setPreference } = useTheme();
+  const { hasHydrated, hasLocalPreference, setPreference } = useTheme();
 
   useEffect(() => {
-    if (isLoading || hasLocalPreference) return;
+    if (!hasHydrated || isLoading || hasLocalPreference) return;
     const remote = profile?.theme_preference;
     if (remote) setPreference(remote);
-  }, [hasLocalPreference, isLoading, profile?.theme_preference, setPreference]);
+  }, [hasHydrated, hasLocalPreference, isLoading, profile?.theme_preference, setPreference]);
 
   return null;
 }

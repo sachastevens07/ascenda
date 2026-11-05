@@ -41,7 +41,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **v2.2 Group 1–3 (all 3 Nov 2026)**
 - **D1** Tester tools behind `showDevTools` (long-press Profile version once). Primary buttons plum `brand` only. Secondary buttons `brandSoft` (outline for paired choices). Tags sentence case, max 2, one line. Short goal eyebrows. Unique routine ids.
-- **N5** Default theme light. Profile → Appearance: Light / Dark / Match phone. `profiles.theme_preference`.
+- **N5** Default theme light. Profile → Appearance: Light / Dark / Match phone from microcopy. Device + `profiles.theme_preference`. Instant. Cloud waits for local hydrate.
 - **N3** Next-session / Start session opens the logger. Swap, remove, add/remove set, different day live there. Timer starts on open. End session discards. No add-exercise on routine sessions. Weighted sets need a weight.
 - **N1** Full safety text in `src/lib/disclaimer.ts` (v2, international). Onboarding checkbox, re-prompt on version change, Profile About, first-session sheet, one-line on routine/stretch detail.
 - **N4** Up to 3 goals; first is Main. `profiles.main_goals text[]`.
@@ -78,7 +78,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **1. D1** done this pass. Wait for Sacha to say "next". Then **2. N5**.
+Current: **2. N5** done this pass. Wait for Sacha to say "next". Then **3. X1**.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -90,7 +90,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 
 ### Stage 1: Look and feel
 - [x] **1. D1** Global design fixes (final-phase pass 5 Nov 2026). Dev tools are a long-press on the version. Primary buttons are plum only (no coral tone). Secondary buttons are `brandSoft` fill; outline is only for paired choices (Camera / Library, under-18). Tags are sentence case, max 2, one line. Eyebrows use a short goal word ("Intermediate · Strength"). `one-spot-6` and `one-spot-2` stay as two different plans. No user-facing em dashes.
-- [x] **2. N5** Light theme by default. Appearance: Light, Dark, Match phone.
+- [x] **2. N5** Light theme by default (final-phase pass 5 Nov 2026). Appearance: Light, Dark, Match phone from `content/microcopy`. Saved on the device and in `profiles.theme_preference`. Applies at once. Cloud fill waits until device storage has been read. Microcopy is bundled, not loaded by content:sync. SQL: `supabase/theme_preference.sql` (not confirmed run).
 - [ ] **3. X1** Photo overhaul. Partly done: `images.licence_source` exists, and D2 gave each routine and stretch its own cover. No separate X1 pass.
 - [ ] **4. G1** Gym-first changes. Not started.
 - [x] **5. Content loader.** `npm run content:sync -- --dry-run` (5 Nov 2026). Reads `/content` and plans upserts by slug. Does not delete, and does not touch sessions, sets, enrolments or profiles. Onboarding, microcopy and `content/ai` are not loaded. Cardio, food, machine guides, warm-ups, single sessions, exercise guides and achievements are skipped until their tables exist. The publishable key cannot see catalogue rows (RLS), so this dry-run does not treat an empty read as an empty library. `routines.is_active` is not in the schema, so old routines are not marked inactive yet. No migration was added.
