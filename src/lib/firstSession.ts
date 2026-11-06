@@ -9,7 +9,7 @@ function storageKey(userId: string): string {
 
 let showSheet: (() => Promise<boolean>) | null = null;
 
-/** The first-session sheet registers here so start paths can wait for “I understand”. */
+/** The first-session sheet registers here so start paths can wait for her confirmation. */
 export function registerFirstSessionSheet(present: (() => Promise<boolean>) | null): void {
   showSheet = present;
 }

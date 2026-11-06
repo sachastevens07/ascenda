@@ -1,0 +1,609 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "App microcopy. Keep in the app as one strings file (e.g. src/copy/en-GB.json) rather than in Supabase, so it ships with the build and works offline.",
+    "{placeholders} are filled by the app. Prices, billing periods and trial lengths always come from RevenueCat.",
+    "Sentence case everywhere except eyebrows (small uppercase labels). UK spelling. No em dashes.",
+    "Never show streak-loss or guilt copy (AGENTS.md Group 3). Never show countdowns or urgency on offers (AGENTS.md C1).",
+    "Empty strings mean 'show nothing' (e.g. a user cancelling the purchase sheet needs no message)."
+  ],
+  "strings": {
+    "greetings": {
+      "_note": "Home header. Pick by local time. {name} is her onboarding name; drop ', {name}' if empty.",
+      "morning": "Good morning, {name}",
+      "afternoon": "Good afternoon, {name}",
+      "evening": "Good evening, {name}",
+      "late": "Hi, {name}"
+    },
+    "home": {
+      "hero_planned_today": {
+        "eyebrow": "TODAY",
+        "title": "{session_name}",
+        "subtitle": "About {minutes} min · {exercise_count} exercises",
+        "cta": "Start session"
+      },
+      "hero_rest_day": {
+        "eyebrow": "REST DAY",
+        "title": "Recovery is part of the plan",
+        "subtitle": "Fancy a gentle stretch? 10 minutes or more counts towards your week.",
+        "cta": "Browse stretches"
+      },
+      "hero_done_today": {
+        "eyebrow": "DONE FOR TODAY",
+        "title": "Nice work, {name}",
+        "subtitle": "{session_name} is in the book. Your next session is {next_day}.",
+        "cta": "See today's wins"
+      },
+      "hero_nothing_planned": {
+        "eyebrow": "THIS WEEK",
+        "title": "Plan your week",
+        "subtitle": "Pick your training days and we'll line up your sessions.",
+        "cta": "Open Planner"
+      },
+      "hero_no_routine": {
+        "eyebrow": "GET STARTED",
+        "title": "Find your routine",
+        "subtitle": "A clear plan, a finish line and every session laid out for you.",
+        "cta": "See routines"
+      },
+      "next_session_menu": {
+        "different_day": "Do a different day",
+        "switch": "Switch routine",
+        "end": "End routine"
+      },
+      "week_strip_empty": "Nothing planned yet. Tap a day to add a session.",
+      "section_featured": "Featured for you",
+      "section_week_so_far": "Your week so far",
+      "section_awards": "Awards",
+      "section_stretch_today": "Stretch today",
+      "section_personalised": "Picked for you",
+      "section_learn": "Learn",
+      "see_all": "See all",
+      "quote_eyebrow": "TODAY'S THOUGHT",
+      "share_week": "Share"
+    },
+    "paywall": {
+      "_note": "DESIGN.md 9.2. Prices, periods and trial length come from RevenueCat, never hard-coded. {trial_days} is 7, or 14 for referred friends.",
+      "headline_with_plan": "Your {routine_name} plan is ready",
+      "headline_fallback": "Your plan is ready",
+      "subheadline": "Everything you need to feel at home in the gym.",
+      "benefits": [
+        "Your full plan, week by week",
+        "Guides for every machine, so nothing feels unfamiliar",
+        "Track your lifts and watch yourself get stronger",
+        "Stretches, warm-ups and recovery built in"
+      ],
+      "benefits_future": {
+        "cardio": "Cardio sessions with machine guides",
+        "food": "Recipes that fuel your training",
+        "ai": "Scan any machine and we'll show you how to use it"
+      },
+      "annual_title": "Annual",
+      "annual_trial_line": "{trial_days} days free, then {annual_price} a year",
+      "annual_monthly_equiv": "About {annual_per_month} a month",
+      "annual_tag": "Best value",
+      "monthly_title": "Monthly",
+      "monthly_line": "{monthly_price} a month",
+      "cta_trial": "Start my free trial",
+      "cta_subscribe": "Subscribe",
+      "small_print_trial": "Free for {trial_days} days, then {annual_price} a year. You won't be charged until {charge_date}. Cancel anytime in Settings. We'll remind you 2 days before your trial ends.",
+      "small_print_monthly": "{monthly_price} a month, renews automatically. Cancel anytime in Settings.",
+      "restore": "Restore purchases",
+      "terms": "Terms",
+      "privacy": "Privacy",
+      "close_a11y": "Close",
+      "purchasing": "Just a moment...",
+      "success_title": "You're in",
+      "success_body": "Your plan is ready. Let's do your first session.",
+      "success_cta": "Let's go",
+      "cancelled_by_user": "",
+      "error": "That didn't go through. You haven't been charged. Please try again.",
+      "restore_none": "We couldn't find a subscription on this Apple ID.",
+      "restore_success": "Welcome back. Your subscription has been restored."
+    },
+    "locked_home": {
+      "_note": "DESIGN.md 9.3. Shown when there's no active subscription or trial. Every tab shows this screen.",
+      "new": {
+        "eyebrow": "YOUR PLAN",
+        "intro": "Here's the plan we built for you.",
+        "why_title": "Why this plan",
+        "cta": "Start your {trial_days}-day free trial",
+        "cta_no_trial": "Subscribe to start",
+        "small_print": "Cancel anytime in Settings."
+      },
+      "lapsed": {
+        "headline": "Welcome back, {name}",
+        "body": "Everything you've done is still here. Pick up where you left off whenever you're ready.",
+        "stats_title": "What you've built",
+        "see_history": "See your history",
+        "export": "Export your data",
+        "cta": "Resubscribe",
+        "small_print": "Your history, personal bests and awards stay yours, whatever you decide."
+      },
+      "tab_tapped": "Start your subscription to open {tab}."
+    },
+    "subscription_status": {
+      "_note": "Profile → Plan and subscription, plus banners (DESIGN.md 9.4, AGENTS.md C1, C3).",
+      "title": "Plan and subscription",
+      "chip_trial": "Trial · ends {date}",
+      "chip_active": "Active · renews {date}",
+      "chip_active_cancelled": "Active · ends {date}",
+      "chip_grace": "Payment issue",
+      "chip_expired": "Expired",
+      "manage": "Manage subscription",
+      "manage_help": "Opens your Apple subscription settings, where you can change or cancel your plan in a couple of taps.",
+      "restore": "Restore purchases",
+      "how_to_cancel_title": "How to cancel",
+      "how_to_cancel_body": "Tap Manage subscription, choose Ascenda and tap Cancel subscription. You'll keep access until the end of your current period, and your history stays yours.",
+      "banner_trial_ending": "Your free trial ends on {day}. You can manage it in Settings.",
+      "banner_trial_ending_cta": "Manage",
+      "banner_grace": "There's a problem with your payment. Update it in Settings to keep access.",
+      "banner_grace_cta": "Update",
+      "banner_dismiss_a11y": "Dismiss"
+    },
+    "onboarding_end": {
+      "building_plan_title": "Building your plan",
+      "plan_reveal_eyebrow": "YOUR PLAN IS READY",
+      "plan_reveal_cta": "Continue",
+      "milestones_label": "Your milestones (estimates)",
+      "first_session_title": "Your first session",
+      "first_session_body": "{session_name} is ready when you are. About {minutes} minutes.",
+      "first_session_cta": "Start now",
+      "first_session_later": "I'll do it later"
+    },
+    "safety": {
+      "_note": "Full disclaimer text lives in AGENTS.md 'Safety disclaimer' (keep it in one file in the app). These are the surrounding strings.",
+      "onboarding_title": "Train safely with Ascenda",
+      "onboarding_checkbox": "I've read this and I'm 18 or over",
+      "onboarding_cta": "Continue",
+      "updated_title": "We've updated our safety guidance",
+      "updated_body": "Please take a moment to read it.",
+      "updated_cta": "I've read this",
+      "first_session_sheet_title": "Train within your limits",
+      "first_session_bullets": [
+        "Ascenda gives general fitness guidance, not medical advice.",
+        "Check with your GP first if you're pregnant, injured or have a health condition.",
+        "Stop and get help if you feel chest pain, dizziness or sharp pain.",
+        "Use weights you can lift with good form, and never train through pain."
+      ],
+      "first_session_link": "Read the full safety guidance",
+      "first_session_cta": "Got it",
+      "footer_line": "Train within your limits. Read the safety guidance"
+    },
+    "logger": {
+      "start_timer": "Start timer",
+      "timer_hint": "The timer starts when you tick your first set.",
+      "finish": "Finish",
+      "finish_confirm_title": "Finish session?",
+      "finish_confirm_body_unticked": "You've got {count} sets left unticked. They won't be saved.",
+      "finish_confirm_yes": "Finish",
+      "finish_confirm_no": "Keep going",
+      "minimise_a11y": "Minimise session",
+      "mini_bar": "{session_name} · {time} · Resume",
+      "stats": {
+        "duration": "Duration",
+        "volume": "Volume",
+        "sets": "Sets"
+      },
+      "columns": {
+        "set": "Set",
+        "previous": "Previous",
+        "kg": "kg",
+        "lbs": "lbs",
+        "reps": "Reps"
+      },
+      "warmup_set_label": "W",
+      "add_set": "+ Add set",
+      "add_exercise": "Add exercise",
+      "exercise_menu": {
+        "swap": "Swap exercise",
+        "remove": "Remove exercise",
+        "add_set": "Add a set",
+        "remove_set": "Remove a set",
+        "rep_target": "Change rep target",
+        "guide": "How to do it",
+        "taken": "Something's taken"
+      },
+      "header_menu": {
+        "different_day": "Do a different day",
+        "reorder": "Reorder exercises",
+        "taken": "Something's taken",
+        "end": "End session"
+      },
+      "today_only_note": "Changes apply to today only. Your routine stays the same.",
+      "rest_chip": "Rest {time}",
+      "rest_sheet_title": "Rest timer for this exercise",
+      "rest_sheet_note": "We'll remember this next time.",
+      "note_chip": "Note",
+      "note_placeholder": "Add a note for next time, like seat height or grip",
+      "rest_bar": "Rest · {time}",
+      "rest_skip": "Skip",
+      "rest_add15": "+15s",
+      "rest_done": "Rest done. Ready when you are.",
+      "suggested_chip": "Try {weight}",
+      "suggested_reason": "You hit the top of your rep range last time. Nice.",
+      "first_time_link": "First time? See the guide",
+      "roles": {
+        "main": "Main lift",
+        "secondary": "Secondary",
+        "accessory": "Accessory",
+        "core": "Core",
+        "finisher": "Finisher"
+      },
+      "rir": {
+        "0": "Finish with nothing left, but only with good form",
+        "1": "Stop with 1 rep left in the tank",
+        "2": "Stop with 2 reps left in the tank",
+        "3": "Stop with 3 reps left in the tank",
+        "range": "Stop with {min} to {max} reps left in the tank"
+      },
+      "tempo": "Tempo: {down} seconds down, {pause} pause, {up} up",
+      "coach_note_label": "Coach note",
+      "warmup_block": "Warm-up · {minutes} min",
+      "cooldown_block": "Cool-down · {minutes} min",
+      "block_skip": "Skip",
+      "block_skipped": "Skipped. No problem.",
+      "pb_toast": "New personal best!",
+      "pb_detail": "{exercise}: {weight} × {reps}",
+      "swap_title": "Swap {exercise}",
+      "swap_subtitle": "Same movement, different kit.",
+      "swap_none": "No close swaps for this one. You could skip it today or try it later in the session.",
+      "different_day_title": "Do a different day",
+      "different_day_body": "Pick another session from this week. Your planner updates to match.",
+      "leave_empty_note": ""
+    },
+    "session_complete": {
+      "_note": "Shown after Finish. Wins are chosen by the app from real data: max 3, most meaningful first.",
+      "title": "Session complete",
+      "subtitle": "{session_name} · {duration}",
+      "stats": {
+        "duration": "Time",
+        "sets": "Sets",
+        "volume": "Volume"
+      },
+      "wins_title": "Today's wins",
+      "win_templates": {
+        "pb": "New personal best on {exercise}",
+        "load_since_start": "+{delta} on {exercise} since week 1",
+        "reps_up": "{delta} more reps on {exercise} than last time",
+        "first_exercise": "First time doing {exercise}",
+        "first_equipment": "First time on the {equipment}!",
+        "first_session": "Your first Ascenda session. The hardest one is done.",
+        "week_target_hit": "That's your week done: {done} of {target}",
+        "gold_week": "Gold week! You hit your full weekly target",
+        "streak_extended": "{weeks} weeks in a row",
+        "badge": "New award: {badge}",
+        "phase_complete": "{phase} complete",
+        "consistency": "Session {count}. Look at you go.",
+        "fallback": "You showed up. That's the win."
+      },
+      "fuel_suggestion": "Fuel for later: {recipe_or_collection}",
+      "share": "Share",
+      "done": "Done",
+      "invite_nudge": "Know someone who'd like a training partner? Invite a friend."
+    },
+    "welcome_back": {
+      "_note": "AGENTS.md H2. Never mention how long she's been away or what she missed.",
+      "eyebrow": "WELCOME BACK",
+      "title": "Good to see you, {name}",
+      "body": "Here's a lighter session to ease back in.",
+      "options": {
+        "lighter": {
+          "title": "Lighter {session_name}",
+          "subtitle": "Fewer sets, weights about 10% lower"
+        },
+        "restart_week": {
+          "title": "Restart this week",
+          "subtitle": "Pick up from the start of week {week}"
+        },
+        "gentler_routine": {
+          "title": "Try a gentler routine",
+          "subtitle": "Welcome Back: 4-week restart"
+        }
+      },
+      "cta": "Start",
+      "later": "Not today",
+      "complete_title": "Back on track",
+      "complete_body": "That's the hardest session of any comeback, done."
+    },
+    "streak": {
+      "_note": "AGENTS.md H1 and Group 3 rules. Never 'you broke your streak', never guilt.",
+      "weeks_trained": "Weeks trained",
+      "current_run": "Current run",
+      "weeks_unit_one": "{count} week",
+      "weeks_unit_many": "{count} weeks",
+      "gold_weeks": "Gold weeks",
+      "goal_progress": "{current} of {goal} weeks",
+      "this_week_progress": "This week: {done} of {target}",
+      "this_week_counted": "This week counts. Anything more is a bonus.",
+      "this_week_gold": "Gold week. You hit your full target.",
+      "this_week_none_yet": "One session makes this week count.",
+      "goal_reached_title": "You reached {goal} weeks!",
+      "goal_reached_body": "That's a real habit. Fancy aiming for {next_goal}?",
+      "goal_reached_cta": "Set {next_goal} weeks",
+      "goal_reached_later": "Maybe later",
+      "rest_week_banked": "Rest weeks banked: {count} of 2",
+      "rest_week_earned": "You've earned a rest week. Use it whenever life gets busy.",
+      "rest_week_prompt_title": "New week, fresh start",
+      "rest_week_prompt_body": "Last week was quiet. Want to use a rest week to keep your run going?",
+      "rest_week_prompt_yes": "Use a rest week",
+      "rest_week_prompt_no": "No thanks",
+      "rest_week_used": "Rest week used. Your run is safe.",
+      "rest_week_schedule": "Plan a rest week",
+      "rest_week_schedule_body": "Going away or having a busy week? Plan it as a rest week and your run carries on.",
+      "repair_offer": "Do one extra session this week and last week counts too.",
+      "repair_progress": "{done} of {needed} sessions to keep your run going",
+      "repaired": "Done. Last week counts and your run carries on.",
+      "new_run": "New week, fresh start. Your weeks trained total is still {total}.",
+      "hidden_note": "Your streak is hidden. You can turn it back on in Settings."
+    },
+    "notifications": {
+      "_note": "AGENTS.md H3. Session reminders, weekly summary and offers are separate toggles. Offers need their own opt-in.",
+      "primer_title": "Want a nudge on training days?",
+      "primer_body": "We'll only remind you on days you've planned a session, at a time you choose. Nothing on rest days.",
+      "primer_yes": "Turn on reminders",
+      "primer_no": "Not now",
+      "session_reminders": [
+        {
+          "title": "{session_name} is ready when you are",
+          "body": "About {minutes} minutes. Your plan's all set."
+        },
+        {
+          "title": "Training day",
+          "body": "{session_name} is planned for today. Go at your own pace."
+        },
+        {
+          "title": "Your session's lined up",
+          "body": "{session_name} is waiting. Even a shorter session counts."
+        },
+        {
+          "title": "Today: {session_name}",
+          "body": "Everything's laid out for you in Ascenda."
+        }
+      ],
+      "stretch_reminder": {
+        "title": "Time for {stretch_name}",
+        "body": "{minutes} quiet minutes, just for you."
+      },
+      "weekly_summary": {
+        "title": "Plan your week",
+        "body": "A couple of taps and your sessions are ready for the week ahead."
+      },
+      "weekly_summary_with_stats": {
+        "title": "Last week: {sessions} sessions",
+        "body": "Nice work. Plan this week's sessions when you're ready."
+      },
+      "trial_ending": {
+        "title": "Your free trial ends in 2 days",
+        "body": "Your subscription starts on {date} at {price}. You can manage or cancel it in Settings."
+      },
+      "renewal_reminder": {
+        "title": "Your annual plan renews soon",
+        "body": "It renews on {date} at {price}. You can manage it in Settings."
+      },
+      "welcome_back_fresh_start": {
+        "title": "New week, fresh start",
+        "body": "A lighter session is ready whenever you'd like to ease back in."
+      },
+      "monthly_recap": {
+        "title": "Your {month} in the gym",
+        "body": "Your recap is ready. Take a look at what you did."
+      },
+      "settings": {
+        "title": "Notifications",
+        "session_reminders": "Session reminders",
+        "session_reminders_help": "On days you've planned a session",
+        "default_time": "Default reminder time",
+        "weekly_summary": "Sunday plan-your-week",
+        "offers": "Offers and news",
+        "offers_help": "Occasional updates about new features and offers",
+        "system_off": "Notifications are off for Ascenda. Turn them on in your phone's Settings.",
+        "open_settings": "Open Settings"
+      }
+    },
+    "routine_actions": {
+      "start": "Start routine",
+      "start_monday": "Start on Monday",
+      "start_today": "Start today",
+      "start_sheet_title": "When would you like to start?",
+      "switch_title": "Switch to {routine_name}?",
+      "switch_body": "Your history, personal bests and awards stay safe. Your current routine will end and the new one will be added to your planner.",
+      "switch_cta": "Switch routine",
+      "end_title": "End {routine_name}?",
+      "end_body": "Your history, personal bests and awards stay safe. Planned sessions from this routine will be cleared from your planner.",
+      "end_cta": "End routine",
+      "cancel": "Cancel",
+      "whats_next_eyebrow": "WHAT'S NEXT",
+      "whats_next_title": "Two weeks to go",
+      "whats_next_body": "When you finish, {next_routine} is a great next step. Take a look.",
+      "whats_next_cta": "Preview",
+      "complete_title": "You finished {routine_name}!",
+      "complete_body": "{sessions} sessions, {time} of training and {pbs} personal bests.",
+      "complete_checkpoint": "Start vs now",
+      "complete_next_cta": "Start {next_routine} on Monday",
+      "complete_browse": "Browse other routines",
+      "checkpoint_eyebrow": "CHECKPOINT WEEK",
+      "checkpoint_body": "This week you'll re-test a few key lifts and see how far you've come. Use a weight you can lift with good form.",
+      "lighter_week_eyebrow": "LIGHTER WEEK",
+      "lighter_week_body": "Fewer sets this week so you feel fresh for your checkpoint. This is part of the plan."
+    },
+    "empty_states": {
+      "planner_week": {
+        "title": "Nothing planned this week",
+        "body": "Add sessions to your week and they'll show up here.",
+        "cta": "Plan my week"
+      },
+      "planner_day": "+ Add",
+      "activity_new": {
+        "title": "Your progress lives here",
+        "body": "Finish your first session and you'll see your stats, personal bests and wins start to build.",
+        "cta": "Start a session"
+      },
+      "personal_bests": {
+        "title": "No personal bests yet",
+        "body": "They'll appear here after your first few sessions."
+      },
+      "charts": "Log this exercise a couple more times to see your chart.",
+      "achievements": {
+        "title": "Your first award is one session away",
+        "body": "Finish a session to unlock it."
+      },
+      "my_workouts": {
+        "title": "No saved workouts yet",
+        "body": "Build your own session from the exercise library.",
+        "cta": "Create workout"
+      },
+      "my_workouts_count_one": "1 saved",
+      "my_workouts_count_many": "{count} saved",
+      "search_no_results": {
+        "title": "Nothing found",
+        "body": "Try a different word, or clear your filters."
+      },
+      "favourites": {
+        "title": "No favourites yet",
+        "body": "Tap the heart on anything you'd like to come back to."
+      },
+      "learn_read_all": "You've read everything in this category. More is on the way.",
+      "history": {
+        "title": "No sessions yet",
+        "body": "Your training history will appear here."
+      },
+      "photos_off": {
+        "title": "Progress photos are off",
+        "body": "If you'd like to use them, you can switch them on in Profile, Privacy. They're private to you.",
+        "cta": "Open Privacy settings"
+      },
+      "offline": {
+        "title": "You're offline",
+        "body": "You can still log your session. We'll sync it when you're back online."
+      }
+    },
+    "progress_photos": {
+      "_note": "AGENTS.md H7. Off by default; no prompts or reminders anywhere.",
+      "consent_title": "Progress photos are private",
+      "consent_points": [
+        "Only you can see them. They're stored securely and never shared.",
+        "They're never used in summaries, share cards, notifications or AI.",
+        "You can delete one or all of them at any time."
+      ],
+      "consent_cta": "Turn on progress photos",
+      "consent_cancel": "Not now",
+      "show": "Show photos",
+      "hide": "Hide photos",
+      "add": "Add photo",
+      "compare": "Compare",
+      "delete_one_title": "Delete this photo?",
+      "delete_all_title": "Delete all progress photos?",
+      "delete_body": "This can't be undone.",
+      "delete_cta": "Delete",
+      "deleted": "Deleted."
+    },
+    "refer": {
+      "_note": "AGENTS.md X6. Final terms depend on what Apple's offer types allow; adjust {friend_trial_days} and reward copy once confirmed.",
+      "banner_title": "Train better together",
+      "banner_body": "Give a friend {friend_trial_days} days free.",
+      "banner_cta": "Invite a friend",
+      "screen_title": "Refer a friend",
+      "screen_body": "Your friend gets {friend_trial_days} days free instead of 7. When they become a subscriber, you get a month free.",
+      "code_label": "Your code",
+      "copy": "Copy",
+      "copied": "Copied",
+      "share": "Share invite",
+      "share_message": "I've been using Ascenda to train at the gym and I think you'd like it. Use my code {code} for {friend_trial_days} days free: {link}",
+      "progress_title": "Your invites",
+      "status": {
+        "invited": "Invited",
+        "trial": "On free trial",
+        "subscribed": "Subscribed",
+        "rewarded": "Free month earned"
+      },
+      "terms_link": "How it works",
+      "terms": [
+        "Your friend needs to be new to Ascenda.",
+        "You get one free month for each friend who starts a paid subscription, up to {max_rewards} a year.",
+        "Free months are added to your existing subscription.",
+        "There are no cash rewards."
+      ],
+      "reward_toast": "{friend_name} subscribed. You've earned a free month!"
+    },
+    "challenges": {
+      "join": "Join challenge",
+      "joined": "You're in",
+      "starts": "Starts {date}",
+      "start_choice_title": "When would you like to start?",
+      "start_next_monday": "Next Monday",
+      "start_first_of_month": "{date}",
+      "progress": "{done} of {total} sessions",
+      "complete_title": "Challenge complete!",
+      "leave": "Leave challenge",
+      "leave_body": "Your sessions still count towards everything else.",
+      "week_repeat": "This week didn't go to plan. No problem, we'll pick it up next week.",
+      "this_week_mission": "This week: {mission}",
+      "switch_title": "Switch challenge?",
+      "switch_body": "You can do one challenge at a time. Your progress in {current} will be saved if you come back to it.",
+      "ended_quietly": "{challenge} has ended. You can start it again whenever you like."
+    },
+    "profile": {
+      "settings_rows": {
+        "appearance": "Appearance",
+        "notifications": "Notifications",
+        "units": "Units",
+        "privacy": "Privacy",
+        "your_answers": "Your answers",
+        "streak_goal": "Edit streak goal",
+        "plan": "Plan and subscription",
+        "refer": "Refer a friend",
+        "safety": "Safety and disclaimer",
+        "terms": "Terms",
+        "privacy_policy": "Privacy policy",
+        "contact": "Contact us",
+        "version": "App version {version}"
+      },
+      "appearance": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "Match phone"
+      },
+      "units": {
+        "kg": "Kilograms (kg)",
+        "lbs": "Pounds (lbs)"
+      },
+      "privacy": {
+        "photos": "Progress photos",
+        "hide_streak": "Hide streak",
+        "hide_achievements": "Hide awards",
+        "hide_quote": "Hide daily quote",
+        "export": "Export my data",
+        "export_body": "We'll create a CSV file of your sessions and sets.",
+        "delete_account": "Delete account"
+      },
+      "delete_account_title": "Delete your account?",
+      "delete_account_body": "This permanently deletes your account and all your data, including your history and photos. It can't be undone. If you have a subscription, cancel it in your Apple settings too.",
+      "delete_account_cta": "Delete my account",
+      "delete_account_confirm_hint": "Type DELETE to confirm",
+      "sign_out": "Sign out",
+      "contact_body": "Questions, ideas or something not working? We'd love to hear from you."
+    },
+    "auth": {
+      "check_inbox_title": "Check your inbox",
+      "check_inbox_body": "We've sent a link to {email}. Tap it on this phone to finish signing in.",
+      "resend": "Resend email",
+      "resent": "Sent again. It can take a minute to arrive.",
+      "wrong_email": "Use a different email",
+      "verified": "You're verified. Welcome to Ascenda."
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "network": "We can't connect right now. Check your connection and try again.",
+      "save_failed": "We couldn't save that. Your session is safe on this phone and we'll try again soon.",
+      "media_unavailable": "The video isn't available right now. Here are the written steps instead.",
+      "retry": "Try again"
+    },
+    "achievements_ui": {
+      "unlocked_toast": "Award unlocked: {badge}",
+      "next_tier": "{current} / {target}",
+      "locked": "Locked",
+      "hidden_note": "Awards are hidden. You can turn them back on in Settings."
+    }
+  }
+}

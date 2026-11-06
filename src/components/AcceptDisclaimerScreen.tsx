@@ -6,6 +6,7 @@ import { DisclaimerBody, DisclaimerCheckbox } from '@/components/ui/Disclaimer';
 import { AppText } from '@/components/ui/AppText';
 import { PrimaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { safetyCopy } from '@/lib/copy';
 import { useProfile } from '@/lib/profile';
 
 /** Shown on next open when the stored disclaimer version does not match the current text. */
@@ -38,13 +39,13 @@ export function AcceptDisclaimerScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <AppText variant="display" style={{ color: colours.ink }}>
-          Train safely
+          {updated ? safetyCopy.updated_title : safetyCopy.onboarding_title}
         </AppText>
-        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
-          {updated
-            ? 'The safety guidance has been updated. Please read it again before you continue.'
-            : 'Please read this before you train.'}
-        </AppText>
+        {updated ? (
+          <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+            {safetyCopy.updated_body}
+          </AppText>
+        ) : null}
         <View
           style={[
             styles.card,
@@ -68,7 +69,7 @@ export function AcceptDisclaimerScreen() {
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <PrimaryButton
-          label="Continue"
+          label={updated ? safetyCopy.updated_cta : safetyCopy.onboarding_cta}
           onPress={() => void handleContinue()}
           disabled={!checked}
           loading={isSaving}

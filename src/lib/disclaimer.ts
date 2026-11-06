@@ -25,16 +25,10 @@ export const DISCLAIMER_STOP_BODY =
 export const DISCLAIMER_LIMITS_HEADING = 'Train within your limits.';
 
 export const DISCLAIMER_LIMITS_BODY =
-  'Warm up, use weights you can lift with good form, and never train through pain. Suggested weights are estimates based on what you log, not personal prescriptions. Exercise demos and tips are for guidance only; if you’re unsure how to do a movement, ask a qualified instructor at your gym.';
+  "Warm up, use weights you can lift with good form, and never train through pain. Suggested weights are estimates based on what you log, not personal prescriptions. Exercise demos and tips are for guidance only; if you're unsure how to do a movement, ask a qualified instructor at your gym.";
 
 export const DISCLAIMER_CLOSE =
-  'You choose how and when you train, and you’re responsible for doing so safely.';
-
-export const DISCLAIMER_CHECKBOX_LABEL = 'I’ve read this and I’m 18 or over';
-
-export const SAFETY_NOTICE_LABEL = 'Train within your limits. Read the safety guidance';
-
-export const FIRST_SESSION_TITLE = 'Train within your limits';
+  "You choose how and when you train, and you're responsible for doing so safely.";
 
 export const FIRST_SESSION_BULLETS = [
   'This is general fitness information, not medical advice.',

@@ -12,7 +12,6 @@ import {
   LockedOverlay,
   PrimaryButton,
   ProBadge,
-  SafetyNotice,
   StatStrip,
   TextButton,
 } from '@/components/ui';
@@ -274,8 +273,6 @@ export default function StretchDetailScreen() {
           <LockedOverlay onUnlock={() => openPaywall('stretch')} label="Unlock with Pro" />
         </View>
       ) : null}
-
-      <SafetyNotice style={{ marginTop: spacing.md }} />
     </DetailLayout>
   );
 }

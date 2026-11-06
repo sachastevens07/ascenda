@@ -7,10 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { PrimaryButton, TextButton } from '@/components/ui/Buttons';
 import { useTheme } from '@/constants/theme';
+import { safetyCopy } from '@/lib/copy';
 import {
   DISCLAIMER_CHECK_HEADING,
   DISCLAIMER_CHECK_ITEMS,
-  DISCLAIMER_CHECKBOX_LABEL,
   DISCLAIMER_CLOSE,
   DISCLAIMER_INTRO,
   DISCLAIMER_LIMITS_BODY,
@@ -19,9 +19,13 @@ import {
   DISCLAIMER_STOP_HEADING,
   DISCLAIMER_TITLE,
   FIRST_SESSION_BULLETS,
-  FIRST_SESSION_TITLE,
-  SAFETY_NOTICE_LABEL,
 } from '@/lib/disclaimer';
+
+function footerParts(line: string): { lead: string; link: string } {
+  const match = line.match(/^(.*?\.)\s+(.*)$/);
+  if (match) return { lead: match[1], link: match[2] };
+  return { lead: '', link: line };
+}
 
 export function DisclaimerBody({ hideTitle = false }: { hideTitle?: boolean }) {
   const { colours, spacing } = useTheme();
@@ -61,7 +65,7 @@ export function DisclaimerCheckbox({
       onPress={onToggle}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
-      accessibilityLabel={DISCLAIMER_CHECKBOX_LABEL}
+      accessibilityLabel={safetyCopy.onboarding_checkbox}
       style={({ pressed }) => [styles.checkRow, pressed && styles.pressed]}>
       <View
         style={[
@@ -75,7 +79,7 @@ export function DisclaimerCheckbox({
         {checked ? <Ionicons name="checkmark" size={16} color={colours.onBrand} /> : null}
       </View>
       <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>
-        {DISCLAIMER_CHECKBOX_LABEL}
+        {safetyCopy.onboarding_checkbox}
       </AppText>
     </Pressable>
   );
@@ -83,16 +87,17 @@ export function DisclaimerCheckbox({
 
 export function SafetyNotice({ style }: { style?: object }) {
   const { colours } = useTheme();
+  const { lead, link } = footerParts(safetyCopy.footer_line);
   return (
     <Pressable
       onPress={() => router.push('/safety' as Href)}
       accessibilityRole="link"
-      accessibilityLabel={SAFETY_NOTICE_LABEL}
+      accessibilityLabel={safetyCopy.footer_line}
       style={({ pressed }) => [pressed && styles.pressed, style]}>
       <AppText variant="caption" style={{ color: colours.inkMuted }}>
-        Train within your limits.{' '}
+        {lead ? `${lead} ` : ''}
         <AppText variant="caption" style={{ color: colours.brand }}>
-          Read the safety guidance
+          {link}
         </AppText>
       </AppText>
     </Pressable>
@@ -135,7 +140,9 @@ export function DisclaimerSheet({
             },
             shadow,
           ]}>
-          <AppText variant="title2" style={{ color: colours.ink }}>{FIRST_SESSION_TITLE}</AppText>
+          <AppText variant="title2" style={{ color: colours.ink }}>
+            {safetyCopy.first_session_sheet_title}
+          </AppText>
           <ScrollView
             style={styles.sheetScroll}
             contentContainerStyle={{ gap: spacing.sm, paddingTop: spacing.sm }}
@@ -151,11 +158,15 @@ export function DisclaimerSheet({
             )}
           </ScrollView>
           <TextButton
-            label={showFull ? 'Back to summary' : 'Read the full safety guidance'}
+            label={showFull ? 'Back to summary' : safetyCopy.first_session_link}
             onPress={() => setShowFull((open) => !open)}
             style={{ alignSelf: 'flex-start', marginTop: spacing.sm }}
           />
-          <PrimaryButton label="I understand" onPress={onUnderstand} style={{ marginTop: spacing.sm }} />
+          <PrimaryButton
+            label={safetyCopy.first_session_cta}
+            onPress={onUnderstand}
+            style={{ marginTop: spacing.sm }}
+          />
         </View>
       </View>
     </Modal>

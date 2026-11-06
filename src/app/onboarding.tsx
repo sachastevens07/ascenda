@@ -26,7 +26,6 @@ import {
   ListRow,
   PrimaryButton,
   ProBadge,
-  SafetyNotice,
   SecondaryButton,
   TextButton,
 } from '@/components/ui';
@@ -41,6 +40,7 @@ import {
   startOnboardingRoutine,
   type LiftProjection,
 } from '@/lib/onboarding';
+import { safetyCopy } from '@/lib/copy';
 import { DISCLAIMER_VERSION } from '@/lib/disclaimer';
 import { formatKg } from '@/lib/programmes';
 import {
@@ -563,7 +563,7 @@ export default function OnboardingScreen() {
     if (step === 'safety') {
       return (
         <PrimaryButton
-          label="Continue"
+          label={safetyCopy.onboarding_cta}
           onPress={() => void handleContinueSafety()}
           disabled={!safetyChecked}
           loading={isSaving}
@@ -677,7 +677,9 @@ export default function OnboardingScreen() {
 
             {step === 'safety' && (
               <>
-                <AppText variant="display" style={{ color: colours.ink }}>Train safely</AppText>
+                <AppText variant="display" style={{ color: colours.ink }}>
+                  {safetyCopy.onboarding_title}
+                </AppText>
                 <View
                   style={[
                     styles.chartCard,
@@ -1119,7 +1121,6 @@ function RevealStep({
         </View>
       ) : null}
 
-      <SafetyNotice style={{ marginTop: 24 }} />
       {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
     </>
   );
@@ -1216,7 +1217,6 @@ function ReviewStep({
           ))}
         </View>
       </View>
-      <SafetyNotice style={{ marginTop: 24 }} />
       {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
     </>
   );

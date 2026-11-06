@@ -23,7 +23,7 @@ import {
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme, type ThemePreference } from '@/constants/theme';
-import { appearanceSectionTitle } from '@/lib/copy';
+import { appearanceSectionTitle, safetySettingsTitle } from '@/lib/copy';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import {
   DEFAULT_REMINDER_TIME,
@@ -793,7 +793,7 @@ export default function ProfileScreen() {
 
       <SettingsGroup title="About">
         <SettingsRow
-          title="Safety and disclaimer"
+          title={safetySettingsTitle}
           onPress={() => router.push('/safety' as Href)}
         />
         <SettingsRow title="Terms" onPress={() => router.push('/terms' as Href)} />

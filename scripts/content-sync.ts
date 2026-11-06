@@ -447,10 +447,11 @@ async function main(): Promise<void> {
 
   line('Not loaded (by design)');
   line('  content/onboarding: bundled in the app (N4 goals come from the goals screen)');
-  line('  content/microcopy: bundled in the app');
+  line('  content/microcopy: bundled in the app (N1 safety surrounding strings)');
   line('  content/ai: Edge Functions, not the app database');
   line();
   reportOnboardingGoals();
+  reportSafetyCopy();
 
   reportWarmups();
 
@@ -489,6 +490,17 @@ function reportGuides(): void {
   line('  Bundled in the app for first-time guides and the swap engine.');
   line('  A live sync would update exercises.cues (first 3 form_cues) and location_hint from where_to_find.');
   line('  Swap lists stay in the app overlay. They are not a separate table.');
+  line();
+}
+
+function reportSafetyCopy(): void {
+  line('safety strings  ←  content/microcopy/en-GB.json strings.safety (bundled)');
+  const safety = asRecord(asRecord(readJson('microcopy/en-GB.json').strings).safety);
+  line(`  Onboarding title: ${text(safety.onboarding_title)}`);
+  line(`  Checkbox: ${text(safety.onboarding_checkbox)}`);
+  line(`  Footer: ${text(safety.footer_line)}`);
+  line('  Full disclaimer body stays in src/lib/disclaimer.ts (one file). Bump DISCLAIMER_VERSION when it changes.');
+  line('  Live sync does not write these strings.');
   line();
 }
 
