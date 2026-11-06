@@ -1,0 +1,7 @@
+-- Confident WorkoutX ids from scripts/match-workoutx.mjs.
+-- Empty until you run the match script with WORKOUTX_API_KEY in this terminal only:
+--   $env:WORKOUTX_API_KEY="wx_..."
+--   node scripts/match-workoutx.mjs
+-- Paste into Supabase > SQL Editor after supabase/workoutx_m1.sql.
+-- Safe to run again: it only sets workoutx_id on these rows.
+-- Never deletes sessions, sets, or exercise rows.

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ExerciseMediaPlayer } from '@/components/ExerciseMediaPlayer';
 import { equipmentIconName, RelatedLearn } from '@/components/ui';
 import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
@@ -107,39 +108,46 @@ export default function ExerciseScreen() {
 
   const mediaSource = mediaFailed ? null : getExerciseImageSource(exercise);
   const setup = setupStepsFor(exercise);
+  const mediaFallback = mediaSource ? (
+    <Image
+      source={mediaSource}
+      style={{ width: mediaWidth, height: mediaHeight }}
+      resizeMode="cover"
+      onError={() => setMediaFailed(true)}
+      accessibilityLabel={`${exercise.name} demonstration`}
+    />
+  ) : (
+    <View style={[styles.mediaPlaceholder, { width: mediaWidth, height: mediaHeight }]}>
+      <MaterialCommunityIcons
+        name={equipmentIconName(exercise.equipment)}
+        size={48}
+        color={colours.accent}
+        accessibilityLabel={EQUIPMENT_LABELS[exercise.equipment]}
+      />
+      <AppText variant="bodySm" style={styles.mediaPlaceholderText}>
+        Demo image coming soon
+      </AppText>
+      {showDevTools && (
+        <AppText variant="caption" style={styles.mediaDevHint}>
+          Upload {exercise.id}.jpg to the {EXERCISE_MEDIA_BUCKET} bucket
+        </AppText>
+      )}
+    </View>
+  );
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}>
-      {mediaSource ? (
-        <View style={[styles.media, { width: mediaWidth, height: mediaHeight }]}>
-          <Image
-            source={mediaSource}
-            style={{ width: mediaWidth, height: mediaHeight }}
-            resizeMode="cover"
-            onError={() => setMediaFailed(true)}
-            accessibilityLabel={`${exercise.name} demonstration`}
-          />
-        </View>
-      ) : (
-        <View style={[styles.media, styles.mediaPlaceholder, { width: mediaWidth, height: mediaHeight }]}>
-          <MaterialCommunityIcons
-            name={equipmentIconName(exercise.equipment)}
-            size={48}
-            color={colours.accent}
-            accessibilityLabel={EQUIPMENT_LABELS[exercise.equipment]}
-          />
-          <AppText variant="bodySm" style={styles.mediaPlaceholderText}>
-            Demo image coming soon
-          </AppText>
-          {showDevTools && (
-            <AppText variant="caption" style={styles.mediaDevHint}>
-              Upload {exercise.id}.jpg to the {EXERCISE_MEDIA_BUCKET} bucket
-            </AppText>
-          )}
-        </View>
-      )}
+      <View style={[styles.media, { width: mediaWidth }]}>
+        <ExerciseMediaPlayer
+          exerciseId={exercise.id}
+          cues={exercise.cues}
+          width={mediaWidth}
+          height={mediaHeight}
+          fallback={mediaFallback}
+        />
+      </View>
 
       <View style={styles.firstTime}>
         <AppText variant="eyebrow" style={styles.firstTimeLabel}>
@@ -283,9 +291,6 @@ const styles = StyleSheet.create({
   },
   media: {
     alignSelf: 'center',
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: colours.surface,
   },
   mediaPlaceholder: {
     alignItems: 'center',

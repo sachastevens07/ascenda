@@ -460,6 +460,7 @@ async function main(): Promise<void> {
 
   await reportImages(client);
   await reportExercises(client);
+  await reportWorkoutx(client);
   await reportRoutines(client);
   await reportQuotes(client);
   await reportLearn(client);
@@ -534,6 +535,7 @@ async function reportExercises(client: SupabaseClient): Promise<void> {
     line(`  New rows ready to insert (guide supplies primary_muscle, 3 cues, location_hint): ${ready.length}`);
     line(`  New rows still blocked (missing guide fields or equipment check): ${blocked}`);
     line('  Not written from the catalogue: pattern, alternatives, media. MuscleWiki columns are left as they are.');
+    line('  WorkoutX ids come from content/exercises/workoutx-ids.json, not the catalogue.');
     line();
     return;
   }
@@ -609,6 +611,28 @@ async function reportExercises(client: SupabaseClient): Promise<void> {
     for (const item of badEquipment) line(`    ${item}`);
   }
   line('  Not written from the catalogue: pattern, alternatives, media. MuscleWiki columns are left as they are.');
+  line('  WorkoutX ids come from content/exercises/workoutx-ids.json, not the catalogue.');
+  line();
+}
+
+async function reportWorkoutx(client: SupabaseClient): Promise<void> {
+  line('workoutx ids  ←  content/exercises/workoutx-ids.json');
+  const matches = asArray(readJson('exercises/workoutx-ids.json').matches).filter((item) => {
+    const slug = text(item.slug);
+    const id = text(item.workoutx_id);
+    return slug && /^ex_[A-Za-z0-9]+$/.test(id);
+  });
+  line(`  Confident matches: ${matches.length}`);
+  const error = await probe(client, 'exercises', 'id, workoutx_id');
+  if (error) {
+    line(`  Column not usable: ${error}`);
+    line('  Paste supabase/workoutx_m1.sql first. Then paste supabase/workoutx_ids.sql after you have reviewed the match CSV.');
+    line('  MuscleWiki columns are left as they are.');
+    line();
+    return;
+  }
+  line('  Plan: set exercises.workoutx_id from this file. Existing MuscleWiki columns are not touched.');
+  line('  Doubtful and unmatched rows stay in scripts/workoutx-matches.csv until you approve them.');
   line();
 }
 

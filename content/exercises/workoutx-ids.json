@@ -1,0 +1,7 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "WorkoutX v2 female-model ids from scripts/match-workoutx.mjs. Confident matches only. Doubtful and unmatched stay in scripts/workoutx-matches.csv for review. Never put the API key here. Store ids, never media URLs."
+  ],
+  "matches": []
+}

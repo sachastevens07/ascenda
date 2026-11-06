@@ -45,3 +45,7 @@ yarn-error.*
 assets/covers/_candidates/
 assets/covers/_pick/
 assets/covers/_d2/
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/

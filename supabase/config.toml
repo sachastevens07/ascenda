@@ -1,0 +1,8 @@
+# Minimal Supabase CLI config for Edge Functions.
+# SQL is still pasted by hand (see supabase/*.sql). Do not put secrets here.
+project_id = "ascenda"
+
+[functions.exercise-media]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/exercise-media/index.ts"

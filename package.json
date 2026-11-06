@@ -22,6 +22,7 @@
     "expo-router": "~58.0.26",
     "expo-splash-screen": "~58.0.13",
     "expo-status-bar": "~58.0.4",
+    "expo-video": "~58.0.13",
     "fflate": "^0.8.3",
     "posthog-react-native": "^4.85.2",
     "react": "19.3.0",
@@ -44,7 +45,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "content:sync": "node scripts/content-sync.ts"
+    "content:sync": "node scripts/content-sync.ts",
+    "content:sql": "node scripts/emit-content-routines-sql.ts",
+    "workoutx:match": "node scripts/match-workoutx.mjs"
   },
   "private": true
 }

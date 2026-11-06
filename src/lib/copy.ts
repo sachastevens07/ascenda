@@ -14,6 +14,9 @@ export const appearanceSectionTitle = profile.settings_rows.appearance;
 /** Logger strings from content/microcopy. Bundled, not loaded by content:sync. */
 export const loggerCopy = microcopy.strings.logger;
 
+/** Shown when exercise media is missing, rate-limited or fails. */
+export const mediaUnavailableCopy = microcopy.strings.errors.media_unavailable;
+
 export function fillCopy(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? ''));
 }

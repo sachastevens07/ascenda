@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { ExerciseMediaSheet } from '@/components/ExerciseMediaPlayer';
 import { ExercisePicker } from '@/components/ExercisePicker';
 import { HoldPlayer } from '@/components/HoldPlayer';
 import { SessionBlockCard } from '@/components/SessionBlockCard';
@@ -268,6 +269,7 @@ export default function SessionScreen() {
   const [repMaxText, setRepMaxText] = useState('');
   const [reorderMode, setReorderMode] = useState(false);
   const [pbGlowKey, setPbGlowKey] = useState<string | null>(null);
+  const [playingExercise, setPlayingExercise] = useState<{ id: string; name: string } | null>(null);
 
   const { restEndsAt, publish, startRest, stopRest, adjustRest, end } = useWorkout();
   const now = useNow(startedAt !== null, 500);
@@ -1199,13 +1201,18 @@ export default function SessionScreen() {
                 onLongPress={() => setReorderMode(true)}
                 delayLongPress={280}
                 style={styles.cardHeader}>
-                <Pressable
-                  onPress={() => openGuide(item.exercise.id)}
-                  style={({ pressed }) => [styles.exerciseHeader, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityHint="Shows how to do this exercise">
-                  <ExerciseThumb exercise={item.exercise} size={40} showPlay />
-                  <View style={styles.flex}>
+                <View style={styles.exerciseHeader}>
+                  <ExerciseThumb
+                    exercise={item.exercise}
+                    size={40}
+                    showPlay
+                    onPlay={() => setPlayingExercise({ id: item.exercise.id, name: item.exercise.name })}
+                  />
+                  <Pressable
+                    onPress={() => openGuide(item.exercise.id)}
+                    style={({ pressed }) => [styles.flex, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                    accessibilityHint="Shows how to do this exercise">
                     {roleLabel(item.role) ? (
                       <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 4 }}>
                         {roleLabel(item.role)}
@@ -1224,8 +1231,8 @@ export default function SessionScreen() {
                         {note}
                       </AppText>
                     ) : null}
-                  </View>
-                </Pressable>
+                  </Pressable>
+                </View>
                 {reorderMode ? (
                   <View style={styles.reorderBtns}>
                     <IconButton
@@ -1536,6 +1543,22 @@ export default function SessionScreen() {
           </>
         ) : null}
       </OverflowMenu>
+
+      <ExerciseMediaSheet
+        visible={playingExercise !== null}
+        exerciseId={playingExercise?.id ?? ''}
+        name={playingExercise?.name ?? ''}
+        onClose={() => setPlayingExercise(null)}
+        onOpenGuide={
+          playingExercise
+            ? () => {
+                const id = playingExercise.id;
+                setPlayingExercise(null);
+                openGuide(id);
+              }
+            : undefined
+        }
+      />
 
       <Modal visible={restItem !== null} transparent animationType="fade" onRequestClose={() => setRestItem(null)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setRestItem(null)}>

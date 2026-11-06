@@ -35,7 +35,8 @@
         }
       ],
       "expo-localization",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

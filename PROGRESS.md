@@ -23,7 +23,7 @@ Git: `main`, ahead of origin. User is Sacha.
 - **R10** Free vs Pro split, contextual `openPaywall(reason)`. Visual paywall restyle is **C1 / C2**, not started.
 - **R11** Pexels covers and 14 exercise photos. Stretch covers were gym shots until **D2**.
 
-**M1 exercise media (WorkoutX): not started.** The old MuscleWiki match files are listed under Roadmap to completion. The app does not read them.
+**M1 exercise media (WorkoutX): built 6 Nov 2026.** Media goes through `getExerciseMedia()` and an authenticated Edge Function. MuscleWiki columns and match files stay until a later drop is confirmed.
 
 **v2.1**
 - **S1** Duplicate loophole closed (create / duplicate / save-from-routine all count; Pro routines cannot be copied on Free).
@@ -70,7 +70,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 ### In progress
 
-**SQL pastes (blocked on Sacha).** To load today's sessions from the new `/content` plans, paste **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (one file at a time; does not touch the old 14 ids, sessions, sets or enrolments). Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, **`images_x1.sql`**, **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, and **`exercise_notes_x4.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote, cover placeholders and the gym-experience question work on-device without SQL. Notes and per-exercise rest in the logger also work on-device; they only sync across phones after `exercise_notes_x4.sql`. The gym-experience answer only persists after `gym_experience_g1.sql`. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7. Content sync will not mark old routines inactive until `routines_is_active.sql` is pasted, and a live sync is not run until you confirm. `session_blocks_w1.sql` adds day/session types and blocks without changing the logger list.
+**SQL pastes (blocked on Sacha).** To load today's sessions from the new `/content` plans, paste **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (one file at a time; does not touch the old 14 ids, sessions, sets or enrolments). Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, **`images_x1.sql`**, **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, **`exercise_notes_x4.sql`**, and **`workoutx_m1.sql`** (M1; do not paste until you confirm). After you review the match CSV, paste **`workoutx_ids.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote, cover placeholders and the gym-experience question work on-device without SQL. Notes and per-exercise rest in the logger also work on-device; they only sync across phones after `exercise_notes_x4.sql`. The gym-experience answer only persists after `gym_experience_g1.sql`. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7. Content sync will not mark old routines inactive until `routines_is_active.sql` is pasted, and a live sync is not run until you confirm. `session_blocks_w1.sql` adds day/session types and blocks without changing the logger list.
 
 ---
 
@@ -78,7 +78,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **8. G2** done this pass. Wait for Sacha to say "next". Then **9. M1 (revised)**.
+Current: **9. M1 (revised)** done this pass. Wait for Sacha to say "next". Then **10. N2**.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -99,7 +99,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **6. W1** Session types and blocks (5 Nov 2026). `routine_days.type` and `sessions.type` are `strength` | `cardio` | `recovery`. Each day has ordered `routine_day_blocks` (warmup, strength, cardio, cooldown, stretch). Existing strength days backfill warmup + strength + cooldown; stretch days backfill one stretch block. Exercises stay on `routine_day_exercises` (with optional `block_id`), so the logger, progression and swaps are unchanged. `support_days` and `weekly_schedule` are jsonb on `routines` for the Planner later; extra cardio/recovery days are not added yet. content:sync plans 104 weeks, 300 days and 935 blocks from `/content`. Live writes still need a service role key and your confirm. SQL: `supabase/session_blocks_w1.sql` (not run).
 - [x] **7. N3 + X4** Logger (6 Nov 2026). Start session opens the logger. Header: minimise, live timer (starts on first ticked set or Start timer), Finish. Stats: duration, volume, sets. Set table: Set, Previous, kg, Reps, tick; W for warm-up sets (long-press + Add set). Per exercise: thumbnail, name opens the guide, ⋯ (swap, remove, add/remove set, change rep target), Rest and Note chips remembered next time. Reorder is long-press then arrows (no drag library). Minimised bar on every tab. Suggested-weight chip, role, RIR, rest bar and PB glow kept. Changes apply to today only. End session with no ticked set discards with no prompt. Swap engine and double-progression unchanged. Microcopy from `content/microcopy` (bundled). SQL: `supabase/exercise_notes_x4.sql` (not run). Did not add `react-native-draggable-flatlist` or `expo-haptics`.
 - [x] **8. G2** Warm-up and cool-down blocks (6 Nov 2026). Every strength session in the logger has a collapsible warm-up at the top and cool-down at the bottom from `content/warmups-cooldowns` (8 templates, bundled). Start opens a timed player (stretch-style ring, Pause, Skip, reps as Done). Skip is one tap and never counts as a session, so the streak is unchanged. First main lift gets two W ramp-up sets: 8 reps at about 50% then 5 at about 75%, skipped for bodyweight and assisted machines, and ignored for volume, PBs and awards. Swap engine and double-progression unchanged. `npm run content:sync -- --dry-run` reports the templates; live writes still need a service role and your confirm. No new SQL (W1 blocks table is enough; the app does not wait on it).
-- [ ] **9. M1 (revised)** WorkoutX exercise media. Not started. See "MuscleWiki to retire" below. Do not drop those columns without a confirmed migration.
+- [x] **9. M1 (revised)** WorkoutX exercise media (6 Nov 2026). `getExerciseMedia(exerciseId)` is the only app entry. Authenticated, rate-limited Edge Function `exercise-media` calls WorkoutX with `WORKOUTX_API_KEY` (never in the app or `.env`). Female model where available. Tap-to-play thumbnail, no autoplay, front/side chips if the API returns them, text-cue fallback on any error. Usage rows in `media_usage` (no URLs or keys). Match script: `npm run workoutx:match`. Confident ids in `content/exercises/workoutx-ids.json`. SQL: `supabase/workoutx_m1.sql` (not run) then `supabase/workoutx_ids.sql` after review. MuscleWiki columns kept. Added `expo-video` (SDK 58) for in-app playback. Did not use WorkoutX's generator.
 - [ ] **10. N2** Routine standard. Partly done: the 14 legacy strength plans have coaching fields in the app. The 15 routines, catalogue and guides in `/content` are not loaded.
 
 ### Stage 3: Onboarding and money
@@ -163,7 +163,7 @@ No Edge Functions and no app reads. These files exist:
 - `supabase/musclewiki_ids.sql` sets 55 approved ids
 - `scripts/match-musclewiki.mjs`, `scripts/apply-musclewiki-ids.mjs`, `scripts/musclewiki-matches.csv`
 
-Proposal when M1 (revised) starts: add a new WorkoutX id column in a migration Sacha confirms. Point `getExerciseMedia()` at that. Leave the MuscleWiki columns in place until she confirms a later migration to drop them. Do not delete the match files until that migration is agreed. The app never called MuscleWiki, so nothing in the logger has to be swapped before the new player exists.
+M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql` (not run). `getExerciseMedia()` uses that id through the Edge Function. MuscleWiki columns and match files stay until a later drop is confirmed. Do not delete them yet.
 
 ### Decisions for this phase
 
@@ -184,7 +184,7 @@ Proposal when M1 (revised) starts: add a new WorkoutX id column in a migration S
 - `one-spot-6` and `one-spot-2` are two different plans; both still show.
 - Old programme tables still exist; Profile UI hidden; `/programme` redirects to Programmes.
 - Dark theme does not restyle sign-in, paywall, workouts, paths, challenges or exercise detail. Stretch detail and player now follow the theme.
-- M1 (revised) is not built. Logger and the exercises list use photos or equipment icons, not exercise media (WorkoutX).
+- M1 Edge Function is not deployed yet. Until `WORKOUTX_API_KEY` is set as a secret and `exercise-media` is deployed, thumbnails stay on photos or equipment icons and the player falls back to form cues.
 - Swap dropdown spacing still reported uneven (not retested).
 - Confirm email off in the Supabase dashboard. Paywall real-store purchases need a development build (Expo Go uses the Test Store key).
 - No ESLint config (`npx expo lint` cannot run).
@@ -200,6 +200,7 @@ Proposal when M1 (revised) starts: add a new WorkoutX id column in a migration S
 - `showDevTools` is on-device AsyncStorage. One long-press of Profile **Version 1.0.0** toggles it (not five). `EXPO_PUBLIC_SHOW_DEV_TOOLS` is unused.
 - N3/X4: timer starts on first ticked set or Start timer. Chevron-down minimises (bar on every tab). End session with no ticks discards with no prompt. Rep targets editable for today. Add exercise is on routine sessions (today only). Weighted sets still need a weight. Swap is free; suggested-weight chips stay Pro. Reorder is long-press then arrows; no drag library until asked.
 - G2: warm-up/cool-down templates are bundled from `/content`. Skip is local to the session and is not a logged session. Ramp-up uses set numbers 0 and -1 so working set 1 still drives progression. Did not add a library.
+- M1: WorkoutX terms followed from their public docs (AGENTS still has the paste placeholder): store ids not URLs; reuse signed links in memory until they expire (~24h); do not download or re-host files; key only in the Edge Function secret (`X-WorkoutX-Key` header). No on-screen attribution in their API docs. Monthly views depend on the plan; `media_usage` stores integer headers only. Added `expo-video` for tap-to-play. Logger list still uses icons until a poster is cached. Swap engine and double-progression unchanged.
 - N1 disclaimer is international v2 (doctor, local emergency number). Safety after 18+, before goals. First-session sheet required “I understand”. Learn article line left for N6. No extra font for “Train safely”.
 - N4 keeps `goal` / `main_goal` columns; `main_goals` is source of truth. Lose body fat is allowed; no calorie/diet response.
 - H1: gold weeks earn rest weeks. Repair = `max(target, 1) + 1` sessions the following week. Only rest rows stored in `streak_weeks`. `accentSoft` added to the theme.

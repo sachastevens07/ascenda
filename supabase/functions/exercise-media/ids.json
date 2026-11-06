@@ -1,0 +1,7 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Copy of content/exercises/workoutx-ids.json for the Edge Function fallback when the workoutx_id column is missing. Updated by scripts/match-workoutx.mjs."
+  ],
+  "matches": []
+}

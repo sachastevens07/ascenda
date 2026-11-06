@@ -1,11 +1,13 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme, type Palette } from '@/constants/theme';
 import { EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
+import { getExerciseMedia, peekExerciseMedia } from '@/lib/getExerciseMedia';
 
 type McName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -56,22 +58,40 @@ export function equipmentIconColour(
   }
 }
 
-/** Photo when we have one; otherwise a distinct icon per equipment type. */
+/** WorkoutX still when fetched; otherwise a licensed photo or a distinct equipment icon. */
 export function ExerciseThumb({
   exercise,
   size = 56,
   showPlay = false,
+  onPlay,
 }: {
   exercise: { id: string; equipment: Equipment; media_url?: string | null };
   size?: number;
   showPlay?: boolean;
+  onPlay?: () => void;
 }) {
   const { colours, radius, scheme } = useTheme();
-  const photo = getExerciseImageSource(exercise);
+  const cached = peekExerciseMedia(exercise.id);
+  const [posterUri, setPosterUri] = useState<string | null>(cached?.thumbnailUrl ?? null);
+  const stock = getExerciseImageSource(exercise);
+  const photo = posterUri ? { uri: posterUri } : stock;
   const tint = equipmentIconColour(exercise.equipment, colours, scheme);
   const iconSize = Math.round(size * 0.42);
 
-  return (
+  useEffect(() => {
+    if (!showPlay) return;
+    let alive = true;
+    getExerciseMedia(exercise.id)
+      .then((media) => {
+        if (alive && media?.thumbnailUrl) setPosterUri(media.thumbnailUrl);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [exercise.id, showPlay]);
+
+  const body = (
     <View
       style={[
         styles.wrap,
@@ -92,12 +112,20 @@ export function ExerciseThumb({
           accessibilityLabel={EQUIPMENT_LABELS[exercise.equipment]}
         />
       )}
-      {photo && showPlay ? (
+      {showPlay ? (
         <View style={[styles.play, { backgroundColor: colours.overlay, borderRadius: radius.full }]}>
           <Ionicons name="play" size={12} color={colours.onAccent} />
         </View>
       ) : null}
     </View>
+  );
+
+  if (!onPlay) return body;
+
+  return (
+    <Pressable onPress={onPlay} accessibilityRole="button" accessibilityLabel="Play demonstration">
+      {body}
+    </Pressable>
   );
 }
 
