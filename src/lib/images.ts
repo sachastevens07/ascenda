@@ -280,19 +280,13 @@ export function coverForRoutine(routine: {
 
 export function coverForChallenge(challenge: {
   name: string;
-  cover: CoverImage | null;
-  routine: {
-    id: string;
-    slug?: string;
-    name?: string;
-    type?: 'strength' | 'stretch';
-    cover: CoverImage | null;
-  };
+  coverSlug?: string | null;
+  cover?: CoverImage | null;
 }): CoverImage | null {
-  const slug = contentSlugForTitle(challenge.name, 'challenge');
-  if (slug) return resolveCover(challenge.cover, slug);
+  const slug = challenge.coverSlug || contentSlugForTitle(challenge.name, 'challenge');
+  if (slug) return resolveCover(challenge.cover ?? null, slug);
   if (challenge.cover) return resolveCover(challenge.cover);
-  return coverForRoutine(challenge.routine);
+  return null;
 }
 
 export function resolveCover(cover: CoverImage | null, slugOrRoutineId?: string): CoverImage | null {

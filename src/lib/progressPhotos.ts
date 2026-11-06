@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { showDialog } from '@/components/Dialog';
 import { supabase } from '@/lib/supabase';
 
 export const PROGRESS_PHOTOS_BUCKET = 'progress-photos';
@@ -170,33 +169,10 @@ export async function savePhotosEnabled(enabled: boolean): Promise<void> {
   if (error && !isMissingEnabledColumn(error)) throw new Error(error.message);
 }
 
-async function hasPhotosConsent(): Promise<boolean> {
+export async function hasPhotosConsent(): Promise<boolean> {
   return (await AsyncStorage.getItem(CONSENT_KEY)) === '1';
 }
 
-async function acceptPhotosConsent(): Promise<void> {
+export async function acceptPhotosConsent(): Promise<void> {
   await AsyncStorage.setItem(CONSENT_KEY, '1');
-}
-
-/** First time she turns photos on, she must accept the privacy copy. Later toggles skip it. */
-export function confirmEnablePhotos(onEnable: () => void): void {
-  void hasPhotosConsent().then((ok) => {
-    if (ok) {
-      onEnable();
-      return;
-    }
-    showDialog(
-      'Private progress photos',
-      'Photos stay in a private folder on your account. They are never sent to AI, never shown in summaries or share cards, and you can delete one or all at any time. Camera and library permission is only asked when you add a photo.',
-      [
-        {
-          text: 'Turn on',
-          onPress: () => {
-            void acceptPhotosConsent().then(onEnable);
-          },
-        },
-        { text: 'Not now', style: 'cancel' },
-      ]
-    );
-  });
 }

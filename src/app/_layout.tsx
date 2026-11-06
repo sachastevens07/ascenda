@@ -222,6 +222,17 @@ function RootNavigator() {
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="history" options={{ headerShown: false }} />
         <Stack.Screen
+          name="photos-consent"
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Back',
+            headerTintColor: colours.brand,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+          }}
+        />
+        <Stack.Screen
           name="safety"
           options={{
             headerShown: true,

@@ -29,7 +29,6 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
-  challengeStatus,
   challengeTimingCopy,
   fetchChallenges,
   type Challenge,
@@ -105,7 +104,7 @@ export function RoutineCatalogue({
           setRoutines(list);
           setEnrolment(active);
           setPath(paths[0] ?? null);
-          setChallenges(challengeList.filter((item) => challengeStatus(item) !== 'ended'));
+          setChallenges(challengeList);
           setProgress(progressMap);
           setMissingSql(list.length === 0);
           setLoadState('ready');

@@ -14,6 +14,7 @@ export const appearanceSectionTitle = profile.settings_rows.appearance;
 
 /** Profile → Privacy hide toggles. Bundled from content/microcopy. */
 export const privacySettingsCopy = {
+  photos: profile.privacy.photos,
   hide_streak: profile.privacy.hide_streak,
   hide_achievements: profile.privacy.hide_achievements,
   hide_quote: profile.privacy.hide_quote,
@@ -212,4 +213,44 @@ export const routineActionsCopy = {
   complete_checkpoint: routineActions.complete_checkpoint,
   complete_next_cta: routineActions.complete_next_cta,
   complete_browse: routineActions.complete_browse,
+} as const;
+
+const progressPhotos = microcopy.strings.progress_photos;
+
+/** H7 progress photos. Bundled from content/microcopy. Never used in shares or notifications. */
+export const progressPhotosCopy = {
+  consent_title: progressPhotos.consent_title,
+  consent_points: progressPhotos.consent_points,
+  consent_cta: progressPhotos.consent_cta,
+  consent_cancel: progressPhotos.consent_cancel,
+  show: progressPhotos.show,
+  hide: progressPhotos.hide,
+  add: progressPhotos.add,
+  compare: progressPhotos.compare,
+  delete_one_title: progressPhotos.delete_one_title,
+  delete_all_title: progressPhotos.delete_all_title,
+  delete_body: progressPhotos.delete_body,
+  delete_cta: progressPhotos.delete_cta,
+  deleted: progressPhotos.deleted,
+} as const;
+
+const challenges = microcopy.strings.challenges;
+
+/** H8 challenge copy. Bundled from content/microcopy. Never a countdown. */
+export const challengesCopy = {
+  join: challenges.join,
+  joined: challenges.joined,
+  starts: challenges.starts,
+  start_choice_title: challenges.start_choice_title,
+  start_next_monday: challenges.start_next_monday,
+  start_first_of_month: challenges.start_first_of_month,
+  progress: challenges.progress,
+  complete_title: challenges.complete_title,
+  leave: challenges.leave,
+  leave_body: challenges.leave_body,
+  week_repeat: challenges.week_repeat,
+  this_week_mission: challenges.this_week_mission,
+  switch_title: challenges.switch_title,
+  switch_body: challenges.switch_body,
+  ended_quietly: challenges.ended_quietly,
 } as const;

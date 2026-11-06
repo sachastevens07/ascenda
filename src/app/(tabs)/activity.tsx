@@ -60,7 +60,7 @@ import {
   type FinishedSessionMeta,
   type WeeklyStreak,
 } from '@/lib/activityStats';
-import { fillCopy, routineActionsCopy, streakCopy } from '@/lib/copy';
+import { fillCopy, progressPhotosCopy, routineActionsCopy, streakCopy } from '@/lib/copy';
 import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import { fetchHideStreak, maybeTrackStreakRepair } from '@/lib/streak';
 import { formatKg } from '@/lib/programmes';
@@ -346,10 +346,10 @@ export default function ActivityScreen() {
   }
 
   function confirmDeletePhoto(photo: ProgressPhoto) {
-    showDialog('Delete this photo?', 'This removes it from your account. It is never sent anywhere else.', [
+    showDialog(progressPhotosCopy.delete_one_title, progressPhotosCopy.delete_body, [
       { text: 'Keep it', style: 'cancel' },
       {
-        text: 'Delete',
+        text: progressPhotosCopy.delete_cta,
         style: 'destructive',
         onPress: async () => {
           try {
@@ -365,10 +365,10 @@ export default function ActivityScreen() {
   }
 
   function confirmDeleteAll(photos: ProgressPhoto[]) {
-    showDialog('Delete all progress photos?', 'This removes every photo from your account.', [
+    showDialog(progressPhotosCopy.delete_all_title, progressPhotosCopy.delete_body, [
       { text: 'Keep them', style: 'cancel' },
       {
-        text: 'Delete all',
+        text: progressPhotosCopy.delete_cta,
         style: 'destructive',
         onPress: async () => {
           try {
@@ -614,7 +614,7 @@ export default function ActivityScreen() {
                     {showPhotos ? (
                       <>
                         <TextButton
-                          label="Hide photos"
+                          label={progressPhotosCopy.hide}
                           onPress={() => {
                             setShowPhotos(false);
                             setCompareIds([]);
@@ -697,7 +697,7 @@ export default function ActivityScreen() {
                                     {formatShortDate(parseDate(photo.taken_on))}
                                   </AppText>
                                   <TextButton
-                                    label={selected ? 'Remove from compare' : 'Compare'}
+                                    label={selected ? 'Remove from compare' : progressPhotosCopy.compare}
                                     onPress={() =>
                                       setCompareIds((current) => {
                                         if (current.includes(photo.id)) {
@@ -730,7 +730,7 @@ export default function ActivityScreen() {
                       </>
                     ) : (
                       <TextButton
-                        label="Show photos"
+                        label={progressPhotosCopy.show}
                         onPress={() => {
                           setShowPhotos(true);
                           void reloadPhotos();

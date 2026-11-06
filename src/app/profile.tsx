@@ -50,7 +50,7 @@ import {
   type ReminderPrefs,
 } from '@/lib/reminders';
 import { fetchHideAchievements, saveHideAchievements } from '@/lib/achievements';
-import { confirmEnablePhotos, fetchPhotosEnabled, savePhotosEnabled } from '@/lib/progressPhotos';
+import { fetchPhotosEnabled, hasPhotosConsent, savePhotosEnabled } from '@/lib/progressPhotos';
 import { isAnalyticsEnabled, track } from '@/lib/analytics';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { CONTACT_EMAIL, openContactEmail } from '@/lib/legal';
@@ -739,7 +739,7 @@ export default function ProfileScreen() {
 
       <SettingsGroup title="Privacy">
         <SettingsRow
-          title="Progress photos"
+          title={privacySettingsCopy.photos}
           subtitle={
             photosEnabled
               ? 'On. Turning this off hides the card. Photos stay until you delete them.'
@@ -751,18 +751,22 @@ export default function ProfileScreen() {
               savePhotosEnabled(false).catch((error) => {
                 setPhotosEnabled(true);
                 showDialog(
-                  'Couldn’t save that',
+                  'Could not save that',
                   error instanceof Error ? error.message : 'Check your connection and try again.'
                 );
               });
               return;
             }
-            confirmEnablePhotos(() => {
+            void hasPhotosConsent().then((ok) => {
+              if (!ok) {
+                router.push('/photos-consent' as Href);
+                return;
+              }
               setPhotosEnabled(true);
               savePhotosEnabled(true).catch((error) => {
                 setPhotosEnabled(false);
                 showDialog(
-                  'Couldn’t save that',
+                  'Could not save that',
                   error instanceof Error ? error.message : 'Check your connection and try again.'
                 );
               });

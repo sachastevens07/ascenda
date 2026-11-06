@@ -1,37 +1,42 @@
-import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
-import { ProgressRing } from '@/components/ProgressRing';
-import { AppText } from '@/components/ui/AppText';
-import { colours } from '@/constants/theme';
+import { AppText, PrimaryButton, TextButton } from '@/components/ui';
+import { useTheme } from '@/constants/theme';
 import { fetchFinishedSessionMeta } from '@/lib/activityStats';
 import {
+  activeJoinedChallenge,
   challengeProgress,
   challengeRangeCopy,
   challengeStatus,
   challengeTimingCopy,
   describeChallengeError,
-  fetchChallenge,
+  fetchChallenges,
   formatStartOption,
   joinChallenge,
-  missingChallengesMessage,
+  leaveChallenge,
   rollingStartOptions,
   type Challenge,
 } from '@/lib/challenges';
+import { challengesCopy, fillCopy, routineActionsCopy } from '@/lib/copy';
 import { coverForChallenge } from '@/lib/images';
+import { getQuizAnswers, useProfile } from '@/lib/profile';
+import { fetchProgressSets } from '@/lib/progress';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
 export default function ChallengeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { colours, radius, spacing, shadow } = useTheme();
+  const { profile } = useProfile();
+  const answers = getQuizAnswers(profile);
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [done, setDone] = useState(0);
-  const [target, setTarget] = useState(0);
+  const [other, setOther] = useState<Challenge | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [joining, setJoining] = useState(false);
 
@@ -40,18 +45,19 @@ export default function ChallengeDetailScreen() {
       setLoadState('not-found');
       return;
     }
-    const next = await fetchChallenge(id);
+    const sessions = await fetchFinishedSessionMeta().catch(() => []);
+    const sets = await fetchProgressSets().catch(() => []);
+    const daysPerWeek = answers?.days_per_week ?? 3;
+    const list = await fetchChallenges({ sessions, sets, daysPerWeek });
+    const next = list.find((item) => item.id === id) ?? null;
     if (!next) {
       setLoadState('not-found');
       return;
     }
-    const sessions = await fetchFinishedSessionMeta().catch(() => []);
-    const progress = challengeProgress(next, sessions);
     setChallenge(next);
-    setDone(progress.done);
-    setTarget(progress.target);
+    setOther(activeJoinedChallenge(list.filter((item) => item.id !== next.id)));
     setLoadState('ready');
-  }, [id]);
+  }, [answers?.days_per_week, id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -65,45 +71,101 @@ export default function ChallengeDetailScreen() {
     }, [reload])
   );
 
-  async function joinWithStart(startDate: string) {
+  async function joinWithStart(startDate: string, replaceId?: string) {
     if (!challenge) return;
     setJoining(true);
     try {
-      await joinChallenge(challenge.id, startDate);
+      await joinChallenge(challenge.id, startDate, replaceId ? { replaceId } : undefined);
       await reload();
     } catch (error) {
-      showDialog('Couldn’t join', describeChallengeError(error));
+      showDialog('Could not join', describeChallengeError(error));
     } finally {
       setJoining(false);
     }
   }
 
-  function handleJoin() {
-    if (!challenge) return;
+  function pickStart(replaceId?: string) {
     const options = rollingStartOptions();
     showDialog(
-      'Pick a start day',
-      'Four weeks from that day. You can start on a Monday or the 1st of the month.',
+      challengesCopy.start_choice_title,
+      undefined,
       [
         ...options.map((option) => ({
           text: formatStartOption(option),
           onPress: () => {
-            void joinWithStart(option.date);
+            void joinWithStart(option.date, replaceId);
           },
         })),
-        { text: 'Not now', style: 'cancel' as const },
+        { text: routineActionsCopy.cancel, style: 'cancel' as const },
       ]
     );
   }
 
+  function handleJoin() {
+    if (!challenge) return;
+    if (other) {
+      showDialog(
+        challengesCopy.switch_title,
+        fillCopy(challengesCopy.switch_body, { current: other.name }),
+        [
+          {
+            text: challengesCopy.join,
+            onPress: () => pickStart(other.id),
+          },
+          { text: routineActionsCopy.cancel, style: 'cancel' },
+        ]
+      );
+      return;
+    }
+    pickStart();
+  }
+
+  function handleLeave() {
+    if (!challenge) return;
+    showDialog(challengesCopy.leave, challengesCopy.leave_body, [
+      {
+        text: challengesCopy.leave,
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            try {
+              await leaveChallenge(challenge.id);
+              await reload();
+            } catch (error) {
+              showDialog('Could not leave', describeChallengeError(error));
+            }
+          })();
+        },
+      },
+      { text: routineActionsCopy.cancel, style: 'cancel' },
+    ]);
+  }
+
+  async function shareCompletion() {
+    if (!challenge) return;
+    const sessions = challenge.progress.missionsDone;
+    try {
+      await Share.share({
+        title: challenge.completionTitle,
+        message: [challenge.completionTitle, fillCopy(challenge.completionBody, { sessions })]
+          .filter(Boolean)
+          .join('\n'),
+      });
+    } catch {
+      showDialog('Could not share', 'You can still screenshot the numbers.');
+    }
+  }
+
   if (loadState !== 'ready' || !challenge) {
     return (
-      <View style={styles.centre}>
+      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
         {loadState === 'loading' ? (
-          <ActivityIndicator color={colours.accent} />
+          <ActivityIndicator color={colours.brand} />
         ) : (
-          <AppText variant="body" style={styles.message}>
-            {loadState === 'not-found' ? 'We couldn’t find that challenge.' : missingChallengesMessage()}
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
+            {loadState === 'not-found'
+              ? 'We could not find that challenge.'
+              : 'Check your connection and try again.'}
           </AppText>
         )}
       </View>
@@ -111,82 +173,101 @@ export default function ChallengeDetailScreen() {
   }
 
   const status = challengeStatus(challenge);
-  const ratio = target > 0 ? done / target : 0;
+  const ring = challengeProgress(challenge);
+  const cover = coverForChallenge(challenge);
 
   return (
     <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 32 }]}>
-      <CoverPhoto
-        cover={coverForChallenge(challenge)}
-        letter={challenge.name.slice(0, 1)}
-        height={180}
-        style={styles.cover}
-      />
-      <View style={styles.chipRow}>
-        <AppText variant="bodySm" style={styles.status}>
-          {challengeTimingCopy(challenge)}
-        </AppText>
-      </View>
-      <AppText variant="title1" style={styles.title}>
+      style={[styles.scroll, { backgroundColor: colours.bg }]}
+      contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 32, gap: spacing.md }]}>
+      <CoverPhoto cover={cover} letter={challenge.name.slice(0, 1)} height={180} />
+      <AppText variant="eyebrow" style={{ color: colours.accent }}>
+        {challengeTimingCopy(challenge)}
+      </AppText>
+      <AppText variant="display" style={{ color: colours.ink }}>
         {challenge.name}
       </AppText>
-      <AppText variant="body" style={styles.body}>
+      <AppText variant="body" style={{ color: colours.inkMuted }}>
         {challenge.description}
       </AppText>
-      <AppText variant="bodySm" style={styles.meta}>
-        {challengeRangeCopy(challenge)}
-      </AppText>
-      <AppText variant="bodySm" style={styles.meta}>
-        Routine: {challenge.routine.name}
-      </AppText>
-      {challenge.participantCount > 0 ? (
-        <AppText variant="bodySm" style={styles.meta}>
-          {challenge.participantCount === 1
-            ? '1 person has joined'
-            : `${challenge.participantCount} people have joined`}
+      {challenge.joined ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+          {challengeRangeCopy(challenge)}
+        </AppText>
+      ) : null}
+      {challenge.joined ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+          {challengesCopy.joined}
         </AppText>
       ) : null}
 
-      <View style={styles.ringCard}>
-        <ProgressRing progress={ratio} size={88} stroke={8}>
-          <AppText variant="bodyStrong" style={styles.ringValue}>
-            {done}/{target}
+      {challenge.progress.justCaughtUp ? (
+        <View style={{ backgroundColor: colours.accentSoft, borderRadius: radius.xl, padding: spacing.lg }}>
+          <AppText variant="body" style={{ color: colours.ink }}>
+            {challengesCopy.week_repeat}
           </AppText>
-        </ProgressRing>
-        <AppText variant="body" style={styles.body}>
-          {challenge.joined
-            ? `Sessions in your four-week window, toward ${target}.`
-            : `Join, then sessions in your four-week window count toward ${target}.`}
+        </View>
+      ) : null}
+
+      <View style={[{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: spacing.lg }, shadow]}>
+        <AppText variant="title3" style={{ color: colours.ink }}>
+          {fillCopy(challengesCopy.progress, { done: ring.done, total: ring.target })}
         </AppText>
+        {challenge.progress.current ? (
+          <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+            {challenge.progress.current.mission.body}
+          </AppText>
+        ) : null}
       </View>
 
-      {status === 'ended' ? (
-        <AppText variant="body" style={styles.body}>
-          Finished. Your sessions stay in Activity.
-        </AppText>
+      <View style={{ gap: spacing.sm }}>
+        {challenge.missions.map((mission, index) => {
+          const done = index < challenge.progress.missionsDone;
+          const current = challenge.progress.current?.mission.week === mission.week;
+          return (
+            <View key={mission.week} style={{ gap: 4 }}>
+              <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                {done ? 'Done · ' : current ? 'This week · ' : ''}
+                {mission.title}
+              </AppText>
+              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+                {mission.body}
+              </AppText>
+            </View>
+          );
+        })}
+      </View>
+
+      {status === 'complete' ? (
+        <>
+          <AppText variant="title2" style={{ color: colours.ink }}>
+            {challengesCopy.complete_title}
+          </AppText>
+          <PrimaryButton label="Share this card" onPress={() => void shareCompletion()} />
+        </>
+      ) : status === 'ended' ? (
+        <>
+          <AppText variant="body" style={{ color: colours.inkMuted }}>
+            {fillCopy(challengesCopy.ended_quietly, { challenge: challenge.name })}
+          </AppText>
+          <PrimaryButton
+            label={joining ? 'Joining…' : challengesCopy.join}
+            onPress={() => handleJoin()}
+            loading={joining}
+            disabled={joining}
+          />
+        </>
       ) : challenge.joined ? (
-        <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-          onPress={() =>
-            router.push({ pathname: '/routines/[id]', params: { id: challenge.routine.id } } as Href)
-          }
-          accessibilityRole="button">
-          <AppText variant="bodyStrong" style={styles.buttonText}>
-            Open {challenge.routine.name}
-          </AppText>
-        </Pressable>
+        <TextButton label={challengesCopy.leave} onPress={handleLeave} style={{ alignSelf: 'flex-start' }} />
       ) : (
-        <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-          onPress={() => void handleJoin()}
+        <PrimaryButton
+          label={joining ? 'Joining…' : challengesCopy.join}
+          onPress={() => handleJoin()}
+          loading={joining}
           disabled={joining}
-          accessibilityRole="button">
-          <AppText variant="bodyStrong" style={styles.buttonText}>
-            {joining ? 'Joining…' : 'Join challenge'}
-          </AppText>
-        </Pressable>
+        />
       )}
+
     </ScrollView>
   );
 }
@@ -194,77 +275,15 @@ export default function ChallengeDetailScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: colours.background,
   },
   container: {
     padding: 24,
     paddingTop: 8,
-    gap: 12,
   },
   centre: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: colours.background,
-  },
-  message: {
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  cover: {
-    borderRadius: 22,
-    overflow: 'hidden',
-  },
-  chipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  free: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-    color: colours.surface,
-    backgroundColor: colours.accent,
-  },
-  status: {
-    color: colours.accent,
-  },
-  title: {
-    color: colours.text,
-  },
-  body: {
-    color: colours.textMuted,
-  },
-  meta: {
-    color: colours.textMuted,
-  },
-  ringCard: {
-    flexDirection: 'row',
-    gap: 16,
-    alignItems: 'center',
-    padding: 20,
-    borderRadius: 22,
-    backgroundColor: colours.surface,
-  },
-  ringValue: {
-    color: colours.text,
-  },
-  button: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colours.accent,
-    marginTop: 8,
-  },
-  buttonText: {
-    color: colours.surface,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });

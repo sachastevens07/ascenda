@@ -1,55 +1,68 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { sessionCountsTowardStreak, sessionDurationSeconds, type FinishedSessionMeta } from '@/lib/activityStats';
-import { addDays, startOfWeekMonday, toIso } from '@/lib/planner';
-import { formatShortDate } from '@/lib/progress';
-import { hydrateImages } from '@/lib/images';
+import { fetchFinishedSessionMeta, sessionDurationSeconds, type FinishedSessionMeta } from '@/lib/activityStats';
 import {
-  describeRoutineError,
-  toSummary,
-  type RoutineSummary,
-  type SummaryRow,
-} from '@/lib/routines';
+  contentChallenge,
+  contentChallenges,
+  type ChallengeMission,
+  type ChallengeRequirement,
+  type ContentChallenge,
+} from '@/lib/contentChallenges';
+import { fillCopy, challengesCopy } from '@/lib/copy';
+import { addDays, startOfWeekMonday, toIso } from '@/lib/planner';
+import { fetchProgressSets, formatShortDate, type ProgressSet } from '@/lib/progress';
+import { describeRoutineError } from '@/lib/routines';
 import { supabase } from '@/lib/supabase';
 
-/** Inclusive length of a challenge window. Monday 3 Nov to Sunday 30 Nov is 28 days. */
-export const CHALLENGE_LENGTH_DAYS = 28;
-
-export type Challenge = {
-  id: string;
-  name: string;
-  description: string;
-  cover: RoutineSummary['cover'];
-  routine: RoutineSummary;
-  /** Catalogue dates from the old fixed-window model. Status uses the personal window. */
-  start_date: string;
-  end_date: string;
-  windowStart: string | null;
-  windowEnd: string | null;
-  is_pro: boolean;
-  joined: boolean;
-  joinedAt: string | null;
-  completedAt: string | null;
-  participantCount: number;
-};
-
-export type ChallengeStatus = 'open' | 'upcoming' | 'live' | 'ended';
+export const MAX_CATCH_UPS = 2;
 
 export type ChallengeStartOption = {
   kind: 'monday' | 'month';
   date: string;
 };
 
-const CHALLENGE_SELECT = `
-  id, name, description, start_date, end_date, is_pro,
-  cover:images (id, url, storage_path, alt_text, licence_source),
-  routine:routines (
-    id, name, slug, description, goal, length_weeks, days_per_week, session_minutes,
-    difficulty, equipment, is_pro, is_featured_eligible, sort_order, source_programme_id, type,
-    cover:images (id, url, storage_path, alt_text, licence_source),
-    routine_tags (tag)
-  )
-`;
+export type ChallengeProgressStatus = 'open' | 'upcoming' | 'live' | 'complete' | 'ended';
+
+export type ChallengeWeekProgress = {
+  mission: ChallengeMission;
+  done: number;
+  target: number;
+  met: boolean;
+};
+
+export type ChallengeProgress = {
+  status: ChallengeProgressStatus;
+  missionsDone: number;
+  missionCount: number;
+  catchUpsUsed: number;
+  justCaughtUp: boolean;
+  current: ChallengeWeekProgress | null;
+};
+
+export type Challenge = {
+  id: string;
+  name: string;
+  summary: string;
+  description: string;
+  coverSlug: string;
+  tags: string[];
+  lengthWeeks: number;
+  missions: ChallengeMission[];
+  weeklyTargetRule: ContentChallenge['weekly_target_rule'];
+  recommendedRoutines: string[];
+  recommendedStretches: string[];
+  completionTitle: string;
+  completionBody: string;
+  featuredFrom: string | null;
+  featuredTo: string | null;
+  fallbackAnyNewExercise: boolean;
+  joined: boolean;
+  joinedAt: string | null;
+  completedAt: string | null;
+  windowStart: string | null;
+  windowEnd: string | null;
+  progress: ChallengeProgress;
+};
 
 type JoinRow = {
   challenge_id: string;
@@ -59,6 +72,25 @@ type JoinRow = {
   start_date?: string | null;
   end_date?: string | null;
 };
+
+type LocalJoin = {
+  challengeId: string;
+  start: string;
+  end: string;
+  joinedAt: string;
+  completedAt: string | null;
+};
+
+type SessionHint = {
+  id: string;
+  date: string;
+  durationSeconds: number;
+  source: string;
+  type: string;
+  routineDayId: string | null;
+};
+
+const JOINS_KEY = 'challenge-joins';
 
 function isMissingChallenges(error: { message?: string; code?: string }): boolean {
   const detail = `${error.code ?? ''} ${error.message ?? ''}`.toLowerCase();
@@ -79,7 +111,7 @@ function isMissingWindowColumn(error: { message?: string; code?: string } | null
 }
 
 export function missingChallengesMessage(): string {
-  return 'Challenges need supabase/paths.sql run in the Supabase SQL editor.';
+  return 'Challenges need supabase/challenges_h8.sql run in the Supabase SQL editor.';
 }
 
 export function describeChallengeError(error: unknown): string {
@@ -89,32 +121,23 @@ export function describeChallengeError(error: unknown): string {
       : error && typeof error === 'object' && 'message' in error
         ? String((error as { message: unknown }).message)
         : '';
-  if (/paths\.sql|challenges|challenge_participants/i.test(detail)) {
+  if (/challenges_h8|paths\.sql|challenges|challenge_participants/i.test(detail)) {
     return missingChallengesMessage();
   }
   return describeRoutineError(error) || detail || 'Check your connection and try again.';
+}
+
+function parseIso(iso: string): Date {
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function todayIso(now = new Date()): string {
   return toIso(now);
 }
 
-function oneCover<T>(cover: T | T[] | null): T | null {
-  if (!cover) return null;
-  return Array.isArray(cover) ? (cover[0] ?? null) : cover;
-}
-
-function windowKey(userId: string, challengeId: string): string {
-  return `challenge-window:${userId}:${challengeId}`;
-}
-
-export function endDateFromStart(startIso: string): string {
-  return toIso(addDays(parseIso(startIso), CHALLENGE_LENGTH_DAYS - 1));
-}
-
-function parseIso(iso: string): Date {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(year, month - 1, day);
+export function endDateFromStart(startIso: string, weeks: number, catchUps = 0): string {
+  return toIso(addDays(parseIso(startIso), (weeks + catchUps) * 7 - 1));
 }
 
 /** Next Monday, or today if today is Monday. */
@@ -138,97 +161,334 @@ export function rollingStartOptions(now = new Date()): ChallengeStartOption[] {
 }
 
 export function formatStartOption(option: ChallengeStartOption, now = new Date()): string {
-  const date = parseIso(option.date);
-  const when = formatShortDate(date, now);
-  const isToday = toIso(now) === option.date;
+  const when = formatShortDate(parseIso(option.date), now);
   if (option.kind === 'monday') {
-    return isToday ? `Today, Monday ${when}` : `Monday ${when}`;
+    return option.date === toIso(now) ? when : `${challengesCopy.start_next_monday} · ${when}`;
   }
-  return isToday ? `Today, ${when}` : when;
+  return fillCopy(challengesCopy.start_first_of_month, { date: when });
 }
 
-export function challengeWindow(challenge: Pick<Challenge, 'windowStart' | 'windowEnd'>): {
-  start: string;
-  end: string;
-} | null {
-  if (!challenge.windowStart || !challenge.windowEnd) return null;
-  return { start: challenge.windowStart, end: challenge.windowEnd };
+function monthDay(now: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-export function challengeStatus(
-  challenge: Pick<Challenge, 'windowStart' | 'windowEnd'>,
-  now = new Date()
-): ChallengeStatus {
-  const window = challengeWindow(challenge);
-  if (!window) return 'open';
-  const today = todayIso(now);
-  if (today < window.start) return 'upcoming';
-  if (today > window.end) return 'ended';
-  return 'live';
+function isFeaturedNow(challenge: Pick<Challenge, 'featuredFrom' | 'featuredTo'>, now = new Date()): boolean {
+  if (!challenge.featuredFrom || !challenge.featuredTo) return false;
+  const md = monthDay(now);
+  if (challenge.featuredFrom <= challenge.featuredTo) {
+    return md >= challenge.featuredFrom && md <= challenge.featuredTo;
+  }
+  return md >= challenge.featuredFrom || md <= challenge.featuredTo;
 }
 
-/** Date or open copy. Never a countdown. */
-export function challengeTimingCopy(
-  challenge: Pick<Challenge, 'windowStart' | 'windowEnd'>,
-  now = new Date()
-): string {
-  const status = challengeStatus(challenge, now);
-  const window = challengeWindow(challenge);
-  if (status === 'open' || !window) return 'Four weeks. Start on a Monday or the 1st.';
-  if (status === 'upcoming') return `Starts ${formatShortDate(parseIso(window.start), now)}`;
-  if (status === 'ended') return 'Finished';
-  return 'Your four weeks';
+function emptyProgress(status: ChallengeProgressStatus, missionCount: number): ChallengeProgress {
+  return {
+    status,
+    missionsDone: 0,
+    missionCount,
+    catchUpsUsed: 0,
+    justCaughtUp: false,
+    current: null,
+  };
 }
 
-export function challengeRangeCopy(
-  challenge: Pick<Challenge, 'windowStart' | 'windowEnd'>,
-  now = new Date()
-): string {
-  const window = challengeWindow(challenge);
-  if (!window) return 'Four weeks. Start on a Monday or the 1st of the month.';
-  return `${formatShortDate(parseIso(window.start), now)} to ${formatShortDate(parseIso(window.end), now)}`;
+function weeklyTarget(rule: ContentChallenge['weekly_target_rule'], daysPerWeek: number): number {
+  if (rule === 'min_3_or_days') return Math.min(3, Math.max(1, daysPerWeek));
+  return 3;
 }
 
-export function challengeTargetSessions(routine: Pick<RoutineSummary, 'days_per_week'>): number {
-  return routine.days_per_week * 4;
+function requirementTarget(requirement: ChallengeRequirement, daysPerWeek: number): number {
+  if (requirement.count === 'weekly_target') return weeklyTarget('min_3_or_days', daysPerWeek);
+  return requirement.count;
 }
 
-type ChallengeRow = {
-  id: string;
-  name: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  is_pro: boolean;
-  cover: RoutineSummary['cover'] | RoutineSummary['cover'][] | null;
-  routine: SummaryRow | null;
-};
+function sessionKind(session: SessionHint): 'strength' | 'cardio' | 'stretch' | 'recovery' {
+  if (session.source === 'stretch' || session.type === 'recovery') return 'stretch';
+  if (session.type === 'cardio') return 'cardio';
+  return 'strength';
+}
 
-async function readLocalWindow(
-  userId: string,
-  challengeId: string
-): Promise<{ start: string; end: string } | null> {
-  try {
-    const raw = await AsyncStorage.getItem(windowKey(userId, challengeId));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { start?: string; end?: string };
-    if (typeof parsed.start === 'string' && typeof parsed.end === 'string') {
-      return { start: parsed.start, end: parsed.end };
+function matchesSessionType(session: SessionHint, types: string[]): boolean {
+  if (types.length === 0) return true;
+  const kind = sessionKind(session);
+  return types.some((type) => {
+    if (type === 'stretch' || type === 'recovery') return kind === 'stretch';
+    return kind === type;
+  });
+}
+
+function stretchLongEnough(session: SessionHint, minMinutes: number | null): boolean {
+  if (minMinutes == null) return true;
+  if (sessionKind(session) !== 'stretch' && session.type !== 'recovery') return true;
+  return session.durationSeconds >= minMinutes * 60;
+}
+
+function matchesStretchSlug(session: SessionHint, slugs: string[]): boolean {
+  if (slugs.length === 0) return true;
+  const dayId = (session.routineDayId ?? '').toLowerCase();
+  return slugs.some((slug) => dayId === slug || dayId.startsWith(`${slug}-`) || dayId.includes(slug));
+}
+
+function setsBefore(sets: ProgressSet[], iso: string): ProgressSet[] {
+  return sets.filter((set) => set.date < iso);
+}
+
+function setsInRange(sets: ProgressSet[], start: string, end: string): ProgressSet[] {
+  return sets.filter((set) => set.date >= start && set.date <= end);
+}
+
+function sessionsInRange(sessions: SessionHint[], start: string, end: string): SessionHint[] {
+  return sessions.filter((session) => session.date >= start && session.date <= end);
+}
+
+function evaluateRequirement(
+  requirement: ChallengeRequirement,
+  weekStart: string,
+  weekEnd: string,
+  sessions: SessionHint[],
+  sets: ProgressSet[],
+  daysPerWeek: number,
+  allowFallback: boolean
+): { done: number; target: number; met: boolean } {
+  const target = requirementTarget(requirement, daysPerWeek);
+  const weekSessions = sessionsInRange(sessions, weekStart, weekEnd);
+  const weekSets = setsInRange(sets, weekStart, weekEnd);
+  const priorSets = setsBefore(sets, weekStart);
+
+  if (requirement.type === 'sessions') {
+    const counted = weekSessions.filter(
+      (session) =>
+        matchesSessionType(session, requirement.session_types) &&
+        stretchLongEnough(session, requirement.stretch_min_minutes ?? 10)
+    );
+    return { done: counted.length, target, met: counted.length >= target };
+  }
+
+  if (requirement.type === 'stretch_sessions') {
+    const min = requirement.min_minutes ?? 10;
+    const stretches = weekSessions.filter(
+      (session) => sessionKind(session) === 'stretch' && session.durationSeconds >= min * 60
+    );
+    const includeOk =
+      requirement.include_any_of.length === 0 ||
+      stretches.some((session) => matchesStretchSlug(session, requirement.include_any_of));
+    const trainingDates = new Set(
+      weekSessions.filter((session) => sessionKind(session) !== 'stretch').map((session) => session.date)
+    );
+    const trainingOk =
+      !requirement.one_on_training_day || stretches.some((session) => trainingDates.has(session.date));
+    const done = stretches.length;
+    return { done, target, met: done >= target && includeOk && trainingOk };
+  }
+
+  if (requirement.type === 'new_equipment') {
+    const types = requirement.equipment_types;
+    const known = new Set(priorSets.map((set) => set.equipment));
+    const fresh = new Set(
+      weekSets
+        .filter((set) => (types.length === 0 || types.includes(set.equipment)) && !known.has(set.equipment))
+        .map((set) => set.equipment)
+    );
+    let met = fresh.size >= target;
+    if (!met && allowFallback) {
+      const newExercises = newExerciseCount(priorSets, weekSets, []);
+      met = newExercises >= 1;
     }
-    return null;
+    return { done: fresh.size, target, met };
+  }
+
+  const types = requirement.equipment_types;
+  const done = newExerciseCount(priorSets, weekSets, types);
+  let met = done >= target;
+  if (!met && allowFallback) {
+    met = newExerciseCount(priorSets, weekSets, []) >= 1;
+  }
+  return { done, target, met };
+}
+
+function newExerciseCount(prior: ProgressSet[], week: ProgressSet[], equipmentTypes: string[]): number {
+  const known = new Set(
+    prior
+      .filter((set) => equipmentTypes.length === 0 || equipmentTypes.includes(set.equipment))
+      .map((set) => set.exerciseId)
+  );
+  const fresh = new Set(
+    week
+      .filter(
+        (set) =>
+          (equipmentTypes.length === 0 || equipmentTypes.includes(set.equipment)) && !known.has(set.exerciseId)
+      )
+      .map((set) => set.exerciseId)
+  );
+  return fresh.size;
+}
+
+export function evaluateChallengeProgress(input: {
+  catalogue: ContentChallenge;
+  windowStart: string | null;
+  completedAt: string | null;
+  sessions: SessionHint[];
+  sets: ProgressSet[];
+  daysPerWeek: number;
+  now?: Date;
+}): ChallengeProgress {
+  const { catalogue } = input;
+  const missionCount = catalogue.missions.length;
+  if (input.completedAt) {
+    return {
+      status: 'complete',
+      missionsDone: missionCount,
+      missionCount,
+      catchUpsUsed: 0,
+      justCaughtUp: false,
+      current: null,
+    };
+  }
+  if (!input.windowStart) return emptyProgress('open', missionCount);
+  const today = todayIso(input.now);
+  if (today < input.windowStart) return emptyProgress('upcoming', missionCount);
+
+  let missionIndex = 0;
+  let catchUpsUsed = 0;
+  let justCaughtUp = false;
+  let weekIndex = 0;
+  const maxWeeks = catalogue.length_weeks + MAX_CATCH_UPS;
+
+  while (weekIndex < maxWeeks && missionIndex < missionCount) {
+    const weekStart = toIso(addDays(parseIso(input.windowStart), weekIndex * 7));
+    const weekEnd = toIso(addDays(parseIso(weekStart), 6));
+    const mission = catalogue.missions[missionIndex];
+    const current = evaluateRequirement(
+      mission.requirement,
+      weekStart,
+      weekEnd,
+      input.sessions,
+      input.sets,
+      input.daysPerWeek,
+      catalogue.fallback_any_new_exercise
+    );
+    if (today <= weekEnd) {
+      return {
+        status: 'live',
+        missionsDone: missionIndex,
+        missionCount,
+        catchUpsUsed,
+        justCaughtUp,
+        current: { mission, ...current },
+      };
+    }
+    if (current.met) {
+      missionIndex += 1;
+      justCaughtUp = false;
+    } else if (catchUpsUsed < MAX_CATCH_UPS) {
+      catchUpsUsed += 1;
+      justCaughtUp = true;
+    } else {
+      return {
+        status: 'ended',
+        missionsDone: missionIndex,
+        missionCount,
+        catchUpsUsed,
+        justCaughtUp: false,
+        current: null,
+      };
+    }
+    weekIndex += 1;
+  }
+
+  if (missionIndex >= missionCount) {
+    return {
+      status: 'complete',
+      missionsDone: missionCount,
+      missionCount,
+      catchUpsUsed,
+      justCaughtUp: false,
+      current: null,
+    };
+  }
+  return emptyProgress('ended', missionCount);
+}
+
+export function challengeStatus(challenge: Challenge): ChallengeProgressStatus {
+  return challenge.progress.status;
+}
+
+/** Date or this week's mission. Never a countdown. */
+export function challengeTimingCopy(challenge: Challenge, now = new Date()): string {
+  const status = challenge.progress.status;
+  if (status === 'upcoming' && challenge.windowStart) {
+    return fillCopy(challengesCopy.starts, { date: formatShortDate(parseIso(challenge.windowStart), now) });
+  }
+  if (status === 'live' && challenge.progress.current) {
+    return fillCopy(challengesCopy.this_week_mission, { mission: challenge.progress.current.mission.title });
+  }
+  if (status === 'complete') return challengesCopy.complete_title;
+  if (status === 'ended') return fillCopy(challengesCopy.ended_quietly, { challenge: challenge.name });
+  return challenge.summary;
+}
+
+export function challengeRangeCopy(challenge: Challenge, now = new Date()): string {
+  if (!challenge.windowStart || !challenge.windowEnd) return challenge.summary;
+  return `${formatShortDate(parseIso(challenge.windowStart), now)} to ${formatShortDate(parseIso(challenge.windowEnd), now)}`;
+}
+
+export function challengeProgress(challenge: Challenge): { done: number; target: number } {
+  const current = challenge.progress.current;
+  if (current) return { done: current.done, target: current.target };
+  return {
+    done: challenge.progress.missionsDone,
+    target: challenge.progress.missionCount,
+  };
+}
+
+function hintsFromMeta(sessions: FinishedSessionMeta[], extra: Map<string, string>): SessionHint[] {
+  return sessions.map((session) => ({
+    id: session.id,
+    date: session.date,
+    durationSeconds: sessionDurationSeconds(session),
+    source: session.source,
+    type: session.type,
+    routineDayId: extra.get(session.id) ?? null,
+  }));
+}
+
+async function loadSessionDayIds(): Promise<Map<string, string>> {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('id, routine_day_id')
+    .not('completed_at', 'is', null);
+  if (error) return new Map();
+  const map = new Map<string, string>();
+  for (const row of (data ?? []) as { id: string; routine_day_id: string | null }[]) {
+    if (row.routine_day_id) map.set(row.id, row.routine_day_id);
+  }
+  return map;
+}
+
+async function readLocalJoins(): Promise<LocalJoin[]> {
+  try {
+    const raw = await AsyncStorage.getItem(JOINS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as LocalJoin[];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
-async function writeLocalWindow(userId: string, challengeId: string, start: string, end: string): Promise<void> {
-  await AsyncStorage.setItem(windowKey(userId, challengeId), JSON.stringify({ start, end }));
+async function writeLocalJoins(rows: LocalJoin[]): Promise<void> {
+  await AsyncStorage.setItem(JOINS_KEY, JSON.stringify(rows));
 }
 
-function windowFromJoinDay(joinedAt: string): { start: string; end: string } {
-  const day = joinedAt.slice(0, 10);
-  const start = toIso(nextMonday(parseIso(day)));
-  return { start, end: endDateFromStart(start) };
+async function upsertLocalJoin(join: LocalJoin): Promise<void> {
+  const rows = await readLocalJoins();
+  await writeLocalJoins([...rows.filter((row) => row.challengeId !== join.challengeId), join]);
+}
+
+async function removeLocalJoin(challengeId: string): Promise<void> {
+  const rows = await readLocalJoins();
+  await writeLocalJoins(rows.filter((row) => row.challengeId !== challengeId));
 }
 
 async function participantRows(): Promise<JoinRow[]> {
@@ -249,136 +509,211 @@ async function participantRows(): Promise<JoinRow[]> {
   return (fallback.data ?? []) as JoinRow[];
 }
 
-async function resolveWindow(
+function joinFor(
+  id: string,
   userId: string | null,
-  row: ChallengeRow,
-  mine: JoinRow | undefined
-): Promise<{ start: string; end: string } | null> {
-  if (!mine || !userId) return null;
-  if (mine.start_date && mine.end_date) return { start: mine.start_date, end: mine.end_date };
-  const local = await readLocalWindow(userId, row.id);
-  if (local) return local;
-  return windowFromJoinDay(mine.joined_at);
-}
-
-async function toChallenge(row: ChallengeRow, userId: string | null, joins: JoinRow[]): Promise<Challenge | null> {
-  if (!row.routine) return null;
-  const mine = joins.find((join) => join.challenge_id === row.id && join.user_id === userId);
-  const window = await resolveWindow(userId, row, mine);
+  remote: JoinRow[],
+  local: LocalJoin[]
+): { start: string | null; joinedAt: string | null; completedAt: string | null } {
+  const mine = remote.find((row) => row.challenge_id === id && row.user_id === userId);
+  const saved = local.find((row) => row.challengeId === id);
+  const start = mine?.start_date ?? saved?.start ?? null;
   return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    cover: oneCover(row.cover),
-    routine: toSummary(row.routine),
-    start_date: row.start_date,
-    end_date: row.end_date,
-    windowStart: window?.start ?? null,
-    windowEnd: window?.end ?? null,
-    is_pro: row.is_pro,
-    joined: Boolean(mine),
-    joinedAt: mine?.joined_at ?? null,
-    completedAt: mine?.completed_at ?? null,
-    participantCount: joins.filter((join) => join.challenge_id === row.id).length,
+    start,
+    joinedAt: mine?.joined_at ?? saved?.joinedAt ?? null,
+    completedAt: mine?.completed_at ?? saved?.completedAt ?? null,
   };
 }
 
-export async function fetchChallenges(): Promise<Challenge[]> {
-  await hydrateImages();
+function toChallenge(
+  catalogue: ContentChallenge,
+  join: { start: string | null; joinedAt: string | null; completedAt: string | null },
+  progress: ChallengeProgress
+): Challenge {
+  const catchUps = progress.catchUpsUsed;
+  return {
+    id: catalogue.slug,
+    name: catalogue.name,
+    summary: catalogue.summary,
+    description: catalogue.description,
+    coverSlug: catalogue.cover_image_slug,
+    tags: catalogue.tags,
+    lengthWeeks: catalogue.length_weeks,
+    missions: catalogue.missions,
+    weeklyTargetRule: catalogue.weekly_target_rule,
+    recommendedRoutines: catalogue.recommended_routines,
+    recommendedStretches: catalogue.recommended_stretches,
+    completionTitle: catalogue.completion_title,
+    completionBody: catalogue.completion_body,
+    featuredFrom: catalogue.featured_from,
+    featuredTo: catalogue.featured_to,
+    fallbackAnyNewExercise: catalogue.fallback_any_new_exercise,
+    joined: Boolean(join.joinedAt),
+    joinedAt: join.joinedAt,
+    completedAt: progress.status === 'complete' ? join.completedAt ?? join.joinedAt : join.completedAt,
+    windowStart: join.start,
+    windowEnd: join.start ? endDateFromStart(join.start, catalogue.length_weeks, catchUps) : null,
+    progress,
+  };
+}
+
+export async function fetchChallenges(input?: {
+  sessions?: FinishedSessionMeta[];
+  sets?: ProgressSet[];
+  daysPerWeek?: number;
+}): Promise<Challenge[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  let { data, error } = await supabase.from('challenges').select(CHALLENGE_SELECT).order('start_date');
-  if (error && /type/i.test(error.message ?? '') && !isMissingChallenges(error)) {
-    const retry = await supabase
-      .from('challenges')
-      .select(CHALLENGE_SELECT.replace(', type', ''))
-      .order('start_date');
-    data = retry.data as typeof data;
-    error = retry.error;
+  const [remote, local, dayIds, loadedSessions, loadedSets] = await Promise.all([
+    participantRows().catch(() => [] as JoinRow[]),
+    readLocalJoins(),
+    loadSessionDayIds().catch(() => new Map<string, string>()),
+    input?.sessions ? Promise.resolve(input.sessions) : fetchFinishedSessionMeta().catch(() => []),
+    input?.sets ? Promise.resolve(input.sets) : fetchProgressSets().catch(() => []),
+  ]);
+  const sessions = hintsFromMeta(loadedSessions, dayIds);
+  const sets = loadedSets;
+  const daysPerWeek = input?.daysPerWeek ?? 3;
+  const list = contentChallenges().map((catalogue) => {
+    const join = joinFor(catalogue.slug, user?.id ?? null, remote, local);
+    const progress = evaluateChallengeProgress({
+      catalogue,
+      windowStart: join.start,
+      completedAt: join.completedAt,
+      sessions,
+      sets,
+      daysPerWeek,
+    });
+    return toChallenge(catalogue, join, progress);
+  });
+  for (const challenge of list) {
+    if (challenge.joined && challenge.progress.status === 'complete' && !challenge.completedAt) {
+      await markChallengeComplete(challenge.id).catch(() => {});
+      challenge.completedAt = new Date().toISOString();
+    }
   }
-  if (error) {
-    if (isMissingChallenges(error)) return [];
-    throw new Error(error.message);
-  }
-  const joins = await participantRows();
-  const mapped = await Promise.all(
-    ((data ?? []) as unknown as ChallengeRow[]).map((row) => toChallenge(row, user?.id ?? null, joins))
-  );
-  return mapped.filter((item): item is Challenge => Boolean(item));
+  return list;
 }
 
-export async function fetchChallenge(id: string): Promise<Challenge | null> {
-  const list = await fetchChallenges();
+export async function fetchChallenge(
+  id: string,
+  input?: { sessions?: FinishedSessionMeta[]; sets?: ProgressSet[]; daysPerWeek?: number }
+): Promise<Challenge | null> {
+  const list = await fetchChallenges(input);
   return list.find((item) => item.id === id) ?? null;
 }
 
-/** Joined and live first, then a joined start that has not begun, then any open challenge. */
+/** Joined live first, then upcoming, then a featured window. Never a countdown. */
 export function pickHomeChallenge(challenges: Challenge[], now = new Date()): Challenge | null {
-  const joinedLive = challenges.filter((item) => item.joined && challengeStatus(item, now) === 'live');
+  const joinedLive = challenges.filter((item) => item.joined && item.progress.status === 'live');
   if (joinedLive[0]) return joinedLive[0];
   const joinedUpcoming = challenges
-    .filter((item) => item.joined && challengeStatus(item, now) === 'upcoming')
+    .filter((item) => item.joined && item.progress.status === 'upcoming')
     .sort((a, b) => (a.windowStart ?? '').localeCompare(b.windowStart ?? ''));
   if (joinedUpcoming[0]) return joinedUpcoming[0];
-  const open = challenges.filter((item) => challengeStatus(item, now) === 'open');
-  return open[0] ?? null;
+  return challenges.find((item) => !item.joined && isFeaturedNow(item, now)) ?? null;
 }
 
-export async function joinChallenge(challengeId: string, startDate: string): Promise<void> {
+export function activeJoinedChallenge(challenges: Challenge[]): Challenge | null {
+  return (
+    challenges.find((item) => item.joined && (item.progress.status === 'live' || item.progress.status === 'upcoming')) ??
+    null
+  );
+}
+
+async function markChallengeComplete(challengeId: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const local = await readLocalJoins();
+  const row = local.find((item) => item.challengeId === challengeId);
+  if (row) {
+    row.completedAt = new Date().toISOString();
+    await writeLocalJoins(local);
+  }
+  if (!user) return;
+  await supabase
+    .from('challenge_participants')
+    .update({ completed_at: new Date().toISOString() })
+    .eq('challenge_id', challengeId)
+    .eq('user_id', user.id);
+}
+
+export async function leaveChallenge(challengeId: string): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  await removeLocalJoin(challengeId);
+  if (!user) return;
+  const { error } = await supabase
+    .from('challenge_participants')
+    .delete()
+    .eq('challenge_id', challengeId)
+    .eq('user_id', user.id);
+  if (error && !isMissingChallenges(error)) throw new Error(error.message);
+}
+
+export async function joinChallenge(
+  challengeId: string,
+  startDate: string,
+  options?: { replaceId?: string }
+): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error('Sign in first.');
-  const endDate = endDateFromStart(startDate);
-  await writeLocalWindow(user.id, challengeId, startDate, endDate);
-  const withWindow = await supabase.from('challenge_participants').insert({
-    challenge_id: challengeId,
-    user_id: user.id,
-    start_date: startDate,
-    end_date: endDate,
+  if (options?.replaceId && options.replaceId !== challengeId) {
+    await leaveChallenge(options.replaceId);
+  }
+  const catalogue = contentChallenge(challengeId);
+  const weeks = catalogue?.length_weeks ?? 4;
+  const endDate = endDateFromStart(startDate, weeks);
+  await upsertLocalJoin({
+    challengeId,
+    start: startDate,
+    end: endDate,
+    joinedAt: new Date().toISOString(),
+    completedAt: null,
   });
+  const withWindow = await supabase.from('challenge_participants').upsert(
+    {
+      challenge_id: challengeId,
+      user_id: user.id,
+      start_date: startDate,
+      end_date: endDate,
+      completed_at: null,
+      joined_at: new Date().toISOString(),
+    },
+    { onConflict: 'challenge_id,user_id' }
+  );
   if (!withWindow.error) return;
-  if (withWindow.error.code === '23505') return;
-  if (isMissingChallenges(withWindow.error)) throw new Error(missingChallengesMessage());
-  if (!isMissingWindowColumn(withWindow.error)) throw new Error(withWindow.error.message);
+  if (isMissingChallenges(withWindow.error) || withWindow.error.code === '23503') return;
+  if (!isMissingWindowColumn(withWindow.error)) {
+    if (withWindow.error.code === '23505') {
+      await supabase
+        .from('challenge_participants')
+        .update({ start_date: startDate, end_date: endDate, completed_at: null })
+        .eq('challenge_id', challengeId)
+        .eq('user_id', user.id);
+      return;
+    }
+    throw new Error(withWindow.error.message);
+  }
   const fallback = await supabase.from('challenge_participants').insert({
     challenge_id: challengeId,
     user_id: user.id,
   });
   if (fallback.error) {
     if (fallback.error.code === '23505') return;
-    if (isMissingChallenges(fallback.error)) throw new Error(missingChallengesMessage());
+    if (isMissingChallenges(fallback.error)) return;
     throw new Error(fallback.error.message);
   }
 }
 
-export function challengeSessionCount(
-  challenge: Pick<Challenge, 'windowStart' | 'windowEnd'>,
-  sessions: FinishedSessionMeta[]
-): number {
-  const window = challengeWindow(challenge);
-  if (!window) return 0;
-  return sessions.filter(
-    (session) =>
-      sessionCountsTowardStreak(session) && session.date >= window.start && session.date <= window.end
-  ).length;
-}
-
-export function challengeProgress(
-  challenge: Challenge,
-  sessions: FinishedSessionMeta[]
-): { done: number; target: number } {
-  return {
-    done: challengeSessionCount(challenge, sessions),
-    target: challengeTargetSessions(challenge.routine),
-  };
-}
-
 export function challengeHours(challenge: Challenge, sessions: FinishedSessionMeta[]): number {
-  const window = challengeWindow(challenge);
-  if (!window) return 0;
+  if (!challenge.windowStart || !challenge.windowEnd) return 0;
   return sessions
-    .filter((session) => session.date >= window.start && session.date <= window.end)
+    .filter((session) => session.date >= challenge.windowStart! && session.date <= challenge.windowEnd!)
     .reduce((sum, session) => sum + sessionDurationSeconds(session), 0);
 }

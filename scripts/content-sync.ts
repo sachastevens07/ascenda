@@ -1006,19 +1006,22 @@ async function reportLearn(client: SupabaseClient): Promise<void> {
 }
 
 async function reportChallenges(client: SupabaseClient): Promise<void> {
-  line('challenges  ←  content/challenges/challenges.json');
-  const challenges = asArray(readJson('challenges/challenges.json').challenges);
-  const error = await probe(client, 'challenges', 'id, name, start_date, end_date');
+  line('challenges  ←  content/challenges/challenges.json (bundled, H8)');
+  const challenges = asArray(readJson('challenges/challenges.json').challenges).map(asRecord);
+  const windowProbe = await probe(client, 'challenge_participants', 'start_date, end_date');
+  const catalogueProbe = await probe(client, 'challenges', 'id, name');
+  const withDates = challenges.filter((item) => text(item.start_date) || text(item.end_date));
+  const showingCounts = challenges.filter((item) => item.show_participant_count === true);
+  const missions = challenges.reduce((sum, item) => sum + asArray(item.weekly_missions).length, 0);
   line(`  Content challenges: ${challenges.length}`);
-  if (error) {
-    line(`  Table not usable: ${error}`);
-    line('  Skipped.');
-    line();
-    return;
-  }
-  line('  Upsert skipped. The live table requires start_date, end_date and routine_id.');
-  line('  /content has none of those: the window lives on the join (H8), and a challenge runs alongside any routine.');
-  line('  Existing challenge rows are left as they are. No countdown fields are added.');
+  line(`  Weekly missions: ${missions}`);
+  line(`  Rolling starts only (no catalogue start_date/end_date): ${withDates.length === 0 ? 'yes' : `${withDates.length} still have dates`}`);
+  line(`  show_participant_count all false: ${showingCounts.length === 0 ? 'yes' : 'no'}`);
+  line('  Bundled in the app. The personal window is challenge_participants.start_date.');
+  line(
+    `  Catalogue table: ${catalogueProbe ? `missing (${catalogueProbe})` : 'present'}. Participant start_date: ${windowProbe ? `missing (paste supabase/challenges_h8.sql)` : 'present'}.`
+  );
+  line('  Live upsert would insert the four content slugs. Old fixed-date rows are left as they are. No delete.');
   line();
 }
 

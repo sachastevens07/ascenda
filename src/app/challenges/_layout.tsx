@@ -1,16 +1,17 @@
 import { Stack } from 'expo-router';
 
-import { colours } from '@/constants/theme';
+import { useTheme } from '@/constants/theme';
 
 export default function ChallengesLayout() {
+  const { colours } = useTheme();
   return (
     <Stack
       screenOptions={{
         headerShown: true,
         title: '',
-        headerTintColor: colours.accent,
+        headerTintColor: colours.brand,
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: colours.background },
+        headerStyle: { backgroundColor: colours.bg },
       }}>
       <Stack.Screen name="[id]" options={{ headerBackTitle: 'Home' }} />
     </Stack>

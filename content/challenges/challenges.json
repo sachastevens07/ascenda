@@ -1,0 +1,377 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Challenges with rolling starts (AGENTS.md H8, replaces S9's fixed dates). There are no start_date or end_date fields: each participant picks next Monday or the 1st of next month when she joins, stored on challenge_participants (add start_date there).",
+    "No countdown timers anywhere. Never tie a challenge to a discount or a deadline.",
+    "show_participant_count is false. Only switch it on once counts are real and meaningful.",
+    "Each week's mission is checked from logged data (requirement). Weeks run Monday to Sunday from her start date.",
+    "Gentle catch-up: if a week's mission isn't met, that week simply repeats (the challenge extends by a week), up to 2 times. After that the challenge ends quietly with no failure message, and she can rejoin any time. Copy: 'This week didn't go to plan. No problem, we'll pick it up next week.'",
+    "One active challenge at a time keeps Home simple. Joining a new one asks to leave the current one.",
+    "Challenges run alongside any routine. Sessions count towards the challenge, the weekly target and the streak at the same time.",
+    "Completion awards the existing 'challenge-complete' badge (achievements.json) once per challenge, plus a share card (numbers and challenge name only).",
+    "Requirement types: sessions (count may be 'weekly_target'), stretch_sessions, new_exercises, new_equipment. 'New' means first time ever logged in Ascenda.",
+    "featured_window controls when a challenge is pushed on Home; all active challenges are always browsable in Programmes."
+  ],
+  "challenges": [
+    {
+      "slug": "four-weeks-strong",
+      "name": "Four Weeks Strong",
+      "summary": "Three sessions a week for four weeks. Build the habit that makes everything else easier.",
+      "description": "This is the classic Ascenda challenge. Train three times a week for four weeks, using your current routine or any sessions you like. Strength, stretch sessions of 10 minutes or more and (once they arrive) cardio sessions all count. If your plan has two training days a week, your target is two.",
+      "cover_image_slug": "challenge-four-weeks-strong",
+      "tags": [
+        "Any routine",
+        "All levels"
+      ],
+      "audience": "Everyone, alongside any routine",
+      "weekly_target_rule": "min(3, profiles.days_per_week)",
+      "weekly_missions": [
+        {
+          "week": 1,
+          "title": "Set the tone",
+          "body": "Get your sessions done this week. Plan them in the Planner first so the decision's already made.",
+          "requirement": {
+            "type": "sessions",
+            "count": "weekly_target",
+            "session_types": [
+              "strength",
+              "stretch",
+              "cardio",
+              "recovery"
+            ],
+            "stretch_min_minutes": 10
+          }
+        },
+        {
+          "week": 2,
+          "title": "Keep it going",
+          "body": "Same again. Notice how much easier it is to start this week.",
+          "requirement": {
+            "type": "sessions",
+            "count": "weekly_target",
+            "session_types": [
+              "strength",
+              "stretch",
+              "cardio",
+              "recovery"
+            ],
+            "stretch_min_minutes": 10
+          }
+        },
+        {
+          "week": 3,
+          "title": "Halfway and beyond",
+          "body": "This is the week habits are made. Pick your training times and stick to them.",
+          "requirement": {
+            "type": "sessions",
+            "count": "weekly_target",
+            "session_types": [
+              "strength",
+              "stretch",
+              "cardio",
+              "recovery"
+            ],
+            "stretch_min_minutes": 10
+          }
+        },
+        {
+          "week": 4,
+          "title": "Finish strong",
+          "body": "Last week. Make it count, then look back at everything you did.",
+          "requirement": {
+            "type": "sessions",
+            "count": "weekly_target",
+            "session_types": [
+              "strength",
+              "stretch",
+              "cardio",
+              "recovery"
+            ],
+            "stretch_min_minutes": 10
+          }
+        }
+      ],
+      "recommended": {
+        "routines": [],
+        "single_sessions": [
+          "full-body-in-30",
+          "one-spot-full-body"
+        ]
+      },
+      "completion": {
+        "badge": "challenge-complete",
+        "title": "Four Weeks Strong: complete",
+        "body": "Four weeks, {sessions} sessions. That's a habit."
+      },
+      "featured_window": null,
+      "length_weeks": 4,
+      "start_options": [
+        "next_monday",
+        "first_of_month"
+      ],
+      "is_active": true,
+      "show_participant_count": false
+    },
+    {
+      "slug": "the-gym-explorer",
+      "name": "The Gym Explorer",
+      "summary": "Try one new thing each week and make more of the gym feel like yours.",
+      "description": "Each week has one small mission: a new exercise, a new machine or a new area of the gym. Use the first-time guides and \"if it's taken\" swaps to make each one easy. Everything you try counts towards Gym unlocked.",
+      "cover_image_slug": "challenge-the-gym-explorer",
+      "tags": [
+        "Gym confidence",
+        "Beginner friendly"
+      ],
+      "audience": "Anyone who wants to feel at home in more of the gym",
+      "weekly_target_rule": null,
+      "weekly_missions": [
+        {
+          "week": 1,
+          "title": "One new exercise",
+          "body": "Log one exercise you've never done in Ascenda before. Open its guide first if you'd like.",
+          "requirement": {
+            "type": "new_exercises",
+            "count": 1
+          }
+        },
+        {
+          "week": 2,
+          "title": "Try a machine",
+          "body": "Log an exercise on a machine you haven't used yet, like the leg press, lat pulldown or seated row.",
+          "requirement": {
+            "type": "new_equipment",
+            "count": 1,
+            "equipment_types": [
+              "machine"
+            ]
+          }
+        },
+        {
+          "week": 3,
+          "title": "The cable station",
+          "body": "Try a cable exercise, like a cable row, face pull or kickback. The guide shows you how to set it up.",
+          "requirement": {
+            "type": "new_exercises",
+            "count": 1,
+            "equipment_types": [
+              "cable"
+            ]
+          }
+        },
+        {
+          "week": 4,
+          "title": "Into the free weights",
+          "body": "Log a dumbbell, kettlebell or barbell exercise you haven't done before.",
+          "requirement": {
+            "type": "new_exercises",
+            "count": 1,
+            "equipment_types": [
+              "dumbbell",
+              "kettlebell",
+              "barbell"
+            ]
+          }
+        }
+      ],
+      "fallback_note": "If she has already used every machine or cable exercise, the mission becomes 'any new exercise' so nobody is stuck.",
+      "recommended": {
+        "routines": [
+          "machines-made-easy",
+          "strong-foundations-6-weeks"
+        ],
+        "single_sessions": [
+          "machine-circuit"
+        ]
+      },
+      "completion": {
+        "badge": "challenge-complete",
+        "title": "The Gym Explorer: complete",
+        "body": "{new_exercises} new exercises and {new_equipment} new pieces of kit. The gym's getting smaller."
+      },
+      "featured_window": null,
+      "length_weeks": 4,
+      "start_options": [
+        "next_monday",
+        "first_of_month"
+      ],
+      "is_active": true,
+      "show_participant_count": false
+    },
+    {
+      "slug": "28-days-of-stretch",
+      "name": "28 Days of Stretch",
+      "summary": "Three stretch sessions a week for four weeks. Feel looser, calmer and ready to train.",
+      "description": "Do three stretch sessions of 10 minutes or more each week. They count towards your weekly target and streak too. Mix them in on rest days, after a session or in the evening.",
+      "cover_image_slug": "challenge-28-days-of-stretch",
+      "tags": [
+        "Mobility",
+        "Recovery"
+      ],
+      "audience": "Everyone, especially if you feel stiff or stressed",
+      "weekly_target_rule": null,
+      "weekly_missions": [
+        {
+          "week": 1,
+          "title": "Start gently",
+          "body": "Try three different stretch sessions to find the ones you like. Morning mobility and Wind down are good places to start.",
+          "requirement": {
+            "type": "stretch_sessions",
+            "count": 3,
+            "min_minutes": 10
+          }
+        },
+        {
+          "week": 2,
+          "title": "Hips and back",
+          "body": "Include Happy hips or Back unwind this week.",
+          "requirement": {
+            "type": "stretch_sessions",
+            "count": 3,
+            "min_minutes": 10,
+            "include_any_of": [
+              "happy-hips",
+              "back-unwind"
+            ]
+          }
+        },
+        {
+          "week": 3,
+          "title": "After training",
+          "body": "Do at least one stretch session on a day you train, like After leg day.",
+          "requirement": {
+            "type": "stretch_sessions",
+            "count": 3,
+            "min_minutes": 10,
+            "one_on_training_day": true
+          }
+        },
+        {
+          "week": 4,
+          "title": "The full flow",
+          "body": "Finish with the 20-minute Full body recovery flow as one of your three.",
+          "requirement": {
+            "type": "stretch_sessions",
+            "count": 3,
+            "min_minutes": 10,
+            "include_any_of": [
+              "full-body-recovery-flow"
+            ]
+          }
+        }
+      ],
+      "recommended": {
+        "stretch_routines": [
+          "morning-mobility",
+          "wind-down",
+          "happy-hips",
+          "back-unwind",
+          "after-leg-day",
+          "full-body-recovery-flow"
+        ]
+      },
+      "completion": {
+        "badge": "challenge-complete",
+        "title": "28 Days of Stretch: complete",
+        "body": "{stretch_sessions} stretch sessions and {stretch_minutes} minutes of looking after yourself."
+      },
+      "featured_window": null,
+      "length_weeks": 4,
+      "start_options": [
+        "next_monday",
+        "first_of_month"
+      ],
+      "is_active": true,
+      "show_participant_count": false
+    },
+    {
+      "slug": "quiet-start",
+      "name": "Quiet Start",
+      "summary": "Two calm sessions a week for four weeks, all in one spot. The gentlest way to begin.",
+      "description": "Made for your first month in the gym, or your first month back. Two sessions a week using a bench and a pair of dumbbells in a quieter corner. No machines to find, no queues, just you and your plan.",
+      "cover_image_slug": "challenge-quiet-start",
+      "tags": [
+        "Beginner friendly",
+        "One spot"
+      ],
+      "audience": "New to the gym or coming back after a break",
+      "weekly_target_rule": null,
+      "weekly_missions": [
+        {
+          "week": 1,
+          "title": "Your first spot",
+          "body": "Do two sessions. Your first gym session is a great place to start.",
+          "requirement": {
+            "type": "sessions",
+            "count": 2,
+            "session_types": [
+              "strength"
+            ]
+          }
+        },
+        {
+          "week": 2,
+          "title": "Same spot, more confidence",
+          "body": "Two sessions again. Try going a little heavier on one exercise if it felt easy.",
+          "requirement": {
+            "type": "sessions",
+            "count": 2,
+            "session_types": [
+              "strength"
+            ]
+          }
+        },
+        {
+          "week": 3,
+          "title": "Make it yours",
+          "body": "Two sessions. Add a note to one exercise, like which bench or dumbbells you like.",
+          "requirement": {
+            "type": "sessions",
+            "count": 2,
+            "session_types": [
+              "strength"
+            ]
+          }
+        },
+        {
+          "week": 4,
+          "title": "Look back",
+          "body": "Two sessions to finish. Then see how much has changed in a month.",
+          "requirement": {
+            "type": "sessions",
+            "count": 2,
+            "session_types": [
+              "strength"
+            ]
+          }
+        }
+      ],
+      "recommended": {
+        "routines": [
+          "strong-foundations-6-weeks",
+          "the-two-day-start"
+        ],
+        "single_sessions": [
+          "your-first-gym-session",
+          "one-spot-full-body"
+        ]
+      },
+      "completion": {
+        "badge": "challenge-complete",
+        "title": "Quiet Start: complete",
+        "body": "A month of showing up. You're not new any more."
+      },
+      "featured_window": {
+        "from_month_day": "01-01",
+        "to_month_day": "02-28",
+        "note": "Feature on Home in January and February (new year starts). Available all year in Programmes."
+      },
+      "length_weeks": 4,
+      "start_options": [
+        "next_monday",
+        "first_of_month"
+      ],
+      "is_active": true,
+      "show_participant_count": false
+    }
+  ]
+}
