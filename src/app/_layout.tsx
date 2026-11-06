@@ -1,3 +1,4 @@
+import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import { Redirect, Stack, usePathname, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';

@@ -55,6 +55,7 @@ import {
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import { getGymUnlocked } from '@/lib/gymUnlocked';
+import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import { fetchHideStreak, fetchRestWeekStarts, maybeTrackStreakRepair, syncRestWeeksBanked } from '@/lib/streak';
 import { fetchBackOnTrack } from '@/lib/welcomeBack';
 import {
@@ -400,7 +401,9 @@ export default function ActivityScreen() {
   const weeks = getWeeklyCounts(
     data.sessions.filter(sessionCountsTowardStreak).map((session) => session.date)
   );
-  const gym = getGymUnlocked(data.sets);
+  const gym = getGymUnlocked(data.sets, {
+    knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
+  });
   const awardGroups = getAchievementGroups({
     sessions: data.sessions,
     sets: data.sets,

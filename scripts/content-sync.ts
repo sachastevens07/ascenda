@@ -446,7 +446,7 @@ async function main(): Promise<void> {
   line();
 
   line('Not loaded (by design)');
-  line('  content/onboarding: bundled in the app (N4 goals come from the goals screen)');
+  line('  content/onboarding: bundled in the app (X5 screens, why_lines, recommendation, strength_estimate)');
   line('  content/microcopy: bundled in the app (N1 safety surrounding strings)');
   line('  content/ai: Edge Functions, not the app database');
   line();
@@ -515,13 +515,17 @@ function reportHardPaywall(): void {
 }
 
 function reportOnboardingGoals(): void {
-  line('onboarding goals  ←  content/onboarding/onboarding.json (bundled)');
-  const screens = asArray(readJson('onboarding/onboarding.json').screens);
-  const goals = screens.map(asRecord).find((item) => text(item.id) === 'goals') ?? {};
+  line('onboarding v2  ←  content/onboarding/onboarding.json (bundled)');
+  const file = asRecord(readJson('onboarding/onboarding.json'));
+  const screens = asArray(file.screens).map(asRecord);
+  const goals = screens.find((item) => text(item.id) === 'goals') ?? {};
   const options = asArray(goals.options);
-  line(`  Options: ${options.length}`);
-  line(`  Stored on profiles.main_goals. First pick is main. Max ${num(goals.max) ?? 3}.`);
-  line(`  Values: ${options.map((item) => text(asRecord(item).value)).filter(Boolean).join(', ')}`);
+  const rules = asArray(asRecord(file.recommendation).rules);
+  const estimate = asRecord(file.strength_estimate);
+  line(`  Screens: ${screens.length}`);
+  line(`  Goal options: ${options.length}. First pick is main. Max ${num(goals.max) ?? 3}.`);
+  line(`  Recommendation rules: ${rules.length}. Formula: ${text(estimate.formula) || 'from file'}`);
+  line('  Stored on profiles (main_goals, gym_experience, onboarding_answers jsonb, age_band, cardio_preference).');
   line('  Live sync does not write onboarding into the database.');
   line();
 }

@@ -13,6 +13,14 @@ import {
   toStoredN4Goals,
   type Goal,
 } from '@/lib/goals';
+import {
+  parseCardioPreference,
+  parseOnboardingAnswers,
+  parseStoredAgeBand,
+  type CardioPreference,
+  type OnboardingAnswersJson,
+  type StoredAgeBand,
+} from '@/lib/onboardingAnswers';
 import { recordLevelChange } from '@/lib/levelUp';
 import { supabase } from '@/lib/supabase';
 
@@ -199,6 +207,10 @@ export type Profile = {
   disclaimer_accepted_at: string | null;
   /** False until supabase/disclaimer.sql has been run. */
   disclaimer_ready: boolean;
+  /** X5 extras. Empty until supabase/onboarding_x5.sql is run. */
+  onboarding_answers: OnboardingAnswersJson;
+  age_band: StoredAgeBand | null;
+  cardio_preference: CardioPreference | null;
 };
 
 const PROFILE_COLUMNS =
@@ -210,6 +222,7 @@ const PROFILE_COLUMNS_THEME = `${PROFILE_COLUMNS_V2}, theme_preference`;
 const PROFILE_COLUMNS_DISCLAIMER = `${PROFILE_COLUMNS_THEME}, disclaimer_version, disclaimer_accepted_at`;
 const PROFILE_COLUMNS_GOALS = `${PROFILE_COLUMNS_DISCLAIMER}, main_goals`;
 const PROFILE_COLUMNS_G1 = `${PROFILE_COLUMNS_GOALS}, gym_experience`;
+const PROFILE_COLUMNS_X5 = `${PROFILE_COLUMNS_G1}, onboarding_answers, age_band, cardio_preference`;
 
 function isMissingOnboardingV2(error: { message?: string; code?: string }): boolean {
   return /main_goal(?!s)|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
@@ -231,6 +244,10 @@ function isMissingMainGoals(error: { message?: string; code?: string }): boolean
 
 function isMissingGymExperience(error: { message?: string; code?: string }): boolean {
   return /gym_experience/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isMissingOnboardingX5(error: { message?: string; code?: string }): boolean {
+  return /onboarding_answers|age_band|cardio_preference/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
 function isMissingAgeConfirmed(error: { message?: string; code?: string }): boolean {
@@ -409,6 +426,9 @@ function toProfile(row: unknown, disclaimerReady = false): Profile {
     disclaimer_version: disclaimerReady ? parseDisclaimerVersion(profile.disclaimer_version) : null,
     disclaimer_accepted_at: disclaimerReady ? (profile.disclaimer_accepted_at ?? null) : null,
     disclaimer_ready: disclaimerReady,
+    onboarding_answers: parseOnboardingAnswers(profile.onboarding_answers),
+    age_band: parseStoredAgeBand(profile.age_band),
+    cardio_preference: parseCardioPreference(profile.cardio_preference),
   };
 }
 
@@ -424,7 +444,15 @@ type ProfileState = {
   isLoading: boolean;
   error: string | null;
   reload: () => void;
-  saveQuizAnswers: (answers: QuizAnswers, bodyweightKg: number | null) => Promise<void>;
+  saveQuizAnswers: (
+    answers: QuizAnswers,
+    bodyweightKg: number | null,
+    extras?: {
+      onboarding_answers: OnboardingAnswersJson;
+      age_band: StoredAgeBand | null;
+      cardio_preference: CardioPreference | null;
+    }
+  ) => Promise<void>;
   saveMainGoals: (goals: Goal[]) => Promise<void>;
   confirmAge: () => Promise<void>;
   /** Deletes her account and everything in it, then signs out. */
@@ -435,6 +463,8 @@ type ProfileState = {
   setConfidenceLevel: (level: Level) => Promise<void>;
   /** Stores the current disclaimer version. No-ops the write if the SQL has not been run. */
   acceptDisclaimer: () => Promise<void>;
+  /** Dev tools: run the quiz again on this account. Does not delete sessions. */
+  restartOnboarding: () => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -448,6 +478,24 @@ async function selectOwnProfile(
 
 async function loadProfile(userId: string | null): Promise<LoadedProfile> {
   if (!userId) return { userId, profile: null, error: null };
+  const withX5 = await selectOwnProfile(userId, PROFILE_COLUMNS_X5);
+  if (!withX5.error) {
+    return {
+      userId,
+      profile: withX5.data ? toProfile(withX5.data, true) : null,
+      error: null,
+    };
+  }
+  if (
+    !isMissingOnboardingX5(withX5.error) &&
+    !isMissingGymExperience(withX5.error) &&
+    !isMissingMainGoals(withX5.error) &&
+    !isMissingDisclaimer(withX5.error) &&
+    !isMissingThemePreference(withX5.error) &&
+    !isMissingOnboardingV2(withX5.error)
+  ) {
+    return { userId, profile: null, error: withX5.error.message ?? 'Couldn’t load profile' };
+  }
   const withGymExperience = await selectOwnProfile(userId, PROFILE_COLUMNS_G1);
   if (!withGymExperience.error) {
     return {
@@ -551,7 +599,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const saveQuizAnswers = useCallback(
-    async (answers: QuizAnswers, bodyweightKg: number | null) => {
+    async (
+      answers: QuizAnswers,
+      bodyweightKg: number | null,
+      extras?: {
+        onboarding_answers: OnboardingAnswersJson;
+        age_band: StoredAgeBand | null;
+        cardio_preference: CardioPreference | null;
+      }
+    ) => {
       if (!userId) throw new Error('You need to be signed in.');
       const previousLevel = loaded?.userId === userId ? loaded.profile?.confidence_level : null;
       const completedAt = new Date().toISOString();
@@ -720,6 +776,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       } else {
         throw withGymExperience.error;
       }
+      if (extras) {
+        const outcome = await saveOwnProfileFields(userId, extras);
+        if (outcome === 'missing-column') {
+          await saveOwnProfileFields(userId, { onboarding_answers: extras.onboarding_answers });
+          await saveOwnProfileFields(userId, { age_band: extras.age_band });
+          await saveOwnProfileFields(userId, { cardio_preference: extras.cardio_preference });
+        }
+      }
       if (!previous?.onboarding_completed_at) track('onboarding_completed');
       if (previousLevel && previousLevel !== answers.confidence_level) {
         await recordLevelChange(previousLevel, answers.confidence_level).catch(() => {});
@@ -842,6 +906,59 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     track('disclaimer_accepted', { version: DISCLAIMER_VERSION });
   }, [userId, loaded]);
 
+  const restartOnboarding = useCallback(async () => {
+    if (!userId) throw new Error('You need to be signed in.');
+    const attempts: Record<string, unknown>[] = [
+      {
+        onboarding_completed_at: null,
+        age_confirmed_at: null,
+        disclaimer_version: null,
+        disclaimer_accepted_at: null,
+        onboarding_answers: {},
+        age_band: null,
+        cardio_preference: null,
+      },
+      {
+        onboarding_completed_at: null,
+        age_confirmed_at: null,
+        disclaimer_version: null,
+        disclaimer_accepted_at: null,
+      },
+      { onboarding_completed_at: null, age_confirmed_at: null },
+      { onboarding_completed_at: null },
+    ];
+    let saved = false;
+    for (const fields of attempts) {
+      const outcome = await saveOwnProfileFields(userId, fields);
+      if (outcome === 'saved') {
+        saved = true;
+        break;
+      }
+    }
+    if (!saved) {
+      throw new Error('Couldn’t reset onboarding. Check your connection and try again.');
+    }
+    const previous = loaded?.userId === userId ? loaded.profile : null;
+    if (previous) {
+      setLoaded({
+        userId,
+        profile: {
+          ...previous,
+          onboarding_completed_at: null,
+          age_confirmed_at: null,
+          disclaimer_version: null,
+          disclaimer_accepted_at: null,
+          onboarding_answers: {},
+          age_band: null,
+          cardio_preference: null,
+        },
+        error: null,
+      });
+    } else {
+      setLoaded(null);
+    }
+  }, [userId, loaded]);
+
   const isLoading = loaded === null || loaded.userId !== userId;
 
   return (
@@ -858,6 +975,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setQuietMode,
         setConfidenceLevel,
         acceptDisclaimer,
+        restartOnboarding,
       }}>
       {children}
     </ProfileContext.Provider>

@@ -47,8 +47,25 @@ export type ContentPhase = {
   days: ContentDay[];
 };
 
+export type ContentPlanMilestone = {
+  week: number;
+  title: string;
+  description: string;
+};
+
 export type ContentRoutineOverlay = {
   slug: string;
+  name: string;
+  subtitle: string;
+  goal: string;
+  secondary_goals: string[];
+  length_weeks: number;
+  days_per_week: number;
+  session_minutes: number;
+  cardio_balanced: boolean;
+  plan_reveal_milestones: ContentPlanMilestone[];
+  checkpoint_lifts: string[];
+  lighter_weeks: number[];
   who_its_for: string[];
   by_the_end: string[];
   why_this_split: string;
@@ -143,8 +160,32 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
       },
     ];
   });
+  const milestones = asArray(routine.plan_reveal_milestones).flatMap((raw) => {
+    const item = asRecord(raw);
+    const week = num(item.week);
+    const title = text(item.title);
+    if (week == null || !title) return [];
+    return [{ week, title, description: text(item.description) }];
+  });
+  const lighter_weeks = asArray(body.weeks).flatMap((raw) => {
+    const item = asRecord(raw);
+    if (item.is_lighter_week !== true) return [];
+    const week = num(item.week);
+    return week == null ? [] : [week];
+  });
   return {
     slug,
+    name: text(routine.name),
+    subtitle: text(routine.subtitle),
+    goal: text(routine.goal),
+    secondary_goals: asArray(routine.secondary_goals).map(text).filter(Boolean),
+    length_weeks: num(routine.length_weeks) ?? 0,
+    days_per_week: num(routine.days_per_week) ?? 0,
+    session_minutes: num(routine.session_minutes) ?? 0,
+    cardio_balanced: routine.cardio_balanced === true,
+    plan_reveal_milestones: milestones,
+    checkpoint_lifts: asArray(routine.checkpoint_lifts).map((value) => resolveExerciseSlug(String(value))),
+    lighter_weeks,
     who_its_for: asArray(routine.who_its_for).map(text).filter(Boolean),
     by_the_end: asArray(routine.by_the_end).map(text).filter(Boolean),
     why_this_split: text(routine.why_this_split),

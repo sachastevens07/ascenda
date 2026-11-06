@@ -1,1309 +1,837 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Animated,
-  Dimensions,
-  Easing,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect, useMemo, useState } from 'react';
+import { View } from 'react-native';
 
-import { LineChart } from '@/components/LineChart';
+import { OnboardingShell } from '@/components/onboarding/OnboardingShell';
 import {
-  AppText,
-  Chip,
-  DisclaimerBody,
-  DisclaimerCheckbox,
-  GoalChipGroup,
-  HeroImage,
-  IconButton,
-  ListRow,
-  PrimaryButton,
-  SecondaryButton,
-  TextButton,
-} from '@/components/ui';
+  BlockMessage,
+  BodyweightField,
+  BuildingSteps,
+  CardChoiceList,
+  ChipChoiceList,
+  ComfortSlider,
+  DayPills,
+  GoalsPicker,
+  NameField,
+  NumberSelect,
+  PhotoMultiChoice,
+  ScreenHeading,
+  SingleChoiceList,
+  StatementScale,
+  TimePickerChips,
+} from '@/components/onboarding/OnboardingInputs';
+import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { DEFAULT_STREAK_GOAL, STREAK_GOALS, type StreakGoal } from '@/lib/activityStats';
-import { coverForRoutine, coverSources } from '@/lib/images';
+import { imageSourceForSlug } from '@/lib/images';
+import { queueOnboardingPaywall, startOnboardingRoutine } from '@/lib/onboarding';
 import {
-  describeRecommendation,
-  pickRecommendedRoutine,
-  projectKeyLift,
-  queueOnboardingPaywall,
-  startOnboardingRoutine,
-  type LiftProjection,
-} from '@/lib/onboarding';
-import { safetyCopy } from '@/lib/copy';
-import { DISCLAIMER_VERSION } from '@/lib/disclaimer';
-import { formatKg } from '@/lib/programmes';
+  defaultDaysFor,
+  emptyOnboardingDraft,
+  extrasFromDraft,
+  draftFromSaved,
+  experienceFromGymExperience,
+  statementKeyFromStores,
+  storedAgeBand,
+  type OnboardingDraft,
+} from '@/lib/onboardingAnswers';
 import {
-  CONFIDENCE_LABELS,
-  CONFIDENCE_LEVELS,
-  DAYS_PER_WEEK_OPTIONS,
-  DEFAULT_SESSION_MINUTES,
-  EQUIPMENT_ACCESS_LABELS,
-  EXPERIENCE_LABELS,
-  EXPERIENCE_LEVELS,
-  FOCUS_AREA_LABELS,
-  FOCUS_AREAS,
-  GOAL_COPY,
-  GOAL_HELPER,
-  GOAL_INSIGHT_TITLE,
-  GOAL_SCREEN_TITLE,
-  fillGoalCopy,
-  formatGoalsLabel,
-  MAX_BODYWEIGHT_KG,
-  MAX_DISPLAY_NAME,
-  MIN_BODYWEIGHT_KG,
+  ONBOARDING_SCREENS,
+  QUESTION_SCREEN_IDS,
+  draftPlaceholders,
+  evalCondition,
+  fillTemplate,
+  ruleContextFromDraft,
+  type OnboardingScreen,
+} from '@/lib/onboardingContent';
+import { defaultRoutineSlug, firstMilestone, recommendPlan, type RecommendedPlan } from '@/lib/onboardingPlan';
+import { openPaywall } from '@/lib/paywall';
+import {
   GYM_EXPERIENCE_LABELS,
-  GYM_EXPERIENCE_LEVELS,
-  SESSION_MINUTES_OPTIONS,
-  formatDaysPerWeek,
-  formatSessionMinutes,
+  MAX_BODYWEIGHT_KG,
+  MIN_BODYWEIGHT_KG,
+  focusAreasFromGoals,
+  formatGoalsLabel,
   getQuizAnswers,
   levelForConfidence,
   useProfile,
-  type Confidence,
-  type DaysPerWeek,
-  type EquipmentAccess,
-  type Experience,
-  type FocusArea,
-  type Goal,
   type QuizAnswers,
-  type SessionMinutes,
-  type GymExperience,
 } from '@/lib/profile';
-import { fetchRoutine, fetchRoutines, type RoutineSummary } from '@/lib/routines';
+import { DEFAULT_REMINDER_TIME, saveReminderPrefs, setDefaultReminderTime } from '@/lib/reminders';
+import { useSubscription } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
 
-type Draft = Partial<QuizAnswers> & { focus_areas?: FocusArea[] };
+const FLOW = ONBOARDING_SCREENS.filter((screen) => screen.type !== 'paywall');
+const REVIEW_ID = 'review';
 
-type FlowStep =
-  | 'welcome'
-  | 'safety'
-  | 'goal'
-  | 'insight-goal'
-  | 'experience'
-  | 'gym_experience'
-  | 'equipment'
-  | 'insight-gym'
-  | 'comfort'
-  | 'days'
-  | 'minutes'
-  | 'focus'
-  | 'insight-streak'
-  | 'streak'
-  | 'bodyweight'
-  | 'name'
-  | 'reveal';
-
-const FLOW_STEPS: FlowStep[] = [
-  'welcome',
-  'safety',
-  'goal',
-  'insight-goal',
-  'experience',
-  'gym_experience',
-  'equipment',
-  'insight-gym',
-  'comfort',
-  'days',
-  'minutes',
-  'focus',
-  'streak',
-  'insight-streak',
-  'bodyweight',
-  'name',
-  'reveal',
-];
-
-const EQUIPMENT_COPY: Record<EquipmentAccess, string> = {
-  full_gym: 'Barbells, machines, cables and dumbbells.',
-  dumbbells: 'A dumbbell rack at the gym, and maybe a bench.',
-  home: 'Bands and bodyweight, for days you cannot get to the gym.',
-};
-
-const EXPERIENCE_COPY: Record<Experience, string> = {
-  new: 'Never, or hardly ever. That’s absolutely fine.',
-  some: 'I’ve used weights before, on and off.',
-  confident: 'I train regularly and know the main lifts.',
-};
-
-const GYM_EXPERIENCE_COPY: Record<GymExperience, string> = {
-  not_yet: 'I have not walked in yet. That is a good time to start.',
-  just_started: 'The first weeks. We will keep sessions simple.',
-  on_and_off: 'You know a gym, and you are coming back.',
-  regularly: 'You already train. We will match that.',
-};
-
-function withStoredLevel(draft: Draft): Draft {
-  let next = draft;
-  if (draft.confidence && draft.confidence_level === undefined) {
-    next = { ...next, confidence_level: levelForConfidence(draft.confidence) };
-  }
-  if ((!next.main_goals || next.main_goals.length === 0) && next.goal) {
-    next = { ...next, main_goals: [next.goal] };
-  }
-  if (next.main_goals && next.main_goals.length > 0) {
-    next = { ...next, goal: next.main_goals[0] };
-  }
-  return next;
+function quizFromDraft(draft: OnboardingDraft): QuizAnswers | null {
+  const goals = draft.main_goals;
+  const gym = draft.gym_experience;
+  if (goals.length === 0 || !gym || !draft.display_name.trim()) return null;
+  return {
+    goal: goals[0],
+    main_goals: goals,
+    experience: experienceFromGymExperience(gym),
+    days_per_week: draft.days_per_week,
+    equipment: 'full_gym',
+    confidence: draft.gym_comfort,
+    confidence_level: levelForConfidence(draft.gym_comfort),
+    gym_experience: gym,
+    session_minutes: draft.session_minutes,
+    focus_areas: focusAreasFromGoals(goals),
+    streak_goal_weeks: draft.streak_goal_weeks,
+    display_name: draft.display_name.trim(),
+  };
 }
 
-function isComplete(draft: Draft): draft is QuizAnswers {
-  const ready = withStoredLevel(draft);
-  return (
-    ready.goal !== undefined &&
-    (ready.main_goals?.length ?? 0) > 0 &&
-    ready.experience !== undefined &&
-    ready.days_per_week !== undefined &&
-    ready.equipment !== undefined &&
-    ready.confidence !== undefined &&
-    ready.confidence_level !== undefined &&
-    ready.gym_experience !== undefined &&
-    ready.session_minutes !== undefined &&
-    (ready.focus_areas?.length ?? 0) > 0 &&
-    ready.streak_goal_weeks !== undefined &&
-    ready.display_name !== undefined
-  );
-}
-
-function parseBodyweight(text: string): number | null | undefined {
+function parseKg(text: string): number | null | undefined {
   if (text.trim() === '') return null;
   const value = Number.parseFloat(text.replace(',', '.'));
-  if (!Number.isFinite(value) || value < MIN_BODYWEIGHT_KG || value > MAX_BODYWEIGHT_KG) {
-    return undefined;
-  }
+  if (!Number.isFinite(value) || value < MIN_BODYWEIGHT_KG || value > MAX_BODYWEIGHT_KG) return undefined;
   return Math.round(value * 10) / 10;
 }
 
-function parseDisplayName(text: string): string | undefined {
-  const trimmed = text.trim();
-  if (trimmed === '') return '';
-  if (trimmed.length > MAX_DISPLAY_NAME) return undefined;
-  return trimmed;
-}
-
-function recommendationBullets(routine: RoutineSummary, answers: QuizAnswers): string[] {
-  return describeRecommendation(routine, answers)
-    .split('. ')
-    .map((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return '';
-      return trimmed.endsWith('.') ? trimmed : `${trimmed}.`;
-    })
-    .filter(Boolean);
+function stonesToKg(stones: string, pounds: string): number | null | undefined {
+  if (!stones.trim() && !pounds.trim()) return null;
+  const st = Number.parseFloat(stones.replace(',', '.')) || 0;
+  const lb = Number.parseFloat(pounds.replace(',', '.')) || 0;
+  const kg = st * 6.35029318 + lb * 0.45359237;
+  if (!Number.isFinite(kg) || kg < MIN_BODYWEIGHT_KG || kg > MAX_BODYWEIGHT_KG) return undefined;
+  return Math.round(kg * 10) / 10;
 }
 
 export default function OnboardingScreen() {
-  const insets = useSafeAreaInsets();
-  const { colours, radius, type, shadow } = useTheme();
-  const { profile, saveQuizAnswers, confirmAge, deleteAccount, acceptDisclaimer } = useProfile();
-  const [savedAnswers] = useState(() => getQuizAnswers(profile));
+  const { colours, radius, shadow } = useTheme();
+  const { profile, saveQuizAnswers, confirmAge, acceptDisclaimer } = useProfile();
+  const subscription = useSubscription();
+  const savedAnswers = getQuizAnswers(profile);
   const isEditing = savedAnswers !== null;
-  const [draft, setDraft] = useState<Draft>(savedAnswers ?? {});
-  const [bodyweight, setBodyweight] = useState(
-    profile?.bodyweight_kg == null ? '' : String(profile.bodyweight_kg)
+
+  const [draft, setDraft] = useState<OnboardingDraft>(() =>
+    savedAnswers
+      ? draftFromSaved({
+          answers: savedAnswers,
+          extras: profile?.onboarding_answers,
+          age_band: profile?.age_band,
+          cardio_preference: profile?.cardio_preference,
+          bodyweight_kg: profile?.bodyweight_kg,
+        })
+      : emptyOnboardingDraft()
   );
-  const [nameText, setNameText] = useState(savedAnswers?.display_name ?? profile?.display_name ?? '');
-  const [step, setStep] = useState<FlowStep | 'review'>(isEditing ? 'review' : 'welcome');
-  const [ageStep, setAgeStep] = useState<'pending' | 'ask' | 'under-18' | null>(
-    isEditing || profile?.age_confirmed_at ? null : 'pending'
-  );
-  const [safetyChecked, setSafetyChecked] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [index, setIndex] = useState(isEditing ? -1 : 0);
+  const [direction, setDirection] = useState(1);
   const [error, setError] = useState<string | null>(null);
-  const [recommended, setRecommended] = useState<RoutineSummary | null>(null);
-  const [projection, setProjection] = useState<LiftProjection | null>(null);
-  const [revealState, setRevealState] = useState<'idle' | 'loading' | 'ready'>('idle');
-  const slideX = useRef(new Animated.Value(0)).current;
-  const screenWidth = Dimensions.get('window').width;
+  const [isSaving, setIsSaving] = useState(false);
+  const [safetyChecked, setSafetyChecked] = useState(false);
+  const [plan, setPlan] = useState<RecommendedPlan | null>(null);
+  const [chosenSlug, setChosenSlug] = useState<string | null>(null);
+  const [buildDone, setBuildDone] = useState(0);
+  const [kgText, setKgText] = useState(profile?.bodyweight_kg ? String(profile.bodyweight_kg) : '');
+  const [stonesText, setStonesText] = useState('');
+  const [poundsText, setPoundsText] = useState('');
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'st_lb'>('kg');
 
-  const flowIndex = FLOW_STEPS.indexOf(step as FlowStep);
-  const progressCount = flowIndex === -1 ? 0 : flowIndex + 1;
+  const screen: OnboardingScreen | { id: string; type: string } =
+    index < 0 ? { id: REVIEW_ID, type: REVIEW_ID } : FLOW[index];
+  const contentScreen = index >= 0 ? FLOW[index] : null;
 
-  function moveTo(next: FlowStep | 'review', direction: 1 | -1) {
+  const questionIndex = contentScreen ? QUESTION_SCREEN_IDS.indexOf(contentScreen.id) : -1;
+  const progress = questionIndex >= 0 ? (questionIndex + 1) / QUESTION_SCREEN_IDS.length : isEditing ? 1 : 0;
+  const showProgress = Boolean(contentScreen && QUESTION_SCREEN_IDS.includes(contentScreen.id));
+
+  const vars = useMemo(() => {
+    const defaultSlug = defaultRoutineSlug(draft);
+    const milestone = firstMilestone(plan?.recommended.slug ?? defaultSlug);
+    return draftPlaceholders(draft, {
+      first_milestone_week: milestone?.week ?? '',
+      first_milestone_title: milestone?.title ?? '',
+      routine_name: plan?.recommended.name ?? '',
+      routine_subtitle: plan?.recommended.subtitle ?? '',
+      'routine.session_minutes': plan?.recommended.overlay.session_minutes ?? '',
+      'routine.length_weeks': plan?.recommended.overlay.length_weeks ?? '',
+    });
+  }, [draft, plan]);
+
+  const title = contentScreen ? fillTemplate(contentScreen.title, vars) : 'Your answers';
+  const body = contentScreen ? fillTemplate(contentScreen.body, vars) : '';
+  const helper = contentScreen ? fillTemplate(contentScreen.helper, vars) : '';
+
+  useEffect(() => {
+    if (contentScreen?.id !== 'building_plan') return;
+    const next = recommendPlan(draft, chosenSlug ?? undefined);
+    setPlan(next);
+    setChosenSlug(next?.recommended.slug ?? null);
+    setBuildDone(0);
+    const steps = contentScreen.steps.length || 4;
+    const total = (contentScreen.duration_seconds || 3) * 1000;
+    const tick = total / steps;
+    let count = 0;
+    const timer = setInterval(() => {
+      count += 1;
+      setBuildDone(count);
+      if (count >= steps) {
+        clearInterval(timer);
+        setTimeout(() => {
+          setDirection(1);
+          setIndex((current) => current + 1);
+        }, 120);
+      }
+    }, tick);
+    return () => clearInterval(timer);
+  }, [contentScreen?.id]);
+
+  function move(delta: number) {
     setError(null);
-    slideX.setValue(direction * screenWidth);
-    setStep(next);
-    Animated.timing(slideX, {
-      toValue: 0,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
+    setDirection(delta);
+    if (isEditing && index >= 0 && delta > 0) {
+      setIndex(-1);
+      return;
+    }
+    let next = index + delta;
+    if (delta < 0 && FLOW[index]?.id === 'plan_reveal') {
+      const bodyIndex = FLOW.findIndex((item) => item.id === 'bodyweight');
+      if (bodyIndex >= 0) next = bodyIndex;
+    }
+    if (next < 0) {
+      if (isEditing) setIndex(-1);
+      return;
+    }
+    if (next >= FLOW.length) {
+      void finish();
+      return;
+    }
+    setIndex(next);
   }
 
-  const answersForRecommend = useMemo(() => {
-    const ready = withStoredLevel({
-      ...draft,
-      display_name: parseDisplayName(nameText) ?? '',
-      streak_goal_weeks: draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL,
-      session_minutes: draft.session_minutes ?? DEFAULT_SESSION_MINUTES,
-      focus_areas: draft.focus_areas ?? [],
-    });
-    return isComplete(ready) ? ready : null;
-  }, [draft, nameText]);
-
-  function goNext(from: FlowStep) {
-    const index = FLOW_STEPS.indexOf(from);
-    if (from === 'welcome' && ageStep === 'pending') {
-      setAgeStep('ask');
-      return;
+  function canContinue(): boolean {
+    if (!contentScreen) return true;
+    if (contentScreen.id === 'age') {
+      return Boolean(draft.age_band && draft.age_band !== 'under_18');
     }
-    if (from === 'welcome' && profile?.disclaimer_version === DISCLAIMER_VERSION) {
-      moveTo('goal', 1);
-      return;
+    if (contentScreen.type === 'text') return draft.display_name.trim().length > 0;
+    if (contentScreen.id === 'goals') return draft.main_goals.length >= (contentScreen.min ?? 1);
+    if (contentScreen.id === 'gym_experience') return draft.gym_experience != null;
+    if (contentScreen.type === 'statement') {
+      const key = statementKeyFromStores(contentScreen.stores_to);
+      return key != null && draft.statements[key] != null;
     }
-    moveTo(FLOW_STEPS[Math.min(index + 1, FLOW_STEPS.length - 1)], 1);
+    if (contentScreen.id === 'cardio') return draft.cardio_preference != null;
+    if (contentScreen.type === 'day_pills') return draft.preferred_days.length === draft.days_per_week;
+    if (contentScreen.type === 'disclaimer') return safetyChecked;
+    if (contentScreen.type === 'building') return false;
+    return true;
   }
 
-  function goBack() {
-    if (isEditing && step !== 'review') {
-      moveTo('review', -1);
+  async function handlePrimary() {
+    if (!contentScreen) {
+      await finish();
       return;
     }
-    if (step === 'review' || step === 'welcome') {
-      if (isEditing) router.back();
-      return;
-    }
-    const index = FLOW_STEPS.indexOf(step);
-    if (index <= 0) return;
-    if (step === 'goal' && profile?.disclaimer_version === DISCLAIMER_VERSION) {
-      moveTo('welcome', -1);
-      return;
-    }
-    moveTo(FLOW_STEPS[index - 1], -1);
-  }
-
-  function patchAnswer<K extends keyof QuizAnswers>(key: K, value: QuizAnswers[K]) {
-    setDraft((current) => {
-      const nextDraft = { ...current, [key]: value } as Draft;
-      if (key === 'confidence') {
-        nextDraft.confidence_level = levelForConfidence(value as Confidence);
+    if (contentScreen.id === 'age') {
+      if (!draft.age_band || draft.age_band === 'under_18') return;
+      setIsSaving(true);
+      try {
+        await confirmAge();
+        setIsSaving(false);
+        move(1);
+      } catch {
+        setIsSaving(false);
+        setError("Sorry, that didn't save. Check your connection and try again.");
       }
-      return nextDraft;
-    });
-  }
-
-  function choose<K extends keyof QuizAnswers>(key: K, value: QuizAnswers[K], next?: FlowStep) {
-    const nextDraft = { ...draft, [key]: value } as Draft;
-    if (key === 'confidence') {
-      nextDraft.confidence_level = levelForConfidence(value as Confidence);
-    }
-    setDraft(nextDraft);
-    if (isEditing) {
-      moveTo('review', -1);
       return;
     }
-    if (next) moveTo(next, 1);
-    else goNext(step as FlowStep);
-  }
-
-  function confirmChoice() {
-    if (step === 'goal' && ((draft.main_goals?.length ?? 0) > 0 || draft.goal !== undefined)) {
-      if (isEditing) moveTo('review', -1);
-      else goNext('goal');
-      return;
-    }
-    if (step === 'experience' && draft.experience !== undefined) choose('experience', draft.experience);
-    else if (step === 'gym_experience' && draft.gym_experience !== undefined) {
-      choose('gym_experience', draft.gym_experience);
-    } else if (step === 'equipment' && draft.equipment !== undefined) choose('equipment', draft.equipment);
-    else if (step === 'comfort' && draft.confidence !== undefined) choose('confidence', draft.confidence);
-    else if (step === 'days' && draft.days_per_week !== undefined) choose('days_per_week', draft.days_per_week);
-    else if (step === 'minutes' && draft.session_minutes !== undefined) {
-      choose('session_minutes', draft.session_minutes);
-    } else if (step === 'streak' && draft.streak_goal_weeks !== undefined) {
-      choose('streak_goal_weeks', draft.streak_goal_weeks);
-    }
-  }
-
-  const choiceReady =
-    (step === 'goal' && ((draft.main_goals?.length ?? 0) > 0 || draft.goal !== undefined)) ||
-    (step === 'experience' && draft.experience !== undefined) ||
-    (step === 'gym_experience' && draft.gym_experience !== undefined) ||
-    (step === 'equipment' && draft.equipment !== undefined) ||
-    (step === 'comfort' && draft.confidence !== undefined) ||
-    (step === 'days' && draft.days_per_week !== undefined) ||
-    (step === 'minutes' && draft.session_minutes !== undefined) ||
-    (step === 'streak' && draft.streak_goal_weeks !== undefined);
-
-  async function loadReveal(answers: QuizAnswers) {
-    setRevealState('loading');
-    try {
-      const routines = await fetchRoutines();
-      const picked = pickRecommendedRoutine(routines, answers);
-      setRecommended(picked);
-      if (picked) {
-        const detail = await fetchRoutine(picked.id).catch(() => null);
-        setProjection(detail ? projectKeyLift(detail) : null);
-      } else {
-        setProjection(null);
+    if (contentScreen.id === 'name') {
+      const name = draft.display_name.trim();
+      const max = contentScreen.max_length ?? 30;
+      if (!name) {
+        setError('Please add a name so we know what to call you.');
+        return;
       }
-    } catch {
-      setRecommended(null);
-      setProjection(null);
-    } finally {
-      setRevealState('ready');
+      if (name.length > max) {
+        setError(`Names can be up to ${max} characters.`);
+        return;
+      }
     }
+    if (contentScreen.id === 'bodyweight') {
+      const parsed = weightUnit === 'kg' ? parseKg(kgText) : stonesToKg(stonesText, poundsText);
+      if (parsed === undefined) {
+        setError(
+          `Enter a bodyweight between ${MIN_BODYWEIGHT_KG} and ${MAX_BODYWEIGHT_KG} kg, or skip it.`
+        );
+        return;
+      }
+      setDraft((current) => ({ ...current, bodyweight_kg: parsed }));
+    }
+    if (contentScreen.type === 'disclaimer') {
+      if (!safetyChecked) return;
+      setIsSaving(true);
+      try {
+        await acceptDisclaimer();
+        setIsSaving(false);
+        await finish();
+      } catch {
+        setIsSaving(false);
+        setError("Sorry, that didn't save. Check your connection and try again.");
+      }
+      return;
+    }
+    if (contentScreen.id === 'plan_reveal') {
+      move(1);
+      return;
+    }
+    move(1);
   }
 
-  async function handleSave(then: 'home' | 'paywall') {
-    const bodyweightKg = parseBodyweight(bodyweight);
-    const displayName = parseDisplayName(nameText);
-    const answers = withStoredLevel({
-      ...draft,
-      display_name: displayName ?? '',
-      streak_goal_weeks: draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL,
-    });
-    if (!isComplete(answers) || bodyweightKg === undefined || displayName === undefined) {
-      setError(
-        displayName === undefined
-          ? `Names can be up to ${MAX_DISPLAY_NAME} characters.`
-          : `Enter a bodyweight between ${MIN_BODYWEIGHT_KG} and ${MAX_BODYWEIGHT_KG} kg, or skip it.`
-      );
+  async function finish() {
+    const answers = quizFromDraft(draft);
+    if (!answers) {
+      setError('Please finish the questions first.');
       return;
     }
     setIsSaving(true);
     setError(null);
     try {
-      await saveQuizAnswers(answers, bodyweightKg);
-      if (then === 'paywall') {
-        await queueOnboardingPaywall(recommended?.id ?? '');
-        await startOnboardingRoutine({
-          recommendedId: recommended?.id,
-        }).catch(() => {});
-        router.replace('/');
+      const recommended = plan ?? recommendPlan(draft, chosenSlug ?? undefined);
+      setPlan(recommended);
+      await saveQuizAnswers(answers, draft.bodyweight_kg, {
+        onboarding_answers: extrasFromDraft(draft),
+        age_band: storedAgeBand(draft),
+        cardio_preference: draft.cardio_preference,
+      });
+      if (draft.reminders_skipped) {
+        await saveReminderPrefs({ sessionReminders: false }).catch(() => {});
+      } else if (draft.reminder_time) {
+        await setDefaultReminderTime(draft.reminder_time).catch(() => {});
+      }
+      if (isEditing) {
+        if (router.canGoBack()) router.back();
+        else router.replace('/');
         return;
       }
-      if (router.canGoBack()) router.back();
-      else router.replace('/');
+      await queueOnboardingPaywall(recommended?.recommended.slug ?? '');
+      await startOnboardingRoutine({
+        recommendedId: recommended?.recommended.slug,
+      }).catch(() => {});
+      router.replace('/');
+      if (!subscription.isLoading && !subscription.isPro) {
+        openPaywall('onboarding');
+      }
     } catch {
       setError("Sorry, we couldn't save your answers. Check your connection and try again.");
       setIsSaving(false);
     }
   }
 
-  async function handleContinueSafety() {
-    if (!safetyChecked) return;
-    setIsSaving(true);
-    setError(null);
-    try {
-      await acceptDisclaimer();
-      setIsSaving(false);
-      goNext('safety');
-    } catch {
-      setError("Sorry, that didn't save. Check your connection and try again.");
-      setIsSaving(false);
-    }
-  }
+  const blocked =
+    contentScreen?.id === 'age' && draft.age_band
+      ? contentScreen.blocked[draft.age_band]
+      : undefined;
 
-  async function handleConfirmAge() {
-    setIsSaving(true);
-    setError(null);
-    try {
-      await confirmAge();
-      setIsSaving(false);
-      setAgeStep(null);
-      goNext('welcome');
-    } catch {
-      setError("Sorry, that didn't save. Check your connection and try again.");
-      setIsSaving(false);
-    }
-  }
+  const insightUsesAlt =
+    contentScreen?.type === 'insight' &&
+    contentScreen.show_if &&
+    !evalCondition(contentScreen.show_if, ruleContextFromDraft(draft));
 
-  async function handleDeleteAccount() {
-    setIsSaving(true);
-    setError(null);
-    try {
-      await deleteAccount();
-    } catch {
-      setError("Sorry, we couldn't delete your account. Check your connection and try again.");
-      setIsSaving(false);
-    }
-  }
+  const insightTitle = insightUsesAlt && contentScreen?.alt_title ? contentScreen.alt_title : title;
+  const insightBody = insightUsesAlt && contentScreen?.alt_body ? contentScreen.alt_body : body;
+  const extraLine =
+    contentScreen?.type === 'insight'
+      ? Object.entries(contentScreen.extra_if).find(([expr]) =>
+          evalCondition(expr, ruleContextFromDraft(draft))
+        )?.[1]
+      : undefined;
 
-  function continueBodyweight(skip: boolean) {
-    if (!skip && parseBodyweight(bodyweight) === undefined) {
-      setError(
-        `Enter a bodyweight between ${MIN_BODYWEIGHT_KG} and ${MAX_BODYWEIGHT_KG} kg, or skip it.`
-      );
-      return;
-    }
-    if (skip) setBodyweight('');
-    if (isEditing) moveTo('review', -1);
-    else goNext('bodyweight');
-  }
-
-  function continueName(skip: boolean) {
-    if (skip) {
-      setNameText('');
-      setDraft((current) => ({ ...current, display_name: '' }));
-      const next = withStoredLevel({ ...draft, display_name: '' });
-      if (!isEditing && isComplete(next)) void loadReveal(next);
-      if (isEditing) moveTo('review', -1);
-      else goNext('name');
-      return;
-    }
-    const parsed = parseDisplayName(nameText);
-    if (parsed === undefined) {
-      setError(`Names can be up to ${MAX_DISPLAY_NAME} characters.`);
-      return;
-    }
-    setDraft((current) => ({ ...current, display_name: parsed }));
-    if (isEditing) {
-      moveTo('review', -1);
-      return;
-    }
-    const next = withStoredLevel({ ...draft, display_name: parsed });
-    if (isComplete(next)) void loadReveal(next);
-    goNext('name');
-  }
-
-  function continueFocus() {
-    if ((draft.focus_areas?.length ?? 0) === 0) {
-      setError('Pick at least one area.');
-      return;
-    }
-    if (isEditing) moveTo('review', -1);
-    else goNext('focus');
-  }
-
-  if (ageStep === 'ask' || ageStep === 'under-18') {
-    return (
-      <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
-        <ScrollView
-          contentContainerStyle={[styles.content, { paddingTop: 48, paddingBottom: 24 }]}
-          keyboardShouldPersistTaps="handled">
-          {ageStep === 'ask' ? (
-            <>
-              <AppText variant="display" style={{ color: colours.ink }}>Are you 18 or over?</AppText>
-              <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-                Ascenda is for adults aged 18 and over.
-              </AppText>
-            </>
-          ) : (
-            <>
-              <AppText variant="display" style={{ color: colours.ink }}>Thanks for being honest</AppText>
-              <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-                Ascenda is for adults aged 18 and over, so we need to delete this account and
-                everything saved in it. We’d love to train with you when you’re 18.
-              </AppText>
-            </>
-          )}
-          {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
-        </ScrollView>
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          {ageStep === 'ask' ? (
-            <>
-              <PrimaryButton
-                label="Yes, I’m 18 or over"
-                onPress={() => void handleConfirmAge()}
-                loading={isSaving}
-                disabled={isSaving}
-              />
-              <SecondaryButton
-                label="No, I’m under 18"
-                appearance="outline"
-                onPress={() => setAgeStep('under-18')}
-                disabled={isSaving}
-              />
-            </>
-          ) : (
-            <>
-              <Pressable
-                onPress={() => void handleDeleteAccount()}
-                disabled={isSaving}
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.dangerFill,
-                  { backgroundColor: colours.danger, borderRadius: radius.full },
-                  (pressed || isSaving) && styles.pressed,
-                ]}>
-                {isSaving ? (
-                  <ActivityIndicator color={colours.onAccent} />
-                ) : (
-                  <AppText variant="bodyStrong" style={{ color: colours.onAccent }}>Delete my account</AppText>
-                )}
-              </Pressable>
-              <SecondaryButton
-                label="Go back"
-                appearance="outline"
-                onPress={() => {
-                  setError(null);
-                  setAgeStep('ask');
-                }}
-                disabled={isSaving}
-              />
-            </>
-          )}
-        </View>
-      </View>
-    );
-  }
-
-  const showBack = isEditing || step !== 'welcome';
-  const showProgress = step !== 'review';
-
-  const footer = (() => {
-    if (step === 'welcome') {
-      return <PrimaryButton label="Get started" onPress={() => goNext('welcome')} />;
-    }
-    if (step === 'safety') {
-      return (
-        <PrimaryButton
-          label={safetyCopy.onboarding_cta}
-          onPress={() => void handleContinueSafety()}
-          disabled={!safetyChecked}
-          loading={isSaving}
-        />
-      );
-    }
-    if (step === 'insight-goal' || step === 'insight-gym' || step === 'insight-streak') {
-      return <PrimaryButton label="Continue" onPress={() => goNext(step)} />;
-    }
-    if (
-      step === 'goal' ||
-      step === 'experience' ||
-      step === 'gym_experience' ||
-      step === 'equipment' ||
-      step === 'comfort' ||
-      step === 'days' ||
-      step === 'minutes' ||
-      step === 'streak'
-    ) {
-      return <PrimaryButton label="Continue" onPress={confirmChoice} disabled={!choiceReady} />;
-    }
-    if (step === 'focus') {
-      return <PrimaryButton label="Continue" onPress={continueFocus} />;
-    }
-    if (step === 'bodyweight') {
-      return (
-        <>
-          <PrimaryButton label="Continue" onPress={() => continueBodyweight(false)} />
-          <TextButton label="Skip" onPress={() => continueBodyweight(true)} />
-        </>
-      );
-    }
-    if (step === 'name') {
-      return (
-        <>
-          <PrimaryButton label="Continue" onPress={() => continueName(false)} />
-          <TextButton label="Skip" onPress={() => continueName(true)} />
-        </>
-      );
-    }
-    if (step === 'reveal') {
-      return (
-        <PrimaryButton
-          label="See your plan"
-          onPress={() => void handleSave('paywall')}
-          loading={isSaving}
-          disabled={isSaving || revealState === 'loading'}
-        />
-      );
-    }
-    if (step === 'review') {
-      return (
-        <PrimaryButton
-          label="Save changes"
-          onPress={() => void handleSave('home')}
-          loading={isSaving}
-          disabled={isSaving}
-        />
-      );
-    }
-    return null;
+  const primaryLabel = (() => {
+    if (index < 0) return 'Save';
+    if (!contentScreen) return 'Continue';
+    if (contentScreen.type === 'welcome') return contentScreen.primary_button || "Let's build your plan";
+    if (contentScreen.type === 'building') return '';
+    if (contentScreen.type === 'plan_reveal') return contentScreen.button || 'Continue';
+    return contentScreen.button || contentScreen.primary_button || 'Continue';
   })();
 
+  const showBack = isEditing || (index > 0 && contentScreen?.type !== 'building');
+
+  function jumpTo(id: string) {
+    const next = FLOW.findIndex((item) => item.id === id);
+    if (next >= 0) {
+      setDirection(1);
+      setIndex(next);
+    }
+  }
+
   return (
-    <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
-      <View style={styles.topBar}>
-        {showBack ? (
-          isEditing && step === 'review' ? (
-            <TextButton label="Cancel" onPress={goBack} />
-          ) : (
-            <IconButton icon="chevron-back" onPress={goBack} accessibilityLabel="Back" />
-          )
-        ) : (
-          <View style={styles.backSpacer} />
-        )}
-      </View>
-      {showProgress ? (
-        <View style={styles.segments} accessibilityRole="progressbar">
-          {FLOW_STEPS.map((id, index) => (
-            <View
-              key={id}
-              style={[
-                styles.segment,
-                {
-                  backgroundColor: index < progressCount ? colours.brand : colours.surfaceMuted,
-                  borderRadius: radius.full,
-                },
-              ]}
-            />
-          ))}
-        </View>
-      ) : null}
-
-      <View style={styles.slideClip}>
-        <Animated.View style={[styles.slidePane, { transform: [{ translateX: slideX }] }]}>
-          <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled">
-            {step === 'welcome' && (
-              <>
-                <AppText variant="eyebrow" style={{ color: colours.accent }}>Welcome to Ascenda</AppText>
-                <AppText variant="display" style={{ color: colours.ink, marginTop: 12 }}>
-                  Let’s find a plan that fits you
-                </AppText>
-                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-                  A few short questions. No weight-loss pressure, just a clear first session.
-                </AppText>
-                <TextButton label="Not you? Sign out" onPress={() => void supabase.auth.signOut()} style={styles.inlineAction} />
-              </>
-            )}
-
-            {step === 'safety' && (
-              <>
-                <AppText variant="display" style={{ color: colours.ink }}>
-                  {safetyCopy.onboarding_title}
-                </AppText>
-                <View
-                  style={[
-                    styles.chartCard,
-                    { backgroundColor: colours.surface, borderRadius: radius.xl, marginTop: 16 },
-                    shadow,
-                  ]}>
-                  <DisclaimerBody hideTitle />
-                </View>
-                <View style={{ marginTop: 20 }}>
-                  <DisclaimerCheckbox
-                    checked={safetyChecked}
-                    onToggle={() => setSafetyChecked((value) => !value)}
-                  />
-                </View>
-                {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
-              </>
-            )}
-
-            {step === 'goal' && (
-              <>
-                <AppText variant="display" style={{ color: colours.ink }}>{GOAL_SCREEN_TITLE}</AppText>
-                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-                  {GOAL_HELPER}
-                </AppText>
-                <GoalChipGroup
-                  selected={draft.main_goals ?? (draft.goal ? [draft.goal] : [])}
-                  onChange={(next) => {
-                    setDraft((current) => ({
-                      ...current,
-                      main_goals: next,
-                      goal: next[0],
-                    }));
-                    setError(null);
-                  }}
-                />
-              </>
-            )}
-
-            {step === 'insight-goal' && (
-              <InsightStep
-                title={fillGoalCopy(GOAL_INSIGHT_TITLE, draft.display_name ?? nameText)}
-                body={
-                  GOAL_COPY[(draft.main_goals?.[0] ?? draft.goal) as Goal] ??
-                  'A clear goal helps you walk in. You can change this later.'
-                }
-              />
-            )}
-
-            {step === 'experience' && (
-              <ChoiceStep
-                title="How much lifting have you done?"
-                options={EXPERIENCE_LEVELS.map((value) => ({
-                  value,
-                  label: EXPERIENCE_LABELS[value],
-                  description: EXPERIENCE_COPY[value],
-                }))}
-                selected={draft.experience}
-                onChoose={(value) => patchAnswer('experience', value as Experience)}
-              />
-            )}
-
-            {step === 'gym_experience' && (
-              <ChoiceStep
-                title="How long have you been going to the gym?"
-                options={GYM_EXPERIENCE_LEVELS.map((value) => ({
-                  value,
-                  label: GYM_EXPERIENCE_LABELS[value],
-                  description: GYM_EXPERIENCE_COPY[value],
-                }))}
-                selected={draft.gym_experience}
-                onChoose={(value) => patchAnswer('gym_experience', value as GymExperience)}
-              />
-            )}
-
-            {step === 'equipment' && (
-              <ChoiceStep
-                title="What kit can you use at the gym?"
-                subtitle="We recommend gym sessions that fit this. Backup sessions for days you cannot get there live in Programmes."
-                options={(['full_gym', 'dumbbells', 'home'] as EquipmentAccess[]).map((value) => ({
-                  value,
-                  label: EQUIPMENT_ACCESS_LABELS[value],
-                  description: EQUIPMENT_COPY[value],
-                }))}
-                selected={draft.equipment}
-                onChoose={(value) => patchAnswer('equipment', value as EquipmentAccess)}
-              />
-            )}
-
-            {step === 'insight-gym' && (
-              <InsightStep
-                title="You don’t need the whole gym on day one"
-                body="One quiet spot is a strong start. You can add machines and free weights when you’re ready."
-              />
-            )}
-
-            {step === 'comfort' && (
-              <ChoiceStep
-                title="How do you feel in the weights room?"
-                subtitle="No wrong answers. This helps us keep the first weeks simple if you want that."
-                options={CONFIDENCE_LEVELS.map((value) => ({
-                  value,
-                  label: `${value}. ${CONFIDENCE_LABELS[value]}`,
-                }))}
-                selected={draft.confidence}
-                onChoose={(value) => patchAnswer('confidence', value as Confidence)}
-              />
-            )}
-
-            {step === 'days' && (
-              <ChoiceStep
-                title="How many days a week can you train?"
-                subtitle="Pick what feels realistic. Rest days help you get stronger too."
-                options={DAYS_PER_WEEK_OPTIONS.map((value) => ({
-                  value,
-                  label: formatDaysPerWeek(value),
-                }))}
-                selected={draft.days_per_week}
-                onChoose={(value) => patchAnswer('days_per_week', value as DaysPerWeek)}
-              />
-            )}
-
-            {step === 'minutes' && (
-              <ChoiceStep
-                title="How long should a session feel?"
-                subtitle="A guide for the plan, not a clock we judge you by."
-                options={SESSION_MINUTES_OPTIONS.map((value) => ({
-                  value,
-                  label: formatSessionMinutes(value),
-                }))}
-                selected={draft.session_minutes}
-                onChoose={(value) => patchAnswer('session_minutes', value as SessionMinutes)}
-              />
-            )}
-
-            {step === 'focus' && (
-              <FocusStep
-                selected={draft.focus_areas ?? []}
-                onChange={(focus_areas) => setDraft((current) => ({ ...current, focus_areas }))}
-                error={error}
-              />
-            )}
-
-            {step === 'streak' && (
-              <ChoiceStep
-                title="Pick a finish line for your weekly streak"
-                subtitle="A week counts when you train at least once. Hitting your plan makes it a gold week."
-                options={STREAK_GOALS.map((value) => ({
-                  value,
-                  label: `${value} weeks`,
-                }))}
-                selected={draft.streak_goal_weeks}
-                onChoose={(value) => patchAnswer('streak_goal_weeks', value as StreakGoal)}
-              />
-            )}
-
-            {step === 'insight-streak' && (
-              <InsightStep
-                metric={`${draft.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
-                title="A finish line you can see"
-                body="That’s all a streak is: weeks in a row where you showed up, not a test. A week counts when you train at least once. Hitting your plan makes it a gold week. You can change this later in Profile."
-              />
-            )}
-
-            {step === 'bodyweight' && (
-              <>
-                <AppText variant="display" style={{ color: colours.ink }}>Your bodyweight</AppText>
-                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-                  Optional. We only use it to show your strength relative to your bodyweight, like
-                  lifting your own bodyweight. Never for BMI or any health score, and only you can see
-                  it.
-                </AppText>
-                <View style={styles.weightRow}>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      type.bodyStrong,
-                      {
-                        flex: 1,
-                        color: colours.ink,
-                        backgroundColor: colours.surface,
-                        borderColor: colours.border,
-                        borderRadius: radius.md,
-                        fontVariant: ['tabular-nums'],
-                      },
-                    ]}
-                    value={bodyweight}
-                    onChangeText={setBodyweight}
-                    keyboardType="decimal-pad"
-                    placeholder="e.g. 65"
-                    placeholderTextColor={colours.inkMuted}
-                    returnKeyType="done"
-                    accessibilityLabel="Bodyweight in kilograms"
-                  />
-                  <AppText variant="title3" style={{ color: colours.inkMuted }}>kg</AppText>
-                </View>
-                {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
-              </>
-            )}
-
-            {step === 'name' && (
-              <>
-                <AppText variant="display" style={{ color: colours.ink }}>What should we call you?</AppText>
-                <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-                  First name is perfect. You can skip this.
-                </AppText>
-                <TextInput
-                  style={[
-                    styles.input,
-                    type.bodyStrong,
-                    {
-                      color: colours.ink,
-                      backgroundColor: colours.surface,
-                      borderColor: colours.border,
-                      borderRadius: radius.md,
-                      marginTop: 28,
-                      fontVariant: ['tabular-nums'],
-                    },
-                  ]}
-                  value={nameText}
-                  onChangeText={setNameText}
-                  autoCapitalize="words"
-                  maxLength={MAX_DISPLAY_NAME}
-                  placeholder="Your name"
-                  placeholderTextColor={colours.inkMuted}
-                  returnKeyType="done"
-                  accessibilityLabel="Your name"
-                />
-                {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
-              </>
-            )}
-
-            {step === 'reveal' && (
-              <RevealStep
-                answers={answersForRecommend}
-                recommended={recommended}
-                projection={projection}
-                loadState={revealState}
-                error={error}
-                onRetry={() => answersForRecommend && void loadReveal(answersForRecommend)}
-              />
-            )}
-
-            {step === 'review' && (
-              <ReviewStep
-                draft={draft}
-                bodyweight={bodyweight}
-                nameText={nameText}
-                error={error}
-                onJump={(next) => moveTo(next, 1)}
-              />
-            )}
-          </ScrollView>
-          {footer ? (
-            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>{footer}</View>
+    <OnboardingShell
+      screenKey={screen.id}
+      direction={direction}
+      progress={progress}
+      showProgress={showProgress || index < 0}
+      showBack={showBack}
+      backIsCancel={isEditing && index < 0}
+      onBack={() => {
+        if (isEditing && index < 0) {
+          if (router.canGoBack()) router.back();
+          return;
+        }
+        if (index <= 0) return;
+        move(-1);
+      }}
+      primaryLabel={primaryLabel}
+      primaryDisabled={!canContinue() || isSaving}
+      primaryLoading={isSaving}
+      onPrimary={() => void handlePrimary()}
+      secondaryLabel={contentScreen?.type === 'welcome' ? contentScreen.secondary_link : undefined}
+      onSecondary={
+        contentScreen?.type === 'welcome'
+          ? () => void supabase.auth.signOut()
+          : undefined
+      }
+      skipLabel={
+        contentScreen?.type === 'time_picker' || contentScreen?.type === 'number_optional'
+          ? contentScreen.skip_label
+          : undefined
+      }
+      onSkip={() => {
+        if (contentScreen?.type === 'time_picker') {
+          setDraft((current) => ({ ...current, reminder_time: null, reminders_skipped: true }));
+          move(1);
+          return;
+        }
+        if (contentScreen?.type === 'number_optional') {
+          setKgText('');
+          setStonesText('');
+          setPoundsText('');
+          setDraft((current) => ({ ...current, bodyweight_kg: null }));
+          move(1);
+        }
+      }}
+      footerNote={error ?? contentScreen?.privacy_note ?? undefined}>
+      {index < 0 ? (
+        <View>
+          <ScreenHeading title="Your answers" helper="Tap a row to change it." />
+          <ListRow title="Name" subtitle={draft.display_name || 'Not added'} onPress={() => jumpTo('name')} />
+          <ListRow
+            title="Goals"
+            subtitle={formatGoalsLabel(draft.main_goals) || 'Not added'}
+            onPress={() => jumpTo('goals')}
+          />
+          <ListRow
+            title="Gym experience"
+            subtitle={draft.gym_experience ? GYM_EXPERIENCE_LABELS[draft.gym_experience] : 'Not added'}
+            onPress={() => jumpTo('gym_experience')}
+          />
+          <ListRow
+            title="Days per week"
+            subtitle={String(draft.days_per_week)}
+            onPress={() => jumpTo('days_per_week')}
+          />
+          {error ? (
+            <AppText variant="bodySm" style={{ color: colours.danger, marginTop: 12 }}>
+              {error}
+            </AppText>
           ) : null}
-        </Animated.View>
-      </View>
-    </View>
-  );
-}
-
-function ChoiceStep<T extends string | number>({
-  title,
-  subtitle,
-  options,
-  selected,
-  onChoose,
-}: {
-  title: string;
-  subtitle?: string;
-  options: { value: T; label: string; description?: string }[];
-  selected: T | undefined;
-  onChoose: (value: T) => void;
-}) {
-  const { colours } = useTheme();
-  const selectedOption = options.find((option) => option.value === selected);
-  return (
-    <>
-      <AppText variant="display" style={{ color: colours.ink }}>{title}</AppText>
-      {subtitle ? (
-        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>{subtitle}</AppText>
-      ) : null}
-      <View style={styles.chipCloud}>
-        {options.map((option) => (
-          <Chip
-            key={String(option.value)}
-            label={option.label}
-            selected={selected === option.value}
-            size="lg"
-            onPress={() => onChoose(option.value)}
-          />
-        ))}
-      </View>
-      {selectedOption?.description ? (
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 16 }}>
-          {selectedOption.description}
-        </AppText>
-      ) : null}
-    </>
-  );
-}
-
-function InsightStep({ title, body, metric }: { title: string; body: string; metric?: string }) {
-  const { colours } = useTheme();
-  return (
-    <View style={styles.insight}>
-      <Ionicons name="checkmark-circle" size={56} color={colours.success} />
-      {metric ? (
-        <AppText variant="number" style={{ color: colours.accent, marginTop: 16 }}>{metric}</AppText>
-      ) : null}
-      <AppText variant="display" style={{ color: colours.ink, marginTop: 16, textAlign: 'center' }}>{title}</AppText>
-      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12, textAlign: 'center' }}>{body}</AppText>
-    </View>
-  );
-}
-
-function FocusStep({
-  selected,
-  onChange,
-  error,
-}: {
-  selected: FocusArea[];
-  onChange: (next: FocusArea[]) => void;
-  error: string | null;
-}) {
-  const { colours } = useTheme();
-  return (
-    <>
-      <AppText variant="display" style={{ color: colours.ink }}>Anything you want to focus on?</AppText>
-      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-        Pick as many as you like. This helps us explain why a plan fits.
-      </AppText>
-      <View style={styles.chipCloud}>
-        {FOCUS_AREAS.map((value) => {
-          const isSelected = selected.includes(value);
-          return (
-            <Chip
-              key={value}
-              label={FOCUS_AREA_LABELS[value]}
-              selected={isSelected}
-              size="lg"
-              onPress={() =>
-                onChange(isSelected ? selected.filter((item) => item !== value) : [...selected, value])
-              }
-            />
-          );
-        })}
-      </View>
-      {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
-    </>
-  );
-}
-
-function RevealStep({
-  answers,
-  recommended,
-  projection,
-  loadState,
-  error,
-  onRetry,
-}: {
-  answers: QuizAnswers | null;
-  recommended: RoutineSummary | null;
-  projection: LiftProjection | null;
-  loadState: 'idle' | 'loading' | 'ready';
-  error: string | null;
-  onRetry: () => void;
-}) {
-  const { colours, radius, shadow } = useTheme();
-  const cover = recommended ? coverSources(coverForRoutine(recommended))[0] ?? null : null;
-  const why = recommended && answers ? recommendationBullets(recommended, answers) : [];
-  return (
-    <>
-      <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 12 }}>Your plan is ready</AppText>
-      {recommended ? (
-        <View style={{ borderRadius: radius.lg, overflow: 'hidden', marginBottom: 16 }}>
-          <HeroImage
-            image={cover}
-            letter={recommended.name}
-            title={recommended.name}
-            eyebrow="YOUR PLAN"
-            height={220}
-          />
         </View>
       ) : null}
-      <AppText variant="display" style={{ color: colours.ink }}>
-        {recommended ? recommended.name : 'Strong Foundations in 6 Weeks'}
-      </AppText>
-      {loadState === 'loading' ? (
-        <ActivityIndicator color={colours.brand} style={{ marginTop: 24 }} />
-      ) : recommended ? (
+
+      {contentScreen?.type === 'welcome' ? (
         <>
-          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 8 }}>
-            {recommended.length_weeks} weeks · {formatDaysPerWeek(recommended.days_per_week)} a week
-            · about {recommended.session_minutes} minutes
+          <HeroImage
+            image={imageSourceForSlug(contentScreen.image_slug)}
+            title={title}
+            height={220}
+            style={{ marginHorizontal: -24, marginBottom: 24, borderRadius: 0 }}
+          />
+          <AppText variant="body" style={{ color: colours.inkMuted }}>
+            {body}
           </AppText>
-          {why.length > 0 ? (
-            <View style={styles.why}>
-              <AppText variant="title3" style={{ color: colours.ink, marginBottom: 8 }}>Why this plan</AppText>
-              {why.map((line) => (
-                <View key={line} style={styles.whyRow}>
-                  <Ionicons name="checkmark" size={18} color={colours.success} />
-                  <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>{line}</AppText>
-                </View>
-              ))}
+        </>
+      ) : null}
+
+      {contentScreen?.id === 'age' ? (
+        <>
+          <ScreenHeading title={title} why={contentScreen.why_we_ask} />
+          <SingleChoiceList
+            options={contentScreen.options}
+            value={draft.age_band}
+            onChange={(value) => setDraft((current) => ({ ...current, age_band: value as OnboardingDraft['age_band'] }))}
+          />
+          {blocked ? <BlockMessage title={blocked.inline_message_title} body={blocked.inline_message} /> : null}
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'text' ? (
+        <>
+          <ScreenHeading title={title} />
+          <NameField
+            value={draft.display_name}
+            placeholder={contentScreen.placeholder}
+            maxLength={contentScreen.max_length ?? 30}
+            onChange={(value) => setDraft((current) => ({ ...current, display_name: value }))}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.id === 'goals' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <GoalsPicker
+            selected={draft.main_goals}
+            onChange={(main_goals) => setDraft((current) => ({ ...current, main_goals }))}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'insight' ? (
+        <>
+          <HeroImage
+            image={imageSourceForSlug(contentScreen.image_slug)}
+            height={180}
+            style={{ marginHorizontal: -24, marginBottom: 24 }}
+          />
+          <ScreenHeading
+            title={fillTemplate(insightTitle, vars)}
+            body={
+              contentScreen.id === 'insight_goals'
+                ? contentScreen.body_by_main_goal[draft.main_goals[0] ?? ''] || insightBody
+                : fillTemplate(insightBody, vars)
+            }
+          />
+          {contentScreen.stat && !insightUsesAlt ? (
+            <View
+              style={{
+                backgroundColor: colours.surface,
+                borderRadius: radius.xl,
+                padding: 16,
+                marginBottom: 16,
+                ...shadow,
+              }}>
+              <AppText variant="display" style={{ color: colours.accent }}>
+                {contentScreen.stat.value}
+              </AppText>
+              <AppText variant="body" style={{ color: colours.ink, marginTop: 8 }}>
+                {contentScreen.stat.text}
+              </AppText>
+              <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 8 }}>
+                {contentScreen.stat.source}
+              </AppText>
             </View>
           ) : null}
+          {contentScreen.milestone_preview ? (
+            <View
+              style={{
+                backgroundColor: colours.brandSoft,
+                borderRadius: radius.lg,
+                padding: 16,
+              }}>
+              <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 8 }}>
+                {contentScreen.milestone_preview.title}
+              </AppText>
+              <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                {fillTemplate(contentScreen.milestone_preview.template, vars)}
+              </AppText>
+            </View>
+          ) : null}
+          {extraLine ? (
+            <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 16 }}>
+              {extraLine}
+            </AppText>
+          ) : null}
         </>
-      ) : (
-        <>
-          <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-            We'll start you on Gym Confidence: 6 weeks, unless we can load your match in a moment.
-          </AppText>
-          <TextButton label="Try loading your plan again" onPress={onRetry} style={styles.inlineAction} />
-        </>
-      )}
-
-      {projection ? (
-        <View style={[styles.chartCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-          <AppText variant="title3" style={{ color: colours.ink }}>{projection.exerciseName}</AppText>
-          <AppText variant="caption" style={{ color: colours.inkMuted }}>
-            Estimate, not a promise. If you hit the top of the rep range every other week, the
-            progression rule looks like this.
-          </AppText>
-          <LineChart
-            points={projection.points.map((point) => ({ x: point.week, y: point.kg }))}
-            formatX={(x) => `W${x}`}
-            formatY={(y) => `${Math.round(y)} kg`}
-            height={180}
-          />
-        </View>
       ) : null}
 
-      {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
-    </>
+      {contentScreen?.id === 'gym_experience' ? (
+        <>
+          <ScreenHeading title={title} />
+          <SingleChoiceList
+            options={contentScreen.options}
+            value={draft.gym_experience}
+            onChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                gym_experience: value as NonNullable<OnboardingDraft['gym_experience']>,
+              }))
+            }
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'slider' ? (
+        <>
+          <ScreenHeading title={title} />
+          <ComfortSlider
+            stops={contentScreen.stops}
+            value={draft.gym_comfort}
+            onChange={(gym_comfort) =>
+              setDraft((current) => ({
+                ...current,
+                gym_comfort: gym_comfort as OnboardingDraft['gym_comfort'],
+              }))
+            }
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'statement' ? (
+        <>
+          <ScreenHeading eyebrow={contentScreen.eyebrow} title={title} />
+          <StatementScale
+            options={contentScreen.options}
+            value={statementKeyFromStores(contentScreen.stores_to)
+              ? draft.statements[statementKeyFromStores(contentScreen.stores_to)!] ?? null
+              : null}
+            onChange={(value) => {
+              const key = statementKeyFromStores(contentScreen.stores_to);
+              if (!key) return;
+              setDraft((current) => ({
+                ...current,
+                statements: { ...current.statements, [key]: value },
+              }));
+            }}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'photo_multi_choice' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <PhotoMultiChoice
+            options={contentScreen.options}
+            selected={draft.machines_used}
+            onChange={(machines_used) => setDraft((current) => ({ ...current, machines_used }))}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.id === 'cardio' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <SingleChoiceList
+            options={contentScreen.options}
+            value={draft.cardio_preference}
+            onChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                cardio_preference: value as NonNullable<OnboardingDraft['cardio_preference']>,
+              }))
+            }
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'number_select' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <NumberSelect
+            min={contentScreen.min ?? 2}
+            max={contentScreen.max ?? 5}
+            value={draft.days_per_week}
+            onChange={(days) => {
+              const days_per_week = days as OnboardingDraft['days_per_week'];
+              setDraft((current) => ({
+                ...current,
+                days_per_week,
+                preferred_days: defaultDaysFor(days_per_week),
+              }));
+            }}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'day_pills' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <DayPills
+            selected={draft.preferred_days}
+            targetCount={draft.days_per_week}
+            onChange={(preferred_days) => setDraft((current) => ({ ...current, preferred_days }))}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'chips' ? (
+        <>
+          <ScreenHeading title={title} />
+          <ChipChoiceList
+            options={contentScreen.options}
+            value={draft.session_minutes}
+            onChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                session_minutes: Number(value) as OnboardingDraft['session_minutes'],
+              }))
+            }
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'cards' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <CardChoiceList
+            options={contentScreen.options}
+            value={draft.streak_goal_weeks}
+            onChange={(value) =>
+              setDraft((current) => ({
+                ...current,
+                streak_goal_weeks: Number(value) as OnboardingDraft['streak_goal_weeks'],
+              }))
+            }
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'time_picker' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <TimePickerChips
+            value={draft.reminders_skipped ? null : (draft.reminder_time ?? DEFAULT_REMINDER_TIME)}
+            onChange={(reminder_time) =>
+              setDraft((current) => ({ ...current, reminder_time, reminders_skipped: false }))
+            }
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'number_optional' ? (
+        <>
+          <ScreenHeading title={title} why={contentScreen.why_we_ask} />
+          <BodyweightField
+            kgText={kgText}
+            stonesText={stonesText}
+            poundsText={poundsText}
+            unit={weightUnit}
+            onUnit={setWeightUnit}
+            onKg={setKgText}
+            onStones={setStonesText}
+            onPounds={setPoundsText}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'building' ? (
+        <>
+          <ScreenHeading title={title} />
+          <BuildingSteps steps={contentScreen.steps} doneCount={buildDone} />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'plan_reveal' && plan ? (
+        <PlanReveal
+          screen={contentScreen}
+          plan={plan}
+          vars={vars}
+          chosenSlug={chosenSlug ?? plan.recommended.slug}
+          onChoose={(slug) => {
+            const next = recommendPlan(draft, slug);
+            setChosenSlug(slug);
+            setPlan(next);
+          }}
+        />
+      ) : null}
+
+      {contentScreen?.type === 'disclaimer' ? (
+        <>
+          <ScreenHeading title={contentScreen.title} />
+          <View
+            style={{
+              backgroundColor: colours.surface,
+              borderRadius: radius.xl,
+              marginBottom: 16,
+              padding: 16,
+              ...shadow,
+            }}>
+            <DisclaimerBody hideTitle />
+          </View>
+          <DisclaimerCheckbox checked={safetyChecked} onToggle={() => setSafetyChecked((value) => !value)} />
+        </>
+      ) : null}
+    </OnboardingShell>
   );
 }
 
-function ReviewStep({
-  draft,
-  bodyweight,
-  nameText,
-  error,
-  onJump,
+function PlanReveal({
+  screen,
+  plan,
+  vars,
+  chosenSlug,
+  onChoose,
 }: {
-  draft: Draft;
-  bodyweight: string;
-  nameText: string;
-  error: string | null;
-  onJump: (step: FlowStep) => void;
+  screen: OnboardingScreen;
+  plan: RecommendedPlan;
+  vars: Record<string, string | number | null | undefined>;
+  chosenSlug: string;
+  onChoose: (slug: string) => void;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const rows: { name: string; value: string; step: FlowStep }[] = [
-    {
-      name: 'Goals',
-      value: formatGoalsLabel(draft.main_goals ?? (draft.goal ? [draft.goal] : [])),
-      step: 'goal',
-    },
-    {
-      name: 'Experience',
-      value: draft.experience ? EXPERIENCE_LABELS[draft.experience] : '',
-      step: 'experience',
-    },
-    {
-      name: 'Gym experience',
-      value: draft.gym_experience ? GYM_EXPERIENCE_LABELS[draft.gym_experience] : '',
-      step: 'gym_experience',
-    },
-    {
-      name: 'Equipment',
-      value: draft.equipment ? EQUIPMENT_ACCESS_LABELS[draft.equipment] : '',
-      step: 'equipment',
-    },
-    {
-      name: 'Gym comfort',
-      value: draft.confidence ? `${draft.confidence}. ${CONFIDENCE_LABELS[draft.confidence]}` : '',
-      step: 'comfort',
-    },
-    {
-      name: 'Days per week',
-      value: draft.days_per_week ? formatDaysPerWeek(draft.days_per_week) : '',
-      step: 'days',
-    },
-    {
-      name: 'Session length',
-      value: draft.session_minutes ? formatSessionMinutes(draft.session_minutes) : '',
-      step: 'minutes',
-    },
-    {
-      name: 'Focus',
-      value: (draft.focus_areas ?? []).map((item) => FOCUS_AREA_LABELS[item]).join(', '),
-      step: 'focus',
-    },
-    {
-      name: 'Streak goal',
-      value: draft.streak_goal_weeks ? `${draft.streak_goal_weeks} weeks` : '',
-      step: 'streak',
-    },
-    {
-      name: 'Bodyweight (optional)',
-      value: parseBodyweight(bodyweight) ? formatKg(parseBodyweight(bodyweight) ?? 0) : 'Not added',
-      step: 'bodyweight',
-    },
-    {
-      name: 'Name',
-      value: nameText.trim() || 'Not added',
-      step: 'name',
-    },
-  ];
-
+  const cover = imageSourceForSlug(`${plan.recommended.slug}-cover`);
   return (
-    <>
-      <AppText variant="display" style={{ color: colours.ink }}>Your answers</AppText>
-      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 8, marginBottom: 16 }}>
-        Tap an answer to change it.
+    <View>
+      <HeroImage
+        image={cover}
+        eyebrow={screen.eyebrow}
+        title={fillTemplate(screen.title, vars)}
+        height={200}
+        style={{ marginHorizontal: -24, marginBottom: 16 }}
+      />
+      <AppText variant="body" style={{ color: colours.inkMuted, marginBottom: 16 }}>
+        {fillTemplate(plan.recommended.subtitle, vars)}
       </AppText>
-      <View style={[{ borderRadius: radius.lg }, shadow]}>
-        <View style={[styles.reviewCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
-          {rows.map((row, index) => (
-            <ListRow
-              key={row.name}
-              title={row.name}
-              subtitle={row.value || 'Not set'}
-              onPress={() => onJump(row.step)}
-              style={index === rows.length - 1 ? { borderBottomWidth: 0 } : undefined}
-            />
-          ))}
+      <AppText variant="title3" style={{ color: colours.ink, marginBottom: 8 }}>
+        {screen.why_title}
+      </AppText>
+      {plan.why.map((line) => (
+        <AppText key={line} variant="body" style={{ color: colours.ink, marginBottom: 6 }}>
+          {line}
+        </AppText>
+      ))}
+      <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
+        {screen.week_title}
+      </AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted }}>
+        {fillTemplate(screen.week_template, vars)}
+      </AppText>
+      <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
+        {screen.timeline_title}
+      </AppText>
+      {plan.milestones.map((item) => (
+        <View
+          key={`${item.week}-${item.title}`}
+          style={{
+            backgroundColor: colours.surface,
+            borderRadius: radius.lg,
+            padding: 12,
+            marginBottom: 8,
+            ...shadow,
+          }}>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            Week {item.week}
+          </AppText>
+          <AppText variant="bodyStrong" style={{ color: colours.ink, marginTop: 4 }}>
+            {item.title}
+          </AppText>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+            {item.description}
+          </AppText>
         </View>
-      </View>
-      {error ? <AppText variant="bodySm" style={[styles.error, { color: colours.danger }]}>{error}</AppText> : null}
-    </>
+      ))}
+      <AppText variant="caption" style={{ color: colours.inkMuted, marginBottom: 16 }}>
+        {screen.estimate_label}
+      </AppText>
+      {plan.alternatives.length > 0 ? (
+        <>
+          <AppText variant="title3" style={{ color: colours.ink, marginBottom: 8 }}>
+            {screen.alternatives_title}
+          </AppText>
+          <CardChoiceList
+            options={plan.alternatives.map((item) => ({
+              value: item.slug,
+              label: item.name,
+              sub: item.subtitle,
+            }))}
+            value={chosenSlug}
+            onChange={onChoose}
+          />
+        </>
+      ) : null}
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    minHeight: 48,
-  },
-  backSpacer: {
-    width: 40,
-    height: 40,
-  },
-  segments: {
-    flexDirection: 'row',
-    gap: 4,
-    paddingHorizontal: 20,
-    marginBottom: 8,
-  },
-  segment: {
-    flex: 1,
-    height: 4,
-  },
-  slideClip: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  slidePane: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  chipCloud: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 28,
-  },
-  insight: {
-    alignItems: 'center',
-    paddingTop: 32,
-  },
-  weightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 28,
-  },
-  input: {
-    minHeight: 56,
-    paddingHorizontal: 16,
-    borderWidth: 1.5,
-  },
-  why: {
-    marginTop: 20,
-    gap: 10,
-  },
-  whyRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  chartCard: {
-    marginTop: 24,
-    padding: 16,
-    gap: 8,
-  },
-  reviewCard: {
-    overflow: 'hidden',
-  },
-  footer: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    gap: 8,
-  },
-  dangerFill: {
-    minHeight: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inlineAction: {
-    alignSelf: 'flex-start',
-    marginTop: 20,
-    paddingHorizontal: 0,
-  },
-  error: {
-    marginTop: 16,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-});

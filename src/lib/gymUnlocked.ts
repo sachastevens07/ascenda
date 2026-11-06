@@ -48,9 +48,13 @@ function firstDate(sets: ProgressSet[], match: (set: ProgressSet) => boolean): s
 }
 
 /** Distinct exercises and equipment from ticked sets in finished sessions, plus first-time badges. */
-export function getGymUnlocked(sets: ProgressSet[]): GymUnlocked {
+export function getGymUnlocked(
+  sets: ProgressSet[],
+  options?: { knownEquipment?: Equipment[] }
+): GymUnlocked {
   const exerciseIds = new Set(sets.map((set) => set.exerciseId));
   const equipmentUsed = new Set(sets.map((set) => set.equipment));
+  for (const equipment of options?.knownEquipment ?? []) equipmentUsed.add(equipment);
   const badges: GymBadge[] = [];
 
   for (const equipment of EQUIPMENT) {

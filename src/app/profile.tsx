@@ -68,6 +68,7 @@ import {
   type WeightUnit,
 } from '@/lib/units';
 import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
+import { clearOnboardingPaywall } from '@/lib/onboarding';
 import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
 import { useAuth } from '@/lib/auth';
 import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
@@ -143,7 +144,7 @@ function savedWorkoutsLabel(count: number): string {
 export default function ProfileScreen() {
   const { colours, radius, preference, setPreference } = useTheme();
   const { session } = useAuth();
-  const { profile, reload, deleteAccount, saveMainGoals } = useProfile();
+  const { profile, reload, deleteAccount, saveMainGoals, restartOnboarding } = useProfile();
   const subscription = useSubscription();
   const { showDevTools, setShowDevTools } = useDevTools();
   const answers = getQuizAnswers(profile);
@@ -303,6 +304,19 @@ export default function ProfileScreen() {
       showDialog('Couldn’t export', 'Check your connection and try again.');
     } finally {
       setIsExporting(false);
+    }
+  }
+
+  async function handleDevRestartOnboarding() {
+    try {
+      await restartOnboarding();
+      await clearOnboardingPaywall();
+      router.replace('/onboarding' as Href);
+    } catch (error) {
+      showDialog(
+        'Couldn’t restart onboarding',
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
     }
   }
 
@@ -856,7 +870,9 @@ export default function ProfileScreen() {
         <SettingsGroup title="Developer">
           <SettingsRow
             title="Testing as"
-            subtitle={DEV_OVERRIDE_LABELS[subscription.devOverride]}
+            subtitle={`${DEV_OVERRIDE_LABELS[subscription.devOverride]} · ${
+              subscription.isPro ? 'can train' : 'sessions locked'
+            }`}
             onPress={() => {
               const next =
                 DEV_OVERRIDES[(DEV_OVERRIDES.indexOf(subscription.devOverride) + 1) % DEV_OVERRIDES.length];
@@ -909,6 +925,20 @@ export default function ProfileScreen() {
                 'Open PostHog, go to Activity, and look for dev_test_event. It can take a few seconds.'
               );
             }}
+          />
+          <SettingsRow
+            title="Restart onboarding"
+            subtitle="Run the quiz again on this account"
+            onPress={() =>
+              showDialog(
+                'Restart onboarding?',
+                'You will go through the questions, plan reveal and paywall again. Your logged sessions stay.',
+                [
+                  { text: 'Restart', style: 'destructive', onPress: () => void handleDevRestartOnboarding() },
+                  { text: 'Not now', style: 'cancel' },
+                ]
+              )
+            }
           />
           <SettingsRow title="Restart 8-week block" onPress={() => void handleDevRestartBlock()} last />
         </SettingsGroup>

@@ -32,6 +32,11 @@ export async function consumeOnboardingPaywall(): Promise<string | null> {
   return value;
 }
 
+/** Dev tools: so a restart does not immediately reopen the last queued paywall. */
+export async function clearOnboardingPaywall(): Promise<void> {
+  await AsyncStorage.removeItem(ONBOARDING_PAYWALL_KEY);
+}
+
 function recommendationMatchesGoal(
   routineGoal: Routine['goal'] | RoutineSummary['goal'],
   goal: Goal
