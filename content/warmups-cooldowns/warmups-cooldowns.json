@@ -1,0 +1,492 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Warm-up and cool-down templates referenced by routine days through warmup_id and cooldown_id.",
+    "Each step is either timed (duration_seconds) or counted (reps). per_side means do both sides; for timed steps the duration is per side.",
+    "In the logger these appear as collapsible blocks at the top and bottom of the session, played with the timed player. One tap skips either block; skipping never affects the streak.",
+    "Ramp-up sets: after the warm-up, before the first main lift of the day, the logger adds two warm-up sets marked W: 8 reps at about 50% of today's working weight, then 5 reps at about 75%. Round to the nearest available weight. Skip for bodyweight and machine-assisted exercises. Ramp-up sets never count towards volume, PBs or awards.",
+    "Moves use the catalogue below. one_spot_alternative is offered automatically if she taps 'Busy?' or the machine is taken.",
+    "Draft for coach review before launch."
+  ],
+  "moves": [
+    {
+      "slug": "easy-bike",
+      "name": "Easy bike",
+      "equipment": "cardio_machine",
+      "cue": "Easy pace, you could chat comfortably.",
+      "one_spot_alternative": "march-on-the-spot"
+    },
+    {
+      "slug": "easy-cross-trainer",
+      "name": "Easy cross-trainer",
+      "equipment": "cardio_machine",
+      "cue": "Easy pace, light resistance.",
+      "one_spot_alternative": "march-on-the-spot"
+    },
+    {
+      "slug": "march-on-the-spot",
+      "name": "March on the spot",
+      "equipment": "bodyweight",
+      "cue": "Lift your knees and swing your arms.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "cat-cow",
+      "name": "Cat-cow",
+      "equipment": "bodyweight",
+      "cue": "On hands and knees, round then gently arch your back with your breath.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "worlds-greatest-stretch",
+      "name": "World's greatest stretch",
+      "equipment": "bodyweight",
+      "cue": "Step into a lunge, hand inside your front foot, then reach that arm to the ceiling.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "bodyweight-squat",
+      "name": "Bodyweight squat",
+      "equipment": "bodyweight",
+      "cue": "Sit back and down, then stand tall. Smooth and easy.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "bodyweight-glute-bridge",
+      "name": "Glute bridge",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back, feet flat, lift your hips and squeeze.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "leg-swing-front-back",
+      "name": "Leg swings, front to back",
+      "equipment": "bodyweight",
+      "cue": "Hold something steady and swing one leg gently forwards and back.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "leg-swing-side",
+      "name": "Leg swings, side to side",
+      "equipment": "bodyweight",
+      "cue": "Face something steady and swing one leg across your body and out.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "bodyweight-reverse-lunge",
+      "name": "Reverse lunge",
+      "equipment": "bodyweight",
+      "cue": "Step back softly, lower your back knee, return.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "hip-circles",
+      "name": "Standing hip circles",
+      "equipment": "bodyweight",
+      "cue": "Lift one knee and draw a slow circle out to the side.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "arm-circles",
+      "name": "Arm circles",
+      "equipment": "bodyweight",
+      "cue": "Small circles growing bigger, forwards then backwards.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "band-pull-apart",
+      "name": "Band pull-apart",
+      "equipment": "band",
+      "cue": "Arms straight in front, pull the band apart to your chest.",
+      "one_spot_alternative": "wall-angel"
+    },
+    {
+      "slug": "wall-angel",
+      "name": "Wall angel",
+      "equipment": "bodyweight",
+      "cue": "Back against a wall, slide your arms up and down like a snow angel.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "open-book",
+      "name": "Open book",
+      "equipment": "bodyweight",
+      "cue": "Lie on your side, knees bent, and open your top arm across to the other side.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "inchworm",
+      "name": "Inchworm",
+      "equipment": "bodyweight",
+      "cue": "Fold forward, walk your hands out to a plank, then walk them back.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "scapular-push-up",
+      "name": "Scapular push-up",
+      "equipment": "bodyweight",
+      "cue": "In a plank, let your chest sink between your shoulder blades, then push away.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "childs-pose",
+      "name": "Child's pose",
+      "equipment": "bodyweight",
+      "cue": "Kneel, sit back on your heels and reach your arms forward. Breathe slowly.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "figure-four-stretch",
+      "name": "Figure four stretch",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back, cross one ankle over the other knee and pull gently towards you.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "lying-hamstring-stretch",
+      "name": "Lying hamstring stretch",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back and raise one straight leg, holding behind your thigh.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "half-kneeling-hip-flexor-stretch",
+      "name": "Half-kneeling hip flexor stretch",
+      "equipment": "bodyweight",
+      "cue": "Kneel on one knee, tuck your hips under and shift gently forward.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "side-lying-quad-stretch",
+      "name": "Side-lying quad stretch",
+      "equipment": "bodyweight",
+      "cue": "Lie on your side and pull your top heel towards your bottom.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "calf-stretch-wall",
+      "name": "Calf stretch",
+      "equipment": "bodyweight",
+      "cue": "Hands on a wall, one leg back with the heel down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "chest-stretch-wall",
+      "name": "Chest stretch",
+      "equipment": "bodyweight",
+      "cue": "Forearm on a wall or upright, turn your body gently away.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "cross-body-shoulder-stretch",
+      "name": "Cross-body shoulder stretch",
+      "equipment": "bodyweight",
+      "cue": "Pull one arm across your chest with the other.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "overhead-triceps-stretch",
+      "name": "Overhead triceps stretch",
+      "equipment": "bodyweight",
+      "cue": "Reach one hand down your back and gently press the elbow.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "kneeling-lat-stretch",
+      "name": "Kneeling lat stretch",
+      "equipment": "bodyweight",
+      "cue": "Kneel, place your hands on a bench and sink your chest down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "seated-spinal-twist",
+      "name": "Seated twist",
+      "equipment": "bodyweight",
+      "cue": "Sit tall, cross one leg over and turn gently towards the bent knee.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "slow-breathing",
+      "name": "Slow breathing",
+      "equipment": "bodyweight",
+      "cue": "Lie or sit comfortably. Breathe in for 4, out for 6.",
+      "one_spot_alternative": null
+    }
+  ],
+  "templates": [
+    {
+      "id": "warmup-full-body",
+      "name": "Full-body warm-up",
+      "kind": "warmup",
+      "focus": "full_body",
+      "estimated_minutes": 6,
+      "intro": "Five easy minutes to get warm and ready. Nothing here should feel like hard work.",
+      "steps": [
+        {
+          "slug": "easy-bike",
+          "duration_seconds": 120,
+          "note": "Or the cross-trainer. Busy? March on the spot instead."
+        },
+        {
+          "slug": "cat-cow",
+          "reps": 8
+        },
+        {
+          "slug": "worlds-greatest-stretch",
+          "reps": 3,
+          "per_side": true
+        },
+        {
+          "slug": "bodyweight-squat",
+          "reps": 10
+        },
+        {
+          "slug": "bodyweight-glute-bridge",
+          "reps": 10
+        },
+        {
+          "slug": "arm-circles",
+          "duration_seconds": 30
+        }
+      ]
+    },
+    {
+      "id": "warmup-lower-body",
+      "name": "Lower-body warm-up",
+      "kind": "warmup",
+      "focus": "lower_body",
+      "estimated_minutes": 6,
+      "intro": "Wake up your hips and glutes before a lower-body session.",
+      "steps": [
+        {
+          "slug": "easy-bike",
+          "duration_seconds": 120,
+          "note": "Or the cross-trainer. Busy? March on the spot instead."
+        },
+        {
+          "slug": "leg-swing-front-back",
+          "reps": 10,
+          "per_side": true
+        },
+        {
+          "slug": "leg-swing-side",
+          "reps": 10,
+          "per_side": true
+        },
+        {
+          "slug": "worlds-greatest-stretch",
+          "reps": 3,
+          "per_side": true
+        },
+        {
+          "slug": "bodyweight-glute-bridge",
+          "reps": 12,
+          "note": "Pause for a second at the top."
+        },
+        {
+          "slug": "bodyweight-squat",
+          "reps": 10
+        }
+      ]
+    },
+    {
+      "id": "warmup-upper-body",
+      "name": "Upper-body warm-up",
+      "kind": "warmup",
+      "focus": "upper_body",
+      "estimated_minutes": 6,
+      "intro": "Loosen your shoulders and upper back before pressing and pulling.",
+      "steps": [
+        {
+          "slug": "easy-cross-trainer",
+          "duration_seconds": 120,
+          "note": "Or the bike. Busy? March on the spot instead."
+        },
+        {
+          "slug": "arm-circles",
+          "duration_seconds": 30
+        },
+        {
+          "slug": "band-pull-apart",
+          "reps": 15,
+          "note": "No band? Do wall angels."
+        },
+        {
+          "slug": "open-book",
+          "reps": 6,
+          "per_side": true
+        },
+        {
+          "slug": "scapular-push-up",
+          "reps": 10,
+          "note": "Hands on a bench to make it easier."
+        },
+        {
+          "slug": "inchworm",
+          "reps": 4
+        }
+      ]
+    },
+    {
+      "id": "warmup-quick",
+      "name": "Quick warm-up",
+      "kind": "warmup",
+      "focus": "full_body",
+      "estimated_minutes": 3,
+      "intro": "Three minutes for when time is tight.",
+      "steps": [
+        {
+          "slug": "march-on-the-spot",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "worlds-greatest-stretch",
+          "reps": 2,
+          "per_side": true
+        },
+        {
+          "slug": "bodyweight-squat",
+          "reps": 10
+        },
+        {
+          "slug": "arm-circles",
+          "duration_seconds": 20
+        },
+        {
+          "slug": "inchworm",
+          "reps": 3
+        }
+      ]
+    },
+    {
+      "id": "cooldown-full-body",
+      "name": "Full-body cool-down",
+      "kind": "cooldown",
+      "focus": "full_body",
+      "estimated_minutes": 5,
+      "intro": "A few slow stretches to finish. Breathe out as you settle into each one.",
+      "steps": [
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "figure-four-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "lying-hamstring-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "chest-stretch-wall",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "slow-breathing",
+          "duration_seconds": 45
+        }
+      ]
+    },
+    {
+      "id": "cooldown-lower-body",
+      "name": "Lower-body cool-down",
+      "kind": "cooldown",
+      "focus": "lower_body",
+      "estimated_minutes": 6,
+      "intro": "Ease off your hips, glutes and legs.",
+      "steps": [
+        {
+          "slug": "figure-four-stretch",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "half-kneeling-hip-flexor-stretch",
+          "duration_seconds": 30,
+          "per_side": true,
+          "note": "Put a mat or towel under your knee."
+        },
+        {
+          "slug": "lying-hamstring-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "side-lying-quad-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "calf-stretch-wall",
+          "duration_seconds": 30,
+          "per_side": true
+        }
+      ]
+    },
+    {
+      "id": "cooldown-upper-body",
+      "name": "Upper-body cool-down",
+      "kind": "cooldown",
+      "focus": "upper_body",
+      "estimated_minutes": 5,
+      "intro": "Release your chest, shoulders and back.",
+      "steps": [
+        {
+          "slug": "chest-stretch-wall",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "cross-body-shoulder-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "overhead-triceps-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "kneeling-lat-stretch",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 45
+        }
+      ]
+    },
+    {
+      "id": "cooldown-quick",
+      "name": "Quick cool-down",
+      "kind": "cooldown",
+      "focus": "full_body",
+      "estimated_minutes": 3,
+      "intro": "Three minutes to settle before you head off.",
+      "steps": [
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 30
+        },
+        {
+          "slug": "figure-four-stretch",
+          "duration_seconds": 20,
+          "per_side": true
+        },
+        {
+          "slug": "seated-spinal-twist",
+          "duration_seconds": 20,
+          "per_side": true
+        },
+        {
+          "slug": "slow-breathing",
+          "duration_seconds": 30
+        }
+      ]
+    }
+  ]
+}

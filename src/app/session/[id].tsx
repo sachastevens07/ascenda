@@ -17,6 +17,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { ExercisePicker } from '@/components/ExercisePicker';
+import { HoldPlayer } from '@/components/HoldPlayer';
+import { SessionBlockCard } from '@/components/SessionBlockCard';
 import { SwapSheet } from '@/components/SwapSheet';
 import {
   AppText,
@@ -78,7 +80,7 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
-import { ROLE_LABELS, formatWarmupStep, type WarmupStep } from '@/lib/routineStandard';
+import { ROLE_LABELS } from '@/lib/routineStandard';
 import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
   REST_ADJUST_SECONDS,
@@ -116,6 +118,7 @@ import {
   allSetNumbers,
   buildEntries,
   clearSessionPlan,
+  completedWorkingSetCount,
   formatClock,
   formatDuration,
   formatPreviousSet,
@@ -130,10 +133,18 @@ import {
   sessionPlanFromDay,
   sessionVolumeKg,
   setKey,
+  workingSetCount,
   type RecordKind,
   type SessionEaseBack,
   type SetEntry,
 } from '@/lib/workoutLog';
+import {
+  applyRampUp,
+  blockForSession,
+  playStepsFromBlock,
+  type BlockPlayStatus,
+  type ResolvedBlock,
+} from '@/lib/warmupBlocks';
 import { consumeWelcomeBackSession, recordWelcomeBackCompleted } from '@/lib/welcomeBack';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
@@ -243,7 +254,10 @@ export default function SessionScreen() {
   const [slotMenuItem, setSlotMenuItem] = useState<ProgrammeExercise | null>(null);
   const [slotMenuAnchor, setSlotMenuAnchor] = useState<AnchorRect | null>(null);
   const [coachOpen, setCoachOpen] = useState(true);
-  const [warmupDone, setWarmupDone] = useState<Record<number, boolean>>({});
+  const [warmupStatus, setWarmupStatus] = useState<BlockPlayStatus>('pending');
+  const [cooldownStatus, setCooldownStatus] = useState<BlockPlayStatus>('pending');
+  const [rampUpApplied, setRampUpApplied] = useState(false);
+  const [playingBlock, setPlayingBlock] = useState<ResolvedBlock | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [restPrefs, setRestPrefs] = useState<Record<string, number>>({});
   const [noteItem, setNoteItem] = useState<ProgrammeExercise | null>(null);
@@ -261,13 +275,21 @@ export default function SessionScreen() {
   const customWorkoutId = session?.custom_workout_id ?? null;
   const mutateCustom = Boolean(customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID);
 
-  const totalSets = day ? day.exercises.reduce((sum, item) => sum + allSetNumbers(item).length, 0) : 0;
-  const doneSets = Object.values(entries).filter((entry) => entry.completed).length;
+  const totalSets = day ? workingSetCount(day) : 0;
+  const doneSets = day ? completedWorkingSetCount(day, entries) : 0;
   const volumeKg = day ? sessionVolumeKg(day, entries) : 0;
 
   const weekDays = useMemo(
     () => (routine && weekNumber !== null ? daysInWeek(routine, weekNumber) : []),
     [routine, weekNumber]
+  );
+  const warmupBlock = useMemo(
+    () => (day ? blockForSession('warmup', day, routine?.session_minutes) : null),
+    [day, routine?.session_minutes]
+  );
+  const cooldownBlock = useMemo(
+    () => (day ? blockForSession('cooldown', day, routine?.session_minutes) : null),
+    [day, routine?.session_minutes]
   );
 
   useEffect(() => {
@@ -298,21 +320,33 @@ export default function SessionScreen() {
         ]);
         if (!isCurrent) return;
         setSession(log.session);
-        setDay(log.day);
-        setWarmupDone({});
+        const built = buildEntries(log.day, log.logged, log.previous, isPro, {
+          weightScale: log.easeBack?.weightScale,
+        });
+        const ramped = applyRampUp(log.day, built, log.rampUpApplied);
+        setDay(ramped.day);
         setCoachOpen(true);
         setPrevious(log.previous);
         setEaseBack(log.easeBack);
         setNotes(prefs.notes);
         setRestPrefs(prefs.rest);
-        setEntries(
-          buildEntries(log.day, log.logged, log.previous, isPro, {
-            weightScale: log.easeBack?.weightScale,
-          })
-        );
+        setEntries(ramped.entries);
         setBests(historyBests);
         setStartedAt(log.timerStartedAt);
+        setWarmupStatus(log.warmupStatus);
+        setCooldownStatus(log.cooldownStatus);
+        setRampUpApplied(true);
         setLoadState('ready');
+        if (!log.rampUpApplied) {
+          await saveSessionPlan(
+            id,
+            sessionPlanFromDay(ramped.day, log.easeBack ?? undefined, log.timerStartedAt, {
+              warmupStatus: log.warmupStatus,
+              cooldownStatus: log.cooldownStatus,
+              rampUpApplied: true,
+            })
+          );
+        }
 
         if (log.session.routine_enrolment_id && log.session.routine_day_id) {
           const enrolment = await fetchActiveEnrolment();
@@ -343,8 +377,19 @@ export default function SessionScreen() {
     ensureRestTimerPermission().catch(() => {});
   }, []);
 
-  async function persistPlan(nextDay: ProgrammeDay, timerAt: number | null = startedAt) {
-    await saveSessionPlan(id, sessionPlanFromDay(nextDay, easeBack ?? undefined, timerAt));
+  async function persistPlan(
+    nextDay: ProgrammeDay,
+    timerAt: number | null = startedAt,
+    extras?: { warmupStatus?: BlockPlayStatus; cooldownStatus?: BlockPlayStatus; rampUpApplied?: boolean }
+  ) {
+    await saveSessionPlan(
+      id,
+      sessionPlanFromDay(nextDay, easeBack ?? undefined, timerAt, {
+        warmupStatus: extras?.warmupStatus ?? warmupStatus,
+        cooldownStatus: extras?.cooldownStatus ?? cooldownStatus,
+        rampUpApplied: extras?.rampUpApplied ?? rampUpApplied,
+      })
+    );
   }
 
   function startTimer() {
@@ -389,7 +434,7 @@ export default function SessionScreen() {
     }
     if (completing) {
       startTimer();
-      startRest(slotRestSeconds(item, restPrefs));
+      if (!isWarmupSetNumber(setNumber)) startRest(slotRestSeconds(item, restPrefs));
     } else stopRest();
     const next = { ...current, completed: completing };
     updateEntry(key, { completed: completing });
@@ -1084,7 +1129,7 @@ export default function SessionScreen() {
           </View>
         ) : null}
 
-        {day.coach_note || (day.warmup && day.warmup.length > 0) || day.finisher ? (
+        {day.coach_note || day.finisher ? (
           <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, padding: 14 }]}>
             <Pressable
               onPress={() => setCoachOpen((open) => !open)}
@@ -1094,7 +1139,7 @@ export default function SessionScreen() {
               <View style={styles.flex}>
                 <AppText variant="eyebrow" style={{ color: colours.accent }}>Today</AppText>
                 <AppText variant="title3" style={{ color: colours.ink, marginTop: 4 }}>
-                  {day.focus ?? 'Warm-up and focus'}
+                  {day.focus ?? day.name}
                 </AppText>
               </View>
               <Ionicons name={coachOpen ? 'chevron-up' : 'chevron-down'} size={20} color={colours.brand} />
@@ -1104,34 +1149,24 @@ export default function SessionScreen() {
                 {day.coach_note ? (
                   <AppText variant="body" style={{ color: colours.ink }}>{day.coach_note}</AppText>
                 ) : null}
-                {(day.warmup ?? []).map((step: WarmupStep, index) => {
-                  const done = Boolean(warmupDone[index]);
-                  return (
-                    <Pressable
-                      key={`${step.text}-${index}`}
-                      onPress={() => setWarmupDone((current) => ({ ...current, [index]: !done }))}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: done }}>
-                      <Ionicons
-                        name={done ? 'checkmark-circle' : 'ellipse-outline'}
-                        size={22}
-                        color={done ? colours.success : colours.inkMuted}
-                      />
-                      <AppText
-                        variant="body"
-                        style={{ color: colours.ink, flex: 1, textDecorationLine: done ? 'line-through' : 'none' }}>
-                        {formatWarmupStep(step)}
-                      </AppText>
-                    </Pressable>
-                  );
-                })}
                 {day.finisher ? (
                   <AppText variant="bodySm" style={{ color: colours.inkMuted }}>{day.finisher}</AppText>
                 ) : null}
               </View>
             ) : null}
           </View>
+        ) : null}
+
+        {warmupBlock ? (
+          <SessionBlockCard
+            block={warmupBlock}
+            status={warmupStatus}
+            onStart={() => setPlayingBlock(warmupBlock)}
+            onSkip={() => {
+              setWarmupStatus('skipped');
+              if (day) void persistPlan(day, startedAt, { warmupStatus: 'skipped' });
+            }}
+          />
         ) : null}
 
         {day.exercises.length === 0 ? (
@@ -1324,6 +1359,18 @@ export default function SessionScreen() {
           );
         })}
 
+        {cooldownBlock ? (
+          <SessionBlockCard
+            block={cooldownBlock}
+            status={cooldownStatus}
+            onStart={() => setPlayingBlock(cooldownBlock)}
+            onSkip={() => {
+              setCooldownStatus('skipped');
+              if (day) void persistPlan(day, startedAt, { cooldownStatus: 'skipped' });
+            }}
+          />
+        ) : null}
+
         {reorderMode ? (
           <PrimaryButton label="Done" onPress={() => setReorderMode(false)} />
         ) : (
@@ -1348,6 +1395,29 @@ export default function SessionScreen() {
           onMinus={() => adjustRest(-REST_ADJUST_SECONDS)}
           onPlus={() => adjustRest(REST_ADJUST_SECONDS)}
           onSkip={stopRest}
+        />
+      ) : null}
+
+      {playingBlock ? (
+        <HoldPlayer
+          title={
+            playingBlock.kind === 'warmup'
+              ? fillCopy(loggerCopy.warmup_block, { minutes: playingBlock.estimatedMinutes })
+              : fillCopy(loggerCopy.cooldown_block, { minutes: playingBlock.estimatedMinutes })
+          }
+          steps={playStepsFromBlock(playingBlock)}
+          onClose={() => setPlayingBlock(null)}
+          onComplete={() => {
+            const kind = playingBlock.kind;
+            setPlayingBlock(null);
+            if (kind === 'warmup') {
+              setWarmupStatus('done');
+              if (day) void persistPlan(day, startedAt, { warmupStatus: 'done' });
+            } else {
+              setCooldownStatus('done');
+              if (day) void persistPlan(day, startedAt, { cooldownStatus: 'done' });
+            }
+          }}
         />
       ) : null}
 

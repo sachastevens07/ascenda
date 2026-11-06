@@ -47,6 +47,9 @@ export type SessionPlan = {
   easeBack?: SessionEaseBack;
   /** Epoch ms when the live timer started (first ticked set, or Start timer). */
   timerStartedAt?: number | null;
+  warmupStatus?: 'pending' | 'done' | 'skipped';
+  cooldownStatus?: 'pending' | 'done' | 'skipped';
+  rampUpApplied?: boolean;
 };
 
 function sessionPlanKey(id: string): string {
@@ -76,7 +79,8 @@ export const FALLBACK_REST_SECONDS = 90;
 export function sessionPlanFromDay(
   day: ProgrammeDay,
   easeBack?: SessionEaseBack,
-  timerStartedAt?: number | null
+  timerStartedAt?: number | null,
+  extras?: Pick<SessionPlan, 'warmupStatus' | 'cooldownStatus' | 'rampUpApplied'>
 ): SessionPlan {
   return {
     slots: day.exercises.map((item) => ({
@@ -90,6 +94,9 @@ export function sessionPlanFromDay(
     })),
     easeBack,
     timerStartedAt: timerStartedAt ?? null,
+    warmupStatus: extras?.warmupStatus,
+    cooldownStatus: extras?.cooldownStatus,
+    rampUpApplied: extras?.rampUpApplied,
   };
 }
 
@@ -254,6 +261,9 @@ export type SessionLog = {
   previous: Record<string, LoggedSet[]>;
   easeBack: SessionEaseBack | null;
   timerStartedAt: number | null;
+  warmupStatus: 'pending' | 'done' | 'skipped';
+  cooldownStatus: 'pending' | 'done' | 'skipped';
+  rampUpApplied: boolean;
 };
 
 /** Everything needed to show a session in the logger. Null if the session or its day is gone. */
@@ -290,7 +300,17 @@ export async function loadSessionLog(
       : hasTicked
         ? new Date(session.started_at).getTime()
         : null;
-  return { session, day, logged, previous, easeBack: plan?.easeBack ?? null, timerStartedAt };
+  return {
+    session,
+    day,
+    logged,
+    previous,
+    easeBack: plan?.easeBack ?? null,
+    timerStartedAt,
+    warmupStatus: plan?.warmupStatus ?? 'pending',
+    cooldownStatus: plan?.cooldownStatus ?? 'pending',
+    rampUpApplied: Boolean(plan?.rampUpApplied),
+  };
 }
 
 /** The first set not yet ticked, in programme order. Null when every set is done. */
@@ -377,6 +397,7 @@ export function sessionVolumeKg(
   for (const item of day.exercises) {
     if (!usesWeight(item.exercise.equipment)) continue;
     for (const setNumber of allSetNumbers(item)) {
+      if (isWarmupSetNumber(setNumber)) continue;
       const entry = entries[setKey(item.exercise.id, setNumber)];
       if (!entry?.completed) continue;
       const kg = parseWeight(entry.weight);
@@ -385,6 +406,23 @@ export function sessionVolumeKg(
     }
   }
   return total;
+}
+
+export function workingSetCount(day: ProgrammeDay): number {
+  return day.exercises.reduce((sum, item) => sum + setNumbers(item).length, 0);
+}
+
+export function completedWorkingSetCount(
+  day: ProgrammeDay,
+  entries: Record<string, SetEntry>
+): number {
+  let done = 0;
+  for (const item of day.exercises) {
+    for (const setNumber of setNumbers(item)) {
+      if (entries[setKey(item.exercise.id, setNumber)]?.completed) done += 1;
+    }
+  }
+  return done;
 }
 
 /** "52 minutes", "1 hour 5 minutes". */

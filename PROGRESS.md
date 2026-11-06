@@ -78,7 +78,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **7. N3 + X4** done this pass. Wait for Sacha to say "next". Then **8. G2**.
+Current: **8. G2** done this pass. Wait for Sacha to say "next". Then **9. M1 (revised)**.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -98,7 +98,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 ### Stage 2: The workout core
 - [x] **6. W1** Session types and blocks (5 Nov 2026). `routine_days.type` and `sessions.type` are `strength` | `cardio` | `recovery`. Each day has ordered `routine_day_blocks` (warmup, strength, cardio, cooldown, stretch). Existing strength days backfill warmup + strength + cooldown; stretch days backfill one stretch block. Exercises stay on `routine_day_exercises` (with optional `block_id`), so the logger, progression and swaps are unchanged. `support_days` and `weekly_schedule` are jsonb on `routines` for the Planner later; extra cardio/recovery days are not added yet. content:sync plans 104 weeks, 300 days and 935 blocks from `/content`. Live writes still need a service role key and your confirm. SQL: `supabase/session_blocks_w1.sql` (not run).
 - [x] **7. N3 + X4** Logger (6 Nov 2026). Start session opens the logger. Header: minimise, live timer (starts on first ticked set or Start timer), Finish. Stats: duration, volume, sets. Set table: Set, Previous, kg, Reps, tick; W for warm-up sets (long-press + Add set). Per exercise: thumbnail, name opens the guide, ⋯ (swap, remove, add/remove set, change rep target), Rest and Note chips remembered next time. Reorder is long-press then arrows (no drag library). Minimised bar on every tab. Suggested-weight chip, role, RIR, rest bar and PB glow kept. Changes apply to today only. End session with no ticked set discards with no prompt. Swap engine and double-progression unchanged. Microcopy from `content/microcopy` (bundled). SQL: `supabase/exercise_notes_x4.sql` (not run). Did not add `react-native-draggable-flatlist` or `expo-haptics`.
-- [ ] **8. G2** Warm-up and cool-down blocks. Partly done: N2 shows a warm-up checklist. `content/warmups-cooldowns` is not loaded. No cool-down player.
+- [x] **8. G2** Warm-up and cool-down blocks (6 Nov 2026). Every strength session in the logger has a collapsible warm-up at the top and cool-down at the bottom from `content/warmups-cooldowns` (8 templates, bundled). Start opens a timed player (stretch-style ring, Pause, Skip, reps as Done). Skip is one tap and never counts as a session, so the streak is unchanged. First main lift gets two W ramp-up sets: 8 reps at about 50% then 5 at about 75%, skipped for bodyweight and assisted machines, and ignored for volume, PBs and awards. Swap engine and double-progression unchanged. `npm run content:sync -- --dry-run` reports the templates; live writes still need a service role and your confirm. No new SQL (W1 blocks table is enough; the app does not wait on it).
 - [ ] **9. M1 (revised)** WorkoutX exercise media. Not started. See "MuscleWiki to retire" below. Do not drop those columns without a confirmed migration.
 - [ ] **10. N2** Routine standard. Partly done: the 14 legacy strength plans have coaching fields in the app. The 15 routines, catalogue and guides in `/content` are not loaded.
 
@@ -199,6 +199,7 @@ Proposal when M1 (revised) starts: add a new WorkoutX id column in a migration S
 - Keep both One spot routines.
 - `showDevTools` is on-device AsyncStorage. One long-press of Profile **Version 1.0.0** toggles it (not five). `EXPO_PUBLIC_SHOW_DEV_TOOLS` is unused.
 - N3/X4: timer starts on first ticked set or Start timer. Chevron-down minimises (bar on every tab). End session with no ticks discards with no prompt. Rep targets editable for today. Add exercise is on routine sessions (today only). Weighted sets still need a weight. Swap is free; suggested-weight chips stay Pro. Reorder is long-press then arrows; no drag library until asked.
+- G2: warm-up/cool-down templates are bundled from `/content`. Skip is local to the session and is not a logged session. Ramp-up uses set numbers 0 and -1 so working set 1 still drives progression. Did not add a library.
 - N1 disclaimer is international v2 (doctor, local emergency number). Safety after 18+, before goals. First-session sheet required “I understand”. Learn article line left for N6. No extra font for “Train safely”.
 - N4 keeps `goal` / `main_goal` columns; `main_goals` is source of truth. Lose body fat is allowed; no calorie/diet response.
 - H1: gold weeks earn rest weeks. Repair = `max(target, 1) + 1` sessions the following week. Only rest rows stored in `streak_weeks`. `accentSoft` added to the theme.

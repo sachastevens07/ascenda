@@ -444,12 +444,13 @@ async function main(): Promise<void> {
   line('  content/ai: Edge Functions, not the app database');
   line();
 
+  reportWarmups();
+
   line('No table in the current schema, skipped');
   const deferred = [
     ['content/cardio', 'cardio library table is W2; finisher fields are stored on cardio blocks now'],
     ['content/food', 'recipes and collections (F2)'],
     ['content/machine-guides', 'machine guides (W4)'],
-    ['content/warmups-cooldowns', 'player UI is G2; template steps are copied onto warmup/cooldown blocks now'],
     ['content/single-sessions', 'single sessions (X3)'],
     ['content/exercise-guides', 'guide copy itself. Cues and location_hint are used to plan new exercise inserts'],
     ['content/achievements', 'achievement definitions (H6 is still computed in the app)'],
@@ -466,6 +467,18 @@ async function main(): Promise<void> {
 
   line();
   line('Nothing was written.');
+}
+
+function reportWarmups(): void {
+  line('warm-up / cool-down  ←  content/warmups-cooldowns/warmups-cooldowns.json');
+  const file = readJson('warmups-cooldowns/warmups-cooldowns.json');
+  const moves = asArray(file.moves);
+  const templates = asArray(file.templates);
+  line(`  Moves: ${moves.length}`);
+  line(`  Templates: ${templates.length} (${templates.map((item) => text(item.id)).filter(Boolean).join(', ')})`);
+  line('  Bundled in the app for the logger. A live sync would copy steps onto routine_day_blocks.steps.');
+  line('  User tables are not touched.');
+  line();
 }
 
 async function reportImages(client: SupabaseClient): Promise<void> {

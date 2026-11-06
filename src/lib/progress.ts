@@ -73,9 +73,10 @@ export async function fetchProgressSets(): Promise<ProgressSet[]> {
     const { data, error } = await supabase
       .from('sets')
       .select(
-        'id, session_id, exercise_id, weight_kg, reps, exercise:exercises(name, equipment, zone, weight_increase_kg), session:sessions!inner(date, completed_at)'
+        'id, session_id, exercise_id, set_number, weight_kg, reps, exercise:exercises(name, equipment, zone, weight_increase_kg), session:sessions!inner(date, completed_at)'
       )
       .eq('completed', true)
+      .gt('set_number', 0)
       .not('session.completed_at', 'is', null)
       .order('id')
       .range(from, from + PAGE_SIZE - 1);
@@ -138,9 +139,10 @@ export async function fetchExerciseBests(
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await supabase
       .from('sets')
-      .select('id, exercise_id, weight_kg, reps, session:sessions!inner(completed_at)')
+      .select('id, exercise_id, set_number, weight_kg, reps, session:sessions!inner(completed_at)')
       .in('exercise_id', exerciseIds)
       .eq('completed', true)
+      .gt('set_number', 0)
       .neq('session_id', excludeSessionId)
       .not('weight_kg', 'is', null)
       .not('session.completed_at', 'is', null)
