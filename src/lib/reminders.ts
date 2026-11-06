@@ -440,14 +440,15 @@ export async function maybeAskSessionReminders(): Promise<void> {
   }
 }
 
-export type ReminderAnalyticsKind = 'session' | 'weekly' | 'test' | 'trial';
+export type ReminderAnalyticsKind = 'session' | 'weekly' | 'test' | 'trial' | 'renewal';
 
 export function reminderKindFromIdentifier(id: string | undefined): ReminderAnalyticsKind | null {
   if (!id) return null;
   if (id.startsWith(SESSION_PREFIX)) return 'session';
   if (id.startsWith(WEEKLY_PREFIX)) return 'weekly';
   if (id === TEST_ID) return 'test';
-  if (id === 'trial-ending') return 'trial';
+  if (id === 'trial-ending' || id === 'dev-billing-reminder-test-trial') return 'trial';
+  if (id === 'annual-renewal' || id === 'dev-billing-reminder-test-renewal') return 'renewal';
   return null;
 }
 

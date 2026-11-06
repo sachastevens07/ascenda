@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { AppText, HeroImage, IconButton, PrimaryButton, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { fillCopy, paywallScreenCopy, restoreCopy } from '@/lib/copy';
+import { fillCopy, paywallScreenCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
 import { imageSourceForSlug } from '@/lib/images';
 import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
 import { recommendPlan } from '@/lib/onboardingPlan';
@@ -27,6 +27,7 @@ import {
   fetchProPackages,
   getFreeTrialDays,
   hasProEntitlement,
+  openManageSubscription,
   purchasePackage,
   restorePurchases,
   useSubscription,
@@ -53,7 +54,7 @@ export default function PaywallScreen() {
   const { colours, radius, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
-  const { isAvailable, applyCustomerInfo } = useSubscription();
+  const { isAvailable, applyCustomerInfo, managementUrl } = useSubscription();
   const [loadState, setLoadState] = useState<LoadState>(isAvailable ? 'loading' : 'unavailable');
   const [attempt, setAttempt] = useState(0);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
@@ -316,6 +317,24 @@ export default function PaywallScreen() {
                 disabled={busy !== null}
               />
             ) : null}
+            <TextButton
+              label={subscriptionStatusCopy.how_to_cancel_title}
+              onPress={() =>
+                showDialog(subscriptionStatusCopy.how_to_cancel_title, subscriptionStatusCopy.how_to_cancel_body, [
+                  {
+                    text: subscriptionStatusCopy.manage,
+                    onPress: () =>
+                      openManageSubscription(managementUrl).catch(() =>
+                        showDialog(
+                          'Couldn’t open your subscription',
+                          `Open ${STORE_NAME} and go to Subscriptions.`
+                        )
+                      ),
+                  },
+                  { text: 'Close', style: 'cancel' },
+                ])
+              }
+            />
             <TextButton label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
             <TextButton label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
           </View>

@@ -102,6 +102,7 @@ import {
   hasProEntitlement,
   openManageSubscription,
   restorePurchases,
+  scheduleTestBillingReminder,
   useSubscription,
   type ProStatus,
 } from '@/lib/subscription';
@@ -583,10 +584,15 @@ export default function ProfileScreen() {
       </View>
 
       <SettingsGroup title={planSettingsTitle}>
-        <SettingsRow title={planChip(subscription)} subtitle={subscriptionStatusCopy.manage_help} />
-        {subscription.isPro ? (
-          <SettingsRow title={subscriptionStatusCopy.manage} onPress={handleManageSubscription} />
-        ) : (
+        <SettingsRow title={planChip(subscription)} />
+        {subscription.isPro || subscription.status === 'expired' ? (
+          <SettingsRow
+            title={subscriptionStatusCopy.manage}
+            subtitle={subscriptionStatusCopy.manage_help}
+            onPress={handleManageSubscription}
+          />
+        ) : null}
+        {!subscription.isPro ? (
           <SettingsRow
             title={
               subscription.status === 'expired'
@@ -595,12 +601,15 @@ export default function ProfileScreen() {
             }
             onPress={() => openPaywall('onboarding')}
           />
-        )}
+        ) : null}
         <SettingsRow title={subscriptionStatusCopy.restore} onPress={() => void handleRestorePurchases()} />
         <SettingsRow
           title={subscriptionStatusCopy.how_to_cancel_title}
           onPress={() =>
-            showDialog(subscriptionStatusCopy.how_to_cancel_title, subscriptionStatusCopy.how_to_cancel_body)
+            showDialog(subscriptionStatusCopy.how_to_cancel_title, subscriptionStatusCopy.how_to_cancel_body, [
+              { text: subscriptionStatusCopy.manage, onPress: handleManageSubscription },
+              { text: 'Close', style: 'cancel' },
+            ])
           }
         />
         <SettingsRow
@@ -910,6 +919,38 @@ export default function ProfileScreen() {
               void scheduleTestSessionReminder().then((ok) => {
                 if (ok) {
                   showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
+                }
+              });
+            }}
+          />
+          <SettingsRow
+            title="Send a test trial-ending reminder"
+            subtitle="Microcopy, in about 8 seconds. Needs notification permission."
+            onPress={() => {
+              void scheduleTestBillingReminder('trial', subscription.priceString).then((ok) => {
+                if (ok) {
+                  showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
+                } else {
+                  showDialog(
+                    'Couldn’t set that reminder',
+                    'Reminders need a development build, and notification permission on this phone.'
+                  );
+                }
+              });
+            }}
+          />
+          <SettingsRow
+            title="Send a test renewal reminder"
+            subtitle="Annual renews-soon copy, in about 8 seconds."
+            onPress={() => {
+              void scheduleTestBillingReminder('renewal', subscription.priceString).then((ok) => {
+                if (ok) {
+                  showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
+                } else {
+                  showDialog(
+                    'Couldn’t set that reminder',
+                    'Reminders need a development build, and notification permission on this phone.'
+                  );
                 }
               });
             }}

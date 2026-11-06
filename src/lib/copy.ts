@@ -95,6 +95,14 @@ export const subscriptionBanners = {
   dismiss_a11y: subscription.banner_dismiss_a11y,
 } as const;
 
+const notifications = microcopy.strings.notifications;
+
+/** Trial-ending and annual-renewal pushes. {date} and {price} come from RevenueCat. */
+export const billingReminderCopy = {
+  trial_ending: notifications.trial_ending,
+  renewal: notifications.renewal_reminder,
+} as const;
+
 /** Logger strings from content/microcopy. Bundled, not loaded by content:sync. */
 export const loggerCopy = microcopy.strings.logger;
 

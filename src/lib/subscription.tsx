@@ -18,6 +18,7 @@ import Purchases, {
 
 import { trackOnce } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
+import { billingReminderCopy, fillCopy } from '@/lib/copy';
 import { useDevTools } from '@/lib/devFlags';
 import { formatShortDate } from '@/lib/progress';
 import { Notifications } from '@/lib/restTimer';
@@ -25,10 +26,16 @@ import { Notifications } from '@/lib/restTimer';
 /** The entitlement identifier in the RevenueCat dashboard. */
 export const PRO_ENTITLEMENT = 'ascenda_pro';
 export const REMINDER_DAYS_BEFORE = 2;
+/** Annual renewal push and Home banner. Not a countdown. */
+export const RENEWAL_DAYS_BEFORE = 7;
 export const STORE_NAME = Platform.OS === 'ios' ? 'App Store' : 'Google Play';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const REMINDER_ID = 'trial-ending';
+const TRIAL_REMINDER_ID = 'trial-ending';
+const RENEWAL_REMINDER_ID = 'annual-renewal';
+function testBillingReminderId(kind: 'trial' | 'renewal'): string {
+  return kind === 'trial' ? 'dev-billing-reminder-test-trial' : 'dev-billing-reminder-test-renewal';
+}
 const REMINDER_CHANNEL_ID = 'reminders';
 const DEV_OVERRIDE_KEY = 'dev-access-override';
 
@@ -53,10 +60,14 @@ export type ProStatus = {
   /** When the entitlement renews or ends. Null if there is no period. */
   expiresAt: Date | null;
   willRenew: boolean;
+  /** Localised price of the current product, from RevenueCat. */
+  priceString: string | null;
+  /** True when the current product is the annual plan. */
+  isAnnual: boolean;
 };
 
 /** Development builds only: pretend each subscription state for sandbox testing. */
-export const DEV_OVERRIDES = ['off', 'free', 'pro', 'trial-ending', 'grace', 'expired'] as const;
+export const DEV_OVERRIDES = ['off', 'free', 'pro', 'trial-ending', 'grace', 'expired', 'renewal-soon'] as const;
 export type DevOverride = (typeof DEV_OVERRIDES)[number];
 
 export const DEV_OVERRIDE_LABELS: Record<DevOverride, string> = {
@@ -66,6 +77,7 @@ export const DEV_OVERRIDE_LABELS: Record<DevOverride, string> = {
   'trial-ending': 'Trial ending in 2 days',
   grace: 'Billing grace period',
   expired: 'Expired (lapsed)',
+  'renewal-soon': 'Annual renews in 6 days',
 };
 
 type SubscriptionState = ProStatus & {
@@ -85,6 +97,8 @@ const FREE: ProStatus = {
   trialEndsAt: null,
   expiresAt: null,
   willRenew: false,
+  priceString: null,
+  isAnnual: false,
 };
 
 const SubscriptionContext = createContext<SubscriptionState>({
@@ -120,10 +134,45 @@ function configureOnce(): boolean {
   return configureResult;
 }
 
-function toStatus(info: CustomerInfo | null): ProStatus {
+function productIdFromInfo(info: CustomerInfo | null): string | null {
+  return (
+    info?.entitlements.active[PRO_ENTITLEMENT]?.productIdentifier ??
+    info?.entitlements.all[PRO_ENTITLEMENT]?.productIdentifier ??
+    null
+  );
+}
+
+function isAnnualIdentifier(identifier: string | null): boolean {
+  return Boolean(identifier && /annual/i.test(identifier));
+}
+
+async function catalogForProduct(
+  identifier: string | null
+): Promise<{ priceString: string; isAnnual: boolean } | null> {
+  if (!identifier) return null;
+  const packages = await fetchProPackages();
+  const match =
+    packages.find((item) => item.product.identifier === identifier) ??
+    packages.find((item) =>
+      identifier.toLowerCase().includes(item.packageType === 'ANNUAL' ? 'annual' : 'monthly')
+    );
+  if (!match) return null;
+  return {
+    priceString: match.product.priceString,
+    isAnnual: match.packageType === 'ANNUAL',
+  };
+}
+
+function toStatus(
+  info: CustomerInfo | null,
+  catalog: { priceString: string; isAnnual: boolean } | null
+): ProStatus {
   const active = info?.entitlements.active[PRO_ENTITLEMENT];
   const known = active ?? info?.entitlements.all[PRO_ENTITLEMENT];
-  if (!known) return FREE;
+  const productId = productIdFromInfo(info);
+  const priceString = catalog?.priceString ?? null;
+  const isAnnual = catalog?.isAnnual ?? isAnnualIdentifier(productId);
+  if (!known) return { ...FREE, priceString, isAnnual };
   const expiresAt = known.expirationDate ? new Date(known.expirationDate) : null;
   if (!active) {
     return {
@@ -132,6 +181,8 @@ function toStatus(info: CustomerInfo | null): ProStatus {
       trialEndsAt: null,
       expiresAt,
       willRenew: false,
+      priceString,
+      isAnnual,
     };
   }
   const billingIssue = Boolean(active.billingIssueDetectedAt);
@@ -142,6 +193,8 @@ function toStatus(info: CustomerInfo | null): ProStatus {
     trialEndsAt: trial ? expiresAt : null,
     expiresAt,
     willRenew: active.willRenew,
+    priceString,
+    isAnnual,
   };
 }
 
@@ -152,54 +205,133 @@ function overrideStatus(value: DevOverride): ProStatus | null {
     case 'free':
       return FREE;
     case 'pro':
-      return { isPro: true, status: 'active', trialEndsAt: null, expiresAt: null, willRenew: true };
+      return {
+        isPro: true,
+        status: 'active',
+        trialEndsAt: null,
+        expiresAt: null,
+        willRenew: true,
+        priceString: null,
+        isAnnual: true,
+      };
     case 'trial-ending': {
       const endsAt = new Date(Date.now() + REMINDER_DAYS_BEFORE * DAY_MS - 60_000);
-      return { isPro: true, status: 'trial', trialEndsAt: endsAt, expiresAt: endsAt, willRenew: true };
+      return {
+        isPro: true,
+        status: 'trial',
+        trialEndsAt: endsAt,
+        expiresAt: endsAt,
+        willRenew: true,
+        priceString: null,
+        isAnnual: true,
+      };
     }
     case 'grace': {
       const endsAt = new Date(Date.now() + 3 * DAY_MS);
-      return { isPro: true, status: 'grace', trialEndsAt: null, expiresAt: endsAt, willRenew: true };
+      return {
+        isPro: true,
+        status: 'grace',
+        trialEndsAt: null,
+        expiresAt: endsAt,
+        willRenew: true,
+        priceString: null,
+        isAnnual: true,
+      };
     }
     case 'expired':
-      return { isPro: false, status: 'expired', trialEndsAt: null, expiresAt: new Date(), willRenew: false };
+      return {
+        isPro: false,
+        status: 'expired',
+        trialEndsAt: null,
+        expiresAt: new Date(),
+        willRenew: false,
+        priceString: null,
+        isAnnual: true,
+      };
+    case 'renewal-soon': {
+      const endsAt = new Date(Date.now() + (RENEWAL_DAYS_BEFORE - 1) * DAY_MS);
+      return {
+        isPro: true,
+        status: 'active',
+        trialEndsAt: null,
+        expiresAt: endsAt,
+        willRenew: true,
+        priceString: null,
+        isAnnual: true,
+      };
+    }
   }
 }
 
-async function ensureReminderPermission(): Promise<boolean> {
+function fillDatePrice(template: { title: string; body: string }, date: Date, price: string | null) {
+  const bodyTemplate = price ? template.body : template.body.replace(' at {price}', '');
+  return {
+    title: template.title,
+    body: fillCopy(bodyTemplate, { date: formatShortDate(date), price: price ?? '' }),
+  };
+}
+
+async function billingNotificationsAllowed(): Promise<boolean> {
   if (!Notifications) return false;
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL_ID, {
-      name: 'Reminders',
-      importance: Notifications.AndroidImportance.DEFAULT,
-    });
-  }
   const current = await Notifications.getPermissionsAsync();
-  if (current.granted) return true;
-  if (!current.canAskAgain) return false;
-  return (await Notifications.requestPermissionsAsync()).granted;
+  return current.granted;
 }
 
-/** Schedules the "trial ends in 2 days" notification, replacing any earlier one. Null cancels it. */
-async function updateTrialReminder(trialEndsAt: Date | null): Promise<void> {
+async function ensureBillingChannel(): Promise<void> {
+  if (!Notifications || Platform.OS !== 'android') return;
+  await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL_ID, {
+    name: 'Reminders',
+    importance: Notifications.AndroidImportance.DEFAULT,
+  });
+}
+
+async function cancelBillingReminders(): Promise<void> {
   if (!Notifications) return;
-  await Notifications.cancelScheduledNotificationAsync(REMINDER_ID);
-  if (!trialEndsAt) return;
-  const remindAt = trialEndsAt.getTime() - REMINDER_DAYS_BEFORE * DAY_MS;
-  if (remindAt <= Date.now()) return;
-  if (!(await ensureReminderPermission())) return;
+  await Notifications.cancelScheduledNotificationAsync(TRIAL_REMINDER_ID);
+  await Notifications.cancelScheduledNotificationAsync(RENEWAL_REMINDER_ID);
+}
+
+async function scheduleDatedReminder(id: string, fireAt: Date, title: string, body: string): Promise<void> {
+  if (!Notifications) return;
+  if (fireAt.getTime() <= Date.now()) return;
+  if (!(await billingNotificationsAllowed())) return;
+  await ensureBillingChannel();
   await Notifications.scheduleNotificationAsync({
-    identifier: REMINDER_ID,
-    content: {
-      title: `Your free trial ends in ${REMINDER_DAYS_BEFORE} days`,
-      body: `Your subscription starts on ${formatShortDate(trialEndsAt)} unless you cancel. You can manage it from Profile.`,
-    },
+    identifier: id,
+    content: { title, body },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
-      date: new Date(remindAt),
+      date: fireAt,
       channelId: REMINDER_CHANNEL_ID,
     },
   });
+}
+
+/** Trial (2 days before) and annual renewal (7 days before). Push only if notifications are already allowed. */
+async function updateBillingReminders(input: {
+  trialEndsAt: Date | null;
+  renewalAt: Date | null;
+  priceString: string | null;
+}): Promise<void> {
+  await cancelBillingReminders();
+  if (input.trialEndsAt) {
+    const copy = fillDatePrice(billingReminderCopy.trial_ending, input.trialEndsAt, input.priceString);
+    await scheduleDatedReminder(
+      TRIAL_REMINDER_ID,
+      new Date(input.trialEndsAt.getTime() - REMINDER_DAYS_BEFORE * DAY_MS),
+      copy.title,
+      copy.body
+    );
+  }
+  if (input.renewalAt) {
+    const copy = fillDatePrice(billingReminderCopy.renewal, input.renewalAt, input.priceString);
+    await scheduleDatedReminder(
+      RENEWAL_REMINDER_ID,
+      new Date(input.renewalAt.getTime() - RENEWAL_DAYS_BEFORE * DAY_MS),
+      copy.title,
+      copy.body
+    );
+  }
 }
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
@@ -208,6 +340,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const userId = session?.user.id ?? null;
   const isAvailable = configureOnce();
   const [info, setInfo] = useState<CustomerInfo | null>(null);
+  const [catalog, setCatalog] = useState<{ priceString: string; isAnnual: boolean } | null>(null);
   const [isLoading, setIsLoading] = useState(isAvailable);
   const [devOverride, setDevOverrideState] = useState<DevOverride>('off');
 
@@ -254,13 +387,41 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, [isAvailable, userId]);
 
-  const realStatus = useMemo(() => toStatus(info), [info]);
-  const reminderAt = realStatus.willRenew ? (realStatus.trialEndsAt?.getTime() ?? null) : null;
+  const productId = productIdFromInfo(info);
+
+  useEffect(() => {
+    if (!isAvailable) {
+      setCatalog(null);
+      return;
+    }
+    let isCurrent = true;
+    catalogForProduct(productId)
+      .then((result) => {
+        if (isCurrent) setCatalog(result);
+      })
+      .catch(() => {
+        if (isCurrent) setCatalog(null);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [isAvailable, productId]);
+
+  const realStatus = useMemo(() => toStatus(info, catalog), [info, catalog]);
+  const trialReminderAt = realStatus.willRenew ? (realStatus.trialEndsAt?.getTime() ?? null) : null;
+  const renewalReminderAt =
+    realStatus.status === 'active' && realStatus.willRenew && realStatus.isAnnual
+      ? (realStatus.expiresAt?.getTime() ?? null)
+      : null;
 
   useEffect(() => {
     if (isLoading) return;
-    updateTrialReminder(reminderAt === null ? null : new Date(reminderAt)).catch(() => {});
-  }, [isLoading, reminderAt]);
+    updateBillingReminders({
+      trialEndsAt: trialReminderAt === null ? null : new Date(trialReminderAt),
+      renewalAt: renewalReminderAt === null ? null : new Date(renewalReminderAt),
+      priceString: realStatus.priceString,
+    }).catch(() => {});
+  }, [isLoading, trialReminderAt, renewalReminderAt, realStatus.priceString]);
 
   useEffect(() => {
     if (isLoading || !userId || !realStatus.trialEndsAt) return;
@@ -273,7 +434,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<SubscriptionState>(() => {
-    const status = (showDevTools ? overrideStatus(devOverride) : null) ?? realStatus;
+    const overridden = showDevTools ? overrideStatus(devOverride) : null;
+    const status = overridden
+      ? {
+          ...overridden,
+          priceString: realStatus.priceString,
+          isAnnual: overridden.isAnnual || realStatus.isAnnual,
+        }
+      : realStatus;
     accessSnapshot = { isPro: status.isPro, isLoading };
     return {
       ...status,
@@ -300,6 +468,54 @@ export function isTrialEndingSoon({ trialEndsAt, willRenew }: ProStatus): boolea
     willRenew &&
     trialEndsAt.getTime() - Date.now() <= REMINDER_DAYS_BEFORE * DAY_MS
   );
+}
+
+/** True in the last 7 days of an annual plan that will renew. */
+export function isRenewalSoon({ status, expiresAt, willRenew, isAnnual }: ProStatus): boolean {
+  return (
+    status === 'active' &&
+    isAnnual &&
+    willRenew &&
+    expiresAt !== null &&
+    expiresAt.getTime() - Date.now() <= RENEWAL_DAYS_BEFORE * DAY_MS
+  );
+}
+
+function billingCopyForTest(kind: 'trial' | 'renewal', date: Date, price: string | null) {
+  return fillDatePrice(
+    kind === 'trial' ? billingReminderCopy.trial_ending : billingReminderCopy.renewal,
+    date,
+    price
+  );
+}
+
+/** Tester helper: trial-ending or annual-renewal copy in a few seconds. */
+export async function scheduleTestBillingReminder(
+  kind: 'trial' | 'renewal',
+  priceString: string | null
+): Promise<boolean> {
+  if (!Notifications) return false;
+  const current = await Notifications.getPermissionsAsync();
+  if (!current.granted) {
+    if (!current.canAskAgain) return false;
+    const requested = await Notifications.requestPermissionsAsync();
+    if (!requested.granted) return false;
+  }
+  await ensureBillingChannel();
+  const date = new Date(Date.now() + (kind === 'trial' ? REMINDER_DAYS_BEFORE : RENEWAL_DAYS_BEFORE) * DAY_MS);
+  const copy = billingCopyForTest(kind, date, priceString);
+  const id = testBillingReminderId(kind);
+  await Notifications.cancelScheduledNotificationAsync(id);
+  await Notifications.scheduleNotificationAsync({
+    identifier: id,
+    content: { title: copy.title, body: copy.body },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 8,
+      channelId: REMINDER_CHANNEL_ID,
+    },
+  });
+  return true;
 }
 
 export function hasProEntitlement(info: CustomerInfo): boolean {

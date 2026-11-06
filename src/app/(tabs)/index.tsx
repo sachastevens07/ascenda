@@ -62,7 +62,7 @@ import {
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { fillCopy, subscriptionBanners } from '@/lib/copy';
+import { billingReminderCopy, fillCopy, subscriptionBanners } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
@@ -70,6 +70,7 @@ import { ensureSubscribed } from '@/lib/paywall';
 import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanProgress } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
+import { formatShortDate } from '@/lib/progress';
 import {
   daysInWeek,
   describeRoutineError,
@@ -115,6 +116,7 @@ import {
 import { fetchStretchRoutines } from '@/lib/stretches';
 import {
   STORE_NAME,
+  isRenewalSoon,
   isTrialEndingSoon,
   openManageSubscription,
   useSubscription,
@@ -173,6 +175,7 @@ export default function HomeScreen() {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
   const [trialBannerHidden, setTrialBannerHidden] = useState(false);
+  const [renewalBannerHidden, setRenewalBannerHidden] = useState(false);
   const routineMenuRef = useRef<AnchorHandle>(null);
   const [routineMenuOpen, setRoutineMenuOpen] = useState(false);
   const [routineMenuAnchor, setRoutineMenuAnchor] = useState<AnchorRect | null>(null);
@@ -192,6 +195,22 @@ export default function HomeScreen() {
       .then((value) => setTrialBannerHidden(value === '1'))
       .catch(() => setTrialBannerHidden(false));
   }, [subscription.trialEndsAt]);
+
+  useEffect(() => {
+    const renews = subscription.expiresAt;
+    if (!renews || !isRenewalSoon(subscription)) {
+      setRenewalBannerHidden(false);
+      return;
+    }
+    AsyncStorage.getItem(`renewal-banner:${renews.toISOString()}`)
+      .then((value) => setRenewalBannerHidden(value === '1'))
+      .catch(() => setRenewalBannerHidden(false));
+  }, [
+    subscription.expiresAt,
+    subscription.status,
+    subscription.willRenew,
+    subscription.isAnnual,
+  ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -620,6 +639,44 @@ export default function HomeScreen() {
                 const ends = subscription.trialEndsAt;
                 if (ends) {
                   AsyncStorage.setItem(`trial-ending-banner:${ends.toISOString()}`, '1').catch(() => {});
+                }
+              }}
+            />
+          </View>
+        ) : null}
+
+        {subscription.status !== 'grace' &&
+        !isTrialEndingSoon(subscription) &&
+        isRenewalSoon(subscription) &&
+        subscription.expiresAt &&
+        !renewalBannerHidden ? (
+          <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <AppText variant="bodySm" style={{ color: colours.ink }}>
+                {fillCopy(
+                  subscription.priceString
+                    ? billingReminderCopy.renewal.body
+                    : billingReminderCopy.renewal.body.replace(' at {price}', ''),
+                  {
+                    date: formatShortDate(subscription.expiresAt),
+                    price: subscription.priceString ?? '',
+                  }
+                )}
+              </AppText>
+              <TextButton
+                label={subscriptionBanners.trial_ending_cta}
+                onPress={handleManageSubscription}
+                style={{ alignSelf: 'flex-start' }}
+              />
+            </View>
+            <IconButton
+              icon="close"
+              accessibilityLabel={subscriptionBanners.dismiss_a11y}
+              onPress={() => {
+                setRenewalBannerHidden(true);
+                const renews = subscription.expiresAt;
+                if (renews) {
+                  AsyncStorage.setItem(`renewal-banner:${renews.toISOString()}`, '1').catch(() => {});
                 }
               }}
             />
