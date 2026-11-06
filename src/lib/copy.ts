@@ -113,6 +113,44 @@ export function fillCopy(template: string, vars: Record<string, string | number>
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? ''));
 }
 
+const streak = microcopy.strings.streak;
+
+/** H1 streak copy. Never guilt. Bundled from content/microcopy. */
+export const streakCopy = {
+  weeks_trained: streak.weeks_trained,
+  current_run: streak.current_run,
+  weeks_unit_one: streak.weeks_unit_one,
+  weeks_unit_many: streak.weeks_unit_many,
+  gold_weeks: streak.gold_weeks,
+  goal_progress: streak.goal_progress,
+  this_week_progress: streak.this_week_progress,
+  this_week_counted: streak.this_week_counted,
+  this_week_gold: streak.this_week_gold,
+  this_week_none_yet: streak.this_week_none_yet,
+  goal_reached_title: streak.goal_reached_title,
+  goal_reached_body: streak.goal_reached_body,
+  goal_reached_cta: streak.goal_reached_cta,
+  goal_reached_later: streak.goal_reached_later,
+  rest_week_banked: streak.rest_week_banked,
+  rest_week_earned: streak.rest_week_earned,
+  rest_week_prompt_title: streak.rest_week_prompt_title,
+  rest_week_prompt_body: streak.rest_week_prompt_body,
+  rest_week_prompt_yes: streak.rest_week_prompt_yes,
+  rest_week_prompt_no: streak.rest_week_prompt_no,
+  rest_week_used: streak.rest_week_used,
+  rest_week_schedule: streak.rest_week_schedule,
+  rest_week_schedule_body: streak.rest_week_schedule_body,
+  repair_offer: streak.repair_offer,
+  repair_progress: streak.repair_progress,
+  repaired: streak.repaired,
+  new_run: streak.new_run,
+  hidden_note: streak.hidden_note,
+} as const;
+
+export function streakWeeksLabel(count: number): string {
+  return fillCopy(count === 1 ? streakCopy.weeks_unit_one : streakCopy.weeks_unit_many, { count });
+}
+
 const home = microcopy.strings.home;
 
 /** Home next-session card ⋯. Bundled microcopy, not loaded by content:sync. */

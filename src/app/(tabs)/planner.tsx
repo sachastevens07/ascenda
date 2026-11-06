@@ -53,7 +53,9 @@ import {
   type PlannerDayView,
   type PlannerRange,
 } from '@/lib/planner';
+import { streakCopy } from '@/lib/copy';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
+import { ensureSubscribed } from '@/lib/paywall';
 import {
   DEFAULT_REMINDER_TIME,
   REMINDER_HOURS,
@@ -340,7 +342,7 @@ export default function PlannerScreen() {
     }
     setBusy(true);
     try {
-      const streak = await loadStreakSnapshot(3);
+      const streak = await loadStreakSnapshot();
       if (weekStartIso === thisMonday && streak.hitThisWeek) {
         showDialog(
           'This week already counts',
@@ -355,19 +357,15 @@ export default function PlannerScreen() {
         );
         return;
       }
-      showDialog(
-        'Plan a rest week?',
-        'This week will keep your run going without a session. Planned workouts stay in the list if you still want them.',
-        [
-          {
-            text: 'Plan rest week',
-            onPress: () => {
-              void runAction(() => setRestWeek(weekStartIso), 'Couldn’t save that rest week');
-            },
+      showDialog(streakCopy.rest_week_schedule, streakCopy.rest_week_schedule_body, [
+        {
+          text: streakCopy.rest_week_schedule,
+          onPress: () => {
+            void runAction(() => setRestWeek(weekStartIso), 'Couldn’t save that rest week');
           },
-          { text: 'Not now', style: 'cancel' },
-        ]
-      );
+        },
+        { text: 'Not now', style: 'cancel' },
+      ]);
     } catch (error) {
       showDialog('Couldn’t check rest weeks', describePlannerError(error));
     } finally {
@@ -376,6 +374,7 @@ export default function PlannerScreen() {
   }
 
   async function handleOpen(day: PlannerDayView) {
+    if (!ensureSubscribed()) return;
     if (!day.plan) return;
     closeSheets();
 
@@ -689,7 +688,7 @@ export default function PlannerScreen() {
             <MenuRow label="Add a custom workout" onPress={() => void startFabAddWorkout()} />
             <MenuRow label="Mark a rest day" onPress={startFabRest} />
             <MenuRow
-              label={restWeekStarts.has(weekStartIso) ? 'Cancel rest week' : 'Plan a rest week'}
+              label={restWeekStarts.has(weekStartIso) ? 'Cancel rest week' : streakCopy.rest_week_schedule}
               onPress={() => void handlePlanRestWeek()}
             />
             <MenuRow

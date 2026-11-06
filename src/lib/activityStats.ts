@@ -1,8 +1,10 @@
+import { fillCopy, streakCopy } from '@/lib/copy';
 import type { Equipment } from '@/lib/exercises';
 import { startOfWeekMonday, toIso } from '@/lib/planner';
 import type { ExerciseBests, ProgressSet } from '@/lib/progress';
 import { parseDate } from '@/lib/progress';
 import { usesWeight } from '@/lib/programmes';
+import { parseSessionType, sessionTypeFromSource, type SessionType } from '@/lib/sessionTypes';
 import type { LoggedSet, SessionSource } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
 
@@ -34,6 +36,7 @@ export type FinishedSessionMeta = {
   duration_seconds: number | null;
   routine_enrolment_id: string | null;
   source: SessionSource;
+  type: SessionType;
 };
 
 export type ActivityTotals = {
@@ -91,9 +94,27 @@ export function sessionDurationSeconds(session: FinishedSessionMeta): number {
   return Math.round((end - start) / 1000);
 }
 
-/** Strength sessions always count. Stretch sessions count from 10 minutes. */
+export function normalizeWeeklyTarget(daysPerWeek: number | null | undefined): number {
+  const value = Number(daysPerWeek);
+  if (Number.isFinite(value) && value >= 1 && value <= 7) return Math.round(value);
+  return 3;
+}
+
+/** Extra sessions needed this week to repair a missed week. */
+export function repairSessionsNeeded(weeklyTarget: number): number {
+  return Math.max(normalizeWeeklyTarget(weeklyTarget), 1) + 1;
+}
+
+function streakSessionKind(session: FinishedSessionMeta): SessionType {
+  if (session.type === 'strength' || session.type === 'cardio' || session.type === 'recovery') {
+    return session.type;
+  }
+  return sessionTypeFromSource(session.source);
+}
+
+/** Strength and cardio always count. Stretch and recovery count from 10 minutes. */
 export function sessionCountsTowardStreak(session: FinishedSessionMeta): boolean {
-  if (session.source === 'stretch') {
+  if (streakSessionKind(session) === 'recovery') {
     return sessionDurationSeconds(session) >= STREAK_STRETCH_MIN_SECONDS;
   }
   return true;
@@ -104,31 +125,53 @@ export async function fetchFinishedSessionMeta(): Promise<FinishedSessionMeta[]>
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from('sessions')
-      .select('id, date, started_at, completed_at, duration_seconds, routine_enrolment_id, source')
+      .select('id, date, started_at, completed_at, duration_seconds, routine_enrolment_id, source, type')
       .not('completed_at', 'is', null)
       .order('date')
       .order('id')
       .range(from, from + 999);
     if (error) {
-      if (/duration_seconds|routine_enrolment_id|source/i.test(error.message)) {
+      if (/duration_seconds|routine_enrolment_id|source|sessions\.type|'type' column/i.test(error.message)) {
         const fallback = await supabase
           .from('sessions')
-          .select('id, date, started_at, completed_at')
+          .select('id, date, started_at, completed_at, duration_seconds, routine_enrolment_id, source')
           .not('completed_at', 'is', null)
           .order('date')
           .order('id')
           .range(from, from + 999);
-        if (fallback.error) throw fallback.error;
+        if (fallback.error) {
+          const legacy = await supabase
+            .from('sessions')
+            .select('id, date, started_at, completed_at')
+            .not('completed_at', 'is', null)
+            .order('date')
+            .order('id')
+            .range(from, from + 999);
+          if (legacy.error) throw legacy.error;
+          rows.push(
+            ...((legacy.data ?? []) as Omit<
+              FinishedSessionMeta,
+              'duration_seconds' | 'routine_enrolment_id' | 'source' | 'type'
+            >[]).map((row) => ({
+              ...row,
+              duration_seconds: null,
+              routine_enrolment_id: null,
+              source: 'programme' as const,
+              type: 'strength' as const,
+            }))
+          );
+          if (!legacy.data || legacy.data.length < 1000) break;
+          continue;
+        }
         rows.push(
-          ...((fallback.data ?? []) as Omit<
-            FinishedSessionMeta,
-            'duration_seconds' | 'routine_enrolment_id' | 'source'
-          >[]).map((row) => ({
-            ...row,
-            duration_seconds: null,
-            routine_enrolment_id: null,
-            source: 'programme' as const,
-          }))
+          ...((fallback.data ?? []) as Omit<FinishedSessionMeta, 'type'>[]).map((row) => {
+            const source = row.source ?? 'programme';
+            return {
+              ...row,
+              source,
+              type: parseSessionType(undefined, sessionTypeFromSource(source)),
+            };
+          })
         );
         if (!fallback.data || fallback.data.length < 1000) break;
         continue;
@@ -136,10 +179,14 @@ export async function fetchFinishedSessionMeta(): Promise<FinishedSessionMeta[]>
       throw error;
     }
     rows.push(
-      ...((data ?? []) as FinishedSessionMeta[]).map((row) => ({
-        ...row,
-        source: row.source ?? 'programme',
-      }))
+      ...((data ?? []) as FinishedSessionMeta[]).map((row) => {
+        const source = row.source ?? 'programme';
+        return {
+          ...row,
+          source,
+          type: parseSessionType(row.type, sessionTypeFromSource(source)),
+        };
+      })
     );
     if (!data || data.length < 1000) break;
   }
@@ -159,11 +206,6 @@ function addWeeks(date: Date, weeks: number): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + weeks * 7);
 }
 
-function weekTarget(monday: string, plannedByWeek: Map<string, number>, fallbackTarget: number): number {
-  const planned = plannedByWeek.get(monday) ?? 0;
-  return planned > 0 ? planned : fallbackTarget;
-}
-
 function restSet(restWeekStarts: Iterable<string> | undefined): Set<string> {
   return restWeekStarts instanceof Set ? restWeekStarts : new Set(restWeekStarts ?? []);
 }
@@ -180,7 +222,7 @@ function statusForWeek(
   if (week.isRest) return 'rest';
   if (week.monday >= thisMondayIso) return 'pending';
   if (firstMondayIso && week.monday < firstMondayIso) return 'pending';
-  const extraNeeded = Math.max(next?.target ?? 0, 1) + 1;
+  const extraNeeded = repairSessionsNeeded(next?.target ?? 1);
   if (next && next.done >= extraNeeded) return 'repaired';
   return 'missed';
 }
@@ -226,8 +268,7 @@ function countBestRun(weeks: StreakWeek[], thisMondayIso: string): number {
 
 export function getWeeklyStreak(
   sessions: FinishedSessionMeta[],
-  plannedByWeek: Map<string, number>,
-  fallbackTarget: number,
+  weeklyTarget: number,
   goal: StreakGoal,
   restWeekStarts: Iterable<string> = [],
   now = new Date()
@@ -235,10 +276,11 @@ export function getWeeklyStreak(
   const thisMonday = startOfWeekMonday(now);
   const thisMondayIso = toIso(thisMonday);
   const restWeeks = restSet(restWeekStarts);
+  const target = normalizeWeeklyTarget(weeklyTarget);
   const counted = sessions.filter(sessionCountsTowardStreak);
   const firstDate = counted[0]?.date ?? null;
   const firstMondayIso = firstDate ? toIso(startOfWeekMonday(parseDate(firstDate))) : null;
-  const targetThisWeek = weekTarget(thisMondayIso, plannedByWeek, fallbackTarget);
+  const targetThisWeek = target;
 
   const doneByWeek = new Map<string, number>();
   for (const session of counted) {
@@ -256,7 +298,7 @@ export function getWeeklyStreak(
     raw.push({
       monday,
       done,
-      target: weekTarget(monday, plannedByWeek, fallbackTarget),
+      target,
       isRest: restWeeks.has(monday) && done === 0,
     });
   }
@@ -280,7 +322,7 @@ export function getWeeklyStreak(
     const draft = {
       monday,
       done,
-      target: weekTarget(monday, plannedByWeek, fallbackTarget),
+      target,
       isRest: restWeeks.has(monday) && done === 0,
     };
     recent.push({
@@ -323,16 +365,18 @@ export function getWeeklyStreak(
 }
 
 export function describeStreak(streak: WeeklyStreak): string {
-  if (streak.weeksTrained === 0) {
-    return 'A week counts when you train at least once. Hitting your plan makes it a gold week.';
+  if (streak.lastWeek?.status === 'missed') {
+    return fillCopy(streakCopy.repair_progress, {
+      done: streak.doneThisWeek,
+      needed: repairSessionsNeeded(streak.targetThisWeek),
+    });
   }
-  if (streak.current === 0) {
-    return 'New week, fresh start. Show up this week and your run begins again. Weeks trained stays with you.';
+  if (streak.current === 0 && streak.weeksTrained > 0) {
+    return fillCopy(streakCopy.new_run, { total: streak.weeksTrained });
   }
-  if (streak.current >= streak.goal) {
-    return `Your current run is ${streak.current} weeks. That’s the finish line you set. Keep going if it feels good.`;
-  }
-  return 'Rest weeks and an extra session after a quiet week can keep your run going. Weeks trained never resets.';
+  if (streak.goldThisWeek) return streakCopy.this_week_gold;
+  if (streak.hitThisWeek) return streakCopy.this_week_counted;
+  return streakCopy.this_week_none_yet;
 }
 
 export async function fetchStreakGoal(): Promise<StreakGoal> {

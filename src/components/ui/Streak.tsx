@@ -3,13 +3,13 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import {
-  REST_BANK_CAP,
   REST_EARN_EVERY,
   type StreakWeek,
   type StreakWeekStatus,
   type WeeklyStreak,
   describeStreak,
 } from '@/lib/activityStats';
+import { fillCopy, streakCopy, streakWeeksLabel } from '@/lib/copy';
 
 function circleColour(
   status: StreakWeekStatus,
@@ -24,14 +24,10 @@ function circleColour(
 }
 
 function restBankCopy(streak: WeeklyStreak): string {
-  const towards = streak.sessionWeeks % REST_EARN_EVERY;
-  if (streak.restWeeksBanked >= REST_BANK_CAP) return '2 rest weeks ready';
-  if (streak.restWeeksBanked === 1) {
-    return towards > 0
-      ? `1 rest week ready · ${towards} of ${REST_EARN_EVERY} towards another`
-      : '1 rest week ready';
+  if (streak.restWeeksBanked > 0 && streak.sessionWeeks > 0 && streak.sessionWeeks % REST_EARN_EVERY === 0) {
+    return streakCopy.rest_week_earned;
   }
-  return `${towards} of ${REST_EARN_EVERY} weeks towards a rest week`;
+  return fillCopy(streakCopy.rest_week_banked, { count: streak.restWeeksBanked });
 }
 
 function weekLabel(week: StreakWeek): string {
@@ -65,10 +61,6 @@ export function RestWeekBanner({ style }: { style?: StyleProp<ViewStyle> }) {
 
 export function StreakCard({ streak }: { streak: WeeklyStreak }) {
   const { colours, radius, shadow, spacing } = useTheme();
-  const runLabel =
-    streak.current === 1 ? '1 week' : `${streak.current} weeks`;
-  const trainedLabel =
-    streak.weeksTrained === 1 ? '1 week' : `${streak.weeksTrained} weeks`;
 
   return (
     <View
@@ -81,16 +73,16 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
         shadow,
       ]}>
       <AppText variant="eyebrow" style={{ color: colours.accent }}>
-        Streak
+        {fillCopy(streakCopy.goal_progress, { current: streak.current, goal: streak.goal })}
       </AppText>
       <AppText variant="title2" style={{ color: colours.ink, marginTop: 6 }}>
-        Current run {runLabel}
+        {streakCopy.current_run} {streakWeeksLabel(streak.current)}
       </AppText>
       <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 4 }}>
-        Weeks trained {trainedLabel}
+        {streakCopy.weeks_trained} {streakWeeksLabel(streak.weeksTrained)}
       </AppText>
       <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 2 }}>
-        Gold weeks {streak.goldWeeks}
+        {streakCopy.gold_weeks} {streak.goldWeeks}
       </AppText>
 
       <View
@@ -122,11 +114,9 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
       <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
         {restBankCopy(streak)}
       </AppText>
-      {streak.current === 0 ? (
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
-          {describeStreak(streak)}
-        </AppText>
-      ) : null}
+      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
+        {describeStreak(streak)}
+      </AppText>
     </View>
   );
 }

@@ -6,12 +6,13 @@ import {
   fetchStreakGoal,
   getWeeklyStreak,
   nextStreakGoal,
+  normalizeWeeklyTarget,
   saveStreakGoal,
   type StreakGoal,
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import { track, trackOnce } from '@/lib/analytics';
-import { fetchPlannedCountsByWeek, toIso } from '@/lib/planner';
+import { fillCopy, streakCopy } from '@/lib/copy';
 import { supabase } from '@/lib/supabase';
 
 const HIDE_STREAK_KEY = 'hide_streak';
@@ -139,17 +140,24 @@ export async function syncRestWeeksBanked(value: number): Promise<void> {
   }
 }
 
-export async function loadStreakSnapshot(fallbackTarget: number): Promise<WeeklyStreak> {
-  const [sessions, goal, rest] = await Promise.all([
+async function fetchWeeklyTargetFromProfile(): Promise<number> {
+  try {
+    const { data, error } = await supabase.from('profiles').select('days_per_week').maybeSingle();
+    if (error) return 3;
+    return normalizeWeeklyTarget((data as { days_per_week?: number } | null)?.days_per_week);
+  } catch {
+    return 3;
+  }
+}
+
+export async function loadStreakSnapshot(): Promise<WeeklyStreak> {
+  const [sessions, goal, rest, weeklyTarget] = await Promise.all([
     fetchFinishedSessionMeta(),
     fetchStreakGoal(),
     fetchRestWeekStarts(),
+    fetchWeeklyTargetFromProfile(),
   ]);
-  const from = sessions[0]?.date ?? toIso(new Date());
-  const planned = await fetchPlannedCountsByWeek(from, toIso(new Date())).catch(
-    () => new Map<string, number>()
-  );
-  const streak = getWeeklyStreak(sessions, planned, fallbackTarget, goal, rest);
+  const streak = getWeeklyStreak(sessions, weeklyTarget, goal, rest);
   void syncRestWeeksBanked(streak.restWeeksBanked);
   void maybeTrackStreakRepair(streak);
   return streak;
@@ -203,33 +211,29 @@ export async function maybePromptMissedWeek(
   track('planned_week_missed', { week_start: last.monday });
 
   if (streak.restWeeksBanked > 0) {
-    showDialog(
-      'New week, fresh start',
-      'Last week was quiet. You have a rest week ready, which keeps this run going. You can also just train this week when you are ready.',
-      [
-        {
-          text: 'Use a rest week',
-          onPress: () => {
-            void setRestWeek(last.monday)
-              .then(() => onApplied?.())
-              .catch((error) =>
-                showDialog(
-                  'Couldn’t save that rest week',
-                  error instanceof Error ? error.message : 'Check your connection and try again.'
-                )
-              );
-          },
+    showDialog(streakCopy.rest_week_prompt_title, streakCopy.rest_week_prompt_body, [
+      {
+        text: streakCopy.rest_week_prompt_yes,
+        onPress: () => {
+          void setRestWeek(last.monday)
+            .then(() => {
+              onApplied?.();
+              showDialog(streakCopy.rest_week_used);
+            })
+            .catch((error) =>
+              showDialog(
+                'Couldn’t save that rest week',
+                error instanceof Error ? error.message : 'Check your connection and try again.'
+              )
+            );
         },
-        { text: 'Not now', style: 'cancel' },
-      ]
-    );
+      },
+      { text: streakCopy.rest_week_prompt_no, style: 'cancel' },
+    ]);
     return;
   }
 
-  showDialog(
-    'New week, fresh start',
-    'Do one extra session this week and last week still counts towards your run.'
-  );
+  showDialog(streakCopy.rest_week_prompt_title, streakCopy.repair_offer);
 }
 
 export async function maybeTrackStreakRepair(streak: WeeklyStreak): Promise<void> {
@@ -254,19 +258,16 @@ export async function maybeCelebrateStreakGoal(streak: WeeklyStreak): Promise<vo
 
   const next = nextStreakGoal(streak.goal);
   if (!next) {
-    showDialog(
-      'You reached your streak goal',
-      `Your current run is ${streak.current} weeks. Keep showing up if it feels good.`
-    );
+    showDialog(fillCopy(streakCopy.goal_reached_title, { goal: streak.goal }));
     return;
   }
 
   showDialog(
-    'You reached your streak goal',
-    `Your current run is ${streak.current} weeks. Want to aim for ${next} weeks next?`,
+    fillCopy(streakCopy.goal_reached_title, { goal: streak.goal }),
+    fillCopy(streakCopy.goal_reached_body, { next_goal: next }),
     [
       {
-        text: `Aim for ${next} weeks`,
+        text: fillCopy(streakCopy.goal_reached_cta, { next_goal: next }),
         onPress: () => {
           void saveStreakGoal(next)
             .then(async () => {
@@ -282,7 +283,7 @@ export async function maybeCelebrateStreakGoal(streak: WeeklyStreak): Promise<vo
             );
         },
       },
-      { text: 'Keep this goal', style: 'cancel' },
+      { text: streakCopy.goal_reached_later, style: 'cancel' },
     ]
   );
 }

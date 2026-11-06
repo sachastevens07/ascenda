@@ -50,20 +50,16 @@ import {
   formatTrainingHours,
   getActivityTotals,
   getWeeklyStreak,
+  normalizeWeeklyTarget,
   sessionCountsTowardStreak,
   type FinishedSessionMeta,
   type WeeklyStreak,
 } from '@/lib/activityStats';
+import { fillCopy, streakCopy } from '@/lib/copy';
 import { getGymUnlocked } from '@/lib/gymUnlocked';
 import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import { fetchHideStreak, fetchRestWeekStarts, maybeTrackStreakRepair, syncRestWeeksBanked } from '@/lib/streak';
 import { fetchBackOnTrack } from '@/lib/welcomeBack';
-import {
-  fetchPlannedCountsByWeek,
-  fetchThisWeekProgress,
-  toIso,
-  type WeekPlanProgress,
-} from '@/lib/planner';
 import { formatKg } from '@/lib/programmes';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
@@ -114,7 +110,6 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 type ActivityData = {
   sets: ProgressSet[];
   sessions: FinishedSessionMeta[];
-  weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
   hideStreak: boolean;
   hideAchievements: boolean;
@@ -203,11 +198,10 @@ export default function ActivityScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, weekProgress, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, restWeeks, backOnTrack] =
+          const [sets, sessions, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, restWeeks, backOnTrack] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
-              fetchThisWeekProgress().catch(() => ({ completed: 0, planned: 0 })),
               fetchStreakGoal(),
               fetchActiveEnrolment().catch(() => null),
               fetchLatestCompletedEnrolment().catch(() => null),
@@ -218,16 +212,18 @@ export default function ActivityScreen() {
               fetchRestWeekStarts().catch(() => new Set<string>()),
               fetchBackOnTrack().catch(() => ({ unlocked: false, at: null as string | null })),
             ]);
-          const from = sessions[0]?.date ?? toIso(new Date());
-          const [plannedByWeek, roadmap, completedRoutineSessions] = await Promise.all([
-            fetchPlannedCountsByWeek(from, toIso(new Date())),
+          const [roadmap, completedRoutineSessions] = await Promise.all([
             enrolment ? fetchRoutineRoadmap(enrolment).catch(() => []) : Promise.resolve([]),
             completedEnrolment
               ? countEnrolmentSessions(completedEnrolment.id).catch(() => 0)
               : Promise.resolve(0),
           ]);
-          const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
-          const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, goal, restWeeks);
+          const streak = getWeeklyStreak(
+            sessions,
+            normalizeWeeklyTarget(answers?.days_per_week),
+            goal,
+            restWeeks
+          );
           void syncRestWeeksBanked(streak.restWeeksBanked);
           void maybeTrackStreakRepair(streak);
           const review = completedEnrolment
@@ -244,7 +240,6 @@ export default function ActivityScreen() {
           setData({
             sets,
             sessions,
-            weekProgress,
             streak,
             hideStreak,
             hideAchievements,
@@ -486,12 +481,12 @@ export default function ActivityScreen() {
           <>
             {highlights}
 
-            {data.weekProgress.planned > 0 ? (
-              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                This week: {data.streak.doneThisWeek} of {data.weekProgress.planned}{' '}
-                {data.weekProgress.planned === 1 ? 'workout' : 'workouts'}
-              </AppText>
-            ) : null}
+            <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+              {fillCopy(streakCopy.this_week_progress, {
+                done: data.streak.doneThisWeek,
+                target: data.streak.targetThisWeek,
+              })}
+            </AppText>
 
             {data.hideStreak ? null : <StreakCard streak={data.streak} />}
 

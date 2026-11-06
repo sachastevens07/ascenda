@@ -44,6 +44,7 @@ import {
   fetchFinishedSessionMeta,
   fetchStreakGoal,
   getWeeklyStreak,
+  normalizeWeeklyTarget,
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import {
@@ -62,12 +63,11 @@ import {
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { billingReminderCopy, fillCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners } from '@/lib/copy';
+import { billingReminderCopy, fillCopy, nextSessionMenuCopy, routineActionsCopy, streakCopy, streakWeeksLabel, subscriptionBanners } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { ensureSubscribed } from '@/lib/paywall';
-import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanProgress } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
@@ -133,7 +133,6 @@ type HomeData = {
   missingSql: boolean;
   activeSession: Session | null;
   ownedWorkouts: number;
-  weekProgress: WeekPlanProgress;
   streak: WeeklyStreak;
   hideStreak: boolean;
   hideQuote: boolean;
@@ -223,7 +222,6 @@ export default function HomeScreen() {
             enrolment,
             activeSession,
             ownedWorkouts,
-            weekProgress,
             challenges,
             progress,
             sessions,
@@ -240,7 +238,6 @@ export default function HomeScreen() {
             fetchActiveEnrolment(),
             fetchActiveSession(),
             countOwnedCustomWorkouts(),
-            fetchThisWeekProgress().catch(() => ({ completed: 0, planned: 0 })),
             fetchChallenges().catch(() => []),
             fetchRoutineProgressMap().catch(() => ({})),
             fetchFinishedSessionMeta().catch(() => []),
@@ -271,12 +268,12 @@ export default function HomeScreen() {
             lastDayId = last?.routine_day_id ?? last?.programme_day_id ?? null;
             next = routine ? getNextRoutineDay(routine, enrolment, lastDayId) : null;
           }
-          const from = sessions[0]?.date ?? toIso(new Date());
-          const plannedByWeek = await fetchPlannedCountsByWeek(from, toIso(new Date())).catch(
-            () => new Map<string, number>()
+          const streak = getWeeklyStreak(
+            sessions,
+            normalizeWeeklyTarget(answers?.days_per_week),
+            streakGoal,
+            restWeeks
           );
-          const fallbackTarget = answers?.days_per_week || enrolment?.routine.days_per_week || 3;
-          const streak = getWeeklyStreak(sessions, plannedByWeek, fallbackTarget, streakGoal, restWeeks);
           void syncRestWeeksBanked(streak.restWeeksBanked);
           const welcomeBack = await resolveWelcomeBackOffer({
             sessions,
@@ -311,7 +308,6 @@ export default function HomeScreen() {
             missingSql,
             activeSession,
             ownedWorkouts,
-            weekProgress,
             streak,
             hideStreak,
             hideQuote,
@@ -576,14 +572,13 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, weekProgress, streak, hideStreak, welcomeBack, handOff, challenge, progress, learn, quotes } =
+  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, streak, hideStreak, welcomeBack, handOff, challenge, progress, learn, quotes } =
     data;
   const quote = pickDailyQuote(quotes);
   const showQuote = !quoteHidden;
   const inProgress = Boolean(activeSession);
-  const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
-  const showWeekCard =
-    weekProgress.planned > 0 || (!hideStreak && (streak.current > 0 || streak.weeksTrained > 0));
+  const weekRatio = streak.targetThisWeek > 0 ? streak.doneThisWeek / streak.targetThisWeek : 0;
+  const showWeekCard = streak.targetThisWeek > 0;
   const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
   const usedPhotos = new Set<string>();
   const nextThumb =
@@ -783,30 +778,33 @@ export default function HomeScreen() {
           <View style={[styles.weekCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
             <ProgressRing progress={weekRatio} size={56} stroke={6}>
               <AppText variant="caption" style={{ color: colours.ink }}>
-                {weekProgress.completed}/{weekProgress.planned || 0}
+                {streak.doneThisWeek}/{streak.targetThisWeek}
               </AppText>
             </ProgressRing>
             <View style={styles.flex}>
-              {weekProgress.planned > 0 ? (
-                <AppText variant="title3" style={{ color: colours.ink }}>
-                  {weekProgress.completed} of {weekProgress.planned}{' '}
-                  {weekProgress.planned === 1 ? 'workout' : 'workouts'}
-                </AppText>
-              ) : (
-                <AppText variant="title3" style={{ color: colours.ink }}>This week</AppText>
-              )}
+              <AppText variant="title3" style={{ color: colours.ink }}>
+                {fillCopy(streakCopy.this_week_progress, {
+                  done: streak.doneThisWeek,
+                  target: streak.targetThisWeek,
+                })}
+              </AppText>
+              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
+                {streak.goldThisWeek
+                  ? streakCopy.this_week_gold
+                  : streak.hitThisWeek
+                    ? streakCopy.this_week_counted
+                    : streakCopy.this_week_none_yet}
+              </AppText>
               {hideStreak ? null : (
                 <View style={styles.streakBlock}>
                   <View style={styles.streakRow}>
                     <Ionicons name="flame" size={16} color={colours.accent} />
                     <AppText variant="bodySm" style={{ color: colours.accent }}>
-                      {streak.current === 0
-                        ? 'Start a streak'
-                        : `Current run: ${streak.current} ${streak.current === 1 ? 'week' : 'weeks'}`}
+                      {streakCopy.current_run}: {streakWeeksLabel(streak.current)}
                     </AppText>
                   </View>
                   <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                    Weeks trained: {streak.weeksTrained}
+                    {streakCopy.weeks_trained}: {streak.weeksTrained}
                   </AppText>
                 </View>
               )}

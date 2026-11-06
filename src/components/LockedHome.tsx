@@ -18,6 +18,7 @@ import {
   fetchFinishedSessionMeta,
   fetchStreakGoal,
   getWeeklyStreak,
+  normalizeWeeklyTarget,
 } from '@/lib/activityStats';
 import { fillCopy, lockedHomeCopy, referCopy } from '@/lib/copy';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
@@ -128,8 +129,7 @@ export function LockedHome() {
           });
           const streak = getWeeklyStreak(
             sessions,
-            new Map(),
-            answers?.days_per_week ?? 3,
+            normalizeWeeklyTarget(answers?.days_per_week),
             streakGoal,
             restWeeks
           );

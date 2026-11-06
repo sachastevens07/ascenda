@@ -49,7 +49,7 @@ Git: `main`, ahead of origin. User is Sacha.
 - **X5** (6 Nov 2026) Onboarding v2 from `content/onboarding/onboarding.json`. Age first with the inline under-18 block (Continue disabled, nothing stored). Varied inputs, progress bar, Reanimated 250 ms transitions. Haptics are a no-op until `expo-haptics` is confirmed. Answers go in `profiles.onboarding_answers`. Recommendation and why-lines follow the JSON rules. Strength estimate is `load_increment_kg × floor(exposures / 3)` from the routine file, never hard-coded. Ends: building plan, plan reveal, safety, paywall, first session. SQL: `supabase/onboarding_x5.sql` (not run). Logger, progression and swaps were not touched. Did not add `expo-haptics`. Added `react-native-reanimated` as named in the task.
 - **C3** (6 Nov 2026) DESIGN 9.2 paywall, locked home on every tab, trial/grace banners, expired Welcome back with read-only history and export. Prices from RevenueCat. Close never opens a second paywall. No new SQL.
 - **C1** (6 Nov 2026) How to cancel from microcopy on the paywall and Profile. Manage subscription is one tap to Apple settings. Trial-ending push (2 days) and annual renewal push/banner (7 days) use notification copy from `/content`. Pushes only fire if permission is already granted. No countdowns. No new SQL.
-- **H1** Streak: one session counts the week; full target is a gold week; rest weeks (earn 1 per 4, bank 2); repair with an extra session; weeks trained never resets; Profile can hide it.
+- **H1** Streak: one session counts the week; Y is onboarding days-per-week (W7); gold week when she hits Y; rest weeks (earn 1 per 4, bank 2); repair with an extra session; weeks trained never resets; Profile can hide it. Copy from `content/microcopy` streak.
 - **H2** Welcome-back card after a full week away. Lighter session / restart week / lighter routine. Back on track badge.
 - **H3** Planner-linked reminders after first session. Profile Notifications toggles. Copy is “X is ready when you are”. Reused `expo-notifications`.
 - **H4** What’s next in the last two weeks; on completion, Start on Monday.
@@ -82,7 +82,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **17. S4** done this pass. Wait for Sacha to say "next". The next unchecked item is **22. H6**. Do not start the next unchecked box until she says so.
+Current: **18. H1** done this pass. Wait for Sacha to say "next". The next unchecked item is **22. H6**. Do not start the next unchecked box until she says so.
 
 The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -116,7 +116,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **17. S4** Switch routine and End routine (6 Nov 2026). On the current plan page ⋯ and the Home next-session ⋯: Switch (opens Programmes) and End. Ending uses `routine_actions` copy (history, PBs and awards stay safe) and marks the enrolment abandoned, or complete if every session is already logged, then clears future planned sessions from that routine. Starting a different plan while one is active uses the Switch confirmation, then `startRoutine` ends the old enrolment and starts the new one. Hard paywall still applies (no per-routine Pro gate). No new SQL. Logger, progression and swaps were not touched. Did not add a library.
 
 ### Stage 4: Habit and retention
-- [x] **18. H1** Streak rework is in the app (weeks trained, current run, gold weeks, rest weeks, repair). Partly against the new rule: Y still comes from the planner, not her onboarding days-per-week. Cardio does not count yet.
+- [x] **18. H1** Streak rework (6 Nov 2026). Y is her onboarding days-per-week (W7), not planned sessions. One qualifying session counts the week; hitting Y is a gold week. Strength and cardio always count; stretch and recovery count from 10 minutes. Weeks trained never resets. Current run, gold weeks and rest weeks (1 per 4 counted, bank 2) show on Home and Activity. Rest weeks can be planned in the Planner or applied on the next Monday. Repair is `max(Y, 1) + 1` sessions the following week. Profile can hide the streak. Copy from `content/microcopy` `strings.streak` (no guilt). SQL: `supabase/streak_h1.sql` (not confirmed run; rest weeks also save on-device if the table is missing). Logger, progression and swaps were not touched. Did not add a library. The three-segment week ring stays for W7.
 - [x] **19. H2** Welcome-back card and Back on track. The content routine `welcome-back-4-week-restart` is not loaded.
 - [x] **20. H3** Planner reminders. `expo-notifications` was already in the project.
 - [x] **21. H4** What's next, then Start on Monday.
@@ -207,7 +207,7 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 - M1: WorkoutX terms followed from their public docs (AGENTS still has the paste placeholder): store ids not URLs; reuse signed links in memory until they expire (~24h); do not download or re-host files; key only in the Edge Function secret (`X-WorkoutX-Key` header). No on-screen attribution in their API docs. Monthly views depend on the plan; `media_usage` stores integer headers only. Added `expo-video` for tap-to-play. Sacha deferred WorkoutX sign-up on 6 Nov 2026; play UI stays off until matches exist. Swap engine and double-progression unchanged.
 - N1 disclaimer is international v2 (doctor, local emergency number). Body stays in `src/lib/disclaimer.ts`; bump `DISCLAIMER_VERSION` when it changes. Surrounding strings from microcopy (safety). Safety after 18+, before goals. First-session sheet uses the 4 AGENTS bullets (no GP) and microcopy "Got it". Footer only on routine detail and Learn articles. No extra font for “Train safely”.
 - N4 keeps `goal` / `main_goal` columns; `main_goals` is source of truth. Goal ids match `content/onboarding` (`build_strength`, `lose_body_fat`, …). Old saved ids are mapped when read. Lose body fat is allowed; no calorie/diet response.
-- H1: gold weeks earn rest weeks. Repair = `max(target, 1) + 1` sessions the following week. Only rest rows stored in `streak_weeks`. `accentSoft` added to the theme.
+- H1: Y is onboarding days-per-week. Counted weeks (any session) earn rest weeks (1 per 4, bank 2). Repair = `max(Y, 1) + 1` sessions the following week. Only rest rows stored in `streak_weeks`. Copy from microcopy streak. `accentSoft` added to the theme.
 - H2 trigger is a full calendar week with no finished session, not rest-week status. Lighter session: `max(1, sets - 1)` and last weight × 0.9 to 0.5 kg.
 - H3 reuses `expo-notifications`. Time picker is hourly chips. Reminders default off. Offers and news never send a push.
 - H5: `posthog-react-native`, EU host, `EXPO_PUBLIC_POSTHOG_API_KEY` (`phc_…`) + `EXPO_PUBLIC_POSTHOG_HOST`. No PostHogProvider / autocapture. `set_ticked` has no weight/reps/exercise id.
