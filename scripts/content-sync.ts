@@ -454,6 +454,7 @@ async function main(): Promise<void> {
   reportOnboardingGoals();
   reportSafetyCopy();
   reportHardPaywall();
+  reportAnalytics();
 
   reportWarmups();
   reportAchievements();
@@ -512,6 +513,15 @@ function reportHardPaywall(): void {
   line('  Access is the `ascenda_pro` entitlement via useSubscription.');
   line('  Server table: public.subscriptions, written only by the RevenueCat webhook.');
   line('  Live sync does not write subscriptions or is_pro.');
+  line();
+}
+
+function reportAnalytics(): void {
+  line('analytics  ←  H5 (bundled in src/lib/analytics.ts). Not a /content file.');
+  line('  Events: onboarding_completed, disclaimer_accepted, paywall_viewed, trial_started, trial_converted, subscription_started, session_started, session_completed, set_ticked, planned_week_missed, rest_week_used (unused; rest weeks removed), streak_repaired, welcome_back_shown, welcome_back_completed, reminder_sent, reminder_opened, routine_completed, next_routine_started, learn_article_opened, ai_feature_used, ai_result_accepted, ai_result_rejected, ai_limit_reached, ai_fallback_used.');
+  line('  Identify: user id + plan (none | trial | active | grace | expired). Never name, email, health, photos or free text.');
+  line('  AI events are named now; call sites wait for v2.5. Never send prompt or answer text.');
+  line('  Dashboards are built in the PostHog EU UI (see PROGRESS.md). Live sync does not write events.');
   line();
 }
 

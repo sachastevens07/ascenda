@@ -16,7 +16,7 @@ import Purchases, {
   type PurchasesStoreProduct,
 } from 'react-native-purchases';
 
-import { trackOnce } from '@/lib/analytics';
+import { trackPaidPlan, trackTrialStarted } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 import { billingReminderCopy, fillCopy } from '@/lib/copy';
 import { useDevTools } from '@/lib/devFlags';
@@ -424,9 +424,15 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   }, [isLoading, trialReminderAt, renewalReminderAt, realStatus.priceString]);
 
   useEffect(() => {
-    if (isLoading || !userId || !realStatus.trialEndsAt) return;
-    void trackOnce(`trial_started:${realStatus.trialEndsAt.toISOString()}`, 'trial_started');
-  }, [isLoading, userId, realStatus.trialEndsAt]);
+    if (isLoading || !userId) return;
+    const product = realStatus.isAnnual ? 'annual' : 'monthly';
+    if (realStatus.status === 'trial' && realStatus.trialEndsAt) {
+      void trackTrialStarted(userId, product, realStatus.trialEndsAt);
+    }
+    if (realStatus.status === 'active') {
+      void trackPaidPlan(userId, product);
+    }
+  }, [isLoading, userId, realStatus.status, realStatus.trialEndsAt, realStatus.isAnnual]);
 
   const setDevOverride = useCallback((value: DevOverride) => {
     setDevOverrideState(value);

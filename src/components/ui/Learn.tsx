@@ -15,7 +15,6 @@ import { AppText } from '@/components/ui/AppText';
 import { CoverPlaceholder } from '@/components/ui/Cards';
 import { SectionHeader } from '@/components/ui/List';
 import { useTheme } from '@/constants/theme';
-import { trackLearnArticleOpened } from '@/lib/analytics';
 import {
   LEARN_CATEGORY_COVERS,
   LEARN_CATEGORY_LABELS,
@@ -30,9 +29,9 @@ import {
   type LearnArticle,
   type LearnCategory,
 } from '@/lib/learn';
+
 export function openLearnArticle(article: LearnArticle): void {
   void recordArticleOpened(article.id);
-  trackLearnArticleOpened(article.id);
   router.push({ pathname: '/learn/[id]', params: { id: article.id } } as Href);
 }
 
