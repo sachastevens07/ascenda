@@ -42,6 +42,9 @@ export type PlannerDayView = {
   exercises: string[];
   completed: boolean;
   kind: PlannerDayKind;
+  /** Estimate for reminder copy. Null on empty days. */
+  sessionMinutes: number | null;
+  isStretch: boolean;
 };
 
 export type PlannerWeek = {
@@ -625,6 +628,8 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
   let title: string | null = null;
   let subtitle: string | null = null;
   const exercises: string[] = [];
+  let sessionMinutes: number | null = null;
+  let isStretch = false;
 
   if (plan?.status === 'rest') {
     kind = 'rest';
@@ -636,6 +641,7 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     title = workout?.name ?? workoutNames.get(plan.custom_workout_id) ?? 'Custom workout';
     subtitle = 'Your workout';
     exercises.push(...(workout?.exercises.map((item) => item.exercise.name) ?? []));
+    sessionMinutes = exercises.length > 0 ? Math.max(20, exercises.length * 8) : null;
   } else if (plan?.routine_day_id) {
     kind = 'routine';
     const day = routineDays.find((item) => item.id === plan.routine_day_id);
@@ -646,6 +652,8 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
         ? `${lookups.enrolment.routine.name} · week ${weekNumber}`
         : (lookups.enrolment?.routine.name ?? 'Routine');
     exercises.push(...(day?.exercises.map((item) => item.exercise.name) ?? []));
+    sessionMinutes = lookups.enrolment?.routine.session_minutes ?? null;
+    isStretch = lookups.routine?.type === 'stretch' || day?.sessionType === 'recovery';
   }
 
   return {
@@ -661,6 +669,8 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     exercises,
     completed,
     kind,
+    sessionMinutes,
+    isStretch,
   };
 }
 

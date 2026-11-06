@@ -103,6 +103,19 @@ export const billingReminderCopy = {
   renewal: notifications.renewal_reminder,
 } as const;
 
+/** H3 planner reminders. Bundled from content/microcopy. */
+export const reminderCopy = {
+  primer_title: notifications.primer_title,
+  primer_body: notifications.primer_body,
+  primer_yes: notifications.primer_yes,
+  primer_no: notifications.primer_no,
+  session_reminders: notifications.session_reminders,
+  stretch_reminder: notifications.stretch_reminder,
+  weekly_summary: notifications.weekly_summary,
+  weekly_summary_with_stats: notifications.weekly_summary_with_stats,
+  settings: notifications.settings,
+} as const;
+
 /** Logger strings from content/microcopy. Bundled, not loaded by content:sync. */
 export const loggerCopy = microcopy.strings.logger;
 

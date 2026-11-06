@@ -27,6 +27,7 @@ import {
   lockedHomeCopy,
   paywallScreenCopy,
   planSettingsTitle,
+  reminderCopy,
   restoreCopy,
   safetySettingsTitle,
   subscriptionStatusCopy,
@@ -698,39 +699,35 @@ export default function ProfileScreen() {
       </SettingsGroup>
 
       {reminderPrefs ? (
-        <SettingsGroup title="Notifications">
+        <SettingsGroup title={reminderCopy.settings.title}>
           <SettingsRow
-            title="Session reminders"
+            title={reminderCopy.settings.session_reminders}
             subtitle={
               !notificationsAvailable()
-                ? 'Need a development build on this phone'
+                ? reminderCopy.settings.system_off
                 : reminderPrefs.sessionReminders
-                  ? 'On days you have something planned'
+                  ? reminderCopy.settings.session_reminders_help
                   : 'Off'
             }
             onPress={() => void toggleSessionReminders()}
           />
           <SettingsRow
-            title="Weekly summary"
-            subtitle={
-              reminderPrefs.weeklySummary
-                ? 'Sunday morning, when you are ready'
-                : 'A Sunday nudge to look at next week'
-            }
+            title={reminderCopy.settings.weekly_summary}
+            subtitle={reminderPrefs.weeklySummary ? 'On' : 'Off'}
             onPress={() => void toggleWeeklySummary()}
           />
           <SettingsRow
-            title="Offers and news"
+            title={reminderCopy.settings.offers}
             subtitle={
               reminderPrefs.marketingOptIn
-                ? 'On. Kept separate from training. Nothing is sent yet.'
-                : 'Kept separate from training. Nothing is sent yet.'
+                ? `On. ${reminderCopy.settings.offers_help}`
+                : reminderCopy.settings.offers_help
             }
             onPress={() => void toggleMarketing()}
           />
           <View ref={timeRowRef} collapsable={false}>
             <SettingsRow
-              title="Default reminder time"
+              title={reminderCopy.settings.default_time}
               subtitle={formatReminderClock(defaultTime)}
               onPress={openDefaultTimeMenu}
               last

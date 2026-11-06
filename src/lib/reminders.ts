@@ -1,12 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
 import { track } from '@/lib/analytics';
+import { fillCopy, reminderCopy } from '@/lib/copy';
 import {
   addDays,
   loadPlannerRange,
   parseIsoDate,
+  startOfWeekMonday,
   toIso,
   updatePlannerReminderTime,
   type PlannerDayView,
@@ -248,12 +250,69 @@ function nextSundays(count: number, now = new Date()): Date[] {
   return sundays;
 }
 
-function sessionCopy(day: PlannerDayView): { title: string; body: string } {
-  const name = day.title?.trim() || 'Your session';
+function reminderTemplateIndex(iso: string, count: number): number {
+  const [year, month, day] = iso.split('-').map(Number);
+  if (!year || !month || !day || count <= 0) return 0;
+  return Math.abs(year * 400 + month * 32 + day) % count;
+}
+
+function fillReminder(template: { title: string; body: string }, vars: Record<string, string | number>) {
   return {
-    title: name,
-    body: `${name} is ready when you are`,
+    title: fillCopy(template.title, vars),
+    body: fillCopy(template.body, vars),
   };
+}
+
+/** Rotate the four session messages by date. Stretch/recovery days use the stretch line. */
+export function sessionReminderCopy(day: PlannerDayView): { title: string; body: string } {
+  const name = day.title?.trim() || 'Your session';
+  const minutes = day.sessionMinutes ?? (day.isStretch ? 10 : 40);
+  const vars = { session_name: name, stretch_name: name, minutes };
+  if (day.isStretch) return fillReminder(reminderCopy.stretch_reminder, vars);
+  const templates = reminderCopy.session_reminders;
+  const index = reminderTemplateIndex(day.iso, templates.length);
+  return fillReminder(templates[index] ?? templates[0], vars);
+}
+
+function shouldRemindOnDay(day: PlannerDayView): boolean {
+  if (!day.plan || day.plan.status !== 'planned') return false;
+  if (day.kind === 'rest') return false;
+  if (day.kind !== 'routine' && day.kind !== 'custom') return false;
+  if (day.completed) return false;
+  return true;
+}
+
+async function lastWeekSessionCount(now = new Date()): Promise<number> {
+  const thisMonday = startOfWeekMonday(now);
+  const from = toIso(addDays(thisMonday, -7));
+  const to = toIso(addDays(thisMonday, -1));
+  const { count, error } = await supabase
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .not('completed_at', 'is', null)
+    .gte('date', from)
+    .lte('date', to);
+  if (error) return 0;
+  return count ?? 0;
+}
+
+function weeklySummaryCopy(sessionsLastWeek: number): { title: string; body: string } {
+  if (sessionsLastWeek > 0) {
+    return fillReminder(reminderCopy.weekly_summary_with_stats, { sessions: sessionsLastWeek });
+  }
+  return reminderCopy.weekly_summary;
+}
+
+function showPermissionOffDialog(): void {
+  showDialog(reminderCopy.settings.session_reminders, reminderCopy.settings.system_off, [
+    {
+      text: reminderCopy.settings.open_settings,
+      onPress: () => {
+        void Linking.openSettings();
+      },
+    },
+    { text: reminderCopy.primer_no, style: 'cancel' },
+  ]);
 }
 
 export async function syncPlannerReminders(): Promise<void> {
@@ -268,16 +327,17 @@ export async function syncPlannerReminders(): Promise<void> {
   if (prefs.sessionReminders) {
     const from = new Date();
     const range = await loadPlannerRange(from, addDays(from, HORIZON_DAYS - 1)).catch(() => null);
+    const scheduledDays = new Set<string>();
     for (const day of range?.days ?? []) {
-      if (!day.plan || day.plan.status !== 'planned') continue;
-      if (day.kind !== 'routine' && day.kind !== 'custom') continue;
-      if (day.completed) continue;
+      if (!shouldRemindOnDay(day) || !day.plan) continue;
+      if (scheduledDays.has(day.iso)) continue;
       const fireAt = dateAtTime(day.iso, reminderTimeForDay(day, prefs));
       if (fireAt.getTime() <= Date.now()) continue;
-      const copy = sessionCopy(day);
+      scheduledDays.add(day.iso);
+      const copy = sessionReminderCopy(day);
       try {
         await Notifications.scheduleNotificationAsync({
-          identifier: `${SESSION_PREFIX}${day.plan.id}`,
+          identifier: `${SESSION_PREFIX}${day.iso}`,
           content: {
             title: copy.title,
             body: copy.body,
@@ -296,13 +356,15 @@ export async function syncPlannerReminders(): Promise<void> {
   }
 
   if (prefs.weeklySummary) {
+    const sessionsLastWeek = await lastWeekSessionCount().catch(() => 0);
+    const copy = weeklySummaryCopy(sessionsLastWeek);
     for (const sunday of nextSundays(SUNDAYS_AHEAD)) {
       try {
         await Notifications.scheduleNotificationAsync({
           identifier: `${WEEKLY_PREFIX}${toIso(sunday)}`,
           content: {
-            title: 'Plan your week',
-            body: 'Your planner is ready whenever you are.',
+            title: copy.title,
+            body: copy.body,
             data: { type: 'weekly-summary' },
           },
           trigger: {
@@ -333,10 +395,7 @@ export async function enableSessionReminders(): Promise<boolean> {
   }
   const granted = await ensureSessionReminderPermission();
   if (!granted) {
-    showDialog(
-      'Reminders are off on this phone',
-      'You can turn them on in your phone settings, then come back to Profile, Notifications.'
-    );
+    showPermissionOffDialog();
     return false;
   }
   const last = await fetchLastSessionReminderTime();
@@ -369,10 +428,7 @@ export async function setWeeklySummaryEnabled(on: boolean): Promise<boolean> {
     }
     const granted = await ensureSessionReminderPermission();
     if (!granted) {
-      showDialog(
-        'Reminders are off on this phone',
-        'You can turn them on in your phone settings, then come back to Profile, Notifications.'
-      );
+      showPermissionOffDialog();
       return false;
     }
   }
@@ -406,7 +462,7 @@ let askLock = false;
 
 /** After her first finished session, or next open if she already has history. */
 export async function maybeAskSessionReminders(): Promise<void> {
-  if (askLock || !Notifications) return;
+  if (askLock) return;
   askLock = true;
   try {
     const asked = await AsyncStorage.getItem(ASKED_KEY);
@@ -422,19 +478,15 @@ export async function maybeAskSessionReminders(): Promise<void> {
       return;
     }
     await markAsked();
-    showDialog(
-      'Session reminders',
-      'We can nudge you on days you have something planned, at a time you pick. Nothing on rest days, and never about streaks.',
-      [
-        {
-          text: 'Turn on',
-          onPress: () => {
-            void enableSessionReminders();
-          },
+    showDialog(reminderCopy.primer_title, reminderCopy.primer_body, [
+      {
+        text: reminderCopy.primer_yes,
+        onPress: () => {
+          void enableSessionReminders();
         },
-        { text: 'Not now', style: 'cancel' },
-      ]
-    );
+      },
+      { text: reminderCopy.primer_no, style: 'cancel' },
+    ]);
   } catch {
     askLock = false;
   }
@@ -480,19 +532,20 @@ export async function scheduleTestSessionReminder(): Promise<boolean> {
   }
   const granted = await ensureSessionReminderPermission();
   if (!granted) {
-    showDialog(
-      'Reminders are off on this phone',
-      'Turn notifications on in your phone settings, then try again.'
-    );
+    showPermissionOffDialog();
     return false;
   }
   await ensureSessionReminderChannel();
   await Notifications.cancelScheduledNotificationAsync(TEST_ID);
+  const sample = fillReminder(reminderCopy.session_reminders[0], {
+    session_name: 'Full body A',
+    minutes: 45,
+  });
   await Notifications.scheduleNotificationAsync({
     identifier: TEST_ID,
     content: {
-      title: 'Full body A',
-      body: 'Full body A is ready when you are',
+      title: sample.title,
+      body: sample.body,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
