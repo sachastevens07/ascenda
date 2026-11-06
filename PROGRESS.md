@@ -45,8 +45,9 @@ Git: `main`, ahead of origin. User is Sacha.
 - **N3** Next-session / Start session opens the logger. Swap, remove, add/remove set, different day live there. Timer starts on open. End session discards. No add-exercise on routine sessions. Weighted sets need a weight.
 - **N1** (6 Nov 2026) Full safety text in `src/lib/disclaimer.ts` (v2, international). Surrounding strings from `content/microcopy` safety. Onboarding checkbox, re-prompt on version change, Profile About, first-session sheet, footer on routine pages and Learn articles only. SQL: `supabase/disclaimer.sql` (not run).
 - **N4** (6 Nov 2026) Up to 3 goals from `content/onboarding/onboarding.json`; first is Main. Profile → Your answers can edit them. `profiles.main_goals text[]`. SQL: `supabase/main_goals.sql` (not run).
-- **P1** (6 Nov 2026) Hard paywall. One `ascenda_pro` check in `useSubscription`. Badges, locked previews, workout cap and Unlock with Pro gone. `subscriptions` + RevenueCat webhook. SQL: `supabase/subscriptions_p1.sql` (not run). Paywall restyle and locked home are C3.
+- **P1** (6 Nov 2026) Hard paywall. One `ascenda_pro` check in `useSubscription`. Badges, locked previews, workout cap and Unlock with Pro gone. `subscriptions` + RevenueCat webhook. SQL: `supabase/subscriptions_p1.sql` (not run). Paywall restyle and locked home are **C3** (done).
 - **X5** (6 Nov 2026) Onboarding v2 from `content/onboarding/onboarding.json`. Age first with the inline under-18 block (Continue disabled, nothing stored). Varied inputs, progress bar, Reanimated 250 ms transitions. Haptics are a no-op until `expo-haptics` is confirmed. Answers go in `profiles.onboarding_answers`. Recommendation and why-lines follow the JSON rules. Strength estimate is `load_increment_kg × floor(exposures / 3)` from the routine file, never hard-coded. Ends: building plan, plan reveal, safety, paywall, first session. SQL: `supabase/onboarding_x5.sql` (not run). Logger, progression and swaps were not touched. Did not add `expo-haptics`. Added `react-native-reanimated` as named in the task.
+- **C3** (6 Nov 2026) DESIGN 9.2 paywall, locked home on every tab, trial/grace banners, expired Welcome back with read-only history and export. Prices from RevenueCat. Close never opens a second paywall. No new SQL.
 - **H1** Streak: one session counts the week; full target is a gold week; rest weeks (earn 1 per 4, bank 2); repair with an extra session; weeks trained never resets; Profile can hide it.
 - **H2** Welcome-back card after a full week away. Lighter session / restart week / lighter routine. Back on track badge.
 - **H3** Planner-linked reminders after first session. Profile Notifications toggles. Copy is “X is ready when you are”. Reused `expo-notifications`.
@@ -80,7 +81,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **14. X5** done this pass. Wait for Sacha to say "next". Then **15. C3**. Do not start C3 until then.
+Current: **15. C3** done this pass. Wait for Sacha to say "next". Then **16. C1**. Do not start C1 until then.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -109,7 +110,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **12. N1** Full safety disclaimer (6 Nov 2026). Body in `src/lib/disclaimer.ts`. Surrounding strings from `content/microcopy` `strings.safety`. Onboarding screen with required checkbox, `disclaimer_version` / `disclaimer_accepted_at`, re-ask when the version changes, first-session sheet with 4 bullets, Profile → Safety and disclaimer, footer on routine pages and Learn articles only. SQL: `supabase/disclaimer.sql` (not run).
 - [x] **13. P1** Hard paywall (6 Nov 2026). Single `ascenda_pro` check in `useSubscription`. Pro badges, FreeBadges, locked previews, custom workout limits and Unlock with Pro paywalls removed from the app. `is_pro` columns stay unused. `subscriptions` table + RevenueCat webhook Edge Function. RLS hides week 2+ and exercise prescriptions without trial/active/grace. Plan-reveal summaries stay readable. Profile → Plan and subscription uses microcopy status chips, Manage, Restore. Paywall screen and locked home stay for **C3**. SQL: `supabase/subscriptions_p1.sql` (not run).
 - [x] **14. X5** Onboarding v2 from `content/onboarding/onboarding.json` (6 Nov 2026). Screens, why_lines, recommendation rules and `strength_estimate` are bundled from that file. Age is first, with the inline under-18 block and Continue disabled; nothing is stored and no analytics fire for that choice. Varied inputs, progress bar, Reanimated transitions. `expo-haptics` was not added (ask first); selection feedback is a no-op. `profiles.onboarding_answers` jsonb plus `age_band` and `cardio_preference`. The milestone estimate uses the file formula on the recommended routine's first checkpoint lift (first estimate uses the default routine for her experience). Ends: building plan, plan reveal, N1 safety, existing paywall, first session. SQL: `supabase/onboarding_x5.sql` (not run). Logger, progression and swaps were not touched.
-- [ ] **15. C3** Paywall screen, locked home, trial, grace and expired states. Not started. The current paywall is the freemium screen.
+- [x] **15. C3** Paywall, locked home and subscription states (6 Nov 2026). Paywall is a full-screen sheet (close × top-left always visible) using `content/microcopy` paywall strings. Prices, trial length and “about £X a month” come from RevenueCat, never hard-coded. Annual is pre-selected; “Best value” only if annual is cheaper than 12× monthly. Closing the paywall lands on locked home, never a second paywall. Locked home covers every tab when status is `none` or `expired` (new plan card, or Welcome back + stats + See your history + Export if she has sessions). Profile, history, export, terms and privacy stay reachable. Trial-ending banner (last 2 days, dismissible) and grace banner on Home. Profile chips already from P1. Listener still updates instantly. Dev override cycle: Real / No subscription / Subscribed / Trial ending / Grace / Expired. No new SQL. Logger, progression and swaps were not changed. Did not add a library.
 - [ ] **16. C1** Subscription compliance. Partly done: a local trial-ending reminder exists. Price, billing period, charge date, cancel path and renewal reminders are not the C1 screen.
 - [x] **17. S4** Switch routine and End routine. History is kept.
 
@@ -211,7 +212,8 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 - H5: `posthog-react-native`, EU host, `EXPO_PUBLIC_POSTHOG_API_KEY` (`phc_…`) + `EXPO_PUBLIC_POSTHOG_HOST`. No PostHogProvider / autocapture. `set_ticked` has no weight/reps/exercise id.
 - H6: badges computed live; no S6 definition tables. Tier rings are D7.
 - H7: photos off even if files exist. Consent once per device. Turning off hides the card, does not delete. After P1 there is no Pro card; photos show if she has switched them on. Delete account is in Profile → Privacy (D8).
-- P1: `useSubscription().isPro` means she has the `ascenda_pro` entitlement (trial, paid or billing grace). Status is `none` | `trial` | `active` | `grace` | `expired`. Starting or resuming a session without that entitlement opens the paywall. Onboarding always presents the paywall unless she already has access. Locked home and the DESIGN 9.2 paywall screen are C3. Until the webhook writes a `subscriptions` row, RLS treats her as not entitled (week 1 overview still readable; `/content` overlay may still fill later weeks on device). Tester insert is commented at the bottom of `supabase/subscriptions_p1.sql`. Dev override storage key is `dev-access-override` so an old "Subscribed" flag is ignored. Did not add a library.
+- P1: `useSubscription().isPro` means she has the `ascenda_pro` entitlement (trial, paid or billing grace). Status is `none` | `trial` | `active` | `grace` | `expired`. Starting or resuming a session without that entitlement opens the paywall. Onboarding always presents the paywall unless she already has access. Until the webhook writes a `subscriptions` row, RLS treats her as not entitled (week 1 overview still readable; `/content` overlay may still fill later weeks on device). Tester insert is commented at the bottom of `supabase/subscriptions_p1.sql`. Dev override storage key is `dev-access-override` so an old "Subscribed" flag is ignored. Did not add a library.
+- C3: Close on the paywall always goes to locked home (tabs stay; overlay on every tab). Refer-a-friend on locked home is copy only until X6 (tap shows the terms dialog, no codes yet). History is a read-only stack screen. Hero photo uses slug `hero-paywall` (falls back to the smiling barbell cover until `hero-paywall.jpg` is uploaded). No new SQL.
 - H8: personal window on join (next Monday and next 1st only). 28 days inclusive. Catalogue `challenges.start_date` / `end_date` kept but ignored for status. Both seed challenges stay and are always joinable. Unrestyled challenge page kept. Join dates also saved in AsyncStorage if SQL is missing.
 - Primary buttons are plum. Coral is highlights only. Unrestyled screens stay cream until their design pass.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
@@ -258,3 +260,21 @@ Scan the QR with Expo Go. Use `--tunnel` if needed. After the typography pass, `
 Agents cannot run SQL. Sacha pastes into Supabase > SQL Editor. Files are idempotent; the editor’s “destructive operations” warning is expected.
 
 **Dashboard still needed:** Authentication → Email → Confirm email off until testers. RevenueCat products `ascenda_annual` and `ascenda_monthly`, entitlement `ascenda_pro`, webhook to `revenuecat-webhook`. PostHog dashboards are created in the PostHog EU UI, not in the app.
+
+**Sandbox subscription testing (C3).** Expo Go uses `EXPO_PUBLIC_REVENUECAT_TEST_KEY`. A development build uses the iOS/Android store keys. After a purchase or restore, the RevenueCat listener updates Home instantly (no restart).
+
+Real Test Store / sandbox:
+- **No subscription:** signed-in, onboarded, never purchased. Every tab shows locked home. Close on the paywall returns here, not a second paywall. Profile, Refer, Terms and Privacy still open.
+- **Trial:** buy **Annual** (7-day intro). Home, logger and tabs unlock. Profile chip is “Trial · ends …”.
+- **Trial ending:** wait until 2 days before the trial ends, or use the Dev override. Home shows a coral-wash banner with Manage; it can be dismissed.
+- **Active:** after the trial converts, or buy **Monthly**. Profile chip is “Active · renews …”.
+- **Grace:** a billing issue on a still-active entitlement. Home shows the payment-problem banner. Access stays on. Use the Dev override if the Test Store cannot fake this.
+- **Expired:** lapse or cancel and let the period end. Locked home again. If she has finished sessions it is the Welcome back layout with stats, See your history (read-only) and Export. History is never deleted.
+
+Dev tools (long-press Profile → Version, then Developer → Testing as). Tap to cycle:
+1. Real status
+2. No subscription (`none`, locked home)
+3. Subscribed (`active`)
+4. Trial ending in 2 days (`trial`, banner)
+5. Billing grace period (`grace`, banner, still unlocked)
+6. Expired (lapsed) (`expired`, locked home; Welcome back only if this account has sessions)

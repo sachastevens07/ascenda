@@ -57,11 +57,42 @@ export const restoreCopy = {
 } as const;
 
 export const paywallScreenCopy = {
+  headline_with_plan: paywall.headline_with_plan,
+  headline_fallback: paywall.headline_fallback,
   title: paywall.headline_fallback,
   body: paywall.subheadline,
+  subheadline: paywall.subheadline,
   benefits: paywall.benefits,
+  annual_title: paywall.annual_title,
+  annual_trial_line: paywall.annual_trial_line,
+  annual_monthly_equiv: paywall.annual_monthly_equiv,
+  annual_tag: paywall.annual_tag,
+  monthly_title: paywall.monthly_title,
+  monthly_line: paywall.monthly_line,
+  cta_trial: paywall.cta_trial,
+  cta_subscribe: paywall.cta_subscribe,
+  small_print_trial: paywall.small_print_trial,
+  small_print_monthly: paywall.small_print_monthly,
+  restore: paywall.restore,
+  terms: paywall.terms,
+  privacy: paywall.privacy,
+  close_a11y: paywall.close_a11y,
+  purchasing: paywall.purchasing,
   success_title: paywall.success_title,
   success_body: paywall.success_body,
+  error: paywall.error,
+} as const;
+
+export const lockedHomeCopy = microcopy.strings.locked_home;
+
+export const referCopy = microcopy.strings.refer;
+
+export const subscriptionBanners = {
+  trial_ending: subscription.banner_trial_ending,
+  trial_ending_cta: subscription.banner_trial_ending_cta,
+  grace: subscription.banner_grace,
+  grace_cta: subscription.banner_grace_cta,
+  dismiss_a11y: subscription.banner_dismiss_a11y,
 } as const;
 
 /** Logger strings from content/microcopy. Bundled, not loaded by content:sync. */

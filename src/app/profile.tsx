@@ -24,6 +24,8 @@ import { useTheme, type ThemePreference } from '@/constants/theme';
 import {
   appearanceSectionTitle,
   fillCopy,
+  lockedHomeCopy,
+  paywallScreenCopy,
   planSettingsTitle,
   restoreCopy,
   safetySettingsTitle,
@@ -586,7 +588,11 @@ export default function ProfileScreen() {
           <SettingsRow title={subscriptionStatusCopy.manage} onPress={handleManageSubscription} />
         ) : (
           <SettingsRow
-            title="Start your 7-day free trial"
+            title={
+              subscription.status === 'expired'
+                ? lockedHomeCopy.lapsed.cta
+                : paywallScreenCopy.cta_trial
+            }
             onPress={() => openPaywall('onboarding')}
           />
         )}

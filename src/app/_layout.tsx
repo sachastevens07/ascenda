@@ -1,4 +1,3 @@
-import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import { Redirect, Stack, usePathname, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -22,6 +21,7 @@ import { DevToolsProvider, useDevTools } from '@/lib/devFlags';
 import { needsDisclaimerAcceptance } from '@/lib/disclaimer';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
 import { registerReminderAnalytics } from '@/lib/reminders';
+import { isUnlockedWithoutSubscription } from '@/lib/paywall';
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription';
 import { hydrateDefaultRestSeconds } from '@/lib/restTimer';
 import { supabase } from '@/lib/supabase';
@@ -127,6 +127,7 @@ function PrefsHydrate() {
 function RootNavigator() {
   const { session, isLoading } = useAuth();
   const profile = useProfile();
+  const subscription = useSubscription();
   const { colours } = useTheme();
   const pathname = usePathname();
 
@@ -146,12 +147,26 @@ function RootNavigator() {
     return <AcceptDisclaimerScreen />;
   }
 
-  if (session && !isOnboarded && pathname !== '/onboarding') {
+  if (session && isOnboarded && !needsDisclaimerGate && !subscription.isLoading && !subscription.isPro) {
+    if (!isUnlockedWithoutSubscription(pathname)) {
+      return <Redirect href={'/' as Href} />;
+    }
+  }
+
+  if (session && !isOnboarded && pathname !== '/onboarding' && pathname !== '/paywall') {
     return <Redirect href={'/onboarding' as Href} />;
   }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="paywall"
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: true,
+          animation: 'slide_from_bottom',
+        }}
+      />
       <Stack.Protected guard={!!session && isOnboarded && !needsDisclaimerGate}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
@@ -205,14 +220,7 @@ function RootNavigator() {
         <Stack.Screen name="challenges" options={{ headerShown: false }} />
         <Stack.Screen name="learn" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="paywall"
-          options={{
-            presentation: 'modal',
-            gestureEnabled: true,
-            animation: 'slide_from_bottom',
-          }}
-        />
+        <Stack.Screen name="history" options={{ headerShown: false }} />
         <Stack.Screen
           name="safety"
           options={{

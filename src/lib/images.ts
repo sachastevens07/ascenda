@@ -192,6 +192,13 @@ export const IMAGE_CATALOGUE: Record<string, ImageCatalogueEntry> = {
     '4534662',
     require('../../assets/covers/cover-stretch-hips.jpg')
   ),
+  'hero-paywall': entry(
+    'hero-paywall',
+    'Woman lifting dumbbells in a gym, smiling',
+    'Miguel González',
+    '14623703',
+    require('../../assets/covers/cover-barbell-strength-8.jpg')
+  ),
 };
 
 export type ContentImageKind = (typeof catalogue.images)[number]['kind'];

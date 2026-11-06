@@ -30,7 +30,7 @@ export const STORE_NAME = Platform.OS === 'ios' ? 'App Store' : 'Google Play';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REMINDER_ID = 'trial-ending';
 const REMINDER_CHANNEL_ID = 'reminders';
-const DEV_OVERRIDE_KEY = 'dev-pro-override';
+const DEV_OVERRIDE_KEY = 'dev-access-override';
 
 // Expo Go only accepts a Test Store key (test_...): it can't reach the real stores.
 const API_KEY =
@@ -55,8 +55,8 @@ export type ProStatus = {
   willRenew: boolean;
 };
 
-/** Development builds only: pretend to be free, Pro, or on a trial that ends in 2 days. */
-export const DEV_OVERRIDES = ['off', 'free', 'pro', 'trial-ending'] as const;
+/** Development builds only: pretend each subscription state for sandbox testing. */
+export const DEV_OVERRIDES = ['off', 'free', 'pro', 'trial-ending', 'grace', 'expired'] as const;
 export type DevOverride = (typeof DEV_OVERRIDES)[number];
 
 export const DEV_OVERRIDE_LABELS: Record<DevOverride, string> = {
@@ -64,6 +64,8 @@ export const DEV_OVERRIDE_LABELS: Record<DevOverride, string> = {
   free: 'No subscription',
   pro: 'Subscribed',
   'trial-ending': 'Trial ending in 2 days',
+  grace: 'Billing grace period',
+  expired: 'Expired (lapsed)',
 };
 
 type SubscriptionState = ProStatus & {
@@ -94,6 +96,14 @@ const SubscriptionContext = createContext<SubscriptionState>({
   setDevOverride: () => {},
   applyCustomerInfo: () => {},
 });
+
+type AccessSnapshot = { isPro: boolean; isLoading: boolean };
+let accessSnapshot: AccessSnapshot = { isPro: false, isLoading: true };
+
+/** Latest entitlement, including the Dev tools override. Safe to call outside React. */
+export function getSubscriptionAccess(): AccessSnapshot {
+  return accessSnapshot;
+}
 
 let configureResult: boolean | null = null;
 
@@ -147,6 +157,12 @@ function overrideStatus(value: DevOverride): ProStatus | null {
       const endsAt = new Date(Date.now() + REMINDER_DAYS_BEFORE * DAY_MS - 60_000);
       return { isPro: true, status: 'trial', trialEndsAt: endsAt, expiresAt: endsAt, willRenew: true };
     }
+    case 'grace': {
+      const endsAt = new Date(Date.now() + 3 * DAY_MS);
+      return { isPro: true, status: 'grace', trialEndsAt: null, expiresAt: endsAt, willRenew: true };
+    }
+    case 'expired':
+      return { isPro: false, status: 'expired', trialEndsAt: null, expiresAt: new Date(), willRenew: false };
   }
 }
 
@@ -258,6 +274,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SubscriptionState>(() => {
     const status = (showDevTools ? overrideStatus(devOverride) : null) ?? realStatus;
+    accessSnapshot = { isPro: status.isPro, isLoading };
     return {
       ...status,
       isLoading,

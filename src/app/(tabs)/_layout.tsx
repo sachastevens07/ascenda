@@ -4,8 +4,10 @@ import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PillTabBar, TabBarHeightProvider } from '@/components/PillTabBar';
+import { LockedHome } from '@/components/LockedHome';
+import { PillTabBar, TabBarHeightProvider, useTabBarHeight } from '@/components/PillTabBar';
 import { useTheme } from '@/constants/theme';
+import { useSubscription } from '@/lib/subscription';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -50,7 +52,28 @@ export default function TabLayout() {
             options={{ title: 'Learn', tabBarIcon: tabIcon('book', 'book-outline') }}
           />
         </TopTabs>
+        <LockedOverlay />
       </View>
     </TabBarHeightProvider>
+  );
+}
+
+function LockedOverlay() {
+  const { isPro, isLoading } = useSubscription();
+  const tabBarHeight = useTabBarHeight();
+  const { colours } = useTheme();
+  if (isLoading || isPro) return null;
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: Math.max(tabBarHeight, 72),
+        backgroundColor: colours.bg,
+      }}>
+      <LockedHome />
+    </View>
   );
 }

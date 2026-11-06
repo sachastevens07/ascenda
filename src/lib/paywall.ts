@@ -1,8 +1,10 @@
 import { router, type Href } from 'expo-router';
+import { useEffect } from 'react';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { track } from '@/lib/analytics';
 import { paywallScreenCopy } from '@/lib/copy';
+import { getSubscriptionAccess, useSubscription } from '@/lib/subscription';
 
 export const PAYWALL_REASONS = [
   'onboarding',
@@ -75,6 +77,49 @@ export function paywallCopy(reason: PaywallReason): PaywallCopy {
 export function openPaywall(reason: PaywallReason = 'general'): void {
   track('paywall_viewed', { reason });
   router.push({ pathname: '/paywall', params: { reason } } as Href);
+}
+
+/** False while status is loading or she has no trial, paid plan or billing grace. Opens the paywall. */
+export function ensureSubscribed(): boolean {
+  const { isPro, isLoading } = getSubscriptionAccess();
+  if (isLoading) return false;
+  if (isPro) return true;
+  openPaywall('onboarding');
+  return false;
+}
+
+const UNLOCKED_WITHOUT_SUB = new Set([
+  '/',
+  '/programmes',
+  '/planner',
+  '/activity',
+  '/learn',
+  '/paywall',
+  '/profile',
+  '/history',
+  '/safety',
+  '/terms',
+  '/privacy',
+  '/onboarding',
+  '/accept-disclaimer',
+  '/sign-in',
+  '/check-inbox',
+  '/auth',
+]);
+
+/** Account, legal, paywall and locked home stay reachable without a subscription. */
+export function isUnlockedWithoutSubscription(pathname: string): boolean {
+  return UNLOCKED_WITHOUT_SUB.has(pathname);
+}
+
+/** Logger and stretch player: send her to locked home if she has no access. */
+export function useSubscriptionGate(): boolean {
+  const { isPro, isLoading } = useSubscription();
+  useEffect(() => {
+    if (isLoading || isPro) return;
+    router.replace('/');
+  }, [isLoading, isPro]);
+  return isPro;
 }
 
 export function defaultPackageId(packages: PurchasesPackage[]): string | null {

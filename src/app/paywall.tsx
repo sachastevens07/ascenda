@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,17 +12,17 @@ import type { PurchasesPackage } from 'react-native-purchases';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { AppText } from '@/components/ui';
-import { colours } from '@/constants/theme';
-import { paywallScreenCopy, restoreCopy } from '@/lib/copy';
+import { AppText, HeroImage, IconButton, PrimaryButton, TextButton } from '@/components/ui';
+import { useTheme } from '@/constants/theme';
+import { fillCopy, paywallScreenCopy, restoreCopy } from '@/lib/copy';
+import { imageSourceForSlug } from '@/lib/images';
+import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
+import { recommendPlan } from '@/lib/onboardingPlan';
+import { PRO_FEATURES, defaultPackageId } from '@/lib/paywall';
+import { getQuizAnswers, useProfile } from '@/lib/profile';
+import { formatShortDate } from '@/lib/progress';
+import { fetchActiveEnrolment } from '@/lib/routines';
 import {
-  PRO_FEATURES,
-  defaultPackageId,
-  isPaywallReason,
-  paywallCopy,
-} from '@/lib/paywall';
-import {
-  REMINDER_DAYS_BEFORE,
   STORE_NAME,
   fetchProPackages,
   getFreeTrialDays,
@@ -34,11 +34,6 @@ import {
 
 type LoadState = 'loading' | 'error' | 'unavailable' | 'ready';
 
-function periodName(item: PurchasesPackage): string {
-  return item.packageType === 'ANNUAL' ? 'year' : 'month';
-}
-
-/** "Save 37%" on the yearly plan compared with paying monthly. */
 function getAnnualSaving(packages: PurchasesPackage[]): number | null {
   const annual = packages.find((item) => item.packageType === 'ANNUAL');
   const monthly = packages.find((item) => item.packageType === 'MONTHLY');
@@ -47,23 +42,59 @@ function getAnnualSaving(packages: PurchasesPackage[]): number | null {
   return saving > 0 ? saving : null;
 }
 
+function chargeDateLabel(trialDays: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + trialDays);
+  return formatShortDate(date);
+}
+
 export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ reason?: string | string[] }>();
-  const rawReason = Array.isArray(params.reason) ? params.reason[0] : params.reason;
-  const reason = isPaywallReason(rawReason) ? rawReason : 'general';
-  const copy = paywallCopy(reason);
+  const { colours, radius, spacing, shadow } = useTheme();
+  const { profile } = useProfile();
+  const answers = getQuizAnswers(profile);
   const { isAvailable, applyCustomerInfo } = useSubscription();
   const [loadState, setLoadState] = useState<LoadState>(isAvailable ? 'loading' : 'unavailable');
   const [attempt, setAttempt] = useState(0);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
+  const [routineName, setRoutineName] = useState<string | null>(null);
 
   function dismiss() {
     if (router.canGoBack()) router.back();
     else router.replace('/');
   }
+
+  useEffect(() => {
+    let isCurrent = true;
+    const draft = answers
+      ? draftFromSaved({
+          answers,
+          extras: profile?.onboarding_answers,
+          age_band: profile?.age_band,
+          cardio_preference: profile?.cardio_preference,
+          bodyweight_kg: profile?.bodyweight_kg,
+        })
+      : emptyOnboardingDraft();
+    fetchActiveEnrolment()
+      .then((enrolment) => {
+        if (!isCurrent) return;
+        if (enrolment?.routine.name) {
+          setRoutineName(enrolment.routine.name);
+          return;
+        }
+        const plan = recommendPlan(draft, undefined);
+        setRoutineName(plan?.recommended.name ?? null);
+      })
+      .catch(() => {
+        if (!isCurrent) return;
+        setRoutineName(recommendPlan(draft)?.recommended.name ?? null);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, [answers, profile?.age_band, profile?.bodyweight_kg, profile?.cardio_preference, profile?.onboarding_answers]);
 
   useEffect(() => {
     if (!isAvailable) return;
@@ -87,6 +118,10 @@ export default function PaywallScreen() {
   const selected = packages.find((item) => item.identifier === selectedId) ?? null;
   const trialDays = selected ? getFreeTrialDays(selected.product) : null;
   const annualSaving = getAnnualSaving(packages);
+  const headline = routineName
+    ? fillCopy(paywallScreenCopy.headline_with_plan, { routine_name: routineName })
+    : paywallScreenCopy.headline_fallback;
+  const showTrialCta = Boolean(trialDays && selected?.packageType === 'ANNUAL');
 
   async function handleSubscribe() {
     if (!selected) return;
@@ -105,10 +140,7 @@ export default function PaywallScreen() {
         );
       }
     } catch {
-      showDialog(
-        'That didn’t go through',
-        'Check your connection and try again. If you were charged, tap Restore purchases.'
-      );
+      showDialog('Please try again', paywallScreenCopy.error);
     } finally {
       setBusy(null);
     }
@@ -133,54 +165,59 @@ export default function PaywallScreen() {
   }
 
   return (
-    <View style={styles.overlay}>
-      <Pressable
-        style={styles.backdrop}
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
+      <IconButton
+        icon="close"
+        accessibilityLabel={paywallScreenCopy.close_a11y}
         onPress={dismiss}
-        accessibilityRole="button"
-        accessibilityLabel="Close"
+        variant="muted"
+        style={[styles.close, { top: Math.max(insets.top, 8) }]}
       />
-      <View style={[styles.sheet, { marginTop: Math.max(insets.top, 36) }]}>
-        <Pressable
-          style={({ pressed }) => [styles.close, pressed && styles.pressed]}
-          onPress={dismiss}
-          accessibilityRole="button"
-          accessibilityLabel="Close">
-          <Ionicons name="close" size={28} color={colours.text} />
-        </Pressable>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+        showsVerticalScrollIndicator={false}>
+        <HeroImage
+          image={imageSourceForSlug('hero-paywall') ?? imageSourceForSlug('cover-barbell-strength-8')}
+          height={240}
+        />
+        <View style={[styles.body, { paddingHorizontal: spacing.lg, gap: spacing.md }]}>
+          <AppText variant="display" style={{ color: colours.ink }}>
+            {headline}
+          </AppText>
+          <AppText variant="body" style={{ color: colours.inkMuted }}>
+            {paywallScreenCopy.subheadline}
+          </AppText>
 
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
-          <AppText variant="eyebrow" style={styles.eyebrow}>{copy.eyebrow}</AppText>
-          <AppText variant="display" style={styles.title}>{copy.title}</AppText>
-          <AppText variant="body" style={styles.body}>{copy.body}</AppText>
-
-          <View style={styles.features}>
+          <View
+            style={[
+              styles.benefits,
+              { backgroundColor: colours.surface, borderRadius: radius.xl, padding: spacing.md },
+              shadow,
+            ]}>
             {PRO_FEATURES.map((feature) => (
-              <View key={feature.text} style={styles.feature}>
-                <View style={styles.featureIcon}>
-                  <Ionicons name={feature.icon} size={22} color={colours.accent} />
+              <View key={feature.text} style={styles.benefit}>
+                <View style={[styles.benefitIcon, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
+                  <Ionicons name={feature.icon} size={20} color={colours.brand} />
                 </View>
-                <AppText variant="body" style={styles.featureText}>{feature.text}</AppText>
+                <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>
+                  {feature.text}
+                </AppText>
               </View>
             ))}
           </View>
+
           {loadState === 'loading' ? (
-            <ActivityIndicator color={colours.accent} style={styles.loading} />
+            <ActivityIndicator color={colours.brand} style={styles.loading} />
           ) : loadState !== 'ready' ? (
-            <View style={styles.notice}>
-              <AppText variant="body" style={styles.noticeText}>
+            <View style={[styles.notice, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+              <AppText variant="body" style={{ color: colours.ink }}>
                 {loadState === 'error'
                   ? 'We couldn’t load the plans. Check your connection and try again.'
                   : 'Subscriptions aren’t available to buy yet. Check back soon.'}
               </AppText>
-              {loadState === 'error' && (
-                <Pressable
-                  style={({ pressed }) => [styles.outlineButton, pressed && styles.pressed]}
-                  onPress={() => setAttempt((count) => count + 1)}
-                  accessibilityRole="button">
-                  <AppText variant="bodyStrong" style={styles.outlineButtonText}>Try again</AppText>
-                </Pressable>
-              )}
+              {loadState === 'error' ? (
+                <PrimaryButton label="Try again" onPress={() => setAttempt((count) => count + 1)} />
+              ) : null}
             </View>
           ) : (
             <>
@@ -188,237 +225,162 @@ export default function PaywallScreen() {
                 {packages.map((item) => {
                   const isSelected = item.identifier === selectedId;
                   const isAnnual = item.packageType === 'ANNUAL';
+                  const itemTrial = getFreeTrialDays(item.product);
                   return (
                     <Pressable
                       key={item.identifier}
                       onPress={() => setSelectedId(item.identifier)}
-                      style={[styles.plan, isSelected && styles.planSelected]}
+                      style={[
+                        styles.plan,
+                        {
+                          borderRadius: radius.xl,
+                          borderColor: isSelected ? colours.brand : colours.border,
+                          backgroundColor: isSelected ? colours.brandSoft : colours.surface,
+                        },
+                      ]}
                       accessibilityRole="radio"
                       accessibilityState={{ checked: isSelected }}>
-                      <Ionicons
-                        name={isSelected ? 'radio-button-on' : 'radio-button-off'}
-                        size={24}
-                        color={colours.accent}
-                      />
-                      <View style={styles.flex}>
-                        <AppText variant="title3" style={styles.planName}>{isAnnual ? 'Yearly' : 'Monthly'}</AppText>
-                        <AppText variant="body" style={styles.planPrice}>
-                          {item.product.priceString} a {periodName(item)}
+                      <View style={styles.planHeader}>
+                        <AppText variant="title3" style={{ color: colours.ink }}>
+                          {isAnnual ? paywallScreenCopy.annual_title : paywallScreenCopy.monthly_title}
                         </AppText>
-                        {isAnnual && item.product.pricePerMonthString && (
-                          <AppText variant="bodySm" style={styles.planDetail}>
-                            Works out at {item.product.pricePerMonthString} a month
+                        {isAnnual && annualSaving !== null ? (
+                          <AppText
+                            variant="caption"
+                            style={[
+                              styles.tag,
+                              { backgroundColor: colours.pro, color: colours.onPro, borderRadius: radius.full },
+                            ]}>
+                            {paywallScreenCopy.annual_tag}
                           </AppText>
-                        )}
+                        ) : null}
                       </View>
-                      {isAnnual && (
-                        <AppText variant="caption" style={styles.badge}>
-                          {annualSaving !== null ? `Save ${annualSaving}%` : 'Best value'}
+                      <AppText variant="body" style={{ color: colours.ink, marginTop: 4 }}>
+                        {isAnnual
+                          ? itemTrial
+                            ? fillCopy(paywallScreenCopy.annual_trial_line, {
+                                trial_days: itemTrial,
+                                annual_price: item.product.priceString,
+                              })
+                            : `${item.product.priceString} a year`
+                          : fillCopy(paywallScreenCopy.monthly_line, {
+                              monthly_price: item.product.priceString,
+                            })}
+                      </AppText>
+                      {isAnnual && item.product.pricePerMonthString ? (
+                        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                          {fillCopy(paywallScreenCopy.annual_monthly_equiv, {
+                            annual_per_month: item.product.pricePerMonthString,
+                          })}
                         </AppText>
-                      )}
+                      ) : null}
                     </Pressable>
                   );
                 })}
               </View>
 
-              <Pressable
-                style={({ pressed }) => [styles.button, (pressed || busy !== null) && styles.pressed]}
-                onPress={handleSubscribe}
+              <PrimaryButton
+                label={
+                  busy === 'buy'
+                    ? paywallScreenCopy.purchasing
+                    : showTrialCta
+                      ? paywallScreenCopy.cta_trial
+                      : paywallScreenCopy.cta_subscribe
+                }
+                onPress={() => void handleSubscribe()}
                 disabled={busy !== null || !selected}
-                accessibilityRole="button">
-                {busy === 'buy' ? (
-                  <ActivityIndicator color={colours.surface} />
-                ) : (
-                  <AppText variant="bodyStrong" style={styles.buttonText}>
-                    {trialDays ? `Start ${trialDays}-day free trial` : 'Subscribe'}
-                  </AppText>
-                )}
-              </Pressable>
+                loading={busy === 'buy'}
+              />
 
-              {selected && (
-                <AppText variant="bodySm" style={styles.finePrint}>
-                  {trialDays
-                    ? `Free for ${trialDays} days, then ${selected.product.priceString} a ${periodName(selected)}. ` +
-                      `We’ll remind you ${REMINDER_DAYS_BEFORE} days before your trial ends. ` +
-                      `Cancel at least 24 hours before it ends in your ${STORE_NAME} settings.`
-                    : `${selected.product.priceString} a ${periodName(selected)}, renewing automatically. ` +
-                      `Cancel any time in your ${STORE_NAME} settings.`}
+              {selected ? (
+                <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center' }}>
+                  {trialDays && selected.packageType === 'ANNUAL'
+                    ? fillCopy(paywallScreenCopy.small_print_trial, {
+                        trial_days: trialDays,
+                        annual_price: selected.product.priceString,
+                        charge_date: chargeDateLabel(trialDays),
+                      })
+                    : fillCopy(paywallScreenCopy.small_print_monthly, {
+                        monthly_price: selected.product.priceString,
+                      })}
                 </AppText>
-              )}
+              ) : null}
             </>
           )}
 
-          {isAvailable && (
-            <Pressable
-              style={styles.link}
-              onPress={handleRestore}
-              disabled={busy !== null}
-              accessibilityRole="button">
-              <AppText variant="bodyStrong" style={styles.linkText}>
-                {busy === 'restore' ? 'Restoring…' : 'Restore purchases'}
-              </AppText>
-            </Pressable>
-          )}
-          <Pressable style={styles.link} onPress={dismiss} accessibilityRole="button">
-            <AppText variant="bodyStrong" style={styles.mutedLinkText}>Not now</AppText>
-          </Pressable>
-        </ScrollView>
-      </View>
+          <View style={styles.footer}>
+            {isAvailable ? (
+              <TextButton
+                label={busy === 'restore' ? 'Restoring…' : paywallScreenCopy.restore}
+                onPress={() => void handleRestore()}
+                disabled={busy !== null}
+              />
+            ) : null}
+            <TextButton label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
+            <TextButton label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  screen: {
     flex: 1,
-    backgroundColor: 'rgba(31, 27, 36, 0.35)',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-  },
-  sheet: {
-    flex: 1,
-    backgroundColor: colours.background,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    overflow: 'hidden',
   },
   close: {
-    alignSelf: 'flex-end',
-    width: 56,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  content: {
-    paddingHorizontal: 24,
-    gap: 16,
-  },
-  eyebrow: {
-    color: colours.accent,
-  },
-  title: {
-    color: colours.text,
-    marginTop: -8,
+    position: 'absolute',
+    left: 8,
+    zIndex: 2,
   },
   body: {
-    color: colours.textMuted,
-    marginTop: -4,
+    paddingTop: 20,
   },
-  features: {
+  benefits: {
     gap: 12,
-    marginTop: 4,
   },
-  feature: {
+  benefit: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
-  featureIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  benefitIcon: {
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colours.accentSoft,
-  },
-  featureText: {
-    flex: 1,
-    color: colours.text,
-  },
-  freeNote: {
-    color: colours.textMuted,
   },
   loading: {
     marginVertical: 32,
   },
   notice: {
     padding: 20,
-    borderRadius: 18,
     gap: 16,
-    backgroundColor: colours.surface,
-  },
-  noticeText: {
-    color: colours.text,
   },
   plans: {
     gap: 12,
   },
   plan: {
+    minHeight: 88,
+    padding: 16,
+    borderWidth: 1.5,
+  },
+  planHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    minHeight: 72,
-    padding: 16,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: colours.border,
-    backgroundColor: colours.surface,
+    justifyContent: 'space-between',
+    gap: 8,
   },
-  planSelected: {
-    borderColor: colours.accent,
-    backgroundColor: colours.accentSoft,
-  },
-  flex: {
-    flex: 1,
-  },
-  planName: {
-    color: colours.text,
-  },
-  planPrice: {
-    color: colours.text,
-    marginTop: 2,
-  },
-  planDetail: {
-    color: colours.textMuted,
-    marginTop: 2,
-  },
-  badge: {
+  tag: {
+    overflow: 'hidden',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 999,
-    overflow: 'hidden',
-    color: colours.surface,
-    backgroundColor: colours.accent,
   },
-  button: {
-    minHeight: 60,
-    borderRadius: 999,
-    alignItems: 'center',
+  footer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    backgroundColor: colours.accent,
-  },
-  buttonText: {
-    color: colours.surface,
-  },
-  outlineButton: {
-    minHeight: 56,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: colours.accent,
-    backgroundColor: colours.surface,
-  },
-  outlineButtonText: {
-    color: colours.accent,
-  },
-  finePrint: {
-    color: colours.textMuted,
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  link: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  linkText: {
-    color: colours.accent,
-  },
-  mutedLinkText: {
-    color: colours.textMuted,
+    gap: 4,
   },
 });

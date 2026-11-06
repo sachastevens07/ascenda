@@ -1,6 +1,7 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -61,15 +62,14 @@ import {
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
+import { fillCopy, subscriptionBanners } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
-import { consumeOnboardingPaywall } from '@/lib/onboarding';
 import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
-import { openPaywall } from '@/lib/paywall';
+import { ensureSubscribed } from '@/lib/paywall';
 import { fetchPlannedCountsByWeek, fetchThisWeekProgress, toIso, type WeekPlanProgress } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
-import { formatShortDate } from '@/lib/progress';
 import {
   daysInWeek,
   describeRoutineError,
@@ -172,7 +172,7 @@ export default function HomeScreen() {
   const [data, setData] = useState<HomeData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
-  const openedOnboardingPaywall = useRef(false);
+  const [trialBannerHidden, setTrialBannerHidden] = useState(false);
   const routineMenuRef = useRef<AnchorHandle>(null);
   const [routineMenuOpen, setRoutineMenuOpen] = useState(false);
   const [routineMenuAnchor, setRoutineMenuAnchor] = useState<AnchorRect | null>(null);
@@ -182,18 +182,21 @@ export default function HomeScreen() {
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
 
+  useEffect(() => {
+    const ends = subscription.trialEndsAt;
+    if (!ends) {
+      setTrialBannerHidden(false);
+      return;
+    }
+    AsyncStorage.getItem(`trial-ending-banner:${ends.toISOString()}`)
+      .then((value) => setTrialBannerHidden(value === '1'))
+      .catch(() => setTrialBannerHidden(false));
+  }, [subscription.trialEndsAt]);
+
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
-      if (!openedOnboardingPaywall.current && !subscription.isPro) {
-        consumeOnboardingPaywall()
-          .then((queued) => {
-            if (!isCurrent || queued === null) return;
-            openedOnboardingPaywall.current = true;
-            openPaywall('onboarding');
-          })
-          .catch(() => {});
-      }
+      if (subscription.isLoading || !subscription.isPro) return;
       (async () => {
         try {
           const [
@@ -322,6 +325,7 @@ export default function HomeScreen() {
       answers?.confidence,
       attempt,
       subscription.isPro,
+      subscription.isLoading,
     ])
   );
 
@@ -343,6 +347,7 @@ export default function HomeScreen() {
     day: RoutineDay,
     options?: { enrolmentId?: string; easeBack?: boolean; welcomeBack?: boolean }
   ) {
+    if (!ensureSubscribed()) return;
     const enrolmentId = options?.enrolmentId ?? data?.enrolment?.id;
     if (!enrolmentId) return;
     setRoutineMenuOpen(false);
@@ -477,11 +482,13 @@ export default function HomeScreen() {
   }
 
   function openSessionDetail() {
+    if (!ensureSubscribed()) return;
     if (!data?.next) return;
     void startDay(data.next.day);
   }
 
   function continueSession() {
+    if (!ensureSubscribed()) return;
     if (!data?.activeSession) return;
     if (data.activeSession.source === 'stretch') {
       router.push({ pathname: '/stretches/play', params: { sessionId: data.activeSession.id } });
@@ -575,12 +582,47 @@ export default function HomeScreen() {
           </AppText>
         </View>
 
-        {subscription.trialEndsAt && isTrialEndingSoon(subscription) ? (
-          <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-            <AppText variant="bodySm" style={{ color: colours.ink }}>
-              Your free trial ends on {formatShortDate(subscription.trialEndsAt)}.
+        {subscription.status === 'grace' ? (
+          <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
+            <AppText variant="bodySm" style={{ color: colours.ink, flex: 1 }}>
+              {subscriptionBanners.grace}
             </AppText>
-            <TextButton label="Manage subscription" onPress={handleManageSubscription} style={{ alignSelf: 'flex-start' }} />
+            <TextButton
+              label={subscriptionBanners.grace_cta}
+              onPress={handleManageSubscription}
+              style={{ alignSelf: 'flex-start' }}
+            />
+          </View>
+        ) : null}
+
+        {subscription.status !== 'grace' &&
+        subscription.trialEndsAt &&
+        isTrialEndingSoon(subscription) &&
+        !trialBannerHidden ? (
+          <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <AppText variant="bodySm" style={{ color: colours.ink }}>
+                {fillCopy(subscriptionBanners.trial_ending, {
+                  day: subscription.trialEndsAt.toLocaleDateString('en-GB', { weekday: 'short' }),
+                })}
+              </AppText>
+              <TextButton
+                label={subscriptionBanners.trial_ending_cta}
+                onPress={handleManageSubscription}
+                style={{ alignSelf: 'flex-start' }}
+              />
+            </View>
+            <IconButton
+              icon="close"
+              accessibilityLabel={subscriptionBanners.dismiss_a11y}
+              onPress={() => {
+                setTrialBannerHidden(true);
+                const ends = subscription.trialEndsAt;
+                if (ends) {
+                  AsyncStorage.setItem(`trial-ending-banner:${ends.toISOString()}`, '1').catch(() => {});
+                }
+              }}
+            />
           </View>
         ) : null}
 
@@ -647,7 +689,7 @@ export default function HomeScreen() {
                   label={isStarting ? 'Starting…' : 'Start session'}
                   onPress={openSessionDetail}
                   loading={isStarting}
-                  disabled={isStarting}
+                  disabled={isStarting || subscription.isLoading}
                   style={{ marginTop: spacing.md }}
                 />
               </View>
@@ -909,6 +951,12 @@ const styles = StyleSheet.create({
   },
   card: {
     padding: 20,
+  },
+  banner: {
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   heroClip: {
     overflow: 'hidden',
