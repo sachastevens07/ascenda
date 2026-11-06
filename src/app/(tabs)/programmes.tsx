@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ExerciseLibrary } from '@/components/ExerciseLibrary';
 import { useTabBarHeight } from '@/components/PillTabBar';
+import { RoutineBrowse } from '@/components/RoutineBrowse';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
 import { AppText, TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
@@ -66,7 +67,7 @@ export default function ProgrammesScreen() {
       </View>
 
       {section === 'routines' && (
-        <RoutineCatalogue showTitle={false} bottomInset={tabBarHeight} routineType="strength" />
+        <RoutineBrowse bottomInset={tabBarHeight} onOpenStretches={() => setSection('stretches')} />
       )}
       {section === 'exercises' && <ExerciseLibrary title={null} bottomInset={tabBarHeight} />}
       {section === 'stretches' && (

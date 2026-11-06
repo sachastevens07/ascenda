@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
@@ -61,6 +61,24 @@ import { useSubscription } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
 
 const FLOW = ONBOARDING_SCREENS.filter((screen) => screen.type !== 'paywall');
+const REBUILD_IDS = new Set([
+  'goals',
+  'insight_goals',
+  'gym_experience',
+  'gym_comfort',
+  'st_not_sure',
+  'insight_not_alone',
+  'st_stopped',
+  'st_busy',
+  'insight_plans',
+  'cardio',
+  'days_per_week',
+  'which_days',
+  'session_length',
+  'building_plan',
+  'plan_reveal',
+]);
+const REBUILD_FLOW = ONBOARDING_SCREENS.filter((screen) => REBUILD_IDS.has(screen.id));
 const REVIEW_ID = 'review';
 
 function quizFromDraft(draft: OnboardingDraft): QuizAnswers | null {
@@ -103,8 +121,12 @@ export default function OnboardingScreen() {
   const { colours, radius, shadow } = useTheme();
   const { profile, saveQuizAnswers, confirmAge, acceptDisclaimer } = useProfile();
   const subscription = useSubscription();
+  const params = useLocalSearchParams<{ rebuild?: string | string[] }>();
+  const rebuildParam = Array.isArray(params.rebuild) ? params.rebuild[0] : params.rebuild;
+  const isRebuild = rebuildParam === '1';
+  const screens = isRebuild ? REBUILD_FLOW : FLOW;
   const savedAnswers = getQuizAnswers(profile);
-  const isEditing = savedAnswers !== null;
+  const isEditing = savedAnswers !== null && !isRebuild;
 
   const [draft, setDraft] = useState<OnboardingDraft>(() =>
     savedAnswers
@@ -131,12 +153,20 @@ export default function OnboardingScreen() {
   const [weightUnit, setWeightUnit] = useState<'kg' | 'st_lb'>('kg');
 
   const screen: OnboardingScreen | { id: string; type: string } =
-    index < 0 ? { id: REVIEW_ID, type: REVIEW_ID } : FLOW[index];
-  const contentScreen = index >= 0 ? FLOW[index] : null;
+    index < 0 ? { id: REVIEW_ID, type: REVIEW_ID } : screens[index];
+  const contentScreen = index >= 0 ? screens[index] : null;
 
   const questionIndex = contentScreen ? QUESTION_SCREEN_IDS.indexOf(contentScreen.id) : -1;
-  const progress = questionIndex >= 0 ? (questionIndex + 1) / QUESTION_SCREEN_IDS.length : isEditing ? 1 : 0;
-  const showProgress = Boolean(contentScreen && QUESTION_SCREEN_IDS.includes(contentScreen.id));
+  const progress = isRebuild
+    ? (index + 1) / Math.max(screens.length, 1)
+    : questionIndex >= 0
+      ? (questionIndex + 1) / QUESTION_SCREEN_IDS.length
+      : isEditing
+        ? 1
+        : 0;
+  const showProgress = isRebuild
+    ? Boolean(contentScreen && contentScreen.type !== 'building')
+    : Boolean(contentScreen && QUESTION_SCREEN_IDS.includes(contentScreen.id));
 
   const vars = useMemo(() => {
     const defaultSlug = defaultRoutineSlug(draft);
@@ -187,15 +217,20 @@ export default function OnboardingScreen() {
       return;
     }
     let next = index + delta;
-    if (delta < 0 && FLOW[index]?.id === 'plan_reveal') {
-      const bodyIndex = FLOW.findIndex((item) => item.id === 'bodyweight');
+    if (delta < 0 && screens[index]?.id === 'plan_reveal') {
+      const backId = isRebuild ? 'session_length' : 'bodyweight';
+      const bodyIndex = screens.findIndex((item) => item.id === backId);
       if (bodyIndex >= 0) next = bodyIndex;
     }
     if (next < 0) {
+      if (isRebuild) {
+        if (router.canGoBack()) router.back();
+        return;
+      }
       if (isEditing) setIndex(-1);
       return;
     }
-    if (next >= FLOW.length) {
+    if (next >= screens.length) {
       void finish();
       return;
     }
@@ -275,6 +310,10 @@ export default function OnboardingScreen() {
       return;
     }
     if (contentScreen.id === 'plan_reveal') {
+      if (isRebuild) {
+        void finish();
+        return;
+      }
       move(1);
       return;
     }
@@ -297,10 +336,22 @@ export default function OnboardingScreen() {
         age_band: storedAgeBand(draft),
         cardio_preference: draft.cardio_preference,
       });
-      if (draft.reminders_skipped) {
-        await saveReminderPrefs({ sessionReminders: false }).catch(() => {});
-      } else if (draft.reminder_time) {
-        await setDefaultReminderTime(draft.reminder_time).catch(() => {});
+      if (!isRebuild) {
+        if (draft.reminders_skipped) {
+          await saveReminderPrefs({ sessionReminders: false }).catch(() => {});
+        } else if (draft.reminder_time) {
+          await setDefaultReminderTime(draft.reminder_time).catch(() => {});
+        }
+      }
+      if (isRebuild) {
+        const slug = recommended?.recommended.slug;
+        if (slug) {
+          router.replace({ pathname: '/routines/[id]', params: { id: slug } } as Href);
+          return;
+        }
+        if (router.canGoBack()) router.back();
+        else router.replace('/programmes' as Href);
+        return;
       }
       if (isEditing) {
         if (router.canGoBack()) router.back();
@@ -349,10 +400,11 @@ export default function OnboardingScreen() {
     return contentScreen.button || contentScreen.primary_button || 'Continue';
   })();
 
-  const showBack = isEditing || (index > 0 && contentScreen?.type !== 'building');
+  const showBack =
+    isRebuild || isEditing || (index > 0 && contentScreen?.type !== 'building');
 
   function jumpTo(id: string) {
-    const next = FLOW.findIndex((item) => item.id === id);
+    const next = screens.findIndex((item) => item.id === id);
     if (next >= 0) {
       setDirection(1);
       setIndex(next);
@@ -372,7 +424,10 @@ export default function OnboardingScreen() {
           if (router.canGoBack()) router.back();
           return;
         }
-        if (index <= 0) return;
+        if (index <= 0) {
+          if (isRebuild && router.canGoBack()) router.back();
+          return;
+        }
         move(-1);
       }}
       primaryLabel={primaryLabel}

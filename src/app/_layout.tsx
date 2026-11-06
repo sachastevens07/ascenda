@@ -215,6 +215,7 @@ function RootNavigator() {
         />
         <Stack.Screen name="workouts" options={{ headerShown: false }} />
         <Stack.Screen name="routines" options={{ headerShown: false }} />
+        <Stack.Screen name="singles" options={{ headerShown: false }} />
         <Stack.Screen name="stretches" options={{ headerShown: false }} />
         <Stack.Screen name="paths" options={{ headerShown: false }} />
         <Stack.Screen name="challenges" options={{ headerShown: false }} />

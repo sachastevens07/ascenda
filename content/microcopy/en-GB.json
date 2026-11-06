@@ -62,6 +62,28 @@
       "quote_eyebrow": "TODAY'S THOUGHT",
       "share_week": "Share"
     },
+    "programmes": {
+      "section_recommended": "Recommended for you",
+      "build_plan": "Build my plan",
+      "section_styles": "Training styles",
+      "section_start_here": "Start here",
+      "section_single_sessions": "Single sessions",
+      "see_all": "See all",
+      "current_plan": "Current plan",
+      "coach_reviewed": "Coach reviewed",
+      "start_session": "Start session",
+      "play_a11y": "Start {session_name}",
+      "style_gym_confidence": "Gym confidence",
+      "style_strength": "Strength",
+      "style_glutes": "Glutes and legs",
+      "style_upper": "Upper body",
+      "style_full_body": "Full body",
+      "style_cardio": "Cardio",
+      "style_stretch": "Stretch and recovery",
+      "style_busy_gym": "Busy gym",
+      "style_cant_get_to_gym": "Days you can't get to the gym",
+      "empty_style": "Nothing in this style yet. Try another tile, or Build my plan."
+    },
     "paywall": {
       "_note": "DESIGN.md 9.2. Prices, periods and trial length come from RevenueCat, never hard-coded. {trial_days} is 7, or 14 for referred friends.",
       "headline_with_plan": "Your {routine_name} plan is ready",

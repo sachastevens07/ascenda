@@ -13,6 +13,7 @@ import {
 } from '@/lib/programmes';
 import { estimateOneRepMax, type ExerciseBests } from '@/lib/progress';
 import { getDefaultRestSeconds } from '@/lib/restTimer';
+import type { ExerciseRole, ProgressionRule } from '@/lib/routineStandard';
 import { fetchRoutineDay, routineDayToProgrammeDay } from '@/lib/routines';
 import { formatWeightInput as formatDisplayWeight, parseDisplayWeight } from '@/lib/units';
 import {
@@ -33,6 +34,12 @@ export type SessionPlanSlot = {
   exercise: SlotExercise;
   /** Extra warm-up sets logged as set_number 0, -1, -2. Today only. */
   warmup_sets?: number;
+  role?: ExerciseRole;
+  target_rir?: number;
+  tempo?: string;
+  progression_rule?: ProgressionRule;
+  load_increment_kg?: number;
+  notes?: string;
 };
 
 export const EASE_BACK_WEIGHT_SCALE = 0.9;
@@ -50,6 +57,10 @@ export type SessionPlan = {
   warmupStatus?: 'pending' | 'done' | 'skipped';
   cooldownStatus?: 'pending' | 'done' | 'skipped';
   rampUpApplied?: boolean;
+  /** Single-session name when there is no custom workout or routine day. */
+  title?: string;
+  focus?: string | null;
+  coach_note?: string | null;
 };
 
 function sessionPlanKey(id: string): string {
@@ -83,6 +94,9 @@ export function sessionPlanFromDay(
   extras?: Pick<SessionPlan, 'warmupStatus' | 'cooldownStatus' | 'rampUpApplied'>
 ): SessionPlan {
   return {
+    title: day.name,
+    focus: day.focus,
+    coach_note: day.coach_note,
     slots: day.exercises.map((item) => ({
       position: item.position,
       sets: item.sets,
@@ -91,6 +105,12 @@ export function sessionPlanFromDay(
       rest_seconds: item.rest_seconds ?? getDefaultRestSeconds(),
       exercise: item.exercise,
       warmup_sets: item.warmup_sets ?? 0,
+      role: item.role,
+      target_rir: item.target_rir,
+      tempo: item.tempo,
+      progression_rule: item.progression_rule,
+      load_increment_kg: item.load_increment_kg,
+      notes: item.notes,
     })),
     easeBack,
     timerStartedAt: timerStartedAt ?? null,
@@ -135,12 +155,12 @@ export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): Programm
         original: swapped ? existing.exercise : existing?.original,
         added: existing?.added,
         warmup_sets: slot.warmup_sets ?? existing?.warmup_sets ?? 0,
-        role: existing?.role,
-        target_rir: existing?.target_rir,
-        tempo: existing?.tempo,
-        progression_rule: existing?.progression_rule,
-        load_increment_kg: existing?.load_increment_kg,
-        notes: existing?.notes,
+        role: existing?.role ?? slot.role,
+        target_rir: existing?.target_rir ?? slot.target_rir,
+        tempo: existing?.tempo ?? slot.tempo,
+        progression_rule: existing?.progression_rule ?? slot.progression_rule,
+        load_increment_kg: existing?.load_increment_kg ?? slot.load_increment_kg,
+        notes: existing?.notes ?? slot.notes,
         alternative_exercise_ids: existing?.alternative_exercise_ids,
       };
     }),
@@ -284,8 +304,32 @@ export async function loadSessionLog(
   } else if (session.programme_day_id) {
     planned = await fetchProgrammeDay(session.programme_day_id, equipment);
   }
-  if (!planned) return null;
   const plan = await loadSessionPlan(session.id);
+  if (!planned && plan?.slots.length) {
+    planned = {
+      id: session.id,
+      day_number: 1,
+      name: plan.title ?? 'Session',
+      focus: plan.focus ?? null,
+      coach_note: plan.coach_note ?? null,
+      exercises: plan.slots.map((slot) => ({
+        position: slot.position,
+        sets: slot.sets,
+        rep_min: slot.rep_min,
+        rep_max: slot.rep_max,
+        rest_seconds: slot.rest_seconds,
+        exercise: slot.exercise,
+        warmup_sets: slot.warmup_sets,
+        role: slot.role,
+        target_rir: slot.target_rir,
+        tempo: slot.tempo,
+        progression_rule: slot.progression_rule,
+        load_increment_kg: slot.load_increment_kg,
+        notes: slot.notes,
+      })),
+    };
+  }
+  if (!planned) return null;
   const swapped = applySwaps(planned, swaps);
   const day = plan && plan.slots.length > 0 ? applySessionPlan(swapped, plan) : swapped;
   const exerciseIds = day.exercises.map((item) => item.exercise.id);

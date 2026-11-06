@@ -356,7 +356,7 @@ export function RoutineCatalogue({
   );
 }
 
-function CatalogueCard({
+export function CatalogueCard({
   summary,
   stretch,
   usedPhotos,

@@ -344,6 +344,17 @@ export function imageSourceForSlug(slug: string | null | undefined): ImageSource
   return coverSources(coverFromSlug(slug, null))[0] ?? null;
 }
 
+export function takeSlugSource(
+  slug: string | null | undefined,
+  used: Set<string>
+): ImageSourcePropType | null {
+  if (!slug || used.has(slug)) return null;
+  const source = imageSourceForSlug(slug);
+  if (!source) return null;
+  used.add(slug);
+  return source;
+}
+
 /** First unused photo for this screen, or null so the caller can show a placeholder. */
 export function takeCoverSource(cover: CoverImage | null, used: Set<string>): ImageSourcePropType | null {
   const resolved = resolveCover(cover);

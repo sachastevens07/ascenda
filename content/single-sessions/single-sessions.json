@@ -1,0 +1,1182 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Single sessions: standalone one-off workouts for the Programmes browse page (AGENTS.md X3). Store as single_sessions or as a routine with type 'single' and one day.",
+    "Exercises follow the same fields as routine days and reference content/exercises/strength-catalogue.json.",
+    "category drives the browse carousels and training style tiles: start_here, quick, strength, glutes, posture, arms, machines, busy_gym, core, cant_get_to_gym.",
+    "where 'home' sessions only appear in 'Days you can't get to the gym' and are never featured on Home unless she asks (AGENTS.md G1).",
+    "Exercises sharing a superset_group are done back to back, resting after the pair.",
+    "your-first-gym-session can also be the first session offered after onboarding if her plan starts later in the week.",
+    "Draft for coach review before launch."
+  ],
+  "single_sessions": [
+    {
+      "slug": "your-first-gym-session",
+      "name": "Your First Gym Session",
+      "subtitle": "A calm, simple start",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "start_here",
+      "where": "gym",
+      "estimated_minutes": 30,
+      "level": "beginner",
+      "focus": "full_body",
+      "tags": [
+        "Start here",
+        "Beginner friendly",
+        "One spot"
+      ],
+      "display_tags": [
+        "Start here",
+        "Beginner friendly"
+      ],
+      "short_description": "Five simple moves in one spot with a bench and a pair of dumbbells. The perfect first visit.",
+      "coach_note": "There's no pressure today. Pick light dumbbells, find a bench in a quiet corner and take your time. Finishing is the win.",
+      "warmup_id": "warmup-full-body",
+      "cooldown_id": "cooldown-quick",
+      "cover_image_slug": "first-session-cover",
+      "exercises": [
+        {
+          "slug": "goblet-squat",
+          "role": "main",
+          "sets": 2,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 3,
+          "progression_rule": "load",
+          "rest_seconds": 120,
+          "load_increment_kg": 2,
+          "notes": "Hold one dumbbell at your chest."
+        },
+        {
+          "slug": "dumbbell-bench-press",
+          "role": "secondary",
+          "sets": 2,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 3,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Feet flat on the floor."
+        },
+        {
+          "slug": "one-arm-dumbbell-row",
+          "role": "secondary",
+          "sets": 2,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 3,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "per_side": true,
+          "load_increment_kg": 2,
+          "notes": "Hand and knee on the bench."
+        },
+        {
+          "slug": "bodyweight-glute-bridge",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 3,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "notes": "Pause at the top."
+        },
+        {
+          "slug": "dead-bug",
+          "role": "core",
+          "sets": 2,
+          "rep_min": 5,
+          "rep_max": 6,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 45,
+          "per_side": true,
+          "load_increment_kg": null,
+          "notes": "Slow and steady."
+        }
+      ]
+    },
+    {
+      "slug": "full-body-in-30",
+      "name": "Full Body in 30",
+      "subtitle": "Everything, done in half an hour",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "quick",
+      "where": "gym",
+      "estimated_minutes": 30,
+      "level": "beginner_to_intermediate",
+      "focus": "full_body",
+      "tags": [
+        "30 minutes",
+        "Full body",
+        "Supersets"
+      ],
+      "display_tags": [
+        "30 minutes",
+        "Full body"
+      ],
+      "short_description": "Two supersets and a core finisher. A whole-body session for busy days.",
+      "coach_note": "Do each pair back to back, then rest. Set up your dumbbells next to your bench first.",
+      "warmup_id": "warmup-quick",
+      "cooldown_id": "cooldown-quick",
+      "cover_image_slug": "full-body-30-cover",
+      "exercises": [
+        {
+          "slug": "goblet-squat",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 30,
+          "superset_group": "1",
+          "load_increment_kg": 2,
+          "notes": ""
+        },
+        {
+          "slug": "one-arm-dumbbell-row",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 75,
+          "per_side": true,
+          "superset_group": "1",
+          "load_increment_kg": 2,
+          "notes": "Then rest."
+        },
+        {
+          "slug": "dumbbell-romanian-deadlift",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 30,
+          "superset_group": "2",
+          "load_increment_kg": 2,
+          "notes": ""
+        },
+        {
+          "slug": "incline-dumbbell-press",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 75,
+          "superset_group": "2",
+          "load_increment_kg": 2,
+          "notes": "Then rest."
+        },
+        {
+          "slug": "forearm-plank",
+          "role": "core",
+          "sets": 2,
+          "duration_min_seconds": 20,
+          "duration_max_seconds": 40,
+          "progression_rule": "time",
+          "rest_seconds": 45,
+          "notes": "Squeeze your glutes."
+        }
+      ]
+    },
+    {
+      "slug": "lower-body-strength",
+      "name": "Lower Body Strength",
+      "subtitle": "45 minutes for legs and glutes",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "strength",
+      "where": "gym",
+      "estimated_minutes": 45,
+      "level": "intermediate",
+      "focus": "lower_body",
+      "tags": [
+        "Lower body",
+        "Build strength",
+        "45 minutes"
+      ],
+      "display_tags": [
+        "Lower body",
+        "Build strength"
+      ],
+      "short_description": "A classic leg day: squat, hinge, single leg and glutes.",
+      "coach_note": "Squat first while you're fresh. Leave 1 to 2 reps in the tank on every set.",
+      "warmup_id": "warmup-lower-body",
+      "cooldown_id": "cooldown-lower-body",
+      "cover_image_slug": "lower-strength-cover",
+      "exercises": [
+        {
+          "slug": "smith-machine-squat",
+          "role": "main",
+          "sets": 4,
+          "rep_min": 6,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 120,
+          "tempo": "3-1-1",
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Feet slightly forward."
+        },
+        {
+          "slug": "barbell-romanian-deadlift",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2.5,
+          "notes": "Bar close to your legs."
+        },
+        {
+          "slug": "bulgarian-split-squat",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "per_side": true,
+          "load_increment_kg": 2,
+          "notes": "Lighter than you think."
+        },
+        {
+          "slug": "seated-leg-curl",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 10,
+          "rep_max": 15,
+          "target_rir": 1,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Slow return."
+        },
+        {
+          "slug": "calf-raise-machine",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 10,
+          "rep_max": 15,
+          "target_rir": 1,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Pause at the bottom."
+        }
+      ]
+    },
+    {
+      "slug": "glute-focus-40",
+      "name": "Glute Focus",
+      "subtitle": "40 minutes, all about your glutes",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "glutes",
+      "where": "gym",
+      "estimated_minutes": 40,
+      "level": "beginner_to_intermediate",
+      "focus": "glutes",
+      "tags": [
+        "Glutes and legs",
+        "40 minutes"
+      ],
+      "display_tags": [
+        "Glutes and legs",
+        "40 minutes"
+      ],
+      "short_description": "Hip thrusts, Romanian deadlifts and two glute finishers.",
+      "coach_note": "Squeeze your glutes for a full second at the top of every hip thrust.",
+      "warmup_id": "warmup-lower-body",
+      "cooldown_id": "cooldown-lower-body",
+      "cover_image_slug": "glute-focus-cover",
+      "exercises": [
+        {
+          "slug": "barbell-hip-thrust",
+          "role": "main",
+          "sets": 4,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 120,
+          "tempo": "2-1-1",
+          "load_increment_kg": 2.5,
+          "notes": "Pad on the bar, chin tucked."
+        },
+        {
+          "slug": "dumbbell-romanian-deadlift",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Hips back."
+        },
+        {
+          "slug": "dumbbell-step-up",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "per_side": true,
+          "load_increment_kg": 2,
+          "notes": "Drive through the top foot."
+        },
+        {
+          "slug": "cable-glute-kickback",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 1,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "per_side": true,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Kick back and slightly out."
+        },
+        {
+          "slug": "hip-abduction-machine",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 15,
+          "rep_max": 20,
+          "target_rir": 1,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Lean slightly forward."
+        }
+      ]
+    },
+    {
+      "slug": "upper-body-express",
+      "name": "Upper Body Express",
+      "subtitle": "30 minutes for arms, back and shoulders",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "quick",
+      "where": "gym",
+      "estimated_minutes": 30,
+      "level": "beginner_to_intermediate",
+      "focus": "upper_body",
+      "tags": [
+        "Upper body",
+        "30 minutes"
+      ],
+      "display_tags": [
+        "Upper body",
+        "30 minutes"
+      ],
+      "short_description": "A quick upper-body session in two supersets.",
+      "coach_note": "Keep the rests honest and you'll be done in 30 minutes.",
+      "warmup_id": "warmup-quick",
+      "cooldown_id": "cooldown-quick",
+      "cover_image_slug": "upper-express-cover",
+      "exercises": [
+        {
+          "slug": "dumbbell-bench-press",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 30,
+          "superset_group": "1",
+          "load_increment_kg": 2,
+          "notes": ""
+        },
+        {
+          "slug": "lat-pulldown",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 75,
+          "superset_group": "1",
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Then rest."
+        },
+        {
+          "slug": "seated-dumbbell-shoulder-press",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 30,
+          "superset_group": "2",
+          "load_increment_kg": 2,
+          "notes": ""
+        },
+        {
+          "slug": "seated-cable-row",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 75,
+          "superset_group": "2",
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Then rest."
+        },
+        {
+          "slug": "dumbbell-lateral-raise",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": 2,
+          "notes": "Elbows lead."
+        }
+      ]
+    },
+    {
+      "slug": "back-and-shoulders",
+      "name": "Back and Shoulders",
+      "subtitle": "Pull more, stand taller",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "posture",
+      "where": "gym",
+      "estimated_minutes": 40,
+      "level": "beginner_to_intermediate",
+      "focus": "upper_body",
+      "tags": [
+        "Upper body",
+        "Posture",
+        "40 minutes"
+      ],
+      "display_tags": [
+        "Upper body",
+        "Posture"
+      ],
+      "short_description": "More pulling than pushing, with face pulls and reverse flys for your upper back.",
+      "coach_note": "On every row, think about squeezing your shoulder blades together before you bend your elbows.",
+      "warmup_id": "warmup-upper-body",
+      "cooldown_id": "cooldown-upper-body",
+      "cover_image_slug": "back-shoulders-cover",
+      "exercises": [
+        {
+          "slug": "lat-pulldown",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 120,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Chest up."
+        },
+        {
+          "slug": "chest-supported-dumbbell-row",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Chest on the incline bench."
+        },
+        {
+          "slug": "seated-dumbbell-shoulder-press",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Bench upright."
+        },
+        {
+          "slug": "face-pull",
+          "role": "accessory",
+          "sets": 3,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Pull towards your eyes."
+        },
+        {
+          "slug": "dumbbell-reverse-fly",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": 2,
+          "notes": "Light weights, slow."
+        },
+        {
+          "slug": "side-plank",
+          "role": "core",
+          "sets": 2,
+          "duration_min_seconds": 20,
+          "duration_max_seconds": 40,
+          "progression_rule": "time",
+          "rest_seconds": 45,
+          "per_side": true,
+          "notes": "Straight legs if you can."
+        }
+      ]
+    },
+    {
+      "slug": "arms-and-shoulders",
+      "name": "Arms and Shoulders",
+      "subtitle": "A 30-minute pump",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "arms",
+      "where": "gym",
+      "estimated_minutes": 30,
+      "level": "beginner_to_intermediate",
+      "focus": "arms",
+      "tags": [
+        "Arms",
+        "30 minutes"
+      ],
+      "display_tags": [
+        "Arms",
+        "30 minutes"
+      ],
+      "short_description": "Biceps, triceps and shoulders in three quick supersets.",
+      "coach_note": "Light to moderate weights and smooth reps. No swinging.",
+      "warmup_id": "warmup-quick",
+      "cooldown_id": "cooldown-upper-body",
+      "cover_image_slug": "arms-cover",
+      "exercises": [
+        {
+          "slug": "dumbbell-biceps-curl",
+          "role": "accessory",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 20,
+          "superset_group": "1",
+          "load_increment_kg": 2,
+          "notes": ""
+        },
+        {
+          "slug": "triceps-pushdown",
+          "role": "accessory",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 60,
+          "superset_group": "1",
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Then rest."
+        },
+        {
+          "slug": "hammer-curl",
+          "role": "accessory",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 20,
+          "superset_group": "2",
+          "load_increment_kg": 2,
+          "notes": ""
+        },
+        {
+          "slug": "overhead-dumbbell-triceps-extension",
+          "role": "accessory",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 60,
+          "superset_group": "2",
+          "load_increment_kg": 2,
+          "notes": "Then rest."
+        },
+        {
+          "slug": "dumbbell-lateral-raise",
+          "role": "accessory",
+          "sets": 3,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 20,
+          "superset_group": "3",
+          "load_increment_kg": 2,
+          "notes": ""
+        },
+        {
+          "slug": "face-pull",
+          "role": "accessory",
+          "sets": 3,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 60,
+          "superset_group": "3",
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Then rest."
+        }
+      ]
+    },
+    {
+      "slug": "machine-circuit",
+      "name": "Machine Circuit",
+      "subtitle": "Six machines, 35 minutes",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "machines",
+      "where": "gym",
+      "estimated_minutes": 35,
+      "level": "beginner",
+      "focus": "full_body",
+      "tags": [
+        "Machines",
+        "Beginner friendly",
+        "35 minutes"
+      ],
+      "display_tags": [
+        "Machines",
+        "Beginner friendly"
+      ],
+      "short_description": "A full-body session using only machines. Easy to follow and easy to set up.",
+      "coach_note": "Open each machine's guide before you start. If one is busy, use the swap and come back to it.",
+      "warmup_id": "warmup-full-body",
+      "cooldown_id": "cooldown-quick",
+      "cover_image_slug": "machine-circuit-cover",
+      "exercises": [
+        {
+          "slug": "leg-press",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 120,
+          "load_increment_kg": 5,
+          "notes": "Never lock your knees."
+        },
+        {
+          "slug": "chest-press-machine",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Handles at mid-chest."
+        },
+        {
+          "slug": "lat-pulldown",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Thighs under the pads."
+        },
+        {
+          "slug": "seated-leg-curl",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Knee lined up with the pivot."
+        },
+        {
+          "slug": "shoulder-press-machine",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Handles at shoulder height."
+        },
+        {
+          "slug": "hip-abduction-machine",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 15,
+          "rep_max": 20,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Smooth and controlled."
+        }
+      ]
+    },
+    {
+      "slug": "one-spot-full-body",
+      "name": "One Spot Full Body",
+      "subtitle": "40 minutes from one bench",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "busy_gym",
+      "where": "gym",
+      "estimated_minutes": 40,
+      "level": "beginner_to_intermediate",
+      "focus": "full_body",
+      "tags": [
+        "Busy gym friendly",
+        "One spot",
+        "Dumbbells only"
+      ],
+      "display_tags": [
+        "Busy gym friendly",
+        "One spot"
+      ],
+      "short_description": "Claim a bench, grab your dumbbells and never move. Perfect when the gym is packed.",
+      "coach_note": "Pick up two or three pairs of dumbbells before you start so you can stay put.",
+      "warmup_id": "warmup-full-body",
+      "cooldown_id": "cooldown-full-body",
+      "cover_image_slug": "one-spot-cover",
+      "exercises": [
+        {
+          "slug": "goblet-squat",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 120,
+          "tempo": "3-1-1",
+          "load_increment_kg": 2,
+          "notes": "Slow on the way down."
+        },
+        {
+          "slug": "dumbbell-romanian-deadlift",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Hips back."
+        },
+        {
+          "slug": "dumbbell-bench-press",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Feet flat."
+        },
+        {
+          "slug": "one-arm-dumbbell-row",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "per_side": true,
+          "load_increment_kg": 2,
+          "notes": "Hand and knee on the bench."
+        },
+        {
+          "slug": "dumbbell-hip-thrust",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "load_increment_kg": 2,
+          "notes": "Upper back on the bench."
+        },
+        {
+          "slug": "dead-bug",
+          "role": "core",
+          "sets": 2,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 45,
+          "per_side": true,
+          "load_increment_kg": null,
+          "notes": "Slow."
+        }
+      ]
+    },
+    {
+      "slug": "core-strength-20",
+      "name": "Core Strength",
+      "subtitle": "20 minutes for a strong middle",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "core",
+      "where": "gym",
+      "estimated_minutes": 20,
+      "level": "beginner_to_intermediate",
+      "focus": "core",
+      "tags": [
+        "Core",
+        "20 minutes"
+      ],
+      "display_tags": [
+        "Core",
+        "20 minutes"
+      ],
+      "short_description": "Slow, controlled core work that helps every other lift. No crunching through your neck.",
+      "coach_note": "Quality over quantity. Every rep slow and controlled.",
+      "warmup_id": "warmup-quick",
+      "cooldown_id": "cooldown-quick",
+      "cover_image_slug": "core-cover",
+      "exercises": [
+        {
+          "slug": "dead-bug",
+          "role": "core",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 45,
+          "per_side": true,
+          "load_increment_kg": null,
+          "notes": "Lower back pressed into the mat."
+        },
+        {
+          "slug": "pallof-press",
+          "role": "core",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 45,
+          "per_side": true,
+          "load_increment_kg": null,
+          "load_increment_note": "One plate on the stack",
+          "notes": "Resist the twist."
+        },
+        {
+          "slug": "side-plank",
+          "role": "core",
+          "sets": 2,
+          "duration_min_seconds": 20,
+          "duration_max_seconds": 40,
+          "progression_rule": "time",
+          "rest_seconds": 45,
+          "per_side": true,
+          "notes": "Straight legs if you can."
+        },
+        {
+          "slug": "reverse-crunch",
+          "role": "core",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 45,
+          "load_increment_kg": null,
+          "notes": "Curl your hips up slowly."
+        },
+        {
+          "slug": "suitcase-carry",
+          "role": "core",
+          "sets": 2,
+          "duration_min_seconds": 20,
+          "duration_max_seconds": 30,
+          "progression_rule": "time",
+          "rest_seconds": 45,
+          "per_side": true,
+          "notes": "Stay tall. Swap hands."
+        }
+      ]
+    },
+    {
+      "slug": "home-dumbbell-full-body",
+      "name": "Home Dumbbell Full Body",
+      "subtitle": "For days you can't get to the gym",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "cant_get_to_gym",
+      "where": "home",
+      "estimated_minutes": 30,
+      "level": "beginner_to_intermediate",
+      "focus": "full_body",
+      "tags": [
+        "Days you can't get to the gym",
+        "Dumbbells",
+        "30 minutes"
+      ],
+      "display_tags": [
+        "Days you can't get to the gym",
+        "Dumbbells"
+      ],
+      "short_description": "Just a pair of dumbbells and some floor space. Keeps your week on track.",
+      "coach_note": "No bench? Use a sturdy chair or sofa for rows and split squats. Pick heavier dumbbells if you have them.",
+      "warmup_id": "warmup-quick",
+      "cooldown_id": "cooldown-quick",
+      "cover_image_slug": "home-dumbbell-cover",
+      "exercises": [
+        {
+          "slug": "goblet-squat",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 120,
+          "tempo": "3-1-1",
+          "load_increment_kg": 2,
+          "notes": "Slow on the way down."
+        },
+        {
+          "slug": "dumbbell-romanian-deadlift",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Hips back."
+        },
+        {
+          "slug": "dumbbell-floor-press",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Elbows touch the floor softly."
+        },
+        {
+          "slug": "bent-over-dumbbell-row",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 10,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "load",
+          "rest_seconds": 90,
+          "load_increment_kg": 2,
+          "notes": "Hinge, then row."
+        },
+        {
+          "slug": "dumbbell-reverse-lunge",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "per_side": true,
+          "load_increment_kg": 2,
+          "notes": "Step back softly."
+        },
+        {
+          "slug": "dead-bug",
+          "role": "core",
+          "sets": 2,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 45,
+          "per_side": true,
+          "load_increment_kg": null,
+          "notes": "Slow."
+        }
+      ]
+    },
+    {
+      "slug": "bodyweight-anywhere",
+      "name": "Bodyweight Anywhere",
+      "subtitle": "20 minutes, no equipment",
+      "type": "strength",
+      "session_type": "strength",
+      "category": "cant_get_to_gym",
+      "where": "home",
+      "estimated_minutes": 20,
+      "level": "beginner",
+      "focus": "full_body",
+      "tags": [
+        "Days you can't get to the gym",
+        "No equipment",
+        "20 minutes"
+      ],
+      "display_tags": [
+        "Days you can't get to the gym",
+        "No equipment"
+      ],
+      "short_description": "No gym, no equipment, no problem. A short session to keep your week moving.",
+      "coach_note": "Slow every rep down to make bodyweight moves feel harder.",
+      "warmup_id": "warmup-quick",
+      "cooldown_id": "cooldown-quick",
+      "cover_image_slug": "bodyweight-cover",
+      "exercises": [
+        {
+          "slug": "bodyweight-box-squat",
+          "role": "main",
+          "sets": 3,
+          "rep_min": 12,
+          "rep_max": 15,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 120,
+          "tempo": "3-1-1",
+          "load_increment_kg": null,
+          "notes": "Sit lightly on a chair and stand back up."
+        },
+        {
+          "slug": "incline-push-up",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 6,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 90,
+          "load_increment_kg": null,
+          "notes": "Hands on a table or sofa arm."
+        },
+        {
+          "slug": "single-leg-glute-bridge",
+          "role": "secondary",
+          "sets": 3,
+          "rep_min": 8,
+          "rep_max": 12,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 90,
+          "per_side": true,
+          "load_increment_kg": null,
+          "notes": "Pause at the top."
+        },
+        {
+          "slug": "bodyweight-reverse-lunge",
+          "role": "accessory",
+          "sets": 2,
+          "rep_min": 8,
+          "rep_max": 10,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 75,
+          "per_side": true,
+          "load_increment_kg": null,
+          "notes": "Hold a wall for balance if you like."
+        },
+        {
+          "slug": "bird-dog",
+          "role": "core",
+          "sets": 2,
+          "rep_min": 6,
+          "rep_max": 8,
+          "target_rir": 2,
+          "progression_rule": "reps",
+          "rest_seconds": 45,
+          "per_side": true,
+          "load_increment_kg": null,
+          "notes": "Slow."
+        },
+        {
+          "slug": "forearm-plank",
+          "role": "core",
+          "sets": 2,
+          "duration_min_seconds": 20,
+          "duration_max_seconds": 40,
+          "progression_rule": "time",
+          "rest_seconds": 45,
+          "notes": "Squeeze your glutes."
+        }
+      ]
+    }
+  ]
+}

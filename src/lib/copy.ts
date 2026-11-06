@@ -116,6 +116,32 @@ export const homeCopy = {
   share_week: home.share_week,
 } as const;
 
+const programmes = microcopy.strings.programmes;
+
+/** X3 Programmes browse. Bundled from content/microcopy. */
+export const programmesCopy = {
+  section_recommended: programmes.section_recommended,
+  build_plan: programmes.build_plan,
+  section_styles: programmes.section_styles,
+  section_start_here: programmes.section_start_here,
+  section_single_sessions: programmes.section_single_sessions,
+  see_all: programmes.see_all,
+  current_plan: programmes.current_plan,
+  coach_reviewed: programmes.coach_reviewed,
+  start_session: programmes.start_session,
+  play_a11y: programmes.play_a11y,
+  style_gym_confidence: programmes.style_gym_confidence,
+  style_strength: programmes.style_strength,
+  style_glutes: programmes.style_glutes,
+  style_upper: programmes.style_upper,
+  style_full_body: programmes.style_full_body,
+  style_cardio: programmes.style_cardio,
+  style_busy_gym: programmes.style_busy_gym,
+  style_stretch: programmes.style_stretch,
+  style_cant_get_to_gym: programmes.style_cant_get_to_gym,
+  empty_style: programmes.empty_style,
+} as const;
+
 export const subscriptionBanners = {
   trial_ending: subscription.banner_trial_ending,
   trial_ending_cta: subscription.banner_trial_ending_cta,

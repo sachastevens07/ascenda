@@ -62,6 +62,13 @@ export {
 export { WhatsNextCard } from './WhatsNext';
 export { TabAvatar } from './TabAvatar';
 export { ArticleBody, ArticleCard, CategoryTile, RelatedLearn, openLearnArticle } from './Learn';
+export {
+  BuildPlanButton,
+  OverlayImageCard,
+  SingleSessionCard,
+  StyleGrid,
+  StyleTile,
+} from './Programmes';
 
 export {
   AnchoredMenu as OverflowMenu,

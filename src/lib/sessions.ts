@@ -313,6 +313,42 @@ export async function startStretchSession(routineDayId: string): Promise<Session
   throw error;
 }
 
+/** One-off session with no saved custom workout (X3 single sessions). Plan lives on the device. */
+export async function startStandaloneSession(): Promise<Session> {
+  const payload = {
+    programme_day_id: null as string | null,
+    source: 'custom' as const,
+    date: localDate(),
+    exercise_swaps: {} as Record<string, string>,
+    type: 'strength' as const,
+  };
+  const { data, error } = await insertSessionRow(payload, SESSION_COLUMNS);
+  if (!error) {
+    track('session_started', { source: 'custom' });
+    return toSession(data as Session)!;
+  }
+  if (isMissingBlockColumn(error)) {
+    const { type: _ignored, ...withoutType } = payload;
+    const custom = await supabase.from('sessions').insert(withoutType).select(SESSION_COLUMNS_CUSTOM).single();
+    if (!custom.error) {
+      track('session_started', { source: 'custom' });
+      return toSession(custom.data as Session)!;
+    }
+    if (isMissingCustomSessionColumns(custom.error)) {
+      throw new Error(
+        'Custom workouts need supabase/custom_workouts.sql run in the Supabase SQL editor.'
+      );
+    }
+    throw custom.error;
+  }
+  if (isMissingCustomSessionColumns(error)) {
+    throw new Error(
+      'Custom workouts need supabase/custom_workouts.sql run in the Supabase SQL editor.'
+    );
+  }
+  throw error;
+}
+
 export async function startCustomSession(
   customWorkoutId: string,
   exerciseSwaps: Record<string, string> = {}

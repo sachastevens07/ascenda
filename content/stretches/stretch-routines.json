@@ -1,0 +1,967 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Stretch routines: single sessions of timed holds (and a few counted moves), stored like routines with type 'stretch' (AGENTS.md S8).",
+    "duration_minutes includes about 8 seconds of transition per step. counts_towards_weekly_target is true for sessions of 10 minutes or more (AGENTS.md H1, S5).",
+    "Steps use the moves list below, which includes every move from content/warmups-cooldowns plus new ones. Merge them into one moves table by slug.",
+    "per_side means both sides; duration is per side.",
+    "Recovery days in routines (v2.3, W5) should link to full-body-recovery-flow, happy-hips, back-unwind or after-leg-day.",
+    "Draft for coach review before launch. No medical claims: these sessions aim to help her feel looser, not to treat pain."
+  ],
+  "moves": [
+    {
+      "slug": "easy-bike",
+      "name": "Easy bike",
+      "equipment": "cardio_machine",
+      "cue": "Easy pace, you could chat comfortably.",
+      "one_spot_alternative": "march-on-the-spot"
+    },
+    {
+      "slug": "easy-cross-trainer",
+      "name": "Easy cross-trainer",
+      "equipment": "cardio_machine",
+      "cue": "Easy pace, light resistance.",
+      "one_spot_alternative": "march-on-the-spot"
+    },
+    {
+      "slug": "march-on-the-spot",
+      "name": "March on the spot",
+      "equipment": "bodyweight",
+      "cue": "Lift your knees and swing your arms.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "cat-cow",
+      "name": "Cat-cow",
+      "equipment": "bodyweight",
+      "cue": "On hands and knees, round then gently arch your back with your breath.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "worlds-greatest-stretch",
+      "name": "World's greatest stretch",
+      "equipment": "bodyweight",
+      "cue": "Step into a lunge, hand inside your front foot, then reach that arm to the ceiling.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "bodyweight-squat",
+      "name": "Bodyweight squat",
+      "equipment": "bodyweight",
+      "cue": "Sit back and down, then stand tall. Smooth and easy.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "bodyweight-glute-bridge",
+      "name": "Glute bridge",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back, feet flat, lift your hips and squeeze.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "leg-swing-front-back",
+      "name": "Leg swings, front to back",
+      "equipment": "bodyweight",
+      "cue": "Hold something steady and swing one leg gently forwards and back.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "leg-swing-side",
+      "name": "Leg swings, side to side",
+      "equipment": "bodyweight",
+      "cue": "Face something steady and swing one leg across your body and out.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "bodyweight-reverse-lunge",
+      "name": "Reverse lunge",
+      "equipment": "bodyweight",
+      "cue": "Step back softly, lower your back knee, return.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "hip-circles",
+      "name": "Standing hip circles",
+      "equipment": "bodyweight",
+      "cue": "Lift one knee and draw a slow circle out to the side.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "arm-circles",
+      "name": "Arm circles",
+      "equipment": "bodyweight",
+      "cue": "Small circles growing bigger, forwards then backwards.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "band-pull-apart",
+      "name": "Band pull-apart",
+      "equipment": "band",
+      "cue": "Arms straight in front, pull the band apart to your chest.",
+      "one_spot_alternative": "wall-angel"
+    },
+    {
+      "slug": "wall-angel",
+      "name": "Wall angel",
+      "equipment": "bodyweight",
+      "cue": "Back against a wall, slide your arms up and down like a snow angel.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "open-book",
+      "name": "Open book",
+      "equipment": "bodyweight",
+      "cue": "Lie on your side, knees bent, and open your top arm across to the other side.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "inchworm",
+      "name": "Inchworm",
+      "equipment": "bodyweight",
+      "cue": "Fold forward, walk your hands out to a plank, then walk them back.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "scapular-push-up",
+      "name": "Scapular push-up",
+      "equipment": "bodyweight",
+      "cue": "In a plank, let your chest sink between your shoulder blades, then push away.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "childs-pose",
+      "name": "Child's pose",
+      "equipment": "bodyweight",
+      "cue": "Kneel, sit back on your heels and reach your arms forward. Breathe slowly.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "figure-four-stretch",
+      "name": "Figure four stretch",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back, cross one ankle over the other knee and pull gently towards you.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "lying-hamstring-stretch",
+      "name": "Lying hamstring stretch",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back and raise one straight leg, holding behind your thigh.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "half-kneeling-hip-flexor-stretch",
+      "name": "Half-kneeling hip flexor stretch",
+      "equipment": "bodyweight",
+      "cue": "Kneel on one knee, tuck your hips under and shift gently forward.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "side-lying-quad-stretch",
+      "name": "Side-lying quad stretch",
+      "equipment": "bodyweight",
+      "cue": "Lie on your side and pull your top heel towards your bottom.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "calf-stretch-wall",
+      "name": "Calf stretch",
+      "equipment": "bodyweight",
+      "cue": "Hands on a wall, one leg back with the heel down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "chest-stretch-wall",
+      "name": "Chest stretch",
+      "equipment": "bodyweight",
+      "cue": "Forearm on a wall or upright, turn your body gently away.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "cross-body-shoulder-stretch",
+      "name": "Cross-body shoulder stretch",
+      "equipment": "bodyweight",
+      "cue": "Pull one arm across your chest with the other.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "overhead-triceps-stretch",
+      "name": "Overhead triceps stretch",
+      "equipment": "bodyweight",
+      "cue": "Reach one hand down your back and gently press the elbow.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "kneeling-lat-stretch",
+      "name": "Kneeling lat stretch",
+      "equipment": "bodyweight",
+      "cue": "Kneel, place your hands on a bench and sink your chest down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "seated-spinal-twist",
+      "name": "Seated twist",
+      "equipment": "bodyweight",
+      "cue": "Sit tall, cross one leg over and turn gently towards the bent knee.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "slow-breathing",
+      "name": "Slow breathing",
+      "equipment": "bodyweight",
+      "cue": "Lie or sit comfortably. Breathe in for 4, out for 6.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "neck-side-stretch",
+      "name": "Neck side stretch",
+      "equipment": "bodyweight",
+      "cue": "Sit tall and tilt one ear towards your shoulder. Let your other shoulder drop.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "chin-tuck",
+      "name": "Chin tuck",
+      "equipment": "bodyweight",
+      "cue": "Sit tall and gently slide your chin straight back, like making a double chin.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "thread-the-needle",
+      "name": "Thread the needle",
+      "equipment": "bodyweight",
+      "cue": "On hands and knees, slide one arm under your body and rest your shoulder down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "hip-90-90-switch",
+      "name": "90/90 hip switch",
+      "equipment": "bodyweight",
+      "cue": "Sit with both knees bent at right angles and slowly rotate them side to side.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "butterfly-stretch",
+      "name": "Butterfly stretch",
+      "equipment": "bodyweight",
+      "cue": "Sit with the soles of your feet together and let your knees relax down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "frog-stretch",
+      "name": "Frog stretch",
+      "equipment": "bodyweight",
+      "cue": "On all fours, slide your knees wide and gently rock your hips back.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "supported-deep-squat",
+      "name": "Supported deep squat",
+      "equipment": "bodyweight",
+      "cue": "Hold a rack or bench and sink into a comfortable deep squat.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "supported-pigeon",
+      "name": "Pigeon stretch",
+      "equipment": "bodyweight",
+      "cue": "Front shin across the mat, back leg long. Use a rolled towel under your hip if needed.",
+      "one_spot_alternative": "figure-four-stretch"
+    },
+    {
+      "slug": "standing-forward-fold",
+      "name": "Standing forward fold",
+      "equipment": "bodyweight",
+      "cue": "Soft knees, let your upper body hang heavy.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "supine-twist",
+      "name": "Lying twist",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back and let both knees fall to one side.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "knees-to-chest",
+      "name": "Knees to chest",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back and hug both knees in. Rock gently if it feels nice.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "happy-baby",
+      "name": "Happy baby",
+      "equipment": "bodyweight",
+      "cue": "Lie on your back, hold your feet and let your knees drop wide.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "sphinx",
+      "name": "Sphinx",
+      "equipment": "bodyweight",
+      "cue": "Lie on your front and prop yourself up on your forearms. Relax your shoulders.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "seated-forward-fold",
+      "name": "Seated forward fold",
+      "equipment": "bodyweight",
+      "cue": "Sit with legs long and reach towards your feet with a long back.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "standing-side-bend",
+      "name": "Standing side bend",
+      "equipment": "bodyweight",
+      "cue": "Reach one arm overhead and lean gently to the other side.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "legs-up-the-wall",
+      "name": "Legs up the wall",
+      "equipment": "bodyweight",
+      "cue": "Lie with your legs resting up a wall. Arms relaxed by your sides.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "shoulder-rolls",
+      "name": "Shoulder rolls",
+      "equipment": "bodyweight",
+      "cue": "Roll your shoulders slowly up, back and down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "wrist-and-forearm-stretch",
+      "name": "Wrist and forearm stretch",
+      "equipment": "bodyweight",
+      "cue": "Arm straight, gently pull your fingers back, then down.",
+      "one_spot_alternative": null
+    },
+    {
+      "slug": "low-lunge-reach",
+      "name": "Low lunge with reach",
+      "equipment": "bodyweight",
+      "cue": "From a kneeling lunge, reach the same-side arm up and over.",
+      "one_spot_alternative": null
+    }
+  ],
+  "stretch_routines": [
+    {
+      "slug": "morning-mobility",
+      "name": "Morning Mobility",
+      "subtitle": "Wake your whole body up",
+      "type": "stretch",
+      "area": "full_body",
+      "occasion": "morning",
+      "duration_minutes": 11,
+      "counts_towards_weekly_target": true,
+      "tags": [
+        "Full body",
+        "11 minutes",
+        "Beginner friendly"
+      ],
+      "display_tags": [
+        "Full body",
+        "11 minutes"
+      ],
+      "short_description": "A gentle 11-minute flow to loosen everything up first thing. No equipment, just a mat.",
+      "who_its_for": [
+        "You feel stiff in the mornings",
+        "You want an easy way to start the day moving",
+        "You'd like a stretch habit that takes 10 minutes"
+      ],
+      "coach_note": "Move slowly and breathe through every stretch. You should feel looser at the end, not tired.",
+      "cover_image_slug": "morning-mobility-cover",
+      "steps": [
+        {
+          "slug": "cat-cow",
+          "reps": 8
+        },
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 40
+        },
+        {
+          "slug": "thread-the-needle",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "low-lunge-reach",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "worlds-greatest-stretch",
+          "reps": 3,
+          "per_side": true
+        },
+        {
+          "slug": "standing-forward-fold",
+          "duration_seconds": 40
+        },
+        {
+          "slug": "standing-side-bend",
+          "duration_seconds": 20,
+          "per_side": true
+        },
+        {
+          "slug": "shoulder-rolls",
+          "duration_seconds": 30
+        },
+        {
+          "slug": "hip-circles",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "arm-circles",
+          "duration_seconds": 30
+        },
+        {
+          "slug": "supported-deep-squat",
+          "duration_seconds": 45,
+          "note": "Hold a bench or doorframe."
+        },
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 45
+        }
+      ]
+    },
+    {
+      "slug": "after-leg-day",
+      "name": "After Leg Day",
+      "subtitle": "Ease off your legs and glutes",
+      "type": "stretch",
+      "area": "lower_body",
+      "occasion": "post_workout",
+      "duration_minutes": 11,
+      "counts_towards_weekly_target": true,
+      "tags": [
+        "Lower body",
+        "Recovery",
+        "11 minutes"
+      ],
+      "display_tags": [
+        "Lower body",
+        "Recovery"
+      ],
+      "short_description": "The perfect way to finish a lower-body session, or to loosen up the day after.",
+      "who_its_for": [
+        "You've just trained legs or glutes",
+        "Your legs feel tight the day after training",
+        "You want a calm 10 minutes to finish your session"
+      ],
+      "coach_note": "Hold each stretch somewhere between a gentle pull and comfortable. Never force it.",
+      "cover_image_slug": "after-leg-day-cover",
+      "steps": [
+        {
+          "slug": "knees-to-chest",
+          "duration_seconds": 40
+        },
+        {
+          "slug": "figure-four-stretch",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "lying-hamstring-stretch",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "half-kneeling-hip-flexor-stretch",
+          "duration_seconds": 35,
+          "per_side": true,
+          "note": "Mat or towel under your knee."
+        },
+        {
+          "slug": "side-lying-quad-stretch",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "butterfly-stretch",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "calf-stretch-wall",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "supine-twist",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "happy-baby",
+          "duration_seconds": 45
+        }
+      ]
+    },
+    {
+      "slug": "desk-reset",
+      "name": "Desk Reset",
+      "subtitle": "Six minutes for neck, shoulders and hips",
+      "type": "stretch",
+      "area": "upper_body",
+      "occasion": "anytime",
+      "duration_minutes": 6,
+      "counts_towards_weekly_target": false,
+      "tags": [
+        "Neck and shoulders",
+        "6 minutes",
+        "No mat needed"
+      ],
+      "display_tags": [
+        "Neck and shoulders",
+        "6 minutes"
+      ],
+      "short_description": "Undo a long day of sitting. Most of it can be done standing, so it works anywhere.",
+      "who_its_for": [
+        "You sit at a desk or study for long periods",
+        "Your neck and shoulders feel tight",
+        "You want something quick you can do anywhere"
+      ],
+      "coach_note": "Small, slow movements work best here. Keep breathing and keep it comfortable.",
+      "cover_image_slug": "desk-reset-cover",
+      "steps": [
+        {
+          "slug": "shoulder-rolls",
+          "duration_seconds": 30
+        },
+        {
+          "slug": "chin-tuck",
+          "reps": 8
+        },
+        {
+          "slug": "neck-side-stretch",
+          "duration_seconds": 25,
+          "per_side": true
+        },
+        {
+          "slug": "chest-stretch-wall",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "standing-side-bend",
+          "duration_seconds": 20,
+          "per_side": true
+        },
+        {
+          "slug": "wrist-and-forearm-stretch",
+          "duration_seconds": 20,
+          "per_side": true
+        },
+        {
+          "slug": "standing-forward-fold",
+          "duration_seconds": 30
+        }
+      ]
+    },
+    {
+      "slug": "happy-hips",
+      "name": "Happy Hips",
+      "subtitle": "A slow session for your hips",
+      "type": "stretch",
+      "area": "hips",
+      "occasion": "anytime",
+      "duration_minutes": 11,
+      "counts_towards_weekly_target": true,
+      "tags": [
+        "Hips",
+        "Mobility",
+        "11 minutes"
+      ],
+      "display_tags": [
+        "Hips",
+        "Mobility"
+      ],
+      "short_description": "A slower session all about your hips. Great before a squat day or on a rest day.",
+      "who_its_for": [
+        "Your hips feel tight or stuck",
+        "You'd like more comfortable depth in squats",
+        "You sit a lot during the day"
+      ],
+      "coach_note": "Hip stretches can feel intense. Ease off if you feel anything sharp, and use a towel for support wherever you like.",
+      "cover_image_slug": "happy-hips-cover",
+      "steps": [
+        {
+          "slug": "cat-cow",
+          "reps": 8
+        },
+        {
+          "slug": "hip-90-90-switch",
+          "reps": 6,
+          "note": "Slow and controlled."
+        },
+        {
+          "slug": "frog-stretch",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "low-lunge-reach",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "supported-pigeon",
+          "duration_seconds": 45,
+          "per_side": true,
+          "note": "Figure four on your back works too."
+        },
+        {
+          "slug": "half-kneeling-hip-flexor-stretch",
+          "duration_seconds": 35,
+          "per_side": true,
+          "note": "Mat or towel under your knee."
+        },
+        {
+          "slug": "figure-four-stretch",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "butterfly-stretch",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "supported-deep-squat",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "happy-baby",
+          "duration_seconds": 45
+        }
+      ]
+    },
+    {
+      "slug": "back-unwind",
+      "name": "Back Unwind",
+      "subtitle": "10 minutes to loosen your back and spine",
+      "type": "stretch",
+      "area": "back",
+      "occasion": "anytime",
+      "duration_minutes": 10,
+      "counts_towards_weekly_target": true,
+      "tags": [
+        "Back",
+        "Gentle",
+        "10 minutes"
+      ],
+      "display_tags": [
+        "Back",
+        "Gentle"
+      ],
+      "short_description": "Gentle movements to help your back feel looser after sitting, standing or training.",
+      "who_its_for": [
+        "Your back feels stiff after a long day",
+        "You'd like a gentle, slow session",
+        "You want to move your spine in every direction"
+      ],
+      "coach_note": "Keep every movement gentle. If you have back pain, check with your GP or a physiotherapist before doing this session.",
+      "cover_image_slug": "back-unwind-cover",
+      "steps": [
+        {
+          "slug": "knees-to-chest",
+          "duration_seconds": 40
+        },
+        {
+          "slug": "cat-cow",
+          "reps": 10
+        },
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "thread-the-needle",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "sphinx",
+          "duration_seconds": 40
+        },
+        {
+          "slug": "supine-twist",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "open-book",
+          "reps": 6,
+          "per_side": true
+        },
+        {
+          "slug": "seated-spinal-twist",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "happy-baby",
+          "duration_seconds": 40
+        },
+        {
+          "slug": "slow-breathing",
+          "duration_seconds": 45
+        }
+      ]
+    },
+    {
+      "slug": "shoulders-and-upper-back",
+      "name": "Shoulders and Upper Back",
+      "subtitle": "Open up after pressing, pulling or a day at a desk",
+      "type": "stretch",
+      "area": "upper_body",
+      "occasion": "post_workout",
+      "duration_minutes": 10,
+      "counts_towards_weekly_target": true,
+      "tags": [
+        "Upper body",
+        "Posture",
+        "10 minutes"
+      ],
+      "display_tags": [
+        "Upper body",
+        "Posture"
+      ],
+      "short_description": "Release your chest, shoulders and upper back. A natural partner to any upper-body day.",
+      "who_its_for": [
+        "You've just trained upper body",
+        "You'd like to sit and stand a little taller",
+        "Your shoulders feel rounded or tight"
+      ],
+      "coach_note": "Let your breathing do the work. Each breath out, sink a little further into the stretch.",
+      "cover_image_slug": "shoulders-cover",
+      "steps": [
+        {
+          "slug": "arm-circles",
+          "duration_seconds": 30
+        },
+        {
+          "slug": "shoulder-rolls",
+          "duration_seconds": 30
+        },
+        {
+          "slug": "wall-angel",
+          "reps": 10
+        },
+        {
+          "slug": "open-book",
+          "reps": 6,
+          "per_side": true
+        },
+        {
+          "slug": "chest-stretch-wall",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "cross-body-shoulder-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "overhead-triceps-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "thread-the-needle",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "kneeling-lat-stretch",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 45
+        }
+      ]
+    },
+    {
+      "slug": "full-body-recovery-flow",
+      "name": "Full-Body Recovery Flow",
+      "subtitle": "20 minutes for rest and recovery days",
+      "type": "stretch",
+      "area": "full_body",
+      "occasion": "recovery_day",
+      "duration_minutes": 20,
+      "counts_towards_weekly_target": true,
+      "tags": [
+        "Full body",
+        "Recovery day",
+        "20 minutes"
+      ],
+      "display_tags": [
+        "Full body",
+        "Recovery day"
+      ],
+      "short_description": "A longer, slower session for recovery days. Every major area, with time to breathe.",
+      "who_its_for": [
+        "You're on a recovery day in your routine",
+        "You want something gentle that still counts",
+        "You'd like a calm 20 minutes"
+      ],
+      "coach_note": "There's no rush today. Take extra breaths in any stretch that feels good.",
+      "cover_image_slug": "recovery-flow-cover",
+      "steps": [
+        {
+          "slug": "slow-breathing",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "cat-cow",
+          "reps": 10
+        },
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "thread-the-needle",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "worlds-greatest-stretch",
+          "reps": 3,
+          "per_side": true
+        },
+        {
+          "slug": "low-lunge-reach",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "supported-pigeon",
+          "duration_seconds": 45,
+          "per_side": true
+        },
+        {
+          "slug": "lying-hamstring-stretch",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "side-lying-quad-stretch",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "supine-twist",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "half-kneeling-hip-flexor-stretch",
+          "duration_seconds": 35,
+          "per_side": true
+        },
+        {
+          "slug": "calf-stretch-wall",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "butterfly-stretch",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "chest-stretch-wall",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "cross-body-shoulder-stretch",
+          "duration_seconds": 30,
+          "per_side": true
+        },
+        {
+          "slug": "happy-baby",
+          "duration_seconds": 40
+        },
+        {
+          "slug": "slow-breathing",
+          "duration_seconds": 60
+        }
+      ]
+    },
+    {
+      "slug": "wind-down",
+      "name": "Wind Down",
+      "subtitle": "A calm way to end the day",
+      "type": "stretch",
+      "area": "full_body",
+      "occasion": "evening",
+      "duration_minutes": 11,
+      "counts_towards_weekly_target": true,
+      "tags": [
+        "Evening",
+        "Relaxing",
+        "11 minutes"
+      ],
+      "display_tags": [
+        "Evening",
+        "Relaxing"
+      ],
+      "short_description": "Slow, floor-based stretches and breathing. A calm way to finish your day.",
+      "who_its_for": [
+        "You like to switch off in the evening",
+        "You prefer slow, relaxing sessions",
+        "You want stretches you can do lying down"
+      ],
+      "coach_note": "Dim the lights if you can. Breathe out for longer than you breathe in.",
+      "cover_image_slug": "wind-down-cover",
+      "steps": [
+        {
+          "slug": "childs-pose",
+          "duration_seconds": 60
+        },
+        {
+          "slug": "knees-to-chest",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "supine-twist",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "lying-hamstring-stretch",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "figure-four-stretch",
+          "duration_seconds": 40,
+          "per_side": true
+        },
+        {
+          "slug": "happy-baby",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "butterfly-stretch",
+          "duration_seconds": 45
+        },
+        {
+          "slug": "legs-up-the-wall",
+          "duration_seconds": 90,
+          "note": "A wall in the stretching area works perfectly."
+        },
+        {
+          "slug": "slow-breathing",
+          "duration_seconds": 60
+        }
+      ]
+    }
+  ]
+}

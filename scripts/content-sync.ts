@@ -458,13 +458,13 @@ async function main(): Promise<void> {
 
   reportWarmups();
   reportAchievements();
+  reportSingleSessions();
 
   line('No table in the current schema, skipped');
   const deferred = [
     ['content/cardio', 'cardio library table is W2; finisher fields are stored on cardio blocks now'],
     ['content/food', 'recipes and collections (F2)'],
     ['content/machine-guides', 'machine guides (W4)'],
-    ['content/single-sessions', 'single sessions (X3)'],
   ];
   for (const [folder, why] of deferred) line(`  ${folder}: ${why}`);
   line();
@@ -538,6 +538,20 @@ function reportOnboardingGoals(): void {
   line(`  Recommendation rules: ${rules.length}. Formula: ${text(estimate.formula) || 'from file'}`);
   line('  Stored on profiles (main_goals, gym_experience, onboarding_answers jsonb, age_band, cardio_preference).');
   line('  Live sync does not write onboarding into the database.');
+  line();
+}
+
+function reportSingleSessions(): void {
+  line('single sessions  ←  content/single-sessions/single-sessions.json (bundled, X3)');
+  const file = asRecord(readJson('single-sessions/single-sessions.json'));
+  const sessions = asArray(file.single_sessions).map(asRecord);
+  const gym = sessions.filter((item) => text(item.where) !== 'home');
+  const home = sessions.filter((item) => text(item.where) === 'home');
+  const reviewed = sessions.filter((item) => text(item.reviewed_by)).length;
+  line(`  Sessions: ${sessions.length} (${gym.length} gym, ${home.length} days you can't get to the gym)`);
+  line(`  Coach reviewed: ${reviewed}`);
+  line('  Bundled in the app. Live sync does not write a single_sessions table.');
+  line("  Home-only sessions stay off Home and off the main Single sessions carousel.");
   line();
 }
 
