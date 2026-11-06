@@ -34,6 +34,7 @@ import {
   fetchChallenges,
   type Challenge,
 } from '@/lib/challenges';
+import { fillCopy, routineActionsCopy } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
@@ -124,11 +125,11 @@ export function RoutineCatalogue({
   function requestLeave() {
     if (!enrolment) return;
     showDialog(
-      `End ${enrolment.routine.name}?`,
-      'Your logged sessions and progress stay. Upcoming planned sessions from this plan will be cleared.',
+      fillCopy(routineActionsCopy.end_title, { routine_name: enrolment.routine.name }),
+      routineActionsCopy.end_body,
       [
-        { text: 'End routine', style: 'destructive', onPress: handleLeave },
-        { text: 'Keep this plan', style: 'cancel' },
+        { text: routineActionsCopy.end_cta, style: 'destructive', onPress: handleLeave },
+        { text: routineActionsCopy.cancel, style: 'cancel' },
       ]
     );
   }
@@ -335,10 +336,7 @@ export function RoutineCatalogue({
       </ScrollView>
 
       <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={() => setMenuOpen(false)}>
-        <MenuHeader
-          label={enrolment?.routine.name ?? 'Your routine'}
-          detail="Your logged sessions stay if you end this plan."
-        />
+        <MenuHeader label={enrolment?.routine.name ?? 'Your routine'} />
         <MenuRow
           label="View routine"
           onPress={() => {
@@ -347,7 +345,7 @@ export function RoutineCatalogue({
           }}
         />
         <MenuRow
-          label={isLeaving ? 'Ending…' : 'End routine'}
+          label={isLeaving ? 'Ending…' : routineActionsCopy.end_cta}
           danger
           onPress={() => {
             setMenuOpen(false);

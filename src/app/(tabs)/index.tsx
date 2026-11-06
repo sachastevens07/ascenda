@@ -62,7 +62,7 @@ import {
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { billingReminderCopy, fillCopy, subscriptionBanners } from '@/lib/copy';
+import { billingReminderCopy, fillCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
@@ -523,11 +523,11 @@ export default function HomeScreen() {
   function requestEndRoutine() {
     if (!data?.enrolment) return;
     showDialog(
-      `End ${data.enrolment.routine.name}?`,
-      'Your logged sessions and progress stay. Upcoming planned sessions from this plan will be cleared.',
+      fillCopy(routineActionsCopy.end_title, { routine_name: data.enrolment.routine.name }),
+      routineActionsCopy.end_body,
       [
-        { text: 'End routine', style: 'destructive', onPress: handleEndRoutine },
-        { text: 'Keep this plan', style: 'cancel' },
+        { text: routineActionsCopy.end_cta, style: 'destructive', onPress: handleEndRoutine },
+        { text: routineActionsCopy.cancel, style: 'cancel' },
       ]
     );
   }
@@ -957,22 +957,22 @@ export default function HomeScreen() {
           </>
         ) : (
           <>
-            <MenuHeader
-              label={enrolment?.routine.name ?? 'Your routine'}
-              detail="Switch to another plan, or end this one. Your logged sessions stay."
-            />
+            <MenuHeader label={enrolment?.routine.name ?? 'Your routine'} />
             {weekDays.length > 1 ? (
-              <MenuRow label="Do a different day" onPress={() => setRoutineMenuMode('days')} />
+              <MenuRow
+                label={nextSessionMenuCopy.different_day}
+                onPress={() => setRoutineMenuMode('days')}
+              />
             ) : null}
             <MenuRow
-              label="Switch routine"
+              label={nextSessionMenuCopy.switch}
               onPress={() => {
                 setRoutineMenuOpen(false);
                 router.push('/programmes' as Href);
               }}
             />
             <MenuRow
-              label="End routine"
+              label={nextSessionMenuCopy.end}
               danger
               onPress={() => {
                 setRoutineMenuOpen(false);

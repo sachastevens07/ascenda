@@ -112,3 +112,22 @@ export const mediaUnavailableCopy = microcopy.strings.errors.media_unavailable;
 export function fillCopy(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? ''));
 }
+
+const home = microcopy.strings.home;
+
+/** Home next-session card ⋯. Bundled microcopy, not loaded by content:sync. */
+export const nextSessionMenuCopy = home.next_session_menu;
+
+const routineActions = microcopy.strings.routine_actions;
+
+/** Switch and End routine confirmations. Bundled from content/microcopy. */
+export const routineActionsCopy = {
+  start: routineActions.start,
+  switch_title: routineActions.switch_title,
+  switch_body: routineActions.switch_body,
+  switch_cta: routineActions.switch_cta,
+  end_title: routineActions.end_title,
+  end_body: routineActions.end_body,
+  end_cta: routineActions.end_cta,
+  cancel: routineActions.cancel,
+} as const;

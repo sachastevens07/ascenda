@@ -75,6 +75,8 @@ import {
   type RoutineWeek,
 } from '@/lib/routines';
 import { fetchLastFinishedRoutineSession } from '@/lib/sessions';
+import { fillCopy, routineActionsCopy } from '@/lib/copy';
+import { ensureSubscribed } from '@/lib/paywall';
 import { openRoutineLogger } from '@/lib/startLogger';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
@@ -275,37 +277,32 @@ export default function RoutineDetailScreen() {
   function requestStart() {
     if (!routine) return;
     if (enrolment?.routine_id === routine.id) return;
-    const message = enrolment
-      ? `This ends ${enrolment.routine.name} and starts ${routine.name} from week 1. Your logged sessions stay. Upcoming planned sessions from the old plan will be cleared.`
-      : `${routine.name} starts today. Home will show your next session from this plan.`;
-    showDialog(`Start ${routine.name}?`, message, [
-      { text: 'Start routine', onPress: handleStart },
-      { text: 'Not now', style: 'cancel' },
-    ]);
+    if (enrolment) {
+      showDialog(
+        fillCopy(routineActionsCopy.switch_title, { routine_name: routine.name }),
+        routineActionsCopy.switch_body,
+        [
+          { text: routineActionsCopy.switch_cta, onPress: handleStart },
+          { text: routineActionsCopy.cancel, style: 'cancel' },
+        ]
+      );
+      return;
+    }
+    void handleStart();
   }
 
   function requestSwitch() {
-    showDialog(
-      'Switch routine?',
-      'Pick another plan from Programmes. Your logged sessions stay. This plan stays current until you start a new one.',
-      [
-        {
-          text: 'Choose a plan',
-          onPress: () => router.push('/programmes' as Href),
-        },
-        { text: 'Not now', style: 'cancel' },
-      ]
-    );
+    router.push('/programmes' as Href);
   }
 
   function requestEnd() {
     if (!routine) return;
     showDialog(
-      `End ${routine.name}?`,
-      'Your logged sessions and progress stay. Upcoming planned sessions from this plan will be cleared.',
+      fillCopy(routineActionsCopy.end_title, { routine_name: routine.name }),
+      routineActionsCopy.end_body,
       [
-        { text: 'End routine', style: 'destructive', onPress: handleEnd },
-        { text: 'Keep this plan', style: 'cancel' },
+        { text: routineActionsCopy.end_cta, style: 'destructive', onPress: handleEnd },
+        { text: routineActionsCopy.cancel, style: 'cancel' },
       ]
     );
   }
@@ -325,6 +322,7 @@ export default function RoutineDetailScreen() {
   }
 
   async function handleStart() {
+    if (!ensureSubscribed()) return;
     if (!routine) return;
     setIsStarting(true);
     try {
@@ -340,6 +338,7 @@ export default function RoutineDetailScreen() {
   }
 
   async function openNextSession() {
+    if (!ensureSubscribed()) return;
     if (!enrolment || !nextSession) return;
     setIsStarting(true);
     try {
@@ -404,7 +403,11 @@ export default function RoutineDetailScreen() {
   const showMore = routine.description.trim().length > 90;
   const phases = groupRoutinePhases(routine.weeks);
   const weeksByNumber = new Map(routine.weeks.map((week) => [week.week_number, week]));
-  const stickyLabel = isCurrent ? 'Start next session' : 'Start routine';
+  const stickyLabel = isCurrent
+    ? 'Start next session'
+    : enrolment
+      ? routineActionsCopy.switch_cta
+      : routineActionsCopy.start;
   const showSticky = !isCurrent || Boolean(nextSession);
   const currentWeek = enrolment && isCurrent ? currentEnrolmentWeek(enrolment) : 0;
   const chips = [
@@ -697,7 +700,7 @@ export default function RoutineDetailScreen() {
       </DetailLayout>
 
       <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={() => setMenuOpen(false)}>
-        <MenuHeader label={routine.name} detail="Copy this plan, or change the one you’re on." />
+        <MenuHeader label={routine.name} />
         <MenuRow
           label={isDuplicating ? 'Copying…' : 'Duplicate'}
           onPress={() => {
@@ -708,14 +711,14 @@ export default function RoutineDetailScreen() {
         {isCurrent ? (
           <>
             <MenuRow
-              label="Switch routine"
+              label={routineActionsCopy.switch_cta}
               onPress={() => {
                 setMenuOpen(false);
                 requestSwitch();
               }}
             />
             <MenuRow
-              label={isEnding ? 'Ending…' : 'End routine'}
+              label={isEnding ? 'Ending…' : routineActionsCopy.end_cta}
               danger
               onPress={() => {
                 setMenuOpen(false);
