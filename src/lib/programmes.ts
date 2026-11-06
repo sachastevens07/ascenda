@@ -45,6 +45,8 @@ export type ProgrammeExercise = {
   candidates?: SlotExercise[];
   /** Extra slot that isn't in the programme (a level-up try added to the session). */
   added?: boolean;
+  /** Extra warm-up sets for today only (set numbers 0, -1, -2). */
+  warmup_sets?: number;
   role?: ExerciseRole;
   target_rir?: number;
   tempo?: string;

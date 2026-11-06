@@ -4,6 +4,7 @@ import { customWorkoutToDay, fetchCustomWorkout } from '@/lib/customWorkouts';
 import type { EquipmentAccess } from '@/lib/profile';
 import {
   fetchProgrammeDay,
+  formatKg,
   getWeightSuggestion,
   usesWeight,
   type ProgrammeDay,
@@ -30,6 +31,8 @@ export type SessionPlanSlot = {
   rep_max: number;
   rest_seconds: number;
   exercise: SlotExercise;
+  /** Extra warm-up sets logged as set_number 0, -1, -2. Today only. */
+  warmup_sets?: number;
 };
 
 export const EASE_BACK_WEIGHT_SCALE = 0.9;
@@ -42,6 +45,8 @@ export type SessionPlan = {
   slots: SessionPlanSlot[];
   /** Welcome-back lighter session: fewer sets live on the slots; weights scale in the logger. */
   easeBack?: SessionEaseBack;
+  /** Epoch ms when the live timer started (first ticked set, or Start timer). */
+  timerStartedAt?: number | null;
 };
 
 function sessionPlanKey(id: string): string {
@@ -68,7 +73,11 @@ export async function clearSessionPlan(sessionId: string): Promise<void> {
 
 export const FALLBACK_REST_SECONDS = 90;
 
-export function sessionPlanFromDay(day: ProgrammeDay, easeBack?: SessionEaseBack): SessionPlan {
+export function sessionPlanFromDay(
+  day: ProgrammeDay,
+  easeBack?: SessionEaseBack,
+  timerStartedAt?: number | null
+): SessionPlan {
   return {
     slots: day.exercises.map((item) => ({
       position: item.position,
@@ -77,8 +86,10 @@ export function sessionPlanFromDay(day: ProgrammeDay, easeBack?: SessionEaseBack
       rep_max: item.rep_max,
       rest_seconds: item.rest_seconds ?? getDefaultRestSeconds(),
       exercise: item.exercise,
+      warmup_sets: item.warmup_sets ?? 0,
     })),
     easeBack,
+    timerStartedAt: timerStartedAt ?? null,
   };
 }
 
@@ -116,6 +127,7 @@ export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): Programm
         exercise: slot.exercise,
         original: swapped ? existing.exercise : existing?.original,
         added: existing?.added,
+        warmup_sets: slot.warmup_sets ?? existing?.warmup_sets ?? 0,
         role: existing?.role,
         target_rir: existing?.target_rir,
         tempo: existing?.tempo,
@@ -154,6 +166,19 @@ export function setNumbers(item: ProgrammeExercise): number[] {
   return Array.from({ length: item.sets }, (_, index) => index + 1);
 }
 
+/** Warm-up sets use 0, -1, -2 so working set 1 stays the progression set. */
+export function warmupSetNumbers(count: number): number[] {
+  return Array.from({ length: Math.max(0, count) }, (_, index) => -index);
+}
+
+export function allSetNumbers(item: ProgrammeExercise): number[] {
+  return [...warmupSetNumbers(item.warmup_sets ?? 0), ...setNumbers(item)];
+}
+
+export function isWarmupSetNumber(setNumber: number): boolean {
+  return setNumber <= 0;
+}
+
 export function parseWeight(text: string): number | null {
   return parseDisplayWeight(text);
 }
@@ -184,7 +209,7 @@ export function buildEntries(
     const exerciseId = item.exercise.id;
     const previousSets = previous[exerciseId] ?? [];
     const suggestion = getWeightSuggestion(item, previousSets);
-    for (const setNumber of setNumbers(item)) {
+    for (const setNumber of allSetNumbers(item)) {
       const saved = logged.find(
         (set) => set.exercise_id === exerciseId && set.set_number === setNumber
       );
@@ -196,7 +221,7 @@ export function buildEntries(
         };
         continue;
       }
-      if (withProgression && !weightScale && suggestion.kind === 'increase') {
+      if (withProgression && !weightScale && !isWarmupSetNumber(setNumber) && suggestion.kind === 'increase') {
         entries[setKey(exerciseId, setNumber)] = {
           weight: formatWeightInput(suggestion.kg),
           reps: String(item.rep_min),
@@ -206,7 +231,7 @@ export function buildEntries(
       }
       const last =
         previousSets.find((set) => set.set_number === setNumber) ??
-        previousSets[previousSets.length - 1];
+        (isWarmupSetNumber(setNumber) ? undefined : previousSets[previousSets.length - 1]);
       let weightKg = last?.weight_kg ?? null;
       if (weightKg !== null && weightScale) {
         weightKg = scaleEaseWeight(weightKg, weightScale);
@@ -228,6 +253,7 @@ export type SessionLog = {
   logged: LoggedSet[];
   previous: Record<string, LoggedSet[]>;
   easeBack: SessionEaseBack | null;
+  timerStartedAt: number | null;
 };
 
 /** Everything needed to show a session in the logger. Null if the session or its day is gone. */
@@ -257,13 +283,20 @@ export async function loadSessionLog(
     fetchSessionSets(id),
     fetchPreviousSets(exerciseIds, id),
   ]);
-  return { session, day, logged, previous, easeBack: plan?.easeBack ?? null };
+  const hasTicked = logged.some((set) => set.completed);
+  const timerStartedAt =
+    typeof plan?.timerStartedAt === 'number'
+      ? plan.timerStartedAt
+      : hasTicked
+        ? new Date(session.started_at).getTime()
+        : null;
+  return { session, day, logged, previous, easeBack: plan?.easeBack ?? null, timerStartedAt };
 }
 
 /** The first set not yet ticked, in programme order. Null when every set is done. */
 export function getNextSet(day: ProgrammeDay, entries: Record<string, SetEntry>): NextSet | null {
   for (const item of day.exercises) {
-    for (const setNumber of setNumbers(item)) {
+    for (const setNumber of allSetNumbers(item)) {
       const entry = entries[setKey(item.exercise.id, setNumber)];
       if (!entry || entry.completed) continue;
       return {
@@ -292,7 +325,8 @@ export function getSetRecords(
     const history = bests[item.exercise.id];
     if (!history || (item.exercise.weight_increase_kg ?? 0) < 0) continue;
     const running = { ...history };
-    for (const setNumber of setNumbers(item)) {
+    for (const setNumber of allSetNumbers(item)) {
+      if (isWarmupSetNumber(setNumber)) continue;
       const key = setKey(item.exercise.id, setNumber);
       const entry = entries[key];
       const weightKg = entry?.completed ? parseWeight(entry.weight) : null;
@@ -321,6 +355,36 @@ export function formatClock(totalSeconds: number): string {
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = String(seconds % 60).padStart(2, '0');
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${secs}` : `${minutes}:${secs}`;
+}
+
+/** Last time this set was logged, e.g. "8 kg × 10". */
+export function formatPreviousSet(set: LoggedSet | undefined, weighted: boolean): string {
+  if (!set) return '-';
+  if (weighted && set.weight_kg !== null && set.reps !== null) {
+    return `${formatKg(set.weight_kg)} × ${set.reps}`;
+  }
+  if (set.reps !== null) return `${set.reps} reps`;
+  if (weighted && set.weight_kg !== null) return formatKg(set.weight_kg);
+  return '-';
+}
+
+/** Sum of ticked weight × reps in this session, in kilograms. */
+export function sessionVolumeKg(
+  day: ProgrammeDay,
+  entries: Record<string, SetEntry>
+): number {
+  let total = 0;
+  for (const item of day.exercises) {
+    if (!usesWeight(item.exercise.equipment)) continue;
+    for (const setNumber of allSetNumbers(item)) {
+      const entry = entries[setKey(item.exercise.id, setNumber)];
+      if (!entry?.completed) continue;
+      const kg = parseWeight(entry.weight);
+      const reps = parseReps(entry.reps);
+      if (kg !== null && reps !== null) total += kg * reps;
+    }
+  }
+  return total;
 }
 
 /** "52 minutes", "1 hour 5 minutes". */

@@ -13,6 +13,7 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
   /** Outline only for paired choices such as Camera / Library. */
   appearance?: 'soft' | 'outline';
+  size?: 'default' | 'compact';
 };
 
 export function PrimaryButton({
@@ -21,11 +22,13 @@ export function PrimaryButton({
   disabled = false,
   loading = false,
   style,
+  size = 'default',
 }: ButtonProps) {
   const { colours, radius } = useTheme();
   const fill = colours.brand;
   const ink = colours.onBrand;
   const busy = disabled || loading;
+  const compact = size === 'compact';
   return (
     <Pressable
       onPress={onPress}
@@ -34,6 +37,7 @@ export function PrimaryButton({
       accessibilityState={{ disabled: busy, busy: loading }}
       style={({ pressed }) => [
         styles.base,
+        compact && styles.compact,
         { backgroundColor: fill, borderRadius: radius.full },
         pressed && !busy && styles.pressed,
         busy && styles.disabled,
@@ -93,13 +97,16 @@ export function SecondaryButton({
 export function TextButton({
   label,
   onPress,
+  onLongPress,
   disabled = false,
   style,
-}: Omit<ButtonProps, 'loading' | 'appearance'>) {
+}: Omit<ButtonProps, 'loading' | 'appearance'> & { onLongPress?: () => void }) {
   const { colours } = useTheme();
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={280}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityState={{ disabled }}
@@ -142,6 +149,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  compact: {
+    minHeight: 36,
+    paddingHorizontal: 14,
   },
   textWrap: {
     minHeight: 44,

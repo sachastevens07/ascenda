@@ -35,6 +35,19 @@ export function formatRestTimerDefault(seconds: number): string {
   return `${seconds} seconds`;
 }
 
+/** Short rest label for the logger chip, without the word "rest". */
+export function formatRestChipTime(seconds: number): string {
+  if (seconds <= 0) return 'off';
+  if (seconds % 60 === 0) {
+    const minutes = seconds / 60;
+    return minutes === 1 ? '1 min' : `${minutes} min`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (minutes === 0) return `${secs} s`;
+  return `${minutes} min ${secs} s`;
+}
+
 export function useDefaultRestSeconds(): RestTimerDefault {
   const [value, setValue] = useState(currentRestDefault);
   useEffect(() => {

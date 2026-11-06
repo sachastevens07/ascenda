@@ -4,33 +4,24 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
-import { formatKg } from '@/lib/programmes';
-import { useWeightUnit } from '@/lib/units';
+import { fillCopy, loggerCopy } from '@/lib/copy';
 import { useNow, useWorkout } from '@/lib/workout';
-import { formatClock, type NextSet } from '@/lib/workoutLog';
-
-/** "Set 2 · 12 kg × 8", "Set 2 · 10 reps". */
-function describeSet(next: NextSet): string {
-  const load =
-    next.weightKg !== null && next.reps !== null
-      ? `${formatKg(next.weightKg)} × ${next.reps}`
-      : next.reps !== null
-        ? `${next.reps} reps`
-        : null;
-  return [`Set ${next.setNumber}`, load].filter(Boolean).join(' · ');
-}
+import { formatClock } from '@/lib/workoutLog';
 
 /** Shown above the tabs while a workout is in progress. Tap to go back to it. */
 export function WorkoutBar() {
   const { colours } = useTheme();
-  useWeightUnit();
-  const { active, nextSet, restEndsAt } = useWorkout();
-  const now = useNow(active !== null, 500);
+  const { active, restEndsAt } = useWorkout();
+  const now = useNow(active !== null && active.startedAt !== null, 500);
   if (!active) return null;
 
   const isResting = restEndsAt !== null && restEndsAt > now;
-  const elapsed = formatClock((now - active.startedAt) / 1000);
-  const rest = isResting ? formatClock(Math.ceil((restEndsAt - now) / 1000)) : null;
+  const elapsed = active.startedAt === null ? '0:00' : formatClock((now - active.startedAt) / 1000);
+  const time = isResting ? formatClock(Math.ceil((restEndsAt - now) / 1000)) : elapsed;
+  const label = fillCopy(loggerCopy.mini_bar, {
+    session_name: active.dayName,
+    time: isResting ? `Rest ${time}` : time,
+  });
   return (
     <Pressable
       onPress={() =>
@@ -44,74 +35,21 @@ export function WorkoutBar() {
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={[
-        `Workout in progress: ${active.dayName}, ${elapsed}`,
-        nextSet
-          ? `Next: ${nextSet.exerciseName}, ${describeSet(nextSet)}`
-          : active.source === 'stretch'
-            ? 'Tap to continue your stretch'
-            : 'All sets done',
-        rest ? `Rest ${rest}` : null,
-        'Go back to your workout',
-      ]
-        .filter(Boolean)
-        .join('. ')}>
+      accessibilityLabel={`${label}. Go back to your workout`}>
       <View style={styles.row}>
         <View style={[styles.liveDot, { backgroundColor: colours.accent }]} />
-        <AppText variant="caption" style={[styles.dayName, { color: colours.bg }]}>
-          {active.dayName}
-        </AppText>
-        <AppText variant="caption" style={[styles.elapsed, { color: colours.bg }]}>
-          {elapsed}
+        <AppText variant="bodySm" style={[styles.label, { color: colours.bg }]} numberOfLines={1}>
+          {label}
         </AppText>
         <Ionicons name="chevron-up" size={18} color={colours.bg} />
       </View>
-
-      {nextSet ? (
-        <>
-          <AppText variant="bodySm" style={{ color: colours.bg }}>
-            <AppText variant="bodySm" style={{ color: colours.brandSoft }}>
-              Next:{' '}
-            </AppText>
-            {nextSet.exerciseName}
-          </AppText>
-          <View style={styles.row}>
-            <AppText variant="bodySm" style={[styles.set, { color: colours.brandSoft }]}>
-              {describeSet(nextSet)}
-            </AppText>
-            {rest && <RestPill time={rest} />}
-          </View>
-        </>
-      ) : (
-        <View style={styles.row}>
-          <AppText variant="bodySm" style={[styles.set, { color: colours.brandSoft }]}>
-            {active.source === 'stretch' ? 'Tap to continue your stretch.' : 'All sets done. Tap to finish.'}
-          </AppText>
-          {rest && <RestPill time={rest} />}
-        </View>
-      )}
     </Pressable>
-  );
-}
-
-function RestPill({ time }: { time: string }) {
-  const { colours } = useTheme();
-  return (
-    <View style={[styles.rest, { backgroundColor: colours.brand }]}>
-      <AppText variant="caption" style={{ color: colours.onBrand }}>
-        Rest
-      </AppText>
-      <AppText variant="bodySm" style={[styles.restTime, { color: colours.onBrand }]}>
-        {time}
-      </AppText>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
-    gap: 3,
-    paddingVertical: 9,
+    paddingVertical: 10,
     paddingHorizontal: 14,
     marginBottom: 8,
     borderRadius: 18,
@@ -134,24 +72,8 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  dayName: {
+  label: {
     flex: 1,
-  },
-  elapsed: {
-    fontVariant: ['tabular-nums'],
-  },
-  set: {
-    flex: 1,
-  },
-  rest: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 5,
-    paddingVertical: 2,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-  },
-  restTime: {
     fontVariant: ['tabular-nums'],
   },
 });

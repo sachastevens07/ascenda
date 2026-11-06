@@ -22,8 +22,8 @@ import { buildEntries, getNextSet, loadSessionLog, type NextSet } from '@/lib/wo
 export type ActiveWorkout = {
   sessionId: string;
   dayName: string;
-  /** Epoch milliseconds. */
-  startedAt: number;
+  /** Epoch milliseconds. Null until the first ticked set or Start timer. */
+  startedAt: number | null;
   source?: SessionSource;
 };
 
@@ -106,7 +106,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       setActive({
         sessionId: current.id,
         dayName: log.day.name,
-        startedAt: new Date(current.started_at).getTime(),
+        startedAt: log.timerStartedAt,
       });
       setNextSet(
         getNextSet(
