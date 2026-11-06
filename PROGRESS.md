@@ -82,7 +82,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **24. H5** done this pass. Wait for Sacha to say "next". The next unchecked item is **25. X2**. Do not start the next unchecked box until she says so.
+Current: **25. X2** done this pass. Wait for Sacha to say "next". The next unchecked item is **26. X3**. Do not start the next unchecked box until she says so.
 
 The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -131,7 +131,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
   6. **AI (empty until v2.5).** Trends of `ai_feature_used` broken down by `feature`. Funnel: `ai_feature_used` → `ai_result_accepted`. Trends of `ai_limit_reached` and `ai_fallback_used`. Never chart prompt or answer text (the app does not send it).
 
 ### Stage 5: Depth and discovery
-- [ ] **25. X2** Home with all sections. Partly done: D3 (avatar, quote, welcome-back, featured cards, From Learn). Not the full X2 section list.
+- [x] **25. X2** Home with all sections (6 Nov 2026). Order: header (avatar, search, planner), welcome hero (~45% height, `hero-home`, state-based CTA), H4 What’s next if it has a recommendation, week strip with today’s session or empty, daily quote, Featured for you, challenge (joined or Quiet Start featured window), refer banner (copy-only; dismiss ×), Your week so far (sessions, PBs, minutes, awards + native text Share), Awards preview, Stretch today, Picked for you (Learn with an Article chip). Each section hides if empty. Welcome-back is a hero state (H2), not a second card. Meals segment omitted until Food. Share is numbers only (no photos, no view-shot library). Full X6 (codes, Apple offers) stays for item 29. Copy from `content/microcopy` `strings.home` (bundled). No new SQL. Logger, progression and swaps were not changed. Did not add a library.
 - [ ] **26. X3** Programmes browse and single sessions. Not started. `content/single-sessions` and the new stretch file are not loaded.
 - [x] **27. D2 to D9** Design fixes are in. D9 thumbnails are photos or equipment icons, not WorkoutX.
 - [ ] **28. N6 + N7** Partly done: Learn has 16 bundled articles (content has 34). Daily quote works from 90 bundled quotes (content has more). Hide quote is in Profile.
@@ -222,6 +222,7 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 - P1: `useSubscription().isPro` means she has the `ascenda_pro` entitlement (trial, paid or billing grace). Status is `none` | `trial` | `active` | `grace` | `expired`. Starting or resuming a session without that entitlement opens the paywall. Onboarding always presents the paywall unless she already has access. Until the webhook writes a `subscriptions` row, RLS treats her as not entitled (week 1 overview still readable; `/content` overlay may still fill later weeks on device). Tester insert is commented at the bottom of `supabase/subscriptions_p1.sql`. Dev override storage key is `dev-access-override` so an old "Subscribed" flag is ignored. Did not add a library.
 - C3: Close on the paywall always goes to locked home (tabs stay; overlay on every tab). Refer-a-friend on locked home is copy only until X6 (tap shows the terms dialog, no codes yet). History is a read-only stack screen. Hero photo uses slug `hero-paywall` (falls back to the smiling barbell cover until `hero-paywall.jpg` is uploaded). No new SQL.
 - H8: personal window on join (next Monday and next 1st only). Catalogue has no start_date. Weekly missions from `/content`. Catch-up repeats a missed week up to twice, then ends quietly. One at a time. No participant counts. Joins save on-device if SQL is missing.
+- X2: Home sections hide when empty. Welcome-back is the hero state. Refer banner is copy-only until X6. Week share is native text (numbers only); no view-shot library. Meals strip waits for Food. Hero photo slug is `hero-home`. No new SQL.
 - Primary buttons are plum. Coral is highlights only. Unrestyled screens stay cream until their design pass.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
 - Do not use native `Switch` under the pill tab bar; do not use `Modal` + `borderRadius: 999` for tall menus.

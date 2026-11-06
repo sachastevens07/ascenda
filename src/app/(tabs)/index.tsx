@@ -1,12 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
-  Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   View,
   useWindowDimensions,
@@ -25,18 +23,25 @@ import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AppText,
   ArticleCard,
-  CoverPlaceholder,
+  AwardsPreview,
+  ChallengeHomeCard,
+  HomeHeader,
   IconButton,
   ImageCard,
   OverflowMenu,
   PrimaryButton,
-  ProgressRing,
   QuoteCard,
+  ReferralBanner,
   SectionHeader,
+  ShareStatsCard,
   TabAvatar,
   TextButton,
-  WelcomeBackCard,
+  WeekStripCard,
+  WeekTodayEmpty,
+  WeekTodaySession,
+  WelcomeHero,
   WhatsNextCard,
+  pickAwardsPreview,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
@@ -45,8 +50,17 @@ import {
   fetchStreakGoal,
   getWeeklyStreak,
   normalizeWeeklyTarget,
+  sessionDurationSeconds,
   type WeeklyStreak,
 } from '@/lib/activityStats';
+import {
+  EMPTY_ACHIEVEMENT_EXTRAS,
+  fetchAchievementExtras,
+  fetchHideAchievements,
+  getAchievementBadges,
+  type AchievementBadge,
+} from '@/lib/achievements';
+import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import {
   fetchHideStreak,
   maybeCelebrateStreakGoal,
@@ -61,8 +75,10 @@ import {
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { billingReminderCopy, fillCopy, nextSessionMenuCopy, routineActionsCopy, streakCopy, streakWeeksLabel, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
-import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
+import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, referCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
+import { coverForChallenge, coverForRoutine, imageSourceForSlug, takeCoverSource } from '@/lib/images';
+import { addDays, loadPlannerWeek, startOfWeekMonday, toIso, type PlannerDayView, type PlannerWeek } from '@/lib/planner';
+import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { ensureSubscribed } from '@/lib/paywall';
@@ -77,6 +93,7 @@ import {
   fetchActiveEnrolment,
   fetchLatestCompletedEnrolment,
   fetchRoutine,
+  fetchCompletedEnrolmentCount,
   fetchRoutineProgressMap,
   fetchRoutines,
   firstDayOfRoutine,
@@ -106,10 +123,11 @@ import {
   saveWelcomeBackPreview,
   type WelcomeBackOffer,
 } from '@/lib/welcomeBack';
-import { openRoutineLogger } from '@/lib/startLogger';
+import { openLogger, openRoutineLogger } from '@/lib/startLogger';
 import {
   fetchActiveSession,
   fetchLastFinishedRoutineSession,
+  startCustomSession,
   type Session,
 } from '@/lib/sessions';
 import { fetchStretchRoutines } from '@/lib/stretches';
@@ -135,19 +153,95 @@ type HomeData = {
   streak: WeeklyStreak;
   hideStreak: boolean;
   hideQuote: boolean;
+  hideAchievements: boolean;
+  hideRefer: boolean;
   welcomeBack: WelcomeBackOffer | null;
   handOff: NextRoutineOffer | null;
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
   learn: LearnArticle[];
   quotes: DailyQuote[];
+  planner: PlannerWeek | null;
+  weekStats: { sessions: number; personalBests: number; minutes: string; awards: number };
+  awardPreview: AchievementBadge[];
+  lifetimeSessions: number;
 };
 
-function greeting(name: string | null | undefined): string {
-  const hour = new Date().getHours();
-  const hello = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const first = name?.trim().split(/\s+/)[0];
-  return first ? `${hello}, ${first}` : hello;
+const REFER_HIDE_KEY = 'home-refer-banner-hidden';
+const WEEKDAY_SHORT = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const;
+
+function fallbackStripDays(): { iso: string; isToday: boolean }[] {
+  const monday = startOfWeekMonday(new Date());
+  const today = toIso(new Date());
+  return Array.from({ length: 7 }, (_, index) => {
+    const iso = toIso(addDays(monday, index));
+    return { iso, isToday: iso === today };
+  });
+}
+
+function heroCopyFor(input: {
+  inProgress: boolean;
+  welcomeBack: WelcomeBackOffer | null;
+  enrolment: boolean;
+  rest: boolean;
+  planned: boolean;
+  doneToday: boolean;
+  nextName: string;
+  minutes: number;
+  exercises: number;
+  nextDay: string;
+  name: string;
+}): { eyebrow: string; title: string; subtitle: string; cta: string } {
+  if (input.inProgress) {
+    return {
+      eyebrow: 'In progress',
+      title: 'You have a session going',
+      subtitle: 'Finish or discard it before starting another.',
+      cta: 'Continue session',
+    };
+  }
+  if (input.welcomeBack) {
+    return {
+      eyebrow: welcomeBackCopy.eyebrow,
+      title: input.welcomeBack.title,
+      subtitle: input.welcomeBack.body,
+      cta: welcomeBackCopy.card_cta,
+    };
+  }
+  if (!input.enrolment) {
+    return {
+      eyebrow: homeCopy.hero_no_routine.eyebrow,
+      title: homeCopy.hero_no_routine.title,
+      subtitle: homeCopy.hero_no_routine.subtitle,
+      cta: homeCopy.hero_no_routine.cta,
+    };
+  }
+  if (input.doneToday) {
+    return {
+      eyebrow: homeCopy.hero_done_today.eyebrow,
+      title: fillCopy(homeCopy.hero_done_today.title, { name: input.name }),
+      subtitle: fillCopy(homeCopy.hero_done_today.subtitle, {
+        session_name: input.nextName,
+        next_day: input.nextDay,
+      }),
+      cta: homeCopy.hero_done_today.cta,
+    };
+  }
+  if (input.rest) {
+    return homeCopy.hero_rest_day;
+  }
+  if (input.planned) {
+    return {
+      eyebrow: homeCopy.hero_planned_today.eyebrow,
+      title: fillCopy(homeCopy.hero_planned_today.title, { session_name: input.nextName }),
+      subtitle: fillCopy(homeCopy.hero_planned_today.subtitle, {
+        minutes: input.minutes,
+        exercise_count: input.exercises,
+      }),
+      cta: homeCopy.hero_planned_today.cta,
+    };
+  }
+  return homeCopy.hero_nothing_planned;
 }
 
 function sessionThumbnail(
@@ -164,7 +258,7 @@ function sessionThumbnail(
 
 export default function HomeScreen() {
   const tabBarHeight = useTabBarHeight();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const { colours, spacing, radius, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
@@ -183,8 +277,10 @@ export default function HomeScreen() {
   const [welcomeBackMenuAnchor, setWelcomeBackMenuAnchor] = useState<AnchorRect | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [quoteHidden, setQuoteHidden] = useState(false);
+  const [referHidden, setReferHidden] = useState(false);
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
+  const heroHeight = Math.round(Math.min(Math.max(height * 0.45, 260), 380));
 
   useEffect(() => {
     const ends = subscription.trialEndsAt;
@@ -234,6 +330,12 @@ export default function HomeScreen() {
             completedEnrolment,
             handOffPreview,
             quotes,
+            plannerWeek,
+            sets,
+            hideAchievements,
+            extras,
+            completedRoutines,
+            hideReferStored,
           ] = await Promise.all([
             fetchRoutines(),
             fetchActiveEnrolment(),
@@ -249,6 +351,19 @@ export default function HomeScreen() {
             fetchLatestCompletedEnrolment().catch(() => null),
             fetchHandOffPreview().catch(() => false),
             fetchDailyQuotes().catch(() => DAILY_QUOTES),
+            loadPlannerWeek().catch(() => null),
+            fetchProgressSets().catch(() => []),
+            fetchHideAchievements().catch(() => false),
+            fetchAchievementExtras(
+              equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used)
+            ).catch(() => ({
+              ...EMPTY_ACHIEVEMENT_EXTRAS,
+              knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
+            })),
+            fetchCompletedEnrolmentCount().catch(() => 0),
+            AsyncStorage.getItem(REFER_HIDE_KEY)
+              .then((value) => value === '1')
+              .catch(() => false),
           ]);
           const missingSql = routines.length === 0;
           const featured = answers
@@ -293,7 +408,22 @@ export default function HomeScreen() {
               }).catch(() => null)
             : null;
           const learnArticles = await fetchLearnArticles().catch(() => []);
-          const learn = recommendArticles(learnArticles, answers, { limit: 2 });
+          const learn = recommendArticles(learnArticles, answers, { limit: 4 });
+          const badges = getAchievementBadges({
+            sessions,
+            sets,
+            streak,
+            completedRoutines,
+            extras,
+          });
+          const weekStart = plannerWeek?.weekStart ?? toIso(startOfWeekMonday(new Date()));
+          const weekEnd = plannerWeek?.weekEnd ?? toIso(addDays(startOfWeekMonday(new Date()), 6));
+          const weekSessions = sessions.filter((session) => session.date >= weekStart && session.date <= weekEnd);
+          const weekSeconds = weekSessions.reduce((sum, session) => sum + sessionDurationSeconds(session), 0);
+          const weekPbs = getPersonalBests(sets).filter((item) => item.date >= weekStart && item.date <= weekEnd).length;
+          const weekAwards = badges.filter(
+            (item) => item.unlocked && item.unlockedOn && item.unlockedOn >= weekStart && item.unlockedOn <= weekEnd
+          ).length;
           if (!isCurrent) return;
           setData({
             featured,
@@ -307,14 +437,26 @@ export default function HomeScreen() {
             streak,
             hideStreak,
             hideQuote,
+            hideAchievements,
+            hideRefer: hideReferStored,
             welcomeBack,
             handOff,
             challenge: pickHomeChallenge(challenges),
             progress,
             learn,
             quotes,
+            planner: plannerWeek,
+            weekStats: {
+              sessions: weekSessions.length,
+              personalBests: weekPbs,
+              minutes: String(Math.max(0, Math.round(weekSeconds / 60))),
+              awards: weekAwards,
+            },
+            awardPreview: pickAwardsPreview(badges),
+            lifetimeSessions: sessions.length,
           });
           setQuoteHidden(hideQuote);
+          setReferHidden(hideReferStored);
           setLoadState('ready');
           if (!hideStreak) void maybeCelebrateStreakGoal(streak);
           void maybeTrackStreakRepair(streak);
@@ -336,6 +478,7 @@ export default function HomeScreen() {
       answers?.confidence,
       attempt,
       profile?.display_name,
+      profile?.onboarding_answers?.machines_used,
       subscription.isPro,
       subscription.isLoading,
     ])
@@ -531,6 +674,50 @@ export default function HomeScreen() {
     saveHideQuote(true).catch(() => setQuoteHidden(false));
   }
 
+  function dismissRefer() {
+    setReferHidden(true);
+    AsyncStorage.setItem(REFER_HIDE_KEY, '1').catch(() => setReferHidden(false));
+  }
+
+  function shareWeekStats() {
+    const stats = data?.weekStats;
+    if (!stats) return;
+    void Share.share({
+      message: `${homeCopy.section_week_so_far}: ${stats.sessions} sessions, ${stats.personalBests} personal bests, ${stats.minutes} minutes, ${stats.awards} awards.`,
+    }).catch(() => {});
+  }
+
+  async function startTodayFromPlanner(today: PlannerDayView) {
+    if (!ensureSubscribed()) return;
+    if (today.kind === 'custom' && today.plan?.custom_workout_id) {
+      setIsStarting(true);
+      try {
+        const session = await startCustomSession(today.plan.custom_workout_id);
+        openLogger(session.id);
+      } catch (error) {
+        showDialog('Couldn’t start that session', describeRoutineError(error));
+      } finally {
+        setIsStarting(false);
+      }
+      return;
+    }
+    const dayId = today.plan?.routine_day_id;
+    const day = dayId && data?.routine ? data.routine.weeks.flatMap((week) => week.days).find((item) => item.id === dayId) : null;
+    if (day) {
+      await startDay(day);
+      return;
+    }
+    if (data?.next) {
+      await startDay(data.next.day);
+      return;
+    }
+    router.push('/planner' as Href);
+  }
+
+  function inviteFriend() {
+    showDialog(referCopy.screen_title, fillCopy(referCopy.screen_body, { friend_trial_days: 14 }));
+  }
+
   function openRoutineMenu() {
     if (!data?.enrolment) return;
     measureAnchor(routineMenuRef.current, (rect) => {
@@ -561,30 +748,104 @@ export default function HomeScreen() {
     );
   }
 
-  const { featured, stretches, enrolment, routine, next, missingSql, activeSession, streak, hideStreak, welcomeBack, handOff, challenge, progress, learn, quotes } =
-    data;
+  const {
+    featured,
+    stretches,
+    enrolment,
+    routine,
+    next,
+    missingSql,
+    activeSession,
+    welcomeBack,
+    handOff,
+    challenge,
+    progress,
+    learn,
+    quotes,
+    planner,
+    weekStats,
+    awardPreview,
+    lifetimeSessions,
+    hideAchievements,
+  } = data;
   const quote = pickDailyQuote(quotes);
-  const showQuote = !quoteHidden;
+  const showQuote = !quoteHidden && Boolean(quote?.text);
   const inProgress = Boolean(activeSession);
-  const weekRatio = streak.targetThisWeek > 0 ? streak.doneThisWeek / streak.targetThisWeek : 0;
-  const showWeekCard = streak.targetThisWeek > 0;
   const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
   const usedPhotos = new Set<string>();
+  const heroImage = imageSourceForSlug('hero-home');
+  if (heroImage) usedPhotos.add('hero-home');
   const nextThumb =
-    enrolment && next && !inProgress ? sessionThumbnail(next.day, enrolment.routine, usedPhotos) : null;
+    enrolment && next ? sessionThumbnail(next.day, enrolment.routine, usedPhotos) : null;
   const handOffImage = handOff ? takeCoverSource(coverForRoutine(handOff.routine), usedPhotos) : null;
   const handOffCard = handOff ? handOffCardCopy(handOff) : null;
   const challengeCover = challenge ? takeCoverSource(coverForChallenge(challenge), usedPhotos) : null;
+  const plannerDays = planner?.days ?? [];
+  const todayPlan = plannerDays.find((day) => day.isToday) ?? null;
+  const stripDays =
+    plannerDays.length > 0
+      ? plannerDays.map((day, index) => ({
+          iso: day.iso,
+          label: WEEKDAY_SHORT[index] ?? 'Mo',
+          isToday: day.isToday,
+          planned: day.kind === 'routine' || day.kind === 'custom',
+          completed: day.completed,
+        }))
+      : fallbackStripDays().map((day, index) => ({
+          iso: day.iso,
+          label: WEEKDAY_SHORT[index] ?? 'Mo',
+          isToday: day.isToday,
+          planned: false,
+          completed: false,
+        }));
+  const upcoming = plannerDays.find(
+    (day) => !day.isToday && !day.isPast && (day.kind === 'routine' || day.kind === 'custom')
+  );
+  const firstName = profile?.display_name?.trim().split(/\s+/)[0] ?? 'you';
+  const hero = heroCopyFor({
+    inProgress,
+    welcomeBack,
+    enrolment: Boolean(enrolment),
+    rest: todayPlan?.kind === 'rest',
+    planned:
+      todayPlan?.kind === 'routine' ||
+      todayPlan?.kind === 'custom' ||
+      (!todayPlan && Boolean(next)),
+    doneToday: Boolean(todayPlan?.completed),
+    nextName: next?.day.name ?? todayPlan?.title ?? 'your session',
+    minutes: enrolment?.routine.session_minutes ?? todayPlan?.sessionMinutes ?? 45,
+    exercises: next?.day.exercises.length ?? todayPlan?.exercises.length ?? 0,
+    nextDay: upcoming?.title ?? next?.day.name ?? 'your next session',
+    name: firstName,
+  });
+  const showTodaySession =
+    !inProgress &&
+    !welcomeBack &&
+    todayPlan &&
+    (todayPlan.kind === 'routine' || todayPlan.kind === 'custom') &&
+    !todayPlan.completed;
+  const showTodayEmpty =
+    !inProgress &&
+    !welcomeBack &&
+    !showTodaySession &&
+    todayPlan?.kind !== 'rest' &&
+    !todayPlan?.completed;
+  const showFeatured = missingSql || featured.length > 0;
+  const showWeekStats = lifetimeSessions > 0;
+  const showAwards = !hideAchievements && awardPreview.length > 0;
+  const showRefer = !referHidden;
+  const showLearn = learn.length > 0;
+  const showStretch = stretches.length > 0;
+  const showChallenge = Boolean(challenge);
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
-        <View style={styles.header}>
-          <TabAvatar />
-          <AppText variant="display" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
-            {greeting(profile?.display_name)}
-          </AppText>
-        </View>
+        <HomeHeader
+          leading={<TabAvatar />}
+          onSearch={() => router.push('/programmes' as Href)}
+          onPlanner={() => router.push('/planner' as Href)}
+        />
 
         {subscription.status === 'grace' ? (
           <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
@@ -668,82 +929,59 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {inProgress ? (
-          <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-            <AppText variant="eyebrow" style={{ color: colours.accent }}>In progress</AppText>
-            <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.sm }}>You have a session going</AppText>
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }}>
-              Finish or discard it before starting another.
-            </AppText>
-            <PrimaryButton label="Continue session" onPress={continueSession} style={{ marginTop: spacing.md }} />
-          </View>
-        ) : null}
-
-        {welcomeBack && !inProgress ? (
-          <WelcomeBackCard
-            eyebrow={welcomeBackCopy.eyebrow}
-            title={welcomeBack.title}
-            body={welcomeBack.body}
-            cta={welcomeBackCopy.card_cta}
-            seeOptions={welcomeBackCopy.see_options}
-            starting={isStarting}
-            onStartLighter={() => void startLighterSession()}
-            onSeeOptions={openWelcomeBackOptions}
-            optionsRef={welcomeBackMenuRef}
-            style={shadow}
-          />
-        ) : null}
-
-        {enrolment && next && !inProgress && !welcomeBack ? (
-          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-            <View style={[styles.heroClip, { borderRadius: radius.xl }]}>
-              <Pressable onPress={openSessionDetail} accessibilityRole="button">
-                <View style={[styles.heroPhoto, { backgroundColor: colours.surfaceMuted }]}>
-                  {nextThumb ? (
-                    <Image
-                      source={nextThumb}
-                      style={styles.heroFill}
-                      resizeMode="cover"
-                      accessibilityLabel={next.day.name}
-                    />
-                  ) : (
-                    <CoverPlaceholder />
-                  )}
-                </View>
-              </Pressable>
-              <View style={styles.heroBody}>
-                <View style={styles.heroHeading}>
-                  <View style={styles.flex}>
-                    <AppText variant="eyebrow" style={{ color: colours.accent }}>
-                      Week {next.weekNumber} · day {next.day.day_number}
-                    </AppText>
-                    <Pressable onPress={openSessionDetail} accessibilityRole="button">
-                      <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.xs }}>{next.day.name}</AppText>
-                    </Pressable>
-                    <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-                      {enrolment.routine.session_minutes} min · {next.day.exercises.length} exercises
-                    </AppText>
-                  </View>
-                  <View ref={routineMenuRef} collapsable={false}>
-                    <IconButton
-                      icon="ellipsis-horizontal"
-                      variant="muted"
-                      accessibilityLabel="Session options"
-                      onPress={openRoutineMenu}
-                    />
-                  </View>
-                </View>
-                <PrimaryButton
-                  label={isStarting ? 'Starting…' : 'Start session'}
-                  onPress={openSessionDetail}
-                  loading={isStarting}
-                  disabled={isStarting || subscription.isLoading}
-                  style={{ marginTop: spacing.md }}
-                />
-              </View>
-            </View>
-          </View>
-        ) : null}
+        <WelcomeHero
+          image={heroImage}
+          height={heroHeight}
+          eyebrow={hero.eyebrow}
+          title={hero.title}
+          subtitle={hero.subtitle}
+          cta={hero.cta}
+          onCta={() => {
+            if (inProgress) {
+              continueSession();
+              return;
+            }
+            if (welcomeBack) {
+              void startLighterSession();
+              return;
+            }
+            if (!enrolment) {
+              router.push('/programmes' as Href);
+              return;
+            }
+            if (todayPlan?.completed) {
+              router.push('/(tabs)/activity' as Href);
+              return;
+            }
+            if (todayPlan?.kind === 'rest') {
+              router.push({ pathname: '/programmes', params: { section: 'stretches' } } as Href);
+              return;
+            }
+            if (todayPlan && (todayPlan.kind === 'routine' || todayPlan.kind === 'custom')) {
+              void startTodayFromPlanner(todayPlan);
+              return;
+            }
+            if (next) {
+              openSessionDetail();
+              return;
+            }
+            router.push('/planner' as Href);
+          }}
+          ctaLoading={isStarting}
+          ctaDisabled={isStarting || subscription.isLoading}
+          secondaryLabel={welcomeBack && !inProgress ? welcomeBackCopy.see_options : !enrolment ? 'Create a workout' : undefined}
+          onSecondary={
+            welcomeBack && !inProgress
+              ? openWelcomeBackOptions
+              : !enrolment
+                ? handleCreateWorkout
+                : undefined
+          }
+          secondaryRef={welcomeBack && !inProgress ? welcomeBackMenuRef : undefined}
+          menuRef={enrolment && next && !inProgress && !welcomeBack ? routineMenuRef : undefined}
+          onMenu={enrolment && next && !inProgress && !welcomeBack ? openRoutineMenu : undefined}
+          style={[styles.heroBleed, { borderRadius: 0 }]}
+        />
 
         {handOff && handOffCard && !inProgress ? (
           <WhatsNextCard
@@ -759,127 +997,105 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        {!enrolment && !inProgress && !welcomeBack && !handOff ? (
-          <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-            <AppText variant="eyebrow" style={{ color: colours.inkMuted }}>No routine yet</AppText>
-            <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.sm }}>Create a workout</AppText>
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }}>
-              Add exercises from the library, or pick a featured routine below.
-            </AppText>
-            <PrimaryButton label="Create a workout" onPress={handleCreateWorkout} style={{ marginTop: spacing.md }} />
-            <TextButton label="My workouts" onPress={() => router.push('/workouts' as Href)} />
-          </View>
-        ) : null}
-
-        {showWeekCard ? (
-          <View
-            style={[styles.weekCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}
-            accessibilityRole="text"
-            accessibilityLabel={fillCopy(streakCopy.this_week_progress, {
-              done: streak.doneThisWeek,
-              target: streak.targetThisWeek,
-            })}>
-            <ProgressRing progress={weekRatio} size={56} stroke={6}>
-              <AppText variant="caption" style={{ color: colours.ink }}>
-                {streak.doneThisWeek}/{streak.targetThisWeek}
-              </AppText>
-            </ProgressRing>
-            <View style={styles.flex}>
-              <AppText variant="title3" style={{ color: colours.ink }}>
-                {fillCopy(streakCopy.this_week_progress, {
-                  done: streak.doneThisWeek,
-                  target: streak.targetThisWeek,
-                })}
-              </AppText>
-              {hideStreak ? null : (
-                <View style={styles.streakBlock}>
-                  <View style={styles.streakRow}>
-                    <Ionicons name="flame" size={16} color={colours.accent} />
-                    <AppText variant="bodySm" style={{ color: colours.accent }}>
-                      {streakCopy.current_run}: {streakWeeksLabel(streak.current)}
-                    </AppText>
-                  </View>
-                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                    {streakCopy.weeks_trained}: {streak.weeksTrained}
-                  </AppText>
-                </View>
-              )}
-            </View>
-          </View>
-        ) : null}
-
-        {showQuote ? <QuoteCard quote={quote} onHide={hideQuote} /> : null}
-
-        {challenge ? (
-          <Pressable
-            onPress={() => router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)}
-            style={({ pressed }) => [
-              styles.card,
-              { backgroundColor: colours.surface, borderRadius: radius.xl },
-              shadow,
-              pressed && styles.pressed,
-            ]}
-            accessibilityRole="button">
-            {challengeCover ? (
-              <Image
-                source={challengeCover}
-                style={[styles.challengePhoto, { borderRadius: radius.md }]}
-                resizeMode="cover"
-                accessibilityLabel={challenge.name}
+        <WeekStripCard
+          days={stripDays}
+          onPressDay={() => router.push('/planner' as Href)}
+          todayCard={
+            showTodaySession && todayPlan ? (
+              <WeekTodaySession
+                title={todayPlan.title ?? next?.day.name ?? 'Today’s session'}
+                subtitle={
+                  todayPlan.subtitle ??
+                  `${enrolment?.routine.session_minutes ?? todayPlan.sessionMinutes ?? 45} min`
+                }
+                image={nextThumb}
+                onPress={() => void startTodayFromPlanner(todayPlan)}
               />
-            ) : (
-              <View style={[styles.challengePhoto, { borderRadius: radius.md, overflow: 'hidden' }]}>
-                <CoverPlaceholder />
-              </View>
-            )}
-            <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: spacing.sm }}>Challenge</AppText>
-            <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.sm }}>{challenge.name}</AppText>
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-              {challengeTimingCopy(challenge)}
-            </AppText>
-          </Pressable>
+            ) : showTodayEmpty ? (
+              <WeekTodayEmpty onExplore={() => router.push('/planner' as Href)} />
+            ) : null
+          }
+        />
+
+        {showQuote && quote ? (
+          <QuoteCard quote={quote} eyebrow={homeCopy.quote_eyebrow} onHide={hideQuote} />
         ) : null}
 
-        <View>
-          <SectionHeader
-            title="Featured for you"
-            actionLabel="See all"
-            onAction={() => router.push('/programmes' as Href)}
-          />
-          {missingSql ? (
-            <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-              <AppText variant="bodySm" style={{ color: colours.ink }}>{missingRoutinesMessage()}</AppText>
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.carousel}
-              style={styles.carouselBleed}>
-              {featured.map((routine) => (
-                <ImageCard
-                  key={routine.id}
-                  title={routine.name}
-                  subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
-                  image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
-                  letter={routine.name.slice(0, 1)}
-                  imageAspectRatio={16 / 10}
-                  progress={
-                    progress[routine.id] ? progress[routine.id].done / progress[routine.id].target : undefined
-                  }
-                  onPress={() => openRoutine(routine)}
-                  style={{ width: featuredWidth }}
-                />
-              ))}
-            </ScrollView>
-          )}
-        </View>
-
-        {stretches.length > 0 ? (
+        {showFeatured ? (
           <View>
             <SectionHeader
-              title="Stretch today"
-              actionLabel="See all"
+              title={homeCopy.section_featured}
+              actionLabel={homeCopy.see_all}
+              onAction={() => router.push('/programmes' as Href)}
+            />
+            {missingSql ? (
+              <View style={[styles.card, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
+                <AppText variant="bodySm" style={{ color: colours.ink }}>{missingRoutinesMessage()}</AppText>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.carousel}
+                style={styles.carouselBleed}>
+                {featured.map((routine) => (
+                  <ImageCard
+                    key={routine.id}
+                    title={routine.name}
+                    subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
+                    tags={routine.tags}
+                    image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
+                    letter={routine.name.slice(0, 1)}
+                    imageAspectRatio={16 / 10}
+                    progress={
+                      progress[routine.id] ? progress[routine.id].done / progress[routine.id].target : undefined
+                    }
+                    onPress={() => openRoutine(routine)}
+                    style={{ width: featuredWidth }}
+                  />
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        ) : null}
+
+        {showChallenge && challenge ? (
+          <ChallengeHomeCard
+            name={challenge.name}
+            timing={challengeTimingCopy(challenge)}
+            joined={Boolean(challenge.joined)}
+            image={challengeCover}
+            onPress={() => router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)}
+          />
+        ) : null}
+
+        {showRefer ? (
+          <ReferralBanner onInvite={inviteFriend} onDismiss={dismissRefer} />
+        ) : null}
+
+        {showWeekStats ? (
+          <ShareStatsCard
+            sessions={weekStats.sessions}
+            personalBests={weekStats.personalBests}
+            minutes={weekStats.minutes}
+            awards={weekStats.awards}
+            onShare={shareWeekStats}
+          />
+        ) : null}
+
+        {showAwards ? (
+          <AwardsPreview
+            badges={awardPreview}
+            onSeeAll={() => router.push('/(tabs)/activity' as Href)}
+            onOpen={() => router.push('/(tabs)/activity' as Href)}
+          />
+        ) : null}
+
+        {showStretch ? (
+          <View>
+            <SectionHeader
+              title={homeCopy.section_stretch_today}
+              actionLabel={homeCopy.see_all}
               onAction={() => router.push({ pathname: '/programmes', params: { section: 'stretches' } } as Href)}
             />
             <ScrollView
@@ -903,11 +1119,11 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {learn.length > 0 ? (
+        {showLearn ? (
           <View>
             <SectionHeader
-              title="From Learn"
-              actionLabel="See all"
+              title={homeCopy.section_personalised}
+              actionLabel={homeCopy.see_all}
               onAction={() => router.push('/(tabs)/learn' as Href)}
             />
             <ScrollView
@@ -916,7 +1132,7 @@ export default function HomeScreen() {
               contentContainerStyle={styles.carousel}
               style={styles.carouselBleed}>
               {learn.map((article) => (
-                <ArticleCard key={article.id} article={article} width={stretchWidth} />
+                <ArticleCard key={article.id} article={article} width={stretchWidth} kindChip="Article" />
               ))}
             </ScrollView>
           </View>
@@ -1028,10 +1244,8 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     gap: 16,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  heroBleed: {
+    marginHorizontal: -24,
   },
   centre: {
     flex: 1,
@@ -1048,49 +1262,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  heroClip: {
-    overflow: 'hidden',
-  },
-  heroPhoto: {
-    aspectRatio: 16 / 10,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroFill: {
-    width: '100%',
-    height: '100%',
-  },
-  challengePhoto: {
-    width: '100%',
-    aspectRatio: 16 / 10,
-    overflow: 'hidden',
-  },
-  heroBody: {
-    padding: 20,
-  },
-  heroHeading: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  weekCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    padding: 20,
-  },
-  streakBlock: {
-    marginTop: 6,
-  },
-  streakRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  flex: {
-    flex: 1,
-  },
   carouselBleed: {
     marginHorizontal: -24,
     marginVertical: -12,
@@ -1100,15 +1271,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     gap: 12,
-  },
-  limitButton: {
-    minHeight: 56,
-    marginTop: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  pressed: {
-    opacity: 0.8,
   },
 });

@@ -11,10 +11,12 @@ import { IconButton } from './IconButton';
 export function QuoteCard({
   quote,
   onHide,
+  eyebrow,
   style,
 }: {
   quote: DailyQuote;
   onHide: () => void;
+  eyebrow?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius, spacing, shadow } = useTheme();
@@ -37,6 +39,11 @@ export function QuoteCard({
         shadow,
         style,
       ]}>
+      {eyebrow ? (
+        <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: spacing.xs }}>
+          {eyebrow}
+        </AppText>
+      ) : null}
       <View style={styles.top}>
         <AppText variant="displaySm" italic style={{ color: colours.accent, marginTop: -8 }} accessibilityElementsHidden>
           “

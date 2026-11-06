@@ -95,6 +95,27 @@ export const lockedHomeCopy = microcopy.strings.locked_home;
 
 export const referCopy = microcopy.strings.refer;
 
+const home = microcopy.strings.home;
+
+/** X2 Home sections. Bundled from content/microcopy. Every section hides itself if empty. */
+export const homeCopy = {
+  hero_planned_today: home.hero_planned_today,
+  hero_rest_day: home.hero_rest_day,
+  hero_done_today: home.hero_done_today,
+  hero_nothing_planned: home.hero_nothing_planned,
+  hero_no_routine: home.hero_no_routine,
+  week_strip_empty: home.week_strip_empty,
+  section_featured: home.section_featured,
+  section_week_so_far: home.section_week_so_far,
+  section_awards: home.section_awards,
+  section_stretch_today: home.section_stretch_today,
+  section_personalised: home.section_personalised,
+  section_learn: home.section_learn,
+  see_all: home.see_all,
+  quote_eyebrow: home.quote_eyebrow,
+  share_week: home.share_week,
+} as const;
+
 export const subscriptionBanners = {
   trial_ending: subscription.banner_trial_ending,
   trial_ending_cta: subscription.banner_trial_ending_cta,
@@ -183,8 +204,6 @@ export const welcomeBackCopy = {
 } as const;
 
 export const welcomeBackFreshStartCopy = notifications.welcome_back_fresh_start;
-
-const home = microcopy.strings.home;
 
 /** Home next-session card ⋯. Bundled microcopy, not loaded by content:sync. */
 export const nextSessionMenuCopy = home.next_session_menu;

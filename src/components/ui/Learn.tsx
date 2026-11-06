@@ -39,10 +39,12 @@ export function ArticleCard({
   article,
   style,
   width,
+  kindChip,
 }: {
   article: LearnArticle;
   style?: StyleProp<ViewStyle>;
   width?: number;
+  kindChip?: string;
 }) {
   const { colours, radius, shadow } = useTheme();
   const image = articleImage(article);
@@ -59,6 +61,13 @@ export function ArticleCard({
           ) : (
             <CoverPlaceholder />
           )}
+          {kindChip ? (
+            <View style={[styles.badge, { backgroundColor: colours.surface, borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 4 }]}>
+              <AppText variant="eyebrow" style={{ color: colours.brand }}>
+                {kindChip}
+              </AppText>
+            </View>
+          ) : null}
         </View>
         <View style={styles.cardBody}>
           <AppText variant="eyebrow" style={{ color: colours.accent }}>

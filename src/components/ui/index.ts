@@ -43,9 +43,22 @@ export {
   SafetyNotice,
 } from './Disclaimer';
 export { GoalChipGroup } from './GoalChipGroup';
-export { RestWeekBanner, StreakCard } from './Streak';
+export { StreakCard } from './Streak';
 export { QuoteCard } from './QuoteCard';
 export { WelcomeBackCard } from './WelcomeBack';
+export {
+  AwardsPreview,
+  ChallengeHomeCard,
+  HomeHeader,
+  ReferralBanner,
+  ShareStatsCard,
+  WeekStripCard,
+  WeekTodayEmpty,
+  WeekTodaySession,
+  WelcomeHero,
+  pickAwardsPreview,
+  type WeekStripDay,
+} from './Home';
 export { WhatsNextCard } from './WhatsNext';
 export { TabAvatar } from './TabAvatar';
 export { ArticleBody, ArticleCard, CategoryTile, RelatedLearn, openLearnArticle } from './Learn';
