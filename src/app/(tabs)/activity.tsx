@@ -37,11 +37,15 @@ import {
 import { useTheme } from '@/constants/theme';
 import {
   countEarnedAwards,
+  EMPTY_ACHIEVEMENT_EXTRAS,
+  fetchAchievementExtras,
   fetchHideAchievements,
   formatBadgeProgress,
+  formatRepeatCount,
   getAchievementGroups,
   nextBadgeInGroup,
   type AchievementBadge,
+  type AchievementExtras,
   type AchievementFamily,
 } from '@/lib/achievements';
 import {
@@ -56,10 +60,8 @@ import {
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import { fillCopy, streakCopy } from '@/lib/copy';
-import { getGymUnlocked } from '@/lib/gymUnlocked';
 import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import { fetchHideStreak, fetchRestWeekStarts, maybeTrackStreakRepair, syncRestWeeksBanked } from '@/lib/streak';
-import { fetchBackOnTrack } from '@/lib/welcomeBack';
 import { formatKg } from '@/lib/programmes';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
@@ -114,8 +116,7 @@ type ActivityData = {
   hideStreak: boolean;
   hideAchievements: boolean;
   photosEnabled: boolean;
-  backOnTrack: boolean;
-  backOnTrackAt: string | null;
+  extras: AchievementExtras;
   enrolment: RoutineEnrolment | null;
   completedEnrolment: RoutineEnrolment | null;
   completedRoutineSessions: number;
@@ -155,19 +156,23 @@ function hoursTileValue(seconds: number): string {
 
 function familyIcon(family: AchievementFamily): IconName {
   switch (family) {
-    case 'firsts':
+    case 'first_times':
       return 'sparkles-outline';
     case 'sessions':
       return 'barbell-outline';
     case 'weeks':
       return 'calendar-outline';
-    case 'pbs':
+    case 'consistency':
+      return 'flame-outline';
+    case 'personal_bests':
       return 'trophy-outline';
     case 'programmes':
       return 'ribbon-outline';
-    case 'gym':
+    case 'gym_unlocked':
       return 'walk-outline';
-    case 'weight':
+    case 'stretch':
+      return 'leaf-outline';
+    case 'weight_lifted':
       return 'fitness-outline';
   }
 }
@@ -198,7 +203,7 @@ export default function ActivityScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, restWeeks, backOnTrack] =
+          const [sets, sessions, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, restWeeks, extras] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
@@ -210,7 +215,12 @@ export default function ActivityScreen() {
               fetchHideAchievements().catch(() => false),
               fetchPhotosEnabled().catch(() => false),
               fetchRestWeekStarts().catch(() => new Set<string>()),
-              fetchBackOnTrack().catch(() => ({ unlocked: false, at: null as string | null })),
+              fetchAchievementExtras(
+                equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used)
+              ).catch(() => ({
+                ...EMPTY_ACHIEVEMENT_EXTRAS,
+                knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
+              })),
             ]);
           const [roadmap, completedRoutineSessions] = await Promise.all([
             enrolment ? fetchRoutineRoadmap(enrolment).catch(() => []) : Promise.resolve([]),
@@ -244,8 +254,7 @@ export default function ActivityScreen() {
             hideStreak,
             hideAchievements,
             photosEnabled,
-            backOnTrack: backOnTrack.unlocked,
-            backOnTrackAt: backOnTrack.at,
+            extras,
             enrolment,
             completedEnrolment,
             completedRoutineSessions,
@@ -278,7 +287,7 @@ export default function ActivityScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [attempt, answers?.days_per_week])
+    }, [attempt, answers?.days_per_week, profile?.onboarding_answers?.machines_used])
   );
 
   async function reloadPhotos() {
@@ -396,17 +405,12 @@ export default function ActivityScreen() {
   const weeks = getWeeklyCounts(
     data.sessions.filter(sessionCountsTowardStreak).map((session) => session.date)
   );
-  const gym = getGymUnlocked(data.sets, {
-    knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
-  });
   const awardGroups = getAchievementGroups({
     sessions: data.sessions,
     sets: data.sets,
     streak: data.streak,
     completedRoutines: data.completedEnrolment ? Math.max(1, data.completedRoutines) : 0,
-    gym,
-    backOnTrack: data.backOnTrack,
-    backOnTrackAt: data.backOnTrackAt,
+    extras: data.extras,
   });
   const badges = awardGroups.flatMap((group) => group.badges);
   const comparePhotos = data.photos.filter((photo) => compareIds.includes(photo.id));
@@ -746,9 +750,14 @@ export default function ActivityScreen() {
         body={openBadge?.detail ?? ''}
         meta={
           openBadge?.unlocked && openBadge.unlockedOn
-            ? `Earned ${formatShortDate(parseDate(openBadge.unlockedOn))}.`
+            ? [
+                formatRepeatCount(openBadge),
+                `Earned ${formatShortDate(parseDate(openBadge.unlockedOn))}.`,
+              ]
+                .filter(Boolean)
+                .join(' ')
             : openBadge?.unlocked
-              ? 'Earned.'
+              ? formatRepeatCount(openBadge) ?? 'Earned.'
               : 'This one is still ahead.'
         }
         onClose={() => setOpenBadge(null)}
@@ -927,7 +936,7 @@ function MedalRow({
   return (
     <View style={styles.badgeGrid}>
       {badges.map((badge) => {
-        const progress = badge.id === nextId ? formatBadgeProgress(badge) : null;
+        const progress = badge.id === nextId ? formatBadgeProgress(badge) : formatRepeatCount(badge);
         return (
           <Pressable
             key={badge.id}

@@ -24,6 +24,7 @@ import { useTheme, type ThemePreference } from '@/constants/theme';
 import {
   appearanceSectionTitle,
   fillCopy,
+  privacySettingsCopy,
   lockedHomeCopy,
   paywallScreenCopy,
   planSettingsTitle,
@@ -658,7 +659,7 @@ export default function ProfileScreen() {
           }}
         />
         <SettingsRow
-          title="Show awards"
+          title={privacySettingsCopy.hide_achievements}
           subtitle={hideAchievements ? 'Hidden on Activity' : 'Shown on Activity'}
           onPress={() => {
             const next = !hideAchievements;

@@ -27,6 +27,7 @@ import {
   type Exercise,
 } from '@/lib/exercises';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
+import { recordGuideOpened } from '@/lib/achievements';
 import { guideForExercise, preferredSwapIds } from '@/lib/contentGuides';
 import { setupStepsFor } from '@/lib/gymUnlocked';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -48,6 +49,10 @@ export default function ExerciseScreen() {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [mediaFailed, setMediaFailed] = useState(false);
   const [swaps, setSwaps] = useState<SlotExercise[]>([]);
+
+  useEffect(() => {
+    if (id) void recordGuideOpened(id);
+  }, [id]);
 
   useEffect(() => {
     let isCurrent = true;

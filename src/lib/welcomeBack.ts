@@ -201,20 +201,20 @@ async function readCompletedDates(): Promise<string[]> {
   }
 }
 
-export async function fetchBackOnTrack(): Promise<{ unlocked: boolean; at: string | null }> {
+export async function fetchBackOnTrack(): Promise<{ unlocked: boolean; at: string | null; times: number }> {
   const local = await readCompletedDates();
-  if (local.length > 0) return { unlocked: true, at: local[0] };
+  if (local.length > 0) return { unlocked: true, at: local[0], times: local.length };
   try {
     const { data, error } = await supabase
       .from('milestones')
       .select('achieved_at')
       .eq('type', 'back-on-track')
       .maybeSingle();
-    if (error) return { unlocked: false, at: null };
+    if (error) return { unlocked: false, at: null, times: 0 };
     const at = (data as { achieved_at?: string } | null)?.achieved_at ?? null;
-    return { unlocked: Boolean(at), at };
+    return { unlocked: Boolean(at), at, times: at ? 1 : 0 };
   } catch {
-    return { unlocked: false, at: null };
+    return { unlocked: false, at: null, times: 0 };
   }
 }
 

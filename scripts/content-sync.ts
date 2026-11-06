@@ -448,6 +448,7 @@ async function main(): Promise<void> {
   line('Not loaded (by design)');
   line('  content/onboarding: bundled in the app (X5 screens, why_lines, recommendation, strength_estimate)');
   line('  content/microcopy: bundled in the app (N1 safety surrounding strings)');
+  line('  content/achievements: bundled in the app (H6 badge definitions)');
   line('  content/ai: Edge Functions, not the app database');
   line();
   reportOnboardingGoals();
@@ -455,6 +456,7 @@ async function main(): Promise<void> {
   reportHardPaywall();
 
   reportWarmups();
+  reportAchievements();
 
   line('No table in the current schema, skipped');
   const deferred = [
@@ -462,7 +464,6 @@ async function main(): Promise<void> {
     ['content/food', 'recipes and collections (F2)'],
     ['content/machine-guides', 'machine guides (W4)'],
     ['content/single-sessions', 'single sessions (X3)'],
-    ['content/achievements', 'achievement definitions (H6 is still computed in the app)'],
   ];
   for (const [folder, why] of deferred) line(`  ${folder}: ${why}`);
   line();
@@ -527,6 +528,19 @@ function reportOnboardingGoals(): void {
   line(`  Recommendation rules: ${rules.length}. Formula: ${text(estimate.formula) || 'from file'}`);
   line('  Stored on profiles (main_goals, gym_experience, onboarding_answers jsonb, age_band, cardio_preference).');
   line('  Live sync does not write onboarding into the database.');
+  line();
+}
+
+function reportAchievements(): void {
+  line('achievements  ←  content/achievements/achievements.json (bundled, H6)');
+  const file = asRecord(readJson('achievements/achievements.json'));
+  const families = asArray(file.families);
+  const badges = asArray(file.achievements).map(asRecord);
+  const hidden = badges.filter((item) => text(item.available_from) === 'v2.3');
+  line(`  Families: ${families.length}`);
+  line(`  Badges: ${badges.length} (${hidden.length} hidden until cardio / v2.3)`);
+  line('  Bundled in the app. Live sync does not write a definitions table.');
+  line('  user_achievements (supabase/achievements_h6.sql) keeps migrated milestone types.');
   line();
 }
 

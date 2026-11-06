@@ -12,6 +12,13 @@ export const appearanceLabels = {
 
 export const appearanceSectionTitle = profile.settings_rows.appearance;
 
+/** Profile → Privacy hide toggles. Bundled from content/microcopy. */
+export const privacySettingsCopy = {
+  hide_streak: profile.privacy.hide_streak,
+  hide_achievements: profile.privacy.hide_achievements,
+  hide_quote: profile.privacy.hide_quote,
+} as const;
+
 /** Surrounding safety strings. The full disclaimer body stays in src/lib/disclaimer.ts. */
 export const safetyCopy = {
   onboarding_title: safety.onboarding_title,
