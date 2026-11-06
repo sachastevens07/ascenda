@@ -88,6 +88,7 @@ type Guide = {
   primary: string | null;
   cues: string[];
   location: string;
+  swapCount: number;
 };
 
 function loadEnv(file: string): void {
@@ -110,6 +111,10 @@ function readJson(relativePath: string): Json {
 
 function asArray(value: unknown): Json[] {
   return Array.isArray(value) ? (value as Json[]) : [];
+}
+
+function asRecord(value: unknown): Json {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Json) : {};
 }
 
 function text(value: unknown): string {
@@ -392,11 +397,13 @@ function loadGuides(): Map<string, Guide> {
       const cues = Array.isArray(item.form_cues)
         ? (item.form_cues as unknown[]).map((value) => String(value).trim()).filter(Boolean)
         : [];
+      const taken = item.if_its_taken && typeof item.if_its_taken === 'object' ? (item.if_its_taken as Json) : {};
       map.set(slug, {
         slug,
         primary: muscles.map((value) => mapMuscle(value)).find((value) => value) ?? null,
         cues: cues.slice(0, 3),
         location: text(item.where_to_find).trim(),
+        swapCount: asArray(taken.swaps).map((value) => String(value).trim()).filter(Boolean).length,
       });
     }
   }
@@ -452,7 +459,6 @@ async function main(): Promise<void> {
     ['content/food', 'recipes and collections (F2)'],
     ['content/machine-guides', 'machine guides (W4)'],
     ['content/single-sessions', 'single sessions (X3)'],
-    ['content/exercise-guides', 'guide copy itself. Cues and location_hint are used to plan new exercise inserts'],
     ['content/achievements', 'achievement definitions (H6 is still computed in the app)'],
   ];
   for (const [folder, why] of deferred) line(`  ${folder}: ${why}`);
@@ -460,6 +466,7 @@ async function main(): Promise<void> {
 
   await reportImages(client);
   await reportExercises(client);
+  reportGuides();
   await reportWorkoutx(client);
   await reportRoutines(client);
   await reportQuotes(client);
@@ -468,6 +475,20 @@ async function main(): Promise<void> {
 
   line();
   line('Nothing was written.');
+}
+
+function reportGuides(): void {
+  line('exercise-guides  ←  content/exercise-guides/*.json');
+  const files = ['lower-body.json', 'upper-body.json', 'core-and-carries.json'];
+  const guides = files.flatMap((file) => asArray(readJson(join('exercise-guides', file)).guides));
+  const withSwaps = guides.filter((item) => asArray(asRecord(item.if_its_taken).swaps).length > 0).length;
+  line(`  Guides: ${guides.length}`);
+  line(`  With if_its_taken swaps: ${withSwaps}`);
+  line(`  Tip only (empty swap list): ${guides.length - withSwaps}`);
+  line('  Bundled in the app for first-time guides and the swap engine.');
+  line('  A live sync would update exercises.cues (first 3 form_cues) and location_hint from where_to_find.');
+  line('  Swap lists stay in the app overlay. They are not a separate table.');
+  line();
 }
 
 function reportWarmups(): void {
@@ -694,8 +715,41 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
     hasType ? 'id, slug, name, type' : 'id, slug, name'
   );
 
+  const n2 = files.map((file) => {
+    const body = readJson(join('routines', file));
+    const routine = body.routine as Json;
+    const phases = asArray(body.phases);
+    const days = phases.flatMap((phase) => asArray(phase.days));
+    const slots = days.flatMap((day) => asArray(day.exercises));
+    return {
+      slug: text(routine.slug),
+      who: asArray(routine.who_its_for).length > 0,
+      end: asArray(routine.by_the_end).length > 0,
+      split: Boolean(text(routine.why_this_split)),
+      how: asArray(routine.how_it_works).length > 0,
+      phases: phases.filter((phase) => text(phase.name) && text(phase.goal)).length,
+      phaseCount: phases.length,
+      days: days.length,
+      daysWithNote: days.filter((day) => text(day.coach_note) && text(day.focus)).length,
+      slots: slots.length,
+      slotsWithRole: slots.filter((slot) => text(slot.role) && num(slot.target_rir) != null).length,
+    };
+  });
+
   line(`  Content strength routines: ${strength.length}`);
   line(`  Content stretch routines: ${stretches.length}`);
+  line(
+    `  N2 copy: ${n2.filter((item) => item.who && item.end && item.split && item.how).length} of ${n2.length} have who_its_for, by_the_end, why_this_split and how_it_works`
+  );
+  line(
+    `  N2 phases: ${n2.reduce((sum, item) => sum + item.phases, 0)} of ${n2.reduce((sum, item) => sum + item.phaseCount, 0)} have a name and goal`
+  );
+  line(
+    `  N2 days: ${n2.reduce((sum, item) => sum + item.daysWithNote, 0)} of ${n2.reduce((sum, item) => sum + item.days, 0)} have focus and coach_note`
+  );
+  line(
+    `  N2 strength slots: ${n2.reduce((sum, item) => sum + item.slotsWithRole, 0)} of ${n2.reduce((sum, item) => sum + item.slots, 0)} have role and target_rir`
+  );
   line(`  Goal mapping: ${strength.length - unmappedGoals.length} of ${strength.length} map onto strength | glutes_legs | general | confidence`);
   line('  Difficulty map: beginner_to_intermediate → beginner, advanced → experienced.');
   if (unmappedGoals.length > 0) {
@@ -712,6 +766,18 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   line(`  Planned weeks: ${structure.weeks}`);
   line(`  Planned days: ${structure.days} (strength days from phases; cardio and recovery days stay in weekly_schedule until W5/W6)`);
   line(`  Planned blocks: ${structure.blocks} (warmup ${structure.warmup}, strength ${structure.strength}, cardio ${structure.cardio}, cooldown ${structure.cooldown}, stretch ${structure.stretch})`);
+  const n2Probe = await probe(client, 'routines', 'audience_bullets, by_the_end_bullets, split_note, progression_note');
+  const n2WeekProbe = await probe(client, 'routine_weeks', 'phase_name, phase_goal, is_lighter_week');
+  const n2DayProbe = await probe(client, 'routine_days', 'focus, coach_note, warmup, finisher');
+  const n2SlotProbe = await probe(
+    client,
+    'routine_day_exercises',
+    'role, target_rir, tempo, progression_rule, load_increment_kg, notes, alternative_exercise_ids, superset_group'
+  );
+  line(`  N2 routine columns: ${n2Probe ? `missing (paste supabase/n2_routines.sql) (${n2Probe})` : 'present'}`);
+  line(`  N2 week columns: ${n2WeekProbe ? `missing (paste supabase/n2_routines.sql) (${n2WeekProbe})` : 'present'}`);
+  line(`  N2 day columns: ${n2DayProbe ? `missing (paste supabase/n2_routines.sql) (${n2DayProbe})` : 'present'}`);
+  line(`  N2 exercise columns: ${n2SlotProbe ? `missing (paste supabase/n2_routines.sql) (${n2SlotProbe})` : 'present'}`);
   line(`  Planned strength exercise slots: ${structure.exercises}`);
   line(`  support_days rows: ${structure.supportDays}. weekly_schedule variants: ${structure.scheduleVariants} (avoid / fine / love).`);
   if (structure.missingWarmupTemplates > 0) {

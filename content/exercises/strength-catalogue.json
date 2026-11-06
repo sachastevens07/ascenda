@@ -1,0 +1,833 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Master list of strength exercises used by every routine. zone: 1 one spot, 2 dumbbell area and cables, 3 machines, 4 barbell and rack. First-time guides are written separately."
+  ],
+  "exercises": [
+    {
+      "slug": "goblet-squat",
+      "name": "Goblet squat",
+      "equipment": "dumbbell",
+      "pattern": "squat",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-box-squat",
+        "leg-press"
+      ]
+    },
+    {
+      "slug": "dumbbell-box-squat",
+      "name": "Dumbbell box squat",
+      "equipment": "dumbbell",
+      "pattern": "squat",
+      "zone": 1,
+      "alternatives": [
+        "goblet-squat",
+        "leg-press"
+      ]
+    },
+    {
+      "slug": "bodyweight-box-squat",
+      "name": "Box squat to a chair",
+      "equipment": "bodyweight",
+      "pattern": "squat",
+      "zone": 1,
+      "alternatives": [
+        "goblet-squat",
+        "dumbbell-box-squat"
+      ]
+    },
+    {
+      "slug": "leg-press",
+      "name": "Leg press",
+      "equipment": "machine",
+      "pattern": "squat",
+      "zone": 3,
+      "alternatives": [
+        "goblet-squat",
+        "dumbbell-box-squat"
+      ]
+    },
+    {
+      "slug": "barbell-back-squat",
+      "name": "Barbell back squat",
+      "equipment": "barbell",
+      "pattern": "squat",
+      "zone": 4,
+      "alternatives": [
+        "smith-machine-squat",
+        "goblet-squat"
+      ]
+    },
+    {
+      "slug": "smith-machine-squat",
+      "name": "Smith machine squat",
+      "equipment": "machine",
+      "pattern": "squat",
+      "zone": 3,
+      "alternatives": [
+        "goblet-squat",
+        "leg-press"
+      ]
+    },
+    {
+      "slug": "hack-squat",
+      "name": "Hack squat",
+      "equipment": "machine",
+      "pattern": "squat",
+      "zone": 3,
+      "alternatives": [
+        "leg-press",
+        "goblet-squat"
+      ]
+    },
+    {
+      "slug": "leg-extension",
+      "name": "Leg extension",
+      "equipment": "machine",
+      "pattern": "squat",
+      "zone": 3,
+      "alternatives": [
+        "leg-press",
+        "goblet-squat"
+      ]
+    },
+    {
+      "slug": "dumbbell-romanian-deadlift",
+      "name": "Dumbbell Romanian deadlift",
+      "equipment": "dumbbell",
+      "pattern": "hinge",
+      "zone": 1,
+      "alternatives": [
+        "kettlebell-deadlift",
+        "cable-pull-through"
+      ]
+    },
+    {
+      "slug": "barbell-romanian-deadlift",
+      "name": "Barbell Romanian deadlift",
+      "equipment": "barbell",
+      "pattern": "hinge",
+      "zone": 4,
+      "alternatives": [
+        "dumbbell-romanian-deadlift",
+        "kettlebell-deadlift"
+      ]
+    },
+    {
+      "slug": "trap-bar-deadlift",
+      "name": "Trap bar deadlift",
+      "equipment": "barbell",
+      "pattern": "hinge",
+      "zone": 4,
+      "alternatives": [
+        "kettlebell-deadlift",
+        "dumbbell-romanian-deadlift"
+      ]
+    },
+    {
+      "slug": "kettlebell-deadlift",
+      "name": "Kettlebell deadlift",
+      "equipment": "kettlebell",
+      "pattern": "hinge",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-romanian-deadlift",
+        "cable-pull-through"
+      ]
+    },
+    {
+      "slug": "single-leg-romanian-deadlift",
+      "name": "Single-leg Romanian deadlift",
+      "equipment": "dumbbell",
+      "pattern": "hinge",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-romanian-deadlift",
+        "dumbbell-reverse-lunge"
+      ]
+    },
+    {
+      "slug": "cable-pull-through",
+      "name": "Cable pull-through",
+      "equipment": "cable",
+      "pattern": "hinge",
+      "zone": 2,
+      "alternatives": [
+        "dumbbell-romanian-deadlift",
+        "dumbbell-glute-bridge"
+      ]
+    },
+    {
+      "slug": "dumbbell-glute-bridge",
+      "name": "Dumbbell glute bridge",
+      "equipment": "dumbbell",
+      "pattern": "hinge",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-hip-thrust",
+        "bodyweight-glute-bridge"
+      ]
+    },
+    {
+      "slug": "bodyweight-glute-bridge",
+      "name": "Glute bridge",
+      "equipment": "bodyweight",
+      "pattern": "hinge",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-glute-bridge",
+        "single-leg-glute-bridge"
+      ]
+    },
+    {
+      "slug": "single-leg-glute-bridge",
+      "name": "Single-leg glute bridge",
+      "equipment": "bodyweight",
+      "pattern": "hinge",
+      "zone": 1,
+      "alternatives": [
+        "bodyweight-glute-bridge",
+        "dumbbell-glute-bridge"
+      ]
+    },
+    {
+      "slug": "dumbbell-hip-thrust",
+      "name": "Dumbbell hip thrust",
+      "equipment": "dumbbell",
+      "pattern": "hinge",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-glute-bridge",
+        "barbell-hip-thrust"
+      ]
+    },
+    {
+      "slug": "barbell-hip-thrust",
+      "name": "Barbell hip thrust",
+      "equipment": "barbell",
+      "pattern": "hinge",
+      "zone": 4,
+      "alternatives": [
+        "dumbbell-hip-thrust",
+        "hip-thrust-machine"
+      ]
+    },
+    {
+      "slug": "hip-thrust-machine",
+      "name": "Hip thrust machine",
+      "equipment": "machine",
+      "pattern": "hinge",
+      "zone": 3,
+      "alternatives": [
+        "barbell-hip-thrust",
+        "dumbbell-hip-thrust"
+      ]
+    },
+    {
+      "slug": "seated-leg-curl",
+      "name": "Seated leg curl",
+      "equipment": "machine",
+      "pattern": "hinge",
+      "zone": 3,
+      "alternatives": [
+        "lying-leg-curl",
+        "dumbbell-romanian-deadlift"
+      ]
+    },
+    {
+      "slug": "lying-leg-curl",
+      "name": "Lying leg curl",
+      "equipment": "machine",
+      "pattern": "hinge",
+      "zone": 3,
+      "alternatives": [
+        "seated-leg-curl",
+        "dumbbell-romanian-deadlift"
+      ]
+    },
+    {
+      "slug": "cable-glute-kickback",
+      "name": "Cable glute kickback",
+      "equipment": "cable",
+      "pattern": "glutes",
+      "zone": 2,
+      "alternatives": [
+        "single-leg-glute-bridge",
+        "dumbbell-glute-bridge"
+      ]
+    },
+    {
+      "slug": "hip-abduction-machine",
+      "name": "Hip abduction machine",
+      "equipment": "machine",
+      "pattern": "glutes",
+      "zone": 3,
+      "alternatives": [
+        "cable-hip-abduction",
+        "side-lying-hip-abduction"
+      ]
+    },
+    {
+      "slug": "cable-hip-abduction",
+      "name": "Cable hip abduction",
+      "equipment": "cable",
+      "pattern": "glutes",
+      "zone": 2,
+      "alternatives": [
+        "hip-abduction-machine",
+        "side-lying-hip-abduction"
+      ]
+    },
+    {
+      "slug": "side-lying-hip-abduction",
+      "name": "Side-lying hip abduction",
+      "equipment": "bodyweight",
+      "pattern": "glutes",
+      "zone": 1,
+      "alternatives": [
+        "hip-abduction-machine",
+        "cable-hip-abduction"
+      ]
+    },
+    {
+      "slug": "dumbbell-split-squat",
+      "name": "Dumbbell split squat",
+      "equipment": "dumbbell",
+      "pattern": "single_leg",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-reverse-lunge",
+        "dumbbell-step-up"
+      ]
+    },
+    {
+      "slug": "bulgarian-split-squat",
+      "name": "Bulgarian split squat",
+      "equipment": "dumbbell",
+      "pattern": "single_leg",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-split-squat",
+        "dumbbell-reverse-lunge"
+      ]
+    },
+    {
+      "slug": "dumbbell-reverse-lunge",
+      "name": "Dumbbell reverse lunge",
+      "equipment": "dumbbell",
+      "pattern": "single_leg",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-split-squat",
+        "dumbbell-step-up"
+      ]
+    },
+    {
+      "slug": "bodyweight-reverse-lunge",
+      "name": "Bodyweight reverse lunge",
+      "equipment": "bodyweight",
+      "pattern": "single_leg",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-reverse-lunge",
+        "dumbbell-split-squat"
+      ]
+    },
+    {
+      "slug": "walking-lunge",
+      "name": "Dumbbell walking lunge",
+      "equipment": "dumbbell",
+      "pattern": "single_leg",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-reverse-lunge",
+        "dumbbell-step-up"
+      ]
+    },
+    {
+      "slug": "dumbbell-step-up",
+      "name": "Dumbbell step-up",
+      "equipment": "dumbbell",
+      "pattern": "single_leg",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-split-squat",
+        "dumbbell-reverse-lunge"
+      ]
+    },
+    {
+      "slug": "calf-raise-machine",
+      "name": "Calf raise machine",
+      "equipment": "machine",
+      "pattern": "calves",
+      "zone": 3,
+      "alternatives": [
+        "dumbbell-calf-raise",
+        "leg-press"
+      ]
+    },
+    {
+      "slug": "dumbbell-calf-raise",
+      "name": "Dumbbell calf raise",
+      "equipment": "dumbbell",
+      "pattern": "calves",
+      "zone": 1,
+      "alternatives": [
+        "calf-raise-machine",
+        "bodyweight-glute-bridge"
+      ]
+    },
+    {
+      "slug": "dumbbell-bench-press",
+      "name": "Dumbbell bench press",
+      "equipment": "dumbbell",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-floor-press",
+        "chest-press-machine"
+      ]
+    },
+    {
+      "slug": "dumbbell-floor-press",
+      "name": "Dumbbell floor press",
+      "equipment": "dumbbell",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-bench-press",
+        "incline-push-up"
+      ]
+    },
+    {
+      "slug": "incline-dumbbell-press",
+      "name": "Incline dumbbell press",
+      "equipment": "dumbbell",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-bench-press",
+        "chest-press-machine"
+      ]
+    },
+    {
+      "slug": "barbell-bench-press",
+      "name": "Barbell bench press",
+      "equipment": "barbell",
+      "pattern": "push",
+      "zone": 4,
+      "alternatives": [
+        "dumbbell-bench-press",
+        "chest-press-machine"
+      ]
+    },
+    {
+      "slug": "chest-press-machine",
+      "name": "Chest press machine",
+      "equipment": "machine",
+      "pattern": "push",
+      "zone": 3,
+      "alternatives": [
+        "dumbbell-bench-press",
+        "incline-push-up"
+      ]
+    },
+    {
+      "slug": "pec-deck",
+      "name": "Pec deck",
+      "equipment": "machine",
+      "pattern": "push",
+      "zone": 3,
+      "alternatives": [
+        "dumbbell-chest-fly",
+        "chest-press-machine"
+      ]
+    },
+    {
+      "slug": "dumbbell-chest-fly",
+      "name": "Dumbbell chest fly",
+      "equipment": "dumbbell",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "pec-deck",
+        "dumbbell-bench-press"
+      ]
+    },
+    {
+      "slug": "incline-push-up",
+      "name": "Incline push-up",
+      "equipment": "bodyweight",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-floor-press",
+        "chest-press-machine"
+      ]
+    },
+    {
+      "slug": "push-up",
+      "name": "Push-up",
+      "equipment": "bodyweight",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "incline-push-up",
+        "dumbbell-floor-press"
+      ]
+    },
+    {
+      "slug": "seated-dumbbell-shoulder-press",
+      "name": "Seated dumbbell shoulder press",
+      "equipment": "dumbbell",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "standing-dumbbell-shoulder-press",
+        "shoulder-press-machine"
+      ]
+    },
+    {
+      "slug": "standing-dumbbell-shoulder-press",
+      "name": "Standing dumbbell shoulder press",
+      "equipment": "dumbbell",
+      "pattern": "push",
+      "zone": 1,
+      "alternatives": [
+        "seated-dumbbell-shoulder-press",
+        "shoulder-press-machine"
+      ]
+    },
+    {
+      "slug": "shoulder-press-machine",
+      "name": "Shoulder press machine",
+      "equipment": "machine",
+      "pattern": "push",
+      "zone": 3,
+      "alternatives": [
+        "seated-dumbbell-shoulder-press",
+        "standing-dumbbell-shoulder-press"
+      ]
+    },
+    {
+      "slug": "dumbbell-lateral-raise",
+      "name": "Dumbbell lateral raise",
+      "equipment": "dumbbell",
+      "pattern": "shoulders",
+      "zone": 1,
+      "alternatives": [
+        "cable-lateral-raise",
+        "shoulder-press-machine"
+      ]
+    },
+    {
+      "slug": "cable-lateral-raise",
+      "name": "Cable lateral raise",
+      "equipment": "cable",
+      "pattern": "shoulders",
+      "zone": 2,
+      "alternatives": [
+        "dumbbell-lateral-raise",
+        "shoulder-press-machine"
+      ]
+    },
+    {
+      "slug": "one-arm-dumbbell-row",
+      "name": "One-arm dumbbell row",
+      "equipment": "dumbbell",
+      "pattern": "pull",
+      "zone": 1,
+      "alternatives": [
+        "chest-supported-dumbbell-row",
+        "seated-cable-row"
+      ]
+    },
+    {
+      "slug": "chest-supported-dumbbell-row",
+      "name": "Chest-supported dumbbell row",
+      "equipment": "dumbbell",
+      "pattern": "pull",
+      "zone": 1,
+      "alternatives": [
+        "one-arm-dumbbell-row",
+        "seated-cable-row"
+      ]
+    },
+    {
+      "slug": "bent-over-dumbbell-row",
+      "name": "Bent-over dumbbell row",
+      "equipment": "dumbbell",
+      "pattern": "pull",
+      "zone": 1,
+      "alternatives": [
+        "chest-supported-dumbbell-row",
+        "seated-cable-row"
+      ]
+    },
+    {
+      "slug": "barbell-bent-over-row",
+      "name": "Barbell bent-over row",
+      "equipment": "barbell",
+      "pattern": "pull",
+      "zone": 4,
+      "alternatives": [
+        "bent-over-dumbbell-row",
+        "seated-cable-row"
+      ]
+    },
+    {
+      "slug": "lat-pulldown",
+      "name": "Lat pulldown",
+      "equipment": "machine",
+      "pattern": "pull",
+      "zone": 3,
+      "alternatives": [
+        "one-arm-dumbbell-row",
+        "seated-cable-row"
+      ]
+    },
+    {
+      "slug": "assisted-pull-up",
+      "name": "Assisted pull-up",
+      "equipment": "machine",
+      "pattern": "pull",
+      "zone": 3,
+      "alternatives": [
+        "lat-pulldown",
+        "one-arm-dumbbell-row"
+      ]
+    },
+    {
+      "slug": "seated-cable-row",
+      "name": "Seated cable row",
+      "equipment": "cable",
+      "pattern": "pull",
+      "zone": 2,
+      "alternatives": [
+        "chest-supported-dumbbell-row",
+        "one-arm-dumbbell-row"
+      ]
+    },
+    {
+      "slug": "single-arm-cable-row",
+      "name": "Single-arm cable row",
+      "equipment": "cable",
+      "pattern": "pull",
+      "zone": 2,
+      "alternatives": [
+        "seated-cable-row",
+        "one-arm-dumbbell-row"
+      ]
+    },
+    {
+      "slug": "face-pull",
+      "name": "Face pull",
+      "equipment": "cable",
+      "pattern": "pull",
+      "zone": 2,
+      "alternatives": [
+        "dumbbell-reverse-fly",
+        "reverse-pec-deck"
+      ]
+    },
+    {
+      "slug": "dumbbell-reverse-fly",
+      "name": "Dumbbell reverse fly",
+      "equipment": "dumbbell",
+      "pattern": "pull",
+      "zone": 1,
+      "alternatives": [
+        "face-pull",
+        "reverse-pec-deck"
+      ]
+    },
+    {
+      "slug": "reverse-pec-deck",
+      "name": "Reverse pec deck",
+      "equipment": "machine",
+      "pattern": "pull",
+      "zone": 3,
+      "alternatives": [
+        "face-pull",
+        "dumbbell-reverse-fly"
+      ]
+    },
+    {
+      "slug": "dumbbell-biceps-curl",
+      "name": "Dumbbell biceps curl",
+      "equipment": "dumbbell",
+      "pattern": "arms",
+      "zone": 1,
+      "alternatives": [
+        "hammer-curl",
+        "cable-biceps-curl"
+      ]
+    },
+    {
+      "slug": "hammer-curl",
+      "name": "Hammer curl",
+      "equipment": "dumbbell",
+      "pattern": "arms",
+      "zone": 1,
+      "alternatives": [
+        "dumbbell-biceps-curl",
+        "cable-biceps-curl"
+      ]
+    },
+    {
+      "slug": "cable-biceps-curl",
+      "name": "Cable biceps curl",
+      "equipment": "cable",
+      "pattern": "arms",
+      "zone": 2,
+      "alternatives": [
+        "dumbbell-biceps-curl",
+        "hammer-curl"
+      ]
+    },
+    {
+      "slug": "triceps-pushdown",
+      "name": "Triceps pushdown",
+      "equipment": "cable",
+      "pattern": "arms",
+      "zone": 2,
+      "alternatives": [
+        "overhead-dumbbell-triceps-extension",
+        "dumbbell-triceps-kickback"
+      ]
+    },
+    {
+      "slug": "overhead-dumbbell-triceps-extension",
+      "name": "Overhead dumbbell triceps extension",
+      "equipment": "dumbbell",
+      "pattern": "arms",
+      "zone": 1,
+      "alternatives": [
+        "triceps-pushdown",
+        "dumbbell-triceps-kickback"
+      ]
+    },
+    {
+      "slug": "dumbbell-triceps-kickback",
+      "name": "Dumbbell triceps kickback",
+      "equipment": "dumbbell",
+      "pattern": "arms",
+      "zone": 1,
+      "alternatives": [
+        "triceps-pushdown",
+        "overhead-dumbbell-triceps-extension"
+      ]
+    },
+    {
+      "slug": "dead-bug",
+      "name": "Dead bug",
+      "equipment": "bodyweight",
+      "pattern": "core",
+      "zone": 1,
+      "alternatives": [
+        "bird-dog",
+        "forearm-plank"
+      ]
+    },
+    {
+      "slug": "bird-dog",
+      "name": "Bird dog",
+      "equipment": "bodyweight",
+      "pattern": "core",
+      "zone": 1,
+      "alternatives": [
+        "dead-bug",
+        "forearm-plank"
+      ]
+    },
+    {
+      "slug": "side-plank",
+      "name": "Side plank",
+      "equipment": "bodyweight",
+      "pattern": "core",
+      "zone": 1,
+      "alternatives": [
+        "forearm-plank",
+        "dead-bug"
+      ]
+    },
+    {
+      "slug": "forearm-plank",
+      "name": "Forearm plank",
+      "equipment": "bodyweight",
+      "pattern": "core",
+      "zone": 1,
+      "alternatives": [
+        "dead-bug",
+        "side-plank"
+      ]
+    },
+    {
+      "slug": "pallof-press",
+      "name": "Pallof press",
+      "equipment": "cable",
+      "pattern": "core",
+      "zone": 2,
+      "alternatives": [
+        "dead-bug",
+        "side-plank"
+      ]
+    },
+    {
+      "slug": "cable-crunch",
+      "name": "Cable crunch",
+      "equipment": "cable",
+      "pattern": "core",
+      "zone": 2,
+      "alternatives": [
+        "reverse-crunch",
+        "dead-bug"
+      ]
+    },
+    {
+      "slug": "reverse-crunch",
+      "name": "Reverse crunch",
+      "equipment": "bodyweight",
+      "pattern": "core",
+      "zone": 1,
+      "alternatives": [
+        "dead-bug",
+        "cable-crunch"
+      ]
+    },
+    {
+      "slug": "hanging-knee-raise",
+      "name": "Hanging knee raise",
+      "equipment": "bodyweight",
+      "pattern": "core",
+      "zone": 3,
+      "alternatives": [
+        "reverse-crunch",
+        "dead-bug"
+      ]
+    },
+    {
+      "slug": "farmer-carry",
+      "name": "Farmer carry",
+      "equipment": "dumbbell",
+      "pattern": "carry",
+      "zone": 1,
+      "alternatives": [
+        "suitcase-carry",
+        "forearm-plank"
+      ]
+    },
+    {
+      "slug": "suitcase-carry",
+      "name": "Suitcase carry",
+      "equipment": "dumbbell",
+      "pattern": "carry",
+      "zone": 1,
+      "alternatives": [
+        "farmer-carry",
+        "side-plank"
+      ]
+    }
+  ]
+}

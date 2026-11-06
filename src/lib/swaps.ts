@@ -1,3 +1,4 @@
+import { preferredSwapIds } from '@/lib/contentGuides';
 import { EQUIPMENT, type Equipment, type Muscle, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import {
@@ -197,45 +198,68 @@ export type SwapOptions = {
 };
 
 /**
- * Alternatives for a swap: same primary muscle, equipment she has, ranked by shared secondary
- * muscles then the same equipment, at most 2 of any one kind. `excludeIds` are already in the day.
+ * Alternatives for a swap. Guide "if it's taken" lists come first, then slot alternatives,
+ * then same-muscle ranking. `excludeIds` are already in the day.
  * Default list is `zone` ≤ `maxZone`. `trySomethingNew` is exactly one from the next zone.
  */
 export async function fetchAlternatives(
   current: SlotExercise,
   access: EquipmentAccess,
   excludeIds: string[],
-  maxZone?: Zone
+  maxZone?: Zone,
+  preferredIds: string[] = []
 ): Promise<SwapOptions> {
+  const guideIds = preferredIds.length > 0 ? preferredIds : preferredSwapIds(current.id);
   const { data, error } = await supabase
     .from('exercises')
     .select(`${SLOT_EXERCISE_COLUMNS}, secondary_muscles`)
     .eq('primary_muscle', current.primary_muscle);
   if (error) throw error;
 
-  const rows = (data ?? []) as unknown as RankedExercise[];
-  const currentSecondary = rows.find((row) => row.id === current.id)?.secondary_muscles ?? [];
+  let preferredRows: RankedExercise[] = [];
+  if (guideIds.length > 0) {
+    const preferred = await supabase
+      .from('exercises')
+      .select(`${SLOT_EXERCISE_COLUMNS}, secondary_muscles`)
+      .in('id', guideIds);
+    if (preferred.error) throw preferred.error;
+    preferredRows = (preferred.data ?? []) as unknown as RankedExercise[];
+  }
+
+  const byId = new Map<string, RankedExercise>();
+  for (const row of [...((data ?? []) as unknown as RankedExercise[]), ...preferredRows]) {
+    byId.set(row.id, row);
+  }
+  const rows = [...byId.values()];
+  const currentSecondary = byId.get(current.id)?.secondary_muscles ?? [];
   const score = (row: RankedExercise) =>
     row.secondary_muscles.filter((muscle) => currentSecondary.includes(muscle)).length * 2 +
     (row.equipment === current.equipment ? 1 : 0);
   const rank = (list: RankedExercise[]) =>
     [...list].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
-
-  const ranked = rank(
-    rows.filter(
-      (row) =>
-        row.id !== current.id &&
-        !excludeIds.includes(row.id) &&
-        EQUIPMENT_FOR_ACCESS[access].includes(row.equipment) &&
-        (maxZone === undefined || row.zone <= maxZone)
-    )
-  );
+  const allowed = (row: RankedExercise) =>
+    row.id !== current.id &&
+    !excludeIds.includes(row.id) &&
+    EQUIPMENT_FOR_ACCESS[access].includes(row.equipment) &&
+    (maxZone === undefined || row.zone <= maxZone);
 
   const alternatives: SlotExercise[] = [];
-  for (const row of ranked) {
+  const seen = new Set<string>();
+  for (const id of guideIds) {
     if (alternatives.length === MAX_ALTERNATIVES) break;
+    const row = byId.get(id);
+    if (!row || !allowed(row) || seen.has(row.id)) continue;
     const sameKit = alternatives.filter((item) => item.equipment === row.equipment).length;
     if (sameKit >= MAX_ALTERNATIVES_PER_EQUIPMENT) continue;
+    seen.add(row.id);
+    alternatives.push(toSlotExercise(row));
+  }
+  for (const row of rank(rows.filter(allowed))) {
+    if (alternatives.length === MAX_ALTERNATIVES) break;
+    if (seen.has(row.id)) continue;
+    const sameKit = alternatives.filter((item) => item.equipment === row.equipment).length;
+    if (sameKit >= MAX_ALTERNATIVES_PER_EQUIPMENT) continue;
+    seen.add(row.id);
     alternatives.push(toSlotExercise(row));
   }
 

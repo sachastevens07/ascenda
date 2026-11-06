@@ -81,7 +81,7 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
-import { ROLE_LABELS } from '@/lib/routineStandard';
+import { ROLE_LABELS, formatTempo } from '@/lib/routineStandard';
 import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
   REST_ADJUST_SECONDS,
@@ -1149,7 +1149,12 @@ export default function SessionScreen() {
             {coachOpen ? (
               <View style={{ gap: 10, marginTop: 8 }}>
                 {day.coach_note ? (
-                  <AppText variant="body" style={{ color: colours.ink }}>{day.coach_note}</AppText>
+                  <View style={{ gap: 4 }}>
+                    <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                      {loggerCopy.coach_note_label}
+                    </AppText>
+                    <AppText variant="body" style={{ color: colours.ink }}>{day.coach_note}</AppText>
+                  </View>
                 ) : null}
                 {day.finisher ? (
                   <AppText variant="bodySm" style={{ color: colours.inkMuted }}>{day.finisher}</AppText>
@@ -1276,7 +1281,7 @@ export default function SessionScreen() {
                   </AppText>
                   {item.tempo ? (
                     <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                      {item.tempo}
+                      {formatTempo(item.tempo)}
                     </AppText>
                   ) : null}
                   {firstTime ? (

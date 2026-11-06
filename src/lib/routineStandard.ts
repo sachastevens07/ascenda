@@ -1,3 +1,6 @@
+import { fillCopy, loggerCopy } from '@/lib/copy';
+import { preferredSwapIds } from '@/lib/contentGuides';
+import { contentPhaseForWeek, contentRoutine } from '@/lib/contentRoutines';
 import type { SlotExercise } from '@/lib/programmes';
 
 type RoutineDifficulty = 'beginner' | 'intermediate' | 'experienced';
@@ -316,6 +319,10 @@ export function formatRir(rir: number): string {
 }
 
 export function formatTempo(tempo: string): string {
+  const match = tempo.trim().match(/^(\d+)\s*[-/]\s*(\d+)\s*[-/]\s*(\d+)(?:\s*[-/]\s*\d+)?$/);
+  if (match) {
+    return fillCopy(loggerCopy.tempo, { down: match[1], pause: match[2], up: match[3] });
+  }
   return tempo;
 }
 
@@ -409,7 +416,17 @@ export type PhaseCopy = {
   lighter?: boolean;
 };
 
-export function phasesForRoutine(routineId: string, lengthWeeks: number): PhaseCopy[] {
+export function phasesForRoutine(routineId: string, lengthWeeks: number, slug?: string): PhaseCopy[] {
+  const overlay = contentRoutine(slug ?? '') ?? contentRoutine(routineId);
+  if (overlay && overlay.phases.length > 0) {
+    return overlay.phases.map((phase) => ({
+      fromWeek: Math.min(...phase.weeks),
+      toWeek: Math.max(...phase.weeks),
+      name: phase.name,
+      goal: phase.goal,
+      lighter: /lighter/i.test(phase.name),
+    }));
+  }
   if (routineId === 'gym-confidence-6') {
     return [
       { fromWeek: 1, toWeek: 2, name: 'Learn the movements', goal: 'Stay in one dumbbell spot and learn the session.' },
@@ -444,15 +461,42 @@ export function phasesForRoutine(routineId: string, lengthWeeks: number): PhaseC
   ];
 }
 
-export function phaseForWeek(routineId: string, lengthWeeks: number, weekNumber: number): PhaseCopy | null {
+export function phaseForWeek(
+  routineId: string,
+  lengthWeeks: number,
+  weekNumber: number,
+  slug?: string
+): PhaseCopy | null {
+  const overlay = contentRoutine(slug ?? '') ?? contentRoutine(routineId);
+  if (overlay) {
+    const phase = contentPhaseForWeek(overlay, weekNumber);
+    if (phase) {
+      return {
+        fromWeek: Math.min(...phase.weeks),
+        toWeek: Math.max(...phase.weeks),
+        name: phase.name,
+        goal: phase.goal,
+        lighter: /lighter/i.test(phase.name),
+      };
+    }
+  }
   return (
-    phasesForRoutine(routineId, lengthWeeks).find(
+    phasesForRoutine(routineId, lengthWeeks, slug).find(
       (phase) => weekNumber >= phase.fromWeek && weekNumber <= phase.toWeek
     ) ?? null
   );
 }
 
-export function briefForRoutine(routineId: string, difficulty: RoutineDifficulty): RoutineBrief {
+export function briefForRoutine(routineId: string, difficulty: RoutineDifficulty, slug?: string): RoutineBrief {
+  const overlay = contentRoutine(slug ?? '') ?? contentRoutine(routineId);
+  if (overlay) {
+    return {
+      audience: overlay.who_its_for,
+      byTheEnd: overlay.by_the_end,
+      splitNote: overlay.why_this_split,
+      progressionNote: overlay.progression_explained,
+    };
+  }
   const listed = ROUTINE_BRIEFS[routineId];
   if (listed) return listed;
   return {
@@ -498,7 +542,7 @@ export function withExerciseCoaching<T extends CoachableExercise>(
   const tempo =
     empty(item.tempo) && difficulty === 'beginner' && role === 'main' ? '3-second lowering' : item.tempo ?? null;
   const alternatives = empty(item.alternative_exercise_ids)
-    ? ALTERNATIVES[item.exercise.id] ?? []
+    ? preferredSwapIds(item.exercise.id, ALTERNATIVES[item.exercise.id] ?? [])
     : item.alternative_exercise_ids;
   return {
     ...item,

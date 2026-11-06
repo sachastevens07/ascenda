@@ -1,7 +1,10 @@
 -- v2.2 N2: coaching fields on routines, weeks, days and exercises.
--- Paste into Supabase > SQL Editor and click Run.
+-- Roadmap step 10. Paste into Supabase > SQL Editor and click Run.
+-- Section 1 adds columns. Section 2 only updates the old 14 routine ids.
+-- The 15 /content slugs are not overwritten here. Their copy is bundled in the app
+-- and loaded by content:sync / content_routines_1.sql to _3.sql.
 -- Safe to run again. Never deletes sessions, sets, enrolments or account data.
--- The app also fills these conservatively in code if this file has not been run.
+-- The app also fills these from /content if this file has not been run.
 
 -- 1. Columns
 alter table public.routines

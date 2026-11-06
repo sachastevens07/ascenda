@@ -1,0 +1,1051 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "First-time guides for lower-body exercises (AGENTS.md R7 and W4). Keyed by exercise slug from content/exercises/strength-catalogue.json.",
+    "if_its_taken.swaps lists only genuinely similar exercises, and may be empty. The swap engine should use these lists instead of the catalogue alternatives for these exercises. When the list is empty, show the tip instead.",
+    "Draft for coach review before launch."
+  ],
+  "guides": [
+    {
+      "slug": "goblet-squat",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "core",
+        "upper back"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Pick one dumbbell and hold it vertically against your chest, cupping the top end with both hands.",
+        "Stand with feet just wider than hip-width, toes turned slightly out."
+      ],
+      "form_cues": [
+        "Sit down between your heels, keeping your chest tall.",
+        "Let your knees travel forward in line with your toes.",
+        "Push the floor away to stand up, squeezing your glutes at the top."
+      ],
+      "where_you_should_feel_it": "Fronts of your thighs and your glutes.",
+      "common_mistakes": [
+        "Heels lifting off the floor. Widen your stance a little or squat slightly less deep.",
+        "Rounding forward. Keep the dumbbell close to your chest."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-box-squat"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "dumbbell-box-squat",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "core"
+      ],
+      "where_to_find": "Any flat bench or plyo box near the dumbbells.",
+      "setup": [
+        "Stand in front of a bench, feet hip to shoulder-width apart.",
+        "Hold a dumbbell at your chest, or one in each hand by your sides."
+      ],
+      "form_cues": [
+        "Sit back until you lightly touch the bench.",
+        "Don't relax onto it: keep your weight in your feet.",
+        "Stand up tall and squeeze your glutes."
+      ],
+      "where_you_should_feel_it": "Thighs and glutes.",
+      "common_mistakes": [
+        "Dropping onto the bench. Touch it gently and stand back up.",
+        "Knees caving in. Push them out over your toes."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "goblet-squat"
+        ],
+        "tip": "Any bench or box at about knee height works. Use a low one if a bench is taken."
+      }
+    },
+    {
+      "slug": "bodyweight-box-squat",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "core"
+      ],
+      "where_to_find": "Anywhere with a sturdy chair or bench.",
+      "setup": [
+        "Stand in front of a chair, feet hip-width apart.",
+        "Arms out in front for balance."
+      ],
+      "form_cues": [
+        "Sit back slowly until you touch the chair.",
+        "Keep your chest up.",
+        "Stand up through your whole foot."
+      ],
+      "where_you_should_feel_it": "Thighs and glutes.",
+      "common_mistakes": [
+        "Using momentum to stand. Pause lightly on the chair first.",
+        "Feet too close to the chair. Step forward a little."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Any sturdy chair, sofa or step works."
+      }
+    },
+    {
+      "slug": "leg-press",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings"
+      ],
+      "where_to_find": "The resistance machine area, usually a large angled machine with a foot platform.",
+      "setup": [
+        "Sit with your back and head against the pad.",
+        "Place feet shoulder-width on the middle of the platform.",
+        "Push the platform up, then release the safety handles at your sides."
+      ],
+      "form_cues": [
+        "Lower the platform until your knees are around 90 degrees, or as low as is comfortable without your lower back lifting.",
+        "Push through your whole foot.",
+        "Stop just short of locking your knees at the top."
+      ],
+      "where_you_should_feel_it": "Thighs and glutes. Feet higher on the platform means more glutes.",
+      "common_mistakes": [
+        "Locking your knees straight at the top. Always keep a slight bend.",
+        "Lowering so far your hips curl off the seat."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "hack-squat",
+          "smith-machine-squat",
+          "goblet-squat"
+        ],
+        "tip": "If it's busy, ask how many sets they have left. Gyms are used to people sharing."
+      }
+    },
+    {
+      "slug": "barbell-back-squat",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "core",
+        "upper back"
+      ],
+      "where_to_find": "The squat racks, usually in the barbell area.",
+      "setup": [
+        "Set the bar on the hooks at about mid-chest height.",
+        "Set the safety bars just below the lowest point of your squat.",
+        "Step under, rest the bar on your upper back, lift it off and take two small steps back."
+      ],
+      "form_cues": [
+        "Brace your stomach like you're about to be poked.",
+        "Sit down and slightly back, knees following your toes.",
+        "Drive up and keep your chest proud."
+      ],
+      "where_you_should_feel_it": "Thighs, glutes and your whole body working together.",
+      "common_mistakes": [
+        "Skipping the safety bars. Set them every time, even on warm-ups.",
+        "Chest dropping forward on the way up."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "smith-machine-squat",
+          "goblet-squat"
+        ],
+        "tip": "Racks get busy at peak times. The Smith machine is the closest swap and often quieter."
+      }
+    },
+    {
+      "slug": "smith-machine-squat",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "core"
+      ],
+      "where_to_find": "Usually near the squat racks: a bar fixed on vertical rails.",
+      "setup": [
+        "Set the bar at shoulder height and the safety stops just below your lowest point.",
+        "Step under so the bar rests on your upper back, with feet slightly in front of the bar.",
+        "Twist the bar to unhook it."
+      ],
+      "form_cues": [
+        "Sit down between your heels.",
+        "Keep your back against an imaginary wall behind you.",
+        "Push up and twist the bar back onto the hooks when you finish."
+      ],
+      "where_you_should_feel_it": "Thighs and glutes.",
+      "common_mistakes": [
+        "Feet directly under the bar. Step them slightly forward.",
+        "Forgetting to set the safety stops."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "barbell-back-squat",
+          "hack-squat",
+          "goblet-squat"
+        ],
+        "tip": "If the Smith machine is taken, a goblet squat gives you a very similar workout."
+      }
+    },
+    {
+      "slug": "hack-squat",
+      "primary_muscles": [
+        "quads"
+      ],
+      "secondary_muscles": [
+        "glutes"
+      ],
+      "where_to_find": "The resistance machine area: an angled machine with shoulder pads and a foot platform.",
+      "setup": [
+        "Stand on the platform with your back flat against the pad and shoulders under the pads.",
+        "Feet shoulder-width, middle of the platform.",
+        "Release the safety handles."
+      ],
+      "form_cues": [
+        "Lower slowly until your thighs are about parallel to the platform.",
+        "Keep your back flat against the pad.",
+        "Drive back up without locking your knees."
+      ],
+      "where_you_should_feel_it": "Mostly the fronts of your thighs.",
+      "common_mistakes": [
+        "Heels lifting. Move your feet slightly higher.",
+        "Locking out hard at the top."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "leg-press",
+          "smith-machine-squat"
+        ],
+        "tip": "Not every gym has one. The leg press is the closest swap."
+      }
+    },
+    {
+      "slug": "leg-extension",
+      "primary_muscles": [
+        "quads"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The resistance machine area, often next to the leg curl.",
+      "setup": [
+        "Sit with your back against the pad.",
+        "Line your knee up with the machine's pivot point (usually a coloured dot).",
+        "Set the ankle pad just above your ankles."
+      ],
+      "form_cues": [
+        "Straighten your legs smoothly.",
+        "Pause for a second at the top.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Fronts of your thighs.",
+      "common_mistakes": [
+        "Swinging the weight up. Slow down.",
+        "Seat too far forward or back. Line your knee up with the pivot."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "There isn't a close swap. Wait for it, or add a set to your squat or leg press instead."
+      }
+    },
+    {
+      "slug": "dumbbell-romanian-deadlift",
+      "primary_muscles": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "lower back",
+        "grip"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Hold a dumbbell in each hand in front of your thighs.",
+        "Stand hip-width apart with soft knees."
+      ],
+      "form_cues": [
+        "Push your hips back like you're closing a door behind you.",
+        "Keep the dumbbells close to your legs and your back flat.",
+        "Stand up by squeezing your glutes."
+      ],
+      "where_you_should_feel_it": "Backs of your legs and your glutes. Not your lower back.",
+      "common_mistakes": [
+        "Bending your knees into a squat. Keep the bend small.",
+        "Letting the dumbbells drift away from your legs."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "kettlebell-deadlift"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "barbell-romanian-deadlift",
+      "primary_muscles": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "lower back",
+        "grip",
+        "upper back"
+      ],
+      "where_to_find": "Barbell area. Lift the bar from a rack at mid-thigh height, or use a fixed barbell.",
+      "setup": [
+        "Lift the bar from a rack or the floor so you're standing tall holding it at your thighs.",
+        "Hands just outside your legs, feet hip-width."
+      ],
+      "form_cues": [
+        "Push your hips back and slide the bar down your thighs.",
+        "Lower until you feel a strong stretch in your hamstrings, usually just below the knee.",
+        "Stand tall by driving your hips forward."
+      ],
+      "where_you_should_feel_it": "Backs of your legs and glutes.",
+      "common_mistakes": [
+        "Rounding your back to reach lower. Only go as low as your flat back allows.",
+        "Bar drifting away from your legs."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-romanian-deadlift"
+        ],
+        "tip": "Use dumbbells or a fixed barbell from the rack if the barbells are busy."
+      }
+    },
+    {
+      "slug": "trap-bar-deadlift",
+      "primary_muscles": [
+        "glutes",
+        "quads",
+        "hamstrings"
+      ],
+      "secondary_muscles": [
+        "back",
+        "grip"
+      ],
+      "where_to_find": "Barbell area. A hexagon-shaped bar, often hung on a wall or stored by the platforms.",
+      "setup": [
+        "Step into the middle of the bar, feet hip-width.",
+        "Bend down and grip the handles in the centre."
+      ],
+      "form_cues": [
+        "Chest up, back flat, arms long.",
+        "Push the floor away to stand up.",
+        "Lower with control by pushing your hips back first."
+      ],
+      "where_you_should_feel_it": "Glutes, thighs and backs of your legs.",
+      "common_mistakes": [
+        "Hips shooting up first. Push through your legs and lift your chest at the same time.",
+        "Rounding your back at the bottom."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "kettlebell-deadlift",
+          "barbell-romanian-deadlift"
+        ],
+        "tip": "Most gyms have only one trap bar. A heavy kettlebell deadlift trains the same movement."
+      }
+    },
+    {
+      "slug": "kettlebell-deadlift",
+      "primary_muscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "secondary_muscles": [
+        "quads",
+        "grip"
+      ],
+      "where_to_find": "The kettlebell rack, usually near the dumbbells.",
+      "setup": [
+        "Stand with the kettlebell between your feet, in line with your ankles.",
+        "Feet hip to shoulder-width."
+      ],
+      "form_cues": [
+        "Push your hips back and grip the handle with both hands.",
+        "Flat back, chest up.",
+        "Stand up tall and squeeze your glutes."
+      ],
+      "where_you_should_feel_it": "Glutes and backs of your legs.",
+      "common_mistakes": [
+        "Squatting it up. Lead with your hips.",
+        "Kettlebell too far in front of your feet."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-romanian-deadlift"
+        ],
+        "tip": "No kettlebells free? Hold one heavy dumbbell by the end in the same way."
+      }
+    },
+    {
+      "slug": "single-leg-romanian-deadlift",
+      "primary_muscles": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "balance",
+        "core"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Hold a dumbbell in the hand opposite your standing leg.",
+        "Hold a bench or rack with your free hand for balance if you like."
+      ],
+      "form_cues": [
+        "Hinge forward as your back leg lifts behind you.",
+        "Keep your hips level, as if both hip bones are headlights pointing at the floor.",
+        "Return slowly to standing."
+      ],
+      "where_you_should_feel_it": "Back of the standing leg and its glute.",
+      "common_mistakes": [
+        "Hips twisting open. Keep them square to the floor.",
+        "Rushing. Balance gets easier when you go slowly."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-romanian-deadlift"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "cable-pull-through",
+      "primary_muscles": [
+        "glutes",
+        "hamstrings"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys.",
+      "setup": [
+        "Attach the rope to the lowest pulley.",
+        "Face away from the machine, holding the rope between your legs, and walk out a few steps."
+      ],
+      "form_cues": [
+        "Push your hips back so the rope moves through your legs.",
+        "Keep your arms straight and relaxed.",
+        "Snap your hips forward and squeeze your glutes to stand."
+      ],
+      "where_you_should_feel_it": "Glutes and backs of your legs.",
+      "common_mistakes": [
+        "Pulling with your arms. They're just hooks.",
+        "Squatting down instead of hinging back."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "kettlebell-deadlift",
+          "dumbbell-romanian-deadlift"
+        ],
+        "tip": "If the cables are busy, a kettlebell deadlift or Romanian deadlift trains the same hinge."
+      }
+    },
+    {
+      "slug": "dumbbell-glute-bridge",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings"
+      ],
+      "where_to_find": "On a mat in the stretching area or any quiet corner, with a dumbbell from the rack.",
+      "setup": [
+        "Lie on your back with knees bent and feet flat, hip-width apart.",
+        "Rest a dumbbell across your hips and hold it in place."
+      ],
+      "form_cues": [
+        "Drive through your heels to lift your hips.",
+        "Squeeze your glutes hard at the top for a second.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Glutes.",
+      "common_mistakes": [
+        "Arching your lower back at the top. Tuck your ribs down.",
+        "Feet too far from your bottom."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-hip-thrust"
+        ],
+        "tip": "You only need a mat and a dumbbell, so you can do this anywhere."
+      }
+    },
+    {
+      "slug": "bodyweight-glute-bridge",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings"
+      ],
+      "where_to_find": "Any mat space.",
+      "setup": [
+        "Lie on your back, knees bent, feet flat and hip-width apart.",
+        "Arms by your sides."
+      ],
+      "form_cues": [
+        "Push through your heels to lift your hips.",
+        "Squeeze at the top for a second.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Glutes.",
+      "common_mistakes": [
+        "Pushing through your toes. Shift weight to your heels.",
+        "Overarching at the top."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "single-leg-glute-bridge",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "core"
+      ],
+      "where_to_find": "Any mat space.",
+      "setup": [
+        "Lie on your back with one foot flat and the other leg lifted or knee hugged in."
+      ],
+      "form_cues": [
+        "Push through the heel of the planted foot.",
+        "Keep your hips level as they lift.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Glute of the working leg.",
+      "common_mistakes": [
+        "One hip dropping. Keep both level.",
+        "Pushing through your toes."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "dumbbell-hip-thrust",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "quads"
+      ],
+      "where_to_find": "Any flat bench, with a dumbbell from the rack.",
+      "setup": [
+        "Sit on the floor with your upper back against the long side of a bench.",
+        "Rest a dumbbell on your hips and hold it there.",
+        "Feet flat, about hip-width apart."
+      ],
+      "form_cues": [
+        "Drive your hips up until your body is flat like a table top.",
+        "Chin tucked, eyes forward.",
+        "Squeeze your glutes for a second at the top."
+      ],
+      "where_you_should_feel_it": "Glutes.",
+      "common_mistakes": [
+        "Arching your back to get higher. Stop when your hips are level.",
+        "Feet so close you feel it in your thighs."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-glute-bridge"
+        ],
+        "tip": "No bench free? Do a dumbbell glute bridge on the floor instead."
+      }
+    },
+    {
+      "slug": "barbell-hip-thrust",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings",
+        "quads"
+      ],
+      "where_to_find": "A bench near the barbells. Some gyms have a dedicated hip thrust bench.",
+      "setup": [
+        "Sit with your upper back against a bench.",
+        "Roll a barbell over your legs to your hips and put a pad or folded mat under it.",
+        "Feet flat, about hip-width apart."
+      ],
+      "form_cues": [
+        "Drive your hips up until your body is flat.",
+        "Chin tucked, ribs down.",
+        "Squeeze for a second, then lower with control."
+      ],
+      "where_you_should_feel_it": "Glutes.",
+      "common_mistakes": [
+        "No pad. The bar is far more comfortable with one.",
+        "Overarching your lower back at the top."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "hip-thrust-machine",
+          "dumbbell-hip-thrust"
+        ],
+        "tip": "Benches near the barbells can be busy. A hip thrust machine or dumbbell hip thrust is the closest swap."
+      }
+    },
+    {
+      "slug": "hip-thrust-machine",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "hamstrings"
+      ],
+      "where_to_find": "The resistance machine area. Not every gym has one.",
+      "setup": [
+        "Sit with your upper back against the pad and the belt or pad across your hips.",
+        "Feet flat on the platform, about hip-width."
+      ],
+      "form_cues": [
+        "Drive your hips up until they're level.",
+        "Squeeze at the top.",
+        "Lower with control."
+      ],
+      "where_you_should_feel_it": "Glutes.",
+      "common_mistakes": [
+        "Using your lower back to finish the rep.",
+        "Feet too far forward, which shifts work to your hamstrings."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "barbell-hip-thrust",
+          "dumbbell-hip-thrust"
+        ],
+        "tip": "If it's taken or your gym doesn't have one, a dumbbell hip thrust works the same muscles."
+      }
+    },
+    {
+      "slug": "seated-leg-curl",
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The resistance machine area, often beside the leg extension.",
+      "setup": [
+        "Sit with your back against the pad.",
+        "Line your knee up with the pivot point.",
+        "Lower the thigh pad onto your legs and put the ankle pad behind your lower calves."
+      ],
+      "form_cues": [
+        "Curl your heels down and back.",
+        "Pause briefly.",
+        "Return slowly."
+      ],
+      "where_you_should_feel_it": "Backs of your thighs.",
+      "common_mistakes": [
+        "Letting the weight slam back. Control it.",
+        "Thigh pad too loose, so your legs lift."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "lying-leg-curl"
+        ],
+        "tip": "The lying leg curl is the closest swap."
+      }
+    },
+    {
+      "slug": "lying-leg-curl",
+      "primary_muscles": [
+        "hamstrings"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The resistance machine area.",
+      "setup": [
+        "Lie face down with your knees just off the end of the pad.",
+        "Ankle pad just above your heels.",
+        "Hold the handles."
+      ],
+      "form_cues": [
+        "Curl your heels towards your bottom.",
+        "Keep your hips pressed into the pad.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Backs of your thighs.",
+      "common_mistakes": [
+        "Hips lifting off the pad.",
+        "Swinging the weight."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "seated-leg-curl"
+        ],
+        "tip": "The seated leg curl is the closest swap."
+      }
+    },
+    {
+      "slug": "cable-glute-kickback",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The cable station.",
+      "setup": [
+        "Attach an ankle strap to the lowest pulley and wrap it around one ankle.",
+        "Face the machine and hold the frame, with a slight forward lean."
+      ],
+      "form_cues": [
+        "Kick your leg back and slightly out to the side.",
+        "Keep your hips square.",
+        "Return slowly."
+      ],
+      "where_you_should_feel_it": "Glute of the working leg.",
+      "common_mistakes": [
+        "Arching your lower back to kick higher.",
+        "Swinging. Slow it down."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "single-leg-glute-bridge"
+        ],
+        "tip": "If the cables are busy, a single-leg glute bridge works the same glute."
+      }
+    },
+    {
+      "slug": "hip-abduction-machine",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The resistance machine area: a seated machine with pads on the outsides of your knees.",
+      "setup": [
+        "Sit with your back against the pad and the pads on the outside of your knees.",
+        "Set the start position so your legs begin together."
+      ],
+      "form_cues": [
+        "Push your knees apart.",
+        "Pause with your legs wide.",
+        "Return slowly."
+      ],
+      "where_you_should_feel_it": "Sides of your glutes.",
+      "common_mistakes": [
+        "Letting the weight snap back.",
+        "Using a weight so heavy you can only move a few centimetres."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "cable-hip-abduction",
+          "side-lying-hip-abduction"
+        ],
+        "tip": "Two similar swaps: cable hip abduction or side-lying hip abduction on a mat."
+      }
+    },
+    {
+      "slug": "cable-hip-abduction",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The cable station.",
+      "setup": [
+        "Attach an ankle strap to the lowest pulley and wrap it around the ankle furthest from the machine.",
+        "Stand side-on and hold the frame."
+      ],
+      "form_cues": [
+        "Lift your leg out to the side.",
+        "Keep your body upright, no leaning.",
+        "Return slowly."
+      ],
+      "where_you_should_feel_it": "Side of your glute.",
+      "common_mistakes": [
+        "Leaning away to lift higher.",
+        "Turning your toes up. Keep them facing forward."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "hip-abduction-machine",
+          "side-lying-hip-abduction"
+        ],
+        "tip": "Use the abduction machine or a side-lying hip abduction on a mat."
+      }
+    },
+    {
+      "slug": "side-lying-hip-abduction",
+      "primary_muscles": [
+        "glutes"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "Any mat space.",
+      "setup": [
+        "Lie on your side with your bottom knee bent for support.",
+        "Top leg straight, in line with your body."
+      ],
+      "form_cues": [
+        "Lift your top leg up and slightly back.",
+        "Keep your toes facing forward.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Side of your glute.",
+      "common_mistakes": [
+        "Rolling backwards. Stack your hips.",
+        "Lifting too high and using your back."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "hip-abduction-machine"
+        ],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "dumbbell-split-squat",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "balance"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Hold a dumbbell in each hand.",
+        "Take a big step forward so you're in a long stance, back heel lifted."
+      ],
+      "form_cues": [
+        "Lower your back knee straight down towards the floor.",
+        "Keep your front foot flat.",
+        "Push through your front foot to rise."
+      ],
+      "where_you_should_feel_it": "Front thigh and glute.",
+      "common_mistakes": [
+        "Stance too short, so your front heel lifts.",
+        "Leaning far forward. Stay tall."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-reverse-lunge"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "bulgarian-split-squat",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "balance"
+      ],
+      "where_to_find": "Any flat bench, with dumbbells from the rack.",
+      "setup": [
+        "Stand a big step in front of a bench, facing away.",
+        "Rest the top of your back foot on the bench.",
+        "Hold a dumbbell in each hand."
+      ],
+      "form_cues": [
+        "Lower straight down until your front thigh is about parallel to the floor.",
+        "Lean slightly forward for more glutes.",
+        "Push through your front foot to rise."
+      ],
+      "where_you_should_feel_it": "Front thigh and glute.",
+      "common_mistakes": [
+        "Standing too close to the bench. Hop your front foot forward.",
+        "Pushing off the back foot."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-split-squat"
+        ],
+        "tip": "No bench free? A split squat with both feet on the floor is the closest swap."
+      }
+    },
+    {
+      "slug": "dumbbell-reverse-lunge",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "balance"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Stand tall with a dumbbell in each hand, or none to start."
+      ],
+      "form_cues": [
+        "Step one foot back and lower your back knee towards the floor.",
+        "Keep most of your weight in your front foot.",
+        "Push through your front foot to step back up."
+      ],
+      "where_you_should_feel_it": "Front thigh and glute.",
+      "common_mistakes": [
+        "Stepping back too short.",
+        "Front knee caving in."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-split-squat"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "bodyweight-reverse-lunge",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "balance"
+      ],
+      "where_to_find": "Any open floor space.",
+      "setup": [
+        "Stand tall. Hold a wall or rail if you'd like support."
+      ],
+      "form_cues": [
+        "Step back and lower your back knee gently.",
+        "Weight in your front foot.",
+        "Push back up to standing."
+      ],
+      "where_you_should_feel_it": "Front thigh and glute.",
+      "common_mistakes": [
+        "Rushing the step.",
+        "Back knee banging the floor."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "walking-lunge",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "balance",
+        "core"
+      ],
+      "where_to_find": "A clear stretch of floor, often by the turf area or along the free-weights area.",
+      "setup": [
+        "Hold a dumbbell in each hand.",
+        "Check you have a clear path of about 10 metres."
+      ],
+      "form_cues": [
+        "Take a long step forward and lower your back knee.",
+        "Push through your front foot to bring your back leg through into the next step.",
+        "Stay tall."
+      ],
+      "where_you_should_feel_it": "Thighs and glutes.",
+      "common_mistakes": [
+        "Steps too short.",
+        "Looking down. Eyes forward."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-reverse-lunge"
+        ],
+        "tip": "No clear space? Reverse lunges on the spot work the same muscles."
+      }
+    },
+    {
+      "slug": "dumbbell-step-up",
+      "primary_muscles": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_muscles": [
+        "balance"
+      ],
+      "where_to_find": "A flat bench or plyo box near the dumbbells.",
+      "setup": [
+        "Stand facing a bench or box, knee height or lower to start.",
+        "Hold a dumbbell in each hand."
+      ],
+      "form_cues": [
+        "Place your whole foot on the box.",
+        "Drive through that foot to stand up tall.",
+        "Step down slowly with the same leg."
+      ],
+      "where_you_should_feel_it": "Glute and thigh of the leg on the box.",
+      "common_mistakes": [
+        "Pushing off the back foot. Let the top leg do the work.",
+        "Box too high to start."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-split-squat"
+        ],
+        "tip": "Any stable bench or box at a comfortable height works."
+      }
+    },
+    {
+      "slug": "calf-raise-machine",
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The resistance machine area. Standing or seated versions both work.",
+      "setup": [
+        "Stand or sit with the balls of your feet on the edge of the platform.",
+        "Shoulders or knees under the pads."
+      ],
+      "form_cues": [
+        "Lower your heels slowly for a stretch.",
+        "Pause at the bottom.",
+        "Rise up as high as you can."
+      ],
+      "where_you_should_feel_it": "Calves.",
+      "common_mistakes": [
+        "Bouncing at the bottom.",
+        "Short, quick reps. Use the full range."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-calf-raise"
+        ],
+        "tip": "Dumbbell calf raises on a step are the closest swap."
+      }
+    },
+    {
+      "slug": "dumbbell-calf-raise",
+      "primary_muscles": [
+        "calves"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "A step or weight plate near the dumbbells.",
+      "setup": [
+        "Hold a dumbbell in one hand and a rail or wall with the other.",
+        "Balls of your feet on a step or plate."
+      ],
+      "form_cues": [
+        "Lower your heels slowly.",
+        "Pause.",
+        "Rise up high."
+      ],
+      "where_you_should_feel_it": "Calves.",
+      "common_mistakes": [
+        "Bouncing.",
+        "Bending your knees to cheat the rep."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "calf-raise-machine"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    }
+  ]
+}

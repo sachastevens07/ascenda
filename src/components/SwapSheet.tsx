@@ -5,6 +5,7 @@ import { ActivityIndicator, Animated, Easing, Pressable, StyleSheet, View } from
 import { showDialog } from '@/components/Dialog';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
+import { preferredSwapIds } from '@/lib/contentGuides';
 import { EQUIPMENT_LABELS, ZONE_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import type { ProgrammeExercise, SlotExercise } from '@/lib/programmes';
@@ -96,7 +97,13 @@ export function SwapSheet({
     if (!open) return;
     let isCurrent = true;
     setLoadState('loading');
-    fetchAlternatives(item.exercise, equipment, excludeKey.split(','), maxZone)
+    fetchAlternatives(
+      item.exercise,
+      equipment,
+      excludeKey.split(','),
+      maxZone,
+      preferredSwapIds(item.exercise.id, item.alternative_exercise_ids ?? [])
+    )
       .then((result) => {
         if (!isCurrent) return;
         setAlternatives(result.alternatives);

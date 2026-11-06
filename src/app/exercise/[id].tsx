@@ -27,6 +27,7 @@ import {
   type Exercise,
 } from '@/lib/exercises';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
+import { guideForExercise, preferredSwapIds } from '@/lib/contentGuides';
 import { setupStepsFor } from '@/lib/gymUnlocked';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import type { SlotExercise } from '@/lib/programmes';
@@ -77,7 +78,9 @@ export default function ExerciseScreen() {
         weight_increase_kg: null,
       },
       answers?.equipment ?? 'full_gym',
-      [exercise.id]
+      [exercise.id],
+      undefined,
+      preferredSwapIds(exercise.id)
     )
       .then((options) => {
         if (isCurrent) setSwaps(options.alternatives);
@@ -107,7 +110,11 @@ export default function ExerciseScreen() {
   }
 
   const mediaSource = mediaFailed ? null : getExerciseImageSource(exercise);
-  const setup = setupStepsFor(exercise);
+  const guide = guideForExercise(exercise.id);
+  const setup = guide?.setup.length ? guide.setup : setupStepsFor(exercise);
+  const cues = guide?.form_cues.length ? guide.form_cues : exercise.cues;
+  const whereToFind = guide?.where_to_find || exercise.location_hint;
+  const takenTip = guide?.if_its_taken.tip ?? '';
   const mediaFallback = mediaSource ? (
     <Image
       source={mediaSource}
@@ -142,7 +149,7 @@ export default function ExerciseScreen() {
       <View style={[styles.media, { width: mediaWidth }]}>
         <ExerciseMediaPlayer
           exerciseId={exercise.id}
-          cues={exercise.cues}
+          cues={cues}
           width={mediaWidth}
           height={mediaHeight}
           fallback={mediaFallback}
@@ -187,7 +194,7 @@ export default function ExerciseScreen() {
           </AppText>
         </View>
         <AppText variant="body" style={styles.body}>
-          {exercise.location_hint}
+          {whereToFind}
         </AppText>
       </View>
 
@@ -217,7 +224,7 @@ export default function ExerciseScreen() {
             Form cues
           </AppText>
         </View>
-        {exercise.cues.map((cue, index) => (
+        {cues.map((cue, index) => (
           <View key={cue} style={styles.cue}>
             <AppText variant="bodySm" style={styles.cueNumber}>
               {index + 1}
@@ -237,11 +244,13 @@ export default function ExerciseScreen() {
           </AppText>
         </View>
         <AppText variant="body" style={styles.body}>
-          Pick one of these: same muscles, no need to wait. You can also swap from the logger.
+          {takenTip || 'Pick one of these: same muscles, no need to wait. You can also swap from the logger.'}
         </AppText>
         {swaps.length === 0 ? (
           <AppText variant="bodySm" style={styles.muted}>
-            We’ll suggest a swap here once the library has finished loading.
+            {takenTip
+              ? 'No close swap is listed for this one. Skip it today or come back to it later in the session.'
+              : "We'll suggest a swap here once the library has finished loading."}
           </AppText>
         ) : (
           swaps.map((option) => (

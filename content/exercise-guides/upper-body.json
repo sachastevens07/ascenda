@@ -1,0 +1,965 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "First-time guides for upper-body exercises. Same structure as content/exercise-guides/lower-body.json.",
+    "if_its_taken.swaps lists only genuinely similar exercises, and may be empty. The swap engine should use these lists instead of the catalogue alternatives.",
+    "Draft for coach review before launch."
+  ],
+  "guides": [
+    {
+      "slug": "dumbbell-bench-press",
+      "primary_muscles": [
+        "chest",
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "front shoulders"
+      ],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Sit on the end of a flat bench with the dumbbells on your thighs.",
+        "Lie back, bringing the dumbbells to your chest as you go.",
+        "Feet flat on the floor."
+      ],
+      "form_cues": [
+        "Press the dumbbells up over your chest until your arms are straight.",
+        "Lower slowly until they're level with your chest, elbows at about 45 degrees to your body.",
+        "Keep your shoulder blades gently squeezed together."
+      ],
+      "where_you_should_feel_it": "Chest and the backs of your arms.",
+      "common_mistakes": [
+        "Elbows flared straight out to the sides. Tuck them in a little.",
+        "Bouncing the dumbbells off your chest."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "chest-press-machine",
+          "dumbbell-floor-press"
+        ],
+        "tip": "No bench free? Do the same press lying on the floor, or use the chest press machine."
+      }
+    },
+    {
+      "slug": "dumbbell-floor-press",
+      "primary_muscles": [
+        "chest",
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "front shoulders"
+      ],
+      "where_to_find": "Any mat space, with dumbbells from the rack.",
+      "setup": [
+        "Lie on your back with knees bent and feet flat.",
+        "Hold a dumbbell in each hand above your chest."
+      ],
+      "form_cues": [
+        "Lower until your upper arms gently touch the floor.",
+        "Pause briefly.",
+        "Press back up."
+      ],
+      "where_you_should_feel_it": "Chest and the backs of your arms.",
+      "common_mistakes": [
+        "Dropping your elbows onto the floor. Touch it softly.",
+        "Elbows flared wide."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-bench-press"
+        ],
+        "tip": "You only need floor space and dumbbells, so you can do this almost anywhere."
+      }
+    },
+    {
+      "slug": "incline-dumbbell-press",
+      "primary_muscles": [
+        "upper chest",
+        "front shoulders"
+      ],
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Set the bench to a low incline, about two notches up.",
+        "Sit back with a dumbbell on each thigh and kick them up to your shoulders as you lie back."
+      ],
+      "form_cues": [
+        "Press up and slightly towards each other.",
+        "Lower to the top of your chest.",
+        "Keep your feet planted and shoulder blades back."
+      ],
+      "where_you_should_feel_it": "Upper chest and the fronts of your shoulders.",
+      "common_mistakes": [
+        "Bench set too steep, which turns it into a shoulder press.",
+        "Arching your lower back off the bench."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-bench-press",
+          "chest-press-machine"
+        ],
+        "tip": "If no adjustable bench is free, a flat dumbbell bench press is the closest swap."
+      }
+    },
+    {
+      "slug": "barbell-bench-press",
+      "primary_muscles": [
+        "chest",
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "front shoulders"
+      ],
+      "where_to_find": "The flat bench stations in the barbell area, or a bench inside a squat rack with safety arms.",
+      "setup": [
+        "Lie on the bench with your eyes under the bar.",
+        "Grip the bar slightly wider than shoulder-width.",
+        "Set the safety arms just below your chest height, or ask someone to spot you."
+      ],
+      "form_cues": [
+        "Lift the bar off and hold it over your shoulders.",
+        "Lower it to your lower chest with control.",
+        "Press back up, keeping your feet planted and shoulder blades squeezed."
+      ],
+      "where_you_should_feel_it": "Chest and the backs of your arms.",
+      "common_mistakes": [
+        "Benching heavy without a spotter or safety arms.",
+        "Bouncing the bar off your chest."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-bench-press",
+          "chest-press-machine"
+        ],
+        "tip": "Benches go fast on Mondays. Dumbbell bench press is the closest swap."
+      }
+    },
+    {
+      "slug": "chest-press-machine",
+      "primary_muscles": [
+        "chest",
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "front shoulders"
+      ],
+      "where_to_find": "The resistance machine area: a seated machine with handles at chest height.",
+      "setup": [
+        "Adjust the seat so the handles line up with the middle of your chest.",
+        "Sit with your back flat against the pad and feet on the floor."
+      ],
+      "form_cues": [
+        "Press the handles forward until your arms are almost straight.",
+        "Return slowly until you feel a light stretch across your chest.",
+        "Keep your back against the pad."
+      ],
+      "where_you_should_feel_it": "Chest and the backs of your arms.",
+      "common_mistakes": [
+        "Seat too high or low, so the handles are at your neck or stomach.",
+        "Letting the weight stack crash down between reps."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-bench-press"
+        ],
+        "tip": "If it's busy, ask how many sets they have left. Gyms are used to people sharing."
+      }
+    },
+    {
+      "slug": "pec-deck",
+      "primary_muscles": [
+        "chest"
+      ],
+      "secondary_muscles": [
+        "front shoulders"
+      ],
+      "where_to_find": "The resistance machine area. Often the same machine as the reverse pec deck.",
+      "setup": [
+        "Set the seat so the handles are at chest height.",
+        "Set the arms so they start just behind your body."
+      ],
+      "form_cues": [
+        "Bring the handles together in a wide hugging motion.",
+        "Keep a soft bend in your elbows.",
+        "Return slowly until you feel a stretch."
+      ],
+      "where_you_should_feel_it": "Chest.",
+      "common_mistakes": [
+        "Bending your elbows a lot, which turns it into a press.",
+        "Letting the weight pull your arms too far back."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-chest-fly"
+        ],
+        "tip": "A dumbbell chest fly on a flat bench is the closest swap."
+      }
+    },
+    {
+      "slug": "dumbbell-chest-fly",
+      "primary_muscles": [
+        "chest"
+      ],
+      "secondary_muscles": [
+        "front shoulders"
+      ],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Lie on a flat bench with light dumbbells held above your chest, palms facing each other."
+      ],
+      "form_cues": [
+        "Open your arms out wide with a soft bend in the elbows.",
+        "Lower until you feel a stretch across your chest.",
+        "Bring them back together in a hugging motion."
+      ],
+      "where_you_should_feel_it": "Chest.",
+      "common_mistakes": [
+        "Going too heavy. Use lighter dumbbells than for pressing.",
+        "Lowering so far it strains your shoulders."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "pec-deck"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "incline-push-up",
+      "primary_muscles": [
+        "chest",
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "front shoulders",
+        "core"
+      ],
+      "where_to_find": "Any bench, box or the bar in a Smith machine set at hip height.",
+      "setup": [
+        "Place your hands on a bench, slightly wider than shoulder-width.",
+        "Walk your feet back until your body is in a straight line."
+      ],
+      "form_cues": [
+        "Lower your chest to the bench.",
+        "Keep your body straight from head to heels.",
+        "Push back up."
+      ],
+      "where_you_should_feel_it": "Chest and the backs of your arms.",
+      "common_mistakes": [
+        "Hips sagging. Squeeze your glutes.",
+        "Elbows flared wide."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Any sturdy surface works. The higher it is, the easier the push-up."
+      }
+    },
+    {
+      "slug": "push-up",
+      "primary_muscles": [
+        "chest",
+        "triceps"
+      ],
+      "secondary_muscles": [
+        "front shoulders",
+        "core"
+      ],
+      "where_to_find": "Any mat space.",
+      "setup": [
+        "Hands on the floor slightly wider than shoulder-width.",
+        "Body in a straight line on your toes, or on your knees to make it easier."
+      ],
+      "form_cues": [
+        "Lower your chest towards the floor.",
+        "Elbows at about 45 degrees to your body.",
+        "Push back up, keeping your body straight."
+      ],
+      "where_you_should_feel_it": "Chest and the backs of your arms.",
+      "common_mistakes": [
+        "Hips sagging or piking up.",
+        "Only lowering halfway."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "incline-push-up"
+        ],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "seated-dumbbell-shoulder-press",
+      "primary_muscles": [
+        "shoulders"
+      ],
+      "secondary_muscles": [
+        "triceps",
+        "upper chest"
+      ],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Set the bench upright, or one notch back from upright.",
+        "Sit with your back against it and kick the dumbbells up to shoulder height."
+      ],
+      "form_cues": [
+        "Press the dumbbells up until your arms are straight overhead.",
+        "Lower to about ear height.",
+        "Keep your back against the pad and ribs down."
+      ],
+      "where_you_should_feel_it": "Shoulders and the backs of your arms.",
+      "common_mistakes": [
+        "Arching your lower back off the bench.",
+        "Lowering too far, past your ears, with heavy weights."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "shoulder-press-machine",
+          "standing-dumbbell-shoulder-press"
+        ],
+        "tip": "No upright bench free? Do the same press standing, or use the shoulder press machine."
+      }
+    },
+    {
+      "slug": "standing-dumbbell-shoulder-press",
+      "primary_muscles": [
+        "shoulders"
+      ],
+      "secondary_muscles": [
+        "triceps",
+        "core"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Stand with feet hip-width apart, a dumbbell in each hand at shoulder height."
+      ],
+      "form_cues": [
+        "Brace your stomach and squeeze your glutes.",
+        "Press the dumbbells overhead.",
+        "Lower with control to shoulder height."
+      ],
+      "where_you_should_feel_it": "Shoulders, with your core working to keep you steady.",
+      "common_mistakes": [
+        "Leaning back to push the weight up.",
+        "Using your legs to bounce it up."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "seated-dumbbell-shoulder-press"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "shoulder-press-machine",
+      "primary_muscles": [
+        "shoulders"
+      ],
+      "secondary_muscles": [
+        "triceps"
+      ],
+      "where_to_find": "The resistance machine area: a seated machine with handles at shoulder height.",
+      "setup": [
+        "Adjust the seat so the handles start at about shoulder height.",
+        "Sit with your back against the pad."
+      ],
+      "form_cues": [
+        "Press the handles up until your arms are almost straight.",
+        "Lower slowly.",
+        "Keep your back against the pad."
+      ],
+      "where_you_should_feel_it": "Shoulders and the backs of your arms.",
+      "common_mistakes": [
+        "Seat too low, so you start with your hands way below your shoulders.",
+        "Locking your elbows hard at the top."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "seated-dumbbell-shoulder-press"
+        ],
+        "tip": "If it's busy, ask how many sets they have left. Gyms are used to people sharing."
+      }
+    },
+    {
+      "slug": "dumbbell-lateral-raise",
+      "primary_muscles": [
+        "side shoulders"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Stand tall with a light dumbbell in each hand by your sides."
+      ],
+      "form_cues": [
+        "Raise your arms out to the sides until they're at shoulder height.",
+        "Lead with your elbows, with a slight bend.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "The sides of your shoulders.",
+      "common_mistakes": [
+        "Going too heavy and swinging. Light weights work best here.",
+        "Shrugging your shoulders up to your ears."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "cable-lateral-raise"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "cable-lateral-raise",
+      "primary_muscles": [
+        "side shoulders"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys and a choice of handles.",
+      "setup": [
+        "Set a pulley to the lowest position with a single handle.",
+        "Stand side-on and hold the handle with the hand furthest from the machine."
+      ],
+      "form_cues": [
+        "Raise your arm out to the side up to shoulder height.",
+        "Lead with your elbow.",
+        "Lower slowly against the cable."
+      ],
+      "where_you_should_feel_it": "The side of your shoulder.",
+      "common_mistakes": [
+        "Leaning away to lift higher.",
+        "Shrugging."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-lateral-raise"
+        ],
+        "tip": "If the cables are busy, dumbbell lateral raises are the closest swap."
+      }
+    },
+    {
+      "slug": "one-arm-dumbbell-row",
+      "primary_muscles": [
+        "upper back",
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "rear shoulders"
+      ],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Place one hand and the same-side knee on a flat bench.",
+        "Hold a dumbbell in the other hand, arm hanging straight down.",
+        "Back flat, like a table top."
+      ],
+      "form_cues": [
+        "Pull the dumbbell up towards your hip.",
+        "Squeeze your shoulder blade back at the top.",
+        "Lower slowly until your arm is straight."
+      ],
+      "where_you_should_feel_it": "Upper back and the side of your back.",
+      "common_mistakes": [
+        "Twisting your body to lift the weight.",
+        "Pulling towards your chest instead of your hip."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "chest-supported-dumbbell-row",
+          "seated-cable-row"
+        ],
+        "tip": "Rows are easy to swap: try a chest-supported row or the seated cable row."
+      }
+    },
+    {
+      "slug": "chest-supported-dumbbell-row",
+      "primary_muscles": [
+        "upper back"
+      ],
+      "secondary_muscles": [
+        "lats",
+        "biceps",
+        "rear shoulders"
+      ],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Set a bench to a medium incline.",
+        "Lie face down on it with your chest on the pad and a dumbbell in each hand hanging down."
+      ],
+      "form_cues": [
+        "Row both dumbbells up, squeezing your shoulder blades together.",
+        "Pause at the top.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Upper back, between your shoulder blades.",
+      "common_mistakes": [
+        "Lifting your chest off the pad.",
+        "Shrugging up instead of pulling back."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "one-arm-dumbbell-row",
+          "seated-cable-row"
+        ],
+        "tip": "If no incline bench is free, do one-arm rows on a flat bench."
+      }
+    },
+    {
+      "slug": "bent-over-dumbbell-row",
+      "primary_muscles": [
+        "upper back",
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "hamstrings"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Hold a dumbbell in each hand.",
+        "Hinge forward at the hips, soft knees and a flat back, until your upper body is at about 45 degrees."
+      ],
+      "form_cues": [
+        "Row both dumbbells towards your lower ribs.",
+        "Keep your back flat throughout.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Upper back and the sides of your back.",
+      "common_mistakes": [
+        "Standing up taller as you row.",
+        "Rounding your back."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "one-arm-dumbbell-row",
+          "barbell-bent-over-row"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "barbell-bent-over-row",
+      "primary_muscles": [
+        "upper back",
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "hamstrings",
+        "lower back"
+      ],
+      "where_to_find": "Barbell area. Use a fixed barbell or a bar from the rack.",
+      "setup": [
+        "Hold the bar with hands just wider than shoulder-width.",
+        "Hinge forward with soft knees and a flat back."
+      ],
+      "form_cues": [
+        "Pull the bar to your lower ribs.",
+        "Squeeze your shoulder blades together.",
+        "Lower under control."
+      ],
+      "where_you_should_feel_it": "Upper back and the sides of your back.",
+      "common_mistakes": [
+        "Jerking the weight up with your hips.",
+        "Rounding your back."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "bent-over-dumbbell-row"
+        ],
+        "tip": "If the barbells are busy, bent-over dumbbell rows are the closest swap."
+      }
+    },
+    {
+      "slug": "lat-pulldown",
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "upper back"
+      ],
+      "where_to_find": "The resistance machine area or part of the cable station: a seat with thigh pads and a long bar above.",
+      "setup": [
+        "Set the thigh pads so they hold your legs snugly.",
+        "Grip the bar slightly wider than shoulder-width and sit down."
+      ],
+      "form_cues": [
+        "Lean back very slightly and pull the bar to your upper chest.",
+        "Drive your elbows down towards your back pockets.",
+        "Let the bar rise slowly until your arms are straight."
+      ],
+      "where_you_should_feel_it": "The sides of your back, under your armpits.",
+      "common_mistakes": [
+        "Pulling the bar behind your head.",
+        "Leaning far back and swinging."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "assisted-pull-up",
+          "single-arm-cable-row"
+        ],
+        "tip": "If it's busy, ask how many sets they have left. Gyms are used to people sharing."
+      }
+    },
+    {
+      "slug": "assisted-pull-up",
+      "primary_muscles": [
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "upper back"
+      ],
+      "where_to_find": "The resistance machine area: a tall machine with a knee pad or platform.",
+      "setup": [
+        "Choose the assistance weight. More weight means more help.",
+        "Step or kneel onto the pad and grip the handles."
+      ],
+      "form_cues": [
+        "Pull your chest up towards the handles.",
+        "Lead with your elbows.",
+        "Lower slowly until your arms are straight."
+      ],
+      "where_you_should_feel_it": "The sides of your back and your biceps.",
+      "common_mistakes": [
+        "Dropping down quickly.",
+        "Only doing the top half of the movement."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "lat-pulldown"
+        ],
+        "tip": "The lat pulldown trains the same muscles and is the closest swap."
+      }
+    },
+    {
+      "slug": "seated-cable-row",
+      "primary_muscles": [
+        "upper back",
+        "lats"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "rear shoulders"
+      ],
+      "where_to_find": "The cable station or a dedicated row machine with a footplate.",
+      "setup": [
+        "Attach a close-grip handle.",
+        "Sit with your feet on the footplate and knees slightly bent.",
+        "Sit tall with your arms straight."
+      ],
+      "form_cues": [
+        "Pull the handle to your belly button.",
+        "Squeeze your shoulder blades together.",
+        "Let your arms straighten slowly without rounding forward."
+      ],
+      "where_you_should_feel_it": "Upper back, between your shoulder blades.",
+      "common_mistakes": [
+        "Rocking backwards to pull the weight.",
+        "Shrugging your shoulders."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "single-arm-cable-row",
+          "chest-supported-dumbbell-row"
+        ],
+        "tip": "If it's busy, ask how many sets they have left. Gyms are used to people sharing."
+      }
+    },
+    {
+      "slug": "single-arm-cable-row",
+      "primary_muscles": [
+        "lats",
+        "upper back"
+      ],
+      "secondary_muscles": [
+        "biceps",
+        "core"
+      ],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys and a choice of handles.",
+      "setup": [
+        "Set a pulley to about chest height with a single handle.",
+        "Stand or kneel facing the machine and hold the handle with one hand."
+      ],
+      "form_cues": [
+        "Let your shoulder reach forward.",
+        "Pull the handle back towards your ribs.",
+        "Keep your hips and chest facing forward."
+      ],
+      "where_you_should_feel_it": "The side of your back.",
+      "common_mistakes": [
+        "Twisting your whole body.",
+        "Rushing the stretch at the front."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "seated-cable-row",
+          "one-arm-dumbbell-row"
+        ],
+        "tip": "If the cables are busy, a one-arm dumbbell row trains the same muscles."
+      }
+    },
+    {
+      "slug": "face-pull",
+      "primary_muscles": [
+        "rear shoulders",
+        "upper back"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys and a choice of handles.",
+      "setup": [
+        "Set a pulley to about face height with a rope attachment.",
+        "Hold the ends of the rope with palms facing each other and step back."
+      ],
+      "form_cues": [
+        "Pull the rope towards your eyes, separating your hands.",
+        "Finish with your elbows high and hands beside your ears.",
+        "Return slowly."
+      ],
+      "where_you_should_feel_it": "The backs of your shoulders and upper back.",
+      "common_mistakes": [
+        "Going too heavy and leaning back.",
+        "Pulling to your chest instead of your face."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "reverse-pec-deck",
+          "dumbbell-reverse-fly"
+        ],
+        "tip": "If the cables are busy, use the reverse pec deck or dumbbell reverse flys."
+      }
+    },
+    {
+      "slug": "dumbbell-reverse-fly",
+      "primary_muscles": [
+        "rear shoulders",
+        "upper back"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Hold light dumbbells and hinge forward with a flat back, or lie chest-down on an incline bench."
+      ],
+      "form_cues": [
+        "Raise your arms out to the sides with a soft bend in your elbows.",
+        "Squeeze your shoulder blades together.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "The backs of your shoulders.",
+      "common_mistakes": [
+        "Going too heavy and swinging.",
+        "Shrugging up."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "reverse-pec-deck",
+          "face-pull"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "reverse-pec-deck",
+      "primary_muscles": [
+        "rear shoulders",
+        "upper back"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The resistance machine area. Usually the pec deck machine, used facing the pad.",
+      "setup": [
+        "Sit facing the pad with your chest against it.",
+        "Set the handles so your arms start in front of you."
+      ],
+      "form_cues": [
+        "Push the handles out and back in a wide arc.",
+        "Squeeze your shoulder blades together.",
+        "Return slowly."
+      ],
+      "where_you_should_feel_it": "The backs of your shoulders.",
+      "common_mistakes": [
+        "Using too much weight and jerking.",
+        "Lifting your chest off the pad."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "face-pull",
+          "dumbbell-reverse-fly"
+        ],
+        "tip": "If it's busy, ask how many sets they have left. Gyms are used to people sharing."
+      }
+    },
+    {
+      "slug": "dumbbell-biceps-curl",
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Stand tall with a dumbbell in each hand, palms facing forward."
+      ],
+      "form_cues": [
+        "Curl the dumbbells up towards your shoulders.",
+        "Keep your elbows by your sides.",
+        "Lower slowly all the way down."
+      ],
+      "where_you_should_feel_it": "The fronts of your upper arms.",
+      "common_mistakes": [
+        "Swinging your body to lift the weight.",
+        "Elbows drifting forward."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "hammer-curl",
+          "cable-biceps-curl"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "hammer-curl",
+      "primary_muscles": [
+        "biceps",
+        "forearms"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The dumbbell rack, usually along a mirrored wall in the free-weights area.",
+      "setup": [
+        "Stand tall with a dumbbell in each hand, palms facing your body."
+      ],
+      "form_cues": [
+        "Curl the dumbbells up with your thumbs pointing up.",
+        "Keep your elbows by your sides.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "Fronts of your upper arms and your forearms.",
+      "common_mistakes": [
+        "Swinging.",
+        "Only lowering halfway."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-biceps-curl",
+          "cable-biceps-curl"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "cable-biceps-curl",
+      "primary_muscles": [
+        "biceps"
+      ],
+      "secondary_muscles": [
+        "forearms"
+      ],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys and a choice of handles.",
+      "setup": [
+        "Set a pulley to the lowest position with a straight bar or rope.",
+        "Stand facing the machine, holding the attachment with palms up."
+      ],
+      "form_cues": [
+        "Curl the handle up towards your chest.",
+        "Elbows stay by your sides.",
+        "Lower slowly."
+      ],
+      "where_you_should_feel_it": "The fronts of your upper arms.",
+      "common_mistakes": [
+        "Leaning back.",
+        "Elbows moving forward."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dumbbell-biceps-curl"
+        ],
+        "tip": "If the cables are busy, dumbbell curls are the closest swap."
+      }
+    },
+    {
+      "slug": "triceps-pushdown",
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys and a choice of handles.",
+      "setup": [
+        "Set a pulley to the highest position with a rope or straight bar.",
+        "Stand facing the machine with your elbows tucked by your sides."
+      ],
+      "form_cues": [
+        "Push the handle down until your arms are straight.",
+        "Keep your elbows pinned to your sides.",
+        "Let it rise slowly to about chest height."
+      ],
+      "where_you_should_feel_it": "The backs of your upper arms.",
+      "common_mistakes": [
+        "Elbows flaring out or moving forward.",
+        "Leaning over the handle and using your body weight."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "overhead-dumbbell-triceps-extension",
+          "dumbbell-triceps-kickback"
+        ],
+        "tip": "If the cables are busy, overhead dumbbell extensions or kickbacks work the same muscle."
+      }
+    },
+    {
+      "slug": "overhead-dumbbell-triceps-extension",
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Sit on an upright bench holding one dumbbell with both hands above your head."
+      ],
+      "form_cues": [
+        "Lower the dumbbell behind your head by bending your elbows.",
+        "Keep your elbows pointing up.",
+        "Straighten your arms to lift it back up."
+      ],
+      "where_you_should_feel_it": "The backs of your upper arms.",
+      "common_mistakes": [
+        "Elbows flaring wide.",
+        "Arching your back."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "triceps-pushdown",
+          "dumbbell-triceps-kickback"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    },
+    {
+      "slug": "dumbbell-triceps-kickback",
+      "primary_muscles": [
+        "triceps"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "An adjustable bench near the dumbbell rack, with dumbbells from the rack.",
+      "setup": [
+        "Place one hand and knee on a bench, like a one-arm row.",
+        "Hold a light dumbbell with your upper arm tucked against your side."
+      ],
+      "form_cues": [
+        "Straighten your arm back behind you.",
+        "Keep your upper arm still.",
+        "Bend back to the start slowly."
+      ],
+      "where_you_should_feel_it": "The back of your upper arm.",
+      "common_mistakes": [
+        "Swinging the dumbbell.",
+        "Letting your upper arm drop."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "triceps-pushdown",
+          "overhead-dumbbell-triceps-extension"
+        ],
+        "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
+      }
+    }
+  ]
+}

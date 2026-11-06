@@ -544,15 +544,35 @@ export default function RoutineDetailScreen() {
             </View>
           ) : null}
 
-          {routine.type === 'strength' && (routine.splitNote || routine.progressionNote) ? (
+          {routine.type === 'strength' && routine.splitNote ? (
             <View style={{ marginTop: spacing.lg, gap: 8 }}>
-              <AppText variant="title3" style={{ color: colours.ink }}>How it works</AppText>
-              {routine.splitNote ? (
-                <AppText variant="body" style={{ color: colours.ink }}>{routine.splitNote}</AppText>
-              ) : null}
-              {routine.progressionNote ? (
-                <AppText variant="body" style={{ color: colours.ink }}>{routine.progressionNote}</AppText>
-              ) : null}
+              <AppText variant="title3" style={{ color: colours.ink }}>Why this split</AppText>
+              <AppText variant="body" style={{ color: colours.ink }}>{routine.splitNote}</AppText>
+            </View>
+          ) : null}
+
+          {routine.type === 'strength' && routine.howItWorks.length > 0 ? (
+            <View style={{ marginTop: spacing.lg, gap: 8 }}>
+              <AppText variant="title3" style={{ color: colours.ink }}>How the weeks work</AppText>
+              {routine.howItWorks.map((line) => (
+                <AppText key={line} variant="body" style={{ color: colours.ink }}>
+                  {`\u2022 ${line}`}
+                </AppText>
+              ))}
+            </View>
+          ) : null}
+
+          {routine.type === 'strength' && routine.weeklyStructure ? (
+            <View style={{ marginTop: spacing.lg, gap: 8 }}>
+              <AppText variant="title3" style={{ color: colours.ink }}>Your week</AppText>
+              <AppText variant="body" style={{ color: colours.ink }}>{routine.weeklyStructure}</AppText>
+            </View>
+          ) : null}
+
+          {routine.type === 'strength' && routine.progressionNote ? (
+            <View style={{ marginTop: spacing.lg, gap: 8 }}>
+              <AppText variant="title3" style={{ color: colours.ink }}>How you'll progress</AppText>
+              <AppText variant="body" style={{ color: colours.ink }}>{routine.progressionNote}</AppText>
             </View>
           ) : null}
 

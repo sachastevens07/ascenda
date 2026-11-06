@@ -1,0 +1,947 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Same structure as content/routines/strong-foundations-6-weeks.json. Exercise details live in content/exercises/strength-catalogue.json.",
+    "Each phase defines its day templates; every week in that phase repeats them.",
+    "Week 1 rule: every exercise uses one set fewer than its template (minimum 2).",
+    "Lighter week: use about 60 to 70% of the normal sets (round down, minimum 1) at the same weights, with 3 reps in reserve.",
+    "Exercises sharing a superset_group are done back to back, resting after the pair.",
+    "Draft for coach review before launch.",
+    "Complete week (AGENTS.md W1, W5, W6, W7): weekly_schedule has one 7-day template per profiles.cardio_preference (avoid, fine, love). Routines with cardio_balanced=true use the same template for everyone.",
+    "Complete week: strength slots point at the phase day (day_key). Cardio and recovery slots point at support_days, which pick the cardio session or stretch routine by week.",
+    "Complete week: a finisher is a cardio block after the strength block on that day (block order warmup, strength, cardio_finisher, cooldown). It's skipped in finisher_skip_weeks (checkpoint and lighter weeks), and she can skip it with one tap at any time.",
+    "Complete week: weekdays are defaults. If she picked different training days, place strength days on her days in order, then fill cardio on free days (avoid the day before a lower-body or full-body day where possible), recovery on a free day after a lower-body or full-body day, and keep at least one full rest day.",
+    "Complete week: optional slots are suggestions. They count towards the week when done but aren't part of the weekly target Y. Y = planned_sessions in weekly_structure_summary.",
+    "Complete week: lighter week cardio uses the session at its starting length with an easy-effort note. Cardio counts towards the weekly target and streak, never towards strength personal bests."
+  ],
+  "routine": {
+    "is_flagship": false,
+    "secondary_goals": [
+      "better_posture",
+      "more_energy"
+    ],
+    "suggested_days": [
+      "tue",
+      "fri"
+    ],
+    "next_routine_suggestions": [
+      "the-two-day-start",
+      "strong-foundations-6-weeks"
+    ],
+    "slug": "strong-for-life",
+    "name": "Strong for Life",
+    "subtitle": "Two sessions a week to feel strong and steady for years",
+    "level": "beginner",
+    "goal": "strong_for_life",
+    "length_weeks": 8,
+    "days_per_week": 2,
+    "session_minutes": 45,
+    "week1_learning": true,
+    "cover_image_slug": "strong-for-life-cover",
+    "tags": [
+      "Joint friendly",
+      "2 days a week",
+      "Beginner friendly",
+      "Balance"
+    ],
+    "display_tags": [
+      "Joint friendly",
+      "2 days a week"
+    ],
+    "equipment_summary": "Machines, dumbbells and a low step",
+    "short_description": "Steady, joint-friendly strength training with carries and balance work. The kind of strength that makes everyday life easier.",
+    "who_its_for": [
+      "You want to stay strong and capable long term",
+      "You prefer a gentle, steady pace",
+      "You can train twice a week"
+    ],
+    "by_the_end": [
+      "Feel stronger carrying, climbing stairs and lifting",
+      "Better balance on one leg",
+      "A sustainable routine you can keep for years"
+    ],
+    "why_this_split": "Two full-body sessions with plenty of recovery suit a steady approach. Machines and dumbbells keep the movements controlled, and carries and step-ups build everyday strength and balance.",
+    "how_it_works": [
+      "Weeks 1 to 3: learn the movements.",
+      "Weeks 4 to 6: build steadily.",
+      "Week 7: lighter week.",
+      "Week 8: checkpoint."
+    ],
+    "progression_explained": "Small, steady increases when you hit the top of the range on every set. No rush.",
+    "effort_explained": "Finish every set with 2 to 3 reps left. You should leave feeling better than you arrived.",
+    "plan_reveal_milestones": [
+      {
+        "week": 2,
+        "title": "Settled in",
+        "description": "Two sessions a week feel routine"
+      },
+      {
+        "week": 4,
+        "title": "Checkpoint",
+        "description": "First progress check"
+      },
+      {
+        "week": 8,
+        "title": "Strong and steady",
+        "description": "Final checkpoint"
+      }
+    ],
+    "checkpoint_lifts": [
+      "leg-press",
+      "chest-press-machine",
+      "seated-cable-row"
+    ],
+    "checkpoint_weeks": [
+      4,
+      8
+    ],
+    "checkpoint_protocol": "Warm up as normal. Then work up to one set of 8 reps where you could have done about 2 more. Log the weight. This isn't a maximum test, so never push to failure.",
+    "type": "strength",
+    "weekly_structure_summary": {
+      "avoid": {
+        "text": "2 strength, 1 recovery, plus a 10-minute cardio finisher",
+        "planned_sessions": 3
+      },
+      "fine": {
+        "text": "2 strength, 1 cardio, 1 recovery, plus a 10-minute cardio finisher",
+        "planned_sessions": 4
+      },
+      "love": {
+        "text": "2 strength, 2 cardio, 1 recovery, plus a 10-minute cardio finisher",
+        "planned_sessions": 5
+      }
+    }
+  },
+  "phases": [
+    {
+      "number": 1,
+      "name": "Learn",
+      "weeks": [
+        1,
+        2,
+        3
+      ],
+      "goal": "Learn each movement with comfortable weights.",
+      "days": [
+        {
+          "key": "A",
+          "name": "Full body A",
+          "focus": "Legs, press and carry",
+          "coach_note": "Move at a pace that feels comfortable. If anything twinges, use the swap or skip it and tell us how it felt.",
+          "exercises": [
+            {
+              "slug": "leg-press",
+              "role": "main",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "load_increment_kg": 5,
+              "notes": "Checkpoint lift. Comfortable depth."
+            },
+            {
+              "slug": "chest-press-machine",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Checkpoint lift."
+            },
+            {
+              "slug": "seated-cable-row",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Checkpoint lift. Sit tall."
+            },
+            {
+              "slug": "dumbbell-step-up",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 10,
+              "target_rir": 3,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "per_side": true,
+              "load_increment_kg": 2,
+              "notes": "Low step, hold a rail if you like."
+            },
+            {
+              "slug": "farmer-carry",
+              "role": "accessory",
+              "sets": 2,
+              "duration_min_seconds": 20,
+              "duration_max_seconds": 30,
+              "progression_rule": "time",
+              "rest_seconds": 75,
+              "notes": "Walk tall, steady steps."
+            },
+            {
+              "slug": "bird-dog",
+              "role": "core",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 8,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 45,
+              "per_side": true,
+              "load_increment_kg": null,
+              "notes": "Slow."
+            }
+          ],
+          "warmup_id": "warmup-full-body",
+          "cooldown_id": "cooldown-full-body",
+          "estimated_minutes": 45,
+          "type": "strength",
+          "blocks": [
+            "warmup",
+            "strength",
+            "cooldown"
+          ]
+        },
+        {
+          "key": "B",
+          "name": "Full body B",
+          "focus": "Squat, pull and balance",
+          "coach_note": "A box squat to a bench gives you a target every rep. Sit down gently and stand back up.",
+          "exercises": [
+            {
+              "slug": "dumbbell-box-squat",
+              "role": "main",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "tempo": "3-1-1",
+              "load_increment_kg": 2,
+              "notes": "Touch the bench lightly."
+            },
+            {
+              "slug": "dumbbell-romanian-deadlift",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": 2,
+              "notes": "Light weights, hips back."
+            },
+            {
+              "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Chest up."
+            },
+            {
+              "slug": "seated-dumbbell-shoulder-press",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_kg": 2,
+              "notes": "Bench upright."
+            },
+            {
+              "slug": "suitcase-carry",
+              "role": "accessory",
+              "sets": 2,
+              "duration_min_seconds": 20,
+              "duration_max_seconds": 30,
+              "progression_rule": "time",
+              "rest_seconds": 75,
+              "per_side": true,
+              "notes": "One dumbbell, stay upright. Swap hands."
+            },
+            {
+              "slug": "side-plank",
+              "role": "core",
+              "sets": 2,
+              "duration_min_seconds": 15,
+              "duration_max_seconds": 30,
+              "progression_rule": "time",
+              "rest_seconds": 45,
+              "per_side": true,
+              "notes": "Knees bent."
+            }
+          ],
+          "warmup_id": "warmup-full-body",
+          "cooldown_id": "cooldown-full-body",
+          "estimated_minutes": 45,
+          "type": "strength",
+          "blocks": [
+            "warmup",
+            "strength",
+            "cardio_finisher",
+            "cooldown"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Build",
+      "weeks": [
+        4,
+        5,
+        6
+      ],
+      "goal": "Steady increases on every lift.",
+      "days": [
+        {
+          "key": "A",
+          "name": "Full body A",
+          "focus": "Legs, press and carry",
+          "coach_note": "Small steps up in weight where last week felt comfortable.",
+          "exercises": [
+            {
+              "slug": "leg-press",
+              "role": "main",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "load_increment_kg": 5,
+              "notes": "Checkpoint lift. Comfortable depth."
+            },
+            {
+              "slug": "chest-press-machine",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Checkpoint lift."
+            },
+            {
+              "slug": "seated-cable-row",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Checkpoint lift. Sit tall."
+            },
+            {
+              "slug": "dumbbell-step-up",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 10,
+              "target_rir": 3,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "per_side": true,
+              "load_increment_kg": 2,
+              "notes": "Low step, hold a rail if you like."
+            },
+            {
+              "slug": "farmer-carry",
+              "role": "accessory",
+              "sets": 2,
+              "duration_min_seconds": 30,
+              "duration_max_seconds": 40,
+              "progression_rule": "time",
+              "rest_seconds": 75,
+              "notes": "Walk tall, steady steps."
+            },
+            {
+              "slug": "bird-dog",
+              "role": "core",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 8,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 45,
+              "per_side": true,
+              "load_increment_kg": null,
+              "notes": "Slow."
+            }
+          ],
+          "warmup_id": "warmup-full-body",
+          "cooldown_id": "cooldown-full-body",
+          "estimated_minutes": 45,
+          "type": "strength",
+          "blocks": [
+            "warmup",
+            "strength",
+            "cooldown"
+          ]
+        },
+        {
+          "key": "B",
+          "name": "Full body B",
+          "focus": "Squat, pull and balance",
+          "coach_note": "A box squat to a bench gives you a target every rep. Sit down gently and stand back up.",
+          "exercises": [
+            {
+              "slug": "dumbbell-box-squat",
+              "role": "main",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "tempo": "3-1-1",
+              "load_increment_kg": 2,
+              "notes": "Touch the bench lightly."
+            },
+            {
+              "slug": "dumbbell-romanian-deadlift",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": 2,
+              "notes": "Light weights, hips back."
+            },
+            {
+              "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Chest up."
+            },
+            {
+              "slug": "seated-dumbbell-shoulder-press",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_kg": 2,
+              "notes": "Bench upright."
+            },
+            {
+              "slug": "suitcase-carry",
+              "role": "accessory",
+              "sets": 2,
+              "duration_min_seconds": 30,
+              "duration_max_seconds": 40,
+              "progression_rule": "time",
+              "rest_seconds": 75,
+              "per_side": true,
+              "notes": "One dumbbell, stay upright. Swap hands."
+            },
+            {
+              "slug": "side-plank",
+              "role": "core",
+              "sets": 2,
+              "duration_min_seconds": 30,
+              "duration_max_seconds": 40,
+              "progression_rule": "time",
+              "rest_seconds": 45,
+              "per_side": true,
+              "notes": "Knees bent."
+            }
+          ],
+          "warmup_id": "warmup-full-body",
+          "cooldown_id": "cooldown-full-body",
+          "estimated_minutes": 45,
+          "type": "strength",
+          "blocks": [
+            "warmup",
+            "strength",
+            "cardio_finisher",
+            "cooldown"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Recharge and check in",
+      "weeks": [
+        7,
+        8
+      ],
+      "goal": "Lighter week, then checkpoint.",
+      "days": [
+        {
+          "key": "A",
+          "name": "Full body A",
+          "focus": "Legs, press and carry",
+          "coach_note": "Small steps up in weight where last week felt comfortable.",
+          "exercises": [
+            {
+              "slug": "leg-press",
+              "role": "main",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "load_increment_kg": 5,
+              "notes": "Checkpoint lift. Comfortable depth."
+            },
+            {
+              "slug": "chest-press-machine",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Checkpoint lift."
+            },
+            {
+              "slug": "seated-cable-row",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Checkpoint lift. Sit tall."
+            },
+            {
+              "slug": "dumbbell-step-up",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 10,
+              "target_rir": 3,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "per_side": true,
+              "load_increment_kg": 2,
+              "notes": "Low step, hold a rail if you like."
+            },
+            {
+              "slug": "farmer-carry",
+              "role": "accessory",
+              "sets": 2,
+              "duration_min_seconds": 30,
+              "duration_max_seconds": 40,
+              "progression_rule": "time",
+              "rest_seconds": 75,
+              "notes": "Walk tall, steady steps."
+            },
+            {
+              "slug": "bird-dog",
+              "role": "core",
+              "sets": 2,
+              "rep_min": 6,
+              "rep_max": 8,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 45,
+              "per_side": true,
+              "load_increment_kg": null,
+              "notes": "Slow."
+            }
+          ],
+          "warmup_id": "warmup-full-body",
+          "cooldown_id": "cooldown-full-body",
+          "estimated_minutes": 45,
+          "type": "strength",
+          "blocks": [
+            "warmup",
+            "strength",
+            "cooldown"
+          ]
+        },
+        {
+          "key": "B",
+          "name": "Full body B",
+          "focus": "Squat, pull and balance",
+          "coach_note": "A box squat to a bench gives you a target every rep. Sit down gently and stand back up.",
+          "exercises": [
+            {
+              "slug": "dumbbell-box-squat",
+              "role": "main",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "tempo": "3-1-1",
+              "load_increment_kg": 2,
+              "notes": "Touch the bench lightly."
+            },
+            {
+              "slug": "dumbbell-romanian-deadlift",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": 2,
+              "notes": "Light weights, hips back."
+            },
+            {
+              "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Chest up."
+            },
+            {
+              "slug": "seated-dumbbell-shoulder-press",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_kg": 2,
+              "notes": "Bench upright."
+            },
+            {
+              "slug": "suitcase-carry",
+              "role": "accessory",
+              "sets": 2,
+              "duration_min_seconds": 30,
+              "duration_max_seconds": 40,
+              "progression_rule": "time",
+              "rest_seconds": 75,
+              "per_side": true,
+              "notes": "One dumbbell, stay upright. Swap hands."
+            },
+            {
+              "slug": "side-plank",
+              "role": "core",
+              "sets": 2,
+              "duration_min_seconds": 30,
+              "duration_max_seconds": 40,
+              "progression_rule": "time",
+              "rest_seconds": 45,
+              "per_side": true,
+              "notes": "Knees bent."
+            }
+          ],
+          "warmup_id": "warmup-full-body",
+          "cooldown_id": "cooldown-full-body",
+          "estimated_minutes": 45,
+          "type": "strength",
+          "blocks": [
+            "warmup",
+            "strength",
+            "cardio_finisher",
+            "cooldown"
+          ]
+        }
+      ]
+    }
+  ],
+  "weeks": [
+    {
+      "week": 1,
+      "phase": 1,
+      "is_checkpoint": false,
+      "is_lighter_week": false,
+      "week_note": "Learning week: one set fewer."
+    },
+    {
+      "week": 2,
+      "phase": 1,
+      "is_checkpoint": false,
+      "is_lighter_week": false,
+      "week_note": "Full sets now."
+    },
+    {
+      "week": 3,
+      "phase": 1,
+      "is_checkpoint": false,
+      "is_lighter_week": false,
+      "week_note": "Steady progress."
+    },
+    {
+      "week": 4,
+      "phase": 2,
+      "is_checkpoint": true,
+      "is_lighter_week": false,
+      "week_note": "Checkpoint week."
+    },
+    {
+      "week": 5,
+      "phase": 2,
+      "is_checkpoint": false,
+      "is_lighter_week": false,
+      "week_note": "Keep building."
+    },
+    {
+      "week": 6,
+      "phase": 2,
+      "is_checkpoint": false,
+      "is_lighter_week": false,
+      "week_note": "Strongest week."
+    },
+    {
+      "week": 7,
+      "phase": 3,
+      "is_checkpoint": false,
+      "is_lighter_week": true,
+      "week_note": "Lighter week."
+    },
+    {
+      "week": 8,
+      "phase": 3,
+      "is_checkpoint": true,
+      "is_lighter_week": false,
+      "week_note": "Final checkpoint."
+    }
+  ],
+  "support_days": [
+    {
+      "key": "CARDIO1",
+      "type": "cardio",
+      "name": "Cardio: easy walk",
+      "by_week": [
+        {
+          "weeks": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "cardio_session": "walk-and-talk-30"
+        }
+      ]
+    },
+    {
+      "key": "CARDIO2",
+      "type": "cardio",
+      "name": "Cardio: second session",
+      "by_week": [
+        {
+          "weeks": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "cardio_session": "easy-bike-20"
+        },
+        {
+          "weeks": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "cardio_session": "cross-trainer-steady-20"
+        }
+      ]
+    },
+    {
+      "key": "RECOVERY",
+      "type": "recovery",
+      "name": "Recovery: stretch",
+      "by_week": [
+        {
+          "weeks": [
+            1,
+            3,
+            5,
+            7
+          ],
+          "stretch_routine": "morning-mobility"
+        },
+        {
+          "weeks": [
+            2,
+            4,
+            6,
+            8
+          ],
+          "stretch_routine": "full-body-recovery-flow"
+        }
+      ]
+    }
+  ],
+  "weekly_schedule": {
+    "avoid": [
+      {
+        "weekday": "mon",
+        "type": "strength",
+        "day_key": "A"
+      },
+      {
+        "weekday": "tue",
+        "type": "rest"
+      },
+      {
+        "weekday": "wed",
+        "type": "rest"
+      },
+      {
+        "weekday": "thu",
+        "type": "strength",
+        "day_key": "B",
+        "finisher": "incline-walk-finisher-10",
+        "finisher_skip_weeks": [
+          4,
+          7,
+          8
+        ]
+      },
+      {
+        "weekday": "fri",
+        "type": "rest"
+      },
+      {
+        "weekday": "sat",
+        "type": "recovery",
+        "support_key": "RECOVERY"
+      },
+      {
+        "weekday": "sun",
+        "type": "rest"
+      }
+    ],
+    "fine": [
+      {
+        "weekday": "mon",
+        "type": "strength",
+        "day_key": "A"
+      },
+      {
+        "weekday": "tue",
+        "type": "rest"
+      },
+      {
+        "weekday": "wed",
+        "type": "cardio",
+        "support_key": "CARDIO1"
+      },
+      {
+        "weekday": "thu",
+        "type": "strength",
+        "day_key": "B",
+        "finisher": "incline-walk-finisher-10",
+        "finisher_skip_weeks": [
+          4,
+          7,
+          8
+        ]
+      },
+      {
+        "weekday": "fri",
+        "type": "rest"
+      },
+      {
+        "weekday": "sat",
+        "type": "recovery",
+        "support_key": "RECOVERY"
+      },
+      {
+        "weekday": "sun",
+        "type": "rest"
+      }
+    ],
+    "love": [
+      {
+        "weekday": "mon",
+        "type": "strength",
+        "day_key": "A"
+      },
+      {
+        "weekday": "tue",
+        "type": "cardio",
+        "support_key": "CARDIO1"
+      },
+      {
+        "weekday": "wed",
+        "type": "rest"
+      },
+      {
+        "weekday": "thu",
+        "type": "strength",
+        "day_key": "B",
+        "finisher": "incline-walk-finisher-10",
+        "finisher_skip_weeks": [
+          4,
+          7,
+          8
+        ]
+      },
+      {
+        "weekday": "fri",
+        "type": "recovery",
+        "support_key": "RECOVERY"
+      },
+      {
+        "weekday": "sat",
+        "type": "cardio",
+        "support_key": "CARDIO2"
+      },
+      {
+        "weekday": "sun",
+        "type": "rest"
+      }
+    ]
+  }
+}

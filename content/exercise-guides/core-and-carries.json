@@ -1,0 +1,311 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "First-time guides for core and carry exercises. Same structure as content/exercise-guides/lower-body.json.",
+    "if_its_taken.swaps lists only genuinely similar exercises, and may be empty. The swap engine should use these lists instead of the catalogue alternatives.",
+    "Draft for coach review before launch."
+  ],
+  "guides": [
+    {
+      "slug": "dead-bug",
+      "primary_muscles": [
+        "deep core"
+      ],
+      "secondary_muscles": [
+        "hip flexors"
+      ],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Lie on your back with your arms pointing to the ceiling.",
+        "Lift your knees so they're bent at 90 degrees over your hips."
+      ],
+      "form_cues": [
+        "Gently press your lower back into the mat and keep it there.",
+        "Slowly lower one arm behind you and the opposite leg towards the floor.",
+        "Return and switch sides."
+      ],
+      "where_you_should_feel_it": "Deep in your stomach, around your belly button.",
+      "common_mistakes": [
+        "Lower back arching off the mat. Make the movement smaller.",
+        "Holding your breath. Breathe out as you lower."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "bird-dog"
+        ],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "bird-dog",
+      "primary_muscles": [
+        "deep core",
+        "lower back"
+      ],
+      "secondary_muscles": [
+        "glutes",
+        "shoulders"
+      ],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Kneel on all fours, hands under shoulders and knees under hips."
+      ],
+      "form_cues": [
+        "Reach one arm forward and the opposite leg back until both are straight.",
+        "Keep your hips level, as if balancing a cup of tea on your back.",
+        "Return slowly and switch sides."
+      ],
+      "where_you_should_feel_it": "Your core and the muscles along your back.",
+      "common_mistakes": [
+        "Twisting your hips as your leg lifts.",
+        "Rushing. Slow is harder and better."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "dead-bug"
+        ],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "side-plank",
+      "primary_muscles": [
+        "obliques"
+      ],
+      "secondary_muscles": [
+        "shoulders",
+        "glutes"
+      ],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Lie on your side with your elbow under your shoulder.",
+        "Bend your knees to start, or straighten your legs to make it harder."
+      ],
+      "form_cues": [
+        "Lift your hips so your body is in a straight line.",
+        "Keep your hips stacked, not rolling forward or back.",
+        "Breathe steadily throughout."
+      ],
+      "where_you_should_feel_it": "The side of your waist.",
+      "common_mistakes": [
+        "Hips sagging towards the floor.",
+        "Elbow too far from your shoulder."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "pallof-press"
+        ],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "forearm-plank",
+      "primary_muscles": [
+        "deep core"
+      ],
+      "secondary_muscles": [
+        "shoulders",
+        "glutes"
+      ],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Lie face down and prop yourself up on your forearms, elbows under your shoulders.",
+        "Start on your knees, or on your toes to make it harder."
+      ],
+      "form_cues": [
+        "Lift your body into a straight line from head to heels.",
+        "Squeeze your glutes and gently pull your belly button in.",
+        "Keep breathing."
+      ],
+      "where_you_should_feel_it": "All around your middle.",
+      "common_mistakes": [
+        "Hips too high or sagging.",
+        "Holding your breath."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "pallof-press",
+      "primary_muscles": [
+        "obliques",
+        "deep core"
+      ],
+      "secondary_muscles": [
+        "shoulders"
+      ],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys.",
+      "setup": [
+        "Set a pulley to chest height with a single handle.",
+        "Stand side-on to the machine, hold the handle at your chest with both hands and step away until the cable is tight."
+      ],
+      "form_cues": [
+        "Press the handle straight out in front of you.",
+        "Don't let the cable twist you towards the machine.",
+        "Bring it back to your chest slowly."
+      ],
+      "where_you_should_feel_it": "The sides of your waist, working to stop you turning.",
+      "common_mistakes": [
+        "Standing too close, so there's no tension.",
+        "Letting your hips rotate."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "side-plank"
+        ],
+        "tip": "If the cables are busy, a side plank trains the same muscles."
+      }
+    },
+    {
+      "slug": "cable-crunch",
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "The cable station: a tall frame with adjustable pulleys.",
+      "setup": [
+        "Attach a rope to the highest pulley.",
+        "Kneel facing the machine and hold the rope beside your head."
+      ],
+      "form_cues": [
+        "Curl your ribs down towards your hips.",
+        "Keep your hips still; don't sit back onto your heels.",
+        "Return slowly until your back is long."
+      ],
+      "where_you_should_feel_it": "The front of your stomach.",
+      "common_mistakes": [
+        "Pulling with your arms. Keep them fixed beside your head.",
+        "Bending at the hips instead of curling your spine."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "reverse-crunch"
+        ],
+        "tip": "If the cables are busy, reverse crunches on a mat work the same muscles."
+      }
+    },
+    {
+      "slug": "reverse-crunch",
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Lie on your back with your knees bent and feet off the floor.",
+        "Arms by your sides, palms down."
+      ],
+      "form_cues": [
+        "Curl your hips off the mat, bringing your knees towards your chest.",
+        "Lower slowly.",
+        "Use your stomach, not momentum."
+      ],
+      "where_you_should_feel_it": "The lower part of your stomach.",
+      "common_mistakes": [
+        "Swinging your legs.",
+        "Pushing hard through your hands."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "cable-crunch"
+        ],
+        "tip": "Doable anywhere there's floor space."
+      }
+    },
+    {
+      "slug": "hanging-knee-raise",
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [
+        "hip flexors",
+        "grip"
+      ],
+      "where_to_find": "A captain's chair (a tall frame with arm pads) in the machine area, or a pull-up bar.",
+      "setup": [
+        "Stand on the captain's chair with your forearms on the pads and back against the backrest.",
+        "Let your legs hang straight down."
+      ],
+      "form_cues": [
+        "Lift your knees towards your chest.",
+        "Curl your hips up slightly at the top.",
+        "Lower slowly without swinging."
+      ],
+      "where_you_should_feel_it": "The front of your stomach.",
+      "common_mistakes": [
+        "Swinging your legs up.",
+        "Only lifting to hip height. Curl a little higher."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "reverse-crunch"
+        ],
+        "tip": "If the captain's chair is taken, reverse crunches on a mat work the same muscles."
+      }
+    },
+    {
+      "slug": "farmer-carry",
+      "primary_muscles": [
+        "grip",
+        "core"
+      ],
+      "secondary_muscles": [
+        "upper back",
+        "shoulders"
+      ],
+      "where_to_find": "The dumbbell rack, with a clear path of a few metres.",
+      "setup": [
+        "Pick up a heavy dumbbell in each hand.",
+        "Stand tall with your shoulders back."
+      ],
+      "form_cues": [
+        "Walk slowly with short, steady steps.",
+        "Keep your shoulders level and your chest up.",
+        "Put the dumbbells down carefully at the end."
+      ],
+      "where_you_should_feel_it": "Your grip, shoulders and whole middle.",
+      "common_mistakes": [
+        "Leaning or swaying.",
+        "Rushing your steps."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "suitcase-carry"
+        ],
+        "tip": "No space to walk? March slowly on the spot holding the dumbbells."
+      }
+    },
+    {
+      "slug": "suitcase-carry",
+      "primary_muscles": [
+        "obliques",
+        "grip"
+      ],
+      "secondary_muscles": [
+        "shoulders"
+      ],
+      "where_to_find": "The dumbbell rack, with a clear path of a few metres.",
+      "setup": [
+        "Pick up one heavy dumbbell in one hand, like a suitcase."
+      ],
+      "form_cues": [
+        "Walk slowly and stay upright.",
+        "Don't lean towards or away from the weight.",
+        "Switch hands and repeat."
+      ],
+      "where_you_should_feel_it": "The side of your waist and your grip.",
+      "common_mistakes": [
+        "Leaning to one side.",
+        "Walking too fast."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "farmer-carry"
+        ],
+        "tip": "No space to walk? Hold the dumbbell and march slowly on the spot."
+      }
+    }
+  ]
+}
