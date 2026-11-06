@@ -22,6 +22,7 @@ import {
   recordArticleOpened,
   type LearnArticle,
 } from '@/lib/learn';
+import { canonicalLearnArticleId } from '@/lib/learnArticles';
 import { trackLearnArticleOpened } from '@/lib/analytics';
 
 type LoadState = 'loading' | 'missing' | 'ready';
@@ -44,6 +45,9 @@ export default function LearnArticleScreen() {
         if (next) {
           void recordArticleOpened(next.id);
           trackLearnArticleOpened(next.id);
+          void fetchReadArticleIds().then((ids) => {
+            if (isCurrent) setIsRead(ids.has(next.id) || ids.has(next.slug));
+          });
         }
       })
       .catch(() => {
@@ -51,7 +55,8 @@ export default function LearnArticleScreen() {
       });
     fetchReadArticleIds()
       .then((ids) => {
-        if (isCurrent && id) setIsRead(ids.has(id));
+        if (!isCurrent || !id) return;
+        setIsRead(ids.has(id) || ids.has(canonicalLearnArticleId(id) ?? ''));
       })
       .catch(() => {});
     return () => {

@@ -1,0 +1,956 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Learn articles (AGENTS.md N6). body_markdown supports headings (##), bullet and numbered lists, bold, italics and > pull quotes.",
+    "read_minutes is calculated at about 200 words a minute, minimum 2.",
+    "related_routines and related_exercises drive the 'related articles' sections on routine and exercise pages; recommended_for_goals drives 'Recommended for you'.",
+    "Every article ends in the app with the line 'Train within your limits. Read the safety guidance' (AGENTS.md N1).",
+    "Draft for review by your coach (and dietitian or nutritionist for fuelling articles) before launch. Fill reviewed_by and reviewed_at when done."
+  ],
+  "categories": [
+    {
+      "id": "getting_started",
+      "name": "Getting started",
+      "sort_order": 1
+    },
+    {
+      "id": "gym_confidence",
+      "name": "Gym confidence",
+      "sort_order": 2
+    },
+    {
+      "id": "technique",
+      "name": "Technique",
+      "sort_order": 3
+    },
+    {
+      "id": "how_programmes_work",
+      "name": "How programmes work",
+      "sort_order": 4
+    },
+    {
+      "id": "recovery_and_sleep",
+      "name": "Recovery and sleep",
+      "sort_order": 5
+    },
+    {
+      "id": "fuelling",
+      "name": "Fuelling your training",
+      "sort_order": 6
+    },
+    {
+      "id": "mindset",
+      "name": "Mindset and motivation",
+      "sort_order": 7
+    },
+    {
+      "id": "myths",
+      "name": "Myths busted",
+      "sort_order": 8
+    }
+  ],
+  "articles": [
+    {
+      "slug": "your-first-gym-session",
+      "title": "Your first gym session, step by step",
+      "summary": "A calm order of events for walking in, finding your spot and leaving with your first session logged.",
+      "category": "getting_started",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-your-first-gym-session",
+      "body_markdown": "Walking into a gym for the first time can feel like a lot. The good news: you don't need to know the whole gym. You need one session and a plan for getting through it. Here's that plan.\n\n## Before you go\n\n- **Open today's session in Ascenda** before you leave home, so you're not working it out on the gym floor.\n- **Pack a water bottle, a small towel and headphones** if music helps you focus.\n- **Wear comfortable clothes and trainers** you can squat and bend in. Nothing needs to be new or matching.\n- **Check the gym's quieter times** if you can. Mid-morning, early afternoon and later evenings are usually calmer than straight after work.\n\n## When you arrive\n\nLots of gyms offer a free induction. If yours does, say yes. Someone will show you around, and you'll know where the changing rooms, water fountain and main areas are before you even start.\n\nThen find your spot. For your first sessions, that's a bench near the dumbbell rack, or a mat in a quieter corner. Grab two or three pairs of dumbbells before you begin, so you can stay put.\n\n## During your session\n\n1. **Do the warm-up.** Five minutes, and nothing in it should feel hard.\n2. **Work through the list in order.** Open the guide for any exercise you haven't done before.\n3. **Log each set as you go.** It takes a second and it's how Ascenda learns what to suggest next time.\n4. **Use the swap button** if something is taken or doesn't feel right. You're still doing the session.\n5. **Finish with the cool-down.**\n\n> You belong in the room as soon as you start your first set.\n\n## Afterwards\n\nThat's a full session. You might feel a little sore for a day or two, which is normal when you start something new. If anything ever feels sharp or wrong, stop, and read our safety guidance.\n\nThe second session is always easier than the first. Book it into your planner before you leave.",
+      "sources": [
+        {
+          "title": "NHS: Physical activity guidelines for adults aged 19 to 64",
+          "url": "https://www.nhs.uk/live-well/exercise/physical-activity-guidelines-for-adults-aged-19-to-64/"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [
+        "goblet-squat",
+        "dumbbell-bench-press"
+      ],
+      "recommended_for_goals": [
+        "gym_confidence",
+        "back_to_training"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 1
+    },
+    {
+      "slug": "what-to-wear-and-bring",
+      "title": "What to wear and bring to the gym",
+      "summary": "A simple kit list so you can walk in feeling prepared, without buying anything new.",
+      "category": "getting_started",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-what-to-wear-and-bring",
+      "body_markdown": "You don't need special kit to start lifting. What matters is that you can move freely and feel comfortable.\n\n## What to wear\n\n- **Something you can move in.** Leggings, joggers or shorts, and a top that doesn't ride up when you bend or lift your arms overhead.\n- **A supportive sports bra.** The most important bit of kit for many women.\n- **Flat, stable trainers.** For lifting, flatter soles feel steadier than thick, bouncy running shoes. Whatever you already own is fine to start.\n- **Layers.** Gyms can be cold when you arrive and warm once you're moving.\n\n## What to bring\n\n- **A water bottle.** Most gyms have a fountain to refill it.\n- **A small towel.** Lots of gyms ask you to put one on benches, and it's handy for wiping equipment down.\n- **Headphones.** Music or a podcast can make it easier to settle into your own session.\n- **A padlock**, if your gym's lockers need one.\n- **Your phone**, with today's session open in Ascenda.\n\n## Nice to have later\n\nThings like lifting gloves, a lifting belt or special shoes are optional extras. Lots of experienced lifters never use them. Get a few months of training under your belt before deciding whether you want any of them.",
+      "sources": [],
+      "related_routines": [
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 2
+    },
+    {
+      "slug": "how-to-read-your-plan",
+      "title": "How to read your plan: sets, reps and rest",
+      "summary": "What \"3 x 8 to 12, 2 reps in reserve, rest 90 seconds\" actually means, in plain English.",
+      "category": "getting_started",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-how-to-read-your-plan",
+      "body_markdown": "Your plan uses a few words that can look like code at first. Here's what they mean.\n\n## Reps and sets\n\n- **A rep** is doing the movement once. One squat down and back up is one rep.\n- **A set** is a group of reps done back to back. \"8 to 12 reps\" means aim for somewhere between 8 and 12.\n- **\"3 x 8 to 12\"** means three sets of 8 to 12 reps, with a rest between each set.\n\n## The rep range\n\nRather than one fixed number, most exercises give you a range. Start with a weight you can lift at least 8 times with good form. When you can do 12 on every set, it's time to go heavier, and Ascenda will suggest how much.\n\n## Reps in reserve\n\n\"2 reps in reserve\" means finish the set when you could still do about two more good reps. It keeps your form solid and your training safe, while still being hard enough to make you stronger. We explain this more in *Reps in reserve: how hard should a set feel?*\n\n## Rest\n\nRest is the break between sets. Bigger lifts get longer rests (two to three minutes), smaller ones get shorter (about a minute). Ascenda starts a rest timer after each set you tick.\n\n## Supersets\n\nIf two exercises are grouped together, do one set of each back to back, then rest. It saves time without making either exercise harder.\n\n## Tempo\n\nSome exercises show a tempo like **3-1-1**. That means 3 seconds lowering, a 1-second pause, then 1 second lifting. Slow lowering is a great way to learn a movement.",
+      "sources": [],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "quick-ascent"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 3
+    },
+    {
+      "slug": "choosing-your-starting-weight",
+      "title": "How to choose your starting weight",
+      "summary": "There's no test to pass. Here's a simple way to find the right weight in your first set.",
+      "category": "getting_started",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-choosing-your-starting-weight",
+      "body_markdown": "One of the most common first-session worries is \"how heavy should I go?\" The honest answer: lighter than you think, and you'll find your level within a session or two.\n\n## The simple method\n\n1. **Start light.** Pick a weight you're confident you can lift 12 times with good form.\n2. **Do your first set** and notice how it feels.\n3. **Adjust.** If you could easily have done 5 or more extra reps, go up a little for the next set. If you struggled to reach the bottom of the rep range, go down.\n4. **Log what you used.** Next time, Ascenda shows you last time's weight so you never start from scratch.\n\n## What \"right\" feels like\n\nThe right weight lets you finish your set with about 2 or 3 reps left in the tank. The last couple of reps should feel like effort, but your form shouldn't change.\n\n## Why lighter is smarter\n\nStarting light lets you learn the movement properly, avoids being very sore the next day and gives you room to progress. Getting stronger week by week feels much better than starting too heavy and going backwards.\n\n## Different equipment, different steps\n\n- **Dumbbells** usually go up in 1 to 2 kg steps.\n- **Machines** use a stack of plates; move the pin one plate at a time.\n- **Barbells** start with the bar itself, often 15 or 20 kg. Many gyms also have lighter fixed barbells, which are perfect for learning.",
+      "sources": [],
+      "related_routines": [
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [
+        "goblet-squat",
+        "leg-press"
+      ],
+      "recommended_for_goals": [
+        "build_strength",
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 4
+    },
+    {
+      "slug": "warm-ups-and-cool-downs",
+      "title": "Warm-ups and cool-downs: why they're worth five minutes",
+      "summary": "What each part of your warm-up and cool-down is doing, and why they're short on purpose.",
+      "category": "getting_started",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-warm-ups-and-cool-downs",
+      "body_markdown": "Every Ascenda strength session starts with a short warm-up and ends with a short cool-down. They're quick on purpose, so you'll actually do them.\n\n## What the warm-up does\n\n- **Raises your temperature.** A couple of minutes on the bike or cross-trainer gets your blood flowing.\n- **Moves your joints** through the ranges you're about to use, like squatting, hinging and reaching overhead.\n- **Wakes up key muscles**, like your glutes, before you load them.\n- **Gets you in the zone.** It's a few minutes to leave the rest of your day at the door.\n\nA review of randomised trials found that warming up tends to reduce the risk of injury, though researchers noted more studies were needed. It's a small investment that most coaches agree is worth making.\n\n## Ramp-up sets\n\nAfter the warm-up, your first main lift starts with two lighter sets, marked **W** in your logger. They help you practise the movement before your working sets, and they don't count towards your stats.\n\n## What the cool-down does\n\nThe cool-down is a few gentle stretches and some slow breathing. It's a calm way to finish, helps you notice how your body feels and gives you a moment to enjoy what you've just done.\n\n## Short on time?\n\nYou can skip either with one tap, and it never affects your streak. But if you only have time for part of the session, keep the warm-up.",
+      "sources": [
+        {
+          "title": "Fradkin et al. (2006), Does warming up prevent injury in sport? Evidence from randomised controlled trials",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/16679062/"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "mobility",
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 5
+    },
+    {
+      "slug": "gym-etiquette",
+      "title": "Gym etiquette: the unwritten rules",
+      "summary": "The handful of habits that make you look like you've been training for years.",
+      "category": "gym_confidence",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-gym-etiquette",
+      "body_markdown": "Gym etiquette sounds intimidating, but it comes down to a few simple habits. Do these and you'll fit right in.\n\n## The big five\n\n1. **Put your weights back.** Return dumbbells to the rack and take plates off bars when you're done.\n2. **Wipe down equipment.** Most gyms have spray and paper towels around. A quick wipe of the bench or handles after use is all it takes.\n3. **Don't hog equipment at busy times.** Resting between sets is fine. Scrolling for ten minutes on a machine when someone's waiting isn't.\n4. **Give people space.** Avoid walking right in front of someone mid-set, especially by the mirrors or the racks.\n5. **Share if asked.** If someone asks to \"work in\" (alternate sets with you), it's normal to say yes.\n\n## Little extras\n\n- **Lay down a towel** on benches if your gym asks you to.\n- **Keep your kit together**, so your bag and bottle aren't spread across the floor.\n- **Don't feel you need to rush.** You've got as much right to the equipment as anyone else.\n\n## You'll see people break these rules\n\nPlenty of people don't put their weights back. It's not a reflection on you, and you don't need to fix it. Just do your own session.",
+      "sources": [],
+      "related_routines": [
+        "busy-gym-no-problem"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 6
+    },
+    {
+      "slug": "when-the-machine-is-taken",
+      "title": "What to do when the machine you need is taken",
+      "summary": "Three calm options, so a busy gym never stalls your session.",
+      "category": "gym_confidence",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-when-the-machine-is-taken",
+      "body_markdown": "It happens to everyone: you walk over to the leg press and someone's on it. Here's what to do.\n\n## Option 1: Do something else first\n\nThe easiest fix. Skip ahead to the next exercise in your session and come back. Most exercises don't need to be done in a strict order, apart from your main lift.\n\n## Option 2: Use a swap\n\nTap the swap button on the exercise. Ascenda only suggests genuinely similar exercises that train the same muscles, so you're not missing out. For some exercises there isn't a good swap, and Ascenda will tell you so.\n\n## Option 3: Ask how long they'll be\n\nA friendly \"How many sets have you got left?\" is completely normal. Most people will tell you, and some will offer to let you alternate sets with them. We've got a whole article on this: *How to share equipment*.\n\n## Plan around it\n\n- **Train at quieter times** if your schedule allows.\n- **Try Busy Gym? No Problem**, a full plan you can do from one bench and a set of dumbbells.\n- **Check the gym's busiest machines** after a few visits. You'll quickly learn which ones are usually free.\n\nA busy machine isn't a failed session. Adapting is part of training, and there's even an award for it.",
+      "sources": [],
+      "related_routines": [
+        "busy-gym-no-problem"
+      ],
+      "related_exercises": [
+        "leg-press",
+        "lat-pulldown"
+      ],
+      "recommended_for_goals": [
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 7
+    },
+    {
+      "slug": "how-to-share-equipment",
+      "title": "How to share equipment (and ask \"how many sets have you got left?\")",
+      "summary": "Exactly what to say, what to expect, and why most people are happy to share.",
+      "category": "gym_confidence",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-how-to-share-equipment",
+      "body_markdown": "Asking someone about a machine can feel awkward the first time. It shouldn't: it's one of the most normal things people say in a gym.\n\n## What to say\n\nWait until they finish a set (never mid-rep), then try one of these:\n\n- \"Hi, how many sets have you got left?\"\n- \"Mind if I work in with you?\"\n- \"Are you using this bench?\"\n\nThat's it. Short, friendly and done.\n\n## What \"working in\" means\n\nWorking in means taking turns: you do a set while they rest, then swap. It works best on machines and benches where you only need to change the weight or seat height. If it feels awkward, just ask how long they'll be and do something else in the meantime.\n\n## What to expect\n\nMost people will happily tell you, and many will offer to let you work in. If someone's short with you, that's about them, not you. Do another exercise and come back.\n\n## When someone asks you\n\nSame rules in reverse. Tell them how many sets you've got left, or offer to alternate. It's a nice way to feel part of the gym.\n\n## If you'd rather not ask\n\nThat's completely fine too. Use the swap button or move on to your next exercise. There's no wrong way to handle it.",
+      "sources": [],
+      "related_routines": [
+        "busy-gym-no-problem"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 8
+    },
+    {
+      "slug": "feeling-watched",
+      "title": "Feeling watched? Why most people aren't looking",
+      "summary": "The science behind why the gym feels like a stage, and why it really isn't one.",
+      "category": "gym_confidence",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-feeling-watched",
+      "body_markdown": "If you've ever felt like everyone in the gym is watching you, you're far from alone. In a 2025 Gymshark survey of 1,000 UK women, almost 9 in 10 said they'd experienced some form of anxiety in the gym.\n\n## The spotlight effect\n\nPsychologists have a name for that feeling: the **spotlight effect**. We tend to overestimate how much other people notice us.\n\nIn a well-known study, students were asked to walk into a room wearing a slightly embarrassing T-shirt. They guessed that about half the people in the room would notice it. In reality, only around a quarter did.\n\nThe gym is the same. Most people are thinking about their own set, their own music and their own form. They're far less focused on you than it feels.\n\n## When people do look\n\nSometimes people glance over. Usually it's because they're waiting for the equipment you're using, checking the time on the clock behind you, or they've just zoned out. A glance isn't a judgement.\n\n## Things that help\n\n- **Have a plan.** Knowing exactly what you're doing next is the single biggest confidence boost. That's what your Ascenda session is for.\n- **Start in one spot.** A bench and dumbbells in a quieter corner is a great home base.\n- **Headphones in.** They help you stay in your own bubble.\n- **Go at quieter times** for your first few sessions, if you can.\n- **Remember everyone started somewhere.** The most confident person in your gym had a first session too.\n\n> The more you go, the more the gym becomes just a place where you train.",
+      "sources": [
+        {
+          "title": "Women's Fitness: Gymshark survey of 1,000 UK women on gym anxiety (2025)",
+          "url": "https://womensfitness.co.uk/motivation/how-to-build-gym-confidence-simple-ways-to-overcome-self-doubt-at-the-gym/"
+        },
+        {
+          "title": "Gilovich, Medvec and Savitsky (2000), The spotlight effect in social judgment",
+          "url": "https://www.kellogg.northwestern.edu/academics-research/research/detail/2000/the-spotlight-effect-in-social-judgment-an-egocentric-bias"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "busy-gym-no-problem"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 9
+    },
+    {
+      "slug": "first-time-in-the-free-weights-area",
+      "title": "Your first time in the free-weights area",
+      "summary": "How the dumbbell and barbell area works, and how to make yourself at home in it.",
+      "category": "gym_confidence",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-first-time-in-the-free-weights-area",
+      "body_markdown": "The free-weights area is where the dumbbells, barbells, benches and racks live. It can feel like the busiest, loudest part of the gym. It's also where some of the most useful equipment is, and it's for everyone.\n\n## How it's laid out\n\n- **The dumbbell rack**, usually along a mirrored wall, with pairs arranged from lightest to heaviest.\n- **Benches** you can move and adjust. Flat, incline and upright positions are set with a pin or lever.\n- **Barbells and plates**, often near the squat racks or platforms. Many gyms also have fixed barbells with the weight already on.\n- **Squat racks**, the tall metal frames with safety bars.\n\n## Making yourself at home\n\n1. **Pick a bench near the rack**, ideally at the quieter end.\n2. **Grab the dumbbells you'll need** for your first two or three exercises before you start.\n3. **Keep your space tidy**, with your bottle and bag next to your bench.\n4. **Return dumbbells to the right spot** when you're done.\n\n## Picking up and putting down dumbbells\n\nSquat down to pick dumbbells up and put them down, rather than bending over with straight legs. When you finish a set lying on a bench, bring the dumbbells to your chest and sit up with them resting on your thighs. Never drop them from a height.\n\n## You don't need to go heavy\n\nThere's no rule that you need the big dumbbells. The right weight is whatever lets you do your set with good form. Everyone in that area started with light weights.\n\nStrong Foundations in 6 Weeks spends its first two weeks entirely in this one spot, so it's a gentle way to get comfortable here.",
+      "sources": [],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "busy-gym-no-problem"
+      ],
+      "related_exercises": [
+        "dumbbell-bench-press",
+        "goblet-squat"
+      ],
+      "recommended_for_goals": [
+        "gym_confidence",
+        "upper_body_strength"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 10
+    },
+    {
+      "slug": "how-to-brace-your-core",
+      "title": "How to brace your core when you lift",
+      "summary": "A simple way to feel stronger and steadier on almost every exercise.",
+      "category": "technique",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-how-to-brace-your-core",
+      "body_markdown": "\"Brace your core\" is one of the most common cues in the gym. Here's what it actually means.\n\n## What bracing is\n\nBracing means gently tightening the muscles all around your middle, front, sides and back, so your torso stays steady while you lift. It's not sucking your stomach in, and it's not holding your breath for ages.\n\n## Try it now\n\n1. Stand tall and breathe in through your nose, filling your stomach and sides.\n2. Imagine someone is about to poke you in the stomach. Tighten up, as if to prepare for it.\n3. Keep that tension and breathe in short sips.\n\nThat firm, steady feeling is bracing.\n\n## When to use it\n\n- **Squats, deadlifts and hip thrusts:** brace before each rep.\n- **Overhead pressing:** brace so your back doesn't arch.\n- **Carries and planks:** keep a lighter brace the whole time.\n\n## How hard?\n\nFor most exercises, a moderate brace is plenty, about half of your maximum effort. Save a stronger brace for your heavier sets on big lifts.\n\n## Common mistakes\n\n- **Sucking your stomach in.** Think \"tighten\", not \"hollow out\".\n- **Holding your breath for the whole set.** Breathe between reps. See *How to breathe while you lift*.",
+      "sources": [],
+      "related_routines": [
+        "the-climb-in-8-weeks",
+        "higher-ground"
+      ],
+      "related_exercises": [
+        "goblet-squat",
+        "barbell-back-squat",
+        "dead-bug"
+      ],
+      "recommended_for_goals": [
+        "build_strength",
+        "better_posture"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 11
+    },
+    {
+      "slug": "the-hip-hinge",
+      "title": "The hip hinge: the move behind deadlifts and hip thrusts",
+      "summary": "Learn this one movement and Romanian deadlifts, rows and kettlebell work all get easier.",
+      "category": "technique",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-the-hip-hinge",
+      "body_markdown": "The hip hinge is one of the most useful movements you'll learn. It's the pattern behind Romanian deadlifts, deadlifts, bent-over rows and cable pull-throughs, and it's how you should pick heavy things up in everyday life.\n\n## What it is\n\nA hinge means bending forward by **pushing your hips back**, with only a small bend in your knees and a flat back. It's different from a squat, where your knees bend much more and you sit down.\n\n## Try it with a wall\n\n1. Stand with your back to a wall, about a foot away.\n2. Soften your knees slightly.\n3. Push your hips back until your bottom touches the wall, letting your chest come forward.\n4. Stand back up by squeezing your glutes.\n\nThat's a hinge. Move a little further from the wall as it gets easier.\n\n## Cues that help\n\n- **\"Close a door behind you with your bottom.\"**\n- **Keep the weight close** to your legs.\n- **Feel it in the backs of your legs.** If you feel it mostly in your lower back, your back is probably rounding or you're going too low.\n\n## How low?\n\nOnly as low as you can keep your back flat. For most people that's somewhere around the knee to mid-shin. Depth will improve as your hamstrings get used to it.",
+      "sources": [],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "glutes-and-legs-in-8-weeks"
+      ],
+      "related_exercises": [
+        "dumbbell-romanian-deadlift",
+        "barbell-romanian-deadlift",
+        "cable-pull-through"
+      ],
+      "recommended_for_goals": [
+        "glutes_and_legs",
+        "build_strength"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 12
+    },
+    {
+      "slug": "how-to-squat-with-confidence",
+      "title": "How to squat with confidence",
+      "summary": "Feet, knees, depth and the questions everyone asks about squatting.",
+      "category": "technique",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-how-to-squat-with-confidence",
+      "body_markdown": "Squats come in lots of versions: goblet squats, box squats, Smith machine squats and barbell squats. The basics are the same for all of them.\n\n## Feet\n\nStand about hip to shoulder-width apart, with your toes turned out a little. There's no single perfect stance. Find the one where you can squat down comfortably.\n\n## Knees\n\nLet your knees travel forward and follow the direction of your toes. It's normal for them to go past your toes; that's how most people squat. The main thing to avoid is your knees caving inwards.\n\n## Depth\n\nSquat as low as you can while keeping your heels down and your back in a steady position. For many people that's around thighs parallel to the floor, but it varies. A box squat to a bench is a great way to practise consistent depth.\n\n## The movement\n\n1. Brace your core.\n2. Sit down between your heels, keeping your chest tall.\n3. Pause briefly at the bottom.\n4. Push the floor away to stand up, squeezing your glutes at the top.\n\n## Common questions\n\n- **My heels lift.** Try a slightly wider stance, turn your toes out more or squat a little less deep for now.\n- **I feel it in my lower back.** Lighten the weight and focus on keeping your chest up.\n- **I wobble.** Slow down your lowering. Three seconds down is a great way to build control.\n\n## Where to start\n\nGoblet squats are the best place for most beginners. Holding the weight at your chest naturally keeps you upright. When they get heavy, you can move on to a Smith machine or barbell squat.",
+      "sources": [],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "the-climb-in-8-weeks"
+      ],
+      "related_exercises": [
+        "goblet-squat",
+        "dumbbell-box-squat",
+        "smith-machine-squat",
+        "barbell-back-squat"
+      ],
+      "recommended_for_goals": [
+        "build_strength",
+        "glutes_and_legs"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 13
+    },
+    {
+      "slug": "how-to-breathe-while-you-lift",
+      "title": "How to breathe while you lift",
+      "summary": "A simple breathing pattern for every rep, and when to keep it gentle.",
+      "category": "technique",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-how-to-breathe-while-you-lift",
+      "body_markdown": "Breathing is something people rarely think about until they're mid-set and realise they've stopped.\n\n## The simple rule\n\n- **Breathe in** on the easier part, usually as you lower the weight.\n- **Breathe out** on the harder part, as you push or pull the weight.\n\nSo for a squat: in on the way down, out on the way up. For a row: out as you pull, in as you lower.\n\n## Bracing and breathing together\n\nOn bigger lifts like squats and deadlifts, take a breath in and brace just before each rep, then breathe out as you finish it. Reset with a fresh breath between reps.\n\n## Keep it gentle\n\nHolding your breath hard for a long time raises your blood pressure. For most healthy people a short breath hold during a heavy rep is normal, but don't hold it for a whole set. If you have high blood pressure, a heart condition or are pregnant, check with your GP before lifting and keep breathing steadily throughout each rep.\n\n## If you feel lightheaded\n\nStop, put the weight down safely and sit for a minute. Breathe slowly. If it keeps happening, or you feel chest pain or faintness, stop training and get medical advice.",
+      "sources": [
+        {
+          "title": "NHS: Physical activity guidelines for adults aged 19 to 64",
+          "url": "https://www.nhs.uk/live-well/exercise/physical-activity-guidelines-for-adults-aged-19-to-64/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [
+        "goblet-squat",
+        "dumbbell-romanian-deadlift"
+      ],
+      "recommended_for_goals": [
+        "build_strength"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 14
+    },
+    {
+      "slug": "progressive-overload",
+      "title": "Progressive overload, simply explained",
+      "summary": "The one idea behind every effective strength plan, and how Ascenda does it for you.",
+      "category": "how_programmes_work",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-progressive-overload",
+      "body_markdown": "Progressive overload sounds technical. It just means **gradually asking your body to do a little more over time**. Your muscles adapt to what you ask of them, so to keep getting stronger, you need to keep nudging the challenge up.\n\nIt's one of the core principles of strength training recommended by the American College of Sports Medicine.\n\n## Ways to do a little more\n\n- **More reps** with the same weight.\n- **More weight** for the same reps.\n- **More sets.**\n- **Better control**, for example a slower lowering phase.\n\n## How Ascenda does it: double progression\n\nMost exercises in your plan use a rep range, like 8 to 12. Here's how it works:\n\n1. Start with a weight you can lift at least 8 times.\n2. Each session, try to add a rep or two.\n3. When you hit 12 reps on every set with good form, Ascenda suggests a little more weight next time.\n4. With the heavier weight, you'll drop back towards 8 reps, and the cycle starts again.\n\n## Small steps add up\n\nAdding 2 kg doesn't sound like much. But do that every few weeks and over months it adds up to a lot.\n\n## It won't always go up\n\nSome weeks you'll feel stronger than others, especially if you've slept badly or had a busy week. That's normal. Progress is a trend over weeks, not a promise every session.",
+      "sources": [
+        {
+          "title": "American College of Sports Medicine (2009), Progression models in resistance training for healthy adults",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/"
+        }
+      ],
+      "related_routines": [
+        "the-climb-in-8-weeks",
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "build_muscle",
+        "upper_body_strength",
+        "lose_body_fat"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 15
+    },
+    {
+      "slug": "reps-in-reserve",
+      "title": "Reps in reserve: how hard should a set feel?",
+      "summary": "Why most of your sets stop before you're completely out of reps.",
+      "category": "how_programmes_work",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-reps-in-reserve",
+      "body_markdown": "Your plan often says something like \"2 reps in reserve\". It's one of the simplest ways to make sure each set is hard enough to make you stronger, but not so hard that your form breaks down.\n\n## What it means\n\n**Reps in reserve (RIR)** is how many more good reps you think you could have done when you finish a set. Researchers have developed scales based on this idea to help lifters judge their effort.\n\n- **3 reps in reserve:** challenging, but you could clearly do three more.\n- **2 reps in reserve:** the last rep was a real effort, and you could do about two more.\n- **1 rep in reserve:** you could only just manage one more.\n- **0:** you couldn't do another rep with good form.\n\n## Why not go to failure?\n\nGoing all-out on every set makes you more tired and sore and increases the chance your form slips, without adding much benefit for most people. Stopping with a couple of reps left still builds strength and muscle very effectively.\n\n## How to judge it\n\nIt takes practice. At first, most people underestimate how many reps they have left. A good test: every now and then on a safe exercise, like a machine, keep going on your last set and see how many more you could actually do.\n\n## In Ascenda\n\nBeginners usually aim for 2 to 3 reps in reserve. Intermediate plans move closer to 1 to 2 on main lifts. Your plan tells you the target for every exercise.",
+      "sources": [
+        {
+          "title": "Helms et al. (2016), Application of the repetitions in reserve-based RPE scale for resistance training",
+          "url": "https://openrepository.aut.ac.nz/items/92cefeac-7c32-44f1-bfbc-f48f4a5dd8cf/full"
+        }
+      ],
+      "related_routines": [
+        "the-climb-in-8-weeks"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "build_muscle"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 16
+    },
+    {
+      "slug": "why-routines-have-phases",
+      "title": "Why your routine has phases",
+      "summary": "Learn, build, test: why your plan changes every couple of weeks, and what each stage is for.",
+      "category": "how_programmes_work",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-why-routines-have-phases",
+      "body_markdown": "Every Ascenda routine is split into two or three phases, like \"Weeks 1 to 2: learn the movements\" or \"Weeks 3 to 5: build\". Here's why.\n\n## Your body needs time to learn first\n\nIn your first few weeks, a lot of your early strength gains come from your brain and muscles learning to work together. The movements start to feel smoother and steadier. That's why early phases use lighter weights, slower lowering and simpler exercises. You're building a foundation.\n\n## Then you build\n\nOnce the movements feel familiar, the build phase asks a bit more: a few more sets, slightly heavier weights or a new exercise. This is where most of your strength and muscle gains happen.\n\n## Then you see how far you've come\n\nThe final phase includes a **checkpoint**, where you re-test two or three key lifts and compare them with where you started. In longer routines there's also a **lighter week** just before it, with fewer sets, so you go into the checkpoint feeling fresh rather than tired.\n\n## Why not just do the same thing every week?\n\nYou'd still make progress for a while, but small, planned changes keep things moving and stop training from feeling stale. Changing too much, too often, makes it hard to tell whether you're getting stronger. Phases are a middle ground: steady enough to track, varied enough to stay interesting.\n\n## What you'll see in the app\n\nEach phase has a name and a goal on your routine page, and the logger shows a short coach note for each day. If a week looks different from the last one, that's the plan working as intended.",
+      "sources": [
+        {
+          "title": "American College of Sports Medicine (2009), Progression models in resistance training for healthy adults",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "the-climb-in-8-weeks",
+        "glutes-and-legs-in-8-weeks"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 17
+    },
+    {
+      "slug": "sets-reps-and-rest",
+      "title": "Why sets, reps and rest change between exercises",
+      "summary": "Main lifts, accessories and core work each have a job. Here's how your plan sets them up.",
+      "category": "how_programmes_work",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-sets-reps-and-rest",
+      "body_markdown": "You might notice that your first exercise of the day has fewer reps and longer rest than the ones that come after. That's on purpose. Each exercise in your plan has a **role**.\n\n## Main lifts\n\nThese are the big movements, like squats, Romanian deadlifts, hip thrusts and presses. They work lots of muscles at once and are where you'll see the clearest strength progress.\n\n- Usually **6 to 10 reps**\n- **2 to 3 minutes' rest**, so you can give each set a good effort\n- Done first, while you're freshest\n\n## Secondary and accessory lifts\n\nThese support the main lifts and target specific muscles, like lunges, rows, lateral raises or leg curls.\n\n- Usually **10 to 15 reps**\n- **60 to 90 seconds' rest**\n- They progress by adding reps first, then weight\n\n## Core and finishers\n\nPlanks, dead bugs, carries and short finishers come last.\n\n- Often timed holds or higher reps\n- Short rests, around 45 seconds\n- They progress by adding time\n\n## Why rest matters\n\nResting too little on main lifts means you'll have less in the tank for the next set. Resting too long on accessories just makes the session longer. The rest timer in the logger is set for each role, and you can change it for any exercise. Ascenda remembers your choice for next time.\n\n## Can I change things?\n\nYes, for today. Inside the logger you can add or remove a set, change the rep target or swap an exercise. Your routine stays the same for next time.",
+      "sources": [
+        {
+          "title": "American College of Sports Medicine (2009), Progression models in resistance training for healthy adults",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/"
+        }
+      ],
+      "related_routines": [
+        "the-climb-in-8-weeks",
+        "higher-ground"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "build_muscle"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 18
+    },
+    {
+      "slug": "sleep-and-strength",
+      "title": "Sleep: your most underrated training tool",
+      "summary": "Why a good night's sleep helps you train better, and simple ways to get more of it.",
+      "category": "recovery_and_sleep",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-sleep-and-strength",
+      "body_markdown": "Training is the signal to get stronger. Recovery, especially sleep, is when your body actually does the work of adapting.\n\n## How much do you need?\n\nMost adults need around **7 to 9 hours** a night. Some people need a little more or less, but if you regularly wake up tired, you probably aren't getting enough.\n\n## How poor sleep shows up in the gym\n\n- Weights feel heavier than usual\n- You lose focus or motivation more easily\n- You feel more sore or run down\n\nOne bad night won't undo your progress. If you've slept badly, it's fine to train a bit lighter, or to swap your session for a stretch or recovery day.\n\n## Simple ways to sleep better\n\n- **Keep a regular routine.** Going to bed and waking up at similar times, even at weekends, helps a lot.\n- **Wind down.** Dim the lights and put your phone away for a while before bed.\n- **Watch caffeine timing.** Caffeine can stay in your system for hours, so try to have your last coffee or energy drink by early afternoon.\n- **Keep your room cool, dark and quiet.**\n- **Don't train too close to bedtime** if you find it keeps you awake. Everyone's different, so notice what works for you.\n\n## Try a wind-down stretch\n\nThe *Wind down* stretch routine in Ascenda is 11 minutes of slow, gentle stretches designed for the evening. It also counts towards your weekly target.\n\nIf you have ongoing trouble sleeping, speak to your GP.",
+      "sources": [
+        {
+          "title": "Public Health Wales: recommended sleep duration",
+          "url": "https://phw.nhs.wales/services-and-teams/healthy-working-wales/workplace-guidance/healthy-lifestyles-at-work/good-health/sleep/what-actions-employers-can-take/recommended-sleep-duration"
+        }
+      ],
+      "related_routines": [
+        "wind-down"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "stress_relief",
+        "build_strength"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 19
+    },
+    {
+      "slug": "sore-after-training",
+      "title": "Sore after training? What's normal and what isn't",
+      "summary": "Muscle soreness explained, how to ease it, and the signs that mean you should stop.",
+      "category": "recovery_and_sleep",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-sore-after-training",
+      "body_markdown": "Feeling achy a day or two after a session is very common, especially when you're new to training or you've tried a new exercise.\n\n## Normal soreness\n\nThis is often called **delayed onset muscle soreness**, or DOMS. It usually:\n\n- starts 12 to 48 hours after training\n- feels like a dull, tender ache in the muscles you worked\n- eases within a few days\n\nIt doesn't mean you've done something wrong, and it isn't a measure of a good workout. As your body gets used to training, you'll usually get much less sore, even while you keep getting stronger.\n\n## Easing it\n\n- **Keep moving.** A walk, some easy cardio or a gentle stretch session often helps more than resting completely.\n- **Sleep well and eat regular meals** with some protein.\n- **Give it time.** You can still train, but you might choose to work a different muscle group or go a little lighter.\n\n## When it's not normal soreness\n\nStop and get advice from a GP or physiotherapist if you have:\n\n- sharp, sudden or stabbing pain during exercise\n- pain in a joint rather than a muscle\n- swelling, bruising or pain that gets worse rather than better\n- pain that lasts more than a week\n- dark brown urine, or severe pain and weakness after training\n\nThe last one is rare but needs urgent medical attention.\n\n## Making soreness less likely\n\nAscenda's routines start with lighter weights and fewer sets in the first weeks for exactly this reason. Building up gradually means less soreness and a much nicer start to training.",
+      "sources": [
+        {
+          "title": "NHS inform: pain and injuries after exercise",
+          "url": "https://nhsinform.scot/illnesses-and-conditions/muscle-bone-and-joints/pain-and-injuries-after-exercise"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "full-body-recovery-flow",
+        "after-leg-day"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "back_to_training"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 20
+    },
+    {
+      "slug": "rest-days-and-recovery",
+      "title": "Rest days: why they count too",
+      "summary": "Rest and recovery days are part of the plan, not a break from it.",
+      "category": "recovery_and_sleep",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-rest-days-and-recovery",
+      "body_markdown": "It can feel like rest days are \"doing nothing\". In reality, they're when your body repairs and adapts to the training you've done.\n\n## Why you need them\n\nStrength training creates small amounts of stress in your muscles. Given time, your body recovers and comes back a little stronger. Without enough recovery, you'll feel tired, your progress may stall and training can start to feel like a chore.\n\n## What a recovery day can look like\n\n- **Complete rest.** Totally fine.\n- **A walk** or some easy movement.\n- **A stretch session**, like *Happy hips* or *Back unwind*. Sessions of 10 minutes or more count towards your weekly target in Ascenda.\n- **Easy cardio** where you could still chat.\n\n## How many do you need?\n\nFor most people training 2 to 4 days a week, the other days are plenty for recovery. Try not to do hard sessions for the same muscles on back-to-back days. Your Ascenda plan is laid out with this in mind.\n\n## A quieter week\n\nLife happens: holidays, exams, illness, busy weeks. That is fine. Come back when you can. Weeks trained never resets, and a welcome-back session is there if you have been away.\n\n## Listen to your body\n\nIf you're feeling run down, unwell or unusually tired, an extra rest day is a good decision, not a failure.",
+      "sources": [],
+      "related_routines": [
+        "full-body-recovery-flow",
+        "happy-hips",
+        "back-unwind"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "stress_relief",
+        "strong_for_life"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 21
+    },
+    {
+      "slug": "eating-enough-to-train",
+      "title": "Eating enough to train well",
+      "summary": "Why fuelling your body properly helps you feel and perform better in the gym.",
+      "category": "fuelling",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-eating-enough-to-train",
+      "body_markdown": "Training asks your body for energy. Eating enough gives it what it needs to train well, recover and get stronger.\n\n## Signs you might not be eating enough\n\n- feeling tired, weak or dizzy during sessions\n- struggling to make progress over several weeks\n- feeling unusually low in mood or irritable\n- getting ill or injured more often\n- changes to your periods\n\nIf any of these sound familiar, especially changes to your periods, speak to your GP.\n\n## A balanced plate\n\nYou don't need a special diet to train. The NHS Eatwell Guide is a helpful starting point. Most meals can include:\n\n- **Starchy carbohydrates** like oats, rice, pasta, potatoes or bread, which are your main fuel for training\n- **A source of protein** like eggs, yoghurt, fish, chicken, tofu, beans or lentils, which help your muscles recover\n- **Fruit and vegetables**\n- **Some healthy fats** like olive oil, nuts or avocado\n\n## Around your sessions\n\n- If it's been a while since you ate, a small snack an hour or two before training can help, like a banana, toast or yoghurt.\n- After training, a normal meal with some protein and carbohydrates is all most people need.\n\n## Food is fuel, not a reward\n\nYou don't need to \"earn\" food with exercise, and training doesn't need to be a way to make up for what you've eaten.\n\nThis is general information, not personal nutrition advice. If you have a medical condition, are pregnant or have a history of disordered eating, speak to your GP or a registered dietitian.",
+      "sources": [
+        {
+          "title": "NHS: the Eatwell Guide",
+          "url": "https://www.nhs.uk/live-well/eat-well/food-guidelines-and-food-labels/the-eatwell-guide/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "build_muscle",
+        "more_energy",
+        "lose_body_fat"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 22
+    },
+    {
+      "slug": "protein-for-training",
+      "title": "Protein and training: the basics",
+      "summary": "What protein does, where to find it, and why you don't need to overthink it.",
+      "category": "fuelling",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-protein-for-training",
+      "body_markdown": "Protein is often talked about as if it's complicated. It doesn't need to be.\n\n## What it does\n\nProtein provides the building blocks your muscles use to repair and grow after training. Research suggests that people who exercise regularly may benefit from a little more protein than people who don't, spread through the day.\n\n## Simple ways to include it\n\nRather than counting grams, aim to include a source of protein at most meals:\n\n- **Breakfast:** eggs, Greek yoghurt, porridge made with milk, or beans on toast\n- **Lunch:** chicken, tuna, tofu, lentils, hummus or cheese\n- **Dinner:** fish, meat, tofu, tempeh, beans or chickpeas\n- **Snacks:** yoghurt, a glass of milk, nuts, edamame or a slice of cheese\n\n## Plant-based?\n\nYou can get plenty of protein from plants. Mixing different sources across the day, like beans, lentils, tofu, soya milk, nuts and wholegrains, makes it easy.\n\n## What about protein shakes?\n\nThey're convenient, not essential. If you find it hard to get protein from food, a shake can help, but food should come first. Look for products that are tested for banned or contaminated ingredients.\n\n## Timing\n\nA meal or snack with some protein in the few hours after training is a sensible habit. What matters most is getting enough across the whole day.\n\nThis is general information, not personal nutrition advice. If you have kidney problems or another medical condition, check with your GP or a registered dietitian before changing what you eat.",
+      "sources": [
+        {
+          "title": "International Society of Sports Nutrition (2017), Position stand: protein and exercise",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28642676/"
+        },
+        {
+          "title": "NHS: the Eatwell Guide",
+          "url": "https://www.nhs.uk/live-well/eat-well/food-guidelines-and-food-labels/the-eatwell-guide/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_muscle",
+        "build_strength",
+        "glutes_and_legs"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 23
+    },
+    {
+      "slug": "hydration",
+      "title": "Staying hydrated in the gym",
+      "summary": "How much to drink, when to drink it and whether you need sports drinks.",
+      "category": "fuelling",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-hydration",
+      "body_markdown": "Even being slightly dehydrated can make training feel harder. The good news is that staying hydrated is simple.\n\n## Every day\n\nThe NHS recommends around **6 to 8 glasses** of fluid a day. Water, milk, sugar-free drinks, tea and coffee all count. You'll need more on hot days and days you train.\n\n## Around your session\n\n- **Before:** have a drink in the couple of hours before you train.\n- **During:** bring a water bottle and sip between sets. Most gyms have a water fountain.\n- **After:** keep drinking normally, especially if you've sweated a lot.\n\n## How to tell if you're drinking enough\n\nPale yellow urine is a good sign. Dark yellow urine, a headache or feeling thirsty can mean you need to drink more.\n\n## Do you need sports drinks?\n\nFor most strength sessions under an hour, water is all you need. Sports drinks can help in long, sweaty sessions, but many are high in sugar.\n\n## Don't overdo it\n\nDrinking very large amounts of water quickly isn't helpful and can be harmful. Drink to thirst, plus a little more on training days.",
+      "sources": [
+        {
+          "title": "NHS: water, drinks and your health",
+          "url": "https://www.nhs.uk/live-well/eat-well/food-guidelines-and-food-labels/water-drinks-nutrition/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "fitness_stamina"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 24
+    },
+    {
+      "slug": "motivation-vs-habits",
+      "title": "Motivation comes and goes. Habits stay",
+      "summary": "Why you don't need to feel motivated to train, and how to make the gym part of your week.",
+      "category": "mindset",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-motivation-vs-habits",
+      "body_markdown": "Almost everyone starts training full of motivation. A few weeks later, it's normal for that feeling to fade. That doesn't mean you've failed. It means it's time to lean on habits instead.\n\n## How long does a habit take?\n\nYou may have heard it takes 21 days. In a well-known study from University College London, people took a median of **66 days** for a new daily behaviour to feel automatic, and it ranged from a few weeks to many months. So be patient with yourself. It's supposed to take a while.\n\n## Make it easy to start\n\n- **Plan your days.** Pick your training days in the Planner at the start of the week, so the decision is already made.\n- **Pick a time and stick to it.** \"Tuesday after work\" is easier to keep than \"sometime this week\".\n- **Pack your bag the night before.**\n- **Know your first exercise.** Your next session is ready on Home, so you never walk in wondering what to do.\n\n## Make it easy to keep going\n\n- **Lower the bar on hard days.** Doing a shorter session, or just your warm-up and first exercise, still counts.\n- **Notice how you feel afterwards.** Most people feel better after training than before. Remembering that helps on the days you don't feel like it.\n- **Count weeks, not perfect weeks.** In Ascenda, a week counts towards your streak with just one session.\n\n> You don't need to feel like it. You just need to start.",
+      "sources": [
+        {
+          "title": "Lally et al. (2010), How are habits formed: modelling habit formation in the real world",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1002/ejsp.674"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "the-two-day-start"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "gym_confidence",
+        "stress_relief",
+        "more_energy",
+        "lose_body_fat"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 25
+    },
+    {
+      "slug": "coming-back-after-a-break",
+      "title": "Missed a week? Here's how to come back",
+      "summary": "Breaks happen to everyone. How to get going again without starting from scratch.",
+      "category": "mindset",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-coming-back-after-a-break",
+      "body_markdown": "Holidays, illness, exams, work and life all get in the way sometimes. Missing a week, or a month, is part of training for almost everyone. What matters is coming back.\n\n## One missed week changes very little\n\nIn research on how habits form, missing a single opportunity didn't really affect people's progress overall. The same is true for strength. You won't lose what you've built in a week or two.\n\n## Ease back in\n\n- **Go a little lighter.** For your first session back, use weights around 10% lighter, or do fewer sets.\n- **Expect to feel a bit stiff or sore.** That's normal and will settle quickly.\n- **Pick up where you left off,** or repeat the last week of your routine if it's been a while.\n\nWhen you come back after a break, Ascenda offers you a lighter version of your next session. If you've been away for three weeks or more, you can also restart the week or switch to a gentler routine like *Welcome Back: 4-week restart*.\n\n## Use a fresh start\n\nA Monday, the start of a new month or the start of term can be a great moment to begin again. Pick a day, plan it in the Planner and go.\n\n## Your progress is still there\n\nYour history, personal bests and \"Weeks trained\" total never reset. A break is just a pause in the story.\n\n> New week, fresh start.",
+      "sources": [
+        {
+          "title": "Lally et al. (2010), How are habits formed: modelling habit formation in the real world",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1002/ejsp.674"
+        }
+      ],
+      "related_routines": [
+        "welcome-back-4-week-restart"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "back_to_training",
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 26
+    },
+    {
+      "slug": "the-wins-that-matter",
+      "title": "The wins that matter most",
+      "summary": "Strength, confidence and energy: the progress worth noticing and celebrating.",
+      "category": "mindset",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-the-wins-that-matter",
+      "body_markdown": "It's easy to measure progress in one narrow way. But some of the most meaningful changes from training are the ones people notice in everyday life.\n\n## Wins worth celebrating\n\n- **You're lifting more.** Going from 8 kg to 14 kg on a goblet squat is real, measurable strength.\n- **You're doing more reps** with the same weight.\n- **Things feel easier**, like carrying shopping, climbing stairs or lifting a suitcase.\n- **You feel more confident in the gym**: walking into the free-weights area, trying a new machine or asking someone how many sets they have left.\n- **You're turning up.** Training consistently for a month is a big achievement.\n- **You have more energy**, sleep better or feel less stressed.\n\n## How Ascenda shows your progress\n\n- **Personal bests** on every lift\n- **Checkpoints**, which compare your start and current lifts on key exercises\n- **Gym unlocked**, which counts the exercises and equipment you've tried\n- **Weeks trained**, your lifetime total, which never goes down\n- **Post-session wins**, a few highlights after every session\n\n## Compare yourself with you\n\nEveryone starts in a different place and progresses at a different speed. The only comparison that matters is with where you started.",
+      "sources": [],
+      "related_routines": [
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [
+        "goblet-squat"
+      ],
+      "recommended_for_goals": [
+        "gym_confidence",
+        "build_strength",
+        "more_energy",
+        "stress_relief",
+        "better_posture",
+        "lose_body_fat"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 27
+    },
+    {
+      "slug": "will-lifting-make-me-bulky",
+      "title": "Myth: lifting weights will make me bulky",
+      "summary": "Why strength training makes you stronger, not suddenly bigger.",
+      "category": "myths",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-will-lifting-make-me-bulky",
+      "body_markdown": "This is one of the most common worries women have about lifting weights. The short answer: it's very unlikely.\n\n## Why\n\nBuilding a lot of muscle takes years of focused training, plenty of food and specific programming. Women generally have much lower levels of testosterone than men, which is one reason most women build muscle more gradually. The athletes you might picture when you think of \"bulky\" have usually trained for many years with that specific goal.\n\n## What actually happens\n\nFor most women, regular strength training leads to:\n\n- getting noticeably stronger\n- feeling more capable in everyday life\n- better posture and more confidence in how you move\n- stronger bones and joints over time\n\n## You're in control\n\nYour training responds to what you ask of it. If at any point you want to change your focus, you can choose a different routine.\n\n## The health benefits are real\n\nThe UK Chief Medical Officers recommend that adults do muscle-strengthening activities on at least two days a week, alongside other physical activity. It's one of the best things you can do for long-term health.",
+      "sources": [
+        {
+          "title": "UK Chief Medical Officers' Physical Activity Guidelines (2019)",
+          "url": "https://www.gov.uk/government/publications/physical-activity-guidelines-uk-chief-medical-officers-report"
+        },
+        {
+          "title": "NHS: strength exercises",
+          "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks",
+        "strong-for-life"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "feel_toned",
+        "strong_for_life",
+        "upper_body_strength",
+        "better_posture"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 28
+    },
+    {
+      "slug": "toning-vs-building",
+      "title": "Myth: you need to 'tone' instead of build",
+      "summary": "Why light weights and endless reps aren't the secret to looking toned.",
+      "category": "myths",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-toning-vs-building",
+      "body_markdown": "You may have heard that to look \"toned\" you should use very light weights for very high reps, and avoid anything heavy. It's a popular idea, but it's not quite how muscles work.\n\n## What \"toned\" usually means\n\nMost people mean muscles that feel firm and look a little more defined. Muscles can get stronger or bigger, but there isn't a separate \"toning\" process.\n\n## So how do you train for it?\n\nThe same way you'd train to get stronger: with **progressive overload**. That means using weights that genuinely challenge you, and gradually doing a little more over time. Light weights for endless reps feel tiring, but they don't give your muscles much reason to change.\n\n## What this looks like in Ascenda\n\n- Main lifts in the **6 to 10 rep** range, stopping with a couple of reps left in the tank\n- Accessories in the **10 to 15 rep** range\n- Weights that go up as you get stronger\n\n## Don't fear heavier weights\n\n\"Heavy\" just means heavy for you. A weight you can lift 8 times with good form is the right weight, whatever the number on the dumbbell.",
+      "sources": [
+        {
+          "title": "NHS: strength exercises",
+          "url": "https://www.nhs.uk/live-well/exercise/strength-exercises/"
+        }
+      ],
+      "related_routines": [
+        "the-climb-in-8-weeks",
+        "glutes-and-legs-in-8-weeks"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "feel_toned",
+        "build_muscle",
+        "build_strength"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 29
+    },
+    {
+      "slug": "cardio-or-weights",
+      "title": "Myth: cardio or weights, you have to choose",
+      "summary": "Why the best plan usually includes both, and how they fit together.",
+      "category": "myths",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-cardio-or-weights",
+      "body_markdown": "People often ask which is better: cardio or weights. The answer is that they do different, complementary things, and most people benefit from both.\n\n## What each one does\n\n**Strength training** builds muscle strength, supports your bones and joints, and makes everyday tasks easier.\n\n**Cardio** like walking, cycling, rowing or the cross-trainer strengthens your heart and lungs, improves stamina and is great for energy and mood.\n\n## What the guidelines say\n\nThe UK Chief Medical Officers recommend that adults:\n\n- do at least **150 minutes of moderate activity** (or 75 minutes of vigorous activity) a week, and\n- do **muscle-strengthening activities on at least two days** a week.\n\nSo it's not one or the other. It's both.\n\n## Will cardio ruin my strength progress?\n\nFor most people, no. Sensible amounts of cardio fit alongside strength training very well. If you're doing both on the same day and strength is your priority, lift first and do cardio afterwards.\n\n## How Ascenda fits them together\n\nYour routines focus on strength, with warm-ups, cool-downs and stretching built in. Cardio days and short finishers are coming as part of your complete week. Until then, a brisk walk or easy session on a cardio machine on your non-lifting days is a great addition.",
+      "sources": [
+        {
+          "title": "UK Chief Medical Officers' Physical Activity Guidelines (2019)",
+          "url": "https://www.gov.uk/government/publications/physical-activity-guidelines-uk-chief-medical-officers-report"
+        },
+        {
+          "title": "NHS: Physical activity guidelines for adults aged 19 to 64",
+          "url": "https://www.nhs.uk/live-well/exercise/physical-activity-guidelines-for-adults-aged-19-to-64/"
+        }
+      ],
+      "related_routines": [
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "fitness_stamina",
+        "more_energy",
+        "strong_for_life",
+        "build_strength",
+        "lose_body_fat"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 30
+    },
+    {
+      "slug": "what-to-eat-before-and-after-training",
+      "title": "What to eat before and after training",
+      "summary": "Simple ideas for fuelling up before a session and refuelling afterwards.",
+      "category": "fuelling",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-what-to-eat-before-and-after-training",
+      "body_markdown": "You don't need special foods or perfect timing. A few simple habits help you feel better during sessions and recover well afterwards.\n\n## Before you train\n\nIf you've eaten a normal meal in the last 2 to 4 hours, you're probably good to go. If it's been longer, a small snack 1 to 2 hours before helps, especially for evening sessions.\n\nGood pre-training snacks are easy to digest and include some carbohydrate:\n\n- a banana, or an apple with peanut butter\n- a yoghurt with some fruit\n- toast with a topping you like\n- an oat muffin or energy ball\n\nSome people prefer to train on an empty stomach in the morning. That's fine if you feel good; if you feel dizzy or weak, try a small snack first.\n\n## After you train\n\nA normal meal within a few hours, with some protein and some carbohydrate, is all most people need. Protein helps your muscles recover, and carbohydrate tops up your energy.\n\n- **Morning session:** porridge with yoghurt, eggs on toast or a smoothie.\n- **Lunchtime session:** a filling lunch like a rice bowl or a wrap.\n- **Evening session:** dinner as normal, like a chilli, curry or tray bake.\n\n## Don't forget drinks\n\nHave some water before, during and after your session, especially on hot days.\n\n## Try these in the Food tab\n\nThe *Before an evening session* and *After leg day* collections have ideas for both.\n\nThis is general information, not personal nutrition advice. If you have a medical condition, speak to your GP or a registered dietitian.",
+      "sources": [
+        {
+          "title": "International Society of Sports Nutrition (2017), Position stand: nutrient timing",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28919842/"
+        },
+        {
+          "title": "NHS: the Eatwell Guide",
+          "url": "https://www.nhs.uk/live-well/eat-well/food-guidelines-and-food-labels/the-eatwell-guide/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "build_muscle",
+        "more_energy"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 31
+    },
+    {
+      "slug": "caffeine-and-training",
+      "title": "Caffeine and training",
+      "summary": "How caffeine can help, how much is sensible and when to give it a miss.",
+      "category": "fuelling",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-caffeine-and-training",
+      "body_markdown": "Many people like a coffee before the gym. Caffeine can make exercise feel a little easier and help you feel more alert. It isn't essential, though, and more isn't better.\n\n## How much is sensible?\n\nThe European Food Safety Authority says that up to **400 mg of caffeine a day** is safe for most healthy adults. As a rough guide, a mug of filter coffee has around 140 mg and a mug of tea around 75 mg, but it varies a lot between drinks and brands.\n\nIf you're pregnant or trying to conceive, the NHS advises no more than **200 mg a day**.\n\n## Pre-workout drinks and energy drinks\n\nMany pre-workout products and energy drinks contain a lot of caffeine, sometimes as much as several coffees in one serving. Always check the label, add up all your caffeine for the day and avoid combining them.\n\n## Watch the timing\n\nCaffeine can stay in your system for many hours. If you train in the evening, a pre-workout coffee could affect your sleep, which matters more for your progress than any boost from caffeine.\n\n## When to skip it\n\nGive caffeine a miss or speak to your GP first if you:\n\n- are pregnant or breastfeeding\n- have a heart condition or high blood pressure\n- have anxiety that caffeine makes worse\n- take medication that interacts with caffeine\n- notice palpitations, shakiness or trouble sleeping\n\n## You don't need it\n\nPlenty of people train brilliantly without any caffeine. A good night's sleep, a snack if you're hungry and some water are the basics that matter most.",
+      "sources": [
+        {
+          "title": "European Food Safety Authority: caffeine",
+          "url": "https://www.efsa.europa.eu/en/topics/topic/caffeine"
+        },
+        {
+          "title": "NHS: foods to avoid in pregnancy (caffeine)",
+          "url": "https://www.nhs.uk/pregnancy/keeping-well/foods-to-avoid/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "build_strength"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 32
+    },
+    {
+      "slug": "supplements-basics",
+      "title": "Supplements: what has evidence and what doesn't",
+      "summary": "A plain-English guide to the supplements people ask about most.",
+      "category": "fuelling",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-supplements-basics",
+      "body_markdown": "The supplement aisle is full of big promises. Most people who eat a varied diet don't need supplements to get stronger. Here's what the evidence says about the common ones.\n\n## Worth knowing about\n\n**Vitamin D.** The NHS advises that everyone in the UK considers taking 10 micrograms of vitamin D a day during autumn and winter, when we don't get enough from sunlight. Some people are advised to take it all year round. This is about general health, not training.\n\n**Creatine.** One of the most researched supplements. Studies show it can help with strength and power training. It's generally considered safe for healthy adults at recommended amounts, but speak to your GP or pharmacist first if you have kidney problems or any health condition, and don't take it if you're pregnant or breastfeeding unless your doctor says so.\n\n**Protein powder.** It's just protein in a convenient form. Food is a great source of protein, but a shake can be handy if you struggle to get enough from meals. See *Protein and training: the basics*.\n\n## Not needed for most people\n\n- **Fat burners** and \"metabolism boosters\": little good evidence, and some contain high doses of stimulants. Ascenda doesn't recommend them.\n- **BCAAs** (branched-chain amino acids): if you eat enough protein, they add very little.\n- **Detox teas**: your liver and kidneys already do this job.\n\n## If you do take supplements\n\n- Choose products that have been **tested for banned and contaminated substances**, such as those carrying the Informed Sport logo.\n- Stick to the dose on the label.\n- Tell your GP or pharmacist what you take, especially if you take medication, are pregnant or have a health condition.\n\nThis is general information, not personal advice. Always check with your GP or pharmacist before starting a new supplement.",
+      "sources": [
+        {
+          "title": "NHS: vitamin D",
+          "url": "https://www.nhs.uk/conditions/vitamins-and-minerals/vitamin-d/"
+        },
+        {
+          "title": "International Society of Sports Nutrition (2017), Position stand: creatine supplementation",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/28615996/"
+        },
+        {
+          "title": "Informed Sport: tested supplements",
+          "url": "https://www.informed-sport.com/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "build_strength",
+        "build_muscle"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 33
+    },
+    {
+      "slug": "when-your-appetite-is-low",
+      "title": "Eating well when your appetite is low",
+      "summary": "Easy ways to keep fuelling your body on days when you don't feel like eating.",
+      "category": "fuelling",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-when-your-appetite-is-low",
+      "body_markdown": "Sometimes your appetite drops: after a hard session, when you're stressed or busy, in hot weather or when you're feeling under the weather. Your body still needs fuel to train and recover.\n\n## Small and often\n\nIf a big plate feels like too much, try smaller meals and snacks more often through the day.\n\n## Easy options\n\n- **Drinks:** a smoothie with milk or yoghurt, a glass of milk, or a hot chocolate.\n- **Soft foods:** porridge, yoghurt, scrambled eggs, soup or a jacket potato.\n- **Snacks:** a banana, cheese and crackers, a handful of nuts or an energy ball.\n\n## Plan ahead\n\nKeep easy food in the house for low-appetite days: tinned soup, eggs, yoghurt, frozen fruit for smoothies and something you enjoy. Batch-cooked meals in the freezer help too.\n\n## Training and appetite\n\nSome people aren't hungry straight after training. That's normal. Have a drink, and eat a proper meal when your appetite comes back later.\n\n## When to get support\n\nIf a low appetite lasts more than a couple of weeks, you're losing weight without trying, or you're feeling low, please speak to your GP.\n\nIf you're worried about your relationship with food or eating, you're not alone and support is available. Beat, the UK's eating disorder charity, offers a helpline and online support.",
+      "sources": [
+        {
+          "title": "Beat: the UK's eating disorder charity",
+          "url": "https://www.beateatingdisorders.org.uk/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "stress_relief"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 34
+    }
+  ]
+}

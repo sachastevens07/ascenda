@@ -2,8 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImageSourcePropType } from 'react-native';
 
 import { contentImage, contentSlugForTitle, hydrateImages, imageSourceForSlug } from '@/lib/images';
-import { LEARN_ARTICLES, LEARN_LINKS } from '@/lib/learnArticles';
-import { userGoalsFromAnswers, type Goal, type QuizAnswers } from '@/lib/profile';
+import {
+  LEARN_ARTICLE_GOALS,
+  LEARN_ARTICLES,
+  LEARN_LINKS,
+  canonicalLearnArticleId,
+} from '@/lib/learnArticles';
+import { resolveExerciseSlug } from '@/lib/contentGuides';
+import type { Goal } from '@/lib/goals';
+import { userGoalsFromAnswers, type QuizAnswers } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 
 export const LEARN_CATEGORIES = [
@@ -86,8 +93,14 @@ function parseSources(value: unknown): LearnSource[] {
   });
 }
 
+function bundledArticle(id: string | undefined): LearnArticle | undefined {
+  if (!id) return undefined;
+  const canonical = canonicalLearnArticleId(id) ?? id;
+  return LEARN_ARTICLES.find((item) => item.id === id || item.slug === id || item.id === canonical || item.slug === canonical);
+}
+
 function toArticle(row: Partial<LearnArticle> & { id: string }): LearnArticle | null {
-  const bundled = LEARN_ARTICLES.find((item) => item.id === row.id);
+  const bundled = bundledArticle(row.id) ?? bundledArticle(row.slug);
   const category = row.category && isCategory(row.category) ? row.category : bundled?.category;
   if (!category) return null;
   const body = row.body_markdown?.trim() || bundled?.body_markdown || '';
@@ -151,7 +164,7 @@ export function isLearnCategory(value: string | undefined): value is LearnCatego
   return Boolean(value && isCategory(value));
 }
 
-/** Overlay: bundled articles always show. Database rows win when body or title is set. */
+/** Overlay: bundled /content articles always show. Database rows win when body or title is set. */
 export async function fetchLearnArticles(): Promise<LearnArticle[]> {
   await hydrateImages();
   const bundled = LEARN_ARTICLES.map((item) => toArticle(item)).filter((item): item is LearnArticle => Boolean(item));
@@ -183,14 +196,24 @@ export async function fetchLearnArticles(): Promise<LearnArticle[]> {
 
 export async function fetchLearnArticle(id: string): Promise<LearnArticle | null> {
   const list = await fetchLearnArticles();
-  return list.find((item) => item.id === id || item.slug === id) ?? null;
+  const wanted = canonicalLearnArticleId(id) ?? id;
+  return (
+    list.find((item) => item.id === id || item.slug === id || item.id === wanted || item.slug === wanted) ?? null
+  );
 }
 
 export async function fetchLearnLinks(): Promise<LearnLink[]> {
+  const bundled = LEARN_LINKS;
   const { data, error } = await supabase.from('learn_links').select('article_id, routine_id, exercise_id');
-  if (error || !data) return LEARN_LINKS;
-  const rows = data as LearnLink[];
-  return rows.length > 0 ? rows : LEARN_LINKS;
+  if (error || !data) return bundled;
+  const keyOf = (link: LearnLink) =>
+    `${link.article_id}|${link.routine_id ?? ''}|${link.exercise_id ?? ''}`;
+  const byKey = new Map(bundled.map((link) => [keyOf(link), link]));
+  for (const row of data as LearnLink[]) {
+    if (!row.article_id || (!row.routine_id && !row.exercise_id)) continue;
+    byKey.set(keyOf(row), row);
+  }
+  return [...byKey.values()];
 }
 
 export function articlesInCategory(articles: LearnArticle[], category: LearnCategory): LearnArticle[] {
@@ -202,32 +225,10 @@ export function featuredArticle(articles: LearnArticle[], readIds: Set<string>):
   return unreadStart ?? articles.find((item) => item.category === 'getting_started') ?? articles[0] ?? null;
 }
 
-function categoriesForGoal(goal: Goal): LearnCategory[] {
-  switch (goal) {
-    case 'gym_confidence':
-    case 'back_to_training':
-      return ['gym_confidence', 'getting_started', 'mindset'];
-    case 'build_strength':
-    case 'build_muscle':
-    case 'upper_body_strength':
-    case 'feel_toned':
-      return ['technique', 'programmes', 'getting_started'];
-    case 'glutes_and_legs':
-      return ['technique', 'programmes', 'gym_confidence'];
-    case 'mobility':
-    case 'better_posture':
-    case 'strong_for_life':
-      return ['technique', 'recovery', 'programmes'];
-    case 'fitness_stamina':
-    case 'more_energy':
-      return ['getting_started', 'recovery', 'fuelling'];
-    case 'stress_relief':
-      return ['mindset', 'recovery', 'getting_started'];
-    case 'lose_body_fat':
-      return ['programmes', 'getting_started', 'myths'];
-    default:
-      return ['getting_started', 'programmes'];
-  }
+function goalWeight(goals: Goal[], goal: Goal): number {
+  const index = goals.indexOf(goal);
+  if (index < 0) return 0;
+  return index === 0 ? 4 : index === 1 ? 2 : 1;
 }
 
 export function recommendArticles(
@@ -237,53 +238,89 @@ export function recommendArticles(
 ): LearnArticle[] {
   const exclude = new Set(options?.excludeIds ?? []);
   const goals = answers ? userGoalsFromAnswers(answers) : [];
-  const wanted = goals.flatMap((goal, index) =>
-    categoriesForGoal(goal).map((category) => ({ category, weight: index === 0 ? 4 : index === 1 ? 2 : 1 }))
-  );
   const scored = articles
-    .filter((item) => !exclude.has(item.id))
+    .filter((item) => !exclude.has(item.id) && !exclude.has(item.slug))
     .map((item) => {
-      const score = wanted.reduce((sum, entry) => (entry.category === item.category ? sum + entry.weight : sum), 0);
-      return { item, score: score + (item.category === 'getting_started' ? 1 : 0) };
+      const tagged = LEARN_ARTICLE_GOALS[item.id] ?? LEARN_ARTICLE_GOALS[item.slug] ?? [];
+      const fromGoals = tagged.reduce((sum, goal) => sum + goalWeight(goals, goal), 0);
+      const gettingStarted = item.category === 'getting_started' ? 1 : 0;
+      return { item, score: fromGoals + gettingStarted };
     })
     .sort((a, b) => b.score - a.score || a.item.sort_order - b.item.sort_order);
   const limit = options?.limit ?? 4;
-  return scored.slice(0, limit).map((entry) => entry.item);
+  const picked = scored.filter((entry) => entry.score > 0).slice(0, limit);
+  if (picked.length >= limit) return picked.map((entry) => entry.item);
+  const extra = scored.filter((entry) => !picked.includes(entry)).slice(0, limit - picked.length);
+  return [...picked, ...extra].map((entry) => entry.item);
+}
+
+function matchKeys(values: Array<string | null | undefined>): Set<string> {
+  const keys = new Set<string>();
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (!trimmed) continue;
+    keys.add(trimmed);
+    keys.add(resolveExerciseSlug(trimmed));
+  }
+  return keys;
 }
 
 export function relatedArticles(
   articles: LearnArticle[],
   links: LearnLink[],
-  options: { routineId?: string | null; exerciseId?: string | null; excludeId?: string; limit?: number }
+  options: {
+    routineId?: string | null;
+    routineSlug?: string | null;
+    exerciseId?: string | null;
+    exerciseSlug?: string | null;
+    excludeId?: string;
+    limit?: number;
+  }
 ): LearnArticle[] {
+  const routineKeys = matchKeys([options.routineId, options.routineSlug]);
+  const exerciseKeys = matchKeys([options.exerciseId, options.exerciseSlug]);
   const ids = new Set(
     links
       .filter((link) => {
-        if (options.routineId && link.routine_id === options.routineId) return true;
-        if (options.exerciseId && link.exercise_id === options.exerciseId) return true;
+        if (link.routine_id && routineKeys.has(link.routine_id)) return true;
+        if (link.exercise_id && (exerciseKeys.has(link.exercise_id) || exerciseKeys.has(resolveExerciseSlug(link.exercise_id)))) {
+          return true;
+        }
         return false;
       })
       .map((link) => link.article_id)
   );
+  const exclude = options.excludeId ? canonicalLearnArticleId(options.excludeId) : null;
   const limit = options.limit ?? 3;
   return articles
-    .filter((item) => ids.has(item.id) && item.id !== options.excludeId)
+    .filter((item) => (ids.has(item.id) || ids.has(item.slug)) && item.id !== exclude && item.slug !== exclude)
     .slice(0, limit);
 }
 
+function expandReadIds(ids: Set<string>): Set<string> {
+  const next = new Set(ids);
+  for (const id of ids) {
+    const canonical = canonicalLearnArticleId(id);
+    if (canonical) next.add(canonical);
+  }
+  return next;
+}
+
 export async function fetchReadArticleIds(): Promise<Set<string>> {
-  const local = await readLocalIds(READS_KEY);
+  const local = expandReadIds(await readLocalIds(READS_KEY));
   const { data, error } = await supabase.from('article_reads').select('article_id');
   if (error || !data) return local;
   const ids = new Set(local);
   for (const row of data as { article_id: string }[]) {
     if (row.article_id) ids.add(row.article_id);
   }
-  return ids;
+  return expandReadIds(ids);
 }
 
 export async function markArticleRead(articleId: string): Promise<void> {
+  const canonical = canonicalLearnArticleId(articleId) ?? articleId;
   const ids = await readLocalIds(READS_KEY);
+  ids.add(canonical);
   ids.add(articleId);
   await AsyncStorage.setItem(READS_KEY, JSON.stringify([...ids]));
   const {
@@ -292,7 +329,7 @@ export async function markArticleRead(articleId: string): Promise<void> {
   if (!user) return;
   const { error } = await supabase.from('article_reads').upsert({
     user_id: user.id,
-    article_id: articleId,
+    article_id: canonical,
     read_at: new Date().toISOString(),
   });
   if (error && !isMissingLearn(error)) {
@@ -313,8 +350,12 @@ export function continueReadingArticle(
   lastOpenedId: string | null,
   readIds: Set<string>
 ): LearnArticle | null {
-  if (!lastOpenedId || readIds.has(lastOpenedId)) return null;
-  return articles.find((item) => item.id === lastOpenedId) ?? null;
+  const wanted = canonicalLearnArticleId(lastOpenedId) ?? lastOpenedId;
+  if (!wanted || readIds.has(wanted) || (lastOpenedId && readIds.has(lastOpenedId))) return null;
+  return (
+    articles.find((item) => item.id === lastOpenedId || item.slug === lastOpenedId || item.id === wanted || item.slug === wanted) ??
+    null
+  );
 }
 
 async function readLocalIds(key: string): Promise<Set<string>> {
@@ -343,6 +384,13 @@ export function parseArticleBody(markdown: string): ArticleBlock[] {
     if (lines.length === 0) continue;
     if (lines.every((line) => line.startsWith('- ') || line.startsWith('* '))) {
       blocks.push({ type: 'list', items: lines.map((line) => line.slice(2).trim()) });
+      continue;
+    }
+    if (lines.every((line) => /^\d+\.\s/.test(line))) {
+      blocks.push({
+        type: 'list',
+        items: lines.map((line) => line.replace(/^\d+\.\s/, '').trim()),
+      });
       continue;
     }
     const first = lines[0];

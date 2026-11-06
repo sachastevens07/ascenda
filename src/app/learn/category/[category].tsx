@@ -47,7 +47,7 @@ export default function LearnCategoryScreen() {
       ) : (
         <ScrollView contentContainerStyle={[styles.content, { gap: spacing.md }]}>
           <AppText variant="body" style={{ color: colours.inkMuted }}>
-            Short reads. Most are free. A few in-depth guides are Pro.
+            Short reads to sit beside your training.
           </AppText>
           {articles.length === 0 ? (
             <AppText variant="body" style={{ color: colours.inkMuted }}>Nothing in this category yet.</AppText>

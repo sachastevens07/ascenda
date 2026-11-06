@@ -991,7 +991,7 @@ async function reportLearn(client: SupabaseClient): Promise<void> {
   line(`  Content categories: ${categories.join(', ')}`);
   if (error) {
     line(`  Table not usable: ${error}`);
-    line('  Skipped. The app still uses the bundled 16 articles.');
+    line('  Skipped. The app still uses the bundled articles from /content.');
     line();
     return;
   }

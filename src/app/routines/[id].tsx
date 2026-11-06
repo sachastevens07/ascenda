@@ -695,7 +695,11 @@ export default function RoutineDetailScreen() {
               </View>
             );
           })}
-          <RelatedLearn routineId={routine.id} style={{ marginTop: spacing.lg }} />
+          <RelatedLearn
+            routineId={routine.id}
+            routineSlug={routine.slug}
+            style={{ marginTop: spacing.lg }}
+          />
           <SafetyNotice style={{ marginTop: spacing.md }} />
       </DetailLayout>
 

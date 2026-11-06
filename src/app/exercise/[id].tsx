@@ -278,7 +278,7 @@ export default function ExerciseScreen() {
         )}
       </View>
 
-      <RelatedLearn exerciseId={exercise.id} />
+      <RelatedLearn exerciseId={exercise.id} exerciseSlug={id} />
     </ScrollView>
   );
 }

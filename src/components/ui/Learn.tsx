@@ -116,6 +116,23 @@ export function CategoryTile({
   );
 }
 
+function MarkdownText({ text, color }: { text: string; color: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g).filter((part) => part.length > 0);
+  return (
+    <AppText variant="body" style={{ color }}>
+      {parts.map((part, index) => {
+        const bold = part.startsWith('**') && part.endsWith('**') && part.length >= 4;
+        const inner = bold ? part.slice(2, -2) : part;
+        return (
+          <AppText key={`${inner}-${index}`} variant={bold ? 'bodyStrong' : 'body'} style={{ color }}>
+            {inner}
+          </AppText>
+        );
+      })}
+    </AppText>
+  );
+}
+
 export function ArticleBody({ markdown }: { markdown: string }) {
   const { colours, spacing } = useTheme();
   const blocks = parseArticleBody(markdown);
@@ -135,9 +152,7 @@ export function ArticleBody({ markdown }: { markdown: string }) {
             <View
               key={key}
               style={[styles.quote, { borderLeftColor: colours.accent, backgroundColor: colours.accentSoft }]}>
-              <AppText variant="body" style={{ color: colours.ink }}>
-                {block.text}
-              </AppText>
+              <MarkdownText text={block.text} color={colours.ink} />
             </View>
           );
         }
@@ -145,18 +160,19 @@ export function ArticleBody({ markdown }: { markdown: string }) {
           return (
             <View key={key} style={{ gap: 8 }}>
               {block.items.map((item) => (
-                <AppText key={item} variant="body" style={{ color: colours.ink }}>
-                  {`\u2022 ${item}`}
-                </AppText>
+                <View key={item} style={{ flexDirection: 'row', gap: 8 }}>
+                  <AppText variant="body" style={{ color: colours.ink }}>
+                    {'\u2022'}
+                  </AppText>
+                  <View style={{ flex: 1 }}>
+                    <MarkdownText text={item} color={colours.ink} />
+                  </View>
+                </View>
               ))}
             </View>
           );
         }
-        return (
-          <AppText key={key} variant="body" style={{ color: colours.ink }}>
-            {block.text}
-          </AppText>
-        );
+        return <MarkdownText key={key} text={block.text} color={colours.ink} />;
       })}
     </View>
   );
@@ -164,13 +180,17 @@ export function ArticleBody({ markdown }: { markdown: string }) {
 
 export function RelatedLearn({
   routineId,
+  routineSlug,
   exerciseId,
+  exerciseSlug,
   category,
   excludeId,
   style,
 }: {
   routineId?: string | null;
+  routineSlug?: string | null;
   exerciseId?: string | null;
+  exerciseSlug?: string | null;
   category?: LearnCategory;
   excludeId?: string;
   style?: StyleProp<ViewStyle>;
@@ -189,7 +209,16 @@ export function RelatedLearn({
           setItems(articles.filter((item) => item.category === category && item.id !== excludeId).slice(0, 4));
           return;
         }
-        setItems(relatedArticles(articles, links, { routineId, exerciseId, excludeId, limit: 4 }));
+        setItems(
+          relatedArticles(articles, links, {
+            routineId,
+            routineSlug,
+            exerciseId,
+            exerciseSlug,
+            excludeId,
+            limit: 4,
+          })
+        );
       })
       .catch(() => {
         if (isCurrent) setItems([]);
@@ -197,7 +226,7 @@ export function RelatedLearn({
     return () => {
       isCurrent = false;
     };
-  }, [routineId, exerciseId, category, excludeId]);
+  }, [routineId, routineSlug, exerciseId, exerciseSlug, category, excludeId]);
 
   if (items.length === 0) return null;
 

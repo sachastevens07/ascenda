@@ -1,3 +1,10 @@
+/**
+ * Daily quotes from content/quotes/quotes.json (AGENTS.md N7).
+ * Bundled. Pick by UTC date: days since 2026-01-01, modulo the active list.
+ * Database rows win when the quotes table has been seeded.
+ */
+import file from '../../content/quotes/quotes.json';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
@@ -9,106 +16,49 @@ export type DailyQuote = {
 };
 
 const HIDE_KEY = 'hide_quote';
+const EPOCH_UTC = Date.UTC(2026, 0, 1);
 
-const QUOTE_COPY: { text: string; attribution: string }[] = [
-  { text: 'Showing up is the work. The rest follows.', attribution: 'Ascenda' },
-  { text: 'Strong is a habit, not a mood.', attribution: 'Ascenda' },
-  { text: 'One session is enough for today.', attribution: 'Ascenda' },
-  { text: 'Quiet progress still counts.', attribution: 'Ascenda' },
-  { text: 'You do not have to feel ready. Begin anyway.', attribution: 'Ascenda' },
-  { text: 'Small lifts, repeated, become strength.', attribution: 'Ascenda' },
-  { text: 'The gym gets quieter once you have a plan.', attribution: 'Ascenda' },
-  { text: 'Consistency is kinder than intensity.', attribution: 'Ascenda' },
-  { text: 'Today’s session does not have to be perfect.', attribution: 'Ascenda' },
-  { text: 'A calmer start still counts as a start.', attribution: 'Ascenda' },
-  { text: 'You can go slowly and still go somewhere.', attribution: 'Ascenda' },
-  { text: 'Strength is built on ordinary Tuesdays.', attribution: 'Ascenda' },
-  { text: 'Leave the session proud you came.', attribution: 'Ascenda' },
-  { text: 'Your next set is the only one that matters right now.', attribution: 'Ascenda' },
-  { text: 'Rest is part of the plan, not a pause from it.', attribution: 'Ascenda' },
-  { text: 'You belong in this space as much as anyone.', attribution: 'Ascenda' },
-  { text: 'Form first. Load later. That is how it stays.', attribution: 'Ascenda' },
-  { text: 'A lighter day can still move you forward.', attribution: 'Ascenda' },
-  { text: 'Keep the promise you made to yourself this week.', attribution: 'Ascenda' },
-  { text: 'The first five minutes are the hardest. Then you are in.', attribution: 'Ascenda' },
-  { text: 'Stronger is a direction, not a deadline.', attribution: 'Ascenda' },
-  { text: 'You can start in one spot and still grow.', attribution: 'Ascenda' },
-  { text: 'Trust the plan on the days you do not feel like it.', attribution: 'Ascenda' },
-  { text: 'Repeat the basics until they feel like home.', attribution: 'Ascenda' },
-  { text: 'Courage can look like walking in and choosing a bench.', attribution: 'Ascenda' },
-  { text: 'Progress likes people who come back.', attribution: 'Ascenda' },
-  { text: 'If it is heavy, make it neat. If it is neat, you are learning.', attribution: 'Ascenda' },
-  { text: 'You do not need a big moment. You need the next one.', attribution: 'Ascenda' },
-  { text: 'Train like someone who plans to still be here next year.', attribution: 'Ascenda' },
-  { text: 'A finished session is a kind thing to give yourself.', attribution: 'Ascenda' },
-  { text: 'The weights do not mind if you are new.', attribution: 'Ascenda' },
-  { text: 'Steady beats spectacular, most weeks.', attribution: 'Ascenda' },
-  { text: 'Take up the space you need. Then train.', attribution: 'Ascenda' },
-  { text: 'You can swap, skip and still finish.', attribution: 'Ascenda' },
-  { text: 'Let today be simple: start, lift, leave.', attribution: 'Ascenda' },
-  { text: 'The sessions you almost skipped still teach you something.', attribution: 'Ascenda' },
-  { text: 'There is no late. There is only next.', attribution: 'Ascenda' },
-  { text: 'Warm up kindly. Then do the work.', attribution: 'Ascenda' },
-  { text: 'Strength grows in the boring middle.', attribution: 'Ascenda' },
-  { text: 'You are allowed to take your time with this.', attribution: 'Ascenda' },
-  { text: 'A plan in your pocket makes the gym feel smaller.', attribution: 'Ascenda' },
-  { text: 'Do the session you have, not the one you imagined.', attribution: 'Ascenda' },
-  { text: 'Coming back is a skill. You are practising it.', attribution: 'Ascenda' },
-  { text: 'Lift with curiosity. See what you can do today.', attribution: 'Ascenda' },
-  { text: 'The goal is not to impress the room. It is to finish.', attribution: 'Ascenda' },
-  { text: 'Soft days still count towards the week.', attribution: 'Ascenda' },
-  { text: 'You can be careful and still be strong.', attribution: 'Ascenda' },
-  { text: 'Put the phone down. Pick the dumbbells up.', attribution: 'Ascenda' },
-  { text: 'One more week of showing up changes the story.', attribution: 'Ascenda' },
-  { text: 'If the machine is taken, you still have a plan.', attribution: 'Ascenda' },
-  { text: 'Breathe at the bottom. Stand up on purpose.', attribution: 'Ascenda' },
-  { text: 'You do not owe anyone a harder session.', attribution: 'Ascenda' },
-  { text: 'Keep your rest. Keep your form. Keep going.', attribution: 'Ascenda' },
-  { text: 'The first time is supposed to feel new.', attribution: 'Ascenda' },
-  { text: 'Build a week you can repeat.', attribution: 'Ascenda' },
-  { text: 'Confidence arrives after the reps, not before.', attribution: 'Ascenda' },
-  { text: 'You can pause a set. You do not have to pause the habit.', attribution: 'Ascenda' },
-  { text: 'Choose the weight you can own.', attribution: 'Ascenda' },
-  { text: 'Today can be the easy version. That still counts.', attribution: 'Ascenda' },
-  { text: 'Walk in with a list. Walk out with a tick.', attribution: 'Ascenda' },
-  { text: 'Nobody is watching as closely as you think.', attribution: 'Ascenda' },
-  { text: 'Strong for life starts with this hour.', attribution: 'Ascenda' },
-  { text: 'Make it neat. Make it yours. Then go home.', attribution: 'Ascenda' },
-  { text: 'A good session is one you can do again tomorrow.', attribution: 'Ascenda' },
-  { text: 'You are allowed to take the corner and stay there.', attribution: 'Ascenda' },
-  { text: 'The work is quiet. The change is not.', attribution: 'Ascenda' },
-  { text: 'Start where you are standing.', attribution: 'Ascenda' },
-  { text: 'Leave two reps in the tank and keep the week.', attribution: 'Ascenda' },
-  { text: 'You can be new at this and still belong here.', attribution: 'Ascenda' },
-  { text: 'The plan is a kindness you wrote in advance.', attribution: 'Ascenda' },
-  { text: 'Show up once. Then show up again.', attribution: 'Ascenda' },
-  { text: 'Your pace is not a problem.', attribution: 'Ascenda' },
-  { text: 'Strength likes people who keep ordinary promises.', attribution: 'Ascenda' },
-  { text: 'If you are unsure, choose the simpler option.', attribution: 'Ascenda' },
-  { text: 'Train within your limits. That is how you stay.', attribution: 'Ascenda' },
-  { text: 'A tick on the first set is a good beginning.', attribution: 'Ascenda' },
-  { text: 'You do not need to earn rest. You already planned it.', attribution: 'Ascenda' },
-  { text: 'The room gets friendlier when you have somewhere to stand.', attribution: 'Ascenda' },
-  { text: 'Do less, well, rather than more, rushed.', attribution: 'Ascenda' },
-  { text: 'This week is still open. Begin where you can.', attribution: 'Ascenda' },
-  { text: 'Let the session be ordinary. Ordinary builds.', attribution: 'Ascenda' },
-  { text: 'You can change the day and still keep the habit.', attribution: 'Ascenda' },
-  { text: 'Hold the bar like you mean to put it down safely.', attribution: 'Ascenda' },
-  { text: 'A calmer gym day is still a gym day.', attribution: 'Ascenda' },
-  { text: 'You are practising being someone who trains.', attribution: 'Ascenda' },
-  { text: 'Finish, log it, go and live the rest of your day.', attribution: 'Ascenda' },
-  { text: 'The next session will wait. This one is yours.', attribution: 'Ascenda' },
-  { text: 'Keep your shoulders down and your week moving.', attribution: 'Ascenda' },
-  { text: 'Nothing here requires you to hurry.', attribution: 'Ascenda' },
-  { text: 'Come as you are. Leave a little stronger.', attribution: 'Ascenda' },
-];
+type Json = Record<string, unknown>;
 
-/** Original quotes in the Ascenda voice. Database rows win when `quotes` has been seeded. */
-export const DAILY_QUOTES: DailyQuote[] = QUOTE_COPY.map((item, index) => ({
-  id: `q-${String(index + 1).padStart(3, '0')}`,
-  text: item.text,
-  attribution: item.attribution,
-}));
+function asRecord(value: unknown): Json {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Json) : {};
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function text(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function num(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function quoteId(sortOrder: number): string {
+  return `q-${String(sortOrder).padStart(3, '0')}`;
+}
+
+function parseQuote(raw: unknown): (DailyQuote & { sort_order: number }) | null {
+  const row = asRecord(raw);
+  const body = text(row.text);
+  const sort = num(row.sort_order);
+  if (!body || sort == null || row.is_active === false) return null;
+  return {
+    id: quoteId(sort),
+    text: body,
+    attribution: text(row.attribution) || 'Ascenda',
+    sort_order: sort,
+  };
+}
+
+/** Original quotes in the Ascenda voice, ordered by content sort_order. */
+export const DAILY_QUOTES: DailyQuote[] = asArray(asRecord(file).quotes)
+  .map(parseQuote)
+  .filter((item): item is NonNullable<typeof item> => Boolean(item))
+  .sort((a, b) => a.sort_order - b.sort_order)
+  .map(({ sort_order: _sort, ...item }) => item);
 
 function isMissingHideColumn(error: { message?: string; code?: string } | null | undefined): boolean {
   return /hide_quote/i.test(`${error?.code ?? ''} ${error?.message ?? ''}`);
@@ -121,7 +71,7 @@ export async function fetchDailyQuotes(): Promise<DailyQuote[]> {
     .select('id, text, attribution, is_active')
     .eq('is_active', true)
     .order('id', { ascending: true });
-  if (error || !data || data.length === 0) {
+  if (error || !data || data.length < DAILY_QUOTES.length) {
     return DAILY_QUOTES;
   }
   const rows = (data as { id: string; text: string; attribution: string | null }[])
@@ -134,10 +84,11 @@ export async function fetchDailyQuotes(): Promise<DailyQuote[]> {
   return rows.length > 0 ? rows : DAILY_QUOTES;
 }
 
-/** Same quote for everyone on the same UTC calendar day. */
+/** Same quote for everyone that UTC day. Index = days since 1 Jan 2026, modulo the list. */
 export function pickDailyQuote(quotes: DailyQuote[] = DAILY_QUOTES, now = new Date()): DailyQuote {
   const list = quotes.length > 0 ? quotes : DAILY_QUOTES;
-  const day = Math.floor(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) / 86_400_000);
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const day = Math.floor((today - EPOCH_UTC) / 86_400_000);
   const index = ((day % list.length) + list.length) % list.length;
   return list[index];
 }
