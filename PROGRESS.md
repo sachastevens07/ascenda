@@ -44,7 +44,7 @@ Git: `main`, ahead of origin. User is Sacha.
 - **N5** Default theme light. Profile → Appearance: Light / Dark / Match phone from microcopy. Device + `profiles.theme_preference`. Instant. Cloud waits for local hydrate.
 - **N3** Next-session / Start session opens the logger. Swap, remove, add/remove set, different day live there. Timer starts on open. End session discards. No add-exercise on routine sessions. Weighted sets need a weight.
 - **N1** Full safety text in `src/lib/disclaimer.ts` (v2, international). Onboarding checkbox, re-prompt on version change, Profile About, first-session sheet, one-line on routine/stretch detail.
-- **N4** Up to 3 goals; first is Main. `profiles.main_goals text[]`.
+- **N4** (6 Nov 2026) Up to 3 goals from `content/onboarding/onboarding.json`; first is Main. Profile → Your answers can edit them. `profiles.main_goals text[]`. SQL: `supabase/main_goals.sql` (not run).
 - **H1** Streak: one session counts the week; full target is a gold week; rest weeks (earn 1 per 4, bank 2); repair with an extra session; weeks trained never resets; Profile can hide it.
 - **H2** Welcome-back card after a full week away. Lighter session / restart week / lighter routine. Back on track badge.
 - **H3** Planner-linked reminders after first session. Profile Notifications toggles. Copy is “X is ready when you are”. Reused `expo-notifications`.
@@ -78,7 +78,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **10. N2** done this pass. Wait for Sacha to say "next". Then **11. N4**.
+Current: **11. N4** done this pass. Wait for Sacha to say "next". Then **12. N1**.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -103,7 +103,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **10. N2** Routine standard (6 Nov 2026). 15 `/content` routines, the strength catalogue and exercise-guides are bundled and reported by content:sync. Detail and logger show the Routine standard fields. Swap engine uses guide swap lists. Old enrolments stay on the old 14 ids. SQL: `supabase/n2_routines.sql` (not run).
 
 ### Stage 3: Onboarding and money
-- [x] **11. N4** Up to three goals, first is Main. Current onboarding, not `content/onboarding`.
+- [x] **11. N4** Up to three goals (6 Nov 2026). Values and labels from `content/onboarding/onboarding.json`. Multi-select chips, Main on the first pick, Profile → Your answers can edit. Featured and Learn weight the main goal. Lose body fat is allowed; the app still recommends strength routines and general articles. SQL: `supabase/main_goals.sql` (not run). Onboarding v2 screens stay for X5.
 - [x] **12. N1** Full safety disclaimer, version 2, international wording.
 - [ ] **13. P1** Hard paywall. Not started. The app is still Free vs Pro with badges, locks and the 4-workout cap. S1 and S3 are built and will be removed here. One entitlement: `ascenda_pro`.
 - [ ] **14. X5** Onboarding v2 from `content/onboarding/onboarding.json`. Not started.
@@ -202,7 +202,7 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 - G2: warm-up/cool-down templates are bundled from `/content`. Skip is local to the session and is not a logged session. Ramp-up uses set numbers 0 and -1 so working set 1 still drives progression. Did not add a library.
 - M1: WorkoutX terms followed from their public docs (AGENTS still has the paste placeholder): store ids not URLs; reuse signed links in memory until they expire (~24h); do not download or re-host files; key only in the Edge Function secret (`X-WorkoutX-Key` header). No on-screen attribution in their API docs. Monthly views depend on the plan; `media_usage` stores integer headers only. Added `expo-video` for tap-to-play. Sacha deferred WorkoutX sign-up on 6 Nov 2026; play UI stays off until matches exist. Swap engine and double-progression unchanged.
 - N1 disclaimer is international v2 (doctor, local emergency number). Safety after 18+, before goals. First-session sheet required “I understand”. Learn article line left for N6. No extra font for “Train safely”.
-- N4 keeps `goal` / `main_goal` columns; `main_goals` is source of truth. Lose body fat is allowed; no calorie/diet response.
+- N4 keeps `goal` / `main_goal` columns; `main_goals` is source of truth. Goal ids match `content/onboarding` (`build_strength`, `lose_body_fat`, …). Old saved ids are mapped when read. Lose body fat is allowed; no calorie/diet response.
 - H1: gold weeks earn rest weeks. Repair = `max(target, 1) + 1` sessions the following week. Only rest rows stored in `streak_weeks`. `accentSoft` added to the theme.
 - H2 trigger is a full calendar week with no finished session, not rest-week status. Lighter session: `max(1, sets - 1)` and last weight × 0.9 to 0.5 kg.
 - H3 reuses `expo-notifications`. Time picker is hourly chips. Reminders default off. Offers and news never send a push.

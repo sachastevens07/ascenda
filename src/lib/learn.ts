@@ -205,25 +205,25 @@ export function featuredArticle(articles: LearnArticle[], readIds: Set<string>):
 function categoriesForGoal(goal: Goal): LearnCategory[] {
   switch (goal) {
     case 'gym_confidence':
-    case 'return':
+    case 'back_to_training':
       return ['gym_confidence', 'getting_started', 'mindset'];
-    case 'strength':
-    case 'muscle':
-    case 'upper_body':
-    case 'toned':
+    case 'build_strength':
+    case 'build_muscle':
+    case 'upper_body_strength':
+    case 'feel_toned':
       return ['technique', 'programmes', 'getting_started'];
-    case 'glutes_legs':
+    case 'glutes_and_legs':
       return ['technique', 'programmes', 'gym_confidence'];
     case 'mobility':
-    case 'posture':
-    case 'longevity':
+    case 'better_posture':
+    case 'strong_for_life':
       return ['technique', 'recovery', 'programmes'];
-    case 'stamina':
-    case 'energy':
+    case 'fitness_stamina':
+    case 'more_energy':
       return ['getting_started', 'recovery', 'fuelling'];
-    case 'wellbeing':
+    case 'stress_relief':
       return ['mindset', 'recovery', 'getting_started'];
-    case 'lose_fat':
+    case 'lose_body_fat':
       return ['programmes', 'getting_started', 'myths'];
     default:
       return ['getting_started', 'programmes'];

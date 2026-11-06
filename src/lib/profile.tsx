@@ -5,122 +5,36 @@ import { DEFAULT_STREAK_GOAL, STREAK_GOALS, type StreakGoal } from '@/lib/activi
 import { resetAnalytics, track } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 import { DISCLAIMER_VERSION } from '@/lib/disclaimer';
+import {
+  MAX_MAIN_GOALS,
+  parseGoal,
+  parseMainGoals,
+  toLegacyGoal,
+  toStoredN4Goals,
+  type Goal,
+} from '@/lib/goals';
 import { recordLevelChange } from '@/lib/levelUp';
 import { supabase } from '@/lib/supabase';
 
-/** User-facing goals. Keep in step with supabase/main_goals.sql. */
-export const GOALS = [
-  'strength',
-  'muscle',
-  'glutes_legs',
-  'upper_body',
-  'toned',
-  'gym_confidence',
-  'stamina',
-  'mobility',
-  'posture',
-  'energy',
-  'wellbeing',
-  'longevity',
-  'return',
-  'lose_fat',
-] as const;
-export type Goal = (typeof GOALS)[number];
-export const MAX_MAIN_GOALS = 3;
-const LEGACY_GOALS = ['strength', 'glutes_legs', 'general'] as const;
-type LegacyGoal = (typeof LEGACY_GOALS)[number];
-
-export const GOAL_LABELS: Record<Goal, string> = {
-  strength: 'Build strength',
-  muscle: 'Build muscle',
-  glutes_legs: 'Glutes and legs',
-  upper_body: 'Upper body strength',
-  toned: 'Feel toned and defined',
-  gym_confidence: 'Gym confidence',
-  stamina: 'Get fitter and improve stamina',
-  mobility: 'Mobility and flexibility',
-  posture: 'Better posture',
-  energy: 'More energy',
-  wellbeing: 'Stress relief and mental wellbeing',
-  longevity: 'Strong for life (bones and joints)',
-  return: 'Get back into training after a break',
-  lose_fat: 'Lose body fat',
-};
-
-export const GOAL_COPY: Record<Goal, string> = {
-  strength: 'Lift heavier on the big moves.',
-  muscle: 'Add muscle with steady strength work.',
-  glutes_legs: 'Build a stronger lower body.',
-  upper_body: 'Get stronger through your back, chest, shoulders and arms.',
-  toned: 'Feel capable and defined through strength training.',
-  gym_confidence: 'Feel at home in the gym, one session at a time.',
-  stamina: 'Feel fitter and more capable all round.',
-  mobility: 'Move more freely, with strength work that stays joint-friendly.',
-  posture: 'Build the strength that helps you sit and stand tall.',
-  energy: 'Leave sessions feeling more awake, not drained.',
-  wellbeing: 'Use training as a calm reset for your head.',
-  longevity: 'Look after bones and joints with sensible strength work.',
-  return: 'Ease back in without leaping to where you left off.',
-  lose_fat: 'We’ll point you to strength training. No calorie targets or weight-loss promises.',
-};
-
-export function parseGoal(value: unknown): Goal | null {
-  const raw = String(value);
-  if (raw === 'general') return 'stamina';
-  return (GOALS as readonly string[]).includes(raw) ? (raw as Goal) : null;
-}
-
-export function parseMainGoals(value: unknown): Goal[] {
-  const raw = Array.isArray(value) ? value : [];
-  const unique: Goal[] = [];
-  for (const item of raw) {
-    const goal = parseGoal(item);
-    if (goal && !unique.includes(goal)) unique.push(goal);
-    if (unique.length === MAX_MAIN_GOALS) break;
-  }
-  return unique;
-}
-
-/** First is always main. Used when the new column is missing. */
-export function toLegacyGoal(goal: Goal): LegacyGoal {
-  if (goal === 'glutes_legs') return 'glutes_legs';
-  if (goal === 'strength' || goal === 'muscle' || goal === 'upper_body' || goal === 'longevity') {
-    return 'strength';
-  }
-  return 'general';
-}
-
-export function formatGoalsLabel(goals: Goal[]): string {
-  if (goals.length === 0) return '';
-  return goals
-    .map((goal, index) => (index === 0 && goals.length > 1 ? `${GOAL_LABELS[goal]} (main)` : GOAL_LABELS[goal]))
-    .join(', ');
-}
+export {
+  fillGoalCopy,
+  formatGoalsLabel,
+  GOAL_COPY,
+  GOAL_HELPER,
+  GOAL_INSIGHT_TITLE,
+  GOAL_LABELS,
+  GOAL_LIMIT_HINT,
+  GOAL_MAIN_LABEL,
+  GOAL_SCREEN_TITLE,
+  GOALS,
+  toggleMainGoal,
+} from '@/lib/goals';
+export { MAX_MAIN_GOALS, parseGoal, parseMainGoals, toLegacyGoal };
+export type { Goal };
 
 export function userGoalsFromAnswers(answers: { goal: Goal; main_goals?: Goal[] }): Goal[] {
   if (answers.main_goals && answers.main_goals.length > 0) return answers.main_goals.slice(0, MAX_MAIN_GOALS);
   return [answers.goal];
-}
-
-/** Tap to add, tap main to remove, tap another pick to make it main. */
-export function toggleMainGoal(
-  selected: Goal[],
-  value: Goal
-): { next: Goal[]; hint: string | null } {
-  const index = selected.indexOf(value);
-  if (index === 0) {
-    return { next: selected.slice(1), hint: null };
-  }
-  if (index > 0) {
-    return { next: [value, ...selected.filter((item) => item !== value)], hint: null };
-  }
-  if (selected.length >= MAX_MAIN_GOALS) {
-    return {
-      next: selected,
-      hint: 'You can pick up to three. Tap one to remove it first.',
-    };
-  }
-  return { next: [...selected, value], hint: null };
 }
 
 export const EXPERIENCE_LEVELS = ['new', 'some', 'confident'] as const;
@@ -319,6 +233,52 @@ function isMissingGymExperience(error: { message?: string; code?: string }): boo
   return /gym_experience/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
+function isMissingAgeConfirmed(error: { message?: string; code?: string }): boolean {
+  return /age_confirmed_at/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isUniqueViolation(error: { message?: string; code?: string }): boolean {
+  return error.code === '23505' || /duplicate key|unique constraint/i.test(error.message ?? '');
+}
+
+/** Write a few of her own profile fields without selecting later columns that may not exist yet. */
+async function saveOwnProfileFields(
+  userId: string,
+  fields: Record<string, unknown>
+): Promise<'saved' | 'missing-column'> {
+  const names = Object.keys(fields);
+  const updated = await supabase
+    .from('profiles')
+    .update(fields)
+    .eq('user_id', userId)
+    .select('user_id')
+    .maybeSingle();
+  if (updated.error) {
+    if (isMissingProfileColumn(updated.error, names)) return 'missing-column';
+    throw updated.error;
+  }
+  if (updated.data) return 'saved';
+  const inserted = await supabase
+    .from('profiles')
+    .insert({ user_id: userId, ...fields })
+    .select('user_id')
+    .maybeSingle();
+  if (inserted.error) {
+    if (isMissingProfileColumn(inserted.error, names)) return 'missing-column';
+    if (isUniqueViolation(inserted.error)) return 'saved';
+    throw inserted.error;
+  }
+  return 'saved';
+}
+
+function isMissingProfileColumn(
+  error: { message?: string; code?: string },
+  columns: string[]
+): boolean {
+  const text = `${error.code ?? ''} ${error.message ?? ''}`;
+  return columns.some((column) => new RegExp(column, 'i').test(text));
+}
+
 function parseGymExperience(value: unknown): GymExperience | null {
   return (GYM_EXPERIENCE_LEVELS as readonly string[]).includes(String(value))
     ? (value as GymExperience)
@@ -402,8 +362,8 @@ export function trainingLocationFromEquipment(equipment: EquipmentAccess): Train
 }
 
 export function focusAreasFromGoal(goal: Goal): FocusArea[] {
-  if (goal === 'glutes_legs') return ['glutes', 'legs'];
-  if (goal === 'upper_body') return ['upper'];
+  if (goal === 'glutes_and_legs') return ['glutes', 'legs'];
+  if (goal === 'upper_body_strength') return ['upper'];
   return ['full_body'];
 }
 
@@ -465,6 +425,7 @@ type ProfileState = {
   error: string | null;
   reload: () => void;
   saveQuizAnswers: (answers: QuizAnswers, bodyweightKg: number | null) => Promise<void>;
+  saveMainGoals: (goals: Goal[]) => Promise<void>;
   confirmAge: () => Promise<void>;
   /** Deletes her account and everything in it, then signs out. */
   deleteAccount: () => Promise<void>;
@@ -669,9 +630,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             throw withGoals.error;
           }
         } else if (withGoals.error && isGoalConstraint(withGoals.error) && !isMissingMainGoals(withGoals.error)) {
+          const stored = toStoredN4Goals(mainGoals);
           const retry = await supabase
             .from('profiles')
-            .upsert({ ...withoutExperience, goal: legacyGoal, main_goal: legacyGoal })
+            .upsert({
+              ...withoutExperience,
+              goal: stored[0] ?? legacyGoal,
+              main_goal: stored[0] ?? legacyGoal,
+              main_goals: stored,
+            })
             .select(PROFILE_COLUMNS_GOALS)
             .single();
           if (retry.error) throw retry.error;
@@ -697,9 +664,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           });
         }
       } else if (isGoalConstraint(withGymExperience.error) && !isMissingMainGoals(withGymExperience.error)) {
+        const stored = toStoredN4Goals(mainGoals);
         const retry = await supabase
           .from('profiles')
-          .upsert({ ...payload, goal: legacyGoal, main_goal: legacyGoal })
+          .upsert({
+            ...payload,
+            goal: stored[0] ?? legacyGoal,
+            main_goal: stored[0] ?? legacyGoal,
+            main_goals: stored,
+          })
           .select(PROFILE_COLUMNS_G1)
           .single();
         if (retry.error) throw retry.error;
@@ -755,16 +728,44 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [userId, loaded]
   );
 
+  const saveMainGoals = useCallback(
+    async (goals: Goal[]) => {
+      const previous = loaded?.userId === userId ? loaded.profile : null;
+      const answers = getQuizAnswers(previous);
+      if (!answers) throw new Error('Finish onboarding first, then you can change your goals.');
+      const next = parseMainGoals(goals);
+      if (next.length === 0) throw new Error('Pick at least one goal.');
+      await saveQuizAnswers(
+        { ...answers, goal: next[0], main_goals: next, focus_areas: focusAreasFromGoals(next) },
+        previous?.bodyweight_kg ?? null
+      );
+    },
+    [userId, loaded, saveQuizAnswers]
+  );
+
   const confirmAge = useCallback(async () => {
     if (!userId) throw new Error('You need to be signed in.');
-    const { data, error } = await supabase
-      .from('profiles')
-      .upsert({ user_id: userId, age_confirmed_at: new Date().toISOString() })
-      .select(PROFILE_COLUMNS)
-      .single();
-    if (error) throw error;
+    const acceptedAt = new Date().toISOString();
+    let outcome: 'saved' | 'missing-column' = 'saved';
+    try {
+      outcome = await saveOwnProfileFields(userId, { age_confirmed_at: acceptedAt });
+    } catch (error) {
+      if (!isMissingAgeConfirmed(error as { message?: string; code?: string })) throw error;
+      outcome = 'missing-column';
+    }
     const previous = loaded?.userId === userId ? loaded.profile : null;
-    setLoaded({ userId, profile: keepDisclaimer(toProfile(data), previous), error: null });
+    const result = outcome === 'saved' ? await loadProfile(userId) : { profile: previous };
+    const next = result.profile ?? previous;
+    if (next) {
+      setLoaded({
+        userId,
+        profile: {
+          ...keepDisclaimer(next, previous),
+          age_confirmed_at: acceptedAt,
+        },
+        error: null,
+      });
+    }
   }, [userId, loaded]);
 
   const deleteAccount = useCallback(async () => {
@@ -816,31 +817,28 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       disclaimer_version: DISCLAIMER_VERSION,
       disclaimer_accepted_at: acceptedAt,
     };
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(payload)
-      .eq('user_id', userId)
-      .select(PROFILE_COLUMNS_DISCLAIMER)
-      .single();
-    if (error && isMissingDisclaimer(error)) {
-      const previous = loaded?.userId === userId ? loaded.profile : null;
-      if (previous) {
-        setLoaded({
-          userId,
-          profile: {
-            ...previous,
-            disclaimer_version: DISCLAIMER_VERSION,
-            disclaimer_accepted_at: acceptedAt,
-            disclaimer_ready: false,
-          },
-          error: null,
-        });
-      }
-      track('disclaimer_accepted', { version: DISCLAIMER_VERSION });
-      return;
+    let outcome: 'saved' | 'missing-column' = 'saved';
+    try {
+      outcome = await saveOwnProfileFields(userId, payload);
+    } catch (error) {
+      if (!isMissingDisclaimer(error as { message?: string; code?: string })) throw error;
+      outcome = 'missing-column';
     }
-    if (error) throw error;
-    setLoaded({ userId, profile: toProfile(data, true), error: null });
+    const previous = loaded?.userId === userId ? loaded.profile : null;
+    const result = outcome === 'saved' ? await loadProfile(userId) : { profile: previous };
+    const next = result.profile ?? previous;
+    if (next) {
+      setLoaded({
+        userId,
+        profile: {
+          ...keepDisclaimer(next, previous),
+          disclaimer_version: DISCLAIMER_VERSION,
+          disclaimer_accepted_at: acceptedAt,
+          disclaimer_ready: outcome === 'saved',
+        },
+        error: null,
+      });
+    }
     track('disclaimer_accepted', { version: DISCLAIMER_VERSION });
   }, [userId, loaded]);
 
@@ -854,6 +852,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         error: isLoading ? null : (loaded?.error ?? null),
         reload,
         saveQuizAnswers,
+        saveMainGoals,
         confirmAge,
         deleteAccount,
         setQuietMode,

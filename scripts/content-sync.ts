@@ -446,10 +446,11 @@ async function main(): Promise<void> {
   line();
 
   line('Not loaded (by design)');
-  line('  content/onboarding: bundled in the app');
+  line('  content/onboarding: bundled in the app (N4 goals come from the goals screen)');
   line('  content/microcopy: bundled in the app');
   line('  content/ai: Edge Functions, not the app database');
   line();
+  reportOnboardingGoals();
 
   reportWarmups();
 
@@ -488,6 +489,18 @@ function reportGuides(): void {
   line('  Bundled in the app for first-time guides and the swap engine.');
   line('  A live sync would update exercises.cues (first 3 form_cues) and location_hint from where_to_find.');
   line('  Swap lists stay in the app overlay. They are not a separate table.');
+  line();
+}
+
+function reportOnboardingGoals(): void {
+  line('onboarding goals  ←  content/onboarding/onboarding.json (bundled)');
+  const screens = asArray(readJson('onboarding/onboarding.json').screens);
+  const goals = screens.map(asRecord).find((item) => text(item.id) === 'goals') ?? {};
+  const options = asArray(goals.options);
+  line(`  Options: ${options.length}`);
+  line(`  Stored on profiles.main_goals. First pick is main. Max ${num(goals.max) ?? 3}.`);
+  line(`  Values: ${options.map((item) => text(asRecord(item).value)).filter(Boolean).join(', ')}`);
+  line('  Live sync does not write onboarding into the database.');
   line();
 }
 

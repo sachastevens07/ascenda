@@ -11,7 +11,13 @@ import {
   type RoutineSummary,
 } from '@/lib/routines';
 
-export const FREE_STARTER_ROUTINE_ID = 'gym-confidence-6';
+export const FREE_STARTER_ROUTINE_ID = 'strong-foundations-6-weeks';
+const STARTER_FALLBACKS = [
+  'strong-foundations-6-weeks',
+  'the-two-day-start',
+  'gym-confidence-6',
+  'full-body-3',
+];
 const ONBOARDING_PAYWALL_KEY = 'pending-onboarding-paywall';
 
 export async function queueOnboardingPaywall(recommendedId: string): Promise<void> {
@@ -30,14 +36,15 @@ function recommendationMatchesGoal(
   routineGoal: Routine['goal'] | RoutineSummary['goal'],
   goal: Goal
 ): boolean {
-  if (goal === 'glutes_legs') return routineGoal === 'glutes_legs';
-  if (goal === 'gym_confidence' || goal === 'return') return routineGoal === 'confidence';
+  if (goal === 'glutes_and_legs') return routineGoal === 'glutes_legs';
+  if (goal === 'gym_confidence' || goal === 'back_to_training') return routineGoal === 'confidence';
   if (
-    goal === 'strength' ||
-    goal === 'muscle' ||
-    goal === 'upper_body' ||
-    goal === 'longevity' ||
-    goal === 'lose_fat'
+    goal === 'build_strength' ||
+    goal === 'build_muscle' ||
+    goal === 'upper_body_strength' ||
+    goal === 'strong_for_life' ||
+    goal === 'feel_toned' ||
+    goal === 'lose_body_fat'
   ) {
     return routineGoal === 'strength';
   }
@@ -54,7 +61,7 @@ export function pickRecommendedRoutine(
 export function describeRecommendation(routine: RoutineSummary, answers: QuizAnswers): string {
   const reasons: string[] = [];
   if (
-    routine.id === FREE_STARTER_ROUTINE_ID &&
+    (routine.id === FREE_STARTER_ROUTINE_ID || routine.id === 'gym-confidence-6') &&
     (answers.gym_experience === 'not_yet' ||
       answers.gym_experience === 'just_started' ||
       answers.experience === 'new' ||
@@ -126,16 +133,27 @@ export function projectKeyLift(routine: Routine): LiftProjection | null {
   return { exerciseName: lift.exercise.name, points };
 }
 
+function pickStarterId(
+  routines: RoutineSummary[],
+  preferredId: string | undefined,
+  isPro: boolean
+): string | null {
+  const ids = [preferredId, ...STARTER_FALLBACKS].filter((id): id is string => Boolean(id));
+  for (const id of ids) {
+    const routine = routines.find((item) => item.id === id);
+    if (routine && (!routine.is_pro || isPro)) return routine.id;
+  }
+  return routines.find((routine) => !routine.is_pro)?.id ?? null;
+}
+
 /** Starts the recommended routine if it’s free or she’s Pro; otherwise the free starter. */
 export async function startOnboardingRoutine(input: {
   recommendedId?: string;
   isPro: boolean;
 }): Promise<void> {
-  const recommendedId = input.recommendedId || FREE_STARTER_ROUTINE_ID;
   const routines = await fetchRoutines().catch(() => []);
-  const recommended = routines.find((routine) => routine.id === recommendedId);
-  const startId =
-    recommended && (!recommended.is_pro || input.isPro) ? recommended.id : FREE_STARTER_ROUTINE_ID;
+  const startId = pickStarterId(routines, input.recommendedId, input.isPro);
+  if (!startId) return;
 
   const existing = await fetchActiveEnrolment().catch(() => null);
   if (existing?.routine_id === startId) return;

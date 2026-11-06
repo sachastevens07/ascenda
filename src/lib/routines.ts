@@ -717,16 +717,17 @@ export function firstDayOfRoutine(routine: Routine): RoutineDay | null {
 
 function routineGoalsForUserGoal(goal: Goal): RoutineGoal[] {
   switch (goal) {
-    case 'glutes_legs':
+    case 'glutes_and_legs':
       return ['glutes_legs'];
     case 'gym_confidence':
-    case 'return':
+    case 'back_to_training':
       return ['confidence'];
-    case 'strength':
-    case 'muscle':
-    case 'upper_body':
-    case 'longevity':
-    case 'lose_fat':
+    case 'build_strength':
+    case 'build_muscle':
+    case 'upper_body_strength':
+    case 'strong_for_life':
+    case 'feel_toned':
+    case 'lose_body_fat':
       return ['strength'];
     default:
       return ['general'];

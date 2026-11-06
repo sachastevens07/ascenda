@@ -9,11 +9,13 @@ import {
   AppText,
   DestructiveTextButton,
   FreeBadge,
+  GoalChipGroup,
   IconButton,
   ListRow,
   MenuHeader,
   MenuRow,
   OverflowMenu,
+  PrimaryButton,
   ProBadge,
   SegmentedThemePicker,
   measureAnchor,
@@ -73,6 +75,7 @@ import {
   EQUIPMENT_ACCESS_LABELS,
   EXPERIENCE_LABELS,
   FOCUS_AREA_LABELS,
+  GOAL_HELPER,
   formatGoalsLabel,
   GYM_EXPERIENCE_LABELS,
   formatDaysPerWeek,
@@ -80,6 +83,7 @@ import {
   getQuizAnswers,
   saveThemePreference,
   useProfile,
+  type Goal,
 } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import { currentEnrolmentWeek, fetchActiveEnrolment, type RoutineEnrolment } from '@/lib/routines';
@@ -126,7 +130,7 @@ function savedWorkoutsLabel(count: number): string {
 export default function ProfileScreen() {
   const { colours, radius, preference, setPreference } = useTheme();
   const { session } = useAuth();
-  const { profile, reload, deleteAccount } = useProfile();
+  const { profile, reload, deleteAccount, saveMainGoals } = useProfile();
   const subscription = useSubscription();
   const { showDevTools, setShowDevTools } = useDevTools();
   const answers = getQuizAnswers(profile);
@@ -137,6 +141,8 @@ export default function ProfileScreen() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [showAnswers, setShowAnswers] = useState(false);
+  const [goalDraft, setGoalDraft] = useState<Goal[]>([]);
+  const [isSavingGoals, setIsSavingGoals] = useState(false);
   const [hideStreak, setHideStreak] = useState(false);
   const [hideAchievements, setHideAchievements] = useState(false);
   const [hideQuote, setHideQuote] = useState(false);
@@ -478,7 +484,6 @@ export default function ProfileScreen() {
   const answerRows = answers
     ? [
         { name: 'Name', value: answers.display_name || 'Not added' },
-        { name: 'Goals', value: formatGoalsLabel(answers.main_goals ?? [answers.goal]) },
         { name: 'Experience', value: EXPERIENCE_LABELS[answers.experience] },
         { name: 'Gym experience', value: GYM_EXPERIENCE_LABELS[answers.gym_experience] },
         { name: 'Equipment', value: EQUIPMENT_ACCESS_LABELS[answers.equipment] },
@@ -727,10 +732,50 @@ export default function ProfileScreen() {
         <SettingsGroup title="Your answers">
           <SettingsRow
             title={showAnswers ? 'Hide answers' : 'Your answers'}
-            subtitle={showAnswers ? undefined : 'Name, goal, experience and more'}
-            onPress={() => setShowAnswers((open) => !open)}
+            subtitle={showAnswers ? undefined : 'Name, goals, experience and more'}
+            onPress={() => {
+              setShowAnswers((open) => {
+                if (!open && answers) setGoalDraft(answers.main_goals);
+                return !open;
+              });
+            }}
             last={!showAnswers}
           />
+          {showAnswers ? (
+            <View style={styles.goalsBlock}>
+              <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                Goals
+              </AppText>
+              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                {GOAL_HELPER}
+              </AppText>
+              <GoalChipGroup selected={goalDraft} onChange={setGoalDraft} />
+              {goalDraft.length === 0 ? (
+                <AppText variant="bodySm" style={{ color: colours.danger, marginTop: 8 }}>
+                  Pick at least one goal.
+                </AppText>
+              ) : null}
+              {formatGoalsLabel(goalDraft) !== formatGoalsLabel(answers.main_goals) ? (
+                <PrimaryButton
+                  label={isSavingGoals ? 'Saving…' : 'Save goals'}
+                  loading={isSavingGoals}
+                  disabled={isSavingGoals || goalDraft.length === 0}
+                  onPress={() => {
+                    setIsSavingGoals(true);
+                    void saveMainGoals(goalDraft)
+                      .catch((error) => {
+                        showDialog(
+                          'Couldn’t save your goals',
+                          error instanceof Error ? error.message : 'Check your connection and try again.'
+                        );
+                      })
+                      .finally(() => setIsSavingGoals(false));
+                  }}
+                  style={{ marginTop: 16 }}
+                />
+              ) : null}
+            </View>
+          ) : null}
           {showAnswers
             ? answerRows.map((row) => (
                 <SettingsRow key={row.name} title={row.name} subtitle={row.value} showChevron={false} />
@@ -945,6 +990,11 @@ const styles = StyleSheet.create({
   appearance: {
     paddingHorizontal: 16,
     paddingVertical: 16,
+  },
+  goalsBlock: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
   },
   signOut: {
     alignSelf: 'center',

@@ -5,6 +5,7 @@ import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import {
   GOAL_LABELS,
+  GOAL_MAIN_LABEL,
   GOALS,
   MAX_MAIN_GOALS,
   toggleMainGoal,
@@ -41,7 +42,7 @@ export function GoalChipGroup({
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
               accessibilityLabel={
-                isMain ? `${GOAL_LABELS[value]}, main goal` : GOAL_LABELS[value]
+                isMain ? `${GOAL_LABELS[value]}, ${GOAL_MAIN_LABEL.toLowerCase()} goal` : GOAL_LABELS[value]
               }
               style={({ pressed }) => [
                 styles.chip,
@@ -55,7 +56,7 @@ export function GoalChipGroup({
               ]}>
               {isMain ? (
                 <AppText variant="eyebrow" style={{ color: colours.accent }}>
-                  Main
+                  {GOAL_MAIN_LABEL}
                 </AppText>
               ) : null}
               <AppText variant={isSelected ? 'bodyStrong' : 'body'} style={{ color: isSelected ? colours.brand : colours.ink }}>

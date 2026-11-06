@@ -54,6 +54,10 @@ import {
   FOCUS_AREA_LABELS,
   FOCUS_AREAS,
   GOAL_COPY,
+  GOAL_HELPER,
+  GOAL_INSIGHT_TITLE,
+  GOAL_SCREEN_TITLE,
+  fillGoalCopy,
   formatGoalsLabel,
   MAX_BODYWEIGHT_KG,
   MAX_DISPLAY_NAME,
@@ -694,9 +698,9 @@ export default function OnboardingScreen() {
 
             {step === 'goal' && (
               <>
-                <AppText variant="display" style={{ color: colours.ink }}>What are you working towards?</AppText>
+                <AppText variant="display" style={{ color: colours.ink }}>{GOAL_SCREEN_TITLE}</AppText>
                 <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-                  Pick up to 3. Your first pick is your main goal.
+                  {GOAL_HELPER}
                 </AppText>
                 <GoalChipGroup
                   selected={draft.main_goals ?? (draft.goal ? [draft.goal] : [])}
@@ -709,18 +713,16 @@ export default function OnboardingScreen() {
                     setError(null);
                   }}
                 />
-                {draft.main_goals?.[0] || draft.goal ? (
-                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 16 }}>
-                    {GOAL_COPY[(draft.main_goals?.[0] ?? draft.goal) as Goal]}
-                  </AppText>
-                ) : null}
               </>
             )}
 
             {step === 'insight-goal' && (
               <InsightStep
-                title="A clear goal helps you walk in"
-                body="When you know what you’re there for, the next session is already decided. You can change this later."
+                title={fillGoalCopy(GOAL_INSIGHT_TITLE, draft.display_name ?? nameText)}
+                body={
+                  GOAL_COPY[(draft.main_goals?.[0] ?? draft.goal) as Goal] ??
+                  'A clear goal helps you walk in. You can change this later.'
+                }
               />
             )}
 
@@ -1063,7 +1065,7 @@ function RevealStep({
       ) : null}
       {recommended?.is_pro ? <ProBadge locked compact style={{ alignSelf: 'flex-start', marginBottom: 8 }} /> : null}
       <AppText variant="display" style={{ color: colours.ink }}>
-        {recommended ? recommended.name : 'Gym Confidence: 6 weeks'}
+        {recommended ? recommended.name : 'Strong Foundations in 6 Weeks'}
       </AppText>
       {loadState === 'loading' ? (
         <ActivityIndicator color={colours.brand} style={{ marginTop: 24 }} />

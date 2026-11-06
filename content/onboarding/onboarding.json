@@ -1,0 +1,850 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Onboarding v2 copy and logic (AGENTS.md X5, N1, N4, G1; DESIGN.md 8.5). Screens are listed in order.",
+    "{name}, {days_per_week} and similar are placeholders filled from her answers.",
+    "statement answers use a 1 to 5 scale and are stored in profiles.onboarding_answers.",
+    "Social proof rule: the only statistic shown is the sourced Gymshark survey figure. No invented user counts or testimonials.",
+    "Paywall copy lives in the microcopy content file.",
+    "Draft: check the Gymshark statistic and wording with your solicitor alongside the paywall."
+  ],
+  "screens": [
+    {
+      "id": "welcome",
+      "type": "welcome",
+      "image_slug": "onboarding-welcome",
+      "title": "Feel at home in the gym",
+      "body": "Tell us a little about you and we'll build a plan that fits your goals, your week and how you feel about the gym.",
+      "primary_button": "Let's build your plan",
+      "secondary_link": "I already have an account"
+    },
+    {
+      "id": "age",
+      "type": "single_choice",
+      "title": "How old are you?",
+      "why_we_ask": "Ascenda is designed for adults, and it helps us pitch your plan at the right pace.",
+      "options": [
+        {
+          "value": "under_18",
+          "label": "Under 18"
+        },
+        {
+          "value": "18_24",
+          "label": "18 to 24"
+        },
+        {
+          "value": "25_34",
+          "label": "25 to 34"
+        },
+        {
+          "value": "35_44",
+          "label": "35 to 44"
+        },
+        {
+          "value": "45_54",
+          "label": "45 to 54"
+        },
+        {
+          "value": "55_plus",
+          "label": "55 or over"
+        }
+      ],
+      "stores_to": "profiles.age_band",
+      "privacy_note": "We only store an age range, never your date of birth.",
+      "blocked_values": {
+        "under_18": {
+          "inline_message_title": "Ascenda is for adults",
+          "inline_message": "Our plans are designed for people aged 18 and over, so we can't set you up just yet. A PE teacher or a qualified coach at your local leisure centre can help you get started safely.",
+          "continue_disabled": true
+        }
+      },
+      "note_for_dev": "Asked before any other personal data. If Under 18 is selected: show the inline message below the options, keep Continue disabled, store nothing and send no analytics events with answers. She can change her selection (for mis-taps), but never show 'are you sure?' or any hint about changing it."
+    },
+    {
+      "id": "name",
+      "type": "text",
+      "title": "What should we call you?",
+      "placeholder": "Your first name",
+      "stores_to": "profiles.first_name",
+      "validation": {
+        "required": true,
+        "max_length": 30
+      },
+      "button": "Continue"
+    },
+    {
+      "id": "goals",
+      "type": "multi_choice",
+      "title": "What would you love to achieve?",
+      "helper": "Pick up to 3. Your first pick is your main goal.",
+      "max": 3,
+      "min": 1,
+      "stores_to": "profiles.main_goals",
+      "options": [
+        {
+          "value": "build_strength",
+          "label": "Build strength",
+          "icon": "dumbbell"
+        },
+        {
+          "value": "build_muscle",
+          "label": "Build muscle",
+          "icon": "muscle"
+        },
+        {
+          "value": "glutes_and_legs",
+          "label": "Glutes and legs",
+          "icon": "legs"
+        },
+        {
+          "value": "upper_body_strength",
+          "label": "Upper body strength",
+          "icon": "arm"
+        },
+        {
+          "value": "feel_toned",
+          "label": "Feel toned and defined",
+          "icon": "sparkle"
+        },
+        {
+          "value": "gym_confidence",
+          "label": "Gym confidence",
+          "icon": "heart"
+        },
+        {
+          "value": "fitness_stamina",
+          "label": "Get fitter and improve stamina",
+          "icon": "lungs"
+        },
+        {
+          "value": "mobility",
+          "label": "Mobility and flexibility",
+          "icon": "stretch"
+        },
+        {
+          "value": "better_posture",
+          "label": "Better posture",
+          "icon": "spine"
+        },
+        {
+          "value": "more_energy",
+          "label": "More energy",
+          "icon": "bolt"
+        },
+        {
+          "value": "stress_relief",
+          "label": "Stress relief and mental wellbeing",
+          "icon": "leaf"
+        },
+        {
+          "value": "strong_for_life",
+          "label": "Strong for life (bones and joints)",
+          "icon": "shield"
+        },
+        {
+          "value": "back_to_training",
+          "label": "Get back into training after a break",
+          "icon": "refresh"
+        },
+        {
+          "value": "lose_body_fat",
+          "label": "Lose body fat",
+          "icon": "flame"
+        }
+      ],
+      "main_label": "Main",
+      "limit_hint": "You can pick up to 3. Tap one to swap it out."
+    },
+    {
+      "id": "insight_goals",
+      "type": "insight",
+      "image_slug": "onboarding-insight-goals",
+      "title": "Great choices, {name}",
+      "body_by_main_goal": {
+        "build_strength": "Strength builds faster than most people expect. Many beginners add weight to their main lifts week after week for the first few months.",
+        "build_muscle": "Building muscle comes from lifting challenging weights consistently. Your plan will tell you exactly when to go heavier.",
+        "glutes_and_legs": "Your glutes respond best to being trained from a few different angles each week. We'll build that into your plan.",
+        "upper_body_strength": "A strong back and shoulders help you lift more and stand taller. We'll give you plenty of pulling as well as pushing.",
+        "feel_toned": "Feeling toned mostly comes from building a bit of muscle. Strength training is the most reliable way to get there.",
+        "gym_confidence": "You're far from alone. We'll start you somewhere comfortable and add a little more of the gym at your own pace.",
+        "fitness_stamina": "Strength training and cardio work brilliantly together. We'll keep your sessions moving.",
+        "mobility": "Moving well and getting strong go hand in hand. Every session starts and ends with mobility work.",
+        "better_posture": "A stronger upper back is one of the best things for posture. We'll make sure your plan includes it.",
+        "more_energy": "Regular strength training is a great way to feel more energetic day to day. Consistency matters more than intensity.",
+        "stress_relief": "Lots of women say the gym is the one hour that's just for them. We'll keep your plan simple so it never feels like another job.",
+        "strong_for_life": "Strength training is one of the best things you can do for strong bones, joints and balance as you get older.",
+        "back_to_training": "Coming back is easier than starting. Your body remembers more than you think.",
+        "lose_body_fat": "Building strength is a great foundation for changing your body composition. We'll focus on getting you strong and consistent."
+      },
+      "milestone_preview": {
+        "title": "Your first milestone",
+        "template": "Around week {first_milestone_week}: {first_milestone_title}",
+        "source": "default_routine"
+      },
+      "button": "Continue"
+    },
+    {
+      "id": "gym_experience",
+      "type": "single_choice",
+      "title": "How long have you been going to the gym?",
+      "stores_to": "profiles.gym_experience",
+      "options": [
+        {
+          "value": "not_yet",
+          "label": "I haven't started yet",
+          "icon": "seedling"
+        },
+        {
+          "value": "just_started",
+          "label": "I've just started",
+          "icon": "sprout"
+        },
+        {
+          "value": "on_and_off",
+          "label": "On and off over the years",
+          "icon": "wave"
+        },
+        {
+          "value": "regularly",
+          "label": "I train regularly",
+          "icon": "tree"
+        }
+      ]
+    },
+    {
+      "id": "gym_comfort",
+      "type": "slider",
+      "title": "How do you feel when you're in the gym?",
+      "stores_to": "profiles.gym_comfort",
+      "stops": [
+        {
+          "value": 1,
+          "label": "Nervous"
+        },
+        {
+          "value": 2,
+          "label": "A bit unsure"
+        },
+        {
+          "value": 3,
+          "label": "Okay"
+        },
+        {
+          "value": 4,
+          "label": "Comfortable"
+        },
+        {
+          "value": 5,
+          "label": "At home"
+        }
+      ],
+      "default": 3
+    },
+    {
+      "id": "st_not_sure",
+      "type": "statement",
+      "eyebrow": "HOW MUCH IS THIS YOU?",
+      "title": "\"I'm not sure what to do when I get to the gym\"",
+      "options": [
+        {
+          "value": 1,
+          "label": "Not me at all"
+        },
+        {
+          "value": 2,
+          "label": "Not really"
+        },
+        {
+          "value": 3,
+          "label": "Sometimes"
+        },
+        {
+          "value": 4,
+          "label": "Quite a lot"
+        },
+        {
+          "value": 5,
+          "label": "That's so me"
+        }
+      ],
+      "stores_to": "profiles.onboarding_answers.not_sure_what_to_do"
+    },
+    {
+      "id": "st_watched",
+      "type": "statement",
+      "eyebrow": "HOW MUCH IS THIS YOU?",
+      "title": "\"I feel like people are watching me\"",
+      "options": [
+        {
+          "value": 1,
+          "label": "Not me at all"
+        },
+        {
+          "value": 2,
+          "label": "Not really"
+        },
+        {
+          "value": 3,
+          "label": "Sometimes"
+        },
+        {
+          "value": 4,
+          "label": "Quite a lot"
+        },
+        {
+          "value": 5,
+          "label": "That's so me"
+        }
+      ],
+      "stores_to": "profiles.onboarding_answers.feel_watched"
+    },
+    {
+      "id": "insight_not_alone",
+      "type": "insight",
+      "image_slug": "onboarding-insight-not-alone",
+      "title": "You're not alone",
+      "stat": {
+        "value": "88%",
+        "text": "of UK women surveyed said they'd felt some form of anxiety in the gym.",
+        "source": "Gymshark survey of 1,000 UK women, September 2025",
+        "source_note": "Show the source line under the stat."
+      },
+      "body": "That's why every exercise in Ascenda comes with a first-time guide: where to find it, how to set it up and what to do if it's taken. You can start in one quiet spot and add more of the gym when you're ready.",
+      "show_if": "gym_comfort <= 3 or st_not_sure >= 3 or st_watched >= 3",
+      "alt_title": "Here's how we'll help",
+      "alt_body": "Every exercise comes with a first-time guide and quick swaps for when the gym is busy, so your session never stalls.",
+      "button": "Continue"
+    },
+    {
+      "id": "st_motivation",
+      "type": "statement",
+      "eyebrow": "HOW MUCH IS THIS YOU?",
+      "title": "\"I find it hard to stay motivated on my own\"",
+      "options": [
+        {
+          "value": 1,
+          "label": "Not me at all"
+        },
+        {
+          "value": 2,
+          "label": "Not really"
+        },
+        {
+          "value": 3,
+          "label": "Sometimes"
+        },
+        {
+          "value": 4,
+          "label": "Quite a lot"
+        },
+        {
+          "value": 5,
+          "label": "That's so me"
+        }
+      ],
+      "stores_to": "profiles.onboarding_answers.hard_to_stay_motivated"
+    },
+    {
+      "id": "st_stopped",
+      "type": "statement",
+      "eyebrow": "HOW MUCH IS THIS YOU?",
+      "title": "\"I've started and stopped before\"",
+      "options": [
+        {
+          "value": 1,
+          "label": "Not me at all"
+        },
+        {
+          "value": 2,
+          "label": "Not really"
+        },
+        {
+          "value": 3,
+          "label": "Sometimes"
+        },
+        {
+          "value": 4,
+          "label": "Quite a lot"
+        },
+        {
+          "value": 5,
+          "label": "That's so me"
+        }
+      ],
+      "stores_to": "profiles.onboarding_answers.started_and_stopped"
+    },
+    {
+      "id": "st_busy",
+      "type": "statement",
+      "eyebrow": "HOW MUCH IS THIS YOU?",
+      "title": "\"My gym is usually busy when I can go\"",
+      "options": [
+        {
+          "value": 1,
+          "label": "Not me at all"
+        },
+        {
+          "value": 2,
+          "label": "Not really"
+        },
+        {
+          "value": 3,
+          "label": "Sometimes"
+        },
+        {
+          "value": 4,
+          "label": "Quite a lot"
+        },
+        {
+          "value": 5,
+          "label": "That's so me"
+        }
+      ],
+      "stores_to": "profiles.onboarding_answers.gym_usually_busy"
+    },
+    {
+      "id": "insight_plans",
+      "type": "insight",
+      "image_slug": "onboarding-insight-plans",
+      "title": "Plans beat willpower",
+      "body": "Deciding when and where you'll train makes it much more likely you'll actually go. You'll pick your days in a moment, and we'll remind you before each session.",
+      "extra_if": {
+        "st_stopped>=3": "And if life gets in the way, that's normal. Ascenda gives you rest weeks and an easy way back in, so a missed week never means starting over."
+      },
+      "button": "Continue"
+    },
+    {
+      "id": "machines_used",
+      "type": "photo_multi_choice",
+      "title": "Which of these have you used before?",
+      "helper": "Tap any you've tried. It's fine if it's none yet.",
+      "stores_to": "profiles.onboarding_answers.machines_used",
+      "options": [
+        {
+          "value": "dumbbells",
+          "label": "Dumbbells",
+          "image_slug": "equip-dumbbells"
+        },
+        {
+          "value": "leg-press",
+          "label": "Leg press",
+          "image_slug": "equip-leg-press"
+        },
+        {
+          "value": "lat-pulldown",
+          "label": "Lat pulldown",
+          "image_slug": "equip-lat-pulldown"
+        },
+        {
+          "value": "chest-press-machine",
+          "label": "Chest press",
+          "image_slug": "equip-chest-press"
+        },
+        {
+          "value": "cable_station",
+          "label": "Cable machine",
+          "image_slug": "equip-cables"
+        },
+        {
+          "value": "smith-machine",
+          "label": "Smith machine",
+          "image_slug": "equip-smith"
+        },
+        {
+          "value": "barbell",
+          "label": "Barbell",
+          "image_slug": "equip-barbell"
+        },
+        {
+          "value": "squat_rack",
+          "label": "Squat rack",
+          "image_slug": "equip-rack"
+        },
+        {
+          "value": "treadmill",
+          "label": "Treadmill",
+          "image_slug": "equip-treadmill"
+        },
+        {
+          "value": "none",
+          "label": "None yet",
+          "exclusive": true
+        }
+      ],
+      "note_for_dev": "Feeds the Gym unlocked baseline: these count as already tried, but don't award first-time badges for them."
+    },
+    {
+      "id": "cardio",
+      "type": "single_choice",
+      "title": "How do you feel about cardio?",
+      "stores_to": "profiles.cardio_preference",
+      "options": [
+        {
+          "value": "love",
+          "label": "Love it",
+          "icon": "heart"
+        },
+        {
+          "value": "fine",
+          "label": "It's fine",
+          "icon": "thumb"
+        },
+        {
+          "value": "avoid",
+          "label": "I'd avoid it if I could",
+          "icon": "shrug"
+        }
+      ],
+      "helper": "No wrong answer. It just tells us how much cardio to add to your week."
+    },
+    {
+      "id": "days_per_week",
+      "type": "number_select",
+      "title": "How many days a week can you train?",
+      "helper": "Pick what's realistic on a normal week. You can always do more.",
+      "min": 2,
+      "max": 5,
+      "default": 3,
+      "stores_to": "profiles.days_per_week"
+    },
+    {
+      "id": "which_days",
+      "type": "day_pills",
+      "title": "Which days work best?",
+      "helper": "Pick {days_per_week} days. We'll space them out if we can.",
+      "stores_to": "profiles.onboarding_answers.preferred_days",
+      "exact_count_from": "days_per_week",
+      "suggest_defaults": {
+        "2": [
+          "tue",
+          "sat"
+        ],
+        "3": [
+          "mon",
+          "wed",
+          "fri"
+        ],
+        "4": [
+          "mon",
+          "tue",
+          "thu",
+          "fri"
+        ],
+        "5": [
+          "mon",
+          "tue",
+          "wed",
+          "fri",
+          "sat"
+        ]
+      }
+    },
+    {
+      "id": "session_length",
+      "type": "chips",
+      "title": "How long do you have for each session?",
+      "stores_to": "profiles.session_minutes",
+      "options": [
+        {
+          "value": 30,
+          "label": "About 30 minutes"
+        },
+        {
+          "value": 45,
+          "label": "About 45 minutes"
+        },
+        {
+          "value": 60,
+          "label": "An hour or more"
+        }
+      ],
+      "default": 45
+    },
+    {
+      "id": "streak_goal",
+      "type": "cards",
+      "title": "How many weeks would you like to aim for first?",
+      "helper": "A week counts when you train at least once. It's a milestone, not a test.",
+      "stores_to": "profiles.streak_goal_weeks",
+      "options": [
+        {
+          "value": 4,
+          "label": "4 weeks",
+          "sub": "A great first goal"
+        },
+        {
+          "value": 8,
+          "label": "8 weeks",
+          "sub": "Build a real habit"
+        },
+        {
+          "value": 12,
+          "label": "12 weeks",
+          "sub": "Make it part of life"
+        }
+      ],
+      "default": 4
+    },
+    {
+      "id": "reminder_time",
+      "type": "time_picker",
+      "title": "When would you like a nudge on training days?",
+      "helper": "We'll ask for permission to send reminders after your first session.",
+      "default": "18:00",
+      "stores_to": "profiles.default_reminder_time",
+      "skip_label": "No reminders for now"
+    },
+    {
+      "id": "bodyweight",
+      "type": "number_optional",
+      "title": "Would you like to add your bodyweight?",
+      "why_we_ask": "Only used for your own strength stats, like lifting your bodyweight on the leg press. It's never used to predict anything, never shared and you can delete it any time.",
+      "unit_options": [
+        "kg",
+        "st_lb"
+      ],
+      "stores_to": "profiles.bodyweight_kg",
+      "skip_label": "Skip this",
+      "button": "Continue"
+    },
+    {
+      "id": "building_plan",
+      "type": "building",
+      "title": "Building your plan, {name}",
+      "duration_seconds": 3,
+      "steps": [
+        "Matching your goals",
+        "Choosing your routine",
+        "Planning your week",
+        "Setting your starting point"
+      ],
+      "note_for_dev": "Run the real recommendation while this shows. Each step ticks as that part completes; minimum 3 seconds total."
+    },
+    {
+      "id": "plan_reveal",
+      "type": "plan_reveal",
+      "eyebrow": "YOUR PLAN",
+      "title": "{routine_name}",
+      "subtitle": "{routine_subtitle}",
+      "why_title": "Why this plan suits you",
+      "why_lines_source": "why_lines (max 3, picked by rules below)",
+      "week_title": "Your week",
+      "week_template": "{days_per_week} sessions a week: {preferred_days_text}",
+      "timeline_title": "What to look forward to",
+      "timeline_source": "routine.plan_reveal_milestones plus strength_estimate",
+      "estimate_label": "Estimates based on your plan. Everyone progresses differently.",
+      "alternatives_title": "Other plans that suit you",
+      "alternatives_count": 2,
+      "button": "Continue"
+    },
+    {
+      "id": "safety",
+      "type": "disclaimer",
+      "title": "Train safely",
+      "source": "AGENTS.md Safety disclaimer (current version)",
+      "checkbox": "I've read this and I'm 18 or over",
+      "button": "Continue"
+    },
+    {
+      "id": "paywall",
+      "type": "paywall",
+      "source": "DESIGN.md 9.2 and content/microcopy (paywall)"
+    }
+  ],
+  "why_lines": [
+    {
+      "if": "gym_comfort <= 2",
+      "text": "It starts in one quiet spot, so you can settle in at your own pace."
+    },
+    {
+      "if": "cardio_preference == 'avoid' and not routine.cardio_balanced",
+      "text": "Cardio is kept to one short, skippable finisher a week."
+    },
+    {
+      "if": "cardio_preference == 'love'",
+      "text": "Your week includes cardio days alongside your lifting."
+    },
+    {
+      "if": "st_not_sure >= 4",
+      "text": "Every session tells you exactly what to do, with a guide for every exercise."
+    },
+    {
+      "if": "st_busy >= 4",
+      "text": "Every exercise has quick swaps for when the gym is busy."
+    },
+    {
+      "if": "days_per_week == routine.days_per_week",
+      "text": "It fits your {days_per_week} days a week."
+    },
+    {
+      "if": "session_minutes >= routine.session_minutes",
+      "text": "Sessions take about {routine.session_minutes} minutes."
+    },
+    {
+      "if": "main_goal == routine.goal or main_goal in routine.secondary_goals",
+      "text": "It's built around your main goal: {main_goal_label}."
+    },
+    {
+      "if": "st_stopped >= 4",
+      "text": "It has a clear finish line, so you always know what you're working towards."
+    },
+    {
+      "if": "st_motivation >= 4",
+      "text": "Checkpoints and wins after every session help you see your progress."
+    },
+    {
+      "if": "gym_experience == 'regularly'",
+      "text": "It's progressive enough to keep you getting stronger."
+    }
+  ],
+  "recommendation": {
+    "_how": "Evaluate rules top to bottom; the first match is the recommendation. Then pick 2 alternatives: the next two matching rules that give different routines, falling back to the alternatives listed on the chosen rule.",
+    "rules": [
+      {
+        "if": "main_goal == 'back_to_training' or (gym_experience == 'on_and_off' and gym_comfort <= 2)",
+        "recommend": "welcome-back-4-week-restart",
+        "alternatives": [
+          "strong-foundations-6-weeks",
+          "the-two-day-start"
+        ]
+      },
+      {
+        "if": "main_goal == 'strong_for_life'",
+        "recommend": "strong-for-life",
+        "alternatives": [
+          "the-two-day-start",
+          "strong-foundations-6-weeks"
+        ]
+      },
+      {
+        "if": "gym_experience in ['not_yet','just_started'] and days_per_week == 2",
+        "recommend": "the-two-day-start",
+        "alternatives": [
+          "strong-foundations-6-weeks",
+          "machines-made-easy"
+        ]
+      },
+      {
+        "if": "gym_experience in ['not_yet','just_started'] and main_goal == 'glutes_and_legs' and gym_comfort >= 3",
+        "recommend": "30-day-glute-challenge",
+        "alternatives": [
+          "strong-foundations-6-weeks",
+          "machines-made-easy"
+        ]
+      },
+      {
+        "if": "gym_experience in ['not_yet','just_started'] and main_goal == 'upper_body_strength' and gym_comfort >= 3",
+        "recommend": "upper-body-strong-in-6-weeks",
+        "alternatives": [
+          "strong-foundations-6-weeks",
+          "machines-made-easy"
+        ]
+      },
+      {
+        "if": "gym_experience in ['not_yet','just_started']",
+        "recommend": "strong-foundations-6-weeks",
+        "alternatives": [
+          "machines-made-easy",
+          "the-two-day-start"
+        ]
+      },
+      {
+        "if": "st_busy >= 4 and days_per_week == 3",
+        "recommend": "busy-gym-no-problem",
+        "alternatives": [
+          "quick-ascent",
+          "the-climb-in-8-weeks"
+        ]
+      },
+      {
+        "if": "session_minutes == 30 and days_per_week >= 3",
+        "recommend": "quick-ascent",
+        "alternatives": [
+          "busy-gym-no-problem",
+          "the-climb-in-8-weeks"
+        ]
+      },
+      {
+        "if": "main_goal == 'fitness_stamina' and cardio_preference != 'avoid' and gym_experience in ['on_and_off','regularly'] and days_per_week == 2",
+        "recommend": "strength-and-stamina",
+        "alternatives": [
+          "strong-and-fit-in-8-weeks",
+          "the-two-day-start"
+        ]
+      },
+      {
+        "if": "main_goal == 'fitness_stamina' and cardio_preference != 'avoid' and days_per_week >= 3",
+        "recommend": "strong-and-fit-in-8-weeks",
+        "alternatives": [
+          "the-climb-in-8-weeks",
+          "strength-and-stamina"
+        ]
+      },
+      {
+        "if": "days_per_week == 2",
+        "recommend": "the-two-day-start",
+        "alternatives": [
+          "strong-for-life",
+          "quick-ascent"
+        ]
+      },
+      {
+        "if": "main_goal == 'glutes_and_legs' and days_per_week >= 4 and gym_experience == 'regularly'",
+        "recommend": "glutes-and-legs-in-8-weeks",
+        "alternatives": [
+          "30-day-glute-challenge",
+          "higher-ground"
+        ]
+      },
+      {
+        "if": "main_goal == 'glutes_and_legs'",
+        "recommend": "30-day-glute-challenge",
+        "alternatives": [
+          "glutes-and-legs-in-8-weeks",
+          "the-climb-in-8-weeks"
+        ]
+      },
+      {
+        "if": "main_goal in ['upper_body_strength','better_posture']",
+        "recommend": "upper-body-strong-in-6-weeks",
+        "alternatives": [
+          "the-climb-in-8-weeks",
+          "higher-ground"
+        ]
+      },
+      {
+        "if": "gym_experience == 'regularly' and days_per_week >= 4 and session_minutes >= 45",
+        "recommend": "higher-ground",
+        "alternatives": [
+          "glutes-and-legs-in-8-weeks",
+          "the-climb-in-8-weeks"
+        ]
+      },
+      {
+        "if": "true",
+        "recommend": "the-climb-in-8-weeks",
+        "alternatives": [
+          "strong-foundations-6-weeks",
+          "busy-gym-no-problem"
+        ]
+      }
+    ],
+    "never_auto_recommend": [
+      "summit"
+    ],
+    "_notes": [
+      "Summit is only shown in alternatives when gym_experience == 'regularly' and gym_comfort == 5, or when she browses.",
+      "If a recommended routine needs more days than she picked, it's still allowed only when the difference is 1 and the Planner can fit it; otherwise skip that rule."
+    ]
+  },
+  "strength_estimate": {
+    "_purpose": "Real, conservative calculation for the plan reveal timeline. Never hard-coded, never shown as a promise.",
+    "lift": "the first checkpoint lift of the recommended routine",
+    "exposures": "number of sessions in the routine that include this lift (count across all weeks, excluding lighter weeks)",
+    "formula": "estimated_increase_kg = load_increment_kg x floor(exposures / 3)",
+    "assumption": "She adds weight roughly every third time she does the lift, which is conservative for beginners using double progression.",
+    "display": "About +{estimated_increase_kg} kg on your {lift_name} by week {routine.length_weeks}",
+    "hide_if": "estimated_increase_kg < 2 or the lift is bodyweight or machine-based without a kg increment",
+    "first_estimate": "On insight_goals, use the default routine for her experience level (strong-foundations-6-weeks for beginners, the-climb-in-8-weeks otherwise) and its first milestone. After building_plan, recalculate with the recommended routine. The result can move earlier or later."
+  }
+}
