@@ -1,4 +1,6 @@
 import { formatTrainingHours, sessionDurationSeconds, type FinishedSessionMeta } from '@/lib/activityStats';
+import { resolveExerciseSlug } from '@/lib/contentGuides';
+import { contentRoutine } from '@/lib/contentRoutines';
 import { formatKg, usesWeight } from '@/lib/programmes';
 import { getPersonalBests, type ProgressSet } from '@/lib/progress';
 import { fetchEnrolment, fetchRoutine, type Routine, type RoutineEnrolment } from '@/lib/routines';
@@ -30,8 +32,22 @@ type WeightedSet = {
   date: string;
 };
 
-/** Up to 3 weighted lifts she sees most often in the plan. */
-export function pickKeyLifts(routine: Routine, limit = 3): { id: string; name: string }[] {
+function findExerciseInRoutine(routine: Routine, slug: string): { id: string; name: string } | null {
+  const wanted = resolveExerciseSlug(slug);
+  for (const week of routine.weeks) {
+    for (const day of week.days) {
+      for (const slot of day.exercises) {
+        const id = slot.exercise.id;
+        if (id === slug || id === wanted || resolveExerciseSlug(id) === wanted) {
+          return { id, name: slot.exercise.name };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function liftsByFrequency(routine: Routine, limit: number): { id: string; name: string }[] {
   const counts = new Map<string, { name: string; count: number; first: number }>();
   let index = 0;
   for (const week of routine.weeks) {
@@ -53,6 +69,19 @@ export function pickKeyLifts(routine: Routine, limit = 3): { id: string; name: s
     .sort((a, b) => b[1].count - a[1].count || a[1].first - b[1].first)
     .slice(0, limit)
     .map(([id, value]) => ({ id, name: value.name }));
+}
+
+/** Checkpoint lifts from /content, then the weighted lifts she sees most often. */
+export function pickKeyLifts(routine: Routine, limit = 3): { id: string; name: string }[] {
+  const overlay = contentRoutine(routine.slug) ?? contentRoutine(routine.id);
+  const fromContent: { id: string; name: string }[] = [];
+  for (const slug of overlay?.checkpoint_lifts ?? []) {
+    const match = findExerciseInRoutine(routine, slug);
+    if (match && !fromContent.some((item) => item.id === match.id)) fromContent.push(match);
+    if (fromContent.length >= limit) return fromContent;
+  }
+  if (fromContent.length > 0) return fromContent;
+  return liftsByFrequency(routine, limit);
 }
 
 export function formatLiftCompare(lift: LiftCompare): string {

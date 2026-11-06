@@ -73,6 +73,7 @@ export type ContentRoutineOverlay = {
   progression_explained: string;
   weekly_structure: string | null;
   phases: ContentPhase[];
+  next_routine_suggestions: string[];
 };
 
 type Json = Record<string, unknown>;
@@ -193,6 +194,9 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
     progression_explained: text(routine.progression_explained),
     weekly_structure: text(fine.text) || text(asRecord(summary.avoid).text) || null,
     phases,
+    next_routine_suggestions: asArray(routine.next_routine_suggestions)
+      .map((value) => text(value))
+      .filter(Boolean),
   };
 }
 

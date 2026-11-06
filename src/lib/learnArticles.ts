@@ -244,7 +244,7 @@ This guide is general. It is not a personal programme review.`,
 
 Adult activity guidance includes rest and a mix of movement, not a session every calendar day. If your plan has three training days, the other four can be walks, stretches or nothing much.
 
-Sleep, food and a quieter evening help more than an extra set you do not recover from. If you feel run down, swap to a stretch or take the day. A planned rest week, when you have one banked, keeps the habit without the load.
+Sleep, food and a quieter evening help more than an extra set you do not recover from. If you feel run down, swap to a stretch or take the day.
 
 You have not lost the week by resting. You have used the plan as written.`,
   }),

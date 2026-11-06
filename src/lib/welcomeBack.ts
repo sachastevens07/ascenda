@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { FinishedSessionMeta, StreakWeekStatus } from '@/lib/activityStats';
+import type { FinishedSessionMeta } from '@/lib/activityStats';
 import { track, trackOnce } from '@/lib/analytics';
 import { contentRoutine } from '@/lib/contentRoutines';
 import { fillCopy, welcomeBackCopy, welcomeBackFreshStartCopy } from '@/lib/copy';
@@ -135,7 +135,6 @@ export async function resolveWelcomeBackOffer(input: {
   lastDayId: string | null;
   nextDay: RoutineDay | null;
   catalogue: RoutineSummary[];
-  lastWeekStatus?: StreakWeekStatus | null;
   displayName?: string | null;
   now?: Date;
 }): Promise<WelcomeBackOffer | null> {
@@ -147,7 +146,6 @@ export async function resolveWelcomeBackOffer(input: {
   if (!preview) {
     if (input.sessions.length === 0) return null;
     if (weeksAway < 1) return null;
-    if (input.lastWeekStatus === 'rest') return null;
     if (await dismissedThisWeek(now)) return null;
   }
 

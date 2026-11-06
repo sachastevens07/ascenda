@@ -14,12 +14,9 @@ export const STREAK_STRETCH_MIN_SECONDS = 10 * 60;
 export const STREAK_GOALS = [4, 8, 12] as const;
 export type StreakGoal = (typeof STREAK_GOALS)[number];
 export const DEFAULT_STREAK_GOAL: StreakGoal = 8;
-/** One rest week is earned every this many weeks with a session. */
-export const REST_EARN_EVERY = 4;
-export const REST_BANK_CAP = 2;
 export const RECENT_STREAK_WEEKS = 8;
 
-export type StreakWeekStatus = 'counted' | 'gold' | 'rest' | 'repaired' | 'missed' | 'pending';
+export type StreakWeekStatus = 'counted' | 'gold' | 'repaired' | 'missed' | 'pending';
 
 export type StreakWeek = {
   monday: string;
@@ -47,15 +44,13 @@ export type ActivityTotals = {
 };
 
 export type WeeklyStreak = {
-  /** Consecutive weeks that keep the run alive (counted, gold, rest or repaired). */
+  /** Consecutive weeks that keep the run alive (counted, gold or repaired). */
   current: number;
   /** Longest run, from the same history as `current`. */
   best: number;
   /** Lifetime weeks with at least one qualifying session. Never resets. */
   weeksTrained: number;
   goldWeeks: number;
-  restWeeksBanked: number;
-  /** Weeks with a session, used to earn rest weeks. */
   sessionWeeks: number;
   goal: StreakGoal;
   /** True when this week already has at least one qualifying session. */
@@ -206,12 +201,8 @@ function addWeeks(date: Date, weeks: number): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + weeks * 7);
 }
 
-function restSet(restWeekStarts: Iterable<string> | undefined): Set<string> {
-  return restWeekStarts instanceof Set ? restWeekStarts : new Set(restWeekStarts ?? []);
-}
-
 function statusForWeek(
-  week: { monday: string; done: number; target: number; isRest: boolean },
+  week: { monday: string; done: number; target: number },
   next: { done: number; target: number } | undefined,
   thisMondayIso: string,
   firstMondayIso: string | null
@@ -219,7 +210,6 @@ function statusForWeek(
   if (week.done > 0) {
     return week.target > 0 && week.done >= week.target ? 'gold' : 'counted';
   }
-  if (week.isRest) return 'rest';
   if (week.monday >= thisMondayIso) return 'pending';
   if (firstMondayIso && week.monday < firstMondayIso) return 'pending';
   const extraNeeded = repairSessionsNeeded(next?.target ?? 1);
@@ -228,7 +218,7 @@ function statusForWeek(
 }
 
 function keepsRunAlive(status: StreakWeekStatus): boolean {
-  return status === 'counted' || status === 'gold' || status === 'rest' || status === 'repaired';
+  return status === 'counted' || status === 'gold' || status === 'repaired';
 }
 
 function runHasASession(status: StreakWeekStatus): boolean {
@@ -270,12 +260,10 @@ export function getWeeklyStreak(
   sessions: FinishedSessionMeta[],
   weeklyTarget: number,
   goal: StreakGoal,
-  restWeekStarts: Iterable<string> = [],
   now = new Date()
 ): WeeklyStreak {
   const thisMonday = startOfWeekMonday(now);
   const thisMondayIso = toIso(thisMonday);
-  const restWeeks = restSet(restWeekStarts);
   const target = normalizeWeeklyTarget(weeklyTarget);
   const counted = sessions.filter(sessionCountsTowardStreak);
   const firstDate = counted[0]?.date ?? null;
@@ -291,7 +279,7 @@ export function getWeeklyStreak(
   const historyStart = firstMondayIso
     ? startOfWeekMonday(parseDate(firstMondayIso))
     : thisMonday;
-  const raw: { monday: string; done: number; target: number; isRest: boolean }[] = [];
+  const raw: { monday: string; done: number; target: number }[] = [];
   for (let cursor = historyStart; cursor.getTime() <= thisMonday.getTime(); cursor = addWeeks(cursor, 1)) {
     const monday = toIso(cursor);
     const done = doneByWeek.get(monday) ?? 0;
@@ -299,7 +287,6 @@ export function getWeeklyStreak(
       monday,
       done,
       target,
-      isRest: restWeeks.has(monday) && done === 0,
     });
   }
 
@@ -323,7 +310,6 @@ export function getWeeklyStreak(
       monday,
       done,
       target,
-      isRest: restWeeks.has(monday) && done === 0,
     };
     recent.push({
       monday,
@@ -338,18 +324,12 @@ export function getWeeklyStreak(
   const doneThisWeek = thisWeek?.done ?? 0;
   const thisWeekStatus = thisWeek?.status ?? 'pending';
   const sessionWeeks = history.filter((week) => week.done > 0).length;
-  const restUsed = [...restWeeks].filter((monday) => (doneByWeek.get(monday) ?? 0) === 0).length;
-  const restWeeksBanked = Math.min(
-    REST_BANK_CAP,
-    Math.max(0, Math.floor(sessionWeeks / REST_EARN_EVERY) - restUsed)
-  );
 
   return {
     current: countCurrentRun(history, thisMondayIso),
     best: countBestRun(history, thisMondayIso),
     weeksTrained: sessionWeeks,
     goldWeeks: history.filter((week) => week.status === 'gold').length,
-    restWeeksBanked,
     sessionWeeks,
     goal,
     hitThisWeek: doneThisWeek > 0,

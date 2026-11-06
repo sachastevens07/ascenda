@@ -41,8 +41,8 @@ import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine, coverSources } from '@/lib/images';
 import {
   fetchHandOffPreview,
+  handOffCardCopy,
   isInHandoffWindow,
-  previewCopy,
   resolveNextRoutineOffer,
   type NextRoutineOffer,
 } from '@/lib/handOff';
@@ -238,7 +238,6 @@ export default function RoutineDetailScreen() {
               answers,
               mode: 'preview',
             }).catch(() => null);
-            if (offer) offer.why = `${previewCopy(active)} ${offer.why}`.trim();
             if (isCurrent) setHandOff(offer);
           } else if (isCurrent) {
             setHandOff(null);
@@ -398,6 +397,7 @@ export default function RoutineDetailScreen() {
   }
 
   const isCurrent = enrolment?.routine_id === routine.id;
+  const nextPlan = handOff ? handOffCardCopy(handOff) : null;
   const cover = coverSources(coverForRoutine(routine))[0] ?? null;
   const busy = isStarting || isDuplicating || isEnding;
   const showMore = routine.description.trim().length > 90;
@@ -541,12 +541,12 @@ export default function RoutineDetailScreen() {
             </View>
           ) : null}
 
-          {isCurrent && handOff ? (
+          {isCurrent && handOff && nextPlan ? (
             <WhatsNextCard
-              title={handOff.routine.name}
-              body={handOff.why}
+              title={nextPlan.title}
+              body={nextPlan.body}
               image={coverSources(coverForRoutine(handOff.routine))[0] ?? null}
-              primaryLabel="See this routine"
+              primaryLabel={nextPlan.primaryLabel}
               onPrimary={() =>
                 router.push({ pathname: '/routines/[id]', params: { id: handOff.routine.id } } as Href)
               }

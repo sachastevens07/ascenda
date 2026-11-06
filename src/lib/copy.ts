@@ -152,15 +152,7 @@ export const streakCopy = {
   goal_reached_body: streak.goal_reached_body,
   goal_reached_cta: streak.goal_reached_cta,
   goal_reached_later: streak.goal_reached_later,
-  rest_week_banked: streak.rest_week_banked,
-  rest_week_earned: streak.rest_week_earned,
   rest_week_prompt_title: streak.rest_week_prompt_title,
-  rest_week_prompt_body: streak.rest_week_prompt_body,
-  rest_week_prompt_yes: streak.rest_week_prompt_yes,
-  rest_week_prompt_no: streak.rest_week_prompt_no,
-  rest_week_used: streak.rest_week_used,
-  rest_week_schedule: streak.rest_week_schedule,
-  rest_week_schedule_body: streak.rest_week_schedule_body,
   repair_offer: streak.repair_offer,
   repair_progress: streak.repair_progress,
   repaired: streak.repaired,
@@ -198,9 +190,12 @@ export const nextSessionMenuCopy = home.next_session_menu;
 
 const routineActions = microcopy.strings.routine_actions;
 
-/** Switch and End routine confirmations. Bundled from content/microcopy. */
+/** Switch, End and H4 next-routine copy. Bundled from content/microcopy. */
 export const routineActionsCopy = {
   start: routineActions.start,
+  start_monday: routineActions.start_monday,
+  start_today: routineActions.start_today,
+  start_sheet_title: routineActions.start_sheet_title,
   switch_title: routineActions.switch_title,
   switch_body: routineActions.switch_body,
   switch_cta: routineActions.switch_cta,
@@ -208,4 +203,13 @@ export const routineActionsCopy = {
   end_body: routineActions.end_body,
   end_cta: routineActions.end_cta,
   cancel: routineActions.cancel,
+  whats_next_eyebrow: routineActions.whats_next_eyebrow,
+  whats_next_title: routineActions.whats_next_title,
+  whats_next_body: routineActions.whats_next_body,
+  whats_next_cta: routineActions.whats_next_cta,
+  complete_title: routineActions.complete_title,
+  complete_body: routineActions.complete_body,
+  complete_checkpoint: routineActions.complete_checkpoint,
+  complete_next_cta: routineActions.complete_next_cta,
+  complete_browse: routineActions.complete_browse,
 } as const;

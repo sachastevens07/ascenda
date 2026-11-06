@@ -736,6 +736,7 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
           ? false
           : true,
       tags: (displayTags.length > 0 ? displayTags : tags).slice(0, 2),
+      nextSuggestions: asArray(body.next_routine_suggestions).map((item) => text(item)).filter(Boolean),
     };
   });
   const stretches = asArray(readJson('stretches/stretch-routines.json').stretch_routines).map((body) => ({
@@ -757,6 +758,13 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   const content = [...strength, ...stretches];
   const unmappedGoals = strength.filter((item) => !item.mappedGoal);
   const badDifficulty = content.filter((item) => !item.difficulty);
+  const knownSlugs = new Set(strength.map((item) => item.slug));
+  const missingNext = strength.filter((item) => item.nextSuggestions.length === 0);
+  const unknownNext = strength.flatMap((item) =>
+    item.nextSuggestions
+      .filter((slug) => !knownSlugs.has(slug))
+      .map((slug) => `${item.slug} → ${slug}`)
+  );
 
   const typeProbe = await probe(client, 'routines', 'type');
   const activeProbe = await probe(client, 'routines', 'is_active');
@@ -814,6 +822,15 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   }
   if (badDifficulty.length > 0) {
     line(`  Unmapped difficulty (row upsert skipped): ${badDifficulty.map((item) => item.slug).join(', ')}`);
+  }
+  line(
+    `  H4 next_routine_suggestions: ${strength.length - missingNext.length} of ${strength.length} strength routines (bundled; no database column)`
+  );
+  if (missingNext.length > 0) {
+    line(`  Missing next_routine_suggestions: ${missingNext.map((item) => item.slug).join(', ')}`);
+  }
+  if (unknownNext.length > 0) {
+    line(`  Unknown next_routine_suggestions: ${unknownNext.join(', ')}`);
   }
   line(`  is_active column: ${hasActive ? 'present' : 'missing (paste supabase/routines_is_active.sql)'}`);
   line(`  type column: ${hasType ? 'present' : `not confirmed (${typeProbe ?? 'unknown'})`}`);

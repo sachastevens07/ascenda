@@ -49,11 +49,9 @@ import {
 } from '@/lib/activityStats';
 import {
   fetchHideStreak,
-  fetchRestWeekStarts,
   maybeCelebrateStreakGoal,
   maybePromptMissedWeek,
   maybeTrackStreakRepair,
-  syncRestWeeksBanked,
 } from '@/lib/streak';
 import {
   challengeTimingCopy,
@@ -96,8 +94,8 @@ import {
 } from '@/lib/routines';
 import {
   fetchHandOffPreview,
+  handOffCardCopy,
   isInHandoffWindow,
-  previewCopy,
   resolveNextRoutineOffer,
   startNextRoutineOnMonday,
   type NextRoutineOffer,
@@ -233,7 +231,6 @@ export default function HomeScreen() {
             streakGoal,
             hideStreak,
             hideQuote,
-            restWeeks,
             completedEnrolment,
             handOffPreview,
             quotes,
@@ -249,7 +246,6 @@ export default function HomeScreen() {
             fetchStreakGoal().catch(() => DEFAULT_STREAK_GOAL),
             fetchHideStreak().catch(() => false),
             fetchHideQuote().catch(() => false),
-            fetchRestWeekStarts().catch(() => new Set<string>()),
             fetchLatestCompletedEnrolment().catch(() => null),
             fetchHandOffPreview().catch(() => false),
             fetchDailyQuotes().catch(() => DAILY_QUOTES),
@@ -275,10 +271,8 @@ export default function HomeScreen() {
           const streak = getWeeklyStreak(
             sessions,
             normalizeWeeklyTarget(answers?.days_per_week),
-            streakGoal,
-            restWeeks
+            streakGoal
           );
-          void syncRestWeeksBanked(streak.restWeeksBanked);
           const welcomeBack = await resolveWelcomeBackOffer({
             sessions,
             enrolment,
@@ -286,7 +280,6 @@ export default function HomeScreen() {
             lastDayId,
             nextDay: next?.day ?? (routine ? firstDayOfRoutine(routine) : null),
             catalogue: routines,
-            lastWeekStatus: streak.lastWeek?.status ?? null,
             displayName: profile?.display_name,
           }).catch(() => null);
           const inWindow = enrolment ? isInHandoffWindow(enrolment) : Boolean(completedEnrolment);
@@ -299,9 +292,6 @@ export default function HomeScreen() {
                 mode: enrolment ? 'preview' : 'start',
               }).catch(() => null)
             : null;
-          if (handOff && enrolment) {
-            handOff.why = `${previewCopy(enrolment)} ${handOff.why}`.trim();
-          }
           const learnArticles = await fetchLearnArticles().catch(() => []);
           const learn = recommendArticles(learnArticles, answers, { limit: 2 });
           if (!isCurrent) return;
@@ -328,7 +318,7 @@ export default function HomeScreen() {
           setLoadState('ready');
           if (!hideStreak) void maybeCelebrateStreakGoal(streak);
           void maybeTrackStreakRepair(streak);
-          void maybePromptMissedWeek(streak, () => setAttempt((count) => count + 1));
+          void maybePromptMissedWeek(streak);
           void maybeAskSessionReminders();
           void syncPlannerReminders();
         } catch {
@@ -583,6 +573,7 @@ export default function HomeScreen() {
   const nextThumb =
     enrolment && next && !inProgress ? sessionThumbnail(next.day, enrolment.routine, usedPhotos) : null;
   const handOffImage = handOff ? takeCoverSource(coverForRoutine(handOff.routine), usedPhotos) : null;
+  const handOffCard = handOff ? handOffCardCopy(handOff) : null;
   const challengeCover = challenge ? takeCoverSource(coverForChallenge(challenge), usedPhotos) : null;
 
   return (
@@ -754,15 +745,16 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {handOff && !inProgress ? (
+        {handOff && handOffCard && !inProgress ? (
           <WhatsNextCard
-            title={handOff.routine.name}
-            body={handOff.why}
+            title={handOffCard.title}
+            body={handOffCard.body}
             image={handOffImage}
             starting={isStarting && handOff.mode === 'start'}
-            primaryLabel={handOff.mode === 'start' ? `Start on ${handOff.mondayLabel}` : 'See this routine'}
+            primaryLabel={handOffCard.primaryLabel}
             onPrimary={() => void startNextFromHandOff()}
             onSeeRoutine={handOff.mode === 'start' ? () => openRoutine(handOff.routine) : undefined}
+            seeRoutineLabel={handOffCard.secondaryLabel}
             style={shadow}
           />
         ) : null}

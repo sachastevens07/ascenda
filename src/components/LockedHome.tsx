@@ -29,7 +29,6 @@ import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { fetchActiveEnrolment, fetchRoutines } from '@/lib/routines';
-import { fetchRestWeekStarts } from '@/lib/streak';
 import { fetchProPackages, getFreeTrialDays } from '@/lib/subscription';
 
 const FRIEND_TRIAL_DAYS = 14;
@@ -98,13 +97,12 @@ export function LockedHome() {
             })
           : emptyOnboardingDraft();
         try {
-          const [enrolment, routines, sessions, sets, streakGoal, restWeeks, packages] = await Promise.all([
+          const [enrolment, routines, sessions, sets, streakGoal, packages] = await Promise.all([
             fetchActiveEnrolment().catch(() => null),
             fetchRoutines().catch(() => []),
             fetchFinishedSessionMeta().catch(() => []),
             fetchProgressSets().catch(() => []),
             fetchStreakGoal().catch(() => DEFAULT_STREAK_GOAL),
-            fetchRestWeekStarts().catch(() => new Set<string>()),
             fetchProPackages().catch(() => []),
           ]);
           if (!isCurrent) return;
@@ -130,8 +128,7 @@ export function LockedHome() {
           const streak = getWeeklyStreak(
             sessions,
             normalizeWeeklyTarget(answers?.days_per_week),
-            streakGoal,
-            restWeeks
+            streakGoal
           );
           setStats({
             sessions: sessions.length,

@@ -2,6 +2,7 @@ import { Image, View, type ImageSourcePropType, type StyleProp, type ViewStyle }
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
+import { routineActionsCopy } from '@/lib/copy';
 
 import { PrimaryButton, TextButton } from './Buttons';
 
@@ -13,6 +14,7 @@ export function WhatsNextCard({
   primaryLabel,
   onPrimary,
   onSeeRoutine,
+  seeRoutineLabel = routineActionsCopy.whats_next_cta,
   style,
 }: {
   title: string;
@@ -22,6 +24,7 @@ export function WhatsNextCard({
   primaryLabel: string;
   onPrimary: () => void;
   onSeeRoutine?: () => void;
+  seeRoutineLabel?: string;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius, spacing } = useTheme();
@@ -41,7 +44,7 @@ export function WhatsNextCard({
       <View style={{ padding: spacing.lg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <AppText variant="eyebrow" style={{ color: colours.accent }}>
-            What’s next
+            {routineActionsCopy.whats_next_eyebrow}
           </AppText>
         </View>
         <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.sm }}>
@@ -58,7 +61,7 @@ export function WhatsNextCard({
           style={{ marginTop: spacing.md }}
         />
         {onSeeRoutine ? (
-          <TextButton label="See this routine" onPress={onSeeRoutine} style={{ alignSelf: 'flex-start' }} />
+          <TextButton label={seeRoutineLabel} onPress={onSeeRoutine} style={{ alignSelf: 'flex-start' }} />
         ) : null}
       </View>
     </View>

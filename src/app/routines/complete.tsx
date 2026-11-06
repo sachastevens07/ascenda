@@ -8,12 +8,13 @@ import { AppText, Chip, PrimaryButton, TextButton, WhatsNextCard } from '@/compo
 import { useTheme } from '@/constants/theme';
 import { fetchFinishedSessionMeta, formatTrainingHours } from '@/lib/activityStats';
 import {
-  describeReview,
   fetchEnrolmentReview,
   formatLiftCompare,
   type EnrolmentReview,
 } from '@/lib/checkpoints';
+import { fillCopy, routineActionsCopy } from '@/lib/copy';
 import {
+  handOffCardCopy,
   resolveNextRoutineOffer,
   startNextRoutineOnMonday,
   type NextRoutineOffer,
@@ -75,13 +76,21 @@ export default function RoutineCompleteScreen() {
   async function shareCard() {
     if (!review) return;
     const lifts = review.lifts.map(formatLiftCompare).join('\n');
-    const message = [`I finished ${review.enrolment.routine.name}.`, describeReview(review), lifts]
+    const message = [
+      fillCopy(routineActionsCopy.complete_title, { routine_name: review.enrolment.routine.name }),
+      fillCopy(routineActionsCopy.complete_body, {
+        sessions: review.sessions,
+        time: formatTrainingHours(review.durationSeconds),
+        pbs: review.personalBests,
+      }),
+      lifts,
+    ]
       .filter(Boolean)
       .join('\n');
     try {
       await Share.share({ message, title: review.enrolment.routine.name });
     } catch {
-      showDialog('Couldn’t share', 'You can still screenshot the card.');
+      showDialog('Could not share', 'You can still screenshot the card.');
     }
   }
 
@@ -92,7 +101,7 @@ export default function RoutineCompleteScreen() {
       await startNextRoutineOnMonday(next.routine);
       router.replace('/');
     } catch (error) {
-      showDialog('Couldn’t start that plan', describeRoutineError(error));
+      showDialog('Could not start that plan', describeRoutineError(error));
     } finally {
       setStarting(false);
     }
@@ -105,7 +114,7 @@ export default function RoutineCompleteScreen() {
           <ActivityIndicator color={colours.brand} />
         ) : (
           <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
-            We couldn’t load that review.
+            We could not load that review.
           </AppText>
         )}
       </View>
@@ -113,14 +122,22 @@ export default function RoutineCompleteScreen() {
   }
 
   const cover = next ? coverSources(coverForRoutine(next.routine))[0] ?? null : null;
+  const card = next ? handOffCardCopy(next) : null;
 
   return (
     <ScrollView
       style={[styles.scroll, { backgroundColor: colours.bg }]}
       contentContainerStyle={[styles.container, { paddingBottom: insets.bottom + 32, gap: spacing.md }]}>
-      <AppText variant="eyebrow" style={{ color: colours.accent }}>Routine complete</AppText>
-      <AppText variant="display" style={{ color: colours.ink }}>{review.enrolment.routine.name}</AppText>
-      <AppText variant="body" style={{ color: colours.inkMuted }}>That’s a full plan. Your history stays.</AppText>
+      <AppText variant="display" style={{ color: colours.ink }}>
+        {fillCopy(routineActionsCopy.complete_title, { routine_name: review.enrolment.routine.name })}
+      </AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted }}>
+        {fillCopy(routineActionsCopy.complete_body, {
+          sessions: review.sessions,
+          time: formatTrainingHours(review.durationSeconds),
+          pbs: review.personalBests,
+        })}
+      </AppText>
       <Chip label="Routine completed" selected />
 
       <View
@@ -137,6 +154,11 @@ export default function RoutineCompleteScreen() {
         <AppText variant="title3" style={{ color: colours.accent }}>
           {review.personalBests} {review.personalBests === 1 ? 'personal best' : 'personal bests'}
         </AppText>
+        {review.lifts.length > 0 ? (
+          <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: spacing.md }}>
+            {routineActionsCopy.complete_checkpoint}
+          </AppText>
+        ) : null}
         {review.lifts.slice(0, 3).map((lift) => (
           <AppText key={lift.exerciseId} variant="body" style={{ color: colours.bg, marginTop: spacing.xs }}>
             {formatLiftCompare(lift)}
@@ -149,23 +171,24 @@ export default function RoutineCompleteScreen() {
 
       <PrimaryButton label="Share this card" onPress={() => void shareCard()} />
 
-      {next ? (
+      {next && card ? (
         <WhatsNextCard
-          title={next.routine.name}
-          body={`${next.why} Starts ${next.mondayLabel}.`}
+          title={card.title}
+          body={card.body}
           image={cover}
           starting={starting}
-          primaryLabel={`Start on ${next.mondayLabel}`}
+          primaryLabel={card.primaryLabel}
           onPrimary={() => void startNext()}
           onSeeRoutine={() =>
             router.replace({ pathname: '/routines/[id]', params: { id: next.routine.id } } as Href)
           }
+          seeRoutineLabel={card.secondaryLabel}
           style={shadow}
         />
       ) : null}
 
       <TextButton
-        label="Back to Programmes"
+        label={routineActionsCopy.complete_browse}
         onPress={() => router.replace('/programmes' as Href)}
         style={{ alignSelf: 'center' }}
       />

@@ -24,6 +24,7 @@ import {
   HighlightTile,
   MenuRow,
   OverflowMenu,
+  PrimaryButton,
   ProgressBar,
   SecondaryButton,
   SectionHeader,
@@ -59,9 +60,9 @@ import {
   type FinishedSessionMeta,
   type WeeklyStreak,
 } from '@/lib/activityStats';
-import { fillCopy, streakCopy } from '@/lib/copy';
+import { fillCopy, routineActionsCopy, streakCopy } from '@/lib/copy';
 import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
-import { fetchHideStreak, fetchRestWeekStarts, maybeTrackStreakRepair, syncRestWeeksBanked } from '@/lib/streak';
+import { fetchHideStreak, maybeTrackStreakRepair } from '@/lib/streak';
 import { formatKg } from '@/lib/programmes';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
@@ -86,22 +87,27 @@ import {
   type ProgressPhoto,
 } from '@/lib/progressPhotos';
 import {
-  describeReview,
   fetchEnrolmentReview,
   formatLiftCompare,
   type EnrolmentReview,
 } from '@/lib/checkpoints';
-import { nextRoutineOnPath } from '@/lib/paths';
+import {
+  handOffCardCopy,
+  resolveNextRoutineOffer,
+  startNextRoutineOnMonday,
+  type NextRoutineOffer,
+} from '@/lib/handOff';
 import {
   countEnrolmentSessions,
   currentEnrolmentWeek,
+  describeRoutineError,
   fetchActiveEnrolment,
   fetchCompletedEnrolmentCount,
   fetchLatestCompletedEnrolment,
   fetchRoutineRoadmap,
+  fetchRoutines,
   type RoadmapWeek,
   type RoutineEnrolment,
-  type RoutineSummary,
 } from '@/lib/routines';
 import { useWeightUnit } from '@/lib/units';
 
@@ -125,7 +131,7 @@ type ActivityData = {
   photos: ProgressPhoto[];
   photosError: string | null;
   review: EnrolmentReview | null;
-  nextPathRoutine: RoutineSummary | null;
+  nextOffer: NextRoutineOffer | null;
 };
 
 const BAR_WIDTH = 20;
@@ -195,6 +201,7 @@ export default function ActivityScreen() {
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isPhotoBusy, setIsPhotoBusy] = useState(false);
   const [openBadge, setOpenBadge] = useState<AchievementBadge | null>(null);
+  const [startingNext, setStartingNext] = useState(false);
   const showPhotosRef = useRef(showPhotos);
   showPhotosRef.current = showPhotos;
 
@@ -203,7 +210,7 @@ export default function ActivityScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, restWeeks, extras] =
+          const [sets, sessions, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, extras] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
@@ -214,7 +221,6 @@ export default function ActivityScreen() {
               fetchHideStreak().catch(() => false),
               fetchHideAchievements().catch(() => false),
               fetchPhotosEnabled().catch(() => false),
-              fetchRestWeekStarts().catch(() => new Set<string>()),
               fetchAchievementExtras(
                 equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used)
               ).catch(() => ({
@@ -231,16 +237,20 @@ export default function ActivityScreen() {
           const streak = getWeeklyStreak(
             sessions,
             normalizeWeeklyTarget(answers?.days_per_week),
-            goal,
-            restWeeks
+            goal
           );
-          void syncRestWeeksBanked(streak.restWeeksBanked);
           void maybeTrackStreakRepair(streak);
           const review = completedEnrolment
             ? await fetchEnrolmentReview(completedEnrolment, sessions, sets).catch(() => null)
             : null;
-          const pathNext = completedEnrolment
-            ? await nextRoutineOnPath(completedEnrolment.routine_id).catch(() => null)
+          const catalogue = completedEnrolment ? await fetchRoutines().catch(() => []) : [];
+          const nextOffer = completedEnrolment
+            ? await resolveNextRoutineOffer({
+                currentRoutineId: completedEnrolment.routine_id,
+                catalogue,
+                answers,
+                mode: enrolment ? 'preview' : 'start',
+              }).catch(() => null)
             : null;
           if (!isCurrent) return;
           if (!photosEnabled) {
@@ -263,7 +273,7 @@ export default function ActivityScreen() {
             photos: [],
             photosError: null,
             review,
-            nextPathRoutine: pathNext?.routine ?? null,
+            nextOffer,
           });
           setLoadState('ready');
           if (photosEnabled && showPhotosRef.current) {
@@ -371,6 +381,20 @@ export default function ActivityScreen() {
         },
       },
     ]);
+  }
+
+  async function startNextFromReview() {
+    const offer = data?.nextOffer;
+    if (!offer || offer.mode !== 'start') return;
+    setStartingNext(true);
+    try {
+      await startNextRoutineOnMonday(offer.routine);
+      setAttempt((count) => count + 1);
+    } catch (error) {
+      showDialog('Could not start that plan', describeRoutineError(error));
+    } finally {
+      setStartingNext(false);
+    }
   }
 
   if (loadState !== 'ready' || !data) {
@@ -721,7 +745,10 @@ export default function ActivityScreen() {
               enrolment={data.completedEnrolment}
               sessions={data.completedRoutineSessions}
               review={data.review}
-              nextRoutine={data.nextPathRoutine}
+              next={data.nextOffer}
+              canStart={!data.enrolment && data.nextOffer?.mode === 'start'}
+              starting={startingNext}
+              onStart={() => void startNextFromReview()}
             />
           </>
         ) : null}
@@ -863,38 +890,60 @@ function RoutineReviewCard({
   enrolment,
   sessions,
   review,
-  nextRoutine,
+  next,
+  canStart,
+  starting,
+  onStart,
 }: {
   enrolment: RoutineEnrolment | null;
   sessions: number;
   review: EnrolmentReview | null;
-  nextRoutine: RoutineSummary | null;
+  next: NextRoutineOffer | null;
+  canStart: boolean;
+  starting: boolean;
+  onStart: () => void;
 }) {
-  const { colours, radius, shadow } = useTheme();
+  const { colours, radius, shadow, spacing } = useTheme();
   if (!enrolment) return null;
+  const card = next ? handOffCardCopy(next) : null;
   return (
     <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-      <AppText variant="title2" style={{ color: colours.ink }}>End-of-routine review</AppText>
-      <AppText variant="bodyStrong" style={{ color: colours.ink }}>{enrolment.routine.name}</AppText>
-      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-        You finished this plan
-        {enrolment.completed_at
-          ? ` on ${formatShortDate(parseDate(enrolment.completed_at.slice(0, 10)))}`
-          : ''}
-        . {review ? describeReview(review) : `${sessions} ${sessions === 1 ? 'session' : 'sessions'} logged.`}
+      <AppText variant="title2" style={{ color: colours.ink }}>
+        {fillCopy(routineActionsCopy.complete_title, { routine_name: enrolment.routine.name })}
       </AppText>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+        {review
+          ? fillCopy(routineActionsCopy.complete_body, {
+              sessions: review.sessions,
+              time: formatTrainingHours(review.durationSeconds),
+              pbs: review.personalBests,
+            })
+          : `${sessions} ${sessions === 1 ? 'session' : 'sessions'} logged.`}
+      </AppText>
+      {review?.lifts.length ? (
+        <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: spacing.sm }}>
+          {routineActionsCopy.complete_checkpoint}
+        </AppText>
+      ) : null}
       {review?.lifts.map((lift) => (
         <AppText key={lift.exerciseId} variant="bodySm" style={{ color: colours.inkMuted }}>
           {formatLiftCompare(lift)}
         </AppText>
       ))}
-      {nextRoutine ? (
-        <AppText variant="caption" style={{ color: colours.inkMuted }}>Next on your path: {nextRoutine.name}.</AppText>
-      ) : (
-        <AppText variant="caption" style={{ color: colours.inkMuted }}>
-          That’s a full routine. Start another when you’re ready.
+      {card ? (
+        <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+          {card.body}
         </AppText>
-      )}
+      ) : null}
+      {canStart && card ? (
+        <PrimaryButton
+          label={starting ? 'Starting…' : card.primaryLabel}
+          onPress={onStart}
+          loading={starting}
+          disabled={starting}
+          style={{ marginTop: spacing.md }}
+        />
+      ) : null}
     </View>
   );
 }

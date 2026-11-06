@@ -22,7 +22,6 @@ import {
   OverflowMenu,
   PrimaryButton,
   ReminderTimeChip,
-  RestWeekBanner,
   StickyDayHeader,
   TabAvatar,
   TextButton,
@@ -53,7 +52,6 @@ import {
   type PlannerDayView,
   type PlannerRange,
 } from '@/lib/planner';
-import { streakCopy } from '@/lib/copy';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed } from '@/lib/paywall';
 import {
@@ -71,7 +69,6 @@ import {
 } from '@/lib/reminders';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 import { openRoutineLogger } from '@/lib/startLogger';
-import { clearRestWeek, fetchRestWeekStarts, loadStreakSnapshot, setRestWeek } from '@/lib/streak';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | 'reminder-time' | null;
@@ -103,7 +100,6 @@ export default function PlannerScreen() {
   const [busy, setBusy] = useState(false);
   const [didScrollToToday, setDidScrollToToday] = useState(false);
   const [weekStartIso, setWeekStartIso] = useState(() => toIso(startOfWeekMonday(new Date())));
-  const [restWeekStarts, setRestWeekStarts] = useState<Set<string>>(() => new Set());
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
   const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
 
@@ -111,14 +107,12 @@ export default function PlannerScreen() {
   const todayIso = toIso(new Date());
 
   const reload = useCallback(async () => {
-    const [next, rest, prefs, lastTime] = await Promise.all([
+    const [next, prefs, lastTime] = await Promise.all([
       loadPlannerRange(horizon.from, horizon.to),
-      fetchRestWeekStarts().catch(() => new Set<string>()),
       fetchReminderPrefs().catch(() => null),
       fetchLastSessionReminderTime().catch(() => null),
     ]);
     setRange(next);
-    setRestWeekStarts(rest);
     setReminderPrefs(prefs);
     setLastSessionTime(lastTime);
     setLoadState('ready');
@@ -311,66 +305,6 @@ export default function PlannerScreen() {
     setPendingWorkout(null);
     setPickDayReason('rest');
     setSheet('pick-day');
-  }
-
-  async function handlePlanRestWeek() {
-    closeSheets();
-    const thisMonday = toIso(startOfWeekMonday(new Date()));
-    const viewedIsRest = restWeekStarts.has(weekStartIso);
-    if (weekStartIso < thisMonday) {
-      showDialog(
-        'Pick this week or a later one',
-        'Rest weeks can be planned ahead, not for weeks that have already finished.'
-      );
-      return;
-    }
-    if (viewedIsRest) {
-      showDialog(
-        'Cancel this rest week?',
-        'This week will need a session to keep your run going.',
-        [
-          {
-            text: 'Cancel rest week',
-            onPress: () => {
-              void runAction(() => clearRestWeek(weekStartIso), 'Couldn’t update that rest week');
-            },
-          },
-          { text: 'Keep it', style: 'cancel' },
-        ]
-      );
-      return;
-    }
-    setBusy(true);
-    try {
-      const streak = await loadStreakSnapshot();
-      if (weekStartIso === thisMonday && streak.hitThisWeek) {
-        showDialog(
-          'This week already counts',
-          'You’ve already trained this week, so it stays as a training week.'
-        );
-        return;
-      }
-      if (streak.restWeeksBanked <= 0) {
-        showDialog(
-          'Rest weeks come after showing up',
-          'You’ll have a rest week after four weeks with a session. You can save up to two.'
-        );
-        return;
-      }
-      showDialog(streakCopy.rest_week_schedule, streakCopy.rest_week_schedule_body, [
-        {
-          text: streakCopy.rest_week_schedule,
-          onPress: () => {
-            void runAction(() => setRestWeek(weekStartIso), 'Couldn’t save that rest week');
-          },
-        },
-        { text: 'Not now', style: 'cancel' },
-      ]);
-    } catch (error) {
-      showDialog('Couldn’t check rest weeks', describePlannerError(error));
-    } finally {
-      setBusy(false);
-    }
   }
 
   async function handleOpen(day: PlannerDayView) {
@@ -568,9 +502,6 @@ export default function PlannerScreen() {
         </View>
       ) : (
         <>
-          {viewMode === 'month' && restWeekStarts.has(weekStartIso) ? (
-            <RestWeekBanner style={{ marginBottom: 8, borderRadius: 0 }} />
-          ) : null}
           {weekPlanned.length > 0 ? (
             <AppText variant="caption" style={{ color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }}>
               This week: {weekDone} of {weekPlanned.length} {weekPlanned.length === 1 ? 'workout' : 'workouts'}
@@ -597,7 +528,6 @@ export default function PlannerScreen() {
           renderSectionHeader={({ section }) => (
             <DaySectionHeader
               day={section.day}
-              restWeekLead={isRestWeekLead(section.day, agendaDays, restWeekStarts)}
               onAdd={
                 section.day.kind === 'empty'
                   ? (from) => openDay(section.day, from)
@@ -687,10 +617,6 @@ export default function PlannerScreen() {
             <MenuHeader label="Add to your planner" detail="Pick what to add, then choose a day." />
             <MenuRow label="Add a custom workout" onPress={() => void startFabAddWorkout()} />
             <MenuRow label="Mark a rest day" onPress={startFabRest} />
-            <MenuRow
-              label={restWeekStarts.has(weekStartIso) ? 'Cancel rest week' : streakCopy.rest_week_schedule}
-              onPress={() => void handlePlanRestWeek()}
-            />
             <MenuRow
               label="My workouts"
               onPress={() => {
@@ -816,34 +742,16 @@ export default function PlannerScreen() {
   );
 }
 
-function weekStartIsoOf(iso: string): string {
-  return toIso(startOfWeekMonday(parseIsoDate(iso)));
-}
-
-function isRestWeekLead(
-  day: PlannerDayView,
-  agendaDays: PlannerDayView[],
-  restWeekStarts: Set<string>
-): boolean {
-  const start = weekStartIsoOf(day.iso);
-  if (!restWeekStarts.has(start)) return false;
-  const first = agendaDays.find((item) => weekStartIsoOf(item.iso) === start);
-  return first?.iso === day.iso;
-}
-
 function DaySectionHeader({
   day,
-  restWeekLead,
   onAdd,
 }: {
   day: PlannerDayView;
-  restWeekLead: boolean;
   onAdd?: (from: AnchorHandle | null) => void;
 }) {
   const headerRef = useRef<AnchorHandle>(null);
   return (
     <View ref={headerRef} collapsable={false}>
-      {restWeekLead ? <RestWeekBanner style={{ borderRadius: 0 }} /> : null}
       <StickyDayHeader
         title={formatStickyDayHeading(day)}
         today={day.isToday}

@@ -1,9 +1,8 @@
-import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import {
-  REST_EARN_EVERY,
   type StreakWeek,
   type StreakWeekStatus,
   type WeeklyStreak,
@@ -17,46 +16,17 @@ function circleColour(
 ): { fill: string; border: string } {
   if (status === 'gold') return { fill: colours.pro, border: colours.pro };
   if (status === 'counted') return { fill: colours.brand, border: colours.brand };
-  if (status === 'rest') return { fill: colours.accentSoft, border: colours.accent };
   if (status === 'repaired') return { fill: colours.success, border: colours.success };
   if (status === 'missed') return { fill: colours.surfaceMuted, border: colours.surfaceMuted };
   return { fill: 'transparent', border: colours.border };
 }
 
-function restBankCopy(streak: WeeklyStreak): string {
-  if (streak.restWeeksBanked > 0 && streak.sessionWeeks > 0 && streak.sessionWeeks % REST_EARN_EVERY === 0) {
-    return streakCopy.rest_week_earned;
-  }
-  return fillCopy(streakCopy.rest_week_banked, { count: streak.restWeeksBanked });
-}
-
 function weekLabel(week: StreakWeek): string {
   if (week.status === 'gold') return 'gold';
   if (week.status === 'counted') return 'counted';
-  if (week.status === 'rest') return 'rest';
   if (week.status === 'repaired') return 'repaired';
   if (week.status === 'missed') return 'quiet';
   return 'this week';
-}
-
-export function RestWeekBanner({ style }: { style?: StyleProp<ViewStyle> }) {
-  const { colours, radius, spacing } = useTheme();
-  return (
-    <View
-      style={[
-        {
-          backgroundColor: colours.accentSoft,
-          borderRadius: radius.lg,
-          paddingHorizontal: spacing.md,
-          paddingVertical: spacing.sm,
-        },
-        style,
-      ]}>
-      <AppText variant="bodyStrong" style={{ color: colours.ink }}>
-        Planned rest week. Enjoy it.
-      </AppText>
-    </View>
-  );
 }
 
 export function StreakCard({ streak }: { streak: WeeklyStreak }) {
@@ -115,9 +85,6 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
       </View>
 
       <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
-        {restBankCopy(streak)}
-      </AppText>
-      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
         {describeStreak(streak)}
       </AppText>
     </View>
