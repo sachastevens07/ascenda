@@ -41,11 +41,16 @@ const API_KEY =
   }) ||
   '';
 
+/** Server and Profile use these. `isPro` is true for trial, active and grace. */
+export type SubscriptionAccess = 'none' | 'trial' | 'active' | 'grace' | 'expired';
+
 export type ProStatus = {
+  /** True while the `ascenda_pro` entitlement is in trial, paid or billing grace. */
   isPro: boolean;
+  status: SubscriptionAccess;
   /** Set while she's in the free trial. */
   trialEndsAt: Date | null;
-  /** When Pro renews or ends. Null for free (or lifetime). */
+  /** When the entitlement renews or ends. Null if there is no period. */
   expiresAt: Date | null;
   willRenew: boolean;
 };
@@ -56,8 +61,8 @@ export type DevOverride = (typeof DEV_OVERRIDES)[number];
 
 export const DEV_OVERRIDE_LABELS: Record<DevOverride, string> = {
   off: 'Real status',
-  free: 'Free',
-  pro: 'Pro',
+  free: 'No subscription',
+  pro: 'Subscribed',
   'trial-ending': 'Trial ending in 2 days',
 };
 
@@ -72,7 +77,13 @@ type SubscriptionState = ProStatus & {
   applyCustomerInfo: (info: CustomerInfo) => void;
 };
 
-const FREE: ProStatus = { isPro: false, trialEndsAt: null, expiresAt: null, willRenew: false };
+const FREE: ProStatus = {
+  isPro: false,
+  status: 'none',
+  trialEndsAt: null,
+  expiresAt: null,
+  willRenew: false,
+};
 
 const SubscriptionContext = createContext<SubscriptionState>({
   ...FREE,
@@ -100,14 +111,27 @@ function configureOnce(): boolean {
 }
 
 function toStatus(info: CustomerInfo | null): ProStatus {
-  const entitlement = info?.entitlements.active[PRO_ENTITLEMENT];
-  if (!entitlement) return FREE;
-  const expiresAt = entitlement.expirationDate ? new Date(entitlement.expirationDate) : null;
+  const active = info?.entitlements.active[PRO_ENTITLEMENT];
+  const known = active ?? info?.entitlements.all[PRO_ENTITLEMENT];
+  if (!known) return FREE;
+  const expiresAt = known.expirationDate ? new Date(known.expirationDate) : null;
+  if (!active) {
+    return {
+      isPro: false,
+      status: 'expired',
+      trialEndsAt: null,
+      expiresAt,
+      willRenew: false,
+    };
+  }
+  const billingIssue = Boolean(active.billingIssueDetectedAt);
+  const trial = active.periodType === 'TRIAL';
   return {
     isPro: true,
-    trialEndsAt: entitlement.periodType === 'TRIAL' ? expiresAt : null,
+    status: billingIssue ? 'grace' : trial ? 'trial' : 'active',
+    trialEndsAt: trial ? expiresAt : null,
     expiresAt,
-    willRenew: entitlement.willRenew,
+    willRenew: active.willRenew,
   };
 }
 
@@ -118,10 +142,10 @@ function overrideStatus(value: DevOverride): ProStatus | null {
     case 'free':
       return FREE;
     case 'pro':
-      return { isPro: true, trialEndsAt: null, expiresAt: null, willRenew: true };
+      return { isPro: true, status: 'active', trialEndsAt: null, expiresAt: null, willRenew: true };
     case 'trial-ending': {
       const endsAt = new Date(Date.now() + REMINDER_DAYS_BEFORE * DAY_MS - 60_000);
-      return { isPro: true, trialEndsAt: endsAt, expiresAt: endsAt, willRenew: true };
+      return { isPro: true, status: 'trial', trialEndsAt: endsAt, expiresAt: endsAt, willRenew: true };
     }
   }
 }
@@ -152,7 +176,7 @@ async function updateTrialReminder(trialEndsAt: Date | null): Promise<void> {
     identifier: REMINDER_ID,
     content: {
       title: `Your free trial ends in ${REMINDER_DAYS_BEFORE} days`,
-      body: `Pro starts on ${formatShortDate(trialEndsAt)} unless you cancel. You can manage it from Profile.`,
+      body: `Your subscription starts on ${formatShortDate(trialEndsAt)} unless you cancel. You can manage it from Profile.`,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,

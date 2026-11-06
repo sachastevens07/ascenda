@@ -34,7 +34,7 @@ export const ANALYTICS_EVENTS = [
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
 
-export type AnalyticsPlan = 'free' | 'pro' | 'trial';
+export type AnalyticsPlan = 'none' | 'trial' | 'active' | 'grace' | 'expired';
 
 type AnalyticsValue = string | number | boolean;
 type AnalyticsProps = Record<string, AnalyticsValue>;

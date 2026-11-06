@@ -6,3 +6,8 @@ project_id = "ascenda"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/exercise-media/index.ts"
+
+[functions.revenuecat-webhook]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/revenuecat-webhook/index.ts"

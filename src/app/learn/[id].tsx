@@ -7,7 +7,6 @@ import {
   ArticleBody,
   HeroImage,
   PrimaryButton,
-  ProBadge,
   RelatedLearn,
   SafetyNotice,
   SecondaryButton,
@@ -24,15 +23,12 @@ import {
   type LearnArticle,
 } from '@/lib/learn';
 import { trackLearnArticleOpened } from '@/lib/analytics';
-import { openPaywall } from '@/lib/paywall';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'missing' | 'ready';
 
 export default function LearnArticleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colours, spacing, radius } = useTheme();
-  const { isPro } = useSubscription();
   const [article, setArticle] = useState<LearnArticle | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [isRead, setIsRead] = useState(false);
@@ -45,7 +41,7 @@ export default function LearnArticleScreen() {
         if (!isCurrent) return;
         setArticle(next);
         setLoadState(next ? 'ready' : 'missing');
-        if (next && (!next.is_pro || isPro)) {
+        if (next) {
           void recordArticleOpened(next.id);
           trackLearnArticleOpened(next.id);
         }
@@ -61,7 +57,7 @@ export default function LearnArticleScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [id, isPro]);
+  }, [id]);
 
   if (loadState !== 'ready' || !article) {
     return (
@@ -76,8 +72,6 @@ export default function LearnArticleScreen() {
       </View>
     );
   }
-
-  const locked = article.is_pro && !isPro;
 
   async function handleRead() {
     const articleId = article?.id;
@@ -107,23 +101,12 @@ export default function LearnArticleScreen() {
           <AppText variant="caption" style={{ color: colours.inkMuted }}>
             {LEARN_CATEGORY_LABELS[article.category]} · {formatReadMinutes(article.read_minutes)}
           </AppText>
-          {article.is_pro ? <ProBadge locked={locked} compact /> : null}
         </View>
         <AppText variant="body" style={{ color: colours.inkMuted }}>{article.summary}</AppText>
 
-        {locked ? (
-          <View style={[styles.lock, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-            <AppText variant="title3" style={{ color: colours.ink }}>This is a Pro guide</AppText>
-            <AppText variant="body" style={{ color: colours.ink, marginTop: spacing.sm }}>
-              The full piece stays behind Pro. Logging and the rest of Learn stay free.
-            </AppText>
-            <PrimaryButton label="Unlock with Pro" onPress={() => openPaywall('learn')} style={{ marginTop: spacing.md }} />
-          </View>
-        ) : (
-          <ArticleBody markdown={article.body_markdown} />
-        )}
+        <ArticleBody markdown={article.body_markdown} />
 
-        {!locked && article.sources.length > 0 ? (
+        {article.sources.length > 0 ? (
           <View style={{ gap: 8, marginTop: spacing.lg }}>
             <AppText variant="title3" style={{ color: colours.ink }}>Sources</AppText>
             {article.sources.map((source) => (
@@ -138,14 +121,12 @@ export default function LearnArticleScreen() {
           </View>
         ) : null}
 
-        {!locked ? (
-          <SecondaryButton
-            label={isRead ? 'Marked as read' : isSaving ? 'Saving…' : 'Mark as read'}
-            onPress={() => void handleRead()}
-            disabled={isRead || isSaving}
-            style={{ marginTop: spacing.lg }}
-          />
-        ) : null}
+        <SecondaryButton
+          label={isRead ? 'Marked as read' : isSaving ? 'Saving…' : 'Mark as read'}
+          onPress={() => void handleRead()}
+          disabled={isRead || isSaving}
+          style={{ marginTop: spacing.lg }}
+        />
 
         <RelatedLearn
           category={article.category}

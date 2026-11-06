@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
-import { ProBadge } from '@/components/ui/Badges';
 import { CoverPlaceholder } from '@/components/ui/Cards';
 import { SectionHeader } from '@/components/ui/List';
 import { useTheme } from '@/constants/theme';
@@ -31,14 +30,7 @@ import {
   type LearnArticle,
   type LearnCategory,
 } from '@/lib/learn';
-import { openPaywall } from '@/lib/paywall';
-import { useSubscription } from '@/lib/subscription';
-
-export function openLearnArticle(article: LearnArticle, isPro: boolean): void {
-  if (article.is_pro && !isPro) {
-    openPaywall('learn');
-    return;
-  }
+export function openLearnArticle(article: LearnArticle): void {
   void recordArticleOpened(article.id);
   trackLearnArticleOpened(article.id);
   router.push({ pathname: '/learn/[id]', params: { id: article.id } } as Href);
@@ -54,11 +46,10 @@ export function ArticleCard({
   width?: number;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const { isPro } = useSubscription();
   const image = articleImage(article);
   return (
     <Pressable
-      onPress={() => openLearnArticle(article, isPro)}
+      onPress={() => openLearnArticle(article)}
       accessibilityRole="button"
       accessibilityLabel={article.title}
       style={({ pressed }) => [style, pressed && styles.pressed]}>
@@ -69,11 +60,6 @@ export function ArticleCard({
           ) : (
             <CoverPlaceholder />
           )}
-          {article.is_pro ? (
-            <View style={styles.badge}>
-              <ProBadge locked={!isPro} compact />
-            </View>
-          ) : null}
         </View>
         <View style={styles.cardBody}>
           <AppText variant="eyebrow" style={{ color: colours.accent }}>

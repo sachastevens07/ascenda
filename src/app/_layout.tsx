@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Redirect, Stack, usePathname, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, type ReactNode } from 'react';
@@ -72,7 +72,7 @@ export default function RootLayout() {
 
 function AnalyticsBootstrap() {
   const { session, isLoading } = useAuth();
-  const { isPro, trialEndsAt } = useSubscription();
+  const { status } = useSubscription();
   const hadUser = useRef(false);
 
   useEffect(() => {
@@ -88,9 +88,8 @@ function AnalyticsBootstrap() {
       return;
     }
     hadUser.current = true;
-    const plan = trialEndsAt ? 'trial' : isPro ? 'pro' : 'free';
-    identifyUser(session.user.id, plan);
-  }, [session, isLoading, isPro, trialEndsAt]);
+    identifyUser(session.user.id, status);
+  }, [session, isLoading, status]);
 
   return null;
 }
@@ -128,6 +127,7 @@ function RootNavigator() {
   const { session, isLoading } = useAuth();
   const profile = useProfile();
   const { colours } = useTheme();
+  const pathname = usePathname();
 
   if (isLoading || (session && profile.isLoading)) {
     return <View style={[styles.blank, { backgroundColor: colours.bg }]} />;
@@ -143,6 +143,10 @@ function RootNavigator() {
 
   if (session && needsDisclaimerGate) {
     return <AcceptDisclaimerScreen />;
+  }
+
+  if (session && !isOnboarded && pathname !== '/onboarding') {
+    return <Redirect href={'/onboarding' as Href} />;
   }
 
   return (
@@ -208,12 +212,6 @@ function RootNavigator() {
             animation: 'slide_from_bottom',
           }}
         />
-      </Stack.Protected>
-      <Stack.Protected guard={!!session && needsDisclaimerGate}>
-        <Stack.Screen name="accept-disclaimer" />
-      </Stack.Protected>
-      <Stack.Protected guard={!!session && !needsDisclaimerGate}>
-        <Stack.Screen name="onboarding" />
         <Stack.Screen
           name="safety"
           options={{
@@ -247,6 +245,12 @@ function RootNavigator() {
             headerStyle: { backgroundColor: colours.bg },
           }}
         />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && needsDisclaimerGate}>
+        <Stack.Screen name="accept-disclaimer" />
+      </Stack.Protected>
+      <Stack.Protected guard={!!session && !needsDisclaimerGate}>
+        <Stack.Screen name="onboarding" />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="sign-in" />

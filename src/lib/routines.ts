@@ -295,7 +295,7 @@ type ExerciseQueryRow = Omit<RoutineDayExercise, 'exercise'> & {
 };
 
 export type FetchRoutineOptions = {
-  /** When false, Pro routines omit week 2+ exercise rows. Defaults to true. */
+  /** Kept so call sites compile. Weeks are no longer preview-locked. */
   includeLockedWeeks?: boolean;
 };
 
@@ -459,17 +459,15 @@ function toRoutine(row: DetailRow): Routine {
 }
 
 export function isRoutineWeekLocked(
-  routine: Pick<RoutineSummary, 'is_pro'>,
-  weekNumber: number,
-  isPro: boolean
+  _routine: Pick<RoutineSummary, 'is_pro'>,
+  _weekNumber: number,
+  _isPro: boolean
 ): boolean {
-  return routine.is_pro && !isPro && weekNumber > 1;
+  return false;
 }
 
-function dayIdsForPreview(routine: Routine, includeLockedWeeks: boolean): string[] {
-  return routine.weeks
-    .filter((week) => includeLockedWeeks || !routine.is_pro || week.week_number <= 1)
-    .flatMap((week) => week.days.map((day) => day.id));
+function dayIdsForPreview(routine: Routine): string[] {
+  return routine.weeks.flatMap((week) => week.days.map((day) => day.id));
 }
 
 function toDayExercise(
@@ -807,54 +805,34 @@ function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   ) {
     score += 3;
   }
-  if (!routine.is_pro) score += 1;
   return score;
 }
 
-/** Swap `candidate` into the row without dropping the only free card. */
 function replaceFeaturedSlot(picked: RoutineSummary[], candidate: RoutineSummary | undefined): void {
   if (!candidate || picked.some((routine) => routine.id === candidate.id)) return;
-  const freeCount = picked.filter((routine) => !routine.is_pro).length;
-  let index = picked.length - 1;
-  for (let i = picked.length - 1; i >= 0; i -= 1) {
-    const soleFree = freeCount === 1 && !picked[i].is_pro;
-    if (!soleFree) {
-      index = i;
-      break;
-    }
-  }
-  picked[index] = candidate;
+  picked[picked.length - 1] = candidate;
 }
 
-/** 3–5 featured cards, tailored to her quiz. Always tries to include one free routine. */
+/** 3–5 featured cards, tailored to her quiz. */
 export function pickFeaturedRoutines(
   routines: RoutineSummary[],
   answers: QuizAnswers,
   count = 4,
-  options?: { freeOnly?: boolean; excludeIds?: string[] }
+  options?: { excludeIds?: string[] }
 ): RoutineSummary[] {
   const excluded = new Set(options?.excludeIds ?? []);
   const strength = routines.filter(
     (routine) =>
       routine.type !== 'stretch' && !excluded.has(routine.id) && !isGymBackupRoutine(routine)
   );
-  const pool = options?.freeOnly ? strength.filter((routine) => !routine.is_pro) : strength;
-  const eligible = pool.filter((routine) => routine.is_featured_eligible);
-  const rankedSource = eligible.length > 0 ? eligible : pool;
+  const eligible = strength.filter((routine) => routine.is_featured_eligible);
+  const rankedSource = eligible.length > 0 ? eligible : strength;
   const ranked = [...rankedSource].sort((a, b) => {
     const gap = scoreRoutine(b, answers) - scoreRoutine(a, answers);
     return gap !== 0 ? gap : a.sort_order - b.sort_order;
   });
-  const size = options?.freeOnly
-    ? Math.min(count, ranked.length)
-    : Math.min(5, Math.max(3, Math.min(count, ranked.length)));
+  const size = Math.min(5, Math.max(3, Math.min(count, ranked.length)));
   const picked = ranked.slice(0, size);
-  if (picked.length > 0 && !picked.some((routine) => !routine.is_pro)) {
-    replaceFeaturedSlot(
-      picked,
-      ranked.find((routine) => !routine.is_pro)
-    );
-  }
   if (picked.length > 0 && !picked.some((routine) => routine.days_per_week === answers.days_per_week)) {
     replaceFeaturedSlot(
       picked,
@@ -939,10 +917,9 @@ export async function fetchRoutines(options?: { type?: RoutineType }): Promise<R
 
 export async function fetchRoutine(
   id: string,
-  options?: FetchRoutineOptions
+  _options?: FetchRoutineOptions
 ): Promise<Routine | null> {
   await hydrateImages();
-  const includeLockedWeeks = options?.includeLockedWeeks ?? true;
   const attempts = [
     `${SUMMARY_SELECT_N2}, routine_weeks (${WEEK_NEST_W1})`,
     `${SUMMARY_SELECT_N2}, routine_weeks (${WEEK_NEST_N2})`,
@@ -971,7 +948,7 @@ export async function fetchRoutine(
   if (error) throw new Error(error.message);
   if (!data) return null;
   const routine = toRoutine(data as DetailRow);
-  const byDay = await fetchExercisesForDays(dayIdsForPreview(routine, includeLockedWeeks));
+  const byDay = await fetchExercisesForDays(dayIdsForPreview(routine));
   return withDayExercises(routine, byDay);
 }
 

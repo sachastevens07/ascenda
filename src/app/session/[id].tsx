@@ -59,8 +59,6 @@ import {
   deleteCustomWorkout,
   describeCustomWorkoutError,
   duplicateRoutineDay,
-  isFreeCustomWorkoutLimitError,
-  isProRoutineDuplicateError,
   replaceCustomWorkoutExercise,
 } from '@/lib/customWorkouts';
 import {
@@ -69,7 +67,6 @@ import {
   saveExerciseNote,
   saveExerciseRestPref,
 } from '@/lib/exercisePrefs';
-import { openPaywall } from '@/lib/paywall';
 import { markPlannerDateDone } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -111,7 +108,6 @@ import {
   type LoggedSet,
   type Session,
 } from '@/lib/sessions';
-import { useSubscription } from '@/lib/subscription';
 import { deleteUserSwap, exerciseFits, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
 import { useNow, useWorkout } from '@/lib/workout';
 import {
@@ -231,8 +227,6 @@ export default function SessionScreen() {
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const equipment = answers?.equipment ?? null;
-  const { isPro, isLoading: isSubscriptionLoading } = useSubscription();
-
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [session, setSession] = useState<Session | null>(null);
   const [day, setDay] = useState<ProgrammeDay | null>(null);
@@ -301,7 +295,7 @@ export default function SessionScreen() {
   }, [pbGlowKey]);
 
   useEffect(() => {
-    if (!equipment || isSubscriptionLoading) return;
+    if (!equipment) return;
     let isCurrent = true;
     (async () => {
       try {
@@ -322,7 +316,7 @@ export default function SessionScreen() {
         ]);
         if (!isCurrent) return;
         setSession(log.session);
-        const built = buildEntries(log.day, log.logged, log.previous, isPro, {
+        const built = buildEntries(log.day, log.logged, log.previous, true, {
           weightScale: log.easeBack?.weightScale,
         });
         const ramped = applyRampUp(log.day, built, log.rampUpApplied);
@@ -368,7 +362,7 @@ export default function SessionScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [id, equipment, isPro, isSubscriptionLoading]);
+  }, [id, equipment]);
 
   useEffect(() => {
     if (!day) return;
@@ -499,7 +493,7 @@ export default function SessionScreen() {
       if (slot) {
         Object.assign(
           next,
-          buildEntries({ ...nextDay, exercises: [slot] }, [], { ...previous, ...extra }, isPro, {
+          buildEntries({ ...nextDay, exercises: [slot] }, [], { ...previous, ...extra }, true, {
             weightScale: easeBack?.weightScale,
           })
         );
@@ -540,7 +534,7 @@ export default function SessionScreen() {
       if (slot) {
         Object.assign(
           next,
-          buildEntries({ ...nextDay, exercises: [slot] }, [], previous, isPro, {
+          buildEntries({ ...nextDay, exercises: [slot] }, [], previous, true, {
             weightScale: easeBack?.weightScale,
           })
         );
@@ -600,7 +594,7 @@ export default function SessionScreen() {
           { ...nextDay, exercises: [slot] },
           [],
           extra,
-          isPro,
+          true,
           { weightScale: easeBack?.weightScale }
         ),
       }));
@@ -804,7 +798,7 @@ export default function SessionScreen() {
         setNotes(prefs.notes);
         setRestPrefs(prefs.rest);
         setEntries(
-          buildEntries(programmeDay, logged, prev, isPro, { weightScale: easeBack?.weightScale })
+          buildEntries(programmeDay, logged, prev, true, { weightScale: easeBack?.weightScale })
         );
         setSwapItem(null);
       } catch (error) {
@@ -830,10 +824,6 @@ export default function SessionScreen() {
 
   async function handleSaveWorkout() {
     if (!routine || !day || day.exercises.length === 0) return;
-    if (routine.is_pro && !isPro) {
-      openPaywall('routine');
-      return;
-    }
     setIsSavingWorkout(true);
     try {
       const copy = await duplicateRoutineDay(
@@ -847,7 +837,6 @@ export default function SessionScreen() {
             rep_max: item.rep_max,
           })),
         },
-        isPro,
         copyWorkoutName(day.name)
       );
       showDialog('Saved to My workouts', `${copy.name} is in your list.`, [
@@ -858,14 +847,6 @@ export default function SessionScreen() {
         { text: 'Done', style: 'cancel' },
       ]);
     } catch (error) {
-      if (isProRoutineDuplicateError(error)) {
-        openPaywall('routine');
-        return;
-      }
-      if (isFreeCustomWorkoutLimitError(error)) {
-        openPaywall('custom-limit');
-        return;
-      }
       showDialog('Couldn’t save it', describeCustomWorkoutError(error));
     } finally {
       setIsSavingWorkout(false);
@@ -1028,12 +1009,7 @@ export default function SessionScreen() {
   const restRemaining = restEndsAt === null ? 0 : Math.ceil((restEndsAt - now) / 1000);
   const records = getSetRecords(day, entries, bests);
   const showGuideTip = day.exercises.some((item) => !previous[item.exercise.id]?.length);
-  const saveLabel =
-    routine?.is_pro && !isPro && !isSavingWorkout
-      ? 'Save as workout with Pro'
-      : isSavingWorkout
-        ? 'Saving…'
-        : 'Save as workout';
+  const saveLabel = isSavingWorkout ? 'Saving…' : 'Save as workout';
   const elapsedLabel = startedAt === null ? '0:00' : formatClock((now - startedAt) / 1000);
   const eyebrow =
     weekNumber !== null ? `Week ${weekNumber} · day ${day.day_number}` : null;
@@ -1193,7 +1169,7 @@ export default function SessionScreen() {
         {day.exercises.map((item, index) => {
           const weighted = usesWeight(item.exercise.equipment);
           const suggestion =
-            isPro && !easeBack ? getWeightSuggestion(item, previous[item.exercise.id]) : null;
+            !easeBack ? getWeightSuggestion(item, previous[item.exercise.id]) : null;
           const increase = suggestion?.kind === 'increase' ? suggestion : null;
           const restSeconds = slotRestSeconds(item, restPrefs);
           const note = notes[item.exercise.id];

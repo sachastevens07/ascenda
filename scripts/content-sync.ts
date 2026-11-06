@@ -452,6 +452,7 @@ async function main(): Promise<void> {
   line();
   reportOnboardingGoals();
   reportSafetyCopy();
+  reportHardPaywall();
 
   reportWarmups();
 
@@ -501,6 +502,15 @@ function reportSafetyCopy(): void {
   line(`  Footer: ${text(safety.footer_line)}`);
   line('  Full disclaimer body stays in src/lib/disclaimer.ts (one file). Bump DISCLAIMER_VERSION when it changes.');
   line('  Live sync does not write these strings.');
+  line();
+}
+
+function reportHardPaywall(): void {
+  line('hard paywall  ←  P1 (bundled). is_pro columns stay on routines, stretches, Learn and challenges.');
+  line('  The app no longer uses those flags for badges, locks or limits.');
+  line('  Access is the `ascenda_pro` entitlement via useSubscription.');
+  line('  Server table: public.subscriptions, written only by the RevenueCat webhook.');
+  line('  Live sync does not write subscriptions or is_pro.');
   line();
 }
 

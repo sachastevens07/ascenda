@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CoverPhoto } from '@/components/CoverPhoto';
 import { showDialog } from '@/components/Dialog';
-import { ProBadge, ProMark } from '@/components/ProBadge';
 import { ProgressRing } from '@/components/ProgressRing';
 import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
@@ -24,15 +23,12 @@ import {
   type Challenge,
 } from '@/lib/challenges';
 import { coverForChallenge } from '@/lib/images';
-import { openPaywall } from '@/lib/paywall';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
 export default function ChallengeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const subscription = useSubscription();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [done, setDone] = useState(0);
   const [target, setTarget] = useState(0);
@@ -84,10 +80,6 @@ export default function ChallengeDetailScreen() {
 
   function handleJoin() {
     if (!challenge) return;
-    if ((challenge.is_pro || challenge.routine.is_pro) && !subscription.isPro) {
-      openPaywall(challenge.is_pro ? 'challenge' : 'routine');
-      return;
-    }
     const options = rollingStartOptions();
     showDialog(
       'Pick a start day',
@@ -119,7 +111,6 @@ export default function ChallengeDetailScreen() {
   }
 
   const status = challengeStatus(challenge);
-  const locked = (challenge.is_pro || challenge.routine.is_pro) && !subscription.isPro;
   const ratio = target > 0 ? done / target : 0;
 
   return (
@@ -133,13 +124,6 @@ export default function ChallengeDetailScreen() {
         style={styles.cover}
       />
       <View style={styles.chipRow}>
-        {challenge.is_pro ? (
-          <ProBadge />
-        ) : (
-          <AppText variant="caption" style={styles.free}>
-            Free to join
-          </AppText>
-        )}
         <AppText variant="bodySm" style={styles.status}>
           {challengeTimingCopy(challenge)}
         </AppText>
@@ -198,15 +182,9 @@ export default function ChallengeDetailScreen() {
           onPress={() => void handleJoin()}
           disabled={joining}
           accessibilityRole="button">
-          {locked ? (
-            <ProMark locked textStyle={styles.buttonText}>
-              Join with Pro
-            </ProMark>
-          ) : (
-            <AppText variant="bodyStrong" style={styles.buttonText}>
-              {joining ? 'Joining…' : 'Join challenge'}
-            </AppText>
-          )}
+          <AppText variant="bodyStrong" style={styles.buttonText}>
+            {joining ? 'Joining…' : 'Join challenge'}
+          </AppText>
         </Pressable>
       )}
     </ScrollView>

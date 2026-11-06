@@ -4,12 +4,10 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CoverPhoto } from '@/components/CoverPhoto';
-import { ProBadge, ProMark } from '@/components/ProBadge';
 import { ProgressRing } from '@/components/ProgressRing';
 import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import { coverForRoutine } from '@/lib/images';
-import { openPaywall } from '@/lib/paywall';
 import {
   describePathError,
   fetchPath,
@@ -17,14 +15,12 @@ import {
   type PathStep,
   type RoutinePath,
 } from '@/lib/paths';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
 export default function PathDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const subscription = useSubscription();
   const [path, setPath] = useState<RoutinePath | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -67,18 +63,9 @@ export default function PathDetailScreen() {
     );
   }
 
-  const locked = path.is_pro && !subscription.isPro;
   const doneCount = path.steps.filter((step) => step.done).length;
 
   function openStep(step: PathStep) {
-    if (locked && step.order > 1) {
-      openPaywall('path');
-      return;
-    }
-    if (step.routine.is_pro && !subscription.isPro) {
-      openPaywall('routine');
-      return;
-    }
     router.push({ pathname: '/routines/[id]', params: { id: step.routine.id } } as Href);
   }
 
@@ -92,15 +79,6 @@ export default function PathDetailScreen() {
         height={180}
         style={styles.cover}
       />
-      <View style={styles.chipRow}>
-        {path.is_pro ? (
-          <ProBadge />
-        ) : (
-          <AppText variant="caption" style={styles.free}>
-            Free
-          </AppText>
-        )}
-      </View>
       <AppText variant="title1" style={styles.title}>
         {path.name}
       </AppText>
@@ -112,7 +90,6 @@ export default function PathDetailScreen() {
       </AppText>
 
       {path.steps.map((step, index) => {
-        const stepLocked = locked && step.order > 1;
         return (
           <Pressable
             key={step.routine.id}
@@ -135,21 +112,11 @@ export default function PathDetailScreen() {
                 {step.routine.length_weeks} weeks · {step.routine.days_per_week} days / week
               </AppText>
             </View>
-            {stepLocked || step.routine.is_pro ? <ProBadge locked={stepLocked} compact /> : null}
           </Pressable>
         );
       })}
 
-      {locked ? (
-        <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-          onPress={() => openPaywall('path')}
-          accessibilityRole="button">
-          <ProMark locked textStyle={styles.buttonText}>
-            Unlock the full path
-          </ProMark>
-        </Pressable>
-      ) : path.nextRoutine ? (
+      {path.nextRoutine ? (
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.pressed]}
           onPress={() =>

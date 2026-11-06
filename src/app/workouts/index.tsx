@@ -12,19 +12,14 @@ import {
   type AnchorRect,
 } from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
-import { ProMark } from '@/components/ProBadge';
 import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
 import {
-  FREE_CUSTOM_WORKOUT_LIMIT,
-  atFreeCustomWorkoutLimit,
   deleteCustomWorkout,
   describeCustomWorkoutError,
   duplicateCustomWorkout,
   fetchCustomWorkouts,
-  isFreeCustomWorkoutLimitError,
   missingCustomWorkoutsMessage,
-  ownedCustomWorkoutCount,
   startBlankCustomSession,
   type CustomWorkout,
 } from '@/lib/customWorkouts';
@@ -34,15 +29,12 @@ import {
   upcomingPlannerDays,
 } from '@/lib/planner';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
-import { openPaywall } from '@/lib/paywall';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
 export default function WorkoutsScreen() {
   const insets = useSafeAreaInsets();
-  const { isPro } = useSubscription();
   const [workouts, setWorkouts] = useState<CustomWorkout[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [missingSql, setMissingSql] = useState(false);
@@ -75,24 +67,12 @@ export default function WorkoutsScreen() {
   );
 
   const mine = workouts.filter((item) => !item.is_starter);
-  const ownedCount = ownedCustomWorkoutCount(workouts);
-  const atLimit = atFreeCustomWorkoutLimit(ownedCount, isPro);
-
-  function requireCreateRoom(): boolean {
-    if (atLimit) {
-      openPaywall('custom-limit');
-      return false;
-    }
-    return true;
-  }
 
   function handleCreate() {
-    if (!requireCreateRoom()) return;
     router.push({ pathname: '/workouts/[id]', params: { id: 'new' } });
   }
 
   async function handleStartBlank() {
-    if (!requireCreateRoom()) return;
     setBusyId('blank');
     try {
       const allowed = await confirmFirstSessionSafety();
@@ -112,13 +92,9 @@ export default function WorkoutsScreen() {
         );
         return;
       }
-      const session = await startBlankCustomSession(isPro);
+      const session = await startBlankCustomSession();
       router.push({ pathname: '/session/[id]', params: { id: session.id } });
     } catch (error) {
-      if (isFreeCustomWorkoutLimitError(error)) {
-        openPaywall('custom-limit');
-        return;
-      }
       showDialog('Couldn’t start the workout', describeCustomWorkoutError(error));
     } finally {
       setBusyId(null);
@@ -155,10 +131,9 @@ export default function WorkoutsScreen() {
   }
 
   async function handleDuplicate(workout: CustomWorkout) {
-    if (!requireCreateRoom()) return;
     setBusyId(workout.id);
     try {
-      const copy = await duplicateCustomWorkout(workout, isPro);
+      const copy = await duplicateCustomWorkout(workout);
       setWorkouts((current) => {
         const starter = current.filter((item) => item.is_starter);
         const rest = current.filter((item) => !item.is_starter && item.id !== copy.id);
@@ -166,10 +141,6 @@ export default function WorkoutsScreen() {
       });
       router.push({ pathname: '/workouts/[id]', params: { id: copy.id } });
     } catch (error) {
-      if (isFreeCustomWorkoutLimitError(error)) {
-        openPaywall('custom-limit');
-        return;
-      }
       showDialog('Couldn’t copy it', describeCustomWorkoutError(error));
     } finally {
       setBusyId(null);
@@ -255,9 +226,7 @@ export default function WorkoutsScreen() {
         My workouts
       </AppText>
       <AppText variant="body" style={styles.lead}>
-        {isPro
-          ? 'Create as many as you like. Start one, or add it to a day in the planner.'
-          : `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts (${ownedCount} of ${FREE_CUSTOM_WORKOUT_LIMIT}). Duplicates count. The starter does not. Existing ones stay if a plan lapses.`}
+        Create as many as you like. Start one, or add it to a day in the planner.
       </AppText>
 
       <View style={styles.card}>
@@ -275,15 +244,9 @@ export default function WorkoutsScreen() {
           onPress={handleCreate}
           disabled={busyId !== null}
           accessibilityRole="button">
-          {atLimit ? (
-            <ProMark locked textStyle={styles.primaryText}>
-              Create with Pro
-            </ProMark>
-          ) : (
-            <AppText variant="bodyStrong" style={styles.primaryText}>
-              Create workout
-            </AppText>
-          )}
+          <AppText variant="bodyStrong" style={styles.primaryText}>
+            Create workout
+          </AppText>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}

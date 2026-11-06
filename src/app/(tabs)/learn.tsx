@@ -34,7 +34,6 @@ import {
   recommendArticles,
   type LearnArticle,
 } from '@/lib/learn';
-import { useSubscription } from '@/lib/subscription';
 
 type LearnData = {
   articles: LearnArticle[];
@@ -50,7 +49,6 @@ export default function LearnScreen() {
   const { colours, radius } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
-  const { isPro } = useSubscription();
   const [data, setData] = useState<LearnData | null>(null);
   const cardWidth = width * 0.72;
   const tileWidth = (width - 48 - 12) / 2;
@@ -99,7 +97,7 @@ export default function LearnScreen() {
 
         {featured ? (
           <Pressable
-            onPress={() => openLearnArticle(featured, isPro)}
+            onPress={() => openLearnArticle(featured)}
             accessibilityRole="button"
             accessibilityLabel={featured.title}
             style={({ pressed }) => [{ borderRadius: radius.xl, overflow: 'hidden' }, pressed && styles.pressed]}>
@@ -123,7 +121,7 @@ export default function LearnScreen() {
             eyebrow="Continue reading"
             title={continueReading.title}
             subtitle={formatReadMinutes(continueReading.read_minutes)}
-            onPress={() => openLearnArticle(continueReading, isPro)}
+            onPress={() => openLearnArticle(continueReading)}
             style={{ borderRadius: radius.lg, overflow: 'hidden' }}
           />
         ) : null}

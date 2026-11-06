@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { AppText } from '@/components/ui';
 import { colours } from '@/constants/theme';
+import { paywallScreenCopy, restoreCopy } from '@/lib/copy';
 import {
-  FREE_ALWAYS,
   PRO_FEATURES,
   defaultPackageId,
   isPaywallReason,
@@ -97,14 +97,12 @@ export default function PaywallScreen() {
       applyCustomerInfo(info);
       if (hasProEntitlement(info)) {
         dismiss();
-        showDialog(
-          'Welcome to Pro',
-          trialDays
-            ? `Your free trial has started. We’ll remind you ${REMINDER_DAYS_BEFORE} days before it ends.`
-            : 'Every routine, unlimited workouts, charts, a roadmap and private photos are ready.'
-        );
+        showDialog(paywallScreenCopy.success_title, paywallScreenCopy.success_body);
       } else {
-        showDialog('Almost there', `Pro will unlock as soon as ${STORE_NAME} confirms your payment.`);
+        showDialog(
+          'Almost there',
+          `Your subscription will unlock as soon as ${STORE_NAME} confirms your payment.`
+        );
       }
     } catch {
       showDialog(
@@ -123,12 +121,12 @@ export default function PaywallScreen() {
       applyCustomerInfo(info);
       if (hasProEntitlement(info)) {
         dismiss();
-        showDialog('Pro restored', 'Welcome back. Everything is unlocked again.');
+        showDialog(restoreCopy.restore, restoreCopy.success);
       } else {
-        showDialog('No subscription found', `We couldn’t find Pro on this ${STORE_NAME} account.`);
+        showDialog(restoreCopy.restore, restoreCopy.none);
       }
     } catch {
-      showDialog('Couldn’t restore', 'Check your connection and try again.');
+      showDialog(restoreCopy.restore, restoreCopy.error);
     } finally {
       setBusy(null);
     }
@@ -166,8 +164,6 @@ export default function PaywallScreen() {
               </View>
             ))}
           </View>
-          <AppText variant="bodySm" style={styles.freeNote}>{FREE_ALWAYS}</AppText>
-
           {loadState === 'loading' ? (
             <ActivityIndicator color={colours.accent} style={styles.loading} />
           ) : loadState !== 'ready' ? (
@@ -175,7 +171,7 @@ export default function PaywallScreen() {
               <AppText variant="body" style={styles.noticeText}>
                 {loadState === 'error'
                   ? 'We couldn’t load the plans. Check your connection and try again.'
-                  : 'Pro isn’t available to buy yet. Check back soon.'}
+                  : 'Subscriptions aren’t available to buy yet. Check back soon.'}
               </AppText>
               {loadState === 'error' && (
                 <Pressable

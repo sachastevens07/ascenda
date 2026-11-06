@@ -29,7 +29,6 @@ import {
   ImageCard,
   OverflowMenu,
   PrimaryButton,
-  ProMark,
   ProgressRing,
   QuoteCard,
   SectionHeader,
@@ -60,10 +59,7 @@ import {
   pickHomeChallenge,
   type Challenge,
 } from '@/lib/challenges';
-import {
-  atFreeCustomWorkoutLimit,
-  countOwnedCustomWorkouts,
-} from '@/lib/customWorkouts';
+import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { consumeOnboardingPaywall } from '@/lib/onboarding';
@@ -237,18 +233,13 @@ export default function HomeScreen() {
           ]);
           const missingSql = routines.length === 0;
           const featured = answers
-            ? pickFeaturedRoutines(routines, answers, subscription.isPro ? 4 : 2, {
-                freeOnly: !subscription.isPro,
+            ? pickFeaturedRoutines(routines, answers, 4, {
                 excludeIds: enrolment ? [enrolment.routine_id] : undefined,
               })
-            : (subscription.isPro
-                ? routines.filter((routine) => !isGymBackupRoutine(routine)).slice(0, 4)
-                : routines.filter((routine) => !routine.is_pro && !isGymBackupRoutine(routine)).slice(0, 2)
-              ).filter((routine) => routine.id !== enrolment?.routine_id);
-          const stretches = (subscription.isPro ? stretchRoutines : stretchRoutines.filter((item) => !item.is_pro)).slice(
-            0,
-            4
-          );
+            : routines
+                .filter((routine) => !isGymBackupRoutine(routine) && routine.id !== enrolment?.routine_id)
+                .slice(0, 4);
+          const stretches = stretchRoutines.slice(0, 4);
           let routine: Routine | null = null;
           let next: PlannedSession | null = null;
           let lastDayId: string | null = null;
@@ -272,7 +263,6 @@ export default function HomeScreen() {
             lastDayId,
             nextDay: next?.day ?? (routine ? firstDayOfRoutine(routine) : null),
             catalogue: routines,
-            isPro: subscription.isPro,
           }).catch(() => null);
           const inWindow = enrolment ? isInHandoffWindow(enrolment) : Boolean(completedEnrolment);
           const showHandOff = handOffPreview || inWindow;
@@ -281,7 +271,6 @@ export default function HomeScreen() {
                 currentRoutineId: enrolment?.routine_id ?? completedEnrolment?.routine_id ?? null,
                 catalogue: routines,
                 answers,
-                isPro: subscription.isPro,
                 mode: enrolment ? 'preview' : 'start',
               }).catch(() => null)
             : null;
@@ -415,11 +404,7 @@ export default function HomeScreen() {
     }
     setIsStarting(true);
     try {
-      const result = await startNextRoutineOnMonday(offer.routine, subscription.isPro);
-      if (result === 'paywall') {
-        openPaywall('routine');
-        return;
-      }
+      await startNextRoutineOnMonday(offer.routine);
       setAttempt((count) => count + 1);
     } catch (error) {
       showDialog('Couldn’t start that plan', describeRoutineError(error));
@@ -431,10 +416,6 @@ export default function HomeScreen() {
   async function switchToLighterRoutine() {
     const lighter = data?.welcomeBack?.lighterRoutine;
     if (!lighter) return;
-    if (lighter.is_pro && !subscription.isPro) {
-      openPaywall('routine');
-      return;
-    }
     try {
       const created = await startRoutine(lighter.id);
       const started = await fetchRoutine(created.routine_id);
@@ -510,10 +491,6 @@ export default function HomeScreen() {
   }
 
   function handleCreateWorkout() {
-    if (atFreeCustomWorkoutLimit(data?.ownedWorkouts ?? 0, subscription.isPro)) {
-      openPaywall('custom-limit');
-      return;
-    }
     router.push({ pathname: '/workouts/[id]', params: { id: 'new' } });
   }
 
@@ -581,7 +558,6 @@ export default function HomeScreen() {
   const weekRatio = weekProgress.planned > 0 ? weekProgress.completed / weekProgress.planned : 0;
   const showWeekCard =
     weekProgress.planned > 0 || (!hideStreak && (streak.current > 0 || streak.weeksTrained > 0));
-  const atCustomLimit = atFreeCustomWorkoutLimit(data.ownedWorkouts, subscription.isPro);
   const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
   const usedPhotos = new Set<string>();
   const nextThumb =
@@ -684,7 +660,6 @@ export default function HomeScreen() {
             title={handOff.routine.name}
             body={handOff.why}
             image={handOffImage}
-            locked={!subscription.isPro && handOff.routine.is_pro}
             starting={isStarting && handOff.mode === 'start'}
             primaryLabel={handOff.mode === 'start' ? `Start on ${handOff.mondayLabel}` : 'See this routine'}
             onPrimary={() => void startNextFromHandOff()}
@@ -700,22 +675,7 @@ export default function HomeScreen() {
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }}>
               Add exercises from the library, or pick a featured routine below.
             </AppText>
-            {atCustomLimit ? (
-              <Pressable
-                onPress={handleCreateWorkout}
-                style={({ pressed }) => [
-                  styles.limitButton,
-                  { backgroundColor: colours.brand, borderRadius: radius.full },
-                  pressed && styles.pressed,
-                ]}
-                accessibilityRole="button">
-                <ProMark locked textStyle={{ color: colours.onBrand }}>
-                  Create with Pro
-                </ProMark>
-              </Pressable>
-            ) : (
-              <PrimaryButton label="Create a workout" onPress={handleCreateWorkout} style={{ marginTop: spacing.md }} />
-            )}
+            <PrimaryButton label="Create a workout" onPress={handleCreateWorkout} style={{ marginTop: spacing.md }} />
             <TextButton label="My workouts" onPress={() => router.push('/workouts' as Href)} />
           </View>
         ) : null}
@@ -789,7 +749,7 @@ export default function HomeScreen() {
 
         <View>
           <SectionHeader
-            title={subscription.isPro ? 'Featured for you' : 'Starter routines'}
+            title="Featured for you"
             actionLabel="See all"
             onAction={() => router.push('/programmes' as Href)}
           />
@@ -810,9 +770,6 @@ export default function HomeScreen() {
                   subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
                   image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
                   letter={routine.name.slice(0, 1)}
-                  isPro={!subscription.isPro && routine.is_pro}
-                  isFree={!subscription.isPro && !routine.is_pro}
-                  locked={!subscription.isPro && routine.is_pro}
                   imageAspectRatio={16 / 10}
                   progress={
                     progress[routine.id] ? progress[routine.id].done / progress[routine.id].target : undefined
@@ -844,9 +801,6 @@ export default function HomeScreen() {
                   subtitle={`${routine.session_minutes} min`}
                   image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
                   letter={routine.name.slice(0, 1)}
-                  isPro={!subscription.isPro && routine.is_pro}
-                  isFree={!subscription.isPro && !routine.is_pro}
-                  locked={!subscription.isPro && routine.is_pro}
                   imageAspectRatio={16 / 10}
                   onPress={() => openStretch(routine)}
                   style={{ width: stretchWidth }}

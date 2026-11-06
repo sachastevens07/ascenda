@@ -24,23 +24,19 @@ import {
   MIN_REPS,
   MIN_SETS,
   fetchCustomWorkout,
-  isFreeCustomWorkoutLimitError,
   missingCustomWorkoutsMessage,
   saveCustomWorkout,
   trimWorkoutName,
   type WorkoutDraftSlot,
 } from '@/lib/customWorkouts';
 import { EQUIPMENT_LABELS, ZONE_LABELS } from '@/lib/exercises';
-import { openPaywall } from '@/lib/paywall';
 import type { SlotExercise } from '@/lib/programmes';
-import { useSubscription } from '@/lib/subscription';
 
 export default function WorkoutEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const isNew = id === 'new';
   const insets = useSafeAreaInsets();
   const { type } = useTheme();
-  const { isPro } = useSubscription();
   const [name, setName] = useState('');
   const [slots, setSlots] = useState<WorkoutDraftSlot[]>([]);
   const [loadState, setLoadState] = useState<'loading' | 'error' | 'ready'>('loading');
@@ -123,14 +119,10 @@ export default function WorkoutEditorScreen() {
     }
     setIsSaving(true);
     try {
-      await saveCustomWorkout(isNew ? null : id, trimmed, slots, isPro);
+      await saveCustomWorkout(isNew ? null : id, trimmed, slots);
       if (router.canGoBack()) router.back();
       else router.replace('/workouts' as Href);
     } catch (error) {
-      if (isFreeCustomWorkoutLimitError(error)) {
-        openPaywall('custom-limit');
-        return;
-      }
       const detail = error instanceof Error ? error.message : '';
       showDialog(
         'That didn’t save',

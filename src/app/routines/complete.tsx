@@ -19,11 +19,9 @@ import {
   type NextRoutineOffer,
 } from '@/lib/handOff';
 import { coverForRoutine, coverSources } from '@/lib/images';
-import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { fetchProgressSets } from '@/lib/progress';
 import { describeRoutineError, fetchEnrolment, fetchRoutines } from '@/lib/routines';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -33,7 +31,6 @@ export default function RoutineCompleteScreen() {
   const { colours, radius, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
-  const subscription = useSubscription();
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [review, setReview] = useState<EnrolmentReview | null>(null);
   const [next, setNext] = useState<NextRoutineOffer | null>(null);
@@ -61,7 +58,6 @@ export default function RoutineCompleteScreen() {
         currentRoutineId: enrolment.routine_id,
         catalogue,
         answers,
-        isPro: subscription.isPro,
         mode: 'start',
       }).catch(() => null);
       if (!isCurrent) return;
@@ -74,7 +70,7 @@ export default function RoutineCompleteScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [answers?.goal, answers?.experience, answers?.equipment, answers?.days_per_week, enrolmentId, subscription.isPro]);
+  }, [answers?.goal, answers?.experience, answers?.equipment, answers?.days_per_week, enrolmentId]);
 
   async function shareCard() {
     if (!review) return;
@@ -93,11 +89,7 @@ export default function RoutineCompleteScreen() {
     if (!next) return;
     setStarting(true);
     try {
-      const result = await startNextRoutineOnMonday(next.routine, subscription.isPro);
-      if (result === 'paywall') {
-        openPaywall('routine');
-        return;
-      }
+      await startNextRoutineOnMonday(next.routine);
       router.replace('/');
     } catch (error) {
       showDialog('Couldn’t start that plan', describeRoutineError(error));
@@ -120,7 +112,6 @@ export default function RoutineCompleteScreen() {
     );
   }
 
-  const locked = !subscription.isPro;
   const cover = next ? coverSources(coverForRoutine(next.routine))[0] ?? null : null;
 
   return (
@@ -156,18 +147,13 @@ export default function RoutineCompleteScreen() {
         </AppText>
       </View>
 
-      {locked ? (
-        <PrimaryButton label="Unlock the full review" onPress={() => openPaywall('review')} />
-      ) : (
-        <PrimaryButton label="Share this card" onPress={() => void shareCard()} />
-      )}
+      <PrimaryButton label="Share this card" onPress={() => void shareCard()} />
 
       {next ? (
         <WhatsNextCard
           title={next.routine.name}
           body={`${next.why} Starts ${next.mondayLabel}.`}
           image={cover}
-          locked={!subscription.isPro && next.routine.is_pro}
           starting={starting}
           primaryLabel={`Start on ${next.mondayLabel}`}
           onPrimary={() => void startNext()}

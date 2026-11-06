@@ -135,24 +135,21 @@ export function projectKeyLift(routine: Routine): LiftProjection | null {
 
 function pickStarterId(
   routines: RoutineSummary[],
-  preferredId: string | undefined,
-  isPro: boolean
+  preferredId: string | undefined
 ): string | null {
   const ids = [preferredId, ...STARTER_FALLBACKS].filter((id): id is string => Boolean(id));
   for (const id of ids) {
-    const routine = routines.find((item) => item.id === id);
-    if (routine && (!routine.is_pro || isPro)) return routine.id;
+    if (routines.some((item) => item.id === id)) return id;
   }
-  return routines.find((routine) => !routine.is_pro)?.id ?? null;
+  return routines[0]?.id ?? null;
 }
 
-/** Starts the recommended routine if it’s free or she’s Pro; otherwise the free starter. */
+/** Starts the recommended routine after the plan reveal. */
 export async function startOnboardingRoutine(input: {
   recommendedId?: string;
-  isPro: boolean;
 }): Promise<void> {
   const routines = await fetchRoutines().catch(() => []);
-  const startId = pickStarterId(routines, input.recommendedId, input.isPro);
+  const startId = pickStarterId(routines, input.recommendedId);
   if (!startId) return;
 
   const existing = await fetchActiveEnrolment().catch(() => null);

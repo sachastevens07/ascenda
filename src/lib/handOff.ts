@@ -74,7 +74,6 @@ export async function resolveNextRoutineOffer(input: {
   currentRoutineId: string | null;
   catalogue: RoutineSummary[];
   answers: QuizAnswers | null;
-  isPro: boolean;
   mode: HandOffMode;
 }): Promise<NextRoutineOffer | null> {
   const mondayIso = upcomingMondayIso();
@@ -98,8 +97,8 @@ export async function resolveNextRoutineOffer(input: {
   }
 
   const ranked = input.answers
-    ? pickFeaturedRoutines(strength, input.answers, 3, { freeOnly: !input.isPro })
-    : strength.filter((routine) => input.isPro || !routine.is_pro);
+    ? pickFeaturedRoutines(strength, input.answers, 3)
+    : strength;
   const pick =
     ranked.find((routine) => routine.id !== input.currentRoutineId) ??
     strength.find((routine) => routine.id === FREE_STARTER_ROUTINE_ID) ??
@@ -116,8 +115,7 @@ export async function resolveNextRoutineOffer(input: {
   };
 }
 
-export async function startNextRoutineOnMonday(routine: RoutineSummary, isPro: boolean): Promise<'started' | 'paywall'> {
-  if (routine.is_pro && !isPro) return 'paywall';
+export async function startNextRoutineOnMonday(routine: RoutineSummary): Promise<'started'> {
   await startRoutine(routine.id, { startDate: upcomingMondayIso() });
   track('next_routine_started', { routine_id: routine.id });
   return 'started';

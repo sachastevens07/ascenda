@@ -13,7 +13,6 @@ import {
 import { AppText } from '@/components/ui/AppText';
 import { THEME_PREFERENCES, THEME_PREFERENCE_LABELS, useTheme, type ThemePreference } from '@/constants/theme';
 
-import { FreeBadge, ProBadge } from './Badges';
 import { ProgressRing } from './Progress';
 
 /** Soft block shown until a licensed photo is uploaded for that slug. */
@@ -51,9 +50,6 @@ export function ImageCard({
   tags = [],
   image,
   letter,
-  isPro = false,
-  isFree = false,
-  locked = false,
   progress,
   imageAspectRatio = 4 / 5,
   imageHeight,
@@ -75,11 +71,6 @@ export function ImageCard({
           ) : (
             <CoverPlaceholder />
           )}
-          {isPro || isFree ? (
-            <View style={styles.badge}>
-              {isPro ? <ProBadge locked={locked} compact /> : <FreeBadge />}
-            </View>
-          ) : null}
           {typeof progress === 'number' ? (
             <View style={styles.ring}>
               <ProgressRing progress={progress} size={40} stroke={4} />

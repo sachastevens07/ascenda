@@ -25,7 +25,6 @@ import {
   IconButton,
   ListRow,
   PrimaryButton,
-  ProBadge,
   SecondaryButton,
   TextButton,
 } from '@/components/ui';
@@ -81,7 +80,6 @@ import {
   type GymExperience,
 } from '@/lib/profile';
 import { fetchRoutine, fetchRoutines, type RoutineSummary } from '@/lib/routines';
-import { useSubscription } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
 
 type Draft = Partial<QuizAnswers> & { focus_areas?: FocusArea[] };
@@ -207,7 +205,6 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { colours, radius, type, shadow } = useTheme();
   const { profile, saveQuizAnswers, confirmAge, deleteAccount, acceptDisclaimer } = useProfile();
-  const { isPro } = useSubscription();
   const [savedAnswers] = useState(() => getQuizAnswers(profile));
   const isEditing = savedAnswers !== null;
   const [draft, setDraft] = useState<Draft>(savedAnswers ?? {});
@@ -345,7 +342,7 @@ export default function OnboardingScreen() {
       const picked = pickRecommendedRoutine(routines, answers);
       setRecommended(picked);
       if (picked) {
-        const detail = await fetchRoutine(picked.id, { includeLockedWeeks: isPro }).catch(() => null);
+        const detail = await fetchRoutine(picked.id).catch(() => null);
         setProjection(detail ? projectKeyLift(detail) : null);
       } else {
         setProjection(null);
@@ -382,7 +379,6 @@ export default function OnboardingScreen() {
         await queueOnboardingPaywall(recommended?.id ?? '');
         await startOnboardingRoutine({
           recommendedId: recommended?.id,
-          isPro,
         }).catch(() => {});
         router.replace('/');
         return;
@@ -1060,12 +1056,11 @@ function RevealStep({
             image={cover}
             letter={recommended.name}
             title={recommended.name}
-            eyebrow={recommended.is_pro ? 'Pro plan' : 'Free starter'}
+            eyebrow="YOUR PLAN"
             height={220}
           />
         </View>
       ) : null}
-      {recommended?.is_pro ? <ProBadge locked compact style={{ alignSelf: 'flex-start', marginBottom: 8 }} /> : null}
       <AppText variant="display" style={{ color: colours.ink }}>
         {recommended ? recommended.name : 'Strong Foundations in 6 Weeks'}
       </AppText>
@@ -1088,18 +1083,11 @@ function RevealStep({
               ))}
             </View>
           ) : null}
-          {recommended.is_pro ? (
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 12 }}>
-              This one is Pro. If you don’t subscribe, we’ll start you on the free Gym Confidence
-              plan, with the same first-session feeling.
-            </AppText>
-          ) : null}
         </>
       ) : (
         <>
           <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
-            We’ll start you on Gym Confidence: 6 weeks, the free beginner plan, unless we can load
-            your match in a moment.
+            We'll start you on Gym Confidence: 6 weeks, unless we can load your match in a moment.
           </AppText>
           <TextButton label="Try loading your plan again" onPress={onRetry} style={styles.inlineAction} />
         </>

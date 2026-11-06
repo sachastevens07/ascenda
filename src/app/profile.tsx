@@ -8,7 +8,6 @@ import { showDialog } from '@/components/Dialog';
 import {
   AppText,
   DestructiveTextButton,
-  FreeBadge,
   GoalChipGroup,
   IconButton,
   ListRow,
@@ -16,14 +15,20 @@ import {
   MenuRow,
   OverflowMenu,
   PrimaryButton,
-  ProBadge,
   SegmentedThemePicker,
   measureAnchor,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme, type ThemePreference } from '@/constants/theme';
-import { appearanceSectionTitle, safetySettingsTitle } from '@/lib/copy';
+import {
+  appearanceSectionTitle,
+  fillCopy,
+  planSettingsTitle,
+  restoreCopy,
+  safetySettingsTitle,
+  subscriptionStatusCopy,
+} from '@/lib/copy';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import {
   DEFAULT_REMINDER_TIME,
@@ -91,25 +96,33 @@ import {
   DEV_OVERRIDES,
   DEV_OVERRIDE_LABELS,
   STORE_NAME,
+  hasProEntitlement,
   openManageSubscription,
+  restorePurchases,
   useSubscription,
   type ProStatus,
 } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
 
-function describePlan({ isPro, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
-  if (!isPro) {
-    return 'Logging, history, export, the library, two starter routines, the planner and your streak are free. Pro adds every routine, unlimited workouts, charts, a roadmap and private photos.';
+function planChip({ status, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
+  const date = trialEndsAt ?? expiresAt;
+  const formatted = date ? formatShortDate(date) : '';
+  switch (status) {
+    case 'trial':
+      return fillCopy(subscriptionStatusCopy.chip_trial, { date: formatted });
+    case 'active':
+      if (!formatted) return 'Active';
+      return fillCopy(
+        willRenew ? subscriptionStatusCopy.chip_active : subscriptionStatusCopy.chip_active_cancelled,
+        { date: formatted }
+      );
+    case 'grace':
+      return subscriptionStatusCopy.chip_grace;
+    case 'expired':
+      return subscriptionStatusCopy.chip_expired;
+    default:
+      return 'No subscription';
   }
-  if (trialEndsAt) {
-    return willRenew
-      ? `Free trial until ${formatShortDate(trialEndsAt)}. Then it becomes a paid plan unless you cancel.`
-      : `Free trial until ${formatShortDate(trialEndsAt)}. It won’t renew.`;
-  }
-  if (!expiresAt) return 'Everything is unlocked.';
-  return willRenew
-    ? `Renews on ${formatShortDate(expiresAt)}.`
-    : `Ends on ${formatShortDate(expiresAt)}. Logging and your history stay free.`;
 }
 
 function initials(name: string, email: string | undefined): string {
@@ -241,6 +254,19 @@ export default function ProfileScreen() {
     openManageSubscription(subscription.managementUrl).catch(() =>
       showDialog('Couldn’t open your subscription', `Open ${STORE_NAME} and go to Subscriptions.`)
     );
+  }
+
+  async function handleRestorePurchases() {
+    try {
+      const info = await restorePurchases();
+      subscription.applyCustomerInfo(info);
+      showDialog(
+        restoreCopy.restore,
+        hasProEntitlement(info) ? restoreCopy.success : restoreCopy.none
+      );
+    } catch {
+      showDialog(restoreCopy.restore, restoreCopy.error);
+    }
   }
 
   async function openFile(uri: string) {
@@ -531,11 +557,6 @@ export default function ProfileScreen() {
             <AppText variant="title2" style={{ color: colours.ink, flexShrink: 1 }} numberOfLines={1}>
               {displayName}
             </AppText>
-            {subscription.isPro ? (
-              <ProBadge compact />
-            ) : (
-              <FreeBadge style={{ backgroundColor: colours.brandSoft }} />
-            )}
           </View>
           {email ? (
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }} numberOfLines={1}>
@@ -545,12 +566,22 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <SettingsGroup title="Plan and subscription">
+      <SettingsGroup title={planSettingsTitle}>
+        <SettingsRow title={planChip(subscription)} subtitle={subscriptionStatusCopy.manage_help} />
+        {subscription.isPro ? (
+          <SettingsRow title={subscriptionStatusCopy.manage} onPress={handleManageSubscription} />
+        ) : (
+          <SettingsRow
+            title="Start your 7-day free trial"
+            onPress={() => openPaywall('onboarding')}
+          />
+        )}
+        <SettingsRow title={subscriptionStatusCopy.restore} onPress={() => void handleRestorePurchases()} />
         <SettingsRow
-          title={subscription.isPro ? 'Manage subscription' : 'See Pro'}
-          subtitle={describePlan(subscription)}
-          right={subscription.isPro ? undefined : <ProBadge locked compact />}
-          onPress={subscription.isPro ? handleManageSubscription : () => openPaywall('general')}
+          title={subscriptionStatusCopy.how_to_cancel_title}
+          onPress={() =>
+            showDialog(subscriptionStatusCopy.how_to_cancel_title, subscriptionStatusCopy.how_to_cancel_body)
+          }
         />
         <SettingsRow
           title={enrolment ? enrolment.routine.name : 'Browse routines'}

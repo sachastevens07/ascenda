@@ -24,7 +24,6 @@ import {
   HighlightTile,
   MenuRow,
   OverflowMenu,
-  ProBadge,
   ProgressBar,
   SecondaryButton,
   SectionHeader,
@@ -58,7 +57,6 @@ import {
 import { getGymUnlocked } from '@/lib/gymUnlocked';
 import { fetchHideStreak, fetchRestWeekStarts, maybeTrackStreakRepair, syncRestWeeksBanked } from '@/lib/streak';
 import { fetchBackOnTrack } from '@/lib/welcomeBack';
-import { openPaywall, type PaywallReason } from '@/lib/paywall';
 import {
   fetchPlannedCountsByWeek,
   fetchThisWeekProgress,
@@ -106,7 +104,6 @@ import {
   type RoutineEnrolment,
   type RoutineSummary,
 } from '@/lib/routines';
-import { useSubscription } from '@/lib/subscription';
 import { useWeightUnit } from '@/lib/units';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -183,7 +180,6 @@ export default function ActivityScreen() {
   const tabBarHeight = useTabBarHeight();
   const { colours, radius, shadow } = useTheme();
   useWeightUnit();
-  const { isPro } = useSubscription();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const [data, setData] = useState<ActivityData | null>(null);
@@ -265,7 +261,7 @@ export default function ActivityScreen() {
             nextPathRoutine: pathNext?.routine ?? null,
           });
           setLoadState('ready');
-          if (photosEnabled && isPro && showPhotosRef.current) {
+          if (photosEnabled && showPhotosRef.current) {
             try {
               const photos = await fetchProgressPhotos();
               if (isCurrent) {
@@ -286,7 +282,7 @@ export default function ActivityScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [attempt, answers?.days_per_week, isPro])
+    }, [attempt, answers?.days_per_week])
   );
 
   async function reloadPhotos() {
@@ -497,7 +493,7 @@ export default function ActivityScreen() {
             {data.hideStreak ? null : <StreakCard streak={data.streak} />}
 
             <SectionHeader title="Your routine" />
-            <CurrentRoutineCard enrolment={data.enrolment} roadmap={data.roadmap} isPro={isPro} />
+            <CurrentRoutineCard enrolment={data.enrolment} roadmap={data.roadmap} />
 
             <SectionHeader title="Personal bests" />
             <View style={card}>
@@ -528,22 +524,14 @@ export default function ActivityScreen() {
               )}
             </View>
 
-            {isPro ? (
-              weeks.filter((week) => week.count > 0).length >= 2 ? (
-                <View style={card}>
-                  <AppText variant="title2" style={{ color: colours.ink }}>Sessions per week</AppText>
-                  <WeeklyBars weeks={weeks} />
-                </View>
-              ) : null
-            ) : (
-              <ProCard
-                reason="charts"
-                title="See your progress over time"
-                copy="With Pro, chart your sessions each week and the weight on every lift."
-              />
-            )}
+            {weeks.filter((week) => week.count > 0).length >= 2 ? (
+              <View style={card}>
+                <AppText variant="title2" style={{ color: colours.ink }}>Sessions per week</AppText>
+                <WeeklyBars weeks={weeks} />
+              </View>
+            ) : null}
 
-            {isPro && lift && history.length >= 2 ? (
+            {lift && history.length >= 2 ? (
               <View style={card}>
                 <AppText variant="title2" style={{ color: colours.ink }}>
                   {lift.assisted ? 'Help over time' : 'Weight over time'}
@@ -588,7 +576,6 @@ export default function ActivityScreen() {
             ) : null}
 
             {data.photosEnabled ? (
-              isPro ? (
                 <>
                   <SectionHeader title="Progress photos" />
                   <View style={card}>
@@ -726,29 +713,14 @@ export default function ActivityScreen() {
                     )}
                   </View>
                 </>
-              ) : (
-                <ProCard
-                  reason="photos"
-                  title="Progress photos"
-                  copy="With Pro, keep private photos on your account. Never sent to AI, and never shown in summaries or share cards."
-                />
-              )
             ) : null}
 
-            {isPro ? (
-              <RoutineReviewCard
-                enrolment={data.completedEnrolment}
-                sessions={data.completedRoutineSessions}
-                review={data.review}
-                nextRoutine={data.nextPathRoutine}
-              />
-            ) : data.completedEnrolment ? (
-              <ProCard
-                reason="review"
-                title="End-of-routine review"
-                copy="You finished a routine. Pro unlocks a short review of how it went."
-              />
-            ) : null}
+            <RoutineReviewCard
+              enrolment={data.completedEnrolment}
+              sessions={data.completedRoutineSessions}
+              review={data.review}
+              nextRoutine={data.nextPathRoutine}
+            />
           </>
         ) : null}
 
@@ -805,14 +777,11 @@ export default function ActivityScreen() {
 function CurrentRoutineCard({
   enrolment,
   roadmap,
-  isPro,
 }: {
   enrolment: RoutineEnrolment | null;
   roadmap: RoadmapWeek[];
-  isPro: boolean;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const showProBadge = Boolean(enrolment?.routine.is_pro && !isPro);
   const week = enrolment ? currentEnrolmentWeek(enrolment) : 0;
   const totalDays = enrolment
     ? Math.max(1, enrolment.routine.length_weeks * enrolment.routine.days_per_week)
@@ -846,7 +815,6 @@ function CurrentRoutineCard({
                 <AppText variant="bodyStrong" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
                   {enrolment ? enrolment.routine.name : 'No routine yet'}
                 </AppText>
-                {showProBadge ? <ProBadge locked compact /> : null}
               </View>
               <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
                 {enrolment
@@ -880,26 +848,6 @@ function CurrentRoutineCard({
       ) : enrolment ? (
         <TextButton label="See full plan" onPress={openPlan} style={styles.inlineAction} />
       ) : null}
-    </View>
-  );
-}
-
-function ProCard({
-  title,
-  copy,
-  reason,
-}: {
-  title: string;
-  copy: string;
-  reason: PaywallReason;
-}) {
-  const { colours, radius, shadow } = useTheme();
-  return (
-    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-      <ProBadge locked />
-      <AppText variant="title2" style={{ color: colours.ink }}>{title}</AppText>
-      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>{copy}</AppText>
-      <SecondaryButton label="See Pro" onPress={() => openPaywall(reason)} />
     </View>
   );
 }

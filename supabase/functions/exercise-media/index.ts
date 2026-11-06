@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { userHasAscendaPro } from '../_shared/entitlement.ts';
 import bundled from './ids.json' with { type: 'json' };
 
 /**
@@ -205,6 +206,11 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   const userId = userData.user?.id ?? null;
   if (userError || !userId) {
+    return fail('unauthorized', 401);
+  }
+
+  const entitled = await userHasAscendaPro(supabase);
+  if (entitled === false) {
     return fail('unauthorized', 401);
   }
 

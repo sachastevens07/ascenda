@@ -17,13 +17,11 @@ import {
   Chip,
   ChipScroller,
   CoverPlaceholder,
-  FreeBadge,
   IconButton,
   MenuHeader,
   MenuRow,
   OverflowMenu,
   PrimaryButton,
-  ProBadge,
   ProgressBar,
   measureAnchor,
   type AnchorHandle,
@@ -37,7 +35,6 @@ import {
   type Challenge,
 } from '@/lib/challenges';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
-import { openPaywall } from '@/lib/paywall';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
   DIFFICULTY_LABELS,
@@ -55,7 +52,6 @@ import {
   type RoutineProgress,
   type RoutineSummary,
 } from '@/lib/routines';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -78,7 +74,6 @@ export function RoutineCatalogue({
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
   const { colours, spacing, radius, shadow } = useTheme();
-  const subscription = useSubscription();
   const [routines, setRoutines] = useState<RoutineSummary[]>([]);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -190,10 +185,6 @@ export function RoutineCatalogue({
         {path && routineType === 'strength' ? (
           <Pressable
             onPress={() => {
-              if (path.is_pro && !subscription.isPro) {
-                openPaywall('path');
-                return;
-              }
               router.push({ pathname: '/paths/[id]', params: { id: path.id } } as Href);
             }}
             style={({ pressed }) => [pressed && styles.pressed]}
@@ -204,7 +195,6 @@ export function RoutineCatalogue({
                   <AppText variant="eyebrow" style={{ color: colours.accent }}>
                     Path
                   </AppText>
-                  {path.is_pro && !subscription.isPro ? <ProBadge compact /> : null}
                 </View>
                 <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.sm }}>
                   {path.name}
@@ -232,7 +222,6 @@ export function RoutineCatalogue({
                     <AppText variant="eyebrow" style={{ color: colours.accent }}>
                       Challenge
                     </AppText>
-                    {challenge.is_pro && !subscription.isPro ? <ProBadge compact /> : null}
                   </View>
                   <View style={styles.challengeRow}>
                     <Thumb image={takeCoverSource(coverForChallenge(challenge), usedPhotos)} letter={challenge.name} />
@@ -339,7 +328,6 @@ export function RoutineCatalogue({
               key={summary.id}
               summary={summary}
               stretch={routineType === 'stretch'}
-              showBadges={!subscription.isPro}
               usedPhotos={usedPhotos}
               onPress={() => openDetails(summary)}
             />
@@ -374,13 +362,11 @@ export function RoutineCatalogue({
 function CatalogueCard({
   summary,
   stretch,
-  showBadges,
   usedPhotos,
   onPress,
 }: {
   summary: RoutineSummary;
   stretch: boolean;
-  showBadges: boolean;
   usedPhotos: Set<string>;
   onPress: () => void;
 }) {
@@ -404,7 +390,6 @@ function CatalogueCard({
               <AppText variant="eyebrow" style={{ color: colours.inkMuted, flex: 1 }} numberOfLines={1}>
                 {eyebrow}
               </AppText>
-              {showBadges ? summary.is_pro ? <ProBadge compact /> : <FreeBadge /> : null}
             </View>
             <AppText variant="title3" style={{ color: colours.ink, marginTop: 4 }} numberOfLines={2}>
               {summary.name}

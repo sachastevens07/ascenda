@@ -15,20 +15,20 @@ Git: `main`, ahead of origin. User is Sacha.
 - **R2 / S2 / N6** Tabs: Home, Programmes (Routines / Stretches / Exercises), Planner, Activity, Learn. Profile opens from the header avatar.
 - **R3** Routines as data (cover, tags, weeks/days/exercises, enrolments). Six launch plans plus S10 extras.
 - **R4** Home featured row, next-session card, routine detail. Session detail screen **removed in N3**; `/routines/session` only launches the logger.
-- **R5** Custom workout builder. Free cap 4 owned workouts (S1).
+- **R5** Custom workout builder. The free cap of 4 was removed in **P1**.
 - **R6** Planner agenda + month view. Rest-week banner is in (H1). **D5** restyle later.
 - **R7** Gym unlocked from logged sets. Level gating / Quiet Mode off the UI. `zone` and `confidence_history` stay in the database.
 - **R8** Activity header (sessions, lifts, time), this-week X of Y, Progress / Awards. Photos moved in **H7**.
 - **R9** Onboarding overhaul. **N1** safety and **N4** goals layered on. Notifications are asked after the first session (H3), not here.
-- **R10** Free vs Pro split, contextual `openPaywall(reason)`. Visual paywall restyle is **C1 / C2**, not started.
+- **R10** Replaced by **P1** (hard paywall). The paywall screen restyle is **C3**.
 - **R11** Pexels covers and 14 exercise photos. Stretch covers were gym shots until **D2**.
 
 **M1 exercise media (WorkoutX): plumbing built 6 Nov 2026, WorkoutX account deferred.** `getExerciseMedia()` and the Edge Function are in the repo. Play buttons stay hidden until there are matches. Sign-up, API key, matching, SQL and deploy wait for Sacha. MuscleWiki columns stay.
 
 **v2.1**
-- **S1** Duplicate loophole closed (create / duplicate / save-from-routine all count; Pro routines cannot be copied on Free).
+- **S1** Duplicate loophole closed, then removed in **P1** (no custom workout limit).
 - **S2** Programmes tab (see R2).
-- **S3** Shared `ProBadge`; Pro routines show week 1 only for free users.
+- **S3** Shared `ProBadge` and locked week 1 previews, then removed in **P1**.
 - **S4** Switch routine / End routine on detail and Home ⋯.
 - **S5** Superseded by **H1**.
 - **S6** Skipped; superseded by **H6** / **D7**.
@@ -45,6 +45,7 @@ Git: `main`, ahead of origin. User is Sacha.
 - **N3** Next-session / Start session opens the logger. Swap, remove, add/remove set, different day live there. Timer starts on open. End session discards. No add-exercise on routine sessions. Weighted sets need a weight.
 - **N1** (6 Nov 2026) Full safety text in `src/lib/disclaimer.ts` (v2, international). Surrounding strings from `content/microcopy` safety. Onboarding checkbox, re-prompt on version change, Profile About, first-session sheet, footer on routine pages and Learn articles only. SQL: `supabase/disclaimer.sql` (not run).
 - **N4** (6 Nov 2026) Up to 3 goals from `content/onboarding/onboarding.json`; first is Main. Profile → Your answers can edit them. `profiles.main_goals text[]`. SQL: `supabase/main_goals.sql` (not run).
+- **P1** (6 Nov 2026) Hard paywall. One `ascenda_pro` check in `useSubscription`. Badges, locked previews, workout cap and Unlock with Pro gone. `subscriptions` + RevenueCat webhook. SQL: `supabase/subscriptions_p1.sql` (not run). Paywall restyle and locked home are C3.
 - **H1** Streak: one session counts the week; full target is a gold week; rest weeks (earn 1 per 4, bank 2); repair with an extra session; weeks trained never resets; Profile can hide it.
 - **H2** Welcome-back card after a full week away. Lighter session / restart week / lighter routine. Back on track badge.
 - **H3** Planner-linked reminders after first session. Profile Notifications toggles. Copy is “X is ready when you are”. Reused `expo-notifications`.
@@ -70,7 +71,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 ### In progress
 
-**SQL pastes (blocked on Sacha).** To load today's sessions from the new `/content` plans, paste **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (one file at a time; does not touch the old 14 ids, sessions, sets or enrolments). Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, **`images_x1.sql`**, **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, **`exercise_notes_x4.sql`**, and **`workoutx_m1.sql`** (M1; do not paste until you confirm). After you review the match CSV, paste **`workoutx_ids.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote, cover placeholders and the gym-experience question work on-device without SQL. Notes and per-exercise rest in the logger also work on-device; they only sync across phones after `exercise_notes_x4.sql`. The gym-experience answer only persists after `gym_experience_g1.sql`. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7. Content sync will not mark old routines inactive until `routines_is_active.sql` is pasted, and a live sync is not run until you confirm. `session_blocks_w1.sql` adds day/session types and blocks without changing the logger list.
+**SQL pastes (blocked on Sacha).** To load today's sessions from the new `/content` plans, paste **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (one file at a time; does not touch the old 14 ids, sessions, sets or enrolments). Still waiting on `d2_covers.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, **`images_x1.sql`**, **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, **`exercise_notes_x4.sql`**, **`workoutx_m1.sql`** (M1; do not paste until you confirm), and **`subscriptions_p1.sql`**. After you review the match CSV, paste **`workoutx_ids.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote, cover placeholders and the gym-experience question work on-device without SQL. Notes and per-exercise rest in the logger also work on-device; they only sync across phones after `exercise_notes_x4.sql`. The gym-experience answer only persists after `gym_experience_g1.sql`. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7. Content sync will not mark old routines inactive until `routines_is_active.sql` is pasted, and a live sync is not run until you confirm. `session_blocks_w1.sql` adds day/session types and blocks without changing the logger list.
 
 ---
 
@@ -78,7 +79,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **12. N1** done this pass. Wait for Sacha to say "next". Then **13. P1**.
+Current: **13. P1** done this pass. Wait for Sacha to say "next". Then **14. X5**. Do not start X5 until then.
 
 C1 is still not built. The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -105,7 +106,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 ### Stage 3: Onboarding and money
 - [x] **11. N4** Up to three goals (6 Nov 2026). Values and labels from `content/onboarding/onboarding.json`. Multi-select chips, Main on the first pick, Profile → Your answers can edit. Featured and Learn weight the main goal. Lose body fat is allowed; the app still recommends strength routines and general articles. SQL: `supabase/main_goals.sql` (not run). Onboarding v2 screens stay for X5.
 - [x] **12. N1** Full safety disclaimer (6 Nov 2026). Body in `src/lib/disclaimer.ts`. Surrounding strings from `content/microcopy` `strings.safety`. Onboarding screen with required checkbox, `disclaimer_version` / `disclaimer_accepted_at`, re-ask when the version changes, first-session sheet with 4 bullets, Profile → Safety and disclaimer, footer on routine pages and Learn articles only. SQL: `supabase/disclaimer.sql` (not run).
-- [ ] **13. P1** Hard paywall. Not started. The app is still Free vs Pro with badges, locks and the 4-workout cap. S1 and S3 are built and will be removed here. One entitlement: `ascenda_pro`.
+- [x] **13. P1** Hard paywall (6 Nov 2026). Single `ascenda_pro` check in `useSubscription`. Pro badges, FreeBadges, locked previews, custom workout limits and Unlock with Pro paywalls removed from the app. `is_pro` columns stay unused. `subscriptions` table + RevenueCat webhook Edge Function. RLS hides week 2+ and exercise prescriptions without trial/active/grace. Plan-reveal summaries stay readable. Profile → Plan and subscription uses microcopy status chips, Manage, Restore. Paywall screen and locked home stay for **C3**. SQL: `supabase/subscriptions_p1.sql` (not run).
 - [ ] **14. X5** Onboarding v2 from `content/onboarding/onboarding.json`. Not started.
 - [ ] **15. C3** Paywall screen, locked home, trial, grace and expired states. Not started. The current paywall is the freemium screen.
 - [ ] **16. C1** Subscription compliance. Partly done: a local trial-ending reminder exists. Price, billing period, charge date, cancel path and renewal reminders are not the C1 screen.
@@ -198,7 +199,7 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 - App name in copy is Ascenda; `app.json` is still "Women's Strength" / `womens-strength`. Ask before renaming.
 - Keep both One spot routines.
 - `showDevTools` is on-device AsyncStorage. One long-press of Profile **Version 1.0.0** toggles it (not five). `EXPO_PUBLIC_SHOW_DEV_TOOLS` is unused.
-- N3/X4: timer starts on first ticked set or Start timer. Chevron-down minimises (bar on every tab). End session with no ticks discards with no prompt. Rep targets editable for today. Add exercise is on routine sessions (today only). Weighted sets still need a weight. Swap is free; suggested-weight chips stay Pro. Reorder is long-press then arrows; no drag library until asked.
+- N3/X4: timer starts on first ticked set or Start timer. Chevron-down minimises (bar on every tab). End session with no ticks discards with no prompt. Rep targets editable for today. Add exercise is on routine sessions (today only). Weighted sets still need a weight. Suggested-weight chips follow the progression rule for everyone after P1. Reorder is long-press then arrows; no drag library until asked.
 - G2: warm-up/cool-down templates are bundled from `/content`. Skip is local to the session and is not a logged session. Ramp-up uses set numbers 0 and -1 so working set 1 still drives progression. Did not add a library.
 - M1: WorkoutX terms followed from their public docs (AGENTS still has the paste placeholder): store ids not URLs; reuse signed links in memory until they expire (~24h); do not download or re-host files; key only in the Edge Function secret (`X-WorkoutX-Key` header). No on-screen attribution in their API docs. Monthly views depend on the plan; `media_usage` stores integer headers only. Added `expo-video` for tap-to-play. Sacha deferred WorkoutX sign-up on 6 Nov 2026; play UI stays off until matches exist. Swap engine and double-progression unchanged.
 - N1 disclaimer is international v2 (doctor, local emergency number). Body stays in `src/lib/disclaimer.ts`; bump `DISCLAIMER_VERSION` when it changes. Surrounding strings from microcopy (safety). Safety after 18+, before goals. First-session sheet uses the 4 AGENTS bullets (no GP) and microcopy "Got it". Footer only on routine detail and Learn articles. No extra font for “Train safely”.
@@ -208,7 +209,8 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 - H3 reuses `expo-notifications`. Time picker is hourly chips. Reminders default off. Offers and news never send a push.
 - H5: `posthog-react-native`, EU host, `EXPO_PUBLIC_POSTHOG_API_KEY` (`phc_…`) + `EXPO_PUBLIC_POSTHOG_HOST`. No PostHogProvider / autocapture. `set_ticked` has no weight/reps/exercise id.
 - H6: badges computed live; no S6 definition tables. Tier rings are D7.
-- H7: photos off even if files exist. Consent once per device. Turning off hides the card, does not delete. Free users can enable, then see the Pro card. Delete account is in Profile → Privacy (D8).
+- H7: photos off even if files exist. Consent once per device. Turning off hides the card, does not delete. After P1 there is no Pro card; photos show if she has switched them on. Delete account is in Profile → Privacy (D8).
+- P1: `useSubscription().isPro` means she has the `ascenda_pro` entitlement (trial, paid or billing grace). Status is `none` | `trial` | `active` | `grace` | `expired`. Locked home and the DESIGN 9.2 paywall screen are C3. Until the webhook writes a `subscriptions` row, RLS treats her as not entitled (week 1 overview still readable; `/content` overlay may still fill later weeks on device). Tester insert is commented at the bottom of `supabase/subscriptions_p1.sql`. Did not add a library.
 - H8: personal window on join (next Monday and next 1st only). 28 days inclusive. Catalogue `challenges.start_date` / `end_date` kept but ignored for status. Both seed challenges stay and are always joinable. Unrestyled challenge page kept. Join dates also saved in AsyncStorage if SQL is missing.
 - Primary buttons are plum. Coral is highlights only. Unrestyled screens stay cream until their design pass.
 - Export is Excel `.xlsx`, not CSV. UK spelling. No em dashes in user-facing copy.
@@ -250,8 +252,8 @@ Scan the QR with Expo Go. Use `--tunnel` if needed. After the typography pass, `
 **SQL already run (confirmed):** `exercises.sql`, `profiles.sql`, `programmes.sql`, `sessions.sql`. User also reported (24 Oct) `routines.sql` and `planned_sessions.sql` pasted.
 
 **SQL to paste (not confirmed; app usually still opens):**
-`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql` (optional if you paste `quotes_n7.sql`), `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, **`images_x1.sql`**, **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (needed for today's sessions on the new plans; paste one file at a time). Do not run `cycle.sql`. `routines_is_active.sql` only adds the column (default true). It does not hide any routine. `session_blocks_w1.sql` does not delete sessions or change the exercise list. `content_routines.sql` does not delete the old 14 routine ids or any workout history.
+`zones.sql`, `onboarding_v1_1.sql`, `quiet_mode.sql`, `level_up.sql`, `custom_workouts.sql`, `blocks.sql`, `remove_cycle_notes.sql`, `activity.sql`, `onboarding_v2.sql`, `routine_covers.sql`, `exercise_media.sql`, `remove_rest_passes.sql`, `stretches.sql`, `paths.sql`, `s10_routines.sql`, `s11_copy.sql`, then v2.2: `theme_preference.sql`, `disclaimer.sql`, `main_goals.sql`, `streak_h1.sql`, `reminders.sql`, `achievements_h6.sql`, `photos_h7.sql`, `challenges_h8.sql` (rewritten; paste the whole file), `d2_covers.sql`, `quotes_d3.sql` (optional if you paste `quotes_n7.sql`), `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, **`images_x1.sql`**, **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (needed for today's sessions on the new plans; paste one file at a time), **`subscriptions_p1.sql`**. Do not run `cycle.sql`. `routines_is_active.sql` only adds the column (default true). It does not hide any routine. `session_blocks_w1.sql` does not delete sessions or change the exercise list. `content_routines.sql` does not delete the old 14 routine ids or any workout history.
 
 Agents cannot run SQL. Sacha pastes into Supabase > SQL Editor. Files are idempotent; the editor’s “destructive operations” warning is expected.
 
-**Dashboard still needed:** Authentication → Email → Confirm email off until testers. RevenueCat entitlement `ascenda_pro`. PostHog dashboards are created in the PostHog EU UI, not in the app.
+**Dashboard still needed:** Authentication → Email → Confirm email off until testers. RevenueCat products `ascenda_annual` and `ascenda_monthly`, entitlement `ascenda_pro`, webhook to `revenuecat-webhook`. PostHog dashboards are created in the PostHog EU UI, not in the app.

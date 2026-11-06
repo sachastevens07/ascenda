@@ -3,14 +3,12 @@ import { Image, View, type ImageSourcePropType, type StyleProp, type ViewStyle }
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 
-import { ProBadge } from './Badges';
 import { PrimaryButton, TextButton } from './Buttons';
 
 export function WhatsNextCard({
   title,
   body,
   image,
-  locked = false,
   starting = false,
   primaryLabel,
   onPrimary,
@@ -20,7 +18,6 @@ export function WhatsNextCard({
   title: string;
   body: string;
   image?: ImageSourcePropType | null;
-  locked?: boolean;
   starting?: boolean;
   primaryLabel: string;
   onPrimary: () => void;
@@ -46,7 +43,6 @@ export function WhatsNextCard({
           <AppText variant="eyebrow" style={{ color: colours.accent }}>
             What’s next
           </AppText>
-          {locked ? <ProBadge compact /> : null}
         </View>
         <AppText variant="title2" style={{ color: colours.ink, marginTop: spacing.sm }}>
           {title}

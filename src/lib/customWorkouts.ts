@@ -14,10 +14,6 @@ export const STARTER_WORKOUT_ID = '11111111-1111-4111-8111-111111111111';
 export const MIN_WORKOUT_NAME = 1;
 export const MAX_WORKOUT_NAME = 60;
 export const MAX_WORKOUT_EXERCISES = 12;
-/** Free users can keep this many owned workouts. Duplicates count. The shared starter does not. */
-export const FREE_CUSTOM_WORKOUT_LIMIT = 4;
-export const FREE_CUSTOM_WORKOUT_LIMIT_CODE = 'FREE_CUSTOM_WORKOUT_LIMIT';
-export const PRO_ROUTINE_DUPLICATE_CODE = 'PRO_ROUTINE_DUPLICATE';
 export const MIN_SETS = 1;
 export const MAX_SETS = 6;
 export const MIN_REPS = 1;
@@ -60,28 +56,10 @@ export function describeCustomWorkoutError(error: unknown): string {
       : error && typeof error === 'object' && 'message' in error
         ? String((error as { message: unknown }).message)
         : '';
-  if (detail === FREE_CUSTOM_WORKOUT_LIMIT_CODE) {
-    return `Free includes ${FREE_CUSTOM_WORKOUT_LIMIT} saved workouts. Duplicates count. The starter does not. Pro is unlimited. Your existing workouts stay.`;
-  }
-  if (detail === PRO_ROUTINE_DUPLICATE_CODE) {
-    return 'Pro routines can’t be copied on the free plan.';
-  }
   if (/42P01|custom_workouts|custom_workout_id|\bsource\b/i.test(detail)) {
     return missingCustomWorkoutsMessage();
   }
   return detail || 'Check your connection and try again.';
-}
-
-export function isFreeCustomWorkoutLimitError(error: unknown): boolean {
-  return error instanceof Error && error.message === FREE_CUSTOM_WORKOUT_LIMIT_CODE;
-}
-
-export function isProRoutineDuplicateError(error: unknown): boolean {
-  return error instanceof Error && error.message === PRO_ROUTINE_DUPLICATE_CODE;
-}
-
-export function atFreeCustomWorkoutLimit(ownedCount: number, isPro: boolean): boolean {
-  return !isPro && ownedCount >= FREE_CUSTOM_WORKOUT_LIMIT;
 }
 
 export function ownedCustomWorkoutCount(workouts: CustomWorkout[]): number {
@@ -102,14 +80,6 @@ export async function countOwnedCustomWorkouts(): Promise<number> {
   } catch (error) {
     if (error && typeof error === 'object' && isMissingCustomWorkouts(error)) return 0;
     throw error;
-  }
-}
-
-async function assertCanCreateCustomWorkout(isPro: boolean): Promise<void> {
-  if (isPro) return;
-  const owned = await countOwnedCustomWorkouts();
-  if (owned >= FREE_CUSTOM_WORKOUT_LIMIT) {
-    throw new Error(FREE_CUSTOM_WORKOUT_LIMIT_CODE);
   }
 }
 
@@ -264,8 +234,7 @@ export type WorkoutDraftSlot = {
 export async function saveCustomWorkout(
   id: string | null,
   name: string,
-  slots: WorkoutDraftSlot[],
-  isPro = false
+  slots: WorkoutDraftSlot[]
 ): Promise<CustomWorkout> {
   const trimmed = trimWorkoutName(name);
   if (trimmed.length < MIN_WORKOUT_NAME) throw new Error('Give this workout a name.');
@@ -273,7 +242,6 @@ export async function saveCustomWorkout(
   if (slots.length > MAX_WORKOUT_EXERCISES) {
     throw new Error(`Keep it to ${MAX_WORKOUT_EXERCISES} exercises.`);
   }
-  if (!id) await assertCanCreateCustomWorkout(isPro);
 
   const rows = slots.map((slot, index) => ({
     position: index + 1,
@@ -318,10 +286,7 @@ export async function deleteCustomWorkout(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function duplicateCustomWorkout(
-  workout: CustomWorkout,
-  isPro = false
-): Promise<CustomWorkout> {
+export async function duplicateCustomWorkout(workout: CustomWorkout): Promise<CustomWorkout> {
   return saveCustomWorkout(
     null,
     copyWorkoutName(workout.name),
@@ -330,8 +295,7 @@ export async function duplicateCustomWorkout(
       sets: item.sets,
       rep_min: item.rep_min,
       rep_max: item.rep_max,
-    })),
-    isPro
+    }))
   );
 }
 
@@ -340,21 +304,16 @@ export type RoutineDayCopy = {
   exercises: WorkoutDraftSlot[];
 };
 
-/** Saves one routine day as an owned custom workout. Counts toward the free cap of 4. */
+/** Saves one routine day as an owned custom workout. */
 export async function duplicateRoutineDay(
-  routine: { name: string; is_pro: boolean },
+  routine: { name: string },
   day: RoutineDayCopy,
-  isPro = false,
   name?: string
 ): Promise<CustomWorkout> {
-  if (routine.is_pro && !isPro) {
-    throw new Error(PRO_ROUTINE_DUPLICATE_CODE);
-  }
   return saveCustomWorkout(
     null,
     name ?? copyWorkoutName(routine.name),
-    day.exercises.slice(0, MAX_WORKOUT_EXERCISES),
-    isPro
+    day.exercises.slice(0, MAX_WORKOUT_EXERCISES)
   );
 }
 
@@ -366,10 +325,8 @@ export function nextCustomWorkoutName(now = new Date()): string {
 
 /** Blank saved workout so she can start now and add lifts in the logger. */
 export async function createEmptyCustomWorkout(
-  name: string = nextCustomWorkoutName(),
-  isPro = false
+  name: string = nextCustomWorkoutName()
 ): Promise<CustomWorkout> {
-  await assertCanCreateCustomWorkout(isPro);
   const trimmed = trimWorkoutName(name);
   const userId = await currentUserId();
   const { data, error } = await supabase
@@ -390,8 +347,8 @@ export async function createEmptyCustomWorkout(
 }
 
 /** One tap: create an empty workout and open the logger. */
-export async function startBlankCustomSession(isPro = false): Promise<Session> {
-  const workout = await createEmptyCustomWorkout(nextCustomWorkoutName(), isPro);
+export async function startBlankCustomSession(): Promise<Session> {
+  const workout = await createEmptyCustomWorkout();
   return startCustomSession(workout.id);
 }
 

@@ -201,7 +201,7 @@ export function formatWeightInput(kg: number | null): string {
 
 /**
  * Pre-fills each set: what's already logged this session, else the increased weight at the bottom
- * of the rep range if she earned one (Pro only), else last time, else the bottom of the rep range.
+ * of the rep range if she earned one, else last time, else the bottom of the rep range.
  */
 export function buildEntries(
   day: ProgrammeDay,

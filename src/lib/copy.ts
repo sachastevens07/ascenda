@@ -28,6 +28,42 @@ export const safetyCopy = {
 
 export const safetySettingsTitle = profile.settings_rows.safety;
 
+const subscription = microcopy.strings.subscription_status;
+
+/** Profile → Plan and subscription. Prices still come from RevenueCat. */
+export const subscriptionStatusCopy = {
+  title: subscription.title,
+  chip_trial: subscription.chip_trial,
+  chip_active: subscription.chip_active,
+  chip_active_cancelled: subscription.chip_active_cancelled,
+  chip_grace: subscription.chip_grace,
+  chip_expired: subscription.chip_expired,
+  manage: subscription.manage,
+  manage_help: subscription.manage_help,
+  restore: subscription.restore,
+  how_to_cancel_title: subscription.how_to_cancel_title,
+  how_to_cancel_body: subscription.how_to_cancel_body,
+} as const;
+
+export const planSettingsTitle = profile.settings_rows.plan;
+
+const paywall = microcopy.strings.paywall;
+
+export const restoreCopy = {
+  restore: paywall.restore,
+  none: paywall.restore_none,
+  success: paywall.restore_success,
+  error: paywall.error,
+} as const;
+
+export const paywallScreenCopy = {
+  title: paywall.headline_fallback,
+  body: paywall.subheadline,
+  benefits: paywall.benefits,
+  success_title: paywall.success_title,
+  success_body: paywall.success_body,
+} as const;
+
 /** Logger strings from content/microcopy. Bundled, not loaded by content:sync. */
 export const loggerCopy = microcopy.strings.logger;
 

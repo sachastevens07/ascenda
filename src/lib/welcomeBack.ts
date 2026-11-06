@@ -68,11 +68,10 @@ export function welcomeBackBody(now = new Date()): string {
 
 export function pickLighterRoutine(
   current: RoutineSummary | null,
-  catalogue: RoutineSummary[],
-  isPro: boolean
+  catalogue: RoutineSummary[]
 ): RoutineSummary | null {
   const strength = catalogue.filter((routine) => routine.type !== 'stretch' && routine.id !== current?.id);
-  const accessible = strength.filter((routine) => isPro || !routine.is_pro);
+  const accessible = strength;
   if (accessible.length === 0) return null;
 
   const starter = accessible.find((routine) => routine.id === FREE_STARTER_ROUTINE_ID);
@@ -126,7 +125,6 @@ export async function resolveWelcomeBackOffer(input: {
   lastDayId: string | null;
   nextDay: RoutineDay | null;
   catalogue: RoutineSummary[];
-  isPro: boolean;
   now?: Date;
 }): Promise<WelcomeBackOffer | null> {
   const now = input.now ?? new Date();
@@ -152,7 +150,7 @@ export async function resolveWelcomeBackOffer(input: {
     restartWeek,
     restartDay,
     lighterRoutine:
-      weeksAway >= 3 ? pickLighterRoutine(input.enrolment?.routine ?? null, input.catalogue, input.isPro) : null,
+      weeksAway >= 3 ? pickLighterRoutine(input.enrolment?.routine ?? null, input.catalogue) : null,
     nextDay: input.nextDay ?? (input.routine ? firstDayOfRoutine(input.routine) : null),
     starterRoutineId: FREE_STARTER_ROUTINE_ID,
   };

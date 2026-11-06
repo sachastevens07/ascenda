@@ -8,10 +8,7 @@ import {
   AppText,
   Chip,
   DetailLayout,
-  FreeBadge,
-  LockedOverlay,
   PrimaryButton,
-  ProBadge,
   StatStrip,
   TextButton,
 } from '@/components/ui';
@@ -19,7 +16,6 @@ import { useTheme } from '@/constants/theme';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { coverForRoutine, coverSources } from '@/lib/images';
-import { openPaywall } from '@/lib/paywall';
 import {
   DIFFICULTY_LABELS,
   ROUTINE_EQUIPMENT_LABELS,
@@ -29,7 +25,6 @@ import {
   type RoutineDayExercise,
 } from '@/lib/routines';
 import {
-  STRETCH_PREVIEW_STEPS,
   beginStretchSession,
   describeStretchError,
   fetchStretchRoutine,
@@ -40,7 +35,6 @@ import {
   stretchSteps,
   totalHoldSeconds,
 } from '@/lib/stretches';
-import { useSubscription } from '@/lib/subscription';
 import { useWorkout } from '@/lib/workout';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
@@ -63,7 +57,6 @@ export default function StretchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const { colours, spacing } = useTheme();
-  const subscription = useSubscription();
   const workout = useWorkout();
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -104,10 +97,6 @@ export default function StretchDetailScreen() {
 
   async function handleStart() {
     if (!routine) return;
-    if (routine.is_pro && !subscription.isPro) {
-      openPaywall('stretch');
-      return;
-    }
     const day = stretchSteps(routine);
     const dayId = routine.weeks[0]?.days[0]?.id;
     if (!dayId || day.length === 0) {
@@ -173,9 +162,7 @@ export default function StretchDetailScreen() {
   }
 
   const steps = stretchSteps(routine);
-  const locked = routine.is_pro && !subscription.isPro;
-  const visibleSteps = locked ? steps.slice(0, STRETCH_PREVIEW_STEPS) : steps;
-  const hiddenCount = Math.max(0, steps.length - visibleSteps.length);
+  const visibleSteps = steps;
   const holdSeconds = totalHoldSeconds(steps);
   const cover = coverSources(coverForRoutine(routine))[0] ?? null;
   const showMore = routine.description.trim().length > 90;
@@ -184,7 +171,7 @@ export default function StretchDetailScreen() {
     ROUTINE_GOAL_LABELS[routine.goal],
     ...routine.tags.map((tag) => formatTagLabel(tag)),
   ];
-  const stickyLabel = locked ? 'Start with Pro' : 'Start stretch';
+  const stickyLabel = 'Start stretch';
 
   return (
     <DetailLayout
@@ -201,10 +188,6 @@ export default function StretchDetailScreen() {
           onPress={() => void handleStart()}
         />
       }>
-      <View style={styles.badgeRow}>
-        {!subscription.isPro ? routine.is_pro ? <ProBadge /> : <FreeBadge /> : null}
-      </View>
-
       <AppText variant="body" style={{ color: colours.ink }} numberOfLines={descriptionOpen ? undefined : 2}>
         {routine.description}
       </AppText>
@@ -258,21 +241,6 @@ export default function StretchDetailScreen() {
           </View>
         </Pressable>
       ))}
-      {hiddenCount > 0 ? (
-        <View
-          style={[
-            styles.lockCard,
-            { backgroundColor: colours.surface, borderRadius: 16, minHeight: 132 },
-          ]}>
-          <AppText variant="title3" style={{ color: colours.ink }}>
-            {hiddenCount} more {hiddenCount === 1 ? 'hold' : 'holds'}
-          </AppText>
-          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-            The free plan includes three stretch sessions in full.
-          </AppText>
-          <LockedOverlay onUnlock={() => openPaywall('stretch')} label="Unlock with Pro" />
-        </View>
-      ) : null}
     </DetailLayout>
   );
 }

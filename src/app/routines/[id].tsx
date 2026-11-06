@@ -15,14 +15,11 @@ import {
   AppText,
   Chip,
   DetailLayout,
-  FreeBadge,
   IconButton,
-  LockedOverlay,
   MenuHeader,
   MenuRow,
   OverflowMenu,
   PrimaryButton,
-  ProBadge,
   ProgressBar,
   RelatedLearn,
   SafetyNotice,
@@ -37,14 +34,11 @@ import { useTheme } from '@/constants/theme';
 import {
   describeCustomWorkoutError,
   duplicateRoutineDay,
-  isFreeCustomWorkoutLimitError,
-  isProRoutineDuplicateError,
 } from '@/lib/customWorkouts';
 import { EQUIPMENT_LABELS, MUSCLE_LABELS, type Equipment } from '@/lib/exercises';
 import { ROLE_LABELS, formatRir } from '@/lib/routineStandard';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine, coverSources } from '@/lib/images';
-import { openPaywall } from '@/lib/paywall';
 import {
   fetchHandOffPreview,
   isInHandoffWindow,
@@ -71,7 +65,6 @@ import {
   formatTagLabel,
   getNextRoutineDay,
   groupRoutinePhases,
-  isRoutineWeekLocked,
   missingRoutinesMessage,
   startRoutine,
   type PlannedSession,
@@ -83,7 +76,6 @@ import {
 } from '@/lib/routines';
 import { fetchLastFinishedRoutineSession } from '@/lib/sessions';
 import { openRoutineLogger } from '@/lib/startLogger';
-import { useSubscription } from '@/lib/subscription';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
@@ -183,7 +175,6 @@ export default function RoutineDetailScreen() {
   const { colours, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
-  const subscription = useSubscription();
   const menuRef = useRef<AnchorHandle>(null);
   const [routine, setRoutine] = useState<Routine | null>(null);
   const [enrolment, setEnrolment] = useState<RoutineEnrolment | null>(null);
@@ -208,12 +199,8 @@ export default function RoutineDetailScreen() {
         setLoadState('not-found');
         return;
       }
-      if (subscription.isLoading) {
-        setLoadState((state) => (state === 'ready' ? state : 'loading'));
-        return;
-      }
       setLoadState((state) => (state === 'ready' ? state : 'loading'));
-      Promise.all([fetchRoutine(id, { includeLockedWeeks: subscription.isPro }), fetchActiveEnrolment()])
+      Promise.all([fetchRoutine(id), fetchActiveEnrolment()])
         .then(async ([next, active]) => {
           if (!isCurrent) return;
           if (next?.type === 'stretch') {
@@ -247,7 +234,6 @@ export default function RoutineDetailScreen() {
               currentRoutineId: active.routine_id,
               catalogue,
               answers,
-              isPro: subscription.isPro,
               mode: 'preview',
             }).catch(() => null);
             if (offer) offer.why = `${previewCopy(active)} ${offer.why}`.trim();
@@ -271,8 +257,6 @@ export default function RoutineDetailScreen() {
       answers?.experience,
       answers?.equipment,
       answers?.days_per_week,
-      subscription.isLoading,
-      subscription.isPro,
     ])
   );
 
@@ -291,10 +275,6 @@ export default function RoutineDetailScreen() {
   function requestStart() {
     if (!routine) return;
     if (enrolment?.routine_id === routine.id) return;
-    if (routine.is_pro && !subscription.isPro) {
-      openPaywall('routine');
-      return;
-    }
     const message = enrolment
       ? `This ends ${enrolment.routine.name} and starts ${routine.name} from week 1. Your logged sessions stay. Upcoming planned sessions from the old plan will be cleared.`
       : `${routine.name} starts today. Home will show your next session from this plan.`;
@@ -375,10 +355,6 @@ export default function RoutineDetailScreen() {
 
   async function handleDuplicate() {
     if (!routine) return;
-    if (routine.is_pro && !subscription.isPro) {
-      openPaywall('routine');
-      return;
-    }
     const day = firstDayOfRoutine(routine);
     if (!day) {
       showDialog('Nothing to copy', 'This routine has no days yet.');
@@ -396,19 +372,10 @@ export default function RoutineDetailScreen() {
             rep_min: item.rep_min,
             rep_max: item.rep_max,
           })),
-        },
-        subscription.isPro
+        }
       );
       router.push({ pathname: '/workouts/[id]', params: { id: copy.id } });
     } catch (error) {
-      if (isProRoutineDuplicateError(error)) {
-        openPaywall('routine');
-        return;
-      }
-      if (isFreeCustomWorkoutLimitError(error)) {
-        openPaywall('custom-limit');
-        return;
-      }
       showDialog('Couldn’t copy it', describeCustomWorkoutError(error));
     } finally {
       setIsDuplicating(false);
@@ -437,11 +404,7 @@ export default function RoutineDetailScreen() {
   const showMore = routine.description.trim().length > 90;
   const phases = groupRoutinePhases(routine.weeks);
   const weeksByNumber = new Map(routine.weeks.map((week) => [week.week_number, week]));
-  const stickyLabel = isCurrent
-    ? 'Start next session'
-    : routine.is_pro && !subscription.isPro
-      ? 'Start with Pro'
-      : 'Start routine';
+  const stickyLabel = isCurrent ? 'Start next session' : 'Start routine';
   const showSticky = !isCurrent || Boolean(nextSession);
   const currentWeek = enrolment && isCurrent ? currentEnrolmentWeek(enrolment) : 0;
   const chips = [
@@ -479,7 +442,6 @@ export default function RoutineDetailScreen() {
           ) : undefined
         }>
           <View style={styles.badgeRow}>
-            {!subscription.isPro ? routine.is_pro ? <ProBadge /> : <FreeBadge /> : null}
             {isCurrent ? <Chip label="Current" selected /> : null}
           </View>
 
@@ -581,7 +543,6 @@ export default function RoutineDetailScreen() {
               title={handOff.routine.name}
               body={handOff.why}
               image={coverSources(coverForRoutine(handOff.routine))[0] ?? null}
-              locked={!subscription.isPro && handOff.routine.is_pro}
               primaryLabel="See this routine"
               onPrimary={() =>
                 router.push({ pathname: '/routines/[id]', params: { id: handOff.routine.id } } as Href)
@@ -613,8 +574,7 @@ export default function RoutineDetailScreen() {
                   </View>
                 ) : null}
                 {weeks.map((week) => {
-                  const weekLocked = isRoutineWeekLocked(routine, week.week_number, subscription.isPro);
-                  const weekOpen = !weekLocked && openWeek === week.week_number;
+                  const weekOpen = openWeek === week.week_number;
                   return (
                     <View key={week.id} style={styles.weekRow}>
                       <View style={styles.rail}>
@@ -626,42 +586,25 @@ export default function RoutineDetailScreen() {
                           style={[
                             styles.weekCard,
                             { backgroundColor: colours.surface, borderRadius: 16 },
-                            weekLocked && styles.weekLocked,
                           ]}>
-                          {weekLocked ? (
-                            <>
-                              <View style={styles.weekHeader}>
-                                <WeekHeaderBody
-                                  week={week}
-                                  doneDayIds={doneDayIds}
-                                  showTicks={isCurrent}
-                                />
-                              </View>
-                              <LockedOverlay
-                                onUnlock={() => openPaywall('routine')}
-                                label={`Unlock weeks 2 to ${routine.length_weeks} with Pro`}
-                              />
-                            </>
-                          ) : (
-                            <Pressable
-                              onPress={() => {
-                                setOpenWeek(weekOpen ? null : week.week_number);
-                                setOpenDayId(null);
-                              }}
-                              style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
-                              accessibilityRole="button">
-                              <WeekHeaderBody
-                                week={week}
-                                doneDayIds={doneDayIds}
-                                showTicks={isCurrent}
-                              />
-                              <Ionicons
-                                name={weekOpen ? 'chevron-up' : 'chevron-down'}
-                                size={20}
-                                color={colours.brand}
-                              />
-                            </Pressable>
-                          )}
+                          <Pressable
+                            onPress={() => {
+                              setOpenWeek(weekOpen ? null : week.week_number);
+                              setOpenDayId(null);
+                            }}
+                            style={({ pressed }) => [styles.weekHeader, pressed && styles.pressed]}
+                            accessibilityRole="button">
+                            <WeekHeaderBody
+                              week={week}
+                              doneDayIds={doneDayIds}
+                              showTicks={isCurrent}
+                            />
+                            <Ionicons
+                              name={weekOpen ? 'chevron-up' : 'chevron-down'}
+                              size={20}
+                              color={colours.brand}
+                            />
+                          </Pressable>
                         </View>
                         {weekOpen
                           ? week.days.map((day) => {
