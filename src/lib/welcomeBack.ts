@@ -1,16 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { FinishedSessionMeta } from '@/lib/activityStats';
+import type { FinishedSessionMeta, StreakWeekStatus } from '@/lib/activityStats';
 import { track, trackOnce } from '@/lib/analytics';
-import { FREE_STARTER_ROUTINE_ID } from '@/lib/onboarding';
+import { contentRoutine } from '@/lib/contentRoutines';
+import { fillCopy, welcomeBackCopy, welcomeBackFreshStartCopy } from '@/lib/copy';
 import { parseIsoDate, startOfWeekMonday, toIso } from '@/lib/planner';
 import {
+  WELCOME_BACK_ROUTINE_ID,
   daysInWeek,
   findPlannedSession,
   firstDayOfRoutine,
   type Routine,
   type RoutineDay,
-  type RoutineDifficulty,
   type RoutineEnrolment,
   type RoutineSummary,
 } from '@/lib/routines';
@@ -21,20 +22,14 @@ const DISMISSED_KEY = 'welcome_back_dismissed_week';
 const COMPLETED_KEY = 'welcome_back_completed';
 const SESSION_KEY_PREFIX = 'welcome_back_session:';
 
-const DIFFICULTY_RANK: Record<RoutineDifficulty, number> = {
-  beginner: 0,
-  intermediate: 1,
-  experienced: 2,
-};
-
 export type WelcomeBackOffer = {
   weeksAway: number;
+  title: string;
   body: string;
   restartWeek: number | null;
   restartDay: RoutineDay | null;
   lighterRoutine: RoutineSummary | null;
   nextDay: RoutineDay | null;
-  starterRoutineId: string;
 };
 
 export function weeksAwayFromSessions(sessions: FinishedSessionMeta[], now = new Date()): number {
@@ -53,43 +48,58 @@ function isStartOfTerm(now: Date): boolean {
   return month === 0 || month === 3 || month === 8;
 }
 
-export function welcomeBackBody(now = new Date()): string {
-  if (isStartOfTerm(now)) {
-    return 'New term, fresh start. Here’s a lighter session to ease back in.';
-  }
-  if (now.getDate() === 1) {
-    return 'New month, fresh start. Here’s a lighter session to ease back in.';
-  }
-  if (now.getDay() === 1) {
-    return 'New week, fresh start. Here’s a lighter session to ease back in.';
-  }
-  return 'Good to see you. Here’s a lighter session to ease back in.';
+function isFreshStartDay(now: Date): boolean {
+  return now.getDay() === 1 || now.getDate() === 1 || isStartOfTerm(now);
 }
 
-export function pickLighterRoutine(
-  current: RoutineSummary | null,
-  catalogue: RoutineSummary[]
-): RoutineSummary | null {
-  const strength = catalogue.filter((routine) => routine.type !== 'stretch' && routine.id !== current?.id);
-  const accessible = strength;
-  if (accessible.length === 0) return null;
+export function welcomeBackTitle(name?: string | null): string {
+  const first = name?.trim().split(/\s+/)[0] ?? '';
+  if (!first) return welcomeBackCopy.title_no_name;
+  return fillCopy(welcomeBackCopy.title, { name: first });
+}
 
-  const starter = accessible.find((routine) => routine.id === FREE_STARTER_ROUTINE_ID);
-  if (starter && current?.id !== FREE_STARTER_ROUTINE_ID) return starter;
+export function welcomeBackBody(now = new Date()): string {
+  if (isFreshStartDay(now)) return welcomeBackFreshStartCopy.body;
+  return welcomeBackCopy.body;
+}
 
-  const ranked = [...accessible].sort((a, b) => {
-    const difficulty = DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty];
-    if (difficulty !== 0) return difficulty;
-    if (a.days_per_week !== b.days_per_week) return a.days_per_week - b.days_per_week;
-    return a.session_minutes - b.session_minutes;
-  });
-  const lightest = ranked[0];
-  if (!current || !lightest) return lightest ?? null;
-  const lighter =
-    DIFFICULTY_RANK[lightest.difficulty] < DIFFICULTY_RANK[current.difficulty] ||
-    lightest.days_per_week < current.days_per_week ||
-    lightest.session_minutes < current.session_minutes;
-  return lighter ? lightest : null;
+function summaryFromOverlay(): RoutineSummary | null {
+  const overlay = contentRoutine(WELCOME_BACK_ROUTINE_ID);
+  if (!overlay) return null;
+  return {
+    id: overlay.slug,
+    slug: overlay.slug,
+    name: overlay.name,
+    description: overlay.subtitle,
+    cover: null,
+    goal: 'confidence',
+    length_weeks: overlay.length_weeks,
+    days_per_week: overlay.days_per_week,
+    session_minutes: overlay.session_minutes,
+    difficulty: 'beginner',
+    equipment: 'full_gym',
+    is_pro: false,
+    is_featured_eligible: false,
+    sort_order: 99,
+    source_programme_id: null,
+    type: 'strength',
+    tags: [],
+    audience: overlay.who_its_for,
+    byTheEnd: overlay.by_the_end,
+    splitNote: overlay.why_this_split,
+    progressionNote: overlay.progression_explained,
+    howItWorks: overlay.how_it_works,
+    weeklyStructure: overlay.weekly_structure,
+  };
+}
+
+/** Welcome Back: 4-week restart from /content, used after 3+ weeks away. */
+export function pickWelcomeBackRoutine(catalogue: RoutineSummary[]): RoutineSummary | null {
+  return (
+    catalogue.find(
+      (routine) => routine.id === WELCOME_BACK_ROUTINE_ID || routine.slug === WELCOME_BACK_ROUTINE_ID
+    ) ?? summaryFromOverlay()
+  );
 }
 
 export async function fetchWelcomeBackPreview(): Promise<boolean> {
@@ -125,14 +135,19 @@ export async function resolveWelcomeBackOffer(input: {
   lastDayId: string | null;
   nextDay: RoutineDay | null;
   catalogue: RoutineSummary[];
+  lastWeekStatus?: StreakWeekStatus | null;
+  displayName?: string | null;
   now?: Date;
 }): Promise<WelcomeBackOffer | null> {
   const now = input.now ?? new Date();
   const preview = await fetchWelcomeBackPreview();
-  const weeksAway = preview ? Math.max(3, weeksAwayFromSessions(input.sessions, now)) : weeksAwayFromSessions(input.sessions, now);
+  const weeksAway = preview
+    ? Math.max(3, weeksAwayFromSessions(input.sessions, now))
+    : weeksAwayFromSessions(input.sessions, now);
   if (!preview) {
     if (input.sessions.length === 0) return null;
     if (weeksAway < 1) return null;
+    if (input.lastWeekStatus === 'rest') return null;
     if (await dismissedThisWeek(now)) return null;
   }
 
@@ -143,16 +158,16 @@ export async function resolveWelcomeBackOffer(input: {
     : null;
   const restartDay =
     input.routine && restartWeek !== null ? (daysInWeek(input.routine, restartWeek)[0] ?? null) : null;
+  const nextDay = input.nextDay ?? (input.routine ? firstDayOfRoutine(input.routine) : null);
 
-  const offer = {
+  const offer: WelcomeBackOffer = {
     weeksAway,
+    title: welcomeBackTitle(input.displayName),
     body: welcomeBackBody(now),
     restartWeek,
     restartDay,
-    lighterRoutine:
-      weeksAway >= 3 ? pickLighterRoutine(input.enrolment?.routine ?? null, input.catalogue) : null,
-    nextDay: input.nextDay ?? (input.routine ? firstDayOfRoutine(input.routine) : null),
-    starterRoutineId: FREE_STARTER_ROUTINE_ID,
+    lighterRoutine: weeksAway >= 3 ? pickWelcomeBackRoutine(input.catalogue) : null,
+    nextDay,
   };
   void trackOnce(`welcome_back_shown:${toIso(startOfWeekMonday(now))}`, 'welcome_back_shown');
   return offer;
@@ -226,4 +241,3 @@ export async function recordWelcomeBackCompleted(date: string): Promise<void> {
     /* First unlock only. Repeat returns still count locally. */
   }
 }
-

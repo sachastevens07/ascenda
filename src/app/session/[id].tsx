@@ -45,7 +45,7 @@ import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
-import { fillCopy, loggerCopy } from '@/lib/copy';
+import { fillCopy, loggerCopy, welcomeBackCopy } from '@/lib/copy';
 import {
   DEFAULT_SLOT,
   MAX_REPS,
@@ -893,7 +893,7 @@ export default function SessionScreen() {
       const welcomeBackDone = await consumeWelcomeBackSession(id);
       if (welcomeBackDone) {
         await recordWelcomeBackCompleted(session?.date ?? new Date().toISOString().slice(0, 10));
-        wins.unshift('Back on track');
+        wins.unshift(welcomeBackCopy.complete_title);
       }
       end();
       if (finishedRoutine && enrolmentId) {
@@ -903,10 +903,11 @@ export default function SessionScreen() {
       router.back();
       const trained =
         durationSeconds === undefined ? '' : `You trained for ${formatDuration(durationSeconds)}.`;
-      const body =
-        [...wins.slice(0, 3), trained].filter(Boolean).join('\n') ||
-        'Nice work. That’s another one done.';
-      showDialog('Session saved', body);
+      const body = welcomeBackDone
+        ? [welcomeBackCopy.complete_body, trained].filter(Boolean).join('\n')
+        : [...wins.slice(0, 3), trained].filter(Boolean).join('\n') ||
+          'Nice work. That’s another one done.';
+      showDialog(welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved', body);
       void maybeAskSessionReminders();
       void syncPlannerReminders();
     } catch {

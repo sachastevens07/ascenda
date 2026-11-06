@@ -23,6 +23,8 @@ import {
 import { parseSessionType, type SessionType } from '@/lib/sessionTypes';
 import { supabase } from '@/lib/supabase';
 
+export const WELCOME_BACK_ROUTINE_ID = 'welcome-back-4-week-restart';
+
 export const LAUNCH_ROUTINE_IDS = [
   'strong-foundations-6-weeks',
   'the-two-day-start',
@@ -37,7 +39,7 @@ export const LAUNCH_ROUTINE_IDS = [
   'strong-for-life',
   'higher-ground',
   'summit',
-  'welcome-back-4-week-restart',
+  WELCOME_BACK_ROUTINE_ID,
   '30-day-glute-challenge',
 ] as const;
 
@@ -762,6 +764,11 @@ export function isGymBackupRoutine(
   return name === 'home strength' || name === GYM_BACKUP_ROUTINE_NAME.toLowerCase();
 }
 
+/** Ease-back plan after time away. Offered from Home, never in Featured. */
+export function isWelcomeBackRoutine(routine: Pick<RoutineSummary, 'id' | 'slug'>): boolean {
+  return routine.id === WELCOME_BACK_ROUTINE_ID || routine.slug === WELCOME_BACK_ROUTINE_ID;
+}
+
 function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   let score = 0;
   if (isGymBackupRoutine(routine)) score -= 8;
@@ -823,7 +830,10 @@ export function pickFeaturedRoutines(
   const excluded = new Set(options?.excludeIds ?? []);
   const strength = routines.filter(
     (routine) =>
-      routine.type !== 'stretch' && !excluded.has(routine.id) && !isGymBackupRoutine(routine)
+      routine.type !== 'stretch' &&
+      !excluded.has(routine.id) &&
+      !isGymBackupRoutine(routine) &&
+      !isWelcomeBackRoutine(routine)
   );
   const eligible = strength.filter((routine) => routine.is_featured_eligible);
   const rankedSource = eligible.length > 0 ? eligible : strength;

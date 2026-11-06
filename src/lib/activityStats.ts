@@ -364,6 +364,19 @@ export function getWeeklyStreak(
   };
 }
 
+export function describeThisWeekTarget(streak: WeeklyStreak): string {
+  if (streak.goldThisWeek) return streakCopy.this_week_gold;
+  const remaining = Math.max(0, streak.targetThisWeek - streak.doneThisWeek);
+  if (streak.hitThisWeek) {
+    return fillCopy(streakCopy.this_week_counted, {
+      done: streak.doneThisWeek,
+      target: streak.targetThisWeek,
+      remaining,
+    });
+  }
+  return fillCopy(streakCopy.this_week_none_yet, { target: streak.targetThisWeek });
+}
+
 export function describeStreak(streak: WeeklyStreak): string {
   if (streak.lastWeek?.status === 'missed') {
     return fillCopy(streakCopy.repair_progress, {
@@ -374,9 +387,7 @@ export function describeStreak(streak: WeeklyStreak): string {
   if (streak.current === 0 && streak.weeksTrained > 0) {
     return fillCopy(streakCopy.new_run, { total: streak.weeksTrained });
   }
-  if (streak.goldThisWeek) return streakCopy.this_week_gold;
-  if (streak.hitThisWeek) return streakCopy.this_week_counted;
-  return streakCopy.this_week_none_yet;
+  return describeThisWeekTarget(streak);
 }
 
 export async function fetchStreakGoal(): Promise<StreakGoal> {

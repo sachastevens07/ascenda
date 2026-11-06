@@ -63,7 +63,7 @@ import {
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { billingReminderCopy, fillCopy, nextSessionMenuCopy, routineActionsCopy, streakCopy, streakWeeksLabel, subscriptionBanners } from '@/lib/copy';
+import { billingReminderCopy, fillCopy, nextSessionMenuCopy, routineActionsCopy, streakCopy, streakWeeksLabel, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
 import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
@@ -72,6 +72,7 @@ import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders'
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import {
+  WELCOME_BACK_ROUTINE_ID,
   daysInWeek,
   describeRoutineError,
   endActiveEnrolment,
@@ -179,6 +180,9 @@ export default function HomeScreen() {
   const [routineMenuOpen, setRoutineMenuOpen] = useState(false);
   const [routineMenuAnchor, setRoutineMenuAnchor] = useState<AnchorRect | null>(null);
   const [routineMenuMode, setRoutineMenuMode] = useState<'actions' | 'days'>('actions');
+  const welcomeBackMenuRef = useRef<AnchorHandle>(null);
+  const [welcomeBackMenuOpen, setWelcomeBackMenuOpen] = useState(false);
+  const [welcomeBackMenuAnchor, setWelcomeBackMenuAnchor] = useState<AnchorRect | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [quoteHidden, setQuoteHidden] = useState(false);
   const featuredWidth = width * 0.78;
@@ -282,6 +286,8 @@ export default function HomeScreen() {
             lastDayId,
             nextDay: next?.day ?? (routine ? firstDayOfRoutine(routine) : null),
             catalogue: routines,
+            lastWeekStatus: streak.lastWeek?.status ?? null,
+            displayName: profile?.display_name,
           }).catch(() => null);
           const inWindow = enrolment ? isInHandoffWindow(enrolment) : Boolean(completedEnrolment);
           const showHandOff = handOffPreview || inWindow;
@@ -339,6 +345,7 @@ export default function HomeScreen() {
       answers?.days_per_week,
       answers?.confidence,
       attempt,
+      profile?.display_name,
       subscription.isPro,
       subscription.isLoading,
     ])
@@ -389,7 +396,7 @@ export default function HomeScreen() {
         await startDay(offer.nextDay, { easeBack: true, welcomeBack: true });
         return;
       }
-      const created = await startRoutine(offer.starterRoutineId);
+      const created = await startRoutine(WELCOME_BACK_ROUTINE_ID);
       const started = await fetchRoutine(created.routine_id);
       const day = started ? firstDayOfRoutine(started) : null;
       if (!day) {
@@ -433,67 +440,59 @@ export default function HomeScreen() {
     }
   }
 
-  async function switchToLighterRoutine() {
+  async function switchToWelcomeBackRoutine() {
     const lighter = data?.welcomeBack?.lighterRoutine;
     if (!lighter) return;
-    try {
-      const created = await startRoutine(lighter.id);
-      const started = await fetchRoutine(created.routine_id);
-      const day = started ? firstDayOfRoutine(started) : null;
-      if (day) {
-        await startDay(day, { enrolmentId: created.id, easeBack: true, welcomeBack: true });
+    const routineId = lighter.id;
+    const startIt = async () => {
+      try {
+        const created = await startRoutine(routineId);
+        const started = await fetchRoutine(created.routine_id);
+        const day = started ? firstDayOfRoutine(started) : null;
+        if (day) {
+          await startDay(day, { enrolmentId: created.id, welcomeBack: true });
+        }
+        setAttempt((count) => count + 1);
+      } catch (error) {
+        showDialog('Couldn’t switch routine', describeRoutineError(error));
       }
-      setAttempt((count) => count + 1);
-    } catch (error) {
-      showDialog('Couldn’t switch routine', describeRoutineError(error));
+    };
+    if (!data?.enrolment) {
+      await startIt();
+      return;
     }
+    showDialog(routineActionsCopy.switch_title, routineActionsCopy.switch_body, [
+      { text: routineActionsCopy.switch_cta, onPress: () => void startIt() },
+      { text: routineActionsCopy.cancel, style: 'cancel' },
+    ]);
+  }
+
+  function skipWelcomeBack() {
+    setWelcomeBackMenuOpen(false);
+    void Promise.all([dismissWelcomeBack(), saveWelcomeBackPreview(false)]).then(() =>
+      setAttempt((count) => count + 1)
+    );
   }
 
   function openWelcomeBackOptions() {
-    const offer = data?.welcomeBack;
-    if (!offer) return;
-    const buttons: { text: string; style?: 'cancel' | 'default' | 'destructive'; onPress?: () => void }[] = [];
-    if (data?.enrolment && offer.restartDay && offer.restartWeek != null) {
-      buttons.push({
-        text: `Restart week ${offer.restartWeek}`,
-        onPress: () =>
-          showDialog(
-            `Restart week ${offer.restartWeek}?`,
-            'You’ll pick up this week from the first session. Your logged sessions stay.',
-            [
-              { text: 'Restart week', onPress: () => void restartThisWeek() },
-              { text: 'Not now', style: 'cancel' },
-            ]
-          ),
-      });
-    }
-    if (offer.lighterRoutine) {
-      buttons.push({
-        text: `Try ${offer.lighterRoutine.name}`,
-        onPress: () => void switchToLighterRoutine(),
-      });
-    }
-    if (data?.enrolment && data.next) {
-      buttons.push({
-        text: 'Start my usual session',
-        onPress: () => void startDay(data.next!.day, { welcomeBack: true }),
-      });
-    } else {
-      buttons.push({
-        text: 'Browse routines',
-        onPress: () => router.push('/programmes' as Href),
-      });
-    }
-    buttons.push({
-      text: 'Not now',
-      style: 'cancel',
-      onPress: () => {
-        void Promise.all([dismissWelcomeBack(), saveWelcomeBackPreview(false)]).then(() =>
-          setAttempt((count) => count + 1)
-        );
-      },
+    measureAnchor(welcomeBackMenuRef.current, (rect) => {
+      setWelcomeBackMenuAnchor(rect);
+      setWelcomeBackMenuOpen(true);
     });
-    showDialog('Ease back in', 'Pick what feels doable today.', buttons);
+  }
+
+  function confirmRestartWeek() {
+    const offer = data?.welcomeBack;
+    if (!offer?.restartWeek) return;
+    setWelcomeBackMenuOpen(false);
+    showDialog(
+      welcomeBackCopy.options.restart_week.title,
+      fillCopy(welcomeBackCopy.options.restart_week.subtitle, { week: offer.restartWeek }),
+      [
+        { text: welcomeBackCopy.cta, onPress: () => void restartThisWeek() },
+        { text: welcomeBackCopy.later, style: 'cancel' },
+      ]
+    );
   }
 
   function openSessionDetail() {
@@ -691,10 +690,16 @@ export default function HomeScreen() {
 
         {welcomeBack && !inProgress ? (
           <WelcomeBackCard
+            eyebrow={welcomeBackCopy.eyebrow}
+            title={welcomeBack.title}
             body={welcomeBack.body}
+            cta={welcomeBackCopy.card_cta}
+            seeOptions={welcomeBackCopy.see_options}
             starting={isStarting}
             onStartLighter={() => void startLighterSession()}
             onSeeOptions={openWelcomeBackOptions}
+            optionsRef={welcomeBackMenuRef}
+            style={shadow}
           />
         ) : null}
 
@@ -775,7 +780,13 @@ export default function HomeScreen() {
         ) : null}
 
         {showWeekCard ? (
-          <View style={[styles.weekCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+          <View
+            style={[styles.weekCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}
+            accessibilityRole="text"
+            accessibilityLabel={fillCopy(streakCopy.this_week_progress, {
+              done: streak.doneThisWeek,
+              target: streak.targetThisWeek,
+            })}>
             <ProgressRing progress={weekRatio} size={56} stroke={6}>
               <AppText variant="caption" style={{ color: colours.ink }}>
                 {streak.doneThisWeek}/{streak.targetThisWeek}
@@ -787,13 +798,6 @@ export default function HomeScreen() {
                   done: streak.doneThisWeek,
                   target: streak.targetThisWeek,
                 })}
-              </AppText>
-              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                {streak.goldThisWeek
-                  ? streakCopy.this_week_gold
-                  : streak.hitThisWeek
-                    ? streakCopy.this_week_counted
-                    : streakCopy.this_week_none_yet}
               </AppText>
               {hideStreak ? null : (
                 <View style={styles.streakBlock}>
@@ -934,6 +938,45 @@ export default function HomeScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      <OverflowMenu
+        visible={welcomeBackMenuOpen}
+        anchor={welcomeBackMenuAnchor}
+        onClose={() => setWelcomeBackMenuOpen(false)}>
+        <MenuHeader label={welcomeBackCopy.eyebrow} />
+        {welcomeBack?.nextDay ? (
+          <MenuRow
+            label={fillCopy(welcomeBackCopy.options.lighter.title, {
+              session_name: welcomeBack.nextDay.name,
+            })}
+            detail={welcomeBackCopy.options.lighter.subtitle}
+            onPress={() => {
+              setWelcomeBackMenuOpen(false);
+              void startLighterSession();
+            }}
+          />
+        ) : null}
+        {enrolment && welcomeBack?.restartDay && welcomeBack.restartWeek != null ? (
+          <MenuRow
+            label={welcomeBackCopy.options.restart_week.title}
+            detail={fillCopy(welcomeBackCopy.options.restart_week.subtitle, {
+              week: welcomeBack.restartWeek,
+            })}
+            onPress={confirmRestartWeek}
+          />
+        ) : null}
+        {welcomeBack?.lighterRoutine ? (
+          <MenuRow
+            label={welcomeBackCopy.options.gentler_routine.title}
+            detail={welcomeBackCopy.options.gentler_routine.subtitle}
+            onPress={() => {
+              setWelcomeBackMenuOpen(false);
+              void switchToWelcomeBackRoutine();
+            }}
+          />
+        ) : null}
+        <MenuRow label={welcomeBackCopy.later} onPress={skipWelcomeBack} />
+      </OverflowMenu>
 
       <OverflowMenu
         visible={routineMenuOpen}

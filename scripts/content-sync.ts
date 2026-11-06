@@ -716,7 +716,11 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
       sessionMinutes: num(body.session_minutes),
       equipment: mapRoutineEquipment(text(body.equipment_summary), tags),
       cover: text(body.cover_image_slug),
-      featured: text(body.equipment_summary).toLowerCase().includes("can't get to the gym") ? false : true,
+      featured:
+        text(body.slug) === 'welcome-back-4-week-restart' ||
+        text(body.equipment_summary).toLowerCase().includes("can't get to the gym")
+          ? false
+          : true,
       tags: (displayTags.length > 0 ? displayTags : tags).slice(0, 2),
     };
   });

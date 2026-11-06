@@ -117,6 +117,7 @@ const streak = microcopy.strings.streak;
 
 /** H1 streak copy. Never guilt. Bundled from content/microcopy. */
 export const streakCopy = {
+  label: streak.label,
   weeks_trained: streak.weeks_trained,
   current_run: streak.current_run,
   weeks_unit_one: streak.weeks_unit_one,
@@ -150,6 +151,25 @@ export const streakCopy = {
 export function streakWeeksLabel(count: number): string {
   return fillCopy(count === 1 ? streakCopy.weeks_unit_one : streakCopy.weeks_unit_many, { count });
 }
+
+const welcomeBack = microcopy.strings.welcome_back;
+
+/** H2 welcome-back card and options. Bundled from content/microcopy. */
+export const welcomeBackCopy = {
+  eyebrow: welcomeBack.eyebrow,
+  title: welcomeBack.title,
+  title_no_name: welcomeBack.title_no_name,
+  body: welcomeBack.body,
+  card_cta: welcomeBack.card_cta,
+  see_options: welcomeBack.see_options,
+  options: welcomeBack.options,
+  cta: welcomeBack.cta,
+  later: welcomeBack.later,
+  complete_title: welcomeBack.complete_title,
+  complete_body: welcomeBack.complete_body,
+} as const;
+
+export const welcomeBackFreshStartCopy = notifications.welcome_back_fresh_start;
 
 const home = microcopy.strings.home;
 

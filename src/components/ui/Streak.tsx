@@ -73,12 +73,15 @@ export function StreakCard({ streak }: { streak: WeeklyStreak }) {
         shadow,
       ]}>
       <AppText variant="eyebrow" style={{ color: colours.accent }}>
-        {fillCopy(streakCopy.goal_progress, { current: streak.current, goal: streak.goal })}
+        {streakCopy.label}
       </AppText>
       <AppText variant="title2" style={{ color: colours.ink, marginTop: 6 }}>
         {streakCopy.current_run} {streakWeeksLabel(streak.current)}
       </AppText>
       <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 4 }}>
+        {fillCopy(streakCopy.goal_progress, { current: streak.current, goal: streak.goal })}
+      </AppText>
+      <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 2 }}>
         {streakCopy.weeks_trained} {streakWeeksLabel(streak.weeksTrained)}
       </AppText>
       <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 2 }}>
