@@ -3,8 +3,10 @@ import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   View,
 } from 'react-native';
@@ -14,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { showDialog } from '@/components/Dialog';
 import { AppText, HeroImage, IconButton, PrimaryButton, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { fillCopy, paywallScreenCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
+import { fillCopy, paywallScreenCopy, referCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
 import { imageSourceForSlug } from '@/lib/images';
 import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
 import { recommendPlan } from '@/lib/onboardingPlan';
@@ -23,7 +25,14 @@ import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import { fetchActiveEnrolment } from '@/lib/routines';
 import {
+  APPLE_OFFER_CODE,
+  FRIEND_TRIAL_DAYS,
+  hasReferralOffer,
+  redeemFriendOffer,
+} from '@/lib/referrals';
+import {
   STORE_NAME,
+  fetchCustomerInfo,
   fetchProPackages,
   getFreeTrialDays,
   hasProEntitlement,
@@ -61,11 +70,27 @@ export default function PaywallScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   const [routineName, setRoutineName] = useState<string | null>(null);
+  const [referred, setReferred] = useState(false);
 
   function dismiss() {
-    if (router.canGoBack()) router.back();
-    else router.replace('/');
+    if (router.canDismiss()) {
+      router.dismiss();
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    const onboarded =
+      getQuizAnswers(profile) !== null && Boolean(profile?.age_confirmed_at);
+    router.replace((onboarded ? '/' : '/onboarding') as Href);
   }
+
+  const closeTop = Math.max(
+    insets.top,
+    Platform.OS === 'android' ? (StatusBar.currentHeight ?? 12) : 54,
+    12
+  );
 
   useEffect(() => {
     let isCurrent = true;
@@ -98,6 +123,20 @@ export default function PaywallScreen() {
   }, [answers, profile?.age_band, profile?.bodyweight_kg, profile?.cardio_preference, profile?.onboarding_answers]);
 
   useEffect(() => {
+    let isCurrent = true;
+    hasReferralOffer()
+      .then((value) => {
+        if (isCurrent) setReferred(value);
+      })
+      .catch(() => {
+        if (isCurrent) setReferred(false);
+      });
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isAvailable) return;
     let isCurrent = true;
     setLoadState('loading');
@@ -117,7 +156,12 @@ export default function PaywallScreen() {
   }, [isAvailable, attempt]);
 
   const selected = packages.find((item) => item.identifier === selectedId) ?? null;
-  const trialDays = selected ? getFreeTrialDays(selected.product) : null;
+  const showFriendTrial = referred && Platform.OS === 'ios';
+  const trialDays = selected
+    ? showFriendTrial && selected.packageType === 'ANNUAL'
+      ? FRIEND_TRIAL_DAYS
+      : getFreeTrialDays(selected.product)
+    : null;
   const annualSaving = getAnnualSaving(packages);
   const headline = routineName
     ? fillCopy(paywallScreenCopy.headline_with_plan, { routine_name: routineName })
@@ -128,6 +172,25 @@ export default function PaywallScreen() {
     if (!selected) return;
     setBusy('buy');
     try {
+      if (showFriendTrial && selected.packageType === 'ANNUAL') {
+        const result = await redeemFriendOffer();
+        if (result === 'opened') {
+          const info = await fetchCustomerInfo();
+          if (info) applyCustomerInfo(info);
+          if (info && hasProEntitlement(info)) {
+            dismiss();
+            showDialog(paywallScreenCopy.success_title, paywallScreenCopy.success_body);
+          }
+          return;
+        }
+        if (result === 'unavailable') {
+          showDialog(
+            fillCopy(referCopy.redeem_title, { friend_trial_days: FRIEND_TRIAL_DAYS }),
+            fillCopy(referCopy.redeem_unavailable, { apple_offer_code: APPLE_OFFER_CODE })
+          );
+          return;
+        }
+      }
       const info = await purchasePackage(selected);
       if (!info) return;
       applyCustomerInfo(info);
@@ -167,16 +230,10 @@ export default function PaywallScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
-      <IconButton
-        icon="close"
-        accessibilityLabel={paywallScreenCopy.close_a11y}
-        onPress={dismiss}
-        variant="muted"
-        style={[styles.close, { top: Math.max(insets.top, 8) }]}
-      />
       <ScrollView
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
         <HeroImage
           image={imageSourceForSlug('hero-paywall') ?? imageSourceForSlug('cover-barbell-strength-8')}
           height={240}
@@ -226,7 +283,8 @@ export default function PaywallScreen() {
                 {packages.map((item) => {
                   const isSelected = item.identifier === selectedId;
                   const isAnnual = item.packageType === 'ANNUAL';
-                  const itemTrial = getFreeTrialDays(item.product);
+                  const itemTrial =
+                    showFriendTrial && isAnnual ? FRIEND_TRIAL_DAYS : getFreeTrialDays(item.product);
                   return (
                     <Pressable
                       key={item.identifier}
@@ -337,9 +395,22 @@ export default function PaywallScreen() {
             />
             <TextButton label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
             <TextButton label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
+            <TextButton label={paywallScreenCopy.close_a11y} onPress={dismiss} />
           </View>
         </View>
       </ScrollView>
+      <View
+        pointerEvents="box-none"
+        collapsable={false}
+        style={[styles.closeLayer, { paddingTop: closeTop }]}>
+        <IconButton
+          icon="close"
+          accessibilityLabel={paywallScreenCopy.close_a11y}
+          onPress={dismiss}
+          variant="overlay"
+          style={styles.close}
+        />
+      </View>
     </View>
   );
 }
@@ -348,10 +419,17 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  close: {
+  closeLayer: {
     position: 'absolute',
-    left: 8,
-    zIndex: 2,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    elevation: 20,
+  },
+  close: {
+    marginLeft: 8,
+    alignSelf: 'flex-start',
   },
   body: {
     paddingTop: 20,

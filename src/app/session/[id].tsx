@@ -45,7 +45,7 @@ import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
-import { fillCopy, loggerCopy, welcomeBackCopy } from '@/lib/copy';
+import { fillCopy, loggerCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
 import {
   DEFAULT_SLOT,
   MAX_REPS,
@@ -907,7 +907,10 @@ export default function SessionScreen() {
         ? [welcomeBackCopy.complete_body, trained].filter(Boolean).join('\n')
         : [...wins.slice(0, 3), trained].filter(Boolean).join('\n') ||
           'Nice work. That’s another one done.';
-      showDialog(welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved', body);
+      showDialog(welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved', [body, sessionCompleteCopy.invite_nudge].filter(Boolean).join('\n\n'), [
+        { text: referCopy.screen_title, onPress: () => router.push('/refer' as Href) },
+        { text: 'OK', style: 'cancel' },
+      ]);
       void maybeAskSessionReminders();
       void syncPlannerReminders();
     } catch {

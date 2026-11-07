@@ -1,0 +1,13 @@
+{
+  "_notes": [
+    "X6 Refer a friend. Apple cannot add a second introductory offer on the same annual product.",
+    "Friend: custom Offer Code FRIEND14 on ascenda_annual. Type Free, duration 2 weeks, new subscribers only. It must not stack with the 7-day intro. Personal Ascenda invite codes track who invited whom.",
+    "Referrer: if she has a paid Apple subscription, extend renewal by 30 days (Apple Extend Renewal Date, max 2 a year). If she has no store subscription, grant a 1-month RevenueCat promotional entitlement. Queue the reward while she is still in her own trial.",
+    "No cash. content:sync does not write user referral rows."
+  ],
+  "friend_trial_days": 14,
+  "max_rewards_per_year": 2,
+  "apple_offer_code": "FRIEND14",
+  "extend_days": 30,
+  "invite_path": "r"
+}

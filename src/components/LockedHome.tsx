@@ -21,6 +21,7 @@ import {
   normalizeWeeklyTarget,
 } from '@/lib/activityStats';
 import { fillCopy, lockedHomeCopy, referCopy } from '@/lib/copy';
+import { FRIEND_TRIAL_DAYS, openRefer } from '@/lib/referrals';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import { coverForRoutine, imageSourceForSlug, takeCoverSource } from '@/lib/images';
 import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
@@ -30,8 +31,6 @@ import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { fetchActiveEnrolment, fetchRoutines } from '@/lib/routines';
 import { fetchProPackages, getFreeTrialDays } from '@/lib/subscription';
-
-const FRIEND_TRIAL_DAYS = 14;
 
 type LockedPlan = {
   name: string;
@@ -242,12 +241,7 @@ export function LockedHome() {
         </AppText>
 
         <Pressable
-          onPress={() =>
-            showDialog(
-              referCopy.screen_title,
-              fillCopy(referCopy.screen_body, { friend_trial_days: FRIEND_TRIAL_DAYS })
-            )
-          }
+          onPress={openRefer}
           accessibilityRole="button"
           style={[
             styles.refer,

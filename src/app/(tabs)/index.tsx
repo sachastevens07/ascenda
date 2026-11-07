@@ -75,7 +75,8 @@ import {
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, referCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
+import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
+import { openRefer } from '@/lib/referrals';
 import { coverForChallenge, coverForRoutine, imageSourceForSlug, takeCoverSource } from '@/lib/images';
 import { addDays, loadPlannerWeek, startOfWeekMonday, toIso, type PlannerDayView, type PlannerWeek } from '@/lib/planner';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
@@ -715,7 +716,7 @@ export default function HomeScreen() {
   }
 
   function inviteFriend() {
-    showDialog(referCopy.screen_title, fillCopy(referCopy.screen_body, { friend_trial_days: 14 }));
+    openRefer();
   }
 
   function openRoutineMenu() {

@@ -12,7 +12,7 @@ import {
   formatLiftCompare,
   type EnrolmentReview,
 } from '@/lib/checkpoints';
-import { fillCopy, routineActionsCopy } from '@/lib/copy';
+import { fillCopy, referCopy, routineActionsCopy } from '@/lib/copy';
 import {
   handOffCardCopy,
   resolveNextRoutineOffer,
@@ -187,6 +187,11 @@ export default function RoutineCompleteScreen() {
         />
       ) : null}
 
+      <TextButton
+        label={referCopy.screen_title}
+        onPress={() => router.push('/refer' as Href)}
+        style={{ alignSelf: 'center' }}
+      />
       <TextButton
         label={routineActionsCopy.complete_browse}
         onPress={() => router.replace('/programmes' as Href)}

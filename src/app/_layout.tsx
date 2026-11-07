@@ -21,7 +21,8 @@ import { DevToolsProvider, useDevTools } from '@/lib/devFlags';
 import { needsDisclaimerAcceptance } from '@/lib/disclaimer';
 import { ProfileProvider, getQuizAnswers, useProfile } from '@/lib/profile';
 import { registerReminderAnalytics } from '@/lib/reminders';
-import { isUnlockedWithoutSubscription } from '@/lib/paywall';
+import { isReferralPath, isUnlockedWithoutSubscription } from '@/lib/paywall';
+import { claimPendingReferral } from '@/lib/referrals';
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription';
 import { hydrateDefaultRestSeconds } from '@/lib/restTimer';
 import { supabase } from '@/lib/supabase';
@@ -119,6 +120,7 @@ function PrefsHydrate() {
   useEffect(() => {
     void hydrateWeightUnit();
     void hydrateDefaultRestSeconds();
+    if (session) void claimPendingReferral();
   }, [session?.user.id]);
 
   return null;
@@ -153,7 +155,13 @@ function RootNavigator() {
     }
   }
 
-  if (session && !isOnboarded && pathname !== '/onboarding' && pathname !== '/paywall') {
+  if (
+    session &&
+    !isOnboarded &&
+    pathname !== '/onboarding' &&
+    pathname !== '/paywall' &&
+    !isReferralPath(pathname)
+  ) {
     return <Redirect href={'/onboarding' as Href} />;
   }
 
@@ -167,6 +175,8 @@ function RootNavigator() {
           animation: 'slide_from_bottom',
         }}
       />
+      <Stack.Screen name="refer" />
+      <Stack.Screen name="r/[code]" />
       <Stack.Protected guard={!!session && isOnboarded && !needsDisclaimerGate}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen

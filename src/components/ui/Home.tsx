@@ -15,13 +15,12 @@ import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { challengesCopy, fillCopy, homeCopy, referCopy } from '@/lib/copy';
 import type { AchievementBadge, AchievementFamily } from '@/lib/achievements';
+import { FRIEND_TRIAL_DAYS } from '@/lib/referrals';
 
 import { PrimaryButton, TextButton } from './Buttons';
 import { CoverPlaceholder, StatTile } from './Cards';
 import { IconButton } from './IconButton';
 import { SectionHeader } from './List';
-
-const FRIEND_TRIAL_DAYS = 14;
 
 export function HomeHeader({
   leading,

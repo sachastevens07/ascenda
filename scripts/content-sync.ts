@@ -454,6 +454,7 @@ async function main(): Promise<void> {
   reportOnboardingGoals();
   reportSafetyCopy();
   reportHardPaywall();
+  reportReferrals();
   reportAnalytics();
 
   reportWarmups();
@@ -513,6 +514,18 @@ function reportHardPaywall(): void {
   line('  Access is the `ascenda_pro` entitlement via useSubscription.');
   line('  Server table: public.subscriptions, written only by the RevenueCat webhook.');
   line('  Live sync does not write subscriptions or is_pro.');
+  line();
+}
+
+function reportReferrals(): void {
+  line('referrals  ←  content/referrals/offers.json (bundled, X6)');
+  const file = asRecord(readJson('referrals/offers.json'));
+  line(`  Friend trial days: ${num(file.friend_trial_days) ?? 14}`);
+  line(`  Apple offer code: ${text(file.apple_offer_code)}`);
+  line(`  Referrer extend days: ${num(file.extend_days) ?? 30}`);
+  line(`  Max rewards a year: ${num(file.max_rewards_per_year) ?? 2}`);
+  line('  Bundled in the app. Live user tables (profiles.referral_code, referrals) are not written here.');
+  line('  Paste supabase/referrals_x6.sql. Set REVENUECAT_SECRET_API_KEY on revenuecat-webhook.');
   line();
 }
 

@@ -31,6 +31,7 @@ import {
   reminderCopy,
   restoreCopy,
   safetySettingsTitle,
+  referCopy,
   subscriptionStatusCopy,
 } from '@/lib/copy';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
@@ -622,6 +623,10 @@ export default function ProfileScreen() {
               : 'Start a routine and Home will use it next.'
           }
           onPress={() => router.push('/programmes' as Href)}
+        />
+        <SettingsRow
+          title={referCopy.screen_title}
+          onPress={() => router.push('/refer' as Href)}
         />
         <SettingsRow
           title="My workouts"

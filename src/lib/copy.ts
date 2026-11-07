@@ -95,6 +95,8 @@ export const lockedHomeCopy = microcopy.strings.locked_home;
 
 export const referCopy = microcopy.strings.refer;
 
+export const sessionCompleteCopy = microcopy.strings.session_complete;
+
 const home = microcopy.strings.home;
 
 /** X2 Home sections. Bundled from content/microcopy. Every section hides itself if empty. */

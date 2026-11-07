@@ -105,11 +105,16 @@ const UNLOCKED_WITHOUT_SUB = new Set([
   '/sign-in',
   '/check-inbox',
   '/auth',
+  '/refer',
 ]);
 
-/** Account, legal, paywall and locked home stay reachable without a subscription. */
+export function isReferralPath(pathname: string): boolean {
+  return pathname === '/refer' || pathname === '/r' || pathname.startsWith('/r/');
+}
+
+/** Account, legal, paywall, refer and locked home stay reachable without a subscription. */
 export function isUnlockedWithoutSubscription(pathname: string): boolean {
-  return UNLOCKED_WITHOUT_SUB.has(pathname);
+  return UNLOCKED_WITHOUT_SUB.has(pathname) || isReferralPath(pathname);
 }
 
 /** Logger and stretch player: send her to locked home if she has no access. */

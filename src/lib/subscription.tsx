@@ -554,6 +554,30 @@ export async function restorePurchases(): Promise<CustomerInfo> {
   return Purchases.restorePurchases();
 }
 
+export async function fetchCustomerInfo(): Promise<CustomerInfo | null> {
+  if (!configureOnce()) return null;
+  try {
+    return await Purchases.getCustomerInfo();
+  } catch {
+    return null;
+  }
+}
+
+/** iOS Offer Code redeem sheet. False in Expo Go or when the store API is missing. */
+export async function presentOfferCodeSheet(): Promise<boolean> {
+  if (Platform.OS !== 'ios') return false;
+  const present = (
+    Purchases as { presentCodeRedemptionSheet?: () => Promise<void> }
+  ).presentCodeRedemptionSheet;
+  if (typeof present !== 'function') return false;
+  try {
+    await present.call(Purchases);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Opens the App Store / Google Play page where she can cancel or change her plan. */
 export async function openManageSubscription(managementUrl: string | null): Promise<void> {
   if (managementUrl) {

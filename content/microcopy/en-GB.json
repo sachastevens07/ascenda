@@ -525,32 +525,49 @@
       "deleted": "Deleted."
     },
     "refer": {
-      "_note": "AGENTS.md X6. Final terms depend on what Apple's offer types allow; adjust {friend_trial_days} and reward copy once confirmed.",
+      "_note": "AGENTS.md X6. Friend trial is Apple Offer Code FRIEND14 (14 days on annual). Referrer reward is a 30-day Apple renewal extension, or a 1-month RevenueCat promotional entitlement if she has no store subscription. Cap {max_rewards} a year.",
       "banner_title": "Train better together",
       "banner_body": "Give a friend {friend_trial_days} days free.",
-      "banner_cta": "Invite a friend",
+      "banner_cta": "Share your link",
+      "hero_title": "Train with a friend",
       "screen_title": "Refer a friend",
       "screen_body": "Your friend gets {friend_trial_days} days free instead of 7. When they become a subscriber, you get a month free.",
       "code_label": "Your code",
       "copy": "Copy",
       "copied": "Copied",
       "share": "Share invite",
+      "share_link": "Share your link",
       "share_message": "I've been using Ascenda to train at the gym and I think you'd like it. Use my code {code} for {friend_trial_days} days free: {link}",
       "progress_title": "Your invites",
+      "empty_invites": "No invites yet. Share your link when you're ready.",
+      "how_it_works_title": "How it works",
+      "how_it_works": [
+        "Share your link or code with a friend who is new to Ascenda.",
+        "She gets {friend_trial_days} days free instead of 7 when she starts the annual plan.",
+        "When she becomes a paying subscriber, you get a month free, up to {max_rewards} a year."
+      ],
       "status": {
         "invited": "Invited",
         "trial": "On free trial",
         "subscribed": "Subscribed",
         "rewarded": "Free month earned"
       },
-      "terms_link": "How it works",
+      "terms_link": "Terms",
       "terms": [
         "Your friend needs to be new to Ascenda.",
         "You get one free month for each friend who starts a paid subscription, up to {max_rewards} a year.",
-        "Free months are added to your existing subscription.",
+        "If you have a paid Apple subscription, the free month is added to it. If you don't, we unlock a month in the app for you.",
         "There are no cash rewards."
       ],
-      "reward_toast": "{friend_name} subscribed. You've earned a free month!"
+      "redeem_title": "{friend_trial_days} days free with your invite",
+      "redeem_body": "On iPhone, Apple will ask for a code. Type {apple_offer_code} for {friend_trial_days} days free on the annual plan instead of 7.",
+      "redeem_cta": "Open Apple redeem",
+      "redeem_later": "Use the 7-day trial instead",
+      "redeem_unavailable": "Open Settings, then tap Redeem Gift Card or Code, and type {apple_offer_code}.",
+      "own_code": "That's your own code.",
+      "unknown_code": "We don't recognise that invite code.",
+      "already_claimed": "This account already used an invite.",
+      "reward_toast": "Your friend subscribed. You've earned a free month!"
     },
     "challenges": {
       "join": "Join challenge",
