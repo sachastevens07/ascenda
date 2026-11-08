@@ -21,6 +21,7 @@ export {
 export {
   Chip,
   CoverPlaceholder,
+  PhotoFill,
   EmptyState,
   HeroImage,
   HighlightTile,

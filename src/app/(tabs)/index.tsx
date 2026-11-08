@@ -30,7 +30,6 @@ import {
   ImageCard,
   OverflowMenu,
   PrimaryButton,
-  QuoteCard,
   ReferralBanner,
   SectionHeader,
   ShareStatsCard,
@@ -77,10 +76,9 @@ import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
 import { openRefer } from '@/lib/referrals';
-import { coverForChallenge, coverForRoutine, imageSourceForSlug, takeCoverSource } from '@/lib/images';
+import { coverForChallenge, coverForRoutine, homeHeroSlug, takeCoverSource, takeSlug } from '@/lib/images';
 import { addDays, loadPlannerWeek, startOfWeekMonday, toIso, type PlannerDayView, type PlannerWeek } from '@/lib/planner';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
-import { DAILY_QUOTES, fetchDailyQuotes, fetchHideQuote, pickDailyQuote, saveHideQuote, type DailyQuote } from '@/lib/quotes';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { ensureSubscribed } from '@/lib/paywall';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
@@ -153,7 +151,6 @@ type HomeData = {
   ownedWorkouts: number;
   streak: WeeklyStreak;
   hideStreak: boolean;
-  hideQuote: boolean;
   hideAchievements: boolean;
   hideRefer: boolean;
   welcomeBack: WelcomeBackOffer | null;
@@ -161,7 +158,6 @@ type HomeData = {
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
   learn: LearnArticle[];
-  quotes: DailyQuote[];
   planner: PlannerWeek | null;
   weekStats: { sessions: number; personalBests: number; minutes: string; awards: number };
   awardPreview: AchievementBadge[];
@@ -277,7 +273,6 @@ export default function HomeScreen() {
   const [welcomeBackMenuOpen, setWelcomeBackMenuOpen] = useState(false);
   const [welcomeBackMenuAnchor, setWelcomeBackMenuAnchor] = useState<AnchorRect | null>(null);
   const [isStarting, setIsStarting] = useState(false);
-  const [quoteHidden, setQuoteHidden] = useState(false);
   const [referHidden, setReferHidden] = useState(false);
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
@@ -327,10 +322,8 @@ export default function HomeScreen() {
             stretchRoutines,
             streakGoal,
             hideStreak,
-            hideQuote,
             completedEnrolment,
             handOffPreview,
-            quotes,
             plannerWeek,
             sets,
             hideAchievements,
@@ -348,10 +341,8 @@ export default function HomeScreen() {
             fetchStretchRoutines().catch(() => []),
             fetchStreakGoal().catch(() => DEFAULT_STREAK_GOAL),
             fetchHideStreak().catch(() => false),
-            fetchHideQuote().catch(() => false),
             fetchLatestCompletedEnrolment().catch(() => null),
             fetchHandOffPreview().catch(() => false),
-            fetchDailyQuotes().catch(() => DAILY_QUOTES),
             loadPlannerWeek().catch(() => null),
             fetchProgressSets().catch(() => []),
             fetchHideAchievements().catch(() => false),
@@ -437,7 +428,6 @@ export default function HomeScreen() {
             ownedWorkouts,
             streak,
             hideStreak,
-            hideQuote,
             hideAchievements,
             hideRefer: hideReferStored,
             welcomeBack,
@@ -445,7 +435,6 @@ export default function HomeScreen() {
             challenge: pickHomeChallenge(challenges),
             progress,
             learn,
-            quotes,
             planner: plannerWeek,
             weekStats: {
               sessions: weekSessions.length,
@@ -456,7 +445,6 @@ export default function HomeScreen() {
             awardPreview: pickAwardsPreview(badges),
             lifetimeSessions: sessions.length,
           });
-          setQuoteHidden(hideQuote);
           setReferHidden(hideReferStored);
           setLoadState('ready');
           if (!hideStreak) void maybeCelebrateStreakGoal(streak);
@@ -670,11 +658,6 @@ export default function HomeScreen() {
     }
   }
 
-  function hideQuote() {
-    setQuoteHidden(true);
-    saveHideQuote(true).catch(() => setQuoteHidden(false));
-  }
-
   function dismissRefer() {
     setReferHidden(true);
     AsyncStorage.setItem(REFER_HIDE_KEY, '1').catch(() => setReferHidden(false));
@@ -762,27 +745,31 @@ export default function HomeScreen() {
     challenge,
     progress,
     learn,
-    quotes,
     planner,
     weekStats,
     awardPreview,
     lifetimeSessions,
     hideAchievements,
   } = data;
-  const quote = pickDailyQuote(quotes);
-  const showQuote = !quoteHidden && Boolean(quote?.text);
   const inProgress = Boolean(activeSession);
   const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
   const usedPhotos = new Set<string>();
-  const heroImage = imageSourceForSlug('hero-home');
-  if (heroImage) usedPhotos.add('hero-home');
-  const nextThumb =
-    enrolment && next ? sessionThumbnail(next.day, enrolment.routine, usedPhotos) : null;
-  const handOffImage = handOff ? takeCoverSource(coverForRoutine(handOff.routine), usedPhotos) : null;
-  const handOffCard = handOff ? handOffCardCopy(handOff) : null;
-  const challengeCover = challenge ? takeCoverSource(coverForChallenge(challenge), usedPhotos) : null;
   const plannerDays = planner?.days ?? [];
   const todayPlan = plannerDays.find((day) => day.isToday) ?? null;
+  const heroSlug = takeSlug(
+    homeHeroSlug({
+      welcomeBack: Boolean(welcomeBack) && !inProgress,
+      rest: todayPlan?.kind === 'rest',
+      doneToday: Boolean(todayPlan?.completed),
+      evening: new Date().getHours() >= 17,
+    }),
+    usedPhotos
+  );
+  const nextThumb =
+    enrolment && next ? sessionThumbnail(next.day, enrolment.routine, usedPhotos) : null;
+  const handOffSlug = handOff ? takeSlug(coverForRoutine(handOff.routine)?.id, usedPhotos) : null;
+  const handOffCard = handOff ? handOffCardCopy(handOff) : null;
+  const challengeSlug = challenge ? takeSlug(coverForChallenge(challenge)?.id, usedPhotos) : null;
   const stripDays =
     plannerDays.length > 0
       ? plannerDays.map((day, index) => ({
@@ -931,7 +918,7 @@ export default function HomeScreen() {
         ) : null}
 
         <WelcomeHero
-          image={heroImage}
+          imageSlug={heroSlug}
           height={heroHeight}
           eyebrow={hero.eyebrow}
           title={hero.title}
@@ -988,7 +975,7 @@ export default function HomeScreen() {
           <WhatsNextCard
             title={handOffCard.title}
             body={handOffCard.body}
-            image={handOffImage}
+            imageSlug={handOffSlug}
             starting={isStarting && handOff.mode === 'start'}
             primaryLabel={handOffCard.primaryLabel}
             onPrimary={() => void startNextFromHandOff()}
@@ -1018,10 +1005,6 @@ export default function HomeScreen() {
           }
         />
 
-        {showQuote && quote ? (
-          <QuoteCard quote={quote} eyebrow={homeCopy.quote_eyebrow} onHide={hideQuote} />
-        ) : null}
-
         {showFeatured ? (
           <View>
             <SectionHeader
@@ -1045,7 +1028,7 @@ export default function HomeScreen() {
                     title={routine.name}
                     subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
                     tags={routine.tags}
-                    image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
+                    imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
                     letter={routine.name.slice(0, 1)}
                     imageAspectRatio={16 / 10}
                     progress={
@@ -1065,13 +1048,13 @@ export default function HomeScreen() {
             name={challenge.name}
             timing={challengeTimingCopy(challenge)}
             joined={Boolean(challenge.joined)}
-            image={challengeCover}
+            imageSlug={challengeSlug}
             onPress={() => router.push({ pathname: '/challenges/[id]', params: { id: challenge.id } } as Href)}
           />
         ) : null}
 
         {showRefer ? (
-          <ReferralBanner onInvite={inviteFriend} onDismiss={dismissRefer} />
+          <ReferralBanner imageSlug="hero-refer" onInvite={inviteFriend} onDismiss={dismissRefer} />
         ) : null}
 
         {showWeekStats ? (
@@ -1109,7 +1092,7 @@ export default function HomeScreen() {
                   key={routine.id}
                   title={routine.name}
                   subtitle={`${routine.session_minutes} min`}
-                  image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
+                  imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
                   letter={routine.name.slice(0, 1)}
                   imageAspectRatio={16 / 10}
                   onPress={() => openStretch(routine)}

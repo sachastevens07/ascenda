@@ -12,6 +12,7 @@ const SHEET_RADIUS = 28;
 
 export function DetailLayout({
   cover,
+  coverSlug,
   letter,
   title,
   eyebrow,
@@ -21,6 +22,8 @@ export function DetailLayout({
   children,
 }: {
   cover: ImageSourcePropType | null;
+  /** Manifest slug. When set, this is the photo. */
+  coverSlug?: string | null;
   letter: string;
   title: string;
   eyebrow: string;
@@ -40,7 +43,7 @@ export function DetailLayout({
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: sticky ? 16 : insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}>
-        <HeroImage image={cover} letter={letter} title={title} eyebrow={eyebrow} height={heroHeight}>
+        <HeroImage image={cover} imageSlug={coverSlug} letter={letter} title={title} eyebrow={eyebrow} height={heroHeight}>
           <View style={[styles.heroBar, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
             <IconButton icon="chevron-back" variant="overlay" accessibilityLabel="Back" onPress={onBack} />
             {menu ?? <View style={styles.menuSpacer} />}

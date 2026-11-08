@@ -47,6 +47,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "content:sync": "node scripts/content-sync.ts",
+    "images:upload": "node scripts/images-upload.ts",
+    "images:report": "node scripts/images-report.ts",
     "content:sql": "node scripts/emit-content-routines-sql.ts",
     "workoutx:match": "node scripts/match-workoutx.mjs"
   },

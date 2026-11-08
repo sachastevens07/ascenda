@@ -594,20 +594,22 @@ function reportWarmups(): void {
 }
 
 async function reportImages(client: SupabaseClient): Promise<void> {
-  line('images  ←  content/images/catalogue.json');
-  const images = asArray(readJson('images/catalogue.json').images);
-  const error = await probe(client, 'images', 'id, url, storage_path, alt_text, licence_source');
-  line(`  Content slugs: ${images.length}`);
+  line('images  ←  content/images/image-manifest.json');
+  const images = asArray(readJson('images/image-manifest.json').images);
+  const columns =
+    'id, slug, kind, shot, orientation, brief, same_as, status, url, storage_path, alt_text, licence_source, photographer, source_url, model_release';
+  const error = await probe(client, 'images', columns);
+  line(`  Manifest slugs: ${images.length}`);
   if (error) {
     line(`  Table not usable: ${error}`);
-    line('  Paste supabase/images_x1.sql first. The app shows placeholders until then.');
+    line('  Paste supabase/images_manifest.sql first. The app shows placeholders until a photo is ready.');
     line();
     return;
   }
   const remote = await fetchAll<ImageRow>(client, 'images', 'id, url');
   if (hiddenNote('images', remote.error, remote.hidden)) {
-    line(`  Plan when a service role can read: upsert ${images.length} slugs with empty url and licence_source.`);
-    line('  Existing url and licence_source are never overwritten. alt_text can update.');
+    line(`  Plan when a service role can read: upsert ${images.length} slugs from the manifest.`);
+    line('  Descriptive fields can update. url, status and licence fields are never cleared.');
     line();
     return;
   }
@@ -617,7 +619,8 @@ async function reportImages(client: SupabaseClient): Promise<void> {
   line(`  Remote rows: ${remote.rows.length}`);
   line(`  Remote rows with a url: ${withUrl}`);
   line(`  Would insert: ${missing.length}`);
-  line('  Would update alt_text only. url and licence_source stay as they are.');
+  line('  Would update kind, shot, orientation, brief, same_as and alt_text.');
+  line('  Would leave status, url, storage_path, photographer, source_url, licence_source and model_release as they are.');
   line();
 }
 

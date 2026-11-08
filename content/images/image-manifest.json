@@ -1,0 +1,4323 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Image manifest (AGENTS.md R11 and X1). One entry per image slug used anywhere in /content or the app. The images table and Supabase storage follow this file: upload a file, then fill file, photographer, source_url, licence_source and model_release, and set status to 'ready'.",
+    "same_as means reuse that slug's file instead of sourcing a new one.",
+    "Show a tidy placeholder (brand-tinted shape with the relevant icon) for any slug that isn't ready."
+  ],
+  "style_guide": {
+    "summary": "Real women training in real, warm, well-lit gyms. Half the people photos are connection shots (smiling, often towards the camera, relaxed between sets); half are in-action shots (focused, mid-exercise, eyes on the movement). Authentic and candid, never posed glamour.",
+    "people": [
+      "Women only in frame (another woman's hand or arm is fine, like reference 1). No men.",
+      "Aged roughly 18 to 45, diverse ethnicities, skin tones, body sizes and builds across the set. Aim for no more than about a third of the set to look alike.",
+      "Natural, confident expressions: genuine smiles or calm focus. Never strained, pained or exhausted.",
+      "Real gym clothes in varied, muted colours. Sports bras and crop tops are fine, but the photo is framed on her face, hands and the movement."
+    ],
+    "framing": [
+      "Never crop or angle to make the stomach, chest or bum the focal point. If a shot reads as a body shot, reject it.",
+      "Eye level or slightly below, 35 to 85 mm look, shallow depth of field so the gym blurs behind her.",
+      "Equipment must be real and recognisable (dumbbell racks, benches, cables, plate-loaded machines, racks).",
+      "Leave clear space for text on heroes and covers: subject off-centre, background calm on one side.",
+      "Check every image in its crops: card 4:3, hero 16:9 or 4:5, tile 1:1."
+    ],
+    "light_and_colour": [
+      "Warm, natural light: window light or warm practical lights, mid to bright exposure.",
+      "Dark gym backgrounds are fine only if she's well lit and the photo feels warm (references 4 and 6). No black and white, no gritty or very low-key shots (reference 2's grading is out).",
+      "One consistent grade across the app: warm white balance, gently lifted shadows, natural skin tones, no heavy filters or neon tints."
+    ],
+    "never": [
+      "Visible brand logos, gym names or watermarks (e.g. Gold's Gym logos on dumbbells in reference 6). Retouch them out or pick another photo.",
+      "Text, captions or stock-site UI in the image.",
+      "Mirror selfies, phones showing screens, before and after or progress-style body photos.",
+      "AI-generated people or AI-generated exercise demonstrations.",
+      "The same photo twice on one screen, and ideally anywhere in the app (the only reuse allowed is where same_as says so)."
+    ],
+    "equipment_photos": "Machine guide and onboarding equipment photos show the machine on its own, three-quarter angle, whole machine in frame, bright clean gym, nobody using it.",
+    "food_photos": "Bright natural light, real kitchens and tables, 45 degrees or overhead, the exact dish in the recipe with no ingredients that aren't in it. Hands are fine; no faces.",
+    "licensing": [
+      "Every file needs licence_source, photographer and source_url filled in.",
+      "Pexels and Unsplash licences allow commercial use but don't include model releases. For people photos used in marketing (App Store screenshots, paywall, onboarding, ads), prefer photos with model releases from a paid library (e.g. Adobe Stock or iStock), and record model_release.",
+      "Never use photos from Pinterest, Google Images or social media, even as placeholders in builds you share."
+    ],
+    "references": "Sacha's references (keep in design/photo-references/): 1 fist bump smiling at camera, 3 lat pulldown, 4 curl, 5 stability ball plank pair, 6 sitting on gym floor laughing. Reference 2 (black and white squat) is NOT the direction."
+  },
+  "counts": {
+    "total": 222,
+    "people": 104,
+    "equipment": 30,
+    "food": 88,
+    "needs_sourcing": 215
+  },
+  "images": [
+    {
+      "slug": "hero-home-morning",
+      "used_in": [
+        "Home hero"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Woman arriving at a bright gym in the morning, gym bag on shoulder, smiling towards the camera, dumbbell rack softly blurred behind. Space above her head for text.",
+      "search_terms": [
+        "woman arriving gym smiling"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-home-evening",
+      "used_in": [
+        "Home hero (evening)"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Woman relaxed between sets on a bench under warm evening lighting, water bottle in hand, laughing, looking just off camera.",
+      "search_terms": [
+        "woman gym bench smiling evening"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-home-rest-day",
+      "used_in": [
+        "Home hero, rest day"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "portrait 4:5",
+      "brief": "Woman stretching calmly on a mat in a quiet corner of a gym studio, eyes closed or soft smile, window light.",
+      "search_terms": [
+        "woman stretching gym studio calm"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-home-done",
+      "used_in": [
+        "Home hero, session done"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Woman sitting on the gym floor against a wall after training, towel round her neck, big genuine smile at the camera (like reference 6).",
+      "search_terms": [
+        "woman sitting gym floor smiling after workout"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-welcome-back",
+      "used_in": [
+        "Welcome-back card"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Woman walking back into a gym, half-smile, holding a water bottle, natural light from the entrance. Feels like a warm return.",
+      "search_terms": [
+        "woman walking into gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-paywall",
+      "used_in": [
+        "Paywall hero"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Confident woman mid-way through a dumbbell exercise, smiling towards the camera, bright gym, plenty of headroom for the headline.",
+      "search_terms": [
+        "woman dumbbells smiling gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-locked-home",
+      "used_in": [
+        "Locked home"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 16:9",
+      "brief": "Woman looking at her phone on a gym bench, relaxed and pleased, gym softly blurred behind (screen not visible).",
+      "search_terms": [
+        "woman phone gym bench"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-programmes",
+      "used_in": [
+        "Programmes browse hero"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Two women training side by side on benches with dumbbells, one laughing, both focused on their own sets (like reference 5).",
+      "search_terms": [
+        "two women dumbbells gym together"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-learn",
+      "used_in": [
+        "Learn hub hero"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 16:9",
+      "brief": "Woman reading on her phone while sitting on a bench in a gym, calm, focused expression.",
+      "search_terms": [
+        "woman reading phone gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-food",
+      "used_in": [
+        "Food tab hero"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "Bright home kitchen counter with a colourful grain bowl, fruit and a water bottle, natural window light, no people or hands only.",
+      "search_terms": [
+        "healthy bowl kitchen counter natural light"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-challenges",
+      "used_in": [
+        "Challenges hero"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 16:9",
+      "brief": "Woman giving a fist bump towards the camera in a gym, big smile, motion blur on the fist (exactly the mood of reference 1).",
+      "search_terms": [
+        "woman fist bump camera gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "hero-refer",
+      "used_in": [
+        "Refer a friend banner"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 16:9",
+      "brief": "Two women high-fiving or fist-bumping in a gym, both smiling, natural light.",
+      "search_terms": [
+        "two women high five gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "onboarding-welcome",
+      "used_in": [
+        "Onboarding welcome"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Smiling woman looking straight at the camera in a bright gym, dumbbell rack behind, portrait, space at the bottom for buttons.",
+      "search_terms": [
+        "woman smiling at camera gym portrait"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "onboarding-insight-goals",
+      "used_in": [
+        "Onboarding insight"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "portrait 4:5",
+      "brief": "Woman in a squat rack area, focused, mid-movement with a light barbell or goblet squat, side-on.",
+      "search_terms": [
+        "woman goblet squat gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "onboarding-insight-not-alone",
+      "used_in": [
+        "Onboarding insight"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Woman sitting on a bench with a slightly nervous but warm smile, looking off camera, quieter corner of a gym.",
+      "search_terms": [
+        "woman gym bench thoughtful smile"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "onboarding-insight-plans",
+      "used_in": [
+        "Onboarding insight"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "portrait 4:5",
+      "brief": "Woman checking her plan on her phone next to a cable machine, smiling.",
+      "search_terms": [
+        "woman phone gym machine smiling"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "strong-foundations-cover",
+      "used_in": [
+        "Routine card and detail: Strong Foundations in 6 Weeks"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a goblet squat with one dumbbell next to a bench in a quiet corner, focused but relaxed, dumbbell rack behind.",
+      "search_terms": [
+        "woman goblet squat dumbbell"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "two-day-start-cover",
+      "used_in": [
+        "Routine card and detail: The Two-Day Start"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 4:3",
+      "brief": "Woman sitting on a bench holding a pair of light dumbbells, smiling towards the camera between sets.",
+      "search_terms": [
+        "woman bench dumbbells smiling"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "the-climb-cover",
+      "used_in": [
+        "Routine card and detail: The Climb in 8 Weeks"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a barbell Romanian deadlift with good form, side-on, determined expression.",
+      "search_terms": [
+        "woman barbell romanian deadlift"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "glute-challenge-cover",
+      "used_in": [
+        "Routine card and detail: 30-Day Glute Challenge"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a hip thrust on a bench with a barbell or dumbbell, side-on, face visible and focused. Framed on the whole movement, never on her bum.",
+      "search_terms": [
+        "woman hip thrust bench"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "glutes-legs-cover",
+      "used_in": [
+        "Routine card and detail: Glutes and Legs in 8 Weeks"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on a leg press or doing walking lunges with dumbbells, determined, full-length frame.",
+      "search_terms": [
+        "woman leg press gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "higher-ground-cover",
+      "used_in": [
+        "Routine card and detail: Higher Ground"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman unracking a barbell in a squat rack, confident, bright gym.",
+      "search_terms": [
+        "woman barbell squat rack"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "upper-body-cover",
+      "used_in": [
+        "Routine card and detail: Upper Body Strong in 6 Weeks"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on a lat pulldown or seated cable row, focused on the movement (like reference 3, framed at shoulders and arms).",
+      "search_terms": [
+        "woman lat pulldown"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "quick-ascent-cover",
+      "used_in": [
+        "Routine card and detail: Quick Ascent"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 4:3",
+      "brief": "Woman moving quickly between two dumbbell exercises, slight motion, energetic, smiling.",
+      "search_terms": [
+        "woman dumbbell workout energetic"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "busy-gym-cover",
+      "used_in": [
+        "Routine card and detail: Busy Gym? No Problem"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman training calmly on one bench with dumbbells while the busy gym is blurred behind her.",
+      "search_terms": [
+        "woman dumbbells bench busy gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machines-cover",
+      "used_in": [
+        "Routine card and detail: Machines Made Easy"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman adjusting the seat or pin on a resistance machine, curious, slight smile.",
+      "search_terms": [
+        "woman adjusting gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "summit-cover",
+      "used_in": [
+        "Routine card and detail: Summit"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Experienced woman deadlifting a loaded trap bar or barbell, strong and focused (bright, not dark like reference 2).",
+      "search_terms": [
+        "woman deadlift barbell strong"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "strong-for-life-cover",
+      "used_in": [
+        "Routine card and detail: Strong for Life"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 4:3",
+      "brief": "Woman in her late 30s or 40s on a leg press or chest press, smiling, relaxed and capable.",
+      "search_terms": [
+        "woman 40s gym machine smiling"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "welcome-back-cover",
+      "used_in": [
+        "Routine card and detail: Welcome Back: 4-Week Restart"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman picking up a pair of dumbbells from the rack, small smile, fresh start feeling.",
+      "search_terms": [
+        "woman picking up dumbbells rack"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "strong-and-fit-cover",
+      "used_in": [
+        "Routine card and detail: Strong and Fit in 8 Weeks"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on a rowing machine or bike, then visible weights area behind; energetic and smiling.",
+      "search_terms": [
+        "woman rowing machine gym smiling"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "strength-and-stamina-cover",
+      "used_in": [
+        "Routine card and detail: Strength and Stamina"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a kettlebell or dumbbell exercise with a treadmill row softly blurred behind, focused.",
+      "search_terms": [
+        "woman kettlebell gym cardio area"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "morning-mobility-cover",
+      "used_in": [
+        "Stretch card and player: Morning Mobility"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a gentle cat-cow or world's greatest stretch on a mat by a bright window in a gym studio, morning light.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "after-leg-day-cover",
+      "used_in": [
+        "Stretch card and player: After Leg Day"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman in a seated hamstring or pigeon stretch on a mat near the leg machines, calm.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "desk-reset-cover",
+      "used_in": [
+        "Stretch card and player: Desk Reset"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a standing chest-opener or neck stretch, standing tall, softly lit studio.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "happy-hips-cover",
+      "used_in": [
+        "Stretch card and player: Happy Hips"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman in a low lunge hip-flexor stretch on a mat, eyes closed, peaceful.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "back-unwind-cover",
+      "used_in": [
+        "Stretch card and player: Back Unwind"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman in child's pose or a supine twist on a mat, quiet corner, warm light.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "shoulders-cover",
+      "used_in": [
+        "Stretch card and player: Shoulders and Upper Back"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a thread-the-needle or cross-body shoulder stretch, relaxed expression.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recovery-flow-cover",
+      "used_in": [
+        "Stretch card and player: Full-Body Recovery Flow"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman flowing through a downward dog on a mat in a bright studio, calm.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "wind-down-cover",
+      "used_in": [
+        "Stretch card and player: Wind Down"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman lying on a mat in a legs-up or knees-hug stretch, evening light, very calm.",
+      "search_terms": [
+        "woman stretching mat studio"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "first-session-cover",
+      "used_in": [
+        "Single session card: Your First Gym Session"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman walking into the free-weights area for the first time, looking around with a curious smile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "full-body-30-cover",
+      "used_in": [
+        "Single session card: Full Body in 30"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a dumbbell row on a bench, focused.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "lower-strength-cover",
+      "used_in": [
+        "Single session card: Lower Body Strength"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a Bulgarian split squat with dumbbells, determined.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "glute-focus-cover",
+      "used_in": [
+        "Single session card: Glute Focus"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a cable kickback or glute bridge, framed on the whole movement and her face.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "upper-express-cover",
+      "used_in": [
+        "Single session card: Upper Body Express"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a seated dumbbell shoulder press, strong and calm.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "back-shoulders-cover",
+      "used_in": [
+        "Single session card: Back and Shoulders"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a face pull at the cable station, focused.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "arms-cover",
+      "used_in": [
+        "Single session card: Arms and Shoulders"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing an EZ-bar or dumbbell curl, framed at chest height, focused (the mood of reference 4, but with a brighter background).",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-circuit-cover",
+      "used_in": [
+        "Single session card: Machine Circuit"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman moving between two resistance machines, smiling.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "one-spot-cover",
+      "used_in": [
+        "Single session card: One Spot Full Body"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman with a mat, a bench and one pair of dumbbells in a quiet corner.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "core-cover",
+      "used_in": [
+        "Single session card: Core Strength"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a plank on a stability ball or a dead bug on a mat (like reference 5).",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "home-dumbbell-cover",
+      "used_in": [
+        "Single session card: Home Dumbbell Full Body"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman training with dumbbells in a bright living room. The only non-gym photo of people in the app.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "bodyweight-cover",
+      "used_in": [
+        "Single session card: Bodyweight Anywhere"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman doing a bodyweight squat or lunge in a bright open space, smiling.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "challenge-four-weeks-strong",
+      "used_in": [
+        "Challenge card"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 16:9",
+      "brief": "Woman lifting dumbbells with a proud grin, looking towards the camera.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "challenge-the-gym-explorer",
+      "used_in": [
+        "Challenge card"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman stepping onto a machine she hasn't used, reading the instructions plate with curiosity.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "challenge-28-days-of-stretch",
+      "used_in": [
+        "Challenge card"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman in a deep stretch on a mat, calm, plants and window light.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "challenge-quiet-start",
+      "used_in": [
+        "Challenge card"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman on her own in a quiet, sunlit corner of the gym with dumbbells and a bench, relaxed.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-incline-walk-20",
+      "used_in": [
+        "Cardio session: Incline walk: 20 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the treadmill in a bright gym, steady, relaxed pace, could chat. Machine clearly recognisable.",
+      "search_terms": [
+        "woman treadmill gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-easy-bike-20",
+      "used_in": [
+        "Cardio session: Easy bike: 20 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the exercise bike in a bright gym, steady, relaxed pace, could chat. Machine clearly recognisable.",
+      "search_terms": [
+        "woman exercise bike gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-cross-trainer-steady-20",
+      "used_in": [
+        "Cardio session: Cross-trainer: 20 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the cross-trainer in a bright gym, steady, relaxed pace, could chat. Machine clearly recognisable.",
+      "search_terms": [
+        "woman cross-trainer gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-rower-steady-15",
+      "used_in": [
+        "Cardio session: Learn to row: 15 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the rowing machine in a bright gym, steady, relaxed pace, could chat. Machine clearly recognisable.",
+      "search_terms": [
+        "woman rowing machine gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-stair-climber-starter-10",
+      "used_in": [
+        "Cardio session: Stair climber starter: 10 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the stair climber in a bright gym, steady, relaxed pace, could chat. Machine clearly recognisable.",
+      "search_terms": [
+        "woman stair climber gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-walk-and-talk-30",
+      "used_in": [
+        "Cardio session: Easy walk: 30 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the treadmill in a bright gym, steady, relaxed pace, could chat. Machine clearly recognisable.",
+      "search_terms": [
+        "woman treadmill gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-cardio-sampler-30",
+      "used_in": [
+        "Cardio session: Cardio sampler: 30 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the cardio area with several machines in a bright gym, steady, relaxed pace, could chat. Machine clearly recognisable.",
+      "search_terms": [
+        "woman cardio area with several machines gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-treadmill-intervals-1-2",
+      "used_in": [
+        "Cardio session: Treadmill intervals: 1 on, 2 easy"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the treadmill in a bright gym, working harder, determined. Machine clearly recognisable.",
+      "search_terms": [
+        "woman treadmill gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-hill-walk-intervals",
+      "used_in": [
+        "Cardio session: Hill walk intervals"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the treadmill in a bright gym, working harder, determined. Machine clearly recognisable.",
+      "search_terms": [
+        "woman treadmill gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-bike-intervals-30-60",
+      "used_in": [
+        "Cardio session: Bike intervals: 30 on, 60 easy"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the exercise bike in a bright gym, working harder, determined. Machine clearly recognisable.",
+      "search_terms": [
+        "woman exercise bike gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-cross-trainer-intervals",
+      "used_in": [
+        "Cardio session: Cross-trainer intervals: 2 and 1"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the cross-trainer in a bright gym, working harder, determined. Machine clearly recognisable.",
+      "search_terms": [
+        "woman cross-trainer gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-rower-pyramid",
+      "used_in": [
+        "Cardio session: Rowing pyramid"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the rowing machine in a bright gym, working harder, determined. Machine clearly recognisable.",
+      "search_terms": [
+        "woman rowing machine gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-bike-finisher-10",
+      "used_in": [
+        "Cardio session: Bike finisher: 10 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the exercise bike in a bright gym, short push after lifting, towel over shoulder. Machine clearly recognisable.",
+      "search_terms": [
+        "woman exercise bike gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-incline-walk-finisher-10",
+      "used_in": [
+        "Cardio session: Incline walk finisher: 10 minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the treadmill in a bright gym, short push after lifting, towel over shoulder. Machine clearly recognisable.",
+      "search_terms": [
+        "woman treadmill gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "cardio-rower-finisher-8",
+      "used_in": [
+        "Cardio session: Rowing finisher: 8 rounds"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 4:3",
+      "brief": "Woman on the rowing machine in a bright gym, short push after lifting, towel over shoulder. Machine clearly recognisable.",
+      "search_terms": [
+        "woman rowing machine gym"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-treadmill",
+      "used_in": [
+        "Machine guide: Treadmill"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The treadmill on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "treadmill gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-bike",
+      "used_in": [
+        "Machine guide: Exercise bike"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The exercise bike on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "exercise bike gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-cross-trainer",
+      "used_in": [
+        "Machine guide: Cross-trainer"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The cross-trainer on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "cross-trainer gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-rower",
+      "used_in": [
+        "Machine guide: Rowing machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The rowing machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "rowing machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-stair-climber",
+      "used_in": [
+        "Machine guide: Stair climber"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The stair climber on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "stair climber gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-leg-press",
+      "used_in": [
+        "Machine guide: Leg press"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The leg press on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "leg press gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-cable",
+      "used_in": [
+        "Machine guide: Cable machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The cable machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "cable machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-smith",
+      "used_in": [
+        "Machine guide: Smith machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The smith machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "smith machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-squat-rack",
+      "used_in": [
+        "Machine guide: Squat rack"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The squat rack on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "squat rack gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-lat-pulldown",
+      "used_in": [
+        "Machine guide: Lat pulldown"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The lat pulldown on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "lat pulldown gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-seated-row",
+      "used_in": [
+        "Machine guide: Seated cable row"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The seated cable row on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "seated cable row gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-chest-press",
+      "used_in": [
+        "Machine guide: Chest press machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The chest press machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "chest press machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-shoulder-press",
+      "used_in": [
+        "Machine guide: Shoulder press machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The shoulder press machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "shoulder press machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-pec-deck",
+      "used_in": [
+        "Machine guide: Pec deck and rear delt machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The pec deck and rear delt machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "pec deck and rear delt machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-leg-extension",
+      "used_in": [
+        "Machine guide: Leg extension"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The leg extension on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "leg extension gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-leg-curl",
+      "used_in": [
+        "Machine guide: Leg curl (seated or lying)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The leg curl (seated or lying) on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "leg curl (seated or lying) gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-hip-thrust",
+      "used_in": [
+        "Machine guide: Hip thrust machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The hip thrust machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "hip thrust machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-hip-abduction",
+      "used_in": [
+        "Machine guide: Hip abduction and adduction machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The hip abduction and adduction machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "hip abduction and adduction machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-assisted-pull-up",
+      "used_in": [
+        "Machine guide: Assisted pull-up machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The assisted pull-up machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "assisted pull-up machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-hack-squat",
+      "used_in": [
+        "Machine guide: Hack squat"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The hack squat on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "hack squat gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "machine-calf-raise",
+      "used_in": [
+        "Machine guide: Calf raise machine"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "landscape 4:3",
+      "brief": "The calf raise machine on its own, three-quarter angle, whole machine in frame, clean bright gym, nobody using it. Seat, pins and handles clearly visible.",
+      "search_terms": [
+        "calf raise machine gym machine"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-dumbbells",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "A dumbbell rack, neat rows of dumbbells, bright gym, no people.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-leg-press",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "Same photo as the machine guide.",
+      "search_terms": [],
+      "same_as": "machine-leg-press",
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-lat-pulldown",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "Same photo as the machine guide.",
+      "search_terms": [],
+      "same_as": "machine-lat-pulldown",
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-chest-press",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "Same photo as the machine guide.",
+      "search_terms": [],
+      "same_as": "machine-chest-press",
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-cables",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "Same photo as the machine guide.",
+      "search_terms": [],
+      "same_as": "machine-cable",
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-smith",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "Same photo as the machine guide.",
+      "search_terms": [],
+      "same_as": "machine-smith",
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-rack",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "Same photo as the machine guide.",
+      "search_terms": [],
+      "same_as": "machine-squat-rack",
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-treadmill",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "Same photo as the machine guide.",
+      "search_terms": [],
+      "same_as": "machine-treadmill",
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "equip-barbell",
+      "used_in": [
+        "Onboarding: machines you've used before (photo card)"
+      ],
+      "kind": "equipment",
+      "shot": "equipment",
+      "orientation": "square 1:1",
+      "brief": "A barbell with plates on the floor or in a rack, close-up, no people.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-getting_started",
+      "used_in": [
+        "Learn category tile: Getting started"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Getting started' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-gym_confidence",
+      "used_in": [
+        "Learn category tile: Gym confidence"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Gym confidence' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-technique",
+      "used_in": [
+        "Learn category tile: Technique"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Technique' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-how_programmes_work",
+      "used_in": [
+        "Learn category tile: How programmes work"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'How programmes work' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-recovery_and_sleep",
+      "used_in": [
+        "Learn category tile: Recovery and sleep"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Recovery and sleep' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-fuelling",
+      "used_in": [
+        "Learn category tile: Fuelling your training"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Fuelling your training' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-mindset",
+      "used_in": [
+        "Learn category tile: Mindset and motivation"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Mindset and motivation' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-category-myths",
+      "used_in": [
+        "Learn category tile: Myths busted"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Myths busted' at a glance; distinct from every other tile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-your-first-gym-session",
+      "used_in": [
+        "Learn article: Your first gym session, step by step"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman at the gym reception or entrance with a bag, smiling nervously.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-what-to-wear-and-bring",
+      "used_in": [
+        "Learn article: What to wear and bring to the gym"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Flat lay: gym bag, trainers, water bottle, towel, headphones.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-how-to-read-your-plan",
+      "used_in": [
+        "Learn article: How to read your plan: sets, reps and rest"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman looking at her phone on a bench, nodding.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-choosing-your-starting-weight",
+      "used_in": [
+        "Learn article: How to choose your starting weight"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman's hand choosing a dumbbell from the rack.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-warm-ups-and-cool-downs",
+      "used_in": [
+        "Learn article: Warm-ups and cool-downs: why they're worth five minutes"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman doing a dynamic leg swing holding a rail.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-gym-etiquette",
+      "used_in": [
+        "Learn article: Gym etiquette: the unwritten rules"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman wiping down a bench with a spray bottle and towel.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-when-the-machine-is-taken",
+      "used_in": [
+        "Learn article: What to do when the machine you need is taken"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman waiting by a cable machine, relaxed, with another woman using it.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-how-to-share-equipment",
+      "used_in": [
+        "Learn article: How to share equipment (and ask \"how many sets have you got left?\")"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Two women chatting between sets at a squat rack, friendly.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-feeling-watched",
+      "used_in": [
+        "Learn article: Feeling watched? Why most people aren't looking"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman with headphones in, focused, gym blurred around her.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-first-time-in-the-free-weights-area",
+      "used_in": [
+        "Learn article: Your first time in the free-weights area"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman standing in front of the dumbbell rack, curious.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-how-to-brace-your-core",
+      "used_in": [
+        "Learn article: How to brace your core when you lift"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman taking a breath before a goblet squat, close-up on face and torso.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-the-hip-hinge",
+      "used_in": [
+        "Learn article: The hip hinge: the move behind deadlifts and hip thrusts"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman doing a dumbbell Romanian deadlift, side-on.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-how-to-squat-with-confidence",
+      "used_in": [
+        "Learn article: How to squat with confidence"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman at the bottom of a goblet squat, side-on, good form.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-how-to-breathe-while-you-lift",
+      "used_in": [
+        "Learn article: How to breathe while you lift"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman exhaling as she presses dumbbells, eyes focused.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-progressive-overload",
+      "used_in": [
+        "Learn article: Progressive overload, simply explained"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Close-up of hands sliding a small plate onto a barbell.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-reps-in-reserve",
+      "used_in": [
+        "Learn article: Reps in reserve: how hard should a set feel?"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman finishing a set of dumbbell rows, controlled, not straining.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-why-routines-have-phases",
+      "used_in": [
+        "Learn article: Why your routine has phases"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Notebook or phone with a training plan on a bench next to dumbbells.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-sets-reps-and-rest",
+      "used_in": [
+        "Learn article: Why sets, reps and rest change between exercises"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman resting between sets checking a timer, water bottle.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-sleep-and-strength",
+      "used_in": [
+        "Learn article: Sleep: your most underrated training tool"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Calm bedroom with morning light, no people.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-sore-after-training",
+      "used_in": [
+        "Learn article: Sore after training? What's normal and what isn't"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman stretching her quads, slight wince turned into a smile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-rest-days-and-recovery",
+      "used_in": [
+        "Learn article: Rest days: why they count too"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman walking outdoors in a park in gym clothes, relaxed.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-eating-enough-to-train",
+      "used_in": [
+        "Learn article: Eating enough to train well"
+      ],
+      "kind": "food",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Colourful balanced plate on a kitchen table.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-protein-for-training",
+      "used_in": [
+        "Learn article: Protein and training: the basics"
+      ],
+      "kind": "food",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Eggs, yoghurt, beans and tofu on a kitchen counter.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-hydration",
+      "used_in": [
+        "Learn article: Staying hydrated in the gym"
+      ],
+      "kind": "food",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Water bottle on a bench next to dumbbells, bright light.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-motivation-vs-habits",
+      "used_in": [
+        "Learn article: Motivation comes and goes. Habits stay"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman lacing her trainers by the door.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-coming-back-after-a-break",
+      "used_in": [
+        "Learn article: Missed a week? Here's how to come back"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman walking back into the gym, small smile.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-the-wins-that-matter",
+      "used_in": [
+        "Learn article: The wins that matter most"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman celebrating a lift with a small fist pump, smiling.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-will-lifting-make-me-bulky",
+      "used_in": [
+        "Learn article: Myth: lifting weights will make me bulky"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman confidently lifting a barbell, everyday build, smiling.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-toning-vs-building",
+      "used_in": [
+        "Learn article: Myth: you need to 'tone' instead of build"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman doing a cable row, focused.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-cardio-or-weights",
+      "used_in": [
+        "Learn article: Myth: cardio or weights, you have to choose"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Split scene: weights area in front, treadmills behind, woman in between.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-what-to-eat-before-and-after-training",
+      "used_in": [
+        "Learn article: What to eat before and after training"
+      ],
+      "kind": "food",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Banana, oats and yoghurt in a gym bag.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-caffeine-and-training",
+      "used_in": [
+        "Learn article: Caffeine and training"
+      ],
+      "kind": "food",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Coffee cup on a bench next to a gym bag.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-supplements-basics",
+      "used_in": [
+        "Learn article: Supplements: what has evidence and what doesn't"
+      ],
+      "kind": "food",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Plain unbranded tub and shaker on a kitchen counter, no labels visible.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-when-your-appetite-is-low",
+      "used_in": [
+        "Learn article: Eating well when your appetite is low"
+      ],
+      "kind": "food",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Smoothie and a bowl of porridge on a table, soft light.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-berry-overnight-oats",
+      "used_in": [
+        "Recipe: Berry overnight oats"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Berry overnight oats. Make it the night before and breakfast is waiting for you. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "berry overnight oats"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-peanut-butter-banana-porridge",
+      "used_in": [
+        "Recipe: Peanut butter banana porridge"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Peanut butter banana porridge. Warm, filling and ready in five minutes. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "peanut butter banana porridge"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-spinach-feta-omelette",
+      "used_in": [
+        "Recipe: Spinach and feta omelette"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Spinach and feta omelette. A quick, savoury breakfast with plenty of protein. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "spinach and feta omelette"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-greek-yoghurt-power-bowl",
+      "used_in": [
+        "Recipe: Greek yoghurt crunch bowl"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Greek yoghurt crunch bowl. Creamy yoghurt, fruit and a crunchy topping. No cooking needed. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "greek yoghurt crunch bowl"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-smoked-salmon-scrambled-eggs",
+      "used_in": [
+        "Recipe: Smoked salmon and scrambled eggs"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Smoked salmon and scrambled eggs. A weekend-feeling breakfast that takes ten minutes. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "smoked salmon and scrambled eggs"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-breakfast-burritos",
+      "used_in": [
+        "Recipe: Prep-ahead breakfast burritos"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Prep-ahead breakfast burritos. Make four on Sunday, wrap and freeze, then reheat on busy mornings. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "prep-ahead breakfast burritos"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-blueberry-baked-oats",
+      "used_in": [
+        "Recipe: Blueberry baked oats"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Blueberry baked oats. Like a warm, soft pudding for breakfast. Bake two portions and keep one for tomorrow. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "blueberry baked oats"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-veggie-egg-muffins",
+      "used_in": [
+        "Recipe: Veggie egg muffins"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Veggie egg muffins. Twelve grab-and-go egg muffins for breakfasts or snacks. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "veggie egg muffins"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-tofu-scramble",
+      "used_in": [
+        "Recipe: Turmeric tofu scramble"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Turmeric tofu scramble. A plant-based twist on scrambled eggs. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "turmeric tofu scramble"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-cottage-cheese-tomato-toast",
+      "used_in": [
+        "Recipe: Cottage cheese and tomato toast"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Cottage cheese and tomato toast. A five-minute breakfast with a protein boost. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "cottage cheese and tomato toast"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-apple-cinnamon-bircher",
+      "used_in": [
+        "Recipe: Apple and cinnamon bircher"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Apple and cinnamon bircher. Soaked oats with grated apple and cinnamon. Makes two breakfasts. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "apple and cinnamon bircher"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-mango-chia-pudding",
+      "used_in": [
+        "Recipe: Mango chia pudding"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Mango chia pudding. A plant-based breakfast you can make in two minutes the night before. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "mango chia pudding"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-avocado-eggs-on-sourdough",
+      "used_in": [
+        "Recipe: Avocado and eggs on sourdough"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Avocado and eggs on sourdough. Creamy avocado, soft eggs and a pinch of chilli. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "avocado and eggs on sourdough"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-smoky-beans-on-toast",
+      "used_in": [
+        "Recipe: Smoky homemade beans on toast"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Smoky homemade beans on toast. Proper beans in 15 minutes, with a smoky tomato sauce. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "smoky homemade beans on toast"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-chicken-quinoa-prep-bowls",
+      "used_in": [
+        "Recipe: Chicken and quinoa prep bowls"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Chicken and quinoa prep bowls. Four lunches from one tray. Roast, portion and you're set for the week. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "chicken and quinoa prep bowls"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-tuna-sweetcorn-pasta-salad",
+      "used_in": [
+        "Recipe: Tuna and sweetcorn pasta salad"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Tuna and sweetcorn pasta salad. A creamy, protein-packed pasta salad that travels well. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "tuna and sweetcorn pasta salad"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-red-lentil-soup",
+      "used_in": [
+        "Recipe: Spiced red lentil soup"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Spiced red lentil soup. A thick, warming soup that's ready in 30 minutes and freezes brilliantly. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "spiced red lentil soup"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-smashed-chickpea-wraps",
+      "used_in": [
+        "Recipe: Smashed chickpea wraps"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Smashed chickpea wraps. A quick plant-based lunch with a lemony tahini filling. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "smashed chickpea wraps"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-chicken-caesar-wraps",
+      "used_in": [
+        "Recipe: Chicken Caesar-style wraps"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Chicken Caesar-style wraps. A lighter take on Caesar salad, wrapped up for lunch. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "chicken caesar-style wraps"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-salmon-rice-bowl",
+      "used_in": [
+        "Recipe: Salmon rice bowl"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Salmon rice bowl. Soy-glazed salmon with rice, edamame and crunchy veg. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "salmon rice bowl"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-halloumi-couscous-salad",
+      "used_in": [
+        "Recipe: Halloumi and herby couscous salad"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Halloumi and herby couscous salad. Golden halloumi with lemony couscous and chickpeas. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "halloumi and herby couscous salad"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-prawn-avocado-salad",
+      "used_in": [
+        "Recipe: Prawn, avocado and sweetcorn salad"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Prawn, avocado and sweetcorn salad. A fresh, zingy salad that comes together in ten minutes. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "prawn, avocado and sweetcorn salad"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-turkey-hummus-pittas",
+      "used_in": [
+        "Recipe: Turkey and hummus pittas"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Turkey and hummus pittas. A packed-lunch classic with extra crunch. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "turkey and hummus pittas"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-roasted-tomato-bean-soup",
+      "used_in": [
+        "Recipe: Roasted tomato and white bean soup"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Roasted tomato and white bean soup. Sweet roasted tomatoes and peppers, blended with beans for a creamy, filling soup. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "roasted tomato and white bean soup"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-peanut-noodle-jars",
+      "used_in": [
+        "Recipe: Peanut noodle salad jars"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Peanut noodle salad jars. Three lunches layered in jars, with a peanut and lime dressing. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "peanut noodle salad jars"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-chilli-bean-sweet-potatoes",
+      "used_in": [
+        "Recipe: Chilli bean jacket sweet potatoes"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Chilli bean jacket sweet potatoes. Soft sweet potatoes with a quick smoky bean chilli. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "chilli bean jacket sweet potatoes"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-lentil-feta-salad",
+      "used_in": [
+        "Recipe: Lentil, feta and tomato salad"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Lentil, feta and tomato salad. A hearty salad that's even better the next day. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "lentil, feta and tomato salad"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-egg-salad-sandwiches",
+      "used_in": [
+        "Recipe: Creamy egg salad sandwiches"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Creamy egg salad sandwiches. Egg mayo made with yoghurt, with a little mustard kick. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "creamy egg salad sandwiches"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-one-pot-chicken-orzo",
+      "used_in": [
+        "Recipe: One-pot lemony chicken orzo"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: One-pot lemony chicken orzo. Everything cooks in one pan, including the pasta. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "one-pot lemony chicken orzo"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-turkey-chilli",
+      "used_in": [
+        "Recipe: Turkey and bean chilli"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Turkey and bean chilli. A big batch of mild chilli for dinners and freezer portions. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "turkey and bean chilli"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-salmon-potato-traybake",
+      "used_in": [
+        "Recipe: Salmon, potato and broccoli traybake"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Salmon, potato and broccoli traybake. One tray, minimal washing up and a proper dinner. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "salmon, potato and broccoli traybake"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-chickpea-spinach-curry",
+      "used_in": [
+        "Recipe: Chickpea and spinach curry"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Chickpea and spinach curry. A mild, creamy coconut curry that's plant-based and very filling. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "chickpea and spinach curry"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-beef-broccoli-noodles",
+      "used_in": [
+        "Recipe: Beef and broccoli noodles"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Beef and broccoli noodles. A quick stir-fry that's faster than a takeaway. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "beef and broccoli noodles"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-lentil-mushroom-bolognese",
+      "used_in": [
+        "Recipe: Lentil and mushroom bolognese"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Lentil and mushroom bolognese. A rich, plant-based bolognese that freezes really well. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "lentil and mushroom bolognese"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-chicken-fajita-traybake",
+      "used_in": [
+        "Recipe: Chicken fajita traybake"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Chicken fajita traybake. Spiced chicken and peppers roasted on one tray, wrapped up at the table. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "chicken fajita traybake"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-pesto-cod-quinoa",
+      "used_in": [
+        "Recipe: Pesto cod with roasted veg and quinoa"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Pesto cod with roasted veg and quinoa. Flaky cod with a pesto crust, roasted courgette and tomatoes. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "pesto cod with roasted veg and quinoa"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-crispy-tofu-noodles",
+      "used_in": [
+        "Recipe: Crispy tofu and veg noodles"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Crispy tofu and veg noodles. Golden tofu with noodles in a sticky soy and ginger sauce. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "crispy tofu and veg noodles"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-garlic-prawn-pasta",
+      "used_in": [
+        "Recipe: Garlic prawn and tomato pasta"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Garlic prawn and tomato pasta. A speedy pasta with juicy prawns and burst tomatoes. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "garlic prawn and tomato pasta"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-turkey-meatballs",
+      "used_in": [
+        "Recipe: Turkey meatballs in tomato sauce"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Turkey meatballs in tomato sauce. Tender meatballs in a simple tomato sauce. A family favourite. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "turkey meatballs in tomato sauce"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-black-bean-sweet-potato-tacos",
+      "used_in": [
+        "Recipe: Black bean and sweet potato tacos"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Black bean and sweet potato tacos. Roasted sweet potato, smoky beans, feta and lime. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "black bean and sweet potato tacos"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-yoghurt-chicken-skewers",
+      "used_in": [
+        "Recipe: Spiced yoghurt chicken with pittas"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Spiced yoghurt chicken with pittas. Tender spiced chicken with a cool cucumber and mint yoghurt. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "spiced yoghurt chicken with pittas"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-one-pot-bean-rice",
+      "used_in": [
+        "Recipe: One-pot smoky bean and rice"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: One-pot smoky bean and rice. Rice, beans and veg all cooked together. Plant-based and great for leftovers. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "one-pot smoky bean and rice"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-baked-feta-bean-pasta",
+      "used_in": [
+        "Recipe: Baked feta and white bean pasta"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Baked feta and white bean pasta. Roast a block of feta with tomatoes, then stir it through pasta and beans. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "baked feta and white bean pasta"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-coconut-fish-curry",
+      "used_in": [
+        "Recipe: Coconut fish curry"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Coconut fish curry. A gentle, fragrant curry with chunks of white fish. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "coconut fish curry"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-turkey-cottage-pie",
+      "used_in": [
+        "Recipe: Turkey cottage pie with sweet potato mash"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Turkey cottage pie with sweet potato mash. Comfort food with a sweet potato topping. Freezes well. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "turkey cottage pie with sweet potato mash"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-veg-egg-fried-rice",
+      "used_in": [
+        "Recipe: Veggie egg fried rice"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Veggie egg fried rice. Better than a takeaway and ready in 15 minutes, especially with leftover rice. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "veggie egg fried rice"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-halloumi-veg-traybake",
+      "used_in": [
+        "Recipe: Halloumi and chickpea traybake"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Halloumi and chickpea traybake. Roasted veg, crispy chickpeas and golden halloumi on one tray. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "halloumi and chickpea traybake"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-beef-burrito-bowls",
+      "used_in": [
+        "Recipe: Beef burrito bowls"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Beef burrito bowls. Spiced beef, rice, beans and all the toppings. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "beef burrito bowls"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-peanut-butter-energy-balls",
+      "used_in": [
+        "Recipe: Peanut butter energy balls"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Peanut butter energy balls. No-bake bites for your gym bag. Makes 12. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "peanut butter energy balls"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-yoghurt-berry-pot",
+      "used_in": [
+        "Recipe: Yoghurt and berry pot"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Yoghurt and berry pot. A quick snack that tides you over until dinner. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "yoghurt and berry pot"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-smoky-roasted-chickpeas",
+      "used_in": [
+        "Recipe: Smoky roasted chickpeas"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Smoky roasted chickpeas. Crunchy, savoury and easy to pack. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "smoky roasted chickpeas"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-hummus-veg-pots",
+      "used_in": [
+        "Recipe: Hummus and veg pots"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Hummus and veg pots. Crunchy veg with hummus, ready to grab from the fridge. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "hummus and veg pots"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-peanut-butter-apple-slices",
+      "used_in": [
+        "Recipe: Apple slices with peanut butter"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Apple slices with peanut butter. Sweet, crunchy and just a little bit salty. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "apple slices with peanut butter"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-banana-blueberry-oat-muffins",
+      "used_in": [
+        "Recipe: Banana and blueberry oat muffins"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Banana and blueberry oat muffins. Soft muffins sweetened with banana. Makes 10. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "banana and blueberry oat muffins"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-chilli-lime-edamame",
+      "used_in": [
+        "Recipe: Chilli and lime edamame"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Chilli and lime edamame. A savoury, plant-based snack in five minutes. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "chilli and lime edamame"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-cottage-cheese-crispbreads",
+      "used_in": [
+        "Recipe: Cottage cheese crispbreads"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Cottage cheese crispbreads. A crunchy, savoury snack with a protein boost. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "cottage cheese crispbreads"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-gym-bag-snack-box",
+      "used_in": [
+        "Recipe: Gym bag snack box"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Gym bag snack box. Boiled eggs, rice cakes, cheese and tomatoes. Pack it in the morning. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "gym bag snack box"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-berry-yoghurt-smoothie",
+      "used_in": [
+        "Recipe: Berry and yoghurt smoothie"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Berry and yoghurt smoothie. Thick, fruity and filling. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "berry and yoghurt smoothie"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-peanut-butter-banana-smoothie",
+      "used_in": [
+        "Recipe: Peanut butter banana smoothie"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Peanut butter banana smoothie. Like a milkshake, but one that keeps you going. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "peanut butter banana smoothie"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-green-mango-smoothie",
+      "used_in": [
+        "Recipe: Green mango smoothie"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Green mango smoothie. Bright, tropical and plant-based. You won't taste the spinach. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "green mango smoothie"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-chocolate-banana-recovery-smoothie",
+      "used_in": [
+        "Recipe: Chocolate banana smoothie"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Chocolate banana smoothie. Chocolatey, creamy and a nice way to refuel after training. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "chocolate banana smoothie"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "recipe-blueberry-oat-smoothie",
+      "used_in": [
+        "Recipe: Blueberry oat smoothie"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 4:3",
+      "brief": "Photo of exactly this dish: Blueberry oat smoothie. A plant-based breakfast smoothie with oats for staying power. Must match the ingredients in the recipe (no extra garnishes that aren't in it). Natural light, real kitchen or table, 45 degrees or overhead.",
+      "search_terms": [
+        "blueberry oat smoothie"
+      ],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-strong-and-nourished",
+      "used_in": [
+        "Recipe collection: Strong and nourished"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Chicken and quinoa prep bowls), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-ten-breakfasts",
+      "used_in": [
+        "Recipe collection: Ten breakfasts to start with"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Berry overnight oats), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-high-protein-dinners",
+      "used_in": [
+        "Recipe collection: High-protein dinners"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (One-pot lemony chicken orzo), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-prep-ahead-lunches",
+      "used_in": [
+        "Recipe collection: Prep-ahead lunches"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Chicken and quinoa prep bowls), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-dinner-in-30",
+      "used_in": [
+        "Recipe collection: Dinner in 30"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Beef and broccoli noodles), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-busy-days",
+      "used_in": [
+        "Recipe collection: Busy days"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Berry overnight oats), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-one-pot",
+      "used_in": [
+        "Recipe collection: One pot"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Spiced red lentil soup), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-prep-ahead-breakfasts",
+      "used_in": [
+        "Recipe collection: Prep-ahead breakfasts"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Berry overnight oats), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-smoothies",
+      "used_in": [
+        "Recipe collection: Smoothie favourites"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Berry and yoghurt smoothie), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-snacks",
+      "used_in": [
+        "Recipe collection: Snacks that keep you going"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Peanut butter energy balls), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-family-friendly",
+      "used_in": [
+        "Recipe collection: Family friendly"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Peanut butter banana porridge), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-high-protein",
+      "used_in": [
+        "Recipe collection: High protein"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Spinach and feta omelette), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-seasonal-favourites",
+      "used_in": [
+        "Recipe collection: Autumn and winter favourites"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Peanut butter banana porridge), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-before-an-evening-session",
+      "used_in": [
+        "Recipe collection: Before an evening session"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Berry overnight oats), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-after-leg-day",
+      "used_in": [
+        "Recipe collection: After leg day"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Chicken and quinoa prep bowls), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-gym-bag-snacks",
+      "used_in": [
+        "Recipe collection: Gym bag snacks"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Veggie egg muffins), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-lunches",
+      "used_in": [
+        "Recipe collection: Lunches"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (Chicken and quinoa prep bowls), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-dinners",
+      "used_in": [
+        "Recipe collection: Dinners"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A different photo of one recipe from this collection (One-pot lemony chicken orzo), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    }
+  ]
+}

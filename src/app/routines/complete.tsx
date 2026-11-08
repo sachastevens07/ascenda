@@ -19,7 +19,7 @@ import {
   startNextRoutineOnMonday,
   type NextRoutineOffer,
 } from '@/lib/handOff';
-import { coverForRoutine, coverSources } from '@/lib/images';
+import { coverForRoutine } from '@/lib/images';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { fetchProgressSets } from '@/lib/progress';
 import { describeRoutineError, fetchEnrolment, fetchRoutines } from '@/lib/routines';
@@ -121,7 +121,7 @@ export default function RoutineCompleteScreen() {
     );
   }
 
-  const cover = next ? coverSources(coverForRoutine(next.routine))[0] ?? null : null;
+  const coverSlug = next ? coverForRoutine(next.routine)?.id ?? null : null;
   const card = next ? handOffCardCopy(next) : null;
 
   return (
@@ -175,7 +175,7 @@ export default function RoutineCompleteScreen() {
         <WhatsNextCard
           title={card.title}
           body={card.body}
-          image={cover}
+          imageSlug={coverSlug}
           starting={starting}
           primaryLabel={card.primaryLabel}
           onPrimary={() => void startNext()}

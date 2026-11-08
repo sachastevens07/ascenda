@@ -36,7 +36,7 @@ export type TrainingStyle = {
 };
 
 export const TRAINING_STYLES: TrainingStyle[] = [
-  { id: 'gym_confidence', label: programmesCopy.style_gym_confidence, wide: true, coverSlug: 'learn-category-gym-confidence' },
+  { id: 'gym_confidence', label: programmesCopy.style_gym_confidence, wide: true, coverSlug: 'learn-category-gym_confidence' },
   { id: 'strength', label: programmesCopy.style_strength, coverSlug: 'higher-ground-cover' },
   { id: 'glutes', label: programmesCopy.style_glutes, coverSlug: 'glutes-legs-cover' },
   { id: 'upper', label: programmesCopy.style_upper, coverSlug: 'upper-body-cover' },

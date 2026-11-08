@@ -1,14 +1,6 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  type ImageSourcePropType,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
@@ -16,7 +8,7 @@ import { AppText } from '@/components/ui/AppText';
 import {
   Chip,
   ChipScroller,
-  CoverPlaceholder,
+  PhotoFill,
   IconButton,
   MenuHeader,
   MenuRow,
@@ -34,7 +26,7 @@ import {
   type Challenge,
 } from '@/lib/challenges';
 import { fillCopy, routineActionsCopy } from '@/lib/copy';
-import { coverForChallenge, coverForRoutine, takeCoverSource } from '@/lib/images';
+import { coverForChallenge, coverForRoutine, takeSlug } from '@/lib/images';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
   DIFFICULTY_LABELS,
@@ -58,8 +50,8 @@ type LoadState = 'loading' | 'error' | 'ready';
 function uniqueCover(
   routine: Pick<RoutineSummary, 'id' | 'slug' | 'name' | 'type' | 'cover'>,
   used: Set<string>
-): ImageSourcePropType | null {
-  return takeCoverSource(coverForRoutine(routine), used);
+): string | null {
+  return takeSlug(coverForRoutine(routine)?.id, used);
 }
 
 export function RoutineCatalogue({
@@ -224,7 +216,7 @@ export function RoutineCatalogue({
                     </AppText>
                   </View>
                   <View style={styles.challengeRow}>
-                    <Thumb image={takeCoverSource(coverForChallenge(challenge), usedPhotos)} letter={challenge.name} />
+                    <Thumb imageSlug={takeSlug(coverForChallenge(challenge)?.id, usedPhotos)} letter={challenge.name} />
                     <View style={styles.flex}>
                       <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={2}>
                         {challenge.name}
@@ -246,7 +238,7 @@ export function RoutineCatalogue({
                 onPress={() => openDetails(enrolment.routine)}
                 style={styles.pinMain}
                 accessibilityRole="button">
-                <Thumb image={uniqueCover(enrolment.routine, new Set())} letter={enrolment.routine.name} />
+                <Thumb imageSlug={uniqueCover(enrolment.routine, new Set())} letter={enrolment.routine.name} />
                 <View style={styles.pinCopy}>
                   <AppText variant="eyebrow" style={{ color: colours.accent }}>
                     Current routine
@@ -368,7 +360,7 @@ export function CatalogueCard({
   onPress: () => void;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const image = uniqueCover(summary, usedPhotos);
+  const imageSlug = uniqueCover(summary, usedPhotos);
   const eyebrow = stretch
     ? formatTagLabel(summary.tags[0] ?? 'Stretch')
     : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[summary.goal]}`;
@@ -381,7 +373,7 @@ export function CatalogueCard({
     <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => pressed && styles.pressed}>
       <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
         <View style={[styles.compact, { borderRadius: radius.lg }]}>
-          <Thumb image={image} letter={summary.name} />
+          <Thumb imageSlug={imageSlug} letter={summary.name} />
           <View style={styles.compactCopy}>
             <View style={styles.rowBetween}>
               <AppText variant="eyebrow" style={{ color: colours.inkMuted, flex: 1 }} numberOfLines={1}>
@@ -408,15 +400,11 @@ export function CatalogueCard({
   );
 }
 
-function Thumb({ image, letter }: { image: ImageSourcePropType | null; letter: string }) {
+function Thumb({ imageSlug, letter }: { imageSlug: string | null; letter: string }) {
   const { colours, radius } = useTheme();
   return (
     <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
-      {image ? (
-        <Image source={image} style={styles.thumbFill} resizeMode="cover" accessibilityLabel="" />
-      ) : (
-        <CoverPlaceholder />
-      )}
+      <PhotoFill slug={imageSlug} kind="people" label={letter} />
     </View>
   );
 }

@@ -22,7 +22,7 @@ import {
 } from '@/components/onboarding/OnboardingInputs';
 import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { imageSourceForSlug } from '@/lib/images';
+import { routineCoverSlug } from '@/lib/images';
 import { queueOnboardingPaywall, startOnboardingRoutine } from '@/lib/onboarding';
 import {
   defaultDaysFor,
@@ -490,7 +490,7 @@ export default function OnboardingScreen() {
       {contentScreen?.type === 'welcome' ? (
         <>
           <HeroImage
-            image={imageSourceForSlug(contentScreen.image_slug)}
+            imageSlug={contentScreen.image_slug}
             title={title}
             height={220}
             style={{ marginHorizontal: -24, marginBottom: 24, borderRadius: 0 }}
@@ -538,7 +538,7 @@ export default function OnboardingScreen() {
       {contentScreen?.type === 'insight' ? (
         <>
           <HeroImage
-            image={imageSourceForSlug(contentScreen.image_slug)}
+            imageSlug={contentScreen.image_slug}
             height={180}
             style={{ marginHorizontal: -24, marginBottom: 24 }}
           />
@@ -817,11 +817,14 @@ function PlanReveal({
   onChoose: (slug: string) => void;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const cover = imageSourceForSlug(`${plan.recommended.slug}-cover`);
+  const coverSlug = routineCoverSlug({
+    slug: plan.recommended.slug,
+    name: plan.recommended.name,
+  });
   return (
     <View>
       <HeroImage
-        image={cover}
+        imageSlug={coverSlug}
         eyebrow={screen.eyebrow}
         title={fillTemplate(screen.title, vars)}
         height={200}

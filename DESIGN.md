@@ -534,11 +534,10 @@ What to take: warmth, smiling women, depth of sections, colourful food photograp
 What not to take: weight-loss predictions, BMI, height and body-type pickers, invented user counts or reviews, ads, countdown offers, calorie-based recipe collections, trainer personas we don't have.
 
 ### 8.1 Photography (X1)
-- Mood: bright, warm, airy. Natural daylight, light walls and floors, plants, clean gyms and studios.
-- People: women only, smiling, many looking towards the camera (welcoming) and some candid mid-movement; mix of ages (18 to 40s), body sizes and ethnicities; fitted activewear, not underwear-like; no midriff-focused crops, no men in frame, no dark or moody gyms.
-- Grade: warm, slightly lifted shadows, soft contrast; same grade across every image.
-- Crops: hero images 4:5 or 3:4 with space for overlaid text; cards 16:10 or 4:3; tiles 1:1.
-- Food: bright, colourful, top-down or 45 degrees, real dish matching the recipe, light or wooden surfaces.
+
+The photo direction lives in `content/images/image-manifest.json` (`style_guide`). That file is the only list of image slugs. Do not keep a second brief here.
+
+Short version: real women training in real, warm, well-lit gyms. About half the people photos are connection shots (smiling, often towards the camera, relaxed between sets) and half are in action (focused, mid-exercise). Women only, about 18 to 45, diverse, natural expressions, real gym clothes. Frame on her face, hands and the movement. Never a body-focused crop. Eye level or slightly below, real equipment, space for text on heroes and covers. Warm light, one grade (warm white balance, lifted shadows, natural skin). No black and white, no gritty low-key grade (reference 2 is not the look). Equipment photos are the machine alone. Food is the exact dish in bright natural light. Every file needs licence_source, photographer and source_url before it can be used.
 
 ### 8.2 Home (X2)
 1. **Header:** avatar (left), search and calendar icons (right).

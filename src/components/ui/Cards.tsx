@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ComponentProps, ReactNode } from 'react';
+import { useEffect, useState, type ComponentProps, ReactNode } from 'react';
 import {
   Image,
   Pressable,
@@ -12,17 +12,90 @@ import {
 
 import { AppText } from '@/components/ui/AppText';
 import { THEME_PREFERENCES, THEME_PREFERENCE_LABELS, useTheme, type ThemePreference } from '@/constants/theme';
+import { presentationForSlug, type ImageKind } from '@/lib/images';
 
 import { ProgressRing } from './Progress';
 
-/** Soft block shown until a licensed photo is uploaded for that slug. */
-export function CoverPlaceholder() {
+function placeholderIcon(kind: ImageKind | null | undefined): ComponentProps<typeof Ionicons>['name'] {
+  if (kind === 'people') return 'person-outline';
+  if (kind === 'equipment') return 'barbell-outline';
+  if (kind === 'food') return 'restaurant-outline';
+  return 'image-outline';
+}
+
+/** Brand-tinted block shown until a licensed photo is ready for that slug. */
+export function CoverPlaceholder({ kind }: { kind?: ImageKind | null }) {
   const { colours } = useTheme();
   return (
     <View
-      style={[styles.placeholder, { backgroundColor: colours.surfaceMuted }]}
+      style={[styles.placeholder, { backgroundColor: colours.brandSoft }]}
       accessibilityElementsHidden>
-      <Ionicons name="image-outline" size={28} color={colours.inkSubtle} />
+      <Ionicons name={placeholderIcon(kind)} size={28} color={colours.brand} />
+    </View>
+  );
+}
+
+/** One photo slot. A slug wins. Anything not ready stays on the placeholder. */
+export function PhotoFill({
+  slug,
+  source,
+  kind,
+  label,
+  focus = 'center',
+}: {
+  slug?: string | null;
+  source?: ImageSourcePropType | null;
+  kind?: ImageKind | null;
+  label?: string;
+  focus?: 'center' | 'top';
+}) {
+  const resolved = slug ? presentationForSlug(slug) : null;
+  const photo = resolved ? resolved.source : source ?? null;
+  const photoKind = resolved?.kind ?? kind ?? null;
+  const [box, setBox] = useState({ width: 0, height: 0 });
+  const [pixels, setPixels] = useState({ width: 0, height: 0 });
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const uri = photo && typeof photo === 'object' && 'uri' in photo && typeof photo.uri === 'string' ? photo.uri : '';
+
+  useEffect(() => {
+    setLoaded(false);
+    setFailed(false);
+    setPixels({ width: 0, height: 0 });
+  }, [slug, uri]);
+
+  if (!photo || failed) return <CoverPlaceholder kind={photoKind} />;
+
+  const fitted =
+    focus === 'top' && box.width > 0 && box.height > 0 && pixels.width > 0 && pixels.height > 0
+      ? coverFrame(box.width, box.height, pixels.width, pixels.height, 'top')
+      : null;
+
+  return (
+    <View
+      style={StyleSheet.absoluteFill}
+      onLayout={(event) => {
+        const { width, height } = event.nativeEvent.layout;
+        setBox((current) => (current.width === width && current.height === height ? current : { width, height }));
+      }}>
+      {loaded ? null : <CoverPlaceholder kind={photoKind} />}
+      <Image
+        source={photo}
+        resizeMode="cover"
+        accessibilityLabel={label}
+        onLoad={(event) => {
+          const width = event.nativeEvent.source?.width ?? 0;
+          const height = event.nativeEvent.source?.height ?? 0;
+          if (width > 0 && height > 0) setPixels({ width, height });
+          setLoaded(true);
+        }}
+        onError={() => setFailed(true)}
+        style={
+          fitted
+            ? { position: 'absolute', width: fitted.width, height: fitted.height, top: fitted.top, left: fitted.left, opacity: loaded ? 1 : 0 }
+            : [styles.photoFill, { opacity: loaded ? 1 : 0 }]
+        }
+      />
     </View>
   );
 }
@@ -32,6 +105,8 @@ type ImageCardProps = {
   subtitle?: string;
   tags?: string[];
   image?: ImageSourcePropType | null;
+  /** Manifest slug. When set, this is the photo, and `image` is ignored. */
+  imageSlug?: string | null;
   letter?: string;
   isPro?: boolean;
   isFree?: boolean;
@@ -49,6 +124,7 @@ export function ImageCard({
   subtitle,
   tags = [],
   image,
+  imageSlug,
   letter,
   progress,
   imageAspectRatio = 4 / 5,
@@ -66,11 +142,7 @@ export function ImageCard({
             { backgroundColor: colours.surfaceMuted },
             imageHeight ? { height: imageHeight } : { aspectRatio: imageAspectRatio },
           ]}>
-          {image ? (
-            <Image source={image} style={styles.photoFill} resizeMode="cover" />
-          ) : (
-            <CoverPlaceholder />
-          )}
+          <PhotoFill slug={imageSlug} source={imageSlug ? null : image} label={title} />
           {typeof progress === 'number' ? (
             <View style={styles.ring}>
               <ProgressRing progress={progress} size={40} stroke={4} />
@@ -113,29 +185,31 @@ export function ImageCard({
 
 export function HeroImage({
   image,
+  imageSlug,
   letter,
   title,
   eyebrow,
   height = 220,
+  imageFocus = 'center',
   children,
   style,
 }: {
   image?: ImageSourcePropType | null;
+  /** Manifest slug. When set, this is the photo, and `image` is ignored. */
+  imageSlug?: string | null;
   letter?: string;
   title?: string;
   eyebrow?: string;
   height?: number;
+  /** `top` uses the same cover zoom as centre, with the crop window moved up so a face at the top of the photo stays in frame. */
+  imageFocus?: 'center' | 'top';
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, spacing } = useTheme();
   return (
     <View style={[{ height, backgroundColor: colours.surfaceMuted, overflow: 'hidden' }, style]}>
-      {image ? (
-        <Image source={image} style={styles.photoFill} resizeMode="cover" />
-      ) : (
-        <CoverPlaceholder />
-      )}
+      <PhotoFill slug={imageSlug} source={imageSlug ? null : image} label={title} focus={imageFocus} />
       {title || eyebrow ? (
         <View style={styles.heroOverlay} pointerEvents="none">
           <View style={[styles.heroFade, { backgroundColor: colours.overlay }]}>
@@ -155,6 +229,26 @@ export function HeroImage({
       {children}
     </View>
   );
+}
+
+/** Same scale as `resizeMode="cover"`. `top` only changes which part of that scaled photo is visible. */
+function coverFrame(
+  frameWidth: number,
+  frameHeight: number,
+  sourceWidth: number,
+  sourceHeight: number,
+  focus: 'center' | 'top'
+) {
+  const scale = Math.max(frameWidth / sourceWidth, frameHeight / sourceHeight);
+  const width = sourceWidth * scale;
+  const height = sourceHeight * scale;
+  const centerTop = (frameHeight - height) / 2;
+  return {
+    width,
+    height,
+    left: (frameWidth - width) / 2,
+    top: focus === 'top' ? 0 : centerTop,
+  };
 }
 
 export function StatTile({

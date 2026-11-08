@@ -205,7 +205,7 @@ export function LockedHome() {
         )}
 
         <View style={[{ backgroundColor: colours.surface, borderRadius: radius.xl, overflow: 'hidden' }, shadow]}>
-          <HeroImage image={plan.cover} eyebrow={lockedHomeCopy.new.eyebrow} title={plan.name} height={200} />
+          <HeroImage imageSlug="hero-locked-home" eyebrow={lockedHomeCopy.new.eyebrow} title={plan.name} height={200} />
           <View style={{ padding: spacing.md, gap: spacing.sm }}>
             {plan.why.length > 0 ? (
               <>

@@ -17,7 +17,6 @@ import { showDialog } from '@/components/Dialog';
 import { AppText, HeroImage, IconButton, PrimaryButton, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, paywallScreenCopy, referCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
-import { imageSourceForSlug } from '@/lib/images';
 import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
 import { recommendPlan } from '@/lib/onboardingPlan';
 import { PRO_FEATURES, defaultPackageId } from '@/lib/paywall';
@@ -235,8 +234,9 @@ export default function PaywallScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         <HeroImage
-          image={imageSourceForSlug('hero-paywall') ?? imageSourceForSlug('cover-barbell-strength-8')}
+          imageSlug="hero-paywall"
           height={240}
+          imageFocus="top"
         />
         <View style={[styles.body, { paddingHorizontal: spacing.lg, gap: spacing.md }]}>
           <AppText variant="display" style={{ color: colours.ink }}>

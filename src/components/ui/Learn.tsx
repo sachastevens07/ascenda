@@ -1,28 +1,17 @@
 import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
-import { CoverPlaceholder } from '@/components/ui/Cards';
+import { PhotoFill } from '@/components/ui/Cards';
 import { SectionHeader } from '@/components/ui/List';
 import { useTheme } from '@/constants/theme';
 import {
   LEARN_CATEGORY_COVERS,
   LEARN_CATEGORY_LABELS,
-  articleImage,
   fetchLearnArticles,
   fetchLearnLinks,
   formatReadMinutes,
-  learnImage,
   parseArticleBody,
   recordArticleOpened,
   relatedArticles,
@@ -47,7 +36,6 @@ export function ArticleCard({
   kindChip?: string;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const image = articleImage(article);
   return (
     <Pressable
       onPress={() => openLearnArticle(article)}
@@ -56,11 +44,7 @@ export function ArticleCard({
       style={({ pressed }) => [style, pressed && styles.pressed]}>
       <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, width }, shadow]}>
         <View style={[styles.photo, { backgroundColor: colours.surfaceMuted, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
-          {image ? (
-            <Image source={image} style={styles.fill} resizeMode="cover" />
-          ) : (
-            <CoverPlaceholder />
-          )}
+          <PhotoFill slug={article.cover_image_id} kind="people" label={article.title} />
           {kindChip ? (
             <View style={[styles.badge, { backgroundColor: colours.surface, borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 4 }]}>
               <AppText variant="eyebrow" style={{ color: colours.brand }}>
@@ -93,23 +77,24 @@ export function CategoryTile({
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius } = useTheme();
-  const image = learnImage(LEARN_CATEGORY_COVERS[category]);
+  const label = LEARN_CATEGORY_LABELS[category];
   return (
     <Pressable
       onPress={() =>
         router.push({ pathname: '/learn/category/[category]', params: { category } } as Href)
       }
       accessibilityRole="button"
-      accessibilityLabel={LEARN_CATEGORY_LABELS[category]}
-      style={({ pressed }) => [styles.tile, { borderRadius: radius.lg }, style, pressed && styles.pressed]}>
-      {image ? (
-        <Image source={image} style={styles.fill} resizeMode="cover" />
-      ) : (
-        <CoverPlaceholder />
-      )}
-      <View style={[styles.tileFade, { backgroundColor: colours.overlay }]}>
-        <AppText variant="title3" style={{ color: colours.onAccent }} numberOfLines={2}>
-          {LEARN_CATEGORY_LABELS[category]}
+      accessibilityLabel={label}
+      style={({ pressed }) => [styles.tileWrap, style, pressed && styles.pressed]}>
+      <View
+        style={[
+          styles.tile,
+          { borderRadius: radius.lg, backgroundColor: colours.surfaceMuted },
+        ]}>
+        <PhotoFill slug={LEARN_CATEGORY_COVERS[category]} kind="people" label={label} />
+        <View style={[styles.tileFade, { backgroundColor: colours.overlay }]} />
+        <AppText variant="title3" style={[styles.tileLabel, { color: colours.onAccent }]} numberOfLines={2}>
+          {label}
         </AppText>
       </View>
     </Pressable>
@@ -256,8 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fill: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFill,
   },
   badge: {
     position: 'absolute',
@@ -267,13 +251,22 @@ const styles = StyleSheet.create({
   cardBody: {
     padding: 14,
   },
+  tileWrap: {
+    width: '48%',
+    flexGrow: 1,
+  },
   tile: {
+    width: '100%',
     aspectRatio: 16 / 10,
+    minHeight: 96,
     overflow: 'hidden',
+    justifyContent: 'flex-end',
   },
   tileFade: {
     ...StyleSheet.absoluteFill,
-    justifyContent: 'flex-end',
+    opacity: 0.45,
+  },
+  tileLabel: {
     padding: 12,
   },
   quote: {

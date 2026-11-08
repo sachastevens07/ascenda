@@ -1,15 +1,17 @@
-import { Image, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { routineActionsCopy } from '@/lib/copy';
 
 import { PrimaryButton, TextButton } from './Buttons';
+import { PhotoFill } from './Cards';
 
 export function WhatsNextCard({
   title,
   body,
   image,
+  imageSlug,
   starting = false,
   primaryLabel,
   onPrimary,
@@ -20,6 +22,7 @@ export function WhatsNextCard({
   title: string;
   body: string;
   image?: ImageSourcePropType | null;
+  imageSlug?: string | null;
   starting?: boolean;
   primaryLabel: string;
   onPrimary: () => void;
@@ -38,8 +41,10 @@ export function WhatsNextCard({
         },
         style,
       ]}>
-      {image ? (
-        <Image source={image} style={{ width: '100%', height: 140 }} resizeMode="cover" accessibilityIgnoresInvertColors />
+      {image || imageSlug ? (
+        <View style={{ height: 140 }}>
+          <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
+        </View>
       ) : null}
       <View style={{ padding: spacing.lg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

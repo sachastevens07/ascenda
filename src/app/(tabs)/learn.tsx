@@ -15,16 +15,17 @@ import {
   CategoryTile,
   HeroImage,
   ListRow,
+  QuoteCard,
   SectionHeader,
   TabAvatar,
   openLearnArticle,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { homeCopy } from '@/lib/copy';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
   LEARN_CATEGORIES,
   LEARN_CATEGORY_LABELS,
-  articleImage,
   continueReadingArticle,
   featuredArticle,
   fetchLastOpenedArticleId,
@@ -34,6 +35,14 @@ import {
   recommendArticles,
   type LearnArticle,
 } from '@/lib/learn';
+import {
+  DAILY_QUOTES,
+  fetchDailyQuotes,
+  fetchHideQuote,
+  pickDailyQuote,
+  saveHideQuote,
+  type DailyQuote,
+} from '@/lib/quotes';
 
 type LearnData = {
   articles: LearnArticle[];
@@ -41,6 +50,7 @@ type LearnData = {
   recommended: LearnArticle[];
   continueReading: LearnArticle | null;
   readIds: Set<string>;
+  quotes: DailyQuote[];
 };
 
 export default function LearnScreen() {
@@ -50,17 +60,20 @@ export default function LearnScreen() {
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const [data, setData] = useState<LearnData | null>(null);
+  const [quoteHidden, setQuoteHidden] = useState(false);
   const cardWidth = width * 0.72;
-  const tileWidth = (width - 48 - 12) / 2;
+  const tileWidth = Math.max(140, (width - 48 - 12) / 2);
 
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
       (async () => {
-        const [articles, readIds, lastOpened] = await Promise.all([
+        const [articles, readIds, lastOpened, quotes, hideQuote] = await Promise.all([
           fetchLearnArticles(),
           fetchReadArticleIds(),
           fetchLastOpenedArticleId(),
+          fetchDailyQuotes().catch(() => DAILY_QUOTES),
+          fetchHideQuote().catch(() => false),
         ]);
         const featured = featuredArticle(articles, readIds);
         const recommended = recommendArticles(articles, answers, {
@@ -68,15 +81,26 @@ export default function LearnScreen() {
           limit: 4,
         });
         if (!isCurrent) return;
+        setQuoteHidden(hideQuote);
         setData({
           articles,
           featured,
           recommended,
           continueReading: continueReadingArticle(articles, lastOpened, readIds),
           readIds,
+          quotes,
         });
       })().catch(() => {
-        if (isCurrent) setData({ articles: [], featured: null, recommended: [], continueReading: null, readIds: new Set() });
+        if (isCurrent) {
+          setData({
+            articles: [],
+            featured: null,
+            recommended: [],
+            continueReading: null,
+            readIds: new Set(),
+            quotes: DAILY_QUOTES,
+          });
+        }
       });
       return () => {
         isCurrent = false;
@@ -86,6 +110,13 @@ export default function LearnScreen() {
 
   const featured = data?.featured ?? null;
   const continueReading = data?.continueReading ?? null;
+  const quote = pickDailyQuote(data?.quotes ?? DAILY_QUOTES);
+  const showQuote = !quoteHidden && Boolean(quote?.text);
+
+  function hideQuote() {
+    setQuoteHidden(true);
+    saveHideQuote(true).catch(() => setQuoteHidden(false));
+  }
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -95,6 +126,10 @@ export default function LearnScreen() {
           <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>Learn</AppText>
         </View>
 
+        {showQuote && quote ? (
+          <QuoteCard quote={quote} eyebrow={homeCopy.quote_eyebrow} onHide={hideQuote} />
+        ) : null}
+
         {featured ? (
           <Pressable
             onPress={() => openLearnArticle(featured)}
@@ -102,7 +137,7 @@ export default function LearnScreen() {
             accessibilityLabel={featured.title}
             style={({ pressed }) => [{ borderRadius: radius.xl, overflow: 'hidden' }, pressed && styles.pressed]}>
             <HeroImage
-              image={articleImage(featured)}
+              imageSlug={featured.cover_image_id}
               title={featured.title}
               eyebrow={LEARN_CATEGORY_LABELS[featured.category]}
               height={200}

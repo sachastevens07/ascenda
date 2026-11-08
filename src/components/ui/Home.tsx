@@ -1,14 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps, ReactNode, Ref } from 'react';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  View,
-  type ImageSourcePropType,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { Pressable, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { AnchorHandle } from '@/components/AnchoredMenu';
 import { AppText } from '@/components/ui/AppText';
@@ -18,7 +10,7 @@ import type { AchievementBadge, AchievementFamily } from '@/lib/achievements';
 import { FRIEND_TRIAL_DAYS } from '@/lib/referrals';
 
 import { PrimaryButton, TextButton } from './Buttons';
-import { CoverPlaceholder, StatTile } from './Cards';
+import { PhotoFill, StatTile } from './Cards';
 import { IconButton } from './IconButton';
 import { SectionHeader } from './List';
 
@@ -45,6 +37,7 @@ export function HomeHeader({
 
 export function WelcomeHero({
   image,
+  imageSlug,
   height,
   eyebrow,
   title,
@@ -62,6 +55,8 @@ export function WelcomeHero({
   style,
 }: {
   image?: ImageSourcePropType | null;
+  /** Manifest slug. When set, this is the photo. */
+  imageSlug?: string | null;
   height: number;
   eyebrow: string;
   title: string;
@@ -82,11 +77,7 @@ export function WelcomeHero({
   return (
     <View style={[{ borderRadius: radius.xl, overflow: 'hidden', backgroundColor: colours.surfaceMuted }, style]}>
       <View style={{ height, backgroundColor: colours.surfaceMuted }}>
-        {image ? (
-          <Image source={image} style={styles.fill} resizeMode="cover" accessibilityLabel={title} />
-        ) : (
-          <CoverPlaceholder />
-        )}
+        <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
         <View style={[styles.heroFade, { backgroundColor: colours.overlay }]} />
         <View style={[styles.heroCopy, { padding: spacing.lg, gap: spacing.sm }]}>
           <View style={styles.heroHeading}>
@@ -201,11 +192,13 @@ export function WeekTodaySession({
   title,
   subtitle,
   image,
+  imageSlug,
   onPress,
 }: {
   title: string;
   subtitle: string;
   image?: ImageSourcePropType | null;
+  imageSlug?: string | null;
   onPress: () => void;
 }) {
   const { colours, radius, spacing } = useTheme();
@@ -215,11 +208,7 @@ export function WeekTodaySession({
       accessibilityRole="button"
       style={({ pressed }) => [styles.todayRow, pressed && styles.pressed]}>
       <View style={[styles.todayThumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
-        {image ? (
-          <Image source={image} style={styles.fill} resizeMode="cover" />
-        ) : (
-          <CoverPlaceholder />
-        )}
+        <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
       </View>
       <View style={styles.flex}>
         <AppText variant="title3" style={{ color: colours.ink }} numberOfLines={2}>
@@ -251,6 +240,7 @@ export function ChallengeHomeCard({
   timing,
   joined,
   image,
+  imageSlug,
   onPress,
   style,
 }: {
@@ -258,6 +248,7 @@ export function ChallengeHomeCard({
   timing: string;
   joined: boolean;
   image?: ImageSourcePropType | null;
+  imageSlug?: string | null;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -274,11 +265,7 @@ export function ChallengeHomeCard({
         style,
       ]}>
       <View style={[styles.challengeThumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
-        {image ? (
-          <Image source={image} style={styles.fill} resizeMode="cover" accessibilityLabel={name} />
-        ) : (
-          <CoverPlaceholder />
-        )}
+        <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={name} />
       </View>
       <View style={styles.flex}>
         <AppText variant="eyebrow" style={{ color: colours.accent }}>
@@ -302,11 +289,13 @@ export function ReferralBanner({
   onInvite,
   onDismiss,
   image,
+  imageSlug,
   style,
 }: {
   onInvite: () => void;
   onDismiss: () => void;
   image?: ImageSourcePropType | null;
+  imageSlug?: string | null;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius, spacing } = useTheme();
@@ -332,8 +321,10 @@ export function ReferralBanner({
           </AppText>
         </Pressable>
       </View>
-      {image ? (
-        <Image source={image} style={[styles.referPhoto, { borderRadius: radius.lg }]} resizeMode="cover" />
+      {image || imageSlug ? (
+        <View style={[styles.referPhoto, { borderRadius: radius.lg, overflow: 'hidden' }]}>
+          <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" />
+        </View>
       ) : null}
       <View style={styles.referClose}>
         <IconButton icon="close" accessibilityLabel="Dismiss" onPress={onDismiss} />

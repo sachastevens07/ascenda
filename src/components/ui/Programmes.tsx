@@ -1,24 +1,17 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ReactNode } from 'react';
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  View,
-  type ImageSourcePropType,
-  type StyleProp,
-  type ViewStyle,
-} from 'react-native';
+import { Pressable, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, programmesCopy } from '@/lib/copy';
 
-import { CoverPlaceholder } from './Cards';
+import { PhotoFill } from './Cards';
 import { IconButton } from './IconButton';
 
 export function OverlayImageCard({
   image,
+  imageSlug,
   eyebrow,
   title,
   subtitle,
@@ -28,6 +21,7 @@ export function OverlayImageCard({
   style,
 }: {
   image?: ImageSourcePropType | null;
+  imageSlug?: string | null;
   eyebrow?: string;
   title: string;
   subtitle?: string;
@@ -45,11 +39,7 @@ export function OverlayImageCard({
       style={({ pressed }) => [style, shadow, pressed && styles.pressed]}>
       <View style={[styles.overlayCard, { borderRadius: radius.xl, backgroundColor: colours.surfaceMuted }]}>
         <View style={[styles.overlayPhoto, { aspectRatio }]}>
-          {image ? (
-            <Image source={image} style={styles.fill} resizeMode="cover" accessibilityLabel={title} />
-          ) : (
-            <CoverPlaceholder />
-          )}
+          <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
           <View style={[styles.overlayFade, { backgroundColor: colours.overlay }]} />
           <View style={styles.overlayCopy}>
             {chip ? (
@@ -82,12 +72,14 @@ export function OverlayImageCard({
 export function StyleTile({
   label,
   image,
+  imageSlug,
   wide,
   onPress,
   style,
 }: {
   label: string;
   image?: ImageSourcePropType | null;
+  imageSlug?: string | null;
   wide?: boolean;
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
@@ -100,11 +92,7 @@ export function StyleTile({
       accessibilityLabel={label}
       style={({ pressed }) => [wide ? styles.styleWide : styles.styleHalf, style, pressed && styles.pressed]}>
       <View style={[styles.styleTile, { borderRadius: radius.lg, backgroundColor: colours.surfaceMuted }]}>
-        {image ? (
-          <Image source={image} style={styles.fill} resizeMode="cover" accessibilityLabel={label} />
-        ) : (
-          <CoverPlaceholder />
-        )}
+        <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={label} />
         <View style={[styles.styleFade, { backgroundColor: colours.overlay }]} />
         <AppText variant="title3" style={[styles.styleLabel, { color: colours.onAccent }]} numberOfLines={2}>
           {label}
@@ -118,6 +106,7 @@ export function SingleSessionCard({
   title,
   minutes,
   image,
+  imageSlug,
   onPress,
   onPlay,
   style,
@@ -125,6 +114,7 @@ export function SingleSessionCard({
   title: string;
   minutes: number;
   image?: ImageSourcePropType | null;
+  imageSlug?: string | null;
   onPress: () => void;
   onPlay: () => void;
   style?: StyleProp<ViewStyle>;
@@ -138,11 +128,7 @@ export function SingleSessionCard({
       style={({ pressed }) => [style, shadow, pressed && styles.pressed]}>
       <View style={[styles.single, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
         <View style={[styles.singlePhoto, { backgroundColor: colours.surfaceMuted }]}>
-          {image ? (
-            <Image source={image} style={styles.fill} resizeMode="cover" />
-          ) : (
-            <CoverPlaceholder />
-          )}
+          <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
           <View style={styles.playWrap}>
             <IconButton
               icon="play"

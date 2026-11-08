@@ -46,6 +46,10 @@ assets/covers/_candidates/
 assets/covers/_pick/
 assets/covers/_d2/
 
+# Photos before they are resized and uploaded. The files are large.
+assets-src/images/*
+!assets-src/images/.gitkeep
+
 # Supabase CLI
 supabase/.temp/
 supabase/.branches/

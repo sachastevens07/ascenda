@@ -15,7 +15,8 @@ import {
 import { useTheme } from '@/constants/theme';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
-import { coverForRoutine, coverSources } from '@/lib/images';
+import { ensureSubscribed } from '@/lib/paywall';
+import { coverForRoutine } from '@/lib/images';
 import {
   DIFFICULTY_LABELS,
   ROUTINE_EQUIPMENT_LABELS,
@@ -96,6 +97,7 @@ export default function StretchDetailScreen() {
   }
 
   async function handleStart() {
+    if (!ensureSubscribed()) return;
     if (!routine) return;
     const day = stretchSteps(routine);
     const dayId = routine.weeks[0]?.days[0]?.id;
@@ -164,7 +166,7 @@ export default function StretchDetailScreen() {
   const steps = stretchSteps(routine);
   const visibleSteps = steps;
   const holdSeconds = totalHoldSeconds(steps);
-  const cover = coverSources(coverForRoutine(routine))[0] ?? null;
+  const coverRecord = coverForRoutine(routine);
   const showMore = routine.description.trim().length > 90;
   const chips = [
     ROUTINE_EQUIPMENT_LABELS[routine.equipment],
@@ -175,7 +177,8 @@ export default function StretchDetailScreen() {
 
   return (
     <DetailLayout
-      cover={cover}
+      cover={null}
+      coverSlug={coverRecord?.id ?? null}
       letter={routine.name}
       title={routine.name}
       eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · Stretch`}

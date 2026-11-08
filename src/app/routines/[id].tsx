@@ -38,7 +38,7 @@ import {
 import { EQUIPMENT_LABELS, MUSCLE_LABELS, type Equipment } from '@/lib/exercises';
 import { ROLE_LABELS, formatRir } from '@/lib/routineStandard';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { coverForRoutine, coverSources } from '@/lib/images';
+import { coverForRoutine } from '@/lib/images';
 import {
   fetchHandOffPreview,
   handOffCardCopy,
@@ -398,7 +398,7 @@ export default function RoutineDetailScreen() {
 
   const isCurrent = enrolment?.routine_id === routine.id;
   const nextPlan = handOff ? handOffCardCopy(handOff) : null;
-  const cover = coverSources(coverForRoutine(routine))[0] ?? null;
+  const coverRecord = coverForRoutine(routine);
   const busy = isStarting || isDuplicating || isEnding;
   const showMore = routine.description.trim().length > 90;
   const phases = groupRoutinePhases(routine.weeks);
@@ -419,7 +419,8 @@ export default function RoutineDetailScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <DetailLayout
-        cover={cover}
+        cover={null}
+        coverSlug={coverRecord?.id ?? null}
         letter={routine.name}
         title={routine.name}
         eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[routine.goal]}`}
@@ -545,7 +546,7 @@ export default function RoutineDetailScreen() {
             <WhatsNextCard
               title={nextPlan.title}
               body={nextPlan.body}
-              image={coverSources(coverForRoutine(handOff.routine))[0] ?? null}
+              imageSlug={coverForRoutine(handOff.routine)?.id ?? null}
               primaryLabel={nextPlan.primaryLabel}
               onPrimary={() =>
                 router.push({ pathname: '/routines/[id]', params: { id: handOff.routine.id } } as Href)

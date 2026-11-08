@@ -33,7 +33,7 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, programmesCopy, routineActionsCopy } from '@/lib/copy';
-import { coverForRoutine, takeCoverSource, takeSlugSource } from '@/lib/images';
+import { coverForRoutine, takeSlug } from '@/lib/images';
 import {
   recommendedBrowseRoutine,
   routineMatchesStyle,
@@ -187,12 +187,10 @@ export function RoutineBrowse({
         ? currentWeek / enrolment.routine.length_weeks
         : 0;
 
-  const recommendedImage = recommended
-    ? takeCoverSource(coverForRoutine(recommended), usedPhotos)
-    : null;
-  const styleImages = Object.fromEntries(
-    trainingStyles.map((style) => [style.id, takeSlugSource(style.coverSlug, usedPhotos)])
-  ) as Partial<Record<TrainingStyleId, ReturnType<typeof takeSlugSource>>>;
+  const recommendedSlug = recommended ? takeSlug(coverForRoutine(recommended)?.id, usedPhotos) : null;
+  const styleSlugs = Object.fromEntries(
+    trainingStyles.map((style) => [style.id, takeSlug(style.coverSlug, usedPhotos)])
+  ) as Partial<Record<TrainingStyleId, string | null>>;
 
   function headerForView(): { title: string; onBack: () => void } | null {
     if (view.kind === 'home') return null;
@@ -281,7 +279,7 @@ export function RoutineBrowse({
                       key={session.slug}
                       title={session.name}
                       minutes={session.estimated_minutes}
-                      image={takeSlugSource(session.cover_image_slug, usedPhotos)}
+                      imageSlug={takeSlug(session.cover_image_slug, usedPhotos)}
                       onPress={() => openSingle(session)}
                       onPlay={() => {
                         if (startingSlug) return;
@@ -346,7 +344,7 @@ export function RoutineBrowse({
               <View>
                 <SectionHeader title={programmesCopy.section_recommended} />
                 <OverlayImageCard
-                  image={recommendedImage}
+                  imageSlug={recommendedSlug}
                   eyebrow={programmesCopy.section_recommended}
                   title={recommended.name}
                   subtitle={`${recommended.length_weeks} weeks · ${recommended.days_per_week} days / week`}
@@ -368,7 +366,7 @@ export function RoutineBrowse({
                       key={style.id}
                       label={style.label}
                       wide={style.wide}
-                      image={styleImages[style.id]}
+                      imageSlug={styleSlugs[style.id]}
                       onPress={() => {
                         if (style.id === 'stretch') {
                           onOpenStretches();
@@ -400,7 +398,7 @@ export function RoutineBrowse({
                       title={routine.name}
                       subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
                       tags={routine.tags.slice(0, 2).map(formatTagLabel)}
-                      image={takeCoverSource(coverForRoutine(routine), usedPhotos)}
+                      imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
                       letter={routine.name.slice(0, 1)}
                       imageAspectRatio={16 / 10}
                       onPress={() => openRoutine(routine)}
@@ -428,7 +426,7 @@ export function RoutineBrowse({
                       key={session.slug}
                       title={session.name}
                       minutes={session.estimated_minutes}
-                      image={takeSlugSource(session.cover_image_slug, usedPhotos)}
+                      imageSlug={takeSlug(session.cover_image_slug, usedPhotos)}
                       onPress={() => openSingle(session)}
                       onPlay={() => {
                         if (startingSlug) return;

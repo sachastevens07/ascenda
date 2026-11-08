@@ -14,12 +14,12 @@ import {
 import { useTheme } from '@/constants/theme';
 import {
   LEARN_CATEGORY_LABELS,
-  articleImage,
   fetchLearnArticle,
   fetchReadArticleIds,
   formatReadMinutes,
   markArticleRead,
   recordArticleOpened,
+  unmarkArticleRead,
   type LearnArticle,
 } from '@/lib/learn';
 import { canonicalLearnArticleId } from '@/lib/learnArticles';
@@ -83,8 +83,13 @@ export default function LearnArticleScreen() {
     if (!articleId) return;
     setIsSaving(true);
     try {
-      await markArticleRead(articleId);
-      setIsRead(true);
+      if (isRead) {
+        await unmarkArticleRead(articleId);
+        setIsRead(false);
+      } else {
+        await markArticleRead(articleId);
+        setIsRead(true);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -96,7 +101,7 @@ export default function LearnArticleScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
       <HeroImage
-        image={articleImage(article)}
+        imageSlug={article.cover_image_id}
         title={article.title}
         eyebrow={LEARN_CATEGORY_LABELS[article.category]}
         height={220}
@@ -127,9 +132,10 @@ export default function LearnArticleScreen() {
         ) : null}
 
         <SecondaryButton
-          label={isRead ? 'Marked as read' : isSaving ? 'Saving…' : 'Mark as read'}
+          label={isRead ? 'Marked as read' : 'Mark as read'}
+          appearance={isRead ? 'quiet' : 'emphasis'}
           onPress={() => void handleRead()}
-          disabled={isRead || isSaving}
+          loading={isSaving}
           style={{ marginTop: spacing.lg }}
         />
 

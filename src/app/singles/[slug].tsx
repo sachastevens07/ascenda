@@ -1,13 +1,12 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { AppText, CoverPlaceholder, PrimaryButton, SafetyNotice, Tag } from '@/components/ui';
+import { AppText, PhotoFill, PrimaryButton, SafetyNotice, Tag } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { programmesCopy } from '@/lib/copy';
-import { imageSourceForSlug } from '@/lib/images';
 import { exerciseNameFromSlug } from '@/lib/onboardingAnswers';
 import {
   describeSingleSessionError,
@@ -21,8 +20,6 @@ export default function SingleSessionScreen() {
   const { colours, spacing, radius } = useTheme();
   const [starting, setStarting] = useState(false);
   const session = slug ? singleSessionBySlug(slug) : null;
-  const image = session ? imageSourceForSlug(session.cover_image_slug) : null;
-
   async function start() {
     if (!session) return;
     setStarting(true);
@@ -52,11 +49,7 @@ export default function SingleSessionScreen() {
       <Stack.Screen options={{ title: session.name }} />
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
         <View style={[styles.hero, { backgroundColor: colours.surfaceMuted, borderRadius: radius.xl }]}>
-          {image ? (
-            <Image source={image} style={styles.heroFill} resizeMode="cover" accessibilityLabel={session.name} />
-          ) : (
-            <CoverPlaceholder />
-          )}
+          <PhotoFill slug={session.cover_image_slug} kind="people" label={session.name} />
         </View>
         <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: spacing.lg }}>
           {session.estimated_minutes} min

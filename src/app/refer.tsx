@@ -7,7 +7,6 @@ import { AppText, DetailLayout, ListRow, PrimaryButton, TextButton } from '@/com
 import { useTheme } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
 import { fillCopy, referCopy } from '@/lib/copy';
-import { imageSourceForSlug } from '@/lib/images';
 import { formatShortDate } from '@/lib/progress';
 import {
   FRIEND_TRIAL_DAYS,
@@ -91,7 +90,8 @@ export default function ReferScreen() {
 
   return (
     <DetailLayout
-      cover={imageSourceForSlug('hero-refer') ?? imageSourceForSlug('hero-home')}
+      cover={null}
+      coverSlug="hero-refer"
       letter="R"
       title={referCopy.hero_title}
       eyebrow={referCopy.screen_title}

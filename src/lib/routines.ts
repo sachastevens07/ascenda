@@ -55,6 +55,8 @@ export type CoverImage = {
   storage_path: string | null;
   alt_text: string;
   licence_source: string | null;
+  /** From the image manifest. Null when this id is not a manifest slug. */
+  kind?: 'people' | 'equipment' | 'food' | null;
 };
 
 export type RoutineSummary = {

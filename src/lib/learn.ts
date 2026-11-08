@@ -3,6 +3,7 @@ import type { ImageSourcePropType } from 'react-native';
 
 import { contentImage, contentSlugForTitle, hydrateImages, imageSourceForSlug } from '@/lib/images';
 import {
+  LEARN_ARTICLE_ALIASES,
   LEARN_ARTICLE_GOALS,
   LEARN_ARTICLES,
   LEARN_LINKS,
@@ -38,11 +39,11 @@ export const LEARN_CATEGORY_LABELS: Record<LearnCategory, string> = {
 };
 
 export const LEARN_CATEGORY_COVERS: Record<LearnCategory, string> = {
-  getting_started: 'learn-category-getting-started',
-  gym_confidence: 'learn-category-gym-confidence',
+  getting_started: 'learn-category-getting_started',
+  gym_confidence: 'learn-category-gym_confidence',
   technique: 'learn-category-technique',
-  programmes: 'learn-category-how-programmes-work',
-  recovery: 'learn-category-recovery-and-sleep',
+  programmes: 'learn-category-how_programmes_work',
+  recovery: 'learn-category-recovery_and_sleep',
   fuelling: 'learn-category-fuelling',
   mindset: 'learn-category-mindset',
   myths: 'learn-category-myths',
@@ -306,6 +307,14 @@ function expandReadIds(ids: Set<string>): Set<string> {
   return next;
 }
 
+function articleReadKeys(articleId: string): string[] {
+  const canonical = canonicalLearnArticleId(articleId) ?? articleId;
+  const aliases = Object.entries(LEARN_ARTICLE_ALIASES)
+    .filter(([, target]) => target === canonical || target === articleId)
+    .map(([alias]) => alias);
+  return [...new Set([articleId, canonical, ...aliases])];
+}
+
 export async function fetchReadArticleIds(): Promise<Set<string>> {
   const local = expandReadIds(await readLocalIds(READS_KEY));
   const { data, error } = await supabase.from('article_reads').select('article_id');
@@ -332,6 +341,21 @@ export async function markArticleRead(articleId: string): Promise<void> {
     article_id: canonical,
     read_at: new Date().toISOString(),
   });
+  if (error && !isMissingLearn(error)) {
+    return;
+  }
+}
+
+export async function unmarkArticleRead(articleId: string): Promise<void> {
+  const keys = articleReadKeys(articleId);
+  const ids = await readLocalIds(READS_KEY);
+  for (const key of keys) ids.delete(key);
+  await AsyncStorage.setItem(READS_KEY, JSON.stringify([...ids]));
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const { error } = await supabase.from('article_reads').delete().eq('user_id', user.id).in('article_id', keys);
   if (error && !isMissingLearn(error)) {
     return;
   }
