@@ -738,7 +738,33 @@
       "learn_section": "Machine guides",
       "learn_intro": "Where to find each machine, how to set it up, and how to start and stop.",
       "cardio_group": "Cardio",
-      "strength_group": "Strength"
+      "strength_group": "Strength",
+      "add_today": "Add to today's session",
+      "pick_exercise": "Which exercise do you want to add?",
+      "no_session": "Start a session first, then you can add this to today.",
+      "added": "Added to today.",
+      "share": "Share",
+      "share_message": "I just unlocked the {machine} with Ascenda",
+      "browse": "Browse machine guides",
+      "ai_label": "AI-generated, not medical advice."
+    },
+    "ai": {
+      "_note": "AI1 Scan a machine. Prompts stay in content/ai and the Edge Function. No em dashes.",
+      "scan_title": "Scan a machine",
+      "scan_tip": "Photograph the machine, not people. Photos are never stored.",
+      "scan_privacy": "Your photo is checked and then deleted straight away.",
+      "camera": "Camera",
+      "library": "Photo library",
+      "checking": "Checking the photo…",
+      "not_equipment": "That doesn't look like gym equipment. Try another photo.",
+      "is_it": "Is it one of these?",
+      "none": "None of these",
+      "people_tip": "Next time, try to photograph just the machine.",
+      "whats_this": "What's this machine?",
+      "limit": "You've hit today's limit for Scan a machine. It resets tomorrow.",
+      "timeout": "That took too long. Here's another way to find what you need.",
+      "error": "Something went wrong. Please try again.",
+      "fallback": "Browse the machine list instead."
     }
   }
 }

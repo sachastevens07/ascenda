@@ -1,0 +1,109 @@
+{
+  "machines": [
+    {
+      "id": "treadmill",
+      "name": "Treadmill",
+      "visual_features": "Moving walking belt with side rails, a front console, and a clip-on safety key."
+    },
+    {
+      "id": "bike",
+      "name": "Exercise bike",
+      "visual_features": "Upright or recumbent cycle with pedals, a saddle, and a small console."
+    },
+    {
+      "id": "cross_trainer",
+      "name": "Cross-trainer",
+      "visual_features": "Standing elliptical with two long moving handles and foot pedals on rails. Also called an elliptical."
+    },
+    {
+      "id": "rower",
+      "name": "Rowing machine",
+      "visual_features": "Long rail with a sliding seat, a fan housing, and a pull handle on a chain or strap."
+    },
+    {
+      "id": "stair_climber",
+      "name": "Stair climber",
+      "visual_features": "Small moving staircase with two handrails and a console."
+    },
+    {
+      "id": "leg_press",
+      "name": "Leg press",
+      "visual_features": "Angled sled with a large footplate, a seat, and two safety handles."
+    },
+    {
+      "id": "cable_station",
+      "name": "Cable machine",
+      "visual_features": "Tall frame with one or two weight stacks, adjustable pulleys, and clip-on handles."
+    },
+    {
+      "id": "smith_machine",
+      "name": "Smith machine",
+      "visual_features": "Barbell fixed on vertical rails with hooks and safety stops, unlike a free squat rack."
+    },
+    {
+      "id": "squat_rack",
+      "name": "Squat rack",
+      "visual_features": "Tall free-standing frame with J-hooks and safety arms. The barbell is not fixed to rails."
+    },
+    {
+      "id": "lat_pulldown",
+      "name": "Lat pulldown",
+      "visual_features": "Seat with thigh pads and a long bar hanging from a high cable."
+    },
+    {
+      "id": "seated_row",
+      "name": "Seated cable row",
+      "visual_features": "Low bench with footplates and a cable at foot height, often with a V-handle."
+    },
+    {
+      "id": "chest_press",
+      "name": "Chest press machine",
+      "visual_features": "Seated stack machine with two handles at chest height that press forward."
+    },
+    {
+      "id": "shoulder_press",
+      "name": "Shoulder press machine",
+      "visual_features": "Seated stack machine with two handles at shoulder height that press upward."
+    },
+    {
+      "id": "pec_deck",
+      "name": "Pec deck and rear delt machine",
+      "visual_features": "Seated machine with vertical pads or arms that meet in front of the chest; often reverses for rear delts."
+    },
+    {
+      "id": "leg_extension",
+      "name": "Leg extension",
+      "visual_features": "Seat with a padded bar in front of the shins that lifts as you straighten your legs."
+    },
+    {
+      "id": "leg_curl",
+      "name": "Leg curl (seated or lying)",
+      "visual_features": "Seated or lying machine with a pad above the heels that you curl toward you."
+    },
+    {
+      "id": "hip_thrust_machine",
+      "name": "Hip thrust machine",
+      "visual_features": "Back pad like a bench with a padded belt or bar across the hips."
+    },
+    {
+      "id": "hip_abduction",
+      "name": "Hip abduction and adduction machine",
+      "visual_features": "Seated machine with pads on the outside or inside of the knees for outer or inner thighs."
+    },
+    {
+      "id": "assisted_pull_up",
+      "name": "Assisted pull-up machine",
+      "visual_features": "Tall frame with overhead handles and a knee pad or standing platform. More stack weight makes it easier."
+    },
+    {
+      "id": "hack_squat",
+      "name": "Hack squat",
+      "visual_features": "Angled sled with shoulder pads and a footplate. You squat under the pads."
+    },
+    {
+      "id": "calf_raise",
+      "name": "Calf raise machine",
+      "visual_features": "Standing or seated machine with a step edge for the balls of the feet and shoulder or knee pads."
+    }
+  ]
+}

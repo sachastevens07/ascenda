@@ -11,3 +11,8 @@ entrypoint = "./functions/exercise-media/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/revenuecat-webhook/index.ts"
+
+[functions.scan-machine]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/scan-machine/index.ts"

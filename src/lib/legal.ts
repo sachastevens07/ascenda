@@ -51,11 +51,15 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   },
   {
     heading: 'What we do not store',
-    body: 'We do not collect cycle data, calorie or macro targets, BMI or body-fat estimates. Progress photos are never sent to an AI service.',
+    body: 'We do not collect cycle data, calorie or macro targets, BMI or body-fat estimates. Progress photos are never sent to an AI service. Machine-scan photos are processed and discarded straight away. We do not store them.',
+  },
+  {
+    heading: 'Ascenda AI',
+    body: 'Scan a machine sends the photo you take to Anthropic (Claude) so we can match it to our machine list. The photo is not stored, logged or used to train models. We never send your name, email, progress photos, health data or bodyweight. Answers are labelled AI-generated, not medical advice.',
   },
   {
     heading: 'Analytics',
-    body: 'Named events such as finishing a session or opening the paywall may go to PostHog in the EU. We do not send health data, photos or free-text notes.',
+    body: 'Named events such as finishing a session or opening the paywall may go to PostHog in the EU. We do not send health data, photos, prompts, answers or free-text notes.',
   },
   {
     heading: 'Progress photos',

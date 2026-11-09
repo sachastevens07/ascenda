@@ -45,7 +45,7 @@ import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
-import { fillCopy, loggerCopy, machineCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
+import { aiCopy, fillCopy, loggerCopy, machineCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
 import { machineGuideForExercise } from '@/lib/machineGuides';
 import {
   DEFAULT_SLOT,
@@ -72,13 +72,16 @@ import { markPlannerDateDone } from '@/lib/planner';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import {
+  SLOT_EXERCISE_COLUMNS,
   formatKg,
   getWeightSuggestion,
+  toSlotExercise,
   usesWeight,
   type ProgrammeDay,
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import { supabase } from '@/lib/supabase';
 import { ROLE_LABELS, formatTempo } from '@/lib/routineStandard';
 import { fetchExerciseBests, type ExerciseBests } from '@/lib/progress';
 import {
@@ -222,7 +225,7 @@ function SlotMenuButton({
 }
 
 export default function SessionScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, addExercise } = useLocalSearchParams<{ id: string; addExercise?: string }>();
   const insets = useSafeAreaInsets();
   const { colours, spacing, radius, shadow } = useTheme();
   const weightUnit = useWeightUnit();
@@ -266,6 +269,7 @@ export default function SessionScreen() {
   const [reorderMode, setReorderMode] = useState(false);
   const [pbGlowKey, setPbGlowKey] = useState<string | null>(null);
   const [playingExercise, setPlayingExercise] = useState<{ id: string; name: string } | null>(null);
+  const pendingAdd = useRef<string | null>(null);
 
   const { restEndsAt, publish, startRest, stopRest, adjustRest, end } = useWorkout();
   const now = useNow(startedAt !== null, 500);
@@ -615,6 +619,27 @@ export default function SessionScreen() {
       setIsAdding(false);
     }
   }
+
+  useEffect(() => {
+    const slug = Array.isArray(addExercise) ? addExercise[0] : addExercise;
+    if (!slug || loadState !== 'ready' || !day) return;
+    if (pendingAdd.current === slug) return;
+    pendingAdd.current = slug;
+    void (async () => {
+      const { data } = await supabase
+        .from('exercises')
+        .select(SLOT_EXERCISE_COLUMNS)
+        .eq('id', slug)
+        .maybeSingle();
+      if (!data) {
+        pendingAdd.current = null;
+        showDialog(machineCopy.add_today, machineCopy.not_found);
+        return;
+      }
+      await handleAddExercise(toSlotExercise(data as SlotExercise));
+      router.setParams({ addExercise: undefined });
+    })();
+  }, [addExercise, loadState, day]);
 
   function updateSlot(position: number, change: Partial<ProgrammeExercise>) {
     if (!day) return;
@@ -1466,6 +1491,13 @@ export default function SessionScreen() {
                 setReorderMode(true);
               }}
             />
+            <MenuRow
+              label={aiCopy.whats_this}
+              onPress={() => {
+                closeMenu();
+                router.push('/machines/scan' as Href);
+              }}
+            />
             {routine ? (
               <MenuRow
                 label={saveLabel}
@@ -1500,6 +1532,13 @@ export default function SessionScreen() {
                 const item = slotMenuItem;
                 setSlotMenuItem(null);
                 openGuide(item.exercise.id);
+              }}
+            />
+            <MenuRow
+              label={aiCopy.whats_this}
+              onPress={() => {
+                setSlotMenuItem(null);
+                router.push('/machines/scan' as Href);
               }}
             />
             <MenuRow

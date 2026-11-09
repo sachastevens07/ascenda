@@ -290,6 +290,9 @@ export const cardioCopy = cardio;
 /** W4 machine guides. Bundled from content/microcopy. */
 export const machineCopy = microcopy.strings.machines;
 
+/** AI1 Scan a machine. Prompts stay in content/ai, not here. */
+export const aiCopy = microcopy.strings.ai;
+
 /** H8 challenge copy. Bundled from content/microcopy. Never a countdown. */
 export const challengesCopy = {
   join: challenges.join,

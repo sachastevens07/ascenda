@@ -462,6 +462,7 @@ async function main(): Promise<void> {
   reportSingleSessions();
   reportCardio();
   reportMachineGuides();
+  reportAi1();
 
   line('No table in the current schema, skipped');
   const deferred = [
@@ -613,6 +614,30 @@ function reportMachineGuides(): void {
   else line('  Strength exercise slugs all match the catalogue (or aliases).');
   line('  Bundled in the app. Live sync does not write a machines table.');
   line('  Gym unlocked cardio badges still come from cardio_logs (W2).');
+  const missingFeatures = list.filter((item) => !text(item.visual_features));
+  line(`  visual_features: ${list.length - missingFeatures.length} of ${list.length}`);
+  if (missingFeatures.length > 0) {
+    line(`  Missing visual_features: ${missingFeatures.map((item) => text(item.id)).join(', ')}`);
+  }
+  line();
+}
+
+function reportAi1(): void {
+  line('AI1 scan  ←  content/ai/ai-config.json + prompts/ai1-scan-machine.md');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai1-scan-machine'] ?? {};
+  const row = asRecord(config);
+  let promptPresent = false;
+  try {
+    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai1-scan-machine.md'), 'utf8').length > 0;
+  } catch {
+    promptPresent = false;
+  }
+  line(`  Feature: ${text(row.feature) || 'AI1 Scan a machine'}`);
+  line(`  Model: ${text(row.model) || 'claude-sonnet-5-5'}. Daily limit: ${num(row.daily_limit) ?? 20}.`);
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Photos are discarded. Never stored.`);
+  line('  Edge Function: scan-machine. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai1.sql (ai_usage, ai_quota, machine_scan_misses).');
+  line('  Bundled machine list for the function: supabase/functions/scan-machine/machines.json (id, name, visual_features).');
+  line('  Live sync does not write AI tables. The function writes usage with the service role.');
   line();
 }
 

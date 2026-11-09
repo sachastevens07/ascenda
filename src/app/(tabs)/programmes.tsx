@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -7,9 +7,10 @@ import { ExerciseLibrary } from '@/components/ExerciseLibrary';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { RoutineBrowse } from '@/components/RoutineBrowse';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
-import { AppText, TabAvatar } from '@/components/ui';
+import { AppText, IconButton, TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { cardioCopy } from '@/lib/copy';
+import { aiCopy, cardioCopy } from '@/lib/copy';
+import { ensureSubscribed } from '@/lib/paywall';
 
 const SECTIONS = [
   { id: 'routines', label: 'Routines' },
@@ -48,6 +49,14 @@ export default function ProgrammesScreen() {
         <View style={styles.titleRow}>
           <TabAvatar />
           <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Programmes</AppText>
+          <IconButton
+            icon="camera-outline"
+            accessibilityLabel={aiCopy.scan_title}
+            onPress={() => {
+              if (!ensureSubscribed()) return;
+              router.push('/machines/scan' as Href);
+            }}
+          />
         </View>
         <View
           style={[styles.tabRow, { borderBottomColor: colours.border }]}

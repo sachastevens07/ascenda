@@ -12,7 +12,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
-import { Chip, ChipScroller, ExerciseThumb, PrimaryButton } from '@/components/ui';
+import { Chip, ChipScroller, ExerciseThumb, IconButton, PrimaryButton } from '@/components/ui';
+import { aiCopy } from '@/lib/copy';
+import { ensureSubscribed } from '@/lib/paywall';
 import { useTheme } from '@/constants/theme';
 import { useDevTools } from '@/lib/devFlags';
 import {
@@ -103,11 +105,23 @@ export function ExerciseLibrary({
   return (
     <View style={[styles.container, { backgroundColor: colours.bg }]}>
       <View style={[styles.header, !title && styles.headerTight]}>
-        {title ? (
-          <AppText variant="display" style={{ color: colours.ink }}>
-            {title}
-          </AppText>
-        ) : null}
+        <View style={styles.titleRow}>
+          {title ? (
+            <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>
+              {title}
+            </AppText>
+          ) : (
+            <View style={styles.flex} />
+          )}
+          <IconButton
+            icon="camera-outline"
+            accessibilityLabel={aiCopy.scan_title}
+            onPress={() => {
+              if (!ensureSubscribed()) return;
+              router.push('/machines/scan');
+            }}
+          />
+        </View>
 
         <View
           style={[
@@ -248,6 +262,14 @@ const styles = StyleSheet.create({
   },
   headerTight: {
     paddingTop: 4,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  flex: {
+    flex: 1,
   },
   search: {
     flexDirection: 'row',

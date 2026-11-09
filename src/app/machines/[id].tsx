@@ -1,19 +1,25 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppText, DetailLayout, RelatedLearn, SafetyNotice } from '@/components/ui';
+import { showDialog } from '@/components/Dialog';
+import { AppText, DetailLayout, PrimaryButton, RelatedLearn, SafetyNotice, SecondaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { machineCopy } from '@/lib/copy';
+import { aiCopy, fillCopy, machineCopy } from '@/lib/copy';
 import {
   machineExercises,
   machineGuide,
 } from '@/lib/machineGuides';
+import { useWorkout } from '@/lib/workout';
 
 export default function MachineGuideScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, scanned, people } = useLocalSearchParams<{ id: string; scanned?: string; people?: string }>();
   const insets = useSafeAreaInsets();
   const { colours, spacing, radius } = useTheme();
+  const workout = useWorkout();
+  const [picking, setPicking] = useState(false);
+  const fromScan = scanned === '1' || scanned === 'true';
   const guide = machineGuide(Array.isArray(id) ? id[0] : id);
 
   function goBack() {
@@ -32,7 +38,47 @@ export default function MachineGuideScreen() {
   }
 
   const exercises = machineExercises(guide);
+  const machineName = guide.name;
   const useTitle = guide.useKind === 'start' ? machineCopy.start : machineCopy.use;
+  const active = workout.active;
+  const canAddToSession =
+    Boolean(active) && active?.source !== 'cardio' && active?.source !== 'stretch';
+
+  function addExercise(slug: string) {
+    if (!active || !canAddToSession) {
+      showDialog(machineCopy.add_today, machineCopy.no_session);
+      return;
+    }
+    setPicking(false);
+    router.push({
+      pathname: '/session/[id]',
+      params: { id: active.sessionId, addExercise: slug },
+    } as Href);
+  }
+
+  function handleAdd() {
+    if (!canAddToSession) {
+      showDialog(machineCopy.add_today, machineCopy.no_session);
+      return;
+    }
+    if (exercises.length === 0) return;
+    if (exercises.length === 1) {
+      addExercise(exercises[0].slug);
+      return;
+    }
+    setPicking(true);
+  }
+
+  async function shareUnlock() {
+    try {
+      await Share.share({
+        message: fillCopy(machineCopy.share_message, { machine: machineName.toLowerCase() }),
+        title: machineCopy.share,
+      });
+    } catch {
+      showDialog(machineCopy.share, 'You can still screenshot the guide name.');
+    }
+  }
 
   return (
     <DetailLayout
@@ -41,7 +87,17 @@ export default function MachineGuideScreen() {
       letter={guide.name}
       title={guide.name}
       eyebrow={machineCopy.eyebrow}
-      onBack={goBack}>
+      onBack={goBack}
+      sticky={
+        fromScan ? (
+          <View style={{ gap: 10 }}>
+            {exercises.length > 0 ? (
+              <PrimaryButton label={machineCopy.add_today} onPress={handleAdd} />
+            ) : null}
+            <SecondaryButton label={machineCopy.share} appearance="outline" onPress={() => void shareUnlock()} />
+          </View>
+        ) : undefined
+      }>
       <GuideSection title={machineCopy.find} steps={guide.whereToFind ? [guide.whereToFind] : []} />
       <GuideSection title={machineCopy.setup} steps={guide.setup} />
       <GuideSection title={useTitle} steps={guide.startAndStop} />
@@ -67,12 +123,16 @@ export default function MachineGuideScreen() {
       {exercises.length > 0 ? (
         <View style={{ marginTop: spacing.lg }}>
           <AppText variant="title2" style={{ color: colours.ink, marginBottom: spacing.md }}>
-            {machineCopy.exercises}
+            {picking ? machineCopy.pick_exercise : machineCopy.exercises}
           </AppText>
           {exercises.map((item) => (
             <Pressable
               key={item.slug}
-              onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: item.slug } } as Href)}
+              onPress={() =>
+                picking
+                  ? addExercise(item.slug)
+                  : router.push({ pathname: '/exercise/[id]', params: { id: item.slug } } as Href)
+              }
               style={({ pressed }) => [
                 styles.exerciseRow,
                 { backgroundColor: colours.surface, borderRadius: radius.md },
@@ -87,6 +147,16 @@ export default function MachineGuideScreen() {
         </View>
       ) : null}
 
+      {fromScan ? (
+        <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.lg }}>
+          {machineCopy.ai_label}
+        </AppText>
+      ) : null}
+      {people === '1' ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+          {aiCopy.people_tip}
+        </AppText>
+      ) : null}
       <RelatedLearn category="gym_confidence" style={{ marginTop: spacing.lg }} />
       <SafetyNotice style={{ marginTop: spacing.md }} />
     </DetailLayout>

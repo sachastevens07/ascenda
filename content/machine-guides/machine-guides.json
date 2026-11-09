@@ -5,7 +5,8 @@
     "Cardio machines are equipment for Gym unlocked (first-treadmill, first-bike, first-cross-trainer, first-rower, first-stair-climber badges).",
     "Strength machine 'exercises' lists the catalogue exercises done on it, for 'Exercises you can do on this' (and later AI1 machine scan).",
     "Exercise-specific setup and form cues live in the exercise guides; these cover the machine itself.",
-    "Draft for coach review before launch."
+    "Draft for coach review before launch.",
+    "visual_features is a short look-for line for AI1 machine scan. Edit here; the Edge Function copies id, name and visual_features."
   ],
   "machines": [
     {
@@ -13,6 +14,7 @@
       "name": "Treadmill",
       "type": "cardio",
       "image_slug": "machine-treadmill",
+      "visual_features": "Moving walking belt with side rails, a front console, and a clip-on safety key.",
       "where_to_find": "In the cardio area, usually in rows facing windows or screens.",
       "setup": [
         "Clip the safety key to your clothing before you start. If you slip, it pulls out and the belt stops.",
@@ -39,6 +41,7 @@
       "name": "Exercise bike",
       "type": "cardio",
       "image_slug": "machine-bike",
+      "visual_features": "Upright or recumbent cycle with pedals, a saddle, and a small console.",
       "where_to_find": "In the cardio area. Upright bikes look like a road bike; recumbent bikes have a seat with a backrest.",
       "setup": [
         "Stand next to the bike and set the seat level with your hip bone.",
@@ -64,6 +67,7 @@
       "name": "Cross-trainer",
       "type": "cardio",
       "image_slug": "machine-cross-trainer",
+      "visual_features": "Standing elliptical with two long moving handles and foot pedals on rails. Also called an elliptical.",
       "where_to_find": "In the cardio area. Also called an elliptical.",
       "setup": [
         "Hold the fixed handles and step onto the foot pedals one at a time.",
@@ -88,6 +92,7 @@
       "name": "Rowing machine",
       "type": "cardio",
       "image_slug": "machine-rower",
+      "visual_features": "Long rail with a sliding seat, a fan housing, and a pull handle on a chain or strap.",
       "where_to_find": "In the cardio or functional area, often on the floor near the walls.",
       "setup": [
         "Sit on the seat and strap your feet in so the strap crosses the widest part of your foot.",
@@ -113,6 +118,7 @@
       "name": "Stair climber",
       "type": "cardio",
       "image_slug": "machine-stair-climber",
+      "visual_features": "Small moving staircase with two handrails and a console.",
       "where_to_find": "In the cardio area. It looks like a small moving staircase.",
       "setup": [
         "Step onto the bottom stair while holding the rails.",
@@ -138,6 +144,7 @@
       "name": "Leg press",
       "type": "strength",
       "image_slug": "machine-leg-press",
+      "visual_features": "Angled sled with a large footplate, a seat, and two safety handles.",
       "where_to_find": "In the machine area, often near other leg machines. Look for a big angled sled with a seat and a footplate.",
       "setup": [
         "Sit back with your back and head against the pad.",
@@ -168,6 +175,7 @@
       "name": "Cable machine",
       "type": "strength",
       "image_slug": "machine-cable",
+      "visual_features": "Tall frame with one or two weight stacks, adjustable pulleys, and clip-on handles.",
       "where_to_find": "Usually a tall frame with one or two weight stacks and adjustable pulleys, in the machine or functional area.",
       "setup": [
         "Slide the pulley up or down the column by pulling the pin and moving it to the height you need.",
@@ -206,6 +214,7 @@
       "name": "Smith machine",
       "type": "strength",
       "image_slug": "machine-smith",
+      "visual_features": "Barbell fixed on vertical rails with hooks and safety stops, unlike a free squat rack.",
       "where_to_find": "Looks like a squat rack with a barbell fixed on rails, usually near the free weights.",
       "setup": [
         "Set the safety stops just below the lowest point you'll reach.",
@@ -235,6 +244,7 @@
       "name": "Squat rack",
       "type": "strength",
       "image_slug": "machine-squat-rack",
+      "visual_features": "Tall free-standing frame with J-hooks and safety arms. The barbell is not fixed to rails.",
       "where_to_find": "In the free-weights area: a tall frame with hooks (J-hooks) and safety arms.",
       "setup": [
         "Set the J-hooks so the bar sits at mid-chest height.",
@@ -267,6 +277,7 @@
       "name": "Lat pulldown",
       "type": "strength",
       "image_slug": "machine-lat-pulldown",
+      "visual_features": "Seat with thigh pads and a long bar hanging from a high cable.",
       "where_to_find": "In the machine area: a seat with knee pads and a long bar hanging from a cable above.",
       "setup": [
         "Adjust the knee pad so your thighs are held snugly.",
@@ -295,6 +306,7 @@
       "name": "Seated cable row",
       "type": "strength",
       "image_slug": "machine-seated-row",
+      "visual_features": "Low bench with footplates and a cable at foot height, often with a V-handle.",
       "where_to_find": "Usually a low bench with footplates and a cable at foot height, near the lat pulldown.",
       "setup": [
         "Sit with your feet on the footplates and knees slightly bent.",
@@ -321,6 +333,7 @@
       "name": "Chest press machine",
       "type": "strength",
       "image_slug": "machine-chest-press",
+      "visual_features": "Seated stack machine with two handles at chest height that press forward.",
       "where_to_find": "In the machine area, often near the shoulder press.",
       "setup": [
         "Set the seat so the handles line up with the middle of your chest.",
@@ -347,6 +360,7 @@
       "name": "Shoulder press machine",
       "type": "strength",
       "image_slug": "machine-shoulder-press",
+      "visual_features": "Seated stack machine with two handles at shoulder height that press upward.",
       "where_to_find": "In the machine area, often next to the chest press.",
       "setup": [
         "Set the seat so the handles start at about shoulder height.",
@@ -373,6 +387,7 @@
       "name": "Pec deck and rear delt machine",
       "type": "strength",
       "image_slug": "machine-pec-deck",
+      "visual_features": "Seated machine with vertical pads or arms that meet in front of the chest; often reverses for rear delts.",
       "where_to_find": "In the machine area. The same machine usually does chest flyes (facing out) and rear delt flyes (facing the pad).",
       "setup": [
         "For chest: sit facing away from the pad and set the handles so they start just behind your shoulders.",
@@ -401,6 +416,7 @@
       "name": "Leg extension",
       "type": "strength",
       "image_slug": "machine-leg-extension",
+      "visual_features": "Seat with a padded bar in front of the shins that lifts as you straighten your legs.",
       "where_to_find": "With the other leg machines: a seat with a padded bar in front of your shins.",
       "setup": [
         "Line your knees up with the machine's pivot point (usually a coloured dot).",
@@ -427,6 +443,7 @@
       "name": "Leg curl (seated or lying)",
       "type": "strength",
       "image_slug": "machine-leg-curl",
+      "visual_features": "Seated or lying machine with a pad above the heels that you curl toward you.",
       "where_to_find": "With the other leg machines. Seated versions have a pad over your thighs; lying versions have you face down.",
       "setup": [
         "Line your knees up with the pivot point.",
@@ -454,6 +471,7 @@
       "name": "Hip thrust machine",
       "type": "strength",
       "image_slug": "machine-hip-thrust",
+      "visual_features": "Back pad like a bench with a padded belt or bar across the hips.",
       "where_to_find": "In the machine or glute area, if your gym has one. It has a back pad and a padded belt or bar over your hips.",
       "setup": [
         "Sit with your upper back on the pad and the belt or pad across your hips.",
@@ -480,6 +498,7 @@
       "name": "Hip abduction and adduction machine",
       "type": "strength",
       "image_slug": "machine-hip-abduction",
+      "visual_features": "Seated machine with pads on the outside or inside of the knees for outer or inner thighs.",
       "where_to_find": "With the leg machines. Often the same machine does outer thighs (abduction) and inner thighs (adduction).",
       "setup": [
         "Set the pads to the inside or outside of your knees, depending on which you're doing.",
@@ -505,6 +524,7 @@
       "name": "Assisted pull-up machine",
       "type": "strength",
       "image_slug": "machine-assisted-pull-up",
+      "visual_features": "Tall frame with overhead handles and a knee pad or standing platform. More stack weight makes it easier.",
       "where_to_find": "In the machine area: a tall frame with handles at the top and a knee pad or platform.",
       "setup": [
         "Choose the assistance with the pin. Here, more weight makes it easier.",
@@ -531,6 +551,7 @@
       "name": "Hack squat",
       "type": "strength",
       "image_slug": "machine-hack-squat",
+      "visual_features": "Angled sled with shoulder pads and a footplate. You squat under the pads.",
       "where_to_find": "In the leg machine area: an angled sled with shoulder pads.",
       "setup": [
         "Stand on the footplate with your back against the pad and shoulders under the pads.",
@@ -559,6 +580,7 @@
       "name": "Calf raise machine",
       "type": "strength",
       "image_slug": "machine-calf-raise",
+      "visual_features": "Standing or seated machine with a step edge for the balls of the feet and shoulder or knee pads.",
       "where_to_find": "With the leg machines. It may be standing or seated.",
       "setup": [
         "Put the balls of your feet on the edge of the step, heels hanging off.",
