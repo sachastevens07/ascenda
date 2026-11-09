@@ -461,11 +461,11 @@ async function main(): Promise<void> {
   reportAchievements();
   reportSingleSessions();
   reportCardio();
+  reportMachineGuides();
 
   line('No table in the current schema, skipped');
   const deferred = [
     ['content/food', 'recipes and collections (F2)'],
-    ['content/machine-guides', 'machine guides (W4)'],
   ];
   for (const [folder, why] of deferred) line(`  ${folder}: ${why}`);
   line();
@@ -580,6 +580,39 @@ function reportCardio(): void {
   }
   line('  Bundled in the app. Live sync does not write a cardio_sessions table.');
   line('  Logs need supabase/cardio_w2.sql (cardio_logs). Distance and calories are never estimated.');
+  line();
+}
+
+function reportMachineGuides(): void {
+  line('machine guides  ←  content/machine-guides/machine-guides.json (bundled, W4)');
+  const list = asArray(readJson('machine-guides/machine-guides.json').machines).map(asRecord);
+  const cardio = list.filter((item) => text(item.type) === 'cardio');
+  const strength = list.filter((item) => text(item.type) === 'strength');
+  const catalogue = new Set(
+    asArray(readJson('exercises/strength-catalogue.json').exercises).map((item) => text(asRecord(item).slug)).filter(Boolean),
+  );
+  const aliases = {
+    'chest-press-machine': 'machine-chest-press',
+    'seated-dumbbell-shoulder-press': 'dumbbell-shoulder-press',
+    'standing-dumbbell-shoulder-press': 'dumbbell-shoulder-press',
+    'shoulder-press-machine': 'machine-shoulder-press',
+    'bodyweight-glute-bridge': 'glute-bridge',
+  } as Record<string, string>;
+  const unknown: string[] = [];
+  for (const item of strength) {
+    const listed = Array.isArray(item.exercises) ? item.exercises : [];
+    for (const raw of listed) {
+      const slug = typeof raw === 'string' ? raw.trim() : '';
+      const resolved = aliases[slug] ?? slug;
+      if (resolved && !catalogue.has(resolved) && !catalogue.has(slug)) unknown.push(`${text(item.id)}:${slug}`);
+    }
+  }
+  line(`  Machines: ${list.length} (cardio ${cardio.length}, strength ${strength.length})`);
+  line(`  Cardio ids: ${cardio.map((item) => text(item.id)).filter(Boolean).join(', ') || 'none'}`);
+  if (unknown.length > 0) line(`  Unknown exercise slugs: ${unknown.join(', ')}`);
+  else line('  Strength exercise slugs all match the catalogue (or aliases).');
+  line('  Bundled in the app. Live sync does not write a machines table.');
+  line('  Gym unlocked cardio badges still come from cardio_logs (W2).');
   line();
 }
 

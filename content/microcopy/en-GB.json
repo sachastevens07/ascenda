@@ -721,6 +721,24 @@
       "activity_empty": "Finish a cardio session and your minutes will land here.",
       "activity_effort": "Effort over time",
       "counts_note": "From 10 minutes, this counts towards your week."
+    },
+    "machines": {
+      "_note": "W4 machine guides. Bodies live in content/machine-guides. No em dashes.",
+      "eyebrow": "MACHINE GUIDE",
+      "find": "Find it",
+      "setup": "Set it up",
+      "start": "Start and stop",
+      "use": "How to use it",
+      "mistakes": "Common mistakes",
+      "etiquette": "Etiquette",
+      "beginner": "Beginner settings",
+      "exercises": "Exercises you can do on this",
+      "first_time": "First time on the {machine}?",
+      "not_found": "We couldn't find that machine guide.",
+      "learn_section": "Machine guides",
+      "learn_intro": "Where to find each machine, how to set it up, and how to start and stop.",
+      "cardio_group": "Cardio",
+      "strength_group": "Strength"
     }
   }
 }

@@ -45,7 +45,8 @@ import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
-import { fillCopy, loggerCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
+import { fillCopy, loggerCopy, machineCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
+import { machineGuideForExercise } from '@/lib/machineGuides';
 import {
   DEFAULT_SLOT,
   MAX_REPS,
@@ -1183,6 +1184,7 @@ export default function SessionScreen() {
           const restSeconds = slotRestSeconds(item, restPrefs);
           const note = notes[item.exercise.id];
           const firstTime = !previous[item.exercise.id]?.length;
+          const machine = machineGuideForExercise(item.exercise.id);
           return (
             <View
               key={item.position}
@@ -1273,6 +1275,17 @@ export default function SessionScreen() {
                     <Pressable onPress={() => openGuide(item.exercise.id)} hitSlop={6}>
                       <AppText variant="bodySm" style={{ color: colours.brand, marginTop: 4 }}>
                         {loggerCopy.first_time_link}
+                      </AppText>
+                    </Pressable>
+                  ) : null}
+                  {machine ? (
+                    <Pressable
+                      onPress={() =>
+                        router.push({ pathname: '/machines/[id]', params: { id: machine.id } } as Href)
+                      }
+                      hitSlop={6}>
+                      <AppText variant="bodySm" style={{ color: colours.brand, marginTop: 4 }}>
+                        {fillCopy(machineCopy.first_time, { machine: machine.name.toLowerCase() })}
                       </AppText>
                     </Pressable>
                   ) : null}

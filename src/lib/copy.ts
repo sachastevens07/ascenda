@@ -287,6 +287,9 @@ const challenges = microcopy.strings.challenges;
 const cardio = microcopy.strings.cardio;
 export const cardioCopy = cardio;
 
+/** W4 machine guides. Bundled from content/microcopy. */
+export const machineCopy = microcopy.strings.machines;
+
 /** H8 challenge copy. Bundled from content/microcopy. Never a countdown. */
 export const challengesCopy = {
   join: challenges.join,

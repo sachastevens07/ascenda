@@ -29,6 +29,8 @@ import {
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { recordGuideOpened } from '@/lib/achievements';
 import { guideForExercise, preferredSwapIds } from '@/lib/contentGuides';
+import { fillCopy, machineCopy } from '@/lib/copy';
+import { machineGuideForExercise } from '@/lib/machineGuides';
 import { setupStepsFor } from '@/lib/gymUnlocked';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import type { SlotExercise } from '@/lib/programmes';
@@ -116,6 +118,7 @@ export default function ExerciseScreen() {
 
   const mediaSource = mediaFailed ? null : getExerciseImageSource(exercise);
   const guide = guideForExercise(exercise.id);
+  const machine = machineGuideForExercise(exercise.id);
   const setup = guide?.setup.length ? guide.setup : setupStepsFor(exercise);
   const cues = guide?.form_cues.length ? guide.form_cues : exercise.cues;
   const whereToFind = guide?.where_to_find || exercise.location_hint;
@@ -168,6 +171,16 @@ export default function ExerciseScreen() {
         <AppText variant="bodySm" style={styles.firstTimeCopy}>
           Where to find it, how to set it up, what to do, and a swap if it’s taken.
         </AppText>
+        {machine ? (
+          <Pressable
+            onPress={() => router.push({ pathname: '/machines/[id]', params: { id: machine.id } } as Href)}
+            style={styles.machineLink}
+            accessibilityRole="link">
+            <AppText variant="bodyStrong" style={styles.machineLinkText}>
+              {fillCopy(machineCopy.first_time, { machine: machine.name.toLowerCase() })}
+            </AppText>
+          </Pressable>
+        ) : null}
       </View>
 
       <AppText variant="title1" style={styles.title}>
@@ -331,6 +344,12 @@ const styles = StyleSheet.create({
   },
   firstTimeCopy: {
     color: colours.text,
+  },
+  machineLink: {
+    marginTop: 6,
+  },
+  machineLinkText: {
+    color: colours.accent,
   },
   title: {
     color: colours.text,

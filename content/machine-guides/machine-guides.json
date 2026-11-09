@@ -1,0 +1,583 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Machine guides (AGENTS.md W4). Shown as 'First time on the [machine]?' in the cardio player and exercise info, and in Learn (Gym confidence).",
+    "Cardio machines are equipment for Gym unlocked (first-treadmill, first-bike, first-cross-trainer, first-rower, first-stair-climber badges).",
+    "Strength machine 'exercises' lists the catalogue exercises done on it, for 'Exercises you can do on this' (and later AI1 machine scan).",
+    "Exercise-specific setup and form cues live in the exercise guides; these cover the machine itself.",
+    "Draft for coach review before launch."
+  ],
+  "machines": [
+    {
+      "id": "treadmill",
+      "name": "Treadmill",
+      "type": "cardio",
+      "image_slug": "machine-treadmill",
+      "where_to_find": "In the cardio area, usually in rows facing windows or screens.",
+      "setup": [
+        "Clip the safety key to your clothing before you start. If you slip, it pulls out and the belt stops.",
+        "Stand on the side rails, not the belt, while you press Start or Quick Start."
+      ],
+      "start_and_stop": [
+        "Press Start and let the belt begin slowly. Step on once it's moving at walking pace.",
+        "Change speed and incline with the arrows or quick-select buttons.",
+        "To stop, lower the speed first, then press Stop. Step onto the side rails once the belt slows right down.",
+        "In an emergency, pull the safety key or press the red stop button."
+      ],
+      "beginner_settings": "Walking: 4 to 5.5 km/h. Incline: 0 to 6% to start. A 1% incline feels closest to walking outdoors.",
+      "common_mistakes": [
+        "Holding the handrails on a steep incline. Lower the incline instead.",
+        "Stepping off a moving belt. Always slow down and stop first."
+      ],
+      "etiquette": [
+        "Many gyms have a time limit when busy, often 20 to 30 minutes.",
+        "Wipe down the handrails and screen when you finish."
+      ]
+    },
+    {
+      "id": "bike",
+      "name": "Exercise bike",
+      "type": "cardio",
+      "image_slug": "machine-bike",
+      "where_to_find": "In the cardio area. Upright bikes look like a road bike; recumbent bikes have a seat with a backrest.",
+      "setup": [
+        "Stand next to the bike and set the seat level with your hip bone.",
+        "Sit on and check: at the bottom of the pedal stroke, your knee should be slightly bent.",
+        "Slide your feet into the pedal straps so the ball of your foot is over the pedal."
+      ],
+      "start_and_stop": [
+        "Most bikes start when you begin pedalling.",
+        "Use the plus and minus buttons to change resistance.",
+        "To finish, lower the resistance and pedal easily for a minute or two before getting off."
+      ],
+      "beginner_settings": "Cadence: 70 to 85 rpm. Resistance: low enough to pedal smoothly, high enough that you're not spinning freely.",
+      "common_mistakes": [
+        "Seat too low, which can strain your knees.",
+        "Rocking side to side. Lower the resistance or the seat slightly."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handlebars after use."
+      ]
+    },
+    {
+      "id": "cross_trainer",
+      "name": "Cross-trainer",
+      "type": "cardio",
+      "image_slug": "machine-cross-trainer",
+      "where_to_find": "In the cardio area. Also called an elliptical.",
+      "setup": [
+        "Hold the fixed handles and step onto the foot pedals one at a time.",
+        "Feet in the middle of the pedals, heels down."
+      ],
+      "start_and_stop": [
+        "Start pedalling forwards and the screen will wake up.",
+        "Hold the moving handles to use your arms, or the fixed ones for balance.",
+        "To stop, slow down gradually. Wait until the pedals stop before stepping off."
+      ],
+      "beginner_settings": "Resistance: low to moderate. Aim for a smooth, steady pace you could keep for 10 minutes or more.",
+      "common_mistakes": [
+        "Leaning on the handles. Stand tall over your feet.",
+        "Up on your toes. Keep your heels down."
+      ],
+      "etiquette": [
+        "Wipe down handles and pedals when you finish."
+      ]
+    },
+    {
+      "id": "rower",
+      "name": "Rowing machine",
+      "type": "cardio",
+      "image_slug": "machine-rower",
+      "where_to_find": "In the cardio or functional area, often on the floor near the walls.",
+      "setup": [
+        "Sit on the seat and strap your feet in so the strap crosses the widest part of your foot.",
+        "Set the damper (the lever on the fan) to 3 to 5. Higher isn't better; it just feels heavier."
+      ],
+      "start_and_stop": [
+        "The screen wakes up when you start rowing.",
+        "The stroke: push with your legs, lean back slightly, then pull the handle to your lower ribs. Return in reverse: arms, body, then legs.",
+        "To stop, row easily for a few strokes, then rest the handle in its holder."
+      ],
+      "beginner_settings": "Damper 3 to 5. 20 to 24 strokes a minute. Smooth and long beats fast and short.",
+      "common_mistakes": [
+        "Pulling with your arms first. Legs do most of the work.",
+        "Rushing forward on the return. Take about twice as long coming forward as pushing back."
+      ],
+      "etiquette": [
+        "Put the handle back gently. Don't let it fly back into the fan.",
+        "Wipe down the handle and seat."
+      ]
+    },
+    {
+      "id": "stair_climber",
+      "name": "Stair climber",
+      "type": "cardio",
+      "image_slug": "machine-stair-climber",
+      "where_to_find": "In the cardio area. It looks like a small moving staircase.",
+      "setup": [
+        "Step onto the bottom stair while holding the rails.",
+        "Choose a low level before you start."
+      ],
+      "start_and_stop": [
+        "Press Start and begin climbing as the stairs move.",
+        "Change speed with the plus and minus buttons.",
+        "To stop, press Stop and keep stepping until the stairs come to a halt. Step off carefully at the bottom."
+      ],
+      "beginner_settings": "Start low (about 3 to 5 on most machines) for 5 to 10 minutes. It's harder than it looks.",
+      "common_mistakes": [
+        "Leaning heavily on the rails. Hold them lightly, just for balance.",
+        "Taking tiny steps on the edge. Use the whole step."
+      ],
+      "etiquette": [
+        "Often busy, so keep to the gym's time limit.",
+        "Wipe down the rails."
+      ]
+    },
+    {
+      "id": "leg_press",
+      "name": "Leg press",
+      "type": "strength",
+      "image_slug": "machine-leg-press",
+      "where_to_find": "In the machine area, often near other leg machines. Look for a big angled sled with a seat and a footplate.",
+      "setup": [
+        "Sit back with your back and head against the pad.",
+        "Feet hip-width on the middle of the footplate.",
+        "Add weight plates to the pegs on each side, or set the pin on a stack version."
+      ],
+      "how_to_use": [
+        "Push the plate up slightly and turn the safety handles out to release it.",
+        "Lower until your knees are comfortably bent, then push back up.",
+        "When you finish, push up, turn the handles back in to lock it, then lower onto them."
+      ],
+      "beginner_settings": "Start with just the sled or one small plate each side. Add plates evenly to both sides.",
+      "common_mistakes": [
+        "Locking your knees straight at the top.",
+        "Lowering so far that your lower back peels off the pad."
+      ],
+      "etiquette": [
+        "It's fine to ask \"How many sets have you got left?\" or \"Can I jump in between your sets?\"",
+        "Take all the plates off when you're done.",
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "leg-press"
+      ]
+    },
+    {
+      "id": "cable_station",
+      "name": "Cable machine",
+      "type": "strength",
+      "image_slug": "machine-cable",
+      "where_to_find": "Usually a tall frame with one or two weight stacks and adjustable pulleys, in the machine or functional area.",
+      "setup": [
+        "Slide the pulley up or down the column by pulling the pin and moving it to the height you need.",
+        "Clip on the handle you need (rope, single handle, bar or ankle strap). They're usually hanging on the frame.",
+        "Choose the weight by putting the pin in the stack."
+      ],
+      "how_to_use": [
+        "Step back so the weight lifts slightly off the stack at the start.",
+        "Move smoothly and don't let the weight slam down between reps."
+      ],
+      "beginner_settings": "Start very light. Cable weights feel heavier than the number suggests, especially with one arm.",
+      "common_mistakes": [
+        "Letting the stack crash down. Control the return.",
+        "Standing too close, so the weight touches down every rep."
+      ],
+      "etiquette": [
+        "Put the handle back where you found it.",
+        "It's fine to ask \"How many sets have you got left?\" or \"Can I jump in between your sets?\""
+      ],
+      "exercises": [
+        "cable-pull-through",
+        "cable-glute-kickback",
+        "cable-hip-abduction",
+        "cable-lateral-raise",
+        "seated-cable-row",
+        "single-arm-cable-row",
+        "face-pull",
+        "cable-biceps-curl",
+        "triceps-pushdown",
+        "pallof-press",
+        "cable-crunch"
+      ]
+    },
+    {
+      "id": "smith_machine",
+      "name": "Smith machine",
+      "type": "strength",
+      "image_slug": "machine-smith",
+      "where_to_find": "Looks like a squat rack with a barbell fixed on rails, usually near the free weights.",
+      "setup": [
+        "Set the safety stops just below the lowest point you'll reach.",
+        "Position the bar at about shoulder height for squats.",
+        "Add plates evenly to each side if you need more than the bar."
+      ],
+      "how_to_use": [
+        "Step under the bar, rest it across your upper back and stand up.",
+        "Twist your wrists to unhook the bar from its hooks.",
+        "Finish by twisting the bar back onto a hook at any level."
+      ],
+      "beginner_settings": "The bar alone usually weighs less than a normal barbell, often 6 to 15 kg. Check the label or ask staff.",
+      "common_mistakes": [
+        "Forgetting to set the safety stops.",
+        "Feet directly under the bar. Step them slightly forward for squats."
+      ],
+      "etiquette": [
+        "Strip the plates after use.",
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "smith-machine-squat"
+      ]
+    },
+    {
+      "id": "squat_rack",
+      "name": "Squat rack",
+      "type": "strength",
+      "image_slug": "machine-squat-rack",
+      "where_to_find": "In the free-weights area: a tall frame with hooks (J-hooks) and safety arms.",
+      "setup": [
+        "Set the J-hooks so the bar sits at mid-chest height.",
+        "Set the safety arms just below the bottom of your squat.",
+        "An Olympic barbell weighs 20 kg; many gyms also have 15 kg bars. Use clips to hold the plates on."
+      ],
+      "how_to_use": [
+        "Step under the bar, brace and stand up to lift it off the hooks.",
+        "Take two or three small steps back.",
+        "When you finish, walk forwards until the bar touches the uprights, then lower it onto the hooks."
+      ],
+      "beginner_settings": "Start with the empty bar while you learn. There's no need to add plates until the movement feels steady.",
+      "common_mistakes": [
+        "Setting the hooks too high, so you go on tiptoes to unrack.",
+        "Skipping the safety arms."
+      ],
+      "etiquette": [
+        "Racks are in demand. Have your plan ready and share if someone asks.",
+        "Strip your plates when you're done."
+      ],
+      "exercises": [
+        "barbell-back-squat",
+        "barbell-bench-press",
+        "barbell-romanian-deadlift",
+        "barbell-bent-over-row"
+      ]
+    },
+    {
+      "id": "lat_pulldown",
+      "name": "Lat pulldown",
+      "type": "strength",
+      "image_slug": "machine-lat-pulldown",
+      "where_to_find": "In the machine area: a seat with knee pads and a long bar hanging from a cable above.",
+      "setup": [
+        "Adjust the knee pad so your thighs are held snugly.",
+        "Choose the weight with the pin."
+      ],
+      "how_to_use": [
+        "Stand, grab the bar slightly wider than your shoulders, then sit down with it.",
+        "Pull the bar to your upper chest, leading with your elbows.",
+        "At the end of your set, stand up slowly with the bar to return it."
+      ],
+      "beginner_settings": "Start light, around 15 to 25 kg, and focus on feeling your back work.",
+      "common_mistakes": [
+        "Leaning way back to swing the weight.",
+        "Pulling the bar behind your head."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish.",
+        "It's fine to ask \"How many sets have you got left?\" or \"Can I jump in between your sets?\""
+      ],
+      "exercises": [
+        "lat-pulldown"
+      ]
+    },
+    {
+      "id": "seated_row",
+      "name": "Seated cable row",
+      "type": "strength",
+      "image_slug": "machine-seated-row",
+      "where_to_find": "Usually a low bench with footplates and a cable at foot height, near the lat pulldown.",
+      "setup": [
+        "Sit with your feet on the footplates and knees slightly bent.",
+        "Clip on the handle you'd like (the V-handle is most common)."
+      ],
+      "how_to_use": [
+        "Sit tall and pull the handle to your stomach, squeezing your shoulder blades together.",
+        "Let your arms straighten slowly without rounding forward."
+      ],
+      "beginner_settings": "Start light and keep your back still. Your arms and back do the work, not your hips.",
+      "common_mistakes": [
+        "Rocking back and forth.",
+        "Shrugging your shoulders up."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "seated-cable-row"
+      ]
+    },
+    {
+      "id": "chest_press",
+      "name": "Chest press machine",
+      "type": "strength",
+      "image_slug": "machine-chest-press",
+      "where_to_find": "In the machine area, often near the shoulder press.",
+      "setup": [
+        "Set the seat so the handles line up with the middle of your chest.",
+        "Choose the weight with the pin."
+      ],
+      "how_to_use": [
+        "Press the handles forward until your arms are straight but not locked.",
+        "Return slowly until you feel a stretch across your chest."
+      ],
+      "beginner_settings": "Start at a weight you could press 15 times, then adjust.",
+      "common_mistakes": [
+        "Seat too low, so you press upwards.",
+        "Letting your shoulders roll forward."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "chest-press-machine"
+      ]
+    },
+    {
+      "id": "shoulder_press",
+      "name": "Shoulder press machine",
+      "type": "strength",
+      "image_slug": "machine-shoulder-press",
+      "where_to_find": "In the machine area, often next to the chest press.",
+      "setup": [
+        "Set the seat so the handles start at about shoulder height.",
+        "Choose the weight with the pin."
+      ],
+      "how_to_use": [
+        "Press the handles up until your arms are nearly straight.",
+        "Lower slowly back to shoulder height."
+      ],
+      "beginner_settings": "Start light: shoulders are smaller muscles than your legs and chest.",
+      "common_mistakes": [
+        "Arching your back off the pad.",
+        "Locking your elbows hard at the top."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "shoulder-press-machine"
+      ]
+    },
+    {
+      "id": "pec_deck",
+      "name": "Pec deck and rear delt machine",
+      "type": "strength",
+      "image_slug": "machine-pec-deck",
+      "where_to_find": "In the machine area. The same machine usually does chest flyes (facing out) and rear delt flyes (facing the pad).",
+      "setup": [
+        "For chest: sit facing away from the pad and set the handles so they start just behind your shoulders.",
+        "For rear delts: sit facing the pad and set the handles to the front position.",
+        "Adjust the seat so the handles are at shoulder height."
+      ],
+      "how_to_use": [
+        "Move with your arms slightly bent and the movement slow.",
+        "Return under control rather than letting the weight pull you back."
+      ],
+      "beginner_settings": "Start light. These are small, isolation movements.",
+      "common_mistakes": [
+        "Seat at the wrong height, so your shoulders hunch.",
+        "Bending and straightening your elbows as you go."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "pec-deck",
+        "reverse-pec-deck"
+      ]
+    },
+    {
+      "id": "leg_extension",
+      "name": "Leg extension",
+      "type": "strength",
+      "image_slug": "machine-leg-extension",
+      "where_to_find": "With the other leg machines: a seat with a padded bar in front of your shins.",
+      "setup": [
+        "Line your knees up with the machine's pivot point (usually a coloured dot).",
+        "Set the pad so it rests on the front of your ankles.",
+        "Choose the weight with the pin."
+      ],
+      "how_to_use": [
+        "Straighten your legs to lift the pad, pause, then lower slowly."
+      ],
+      "beginner_settings": "Start light and use a slow lowering. It's an easy machine to go heavier on than you need.",
+      "common_mistakes": [
+        "Swinging the weight up.",
+        "Knees out of line with the pivot."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "leg-extension"
+      ]
+    },
+    {
+      "id": "leg_curl",
+      "name": "Leg curl (seated or lying)",
+      "type": "strength",
+      "image_slug": "machine-leg-curl",
+      "where_to_find": "With the other leg machines. Seated versions have a pad over your thighs; lying versions have you face down.",
+      "setup": [
+        "Line your knees up with the pivot point.",
+        "Set the pad so it sits just above your heels.",
+        "For the seated version, lower the thigh pad so it holds your legs in place."
+      ],
+      "how_to_use": [
+        "Bend your knees to curl the pad, pause, then return slowly."
+      ],
+      "beginner_settings": "Start light; your hamstrings may cramp if you go heavy too soon.",
+      "common_mistakes": [
+        "Lifting your hips off the seat or bench.",
+        "Rushing the return."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "seated-leg-curl",
+        "lying-leg-curl"
+      ]
+    },
+    {
+      "id": "hip_thrust_machine",
+      "name": "Hip thrust machine",
+      "type": "strength",
+      "image_slug": "machine-hip-thrust",
+      "where_to_find": "In the machine or glute area, if your gym has one. It has a back pad and a padded belt or bar over your hips.",
+      "setup": [
+        "Sit with your upper back on the pad and the belt or pad across your hips.",
+        "Feet flat, about hip-width, so your shins are vertical at the top."
+      ],
+      "how_to_use": [
+        "Drive through your heels to lift your hips until they're in line with your body.",
+        "Squeeze your glutes at the top, then lower under control."
+      ],
+      "beginner_settings": "Start with a weight you can lift 12 times with a pause at the top.",
+      "common_mistakes": [
+        "Arching your lower back at the top.",
+        "Feet too far forward, so you feel it in your hamstrings."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "hip-thrust-machine"
+      ]
+    },
+    {
+      "id": "hip_abduction",
+      "name": "Hip abduction and adduction machine",
+      "type": "strength",
+      "image_slug": "machine-hip-abduction",
+      "where_to_find": "With the leg machines. Often the same machine does outer thighs (abduction) and inner thighs (adduction).",
+      "setup": [
+        "Set the pads to the inside or outside of your knees, depending on which you're doing.",
+        "Choose a starting position that's comfortable."
+      ],
+      "how_to_use": [
+        "Press your knees out (or in) smoothly, pause, then return slowly."
+      ],
+      "beginner_settings": "Light to moderate weight with a pause works best.",
+      "common_mistakes": [
+        "Bouncing or using momentum.",
+        "Starting with your legs stretched too wide."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "hip-abduction-machine"
+      ]
+    },
+    {
+      "id": "assisted_pull_up",
+      "name": "Assisted pull-up machine",
+      "type": "strength",
+      "image_slug": "machine-assisted-pull-up",
+      "where_to_find": "In the machine area: a tall frame with handles at the top and a knee pad or platform.",
+      "setup": [
+        "Choose the assistance with the pin. Here, more weight makes it easier.",
+        "Step up and kneel or stand on the platform."
+      ],
+      "how_to_use": [
+        "Hold the handles and pull your chest up towards them.",
+        "Lower slowly until your arms are straight."
+      ],
+      "beginner_settings": "Start with plenty of assistance, often 30 to 50 kg, and reduce it over time.",
+      "common_mistakes": [
+        "Dropping down quickly.",
+        "Not using the full range."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "assisted-pull-up"
+      ]
+    },
+    {
+      "id": "hack_squat",
+      "name": "Hack squat",
+      "type": "strength",
+      "image_slug": "machine-hack-squat",
+      "where_to_find": "In the leg machine area: an angled sled with shoulder pads.",
+      "setup": [
+        "Stand on the footplate with your back against the pad and shoulders under the pads.",
+        "Feet hip-width, in the middle of the plate.",
+        "Release the safety handles."
+      ],
+      "how_to_use": [
+        "Squat down under control, then push back up.",
+        "Lock the safety handles back in place when you finish."
+      ],
+      "beginner_settings": "Start with the empty sled; it already has some weight.",
+      "common_mistakes": [
+        "Heels lifting off the plate.",
+        "Forgetting to re-engage the safety handles."
+      ],
+      "etiquette": [
+        "Strip the plates after use.",
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "hack-squat"
+      ]
+    },
+    {
+      "id": "calf_raise",
+      "name": "Calf raise machine",
+      "type": "strength",
+      "image_slug": "machine-calf-raise",
+      "where_to_find": "With the leg machines. It may be standing or seated.",
+      "setup": [
+        "Put the balls of your feet on the edge of the step, heels hanging off.",
+        "Set the shoulder or knee pads so they're snug."
+      ],
+      "how_to_use": [
+        "Rise up onto your toes, pause, then lower slowly into a stretch."
+      ],
+      "beginner_settings": "Moderate weight, a pause at the top and a slow stretch at the bottom.",
+      "common_mistakes": [
+        "Bouncing quickly.",
+        "Bending your knees to help (on the standing version)."
+      ],
+      "etiquette": [
+        "Wipe down the seat and handles when you finish."
+      ],
+      "exercises": [
+        "calf-raise-machine"
+      ]
+    }
+  ]
+}

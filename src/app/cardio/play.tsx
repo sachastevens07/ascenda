@@ -42,7 +42,8 @@ import {
   type CardioSessionDef,
   type CardioSettings,
 } from '@/lib/cardio';
-import { cardioCopy, fillCopy } from '@/lib/copy';
+import { cardioCopy, fillCopy, machineCopy } from '@/lib/copy';
+import { machineGuide } from '@/lib/machineGuides';
 import { useSubscriptionGate } from '@/lib/paywall';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { discardSession, fetchSession } from '@/lib/sessions';
@@ -234,6 +235,7 @@ export default function CardioPlayScreen() {
   const sessionSettings = formatSettings(def.settings);
   const aim = currentSettings || sessionSettings;
   const machineName = machineLabel(step.machineId ?? def.machineId);
+  const guide = machineGuide(step.machineId ?? (def.machineId === 'mixed' ? null : def.machineId));
   const primaryLabel = holdDone && !isLast ? 'Next' : running ? cardioCopy.pause : cardioCopy.resume;
 
   return (
@@ -265,11 +267,13 @@ export default function CardioPlayScreen() {
       <AppText variant="title1" style={{ color: colours.ink, marginTop: spacing.xs }}>
         {def.name}
       </AppText>
-      <TextButton
-        label={fillCopy(cardioCopy.first_time, { machine: machineName.toLowerCase() })}
-        onPress={() => showDialog(cardioCopy.first_time_title, cardioCopy.first_time_body)}
-        style={{ alignSelf: 'flex-start', marginTop: spacing.xs }}
-      />
+      {guide ? (
+        <TextButton
+          label={fillCopy(machineCopy.first_time, { machine: guide.name.toLowerCase() })}
+          onPress={() => router.push({ pathname: '/machines/[id]', params: { id: guide.id } } as Href)}
+          style={{ alignSelf: 'flex-start', marginTop: spacing.xs }}
+        />
+      ) : null}
 
       <View style={styles.ringWrap}>
         <ProgressRing progress={ringProgress} size={RING_SIZE} stroke={12}>

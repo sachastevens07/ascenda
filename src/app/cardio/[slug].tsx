@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { AppText, Chip, DetailLayout, PrimaryButton, StatStrip } from '@/components/ui';
+import { AppText, Chip, DetailLayout, PrimaryButton, StatStrip, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
   beginCardioSession,
@@ -16,9 +16,11 @@ import {
   formatSettings,
   isSessionInProgressError,
   machineLabel,
+  sessionMachines,
   styleLabel,
 } from '@/lib/cardio';
-import { cardioCopy, fillCopy } from '@/lib/copy';
+import { cardioCopy, fillCopy, machineCopy } from '@/lib/copy';
+import { machineGuide } from '@/lib/machineGuides';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed } from '@/lib/paywall';
 import { useWorkout } from '@/lib/workout';
@@ -95,6 +97,9 @@ export default function CardioDetailScreen() {
 
   const settings = formatSettings(session.settings);
   const effort = formatEffortTarget(session.effortTarget);
+  const guides = sessionMachines(session)
+    .map((id) => machineGuide(id))
+    .filter((item): item is NonNullable<typeof item> => item != null);
 
   return (
     <DetailLayout
@@ -119,6 +124,14 @@ export default function CardioDetailScreen() {
         <Chip label={styleLabel(session.style)} />
         <Chip label={machineLabel(session.machineId)} />
       </View>
+      {guides.map((guide) => (
+        <TextButton
+          key={guide.id}
+          label={fillCopy(machineCopy.first_time, { machine: guide.name.toLowerCase() })}
+          onPress={() => router.push({ pathname: '/machines/[id]', params: { id: guide.id } } as Href)}
+          style={{ alignSelf: 'flex-start', marginTop: spacing.xs }}
+        />
+      ))}
 
       <StatStrip
         style={{ marginTop: spacing.lg }}
