@@ -15,6 +15,7 @@ import { estimateOneRepMax, type ExerciseBests } from '@/lib/progress';
 import { getDefaultRestSeconds } from '@/lib/restTimer';
 import type { ExerciseRole, ProgressionRule } from '@/lib/routineStandard';
 import { fetchRoutineDay, routineDayToProgrammeDay } from '@/lib/routines';
+import { isCardioSession } from '@/lib/sessionTypes';
 import { formatWeightInput as formatDisplayWeight, parseDisplayWeight } from '@/lib/units';
 import {
   fetchPreviousSets,
@@ -292,7 +293,7 @@ export async function loadSessionLog(
   equipment: EquipmentAccess
 ): Promise<SessionLog | null> {
   const session = await fetchSession(id);
-  if (!session || session.source === 'stretch') return null;
+  if (!session || session.source === 'stretch' || isCardioSession(session)) return null;
   const swaps = await fetchSessionSwaps(session);
   let planned: ProgrammeDay | null = null;
   if (session.custom_workout_id) {

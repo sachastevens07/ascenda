@@ -123,6 +123,7 @@ export default function StretchDetailScreen() {
     } catch (error) {
       if (isSessionInProgressError(error) && error.activeId) {
         const playStretch = error.activeSource === 'stretch';
+        const playCardio = error.activeSource === 'cardio';
         showDialog(
           'You already have a session going',
           'Finish or discard it first, then start this stretch.',
@@ -133,6 +134,8 @@ export default function StretchDetailScreen() {
                 router.push(
                   playStretch
                     ? ({ pathname: '/stretches/play', params: { sessionId: error.activeId } } as Href)
+                    : playCardio
+                      ? ({ pathname: '/cardio/play', params: { sessionId: error.activeId } } as Href)
                     : ({ pathname: '/session/[id]', params: { id: error.activeId } } as Href)
                 ),
             },

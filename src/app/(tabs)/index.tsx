@@ -129,6 +129,7 @@ import {
   startCustomSession,
   type Session,
 } from '@/lib/sessions';
+import { isCardioSession } from '@/lib/sessionTypes';
 import { fetchStretchRoutines } from '@/lib/stretches';
 import {
   STORE_NAME,
@@ -628,6 +629,10 @@ export default function HomeScreen() {
     if (!data?.activeSession) return;
     if (data.activeSession.source === 'stretch') {
       router.push({ pathname: '/stretches/play', params: { sessionId: data.activeSession.id } });
+      return;
+    }
+    if (isCardioSession(data.activeSession)) {
+      router.push({ pathname: '/cardio/play', params: { sessionId: data.activeSession.id } });
       return;
     }
     router.push({ pathname: '/session/[id]', params: { id: data.activeSession.id } });

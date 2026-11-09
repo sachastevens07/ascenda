@@ -60,7 +60,14 @@ import {
   type FinishedSessionMeta,
   type WeeklyStreak,
 } from '@/lib/activityStats';
-import { fillCopy, progressPhotosCopy, routineActionsCopy, streakCopy } from '@/lib/copy';
+import {
+  cardioWeekMinutes,
+  fetchCardioLogs,
+  longestCardioMinutes,
+  type CardioLog,
+} from '@/lib/cardio';
+import { cardioCopy, fillCopy, progressPhotosCopy, routineActionsCopy, streakCopy } from '@/lib/copy';
+import { startOfWeekMonday, toIso } from '@/lib/planner';
 import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import { fetchHideStreak, maybeTrackStreakRepair } from '@/lib/streak';
 import { formatKg } from '@/lib/programmes';
@@ -132,6 +139,7 @@ type ActivityData = {
   photosError: string | null;
   review: EnrolmentReview | null;
   nextOffer: NextRoutineOffer | null;
+  cardioLogs: CardioLog[];
 };
 
 const BAR_WIDTH = 20;
@@ -210,7 +218,7 @@ export default function ActivityScreen() {
       let isCurrent = true;
       (async () => {
         try {
-          const [sets, sessions, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, extras] =
+          const [sets, sessions, goal, enrolment, completedEnrolment, completedRoutines, hideStreak, hideAchievements, photosEnabled, extras, cardioLogs] =
             await Promise.all([
               fetchProgressSets(),
               fetchFinishedSessionMeta(),
@@ -227,6 +235,7 @@ export default function ActivityScreen() {
                 ...EMPTY_ACHIEVEMENT_EXTRAS,
                 knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
               })),
+              fetchCardioLogs().catch(() => []),
             ]);
           const [roadmap, completedRoutineSessions] = await Promise.all([
             enrolment ? fetchRoutineRoadmap(enrolment).catch(() => []) : Promise.resolve([]),
@@ -274,6 +283,7 @@ export default function ActivityScreen() {
             photosError: null,
             review,
             nextOffer,
+            cardioLogs,
           });
           setLoadState('ready');
           if (photosEnabled && showPhotosRef.current) {
@@ -520,6 +530,8 @@ export default function ActivityScreen() {
 
             <SectionHeader title="Your routine" />
             <CurrentRoutineCard enrolment={data.enrolment} roadmap={data.roadmap} />
+
+            <CardioProgressCard logs={data.cardioLogs} />
 
             <SectionHeader title="Personal bests" />
             <View style={card}>
@@ -805,6 +817,55 @@ export default function ActivityScreen() {
         ))}
       </OverflowMenu>
     </View>
+  );
+}
+
+function CardioProgressCard({ logs }: { logs: CardioLog[] }) {
+  const { colours, radius, shadow } = useTheme();
+  const weekStart = toIso(startOfWeekMonday(new Date()));
+  const weekMinutes = Math.round(cardioWeekMinutes(logs, weekStart));
+  const longest = Math.round(longestCardioMinutes(logs));
+  const effortPoints = logs
+    .filter((log) => log.effort != null)
+    .map((log) => ({
+      x: Date.parse(log.createdAt) || parseDate(log.createdAt.slice(0, 10)).getTime(),
+      y: log.effort ?? 0,
+    }))
+    .filter((point) => Number.isFinite(point.x));
+
+  return (
+    <>
+      <SectionHeader title={cardioCopy.activity_title} />
+      <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+        {logs.length === 0 ? (
+          <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+            {cardioCopy.activity_empty}
+          </AppText>
+        ) : (
+          <>
+            <AppText variant="title3" style={{ color: colours.ink }}>
+              {fillCopy(cardioCopy.activity_week, { minutes: weekMinutes })}
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+              {fillCopy(cardioCopy.activity_longest, { minutes: longest })}
+            </AppText>
+            {effortPoints.length >= 2 ? (
+              <>
+                <AppText variant="bodyStrong" style={{ color: colours.ink, marginTop: 16 }}>
+                  {cardioCopy.activity_effort}
+                </AppText>
+                <LineChart
+                  points={effortPoints}
+                  formatX={(x) => formatShortDate(new Date(x))}
+                  formatY={(y) => String(Math.round(y))}
+                  height={160}
+                />
+              </>
+            ) : null}
+          </>
+        )}
+      </View>
+    </>
   );
 }
 

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, loggerCopy } from '@/lib/copy';
+import { ensureSubscribed } from '@/lib/paywall';
 import { useNow, useWorkout } from '@/lib/workout';
 import { formatClock } from '@/lib/workoutLog';
 
@@ -24,11 +25,18 @@ export function WorkoutBar() {
   });
   return (
     <Pressable
-      onPress={() =>
-        active.source === 'stretch'
-          ? router.push({ pathname: '/stretches/play', params: { sessionId: active.sessionId } })
-          : router.push({ pathname: '/session/[id]', params: { id: active.sessionId } })
-      }
+      onPress={() => {
+        if (!ensureSubscribed()) return;
+        if (active.source === 'stretch') {
+          router.push({ pathname: '/stretches/play', params: { sessionId: active.sessionId } });
+          return;
+        }
+        if (active.source === 'cardio') {
+          router.push({ pathname: '/cardio/play', params: { sessionId: active.sessionId } });
+          return;
+        }
+        router.push({ pathname: '/session/[id]', params: { id: active.sessionId } });
+      }}
       style={({ pressed }) => [
         styles.bar,
         { backgroundColor: colours.ink },

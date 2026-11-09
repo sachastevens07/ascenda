@@ -460,10 +460,10 @@ async function main(): Promise<void> {
   reportWarmups();
   reportAchievements();
   reportSingleSessions();
+  reportCardio();
 
   line('No table in the current schema, skipped');
   const deferred = [
-    ['content/cardio', 'cardio library table is W2; finisher fields are stored on cardio blocks now'],
     ['content/food', 'recipes and collections (F2)'],
     ['content/machine-guides', 'machine guides (W4)'],
   ];
@@ -554,6 +554,35 @@ function reportOnboardingGoals(): void {
   line();
 }
 
+function reportCardio(): void {
+  line('cardio  ←  content/cardio/cardio-sessions.json (bundled, W2)');
+  const file = asRecord(readJson('cardio/cardio-sessions.json'));
+  const list = asArray(file.cardio_sessions).map(asRecord).filter((item) => item.is_active !== false);
+  const styles = { steady: 0, intervals: 0, finisher: 0 };
+  const machines = new Map<string, number>();
+  let intervalMismatch = 0;
+  let beginnerBlocked = 0;
+  for (const item of list) {
+    const style = text(item.style);
+    if (style === 'steady' || style === 'intervals' || style === 'finisher') styles[style] += 1;
+    const machine = text(item.machine_id) || 'unknown';
+    machines.set(machine, (machines.get(machine) ?? 0) + 1);
+    if (item.beginner_ok === false) beginnerBlocked += 1;
+    const seconds = asArray(item.intervals).reduce((sum, step) => sum + (num(asRecord(step).seconds) ?? 0), 0);
+    const duration = (num(item.duration_minutes) ?? 0) * 60;
+    if (duration > 0 && Math.abs(seconds - duration) > 5) intervalMismatch += 1;
+  }
+  line(`  Sessions: ${list.length} (steady ${styles.steady}, intervals ${styles.intervals}, finisher ${styles.finisher})`);
+  line(`  Machines: ${[...machines.entries()].map(([id, count]) => `${id} ${count}`).join(', ')}`);
+  line(`  Beginner-blocked (intervals): ${beginnerBlocked}. Hidden for gym_experience not_yet/just_started in the first 4 weeks.`);
+  if (intervalMismatch > 0) {
+    line(`  Interval seconds do not match duration_minutes on ${intervalMismatch} session(s).`);
+  }
+  line('  Bundled in the app. Live sync does not write a cardio_sessions table.');
+  line('  Logs need supabase/cardio_w2.sql (cardio_logs). Distance and calories are never estimated.');
+  line();
+}
+
 function reportSingleSessions(): void {
   line('single sessions  ←  content/single-sessions/single-sessions.json (bundled, X3)');
   const file = asRecord(readJson('single-sessions/single-sessions.json'));
@@ -575,7 +604,7 @@ function reportAchievements(): void {
   const badges = asArray(file.achievements).map(asRecord);
   const hidden = badges.filter((item) => text(item.available_from) === 'v2.3');
   line(`  Families: ${families.length}`);
-  line(`  Badges: ${badges.length} (${hidden.length} hidden until cardio / v2.3)`);
+  line(`  Badges: ${badges.length} (${hidden.length} cardio machine badges, visible from W2)`);
   line('  Bundled in the app. Live sync does not write a definitions table.');
   line('  user_achievements (supabase/achievements_h6.sql) keeps migrated milestone types.');
   line();

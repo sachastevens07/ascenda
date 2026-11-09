@@ -2,15 +2,18 @@ import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { CardioCatalogue } from '@/components/CardioCatalogue';
 import { ExerciseLibrary } from '@/components/ExerciseLibrary';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { RoutineBrowse } from '@/components/RoutineBrowse';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
 import { AppText, TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { cardioCopy } from '@/lib/copy';
 
 const SECTIONS = [
   { id: 'routines', label: 'Routines' },
+  { id: 'cardio', label: cardioCopy.tab },
   { id: 'stretches', label: 'Stretches' },
   { id: 'exercises', label: 'Exercises' },
 ] as const;
@@ -23,11 +26,18 @@ export default function ProgrammesScreen() {
   const params = useLocalSearchParams<{ section?: string | string[] }>();
   const requested = Array.isArray(params.section) ? params.section[0] : params.section;
   const [section, setSection] = useState<Section>(
-    requested === 'stretches' || requested === 'exercises' || requested === 'routines' ? requested : 'routines'
+    requested === 'stretches' || requested === 'exercises' || requested === 'routines' || requested === 'cardio'
+      ? requested
+      : 'routines'
   );
 
   useEffect(() => {
-    if (requested === 'stretches' || requested === 'exercises' || requested === 'routines') {
+    if (
+      requested === 'stretches' ||
+      requested === 'exercises' ||
+      requested === 'routines' ||
+      requested === 'cardio'
+    ) {
       setSection(requested);
     }
   }, [requested]);
@@ -51,7 +61,7 @@ export default function ProgrammesScreen() {
                 style={styles.tab}
                 accessibilityRole="tab"
                 accessibilityState={{ selected }}>
-                <AppText variant="title3" style={{ color: selected ? colours.ink : colours.inkMuted }}>
+                <AppText variant="bodySm" style={{ color: selected ? colours.ink : colours.inkMuted }}>
                   {item.label}
                 </AppText>
                 <View
@@ -67,8 +77,13 @@ export default function ProgrammesScreen() {
       </View>
 
       {section === 'routines' && (
-        <RoutineBrowse bottomInset={tabBarHeight} onOpenStretches={() => setSection('stretches')} />
+        <RoutineBrowse
+          bottomInset={tabBarHeight}
+          onOpenStretches={() => setSection('stretches')}
+          onOpenCardio={() => setSection('cardio')}
+        />
       )}
+      {section === 'cardio' && <CardioCatalogue bottomInset={tabBarHeight} />}
       {section === 'exercises' && <ExerciseLibrary title={null} bottomInset={tabBarHeight} />}
       {section === 'stretches' && (
         <RoutineCatalogue showTitle={false} bottomInset={tabBarHeight} routineType="stretch" />

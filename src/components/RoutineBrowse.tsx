@@ -74,9 +74,11 @@ type BrowseView =
 export function RoutineBrowse({
   bottomInset,
   onOpenStretches,
+  onOpenCardio,
 }: {
   bottomInset?: number;
   onOpenStretches: () => void;
+  onOpenCardio?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
@@ -370,6 +372,10 @@ export function RoutineBrowse({
                       onPress={() => {
                         if (style.id === 'stretch') {
                           onOpenStretches();
+                          return;
+                        }
+                        if (style.id === 'cardio' && onOpenCardio) {
+                          onOpenCardio();
                           return;
                         }
                         setView({ kind: 'style', style: style.id, title: style.label });

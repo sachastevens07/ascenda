@@ -1,0 +1,1530 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Cardio sessions (AGENTS.md W2). Each session is one cardio block; intervals are the timed segments the cardio player steps through (seconds add up to duration_minutes).",
+    "effort is 1 to 10 'how hard it should feel' (effort_scale below). settings_guidance gives ranges to aim for; machines vary, so copy says 'about' and 'aim for'.",
+    "Progression: add minutes first up to max_minutes, then intensity, as written in 'progression' (shown to her in plain English).",
+    "Beginners get steady and finisher sessions only for their first 4 weeks (beginner_ok=false for intervals).",
+    "machine_id 'mixed' means each segment names its machine in settings.machine_id. If a machine is taken, any cardio machine can be swapped in at the same effort.",
+    "Sessions of 10 minutes or more count towards the weekly target and streak. Cardio never counts towards strength PBs.",
+    "Calories and distance are never estimated by the app; she can type distance herself.",
+    "Draft for coach review before launch."
+  ],
+  "effort_scale": {
+    "1": "Barely moving",
+    "2": "Very easy",
+    "3": "Easy, like a stroll",
+    "4": "Comfortable, you can chat easily",
+    "5": "Steady, you can chat in full sentences",
+    "6": "Working, you can talk in short sentences",
+    "7": "Hard, a few words at a time",
+    "8": "Very hard, you can't really talk",
+    "9": "Almost all-out",
+    "10": "All-out"
+  },
+  "cardio_sessions": [
+    {
+      "slug": "incline-walk-20",
+      "name": "Incline walk: 20 minutes",
+      "summary": "A steady uphill walk. Easy on the joints and great for stamina.",
+      "machine_id": "treadmill",
+      "style": "steady",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 20,
+      "max_minutes": 35,
+      "effort_target": [
+        4,
+        5
+      ],
+      "settings_guidance": {
+        "speed_kmh": [
+          4.5,
+          5.5
+        ],
+        "incline_percent": [
+          4,
+          10
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 180,
+          "effort": 3,
+          "settings": {
+            "speed_kmh": [
+              4,
+              4.5
+            ],
+            "incline_percent": [
+              0,
+              2
+            ]
+          },
+          "cue": "Easy walk, flat."
+        },
+        {
+          "label": "Steady climb",
+          "seconds": 900,
+          "effort": 5,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ],
+            "incline_percent": [
+              4,
+              10
+            ]
+          },
+          "cue": "Raise the incline. You should still be able to chat."
+        },
+        {
+          "label": "Cool down",
+          "seconds": 120,
+          "effort": 3,
+          "settings": {
+            "speed_kmh": [
+              4,
+              4.5
+            ],
+            "incline_percent": [
+              0,
+              1
+            ]
+          },
+          "cue": "Lower the incline and slow down."
+        }
+      ],
+      "progression": "Add 2 to 3 minutes each week up to 35 minutes. Then raise the incline by 1% at a time.",
+      "coach_note": "Stand tall and let go of the handrails if you can. If you need to hold them, the incline is too high.",
+      "cover_image_slug": "cardio-incline-walk-20",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "easy-bike-20",
+      "name": "Easy bike: 20 minutes",
+      "summary": "A comfortable ride to build your base, sitting down the whole time.",
+      "machine_id": "bike",
+      "style": "steady",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 20,
+      "max_minutes": 40,
+      "effort_target": [
+        4,
+        5
+      ],
+      "settings_guidance": {
+        "cadence_rpm": [
+          70,
+          85
+        ],
+        "resistance": "Low to moderate: pedalling should feel smooth, not like spinning freely"
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 180,
+          "effort": 3,
+          "settings": {
+            "cadence_rpm": [
+              65,
+              75
+            ]
+          }
+        },
+        {
+          "label": "Steady ride",
+          "seconds": 900,
+          "effort": 5,
+          "settings": {
+            "cadence_rpm": [
+              75,
+              85
+            ]
+          },
+          "cue": "Find a rhythm you could keep going for a while."
+        },
+        {
+          "label": "Cool down",
+          "seconds": 120,
+          "effort": 3,
+          "settings": {
+            "cadence_rpm": [
+              60,
+              70
+            ]
+          }
+        }
+      ],
+      "progression": "Add 5 minutes every week or two, up to 40 minutes. Then add a level of resistance.",
+      "coach_note": "Set your seat so your knee is only slightly bent at the bottom of each pedal stroke.",
+      "cover_image_slug": "cardio-easy-bike-20",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "cross-trainer-steady-20",
+      "name": "Cross-trainer: 20 minutes",
+      "summary": "Smooth, low-impact cardio for your whole body.",
+      "machine_id": "cross_trainer",
+      "style": "steady",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 20,
+      "max_minutes": 40,
+      "effort_target": [
+        4,
+        5
+      ],
+      "settings_guidance": {
+        "strides_per_minute": [
+          110,
+          140
+        ],
+        "resistance": "Low to moderate"
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 180,
+          "effort": 3,
+          "settings": {
+            "resistance": "Low"
+          }
+        },
+        {
+          "label": "Steady",
+          "seconds": 900,
+          "effort": 5,
+          "settings": {
+            "resistance": "Low to moderate"
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 120,
+          "effort": 3,
+          "settings": {
+            "resistance": "Low"
+          }
+        }
+      ],
+      "progression": "Add 5 minutes every week or two up to 40 minutes, then add a level of resistance.",
+      "coach_note": "Push and pull the handles gently so your arms join in. Keep your heels down.",
+      "cover_image_slug": "cardio-cross-trainer-steady-20",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "rower-steady-15",
+      "name": "Learn to row: 15 minutes",
+      "summary": "Short steady blocks to learn the rowing stroke before going longer.",
+      "machine_id": "rower",
+      "style": "steady",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 15,
+      "max_minutes": 25,
+      "effort_target": [
+        4,
+        5
+      ],
+      "settings_guidance": {
+        "damper": [
+          3,
+          5
+        ],
+        "strokes_per_minute": [
+          20,
+          24
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Easy rowing",
+          "seconds": 180,
+          "effort": 3,
+          "settings": {
+            "strokes_per_minute": [
+              18,
+              20
+            ]
+          },
+          "cue": "Arms only for 10 strokes, then add your body, then legs."
+        },
+        {
+          "label": "Steady row 1 of 3",
+          "seconds": 180,
+          "effort": 5,
+          "settings": {
+            "strokes_per_minute": [
+              20,
+              24
+            ]
+          }
+        },
+        {
+          "label": "Easy 1 of 3",
+          "seconds": 30,
+          "effort": 3,
+          "settings": {
+            "strokes_per_minute": [
+              16,
+              18
+            ]
+          }
+        },
+        {
+          "label": "Steady row 2 of 3",
+          "seconds": 180,
+          "effort": 5,
+          "settings": {
+            "strokes_per_minute": [
+              20,
+              24
+            ]
+          }
+        },
+        {
+          "label": "Easy 2 of 3",
+          "seconds": 30,
+          "effort": 3,
+          "settings": {
+            "strokes_per_minute": [
+              16,
+              18
+            ]
+          }
+        },
+        {
+          "label": "Steady row 3 of 3",
+          "seconds": 180,
+          "effort": 5,
+          "settings": {
+            "strokes_per_minute": [
+              20,
+              24
+            ]
+          }
+        },
+        {
+          "label": "Easy 3 of 3",
+          "seconds": 30,
+          "effort": 3,
+          "settings": {
+            "strokes_per_minute": [
+              16,
+              18
+            ]
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 90,
+          "effort": 3,
+          "settings": {
+            "strokes_per_minute": [
+              16,
+              18
+            ]
+          }
+        }
+      ],
+      "progression": "Once the stroke feels smooth, add 2 minutes a week up to 25 minutes.",
+      "coach_note": "Legs, then body, then arms on the way back. Arms, then body, then legs on the way forward. Smooth beats fast.",
+      "cover_image_slug": "cardio-rower-steady-15",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "stair-climber-starter-10",
+      "name": "Stair climber starter: 10 minutes",
+      "summary": "A short, steady climb to get to know the stair climber.",
+      "machine_id": "stair_climber",
+      "style": "steady",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 10,
+      "max_minutes": 20,
+      "effort_target": [
+        5,
+        6
+      ],
+      "settings_guidance": {
+        "level": "Low (about 3 to 5 on most machines)",
+        "steps_per_minute": [
+          40,
+          60
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "level": "Lowest"
+          }
+        },
+        {
+          "label": "Steady climb",
+          "seconds": 420,
+          "effort": 6,
+          "settings": {
+            "level": "Low"
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 60,
+          "effort": 3,
+          "settings": {
+            "level": "Lowest"
+          }
+        }
+      ],
+      "progression": "Add 2 minutes a week up to 20 minutes. Then raise the speed one level.",
+      "coach_note": "Use the whole step, stand tall and touch the rails only lightly for balance.",
+      "cover_image_slug": "cardio-stair-climber-starter-10",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "walk-and-talk-30",
+      "name": "Easy walk: 30 minutes",
+      "summary": "A relaxed walk for recovery days, podcasts and switching off.",
+      "machine_id": "treadmill",
+      "style": "steady",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 30,
+      "max_minutes": 45,
+      "effort_target": [
+        3,
+        4
+      ],
+      "settings_guidance": {
+        "speed_kmh": [
+          4,
+          5
+        ],
+        "incline_percent": [
+          0,
+          4
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Easy walk",
+          "seconds": 1800,
+          "effort": 4,
+          "settings": {
+            "speed_kmh": [
+              4,
+              5
+            ],
+            "incline_percent": [
+              0,
+              4
+            ]
+          }
+        }
+      ],
+      "progression": "Add 5 minutes when you'd like, up to 45. Keep it easy: this is recovery.",
+      "coach_note": "This should feel easy the whole way. If you're out of breath, slow down.",
+      "cover_image_slug": "cardio-walk-and-talk-30",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "cardio-sampler-30",
+      "name": "Cardio sampler: 30 minutes",
+      "summary": "Ten easy minutes on three machines. A great way to find your favourite.",
+      "machine_id": "mixed",
+      "style": "steady",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 30,
+      "max_minutes": 45,
+      "effort_target": [
+        4,
+        5
+      ],
+      "settings_guidance": {
+        "note": "See each block"
+      },
+      "intervals": [
+        {
+          "label": "Bike",
+          "seconds": 600,
+          "effort": 5,
+          "settings": {
+            "machine_id": "bike",
+            "cadence_rpm": [
+              70,
+              85
+            ]
+          }
+        },
+        {
+          "label": "Cross-trainer",
+          "seconds": 600,
+          "effort": 5,
+          "settings": {
+            "machine_id": "cross_trainer",
+            "resistance": "Low to moderate"
+          }
+        },
+        {
+          "label": "Incline walk",
+          "seconds": 600,
+          "effort": 5,
+          "settings": {
+            "machine_id": "treadmill",
+            "speed_kmh": [
+              4.5,
+              5.5
+            ],
+            "incline_percent": [
+              4,
+              10
+            ]
+          }
+        }
+      ],
+      "progression": "Add a few minutes to each machine when it feels easy, up to 15 each.",
+      "coach_note": "Move straight from one machine to the next. If one's taken, swap in any other cardio machine.",
+      "cover_image_slug": "cardio-cardio-sampler-30",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "treadmill-intervals-1-2",
+      "name": "Treadmill intervals: 1 on, 2 easy",
+      "summary": "One faster minute, two easy minutes. Walk or jog, it's your choice.",
+      "machine_id": "treadmill",
+      "style": "intervals",
+      "level": "intermediate",
+      "beginner_ok": false,
+      "duration_minutes": 24,
+      "max_minutes": 30,
+      "effort_target": [
+        5,
+        7
+      ],
+      "settings_guidance": {
+        "easy": {
+          "speed_kmh": [
+            4.5,
+            5.5
+          ]
+        },
+        "faster": {
+          "speed_kmh": [
+            6,
+            8
+          ],
+          "note": "A brisk walk, power walk or easy jog"
+        }
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 240,
+          "effort": 3,
+          "settings": {
+            "speed_kmh": [
+              4,
+              5
+            ]
+          }
+        },
+        {
+          "label": "Faster 1 of 6",
+          "seconds": 60,
+          "effort": 7,
+          "settings": {
+            "speed_kmh": [
+              6,
+              8
+            ]
+          }
+        },
+        {
+          "label": "Easy 1 of 6",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ]
+          }
+        },
+        {
+          "label": "Faster 2 of 6",
+          "seconds": 60,
+          "effort": 7,
+          "settings": {
+            "speed_kmh": [
+              6,
+              8
+            ]
+          }
+        },
+        {
+          "label": "Easy 2 of 6",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ]
+          }
+        },
+        {
+          "label": "Faster 3 of 6",
+          "seconds": 60,
+          "effort": 7,
+          "settings": {
+            "speed_kmh": [
+              6,
+              8
+            ]
+          }
+        },
+        {
+          "label": "Easy 3 of 6",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ]
+          }
+        },
+        {
+          "label": "Faster 4 of 6",
+          "seconds": 60,
+          "effort": 7,
+          "settings": {
+            "speed_kmh": [
+              6,
+              8
+            ]
+          }
+        },
+        {
+          "label": "Easy 4 of 6",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ]
+          }
+        },
+        {
+          "label": "Faster 5 of 6",
+          "seconds": 60,
+          "effort": 7,
+          "settings": {
+            "speed_kmh": [
+              6,
+              8
+            ]
+          }
+        },
+        {
+          "label": "Easy 5 of 6",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ]
+          }
+        },
+        {
+          "label": "Faster 6 of 6",
+          "seconds": 60,
+          "effort": 7,
+          "settings": {
+            "speed_kmh": [
+              6,
+              8
+            ]
+          }
+        },
+        {
+          "label": "Easy 6 of 6",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ]
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 120,
+          "effort": 3,
+          "settings": {
+            "speed_kmh": [
+              4,
+              4.5
+            ]
+          }
+        }
+      ],
+      "progression": "Add one more round (up to 8), then add 0.5 km/h to the faster minutes.",
+      "coach_note": "Faster should feel like a 7 out of 10, not a sprint. Step to the side rails to change speed only if you need to.",
+      "cover_image_slug": "cardio-treadmill-intervals-1-2",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "hill-walk-intervals",
+      "name": "Hill walk intervals",
+      "summary": "Alternate steep and gentle hills at a steady walking pace.",
+      "machine_id": "treadmill",
+      "style": "intervals",
+      "level": "intermediate",
+      "beginner_ok": false,
+      "duration_minutes": 25,
+      "max_minutes": 35,
+      "effort_target": [
+        5,
+        7
+      ],
+      "settings_guidance": {
+        "speed_kmh": [
+          4.5,
+          5.5
+        ],
+        "steep_incline_percent": [
+          8,
+          12
+        ],
+        "gentle_incline_percent": [
+          2,
+          4
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 180,
+          "effort": 3,
+          "settings": {
+            "incline_percent": [
+              0,
+              2
+            ]
+          }
+        },
+        {
+          "label": "Steep 1 of 5",
+          "seconds": 120,
+          "effort": 7,
+          "settings": {
+            "incline_percent": [
+              8,
+              12
+            ]
+          }
+        },
+        {
+          "label": "Gentle 1 of 5",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "incline_percent": [
+              2,
+              4
+            ]
+          }
+        },
+        {
+          "label": "Steep 2 of 5",
+          "seconds": 120,
+          "effort": 7,
+          "settings": {
+            "incline_percent": [
+              8,
+              12
+            ]
+          }
+        },
+        {
+          "label": "Gentle 2 of 5",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "incline_percent": [
+              2,
+              4
+            ]
+          }
+        },
+        {
+          "label": "Steep 3 of 5",
+          "seconds": 120,
+          "effort": 7,
+          "settings": {
+            "incline_percent": [
+              8,
+              12
+            ]
+          }
+        },
+        {
+          "label": "Gentle 3 of 5",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "incline_percent": [
+              2,
+              4
+            ]
+          }
+        },
+        {
+          "label": "Steep 4 of 5",
+          "seconds": 120,
+          "effort": 7,
+          "settings": {
+            "incline_percent": [
+              8,
+              12
+            ]
+          }
+        },
+        {
+          "label": "Gentle 4 of 5",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "incline_percent": [
+              2,
+              4
+            ]
+          }
+        },
+        {
+          "label": "Steep 5 of 5",
+          "seconds": 120,
+          "effort": 7,
+          "settings": {
+            "incline_percent": [
+              8,
+              12
+            ]
+          }
+        },
+        {
+          "label": "Gentle 5 of 5",
+          "seconds": 120,
+          "effort": 4,
+          "settings": {
+            "incline_percent": [
+              2,
+              4
+            ]
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 120,
+          "effort": 3,
+          "settings": {
+            "incline_percent": [
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "progression": "Add one more round (up to 7), then raise the steep incline by 1%.",
+      "coach_note": "Keep the speed the same and let the incline do the work. No holding the rails on the steep parts if you can help it.",
+      "cover_image_slug": "cardio-hill-walk-intervals",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "bike-intervals-30-60",
+      "name": "Bike intervals: 30 on, 60 easy",
+      "summary": "Short, punchy efforts with plenty of recovery between.",
+      "machine_id": "bike",
+      "style": "intervals",
+      "level": "intermediate",
+      "beginner_ok": false,
+      "duration_minutes": 20,
+      "max_minutes": 26,
+      "effort_target": [
+        5,
+        8
+      ],
+      "settings_guidance": {
+        "easy": {
+          "cadence_rpm": [
+            70,
+            80
+          ],
+          "resistance": "Low"
+        },
+        "hard": {
+          "cadence_rpm": [
+            85,
+            100
+          ],
+          "resistance": "Add 2 to 3 levels"
+        }
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 240,
+          "effort": 3
+        },
+        {
+          "label": "Hard 1 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 1 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Hard 2 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 2 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Hard 3 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 3 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Hard 4 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 4 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Hard 5 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 5 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Hard 6 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 6 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Hard 7 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 7 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Hard 8 of 8",
+          "seconds": 30,
+          "effort": 8,
+          "settings": {
+            "cadence_rpm": [
+              85,
+              100
+            ]
+          }
+        },
+        {
+          "label": "Easy 8 of 8",
+          "seconds": 60,
+          "effort": 4,
+          "settings": {
+            "cadence_rpm": [
+              70,
+              80
+            ]
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 240,
+          "effort": 3
+        }
+      ],
+      "progression": "Add 2 rounds (up to 12), then make the hard efforts one level heavier.",
+      "coach_note": "Stay seated. Hard means 8 out of 10 for just 30 seconds, then really ease off.",
+      "cover_image_slug": "cardio-bike-intervals-30-60",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "cross-trainer-intervals",
+      "name": "Cross-trainer intervals: 2 and 1",
+      "summary": "Two steady minutes, one stronger minute, repeated.",
+      "machine_id": "cross_trainer",
+      "style": "intervals",
+      "level": "intermediate",
+      "beginner_ok": false,
+      "duration_minutes": 25,
+      "max_minutes": 31,
+      "effort_target": [
+        5,
+        7
+      ],
+      "settings_guidance": {
+        "steady": {
+          "resistance": "Moderate"
+        },
+        "stronger": {
+          "resistance": "Add 2 levels",
+          "note": "Or move a little faster"
+        }
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 180,
+          "effort": 3
+        },
+        {
+          "label": "Steady 1 of 6",
+          "seconds": 120,
+          "effort": 5
+        },
+        {
+          "label": "Stronger 1 of 6",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Steady 2 of 6",
+          "seconds": 120,
+          "effort": 5
+        },
+        {
+          "label": "Stronger 2 of 6",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Steady 3 of 6",
+          "seconds": 120,
+          "effort": 5
+        },
+        {
+          "label": "Stronger 3 of 6",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Steady 4 of 6",
+          "seconds": 120,
+          "effort": 5
+        },
+        {
+          "label": "Stronger 4 of 6",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Steady 5 of 6",
+          "seconds": 120,
+          "effort": 5
+        },
+        {
+          "label": "Stronger 5 of 6",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Steady 6 of 6",
+          "seconds": 120,
+          "effort": 5
+        },
+        {
+          "label": "Stronger 6 of 6",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Cool down",
+          "seconds": 240,
+          "effort": 3
+        }
+      ],
+      "progression": "Add a round (up to 8), then raise both resistances by one level.",
+      "coach_note": "On the stronger minutes, push through your heels and use your arms more.",
+      "cover_image_slug": "cardio-cross-trainer-intervals",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "rower-pyramid",
+      "name": "Rowing pyramid",
+      "summary": "Work up from 1 to 3 minutes and back down, with easy rowing between.",
+      "machine_id": "rower",
+      "style": "intervals",
+      "level": "intermediate",
+      "beginner_ok": false,
+      "duration_minutes": 25,
+      "max_minutes": 30,
+      "effort_target": [
+        5,
+        7
+      ],
+      "settings_guidance": {
+        "damper": [
+          3,
+          5
+        ],
+        "working_strokes_per_minute": [
+          24,
+          28
+        ],
+        "easy_strokes_per_minute": [
+          18,
+          20
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 240,
+          "effort": 3,
+          "settings": {
+            "strokes_per_minute": [
+              18,
+              20
+            ]
+          }
+        },
+        {
+          "label": "Work: 1 minute",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Easy",
+          "seconds": 60,
+          "effort": 3
+        },
+        {
+          "label": "Work: 2 minutes",
+          "seconds": 120,
+          "effort": 7
+        },
+        {
+          "label": "Easy",
+          "seconds": 60,
+          "effort": 3
+        },
+        {
+          "label": "Work: 3 minutes",
+          "seconds": 180,
+          "effort": 7
+        },
+        {
+          "label": "Easy",
+          "seconds": 90,
+          "effort": 3
+        },
+        {
+          "label": "Work: 3 minutes",
+          "seconds": 180,
+          "effort": 7
+        },
+        {
+          "label": "Easy",
+          "seconds": 90,
+          "effort": 3
+        },
+        {
+          "label": "Work: 2 minutes",
+          "seconds": 120,
+          "effort": 7
+        },
+        {
+          "label": "Easy",
+          "seconds": 60,
+          "effort": 3
+        },
+        {
+          "label": "Work: 1 minute",
+          "seconds": 60,
+          "effort": 7
+        },
+        {
+          "label": "Cool down",
+          "seconds": 180,
+          "effort": 3
+        }
+      ],
+      "progression": "When it feels comfortable, add a 4-minute block at the top of the pyramid.",
+      "coach_note": "Even on the harder blocks, keep your stroke long and smooth. Rushing the return makes it harder, not faster.",
+      "cover_image_slug": "cardio-rower-pyramid",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "bike-finisher-10",
+      "name": "Bike finisher: 10 minutes",
+      "summary": "Ten easy-to-steady minutes to end a strength session.",
+      "machine_id": "bike",
+      "style": "finisher",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 10,
+      "max_minutes": 15,
+      "effort_target": [
+        4,
+        6
+      ],
+      "settings_guidance": {
+        "cadence_rpm": [
+          75,
+          90
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Easy",
+          "seconds": 120,
+          "effort": 4
+        },
+        {
+          "label": "Steady",
+          "seconds": 420,
+          "effort": 6
+        },
+        {
+          "label": "Easy",
+          "seconds": 60,
+          "effort": 3
+        }
+      ],
+      "progression": "Add a minute each week up to 15.",
+      "coach_note": "Lifting comes first; this is a bonus. Keep it at a level you could chat through.",
+      "cover_image_slug": "cardio-bike-finisher-10",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "incline-walk-finisher-10",
+      "name": "Incline walk finisher: 10 minutes",
+      "summary": "A short uphill walk after lifting.",
+      "machine_id": "treadmill",
+      "style": "finisher",
+      "level": "beginner",
+      "beginner_ok": true,
+      "duration_minutes": 10,
+      "max_minutes": 15,
+      "effort_target": [
+        4,
+        6
+      ],
+      "settings_guidance": {
+        "speed_kmh": [
+          4.5,
+          5.5
+        ],
+        "incline_percent": [
+          4,
+          10
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 60,
+          "effort": 3,
+          "settings": {
+            "incline_percent": [
+              0,
+              2
+            ]
+          }
+        },
+        {
+          "label": "Steady climb",
+          "seconds": 480,
+          "effort": 5,
+          "settings": {
+            "speed_kmh": [
+              4.5,
+              5.5
+            ],
+            "incline_percent": [
+              4,
+              10
+            ]
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 60,
+          "effort": 3,
+          "settings": {
+            "incline_percent": [
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "progression": "Add a minute each week up to 15, then 1% more incline.",
+      "coach_note": "Perfect after an upper-body day. After a heavy leg day, keep the incline lower.",
+      "cover_image_slug": "cardio-incline-walk-finisher-10",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
+      "slug": "rower-finisher-8",
+      "name": "Rowing finisher: 8 rounds",
+      "summary": "Eight rounds of 30 seconds stronger, 30 seconds easy.",
+      "machine_id": "rower",
+      "style": "finisher",
+      "level": "intermediate",
+      "beginner_ok": true,
+      "duration_minutes": 10,
+      "max_minutes": 12,
+      "effort_target": [
+        5,
+        8
+      ],
+      "settings_guidance": {
+        "damper": [
+          3,
+          5
+        ],
+        "strong_strokes_per_minute": [
+          26,
+          30
+        ],
+        "easy_strokes_per_minute": [
+          18,
+          20
+        ]
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 120,
+          "effort": 3
+        },
+        {
+          "label": "Strong 1 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 1 of 8",
+          "seconds": 30,
+          "effort": 4
+        },
+        {
+          "label": "Strong 2 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 2 of 8",
+          "seconds": 30,
+          "effort": 4
+        },
+        {
+          "label": "Strong 3 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 3 of 8",
+          "seconds": 30,
+          "effort": 4
+        },
+        {
+          "label": "Strong 4 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 4 of 8",
+          "seconds": 30,
+          "effort": 4
+        },
+        {
+          "label": "Strong 5 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 5 of 8",
+          "seconds": 30,
+          "effort": 4
+        },
+        {
+          "label": "Strong 6 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 6 of 8",
+          "seconds": 30,
+          "effort": 4
+        },
+        {
+          "label": "Strong 7 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 7 of 8",
+          "seconds": 30,
+          "effort": 4
+        },
+        {
+          "label": "Strong 8 of 8",
+          "seconds": 30,
+          "effort": 8
+        },
+        {
+          "label": "Easy 8 of 8",
+          "seconds": 30,
+          "effort": 4
+        }
+      ],
+      "progression": "Add a round (up to 10) once all 8 feel smooth.",
+      "coach_note": "Only try this once you're comfortable with the rowing stroke. Smooth first, then strong.",
+      "cover_image_slug": "cardio-rower-finisher-8",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    }
+  ]
+}

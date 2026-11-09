@@ -283,6 +283,10 @@ export const progressPhotosCopy = {
 
 const challenges = microcopy.strings.challenges;
 
+/** W2/W3 cardio library and player. Bundled from content/microcopy. */
+const cardio = microcopy.strings.cardio;
+export const cardioCopy = cardio;
+
 /** H8 challenge copy. Bundled from content/microcopy. Never a countdown. */
 export const challengesCopy = {
   join: challenges.join,

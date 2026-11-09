@@ -1,8 +1,13 @@
 import { track } from '@/lib/analytics';
-import { parseSessionType, sessionTypeFromSource, type SessionType } from '@/lib/sessionTypes';
+import {
+  CARDIO_SLUG_KEY,
+  parseSessionType,
+  sessionTypeFromSource,
+  type SessionType,
+} from '@/lib/sessionTypes';
 import { supabase } from '@/lib/supabase';
 
-export type SessionSource = 'programme' | 'custom' | 'ai' | 'routine' | 'stretch';
+export type SessionSource = 'programme' | 'custom' | 'ai' | 'routine' | 'stretch' | 'cardio';
 
 /** One row of the `sessions` table. */
 export type Session = {
@@ -59,6 +64,10 @@ function isMissingSessionTypeColumn(error: { message?: string; code?: string }):
   return /Could not find the 'type' column of 'sessions'|column sessions\.type/i.test(
     `${error.code ?? ''} ${error.message ?? ''}`
   );
+}
+
+function isRejectedCardioSource(error: { message?: string; code?: string }): boolean {
+  return /sessions_source_check|source.*cardio/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
 const SESSION_COLUMNS_ROUTINES_W1 = `${SESSION_COLUMNS_ROUTINES}, type`;
@@ -291,6 +300,31 @@ export async function startRoutineSession(input: {
     throw new Error('Routines need supabase/routines.sql run in the Supabase SQL editor.');
   }
   throw error;
+}
+
+export async function startCardioSession(slug: string): Promise<Session> {
+  const swaps = { [CARDIO_SLUG_KEY]: slug };
+  const payload = {
+    programme_day_id: null as string | null,
+    date: localDate(),
+    exercise_swaps: swaps,
+    source: 'cardio' as const,
+    type: 'cardio' as const,
+  };
+  const first = await insertSessionRow(payload, SESSION_COLUMNS_ROUTINES);
+  if (!first.error) {
+    track('session_started', { source: 'cardio', type: 'cardio' });
+    return toSession(first.data as Session)!;
+  }
+  const fallback = await insertSessionRow({ ...payload, source: 'custom' as const }, SESSION_COLUMNS);
+  if (!fallback.error) {
+    track('session_started', { source: 'cardio', type: 'cardio' });
+    return toSession(fallback.data as Session)!;
+  }
+  if (isRejectedCardioSource(first.error) || isRejectedCardioSource(fallback.error)) {
+    throw new Error('Cardio sessions need supabase/cardio_w2.sql run in the Supabase SQL editor.');
+  }
+  throw fallback.error;
 }
 
 export async function startStretchSession(routineDayId: string): Promise<Session> {

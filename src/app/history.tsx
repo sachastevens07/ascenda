@@ -12,6 +12,7 @@ import { fetchProgressSets, formatShortDate, getPersonalBests, parseDate, type P
 
 function sessionLabel(session: FinishedSessionMeta): string {
   if (session.source === 'stretch') return 'Stretch';
+  if (session.source === 'cardio' || session.type === 'cardio') return 'Cardio';
   if (session.source === 'custom') return 'Custom workout';
   return 'Session';
 }

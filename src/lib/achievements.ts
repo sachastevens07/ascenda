@@ -17,6 +17,7 @@ import type { ProgressSet } from '@/lib/progress';
 import { getPersonalBests } from '@/lib/progress';
 import { usesWeight } from '@/lib/programmes';
 import { supabase } from '@/lib/supabase';
+import { cardioMachinesFromLogs, fetchCardioLogs } from '@/lib/cardio';
 import { fetchBackOnTrack } from '@/lib/welcomeBack';
 
 export type AchievementFamily = AchievementFamilyId;
@@ -36,6 +37,7 @@ export type AchievementExtras = {
   welcomeBackAt: string | null;
   stored: Record<string, StoredUnlock>;
   knownEquipment: Equipment[];
+  cardioMachines: string[];
 };
 
 export const EMPTY_ACHIEVEMENT_EXTRAS: AchievementExtras = {
@@ -47,6 +49,7 @@ export const EMPTY_ACHIEVEMENT_EXTRAS: AchievementExtras = {
   welcomeBackAt: null,
   stored: {},
   knownEquipment: [],
+  cardioMachines: [],
 };
 
 export type AchievementBadge = GymBadge & {
@@ -247,14 +250,16 @@ async function fetchStoredUnlocks(): Promise<Record<string, StoredUnlock>> {
 }
 
 export async function fetchAchievementExtras(knownEquipment: Equipment[] = []): Promise<AchievementExtras> {
-  const [swapsUsed, guidesOpened, checkpointsCompleted, challengesCompleted, welcome, stored] = await Promise.all([
-    fetchSwapCount(),
-    fetchGuidesOpened(),
-    fetchCheckpointCount(),
-    fetchChallengeCount(),
-    fetchBackOnTrack().catch(() => ({ unlocked: false, at: null as string | null, times: 0 })),
-    fetchStoredUnlocks(),
-  ]);
+  const [swapsUsed, guidesOpened, checkpointsCompleted, challengesCompleted, welcome, stored, cardioLogs] =
+    await Promise.all([
+      fetchSwapCount(),
+      fetchGuidesOpened(),
+      fetchCheckpointCount(),
+      fetchChallengeCount(),
+      fetchBackOnTrack().catch(() => ({ unlocked: false, at: null as string | null, times: 0 })),
+      fetchStoredUnlocks(),
+      fetchCardioLogs().catch(() => []),
+    ]);
   const times = Math.max(welcome.times, welcome.unlocked ? 1 : 0);
   if (times > 0) mergeStored(stored, 'back-on-track', welcome.at, times);
   return {
@@ -266,6 +271,7 @@ export async function fetchAchievementExtras(knownEquipment: Equipment[] = []): 
     welcomeBackAt: welcome.at,
     stored,
     knownEquipment,
+    cardioMachines: [...cardioMachinesFromLogs(cardioLogs)],
   };
 }
 
@@ -532,7 +538,7 @@ export function getAchievementGroups(input: {
     distinct_exercises_logged: distinctExerciseCount(input.sets),
     distinct_equipment_types_logged: new Set(equipment),
     exercises_logged: slugs,
-    cardio_machines_logged: new Set(),
+    cardio_machines_logged: new Set(extras.cardioMachines),
   };
 
   const byFamily = new Map<AchievementFamily, AchievementBadge[]>();

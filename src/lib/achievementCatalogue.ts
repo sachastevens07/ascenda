@@ -53,8 +53,8 @@ const FAMILIES: AchievementFamilyId[] = [
   'weight_lifted',
 ];
 
-/** Cardio first-time badges wait for W2. */
-export const SHIPPED_PHASE = 'v2.2';
+/** Cardio first-time badges are visible from W2. */
+export const SHIPPED_PHASE = 'v2.3';
 
 /**
  * Older Awards ids and `milestones.type` values → H6 ids.

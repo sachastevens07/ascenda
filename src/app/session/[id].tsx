@@ -108,6 +108,7 @@ import {
   type LoggedSet,
   type Session,
 } from '@/lib/sessions';
+import { isCardioSession } from '@/lib/sessionTypes';
 import { deleteUserSwap, exerciseFits, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
 import { useNow, useWorkout } from '@/lib/workout';
 import {
@@ -302,6 +303,10 @@ export default function SessionScreen() {
         const current = await fetchSession(id);
         if (current?.source === 'stretch') {
           router.replace({ pathname: '/stretches/play', params: { sessionId: id } });
+          return;
+        }
+        if (current && isCardioSession(current)) {
+          router.replace({ pathname: '/cardio/play', params: { sessionId: id } });
           return;
         }
         const log = await loadSessionLog(id, equipment);

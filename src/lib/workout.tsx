@@ -11,9 +11,11 @@ import {
 import { Vibration } from 'react-native';
 
 import { useAuth } from '@/lib/auth';
+import { cardioSession } from '@/lib/cardio';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { cancelRestOver, scheduleRestOver } from '@/lib/restTimer';
 import { fetchRoutineDay } from '@/lib/routines';
+import { isCardioSession } from '@/lib/sessionTypes';
 import { fetchActiveSession, type SessionSource } from '@/lib/sessions';
 import { buildEntries, getNextSet, loadSessionLog, type NextSet } from '@/lib/workoutLog';
 
@@ -91,6 +93,19 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
           dayName: day?.name ?? 'Stretch',
           startedAt: new Date(current.started_at).getTime(),
           source: 'stretch',
+        });
+        setNextSet(null);
+        return;
+      }
+      if (isCardioSession(current)) {
+        const slug = current.exercise_swaps._cardio_slug;
+        const def = slug ? cardioSession(slug) : null;
+        if (!isCurrent || hasPublished.current) return;
+        setActive({
+          sessionId: current.id,
+          dayName: def?.name ?? 'Cardio',
+          startedAt: new Date(current.started_at).getTime(),
+          source: 'cardio',
         });
         setNextSet(null);
         return;
