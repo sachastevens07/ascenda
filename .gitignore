@@ -50,6 +50,9 @@ assets/covers/_d2/
 assets-src/images/*
 !assets-src/images/.gitkeep
 
+# Local photo search, Claude screens and the review grid. Not the app.
+assets-src/image-review/
+
 # Supabase CLI
 supabase/.temp/
 supabase/.branches/

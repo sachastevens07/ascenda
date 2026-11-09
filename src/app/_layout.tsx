@@ -276,6 +276,17 @@ function RootNavigator() {
             headerStyle: { backgroundColor: colours.bg },
           }}
         />
+        <Stack.Screen
+          name="photo-credits"
+          options={{
+            headerShown: true,
+            title: 'Photo credits',
+            headerBackTitle: 'Back',
+            headerTintColor: colours.brand,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+          }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!!session && needsDisclaimerGate}>
         <Stack.Screen name="accept-disclaimer" />

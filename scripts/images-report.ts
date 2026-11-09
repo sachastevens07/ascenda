@@ -140,6 +140,24 @@ if (waiting.length) {
   console.log();
 }
 
+function isMarketingPeople(item: Entry): boolean {
+  if (item.kind !== 'people') return false;
+  const slug = item.slug;
+  const where = (item.used_in ?? []).join(' ').toLowerCase();
+  if (slug.startsWith('hero-home') || slug === 'hero-paywall' || slug === 'hero-locked-home' || slug.startsWith('onboarding-')) {
+    return true;
+  }
+  return /paywall|onboarding|home hero|welcome hero/.test(where);
+}
+
+const marketing = images.filter(isMarketingPeople);
+if (marketing.length) {
+  console.log('consider paid stock with model release before marketing use');
+  console.log('People photos on the paywall, onboarding and home heroes:');
+  for (const item of marketing) console.log(`  ${item.slug}`);
+  console.log();
+}
+
 const brokenSameAs = images.filter((item) => item.same_as && !bySlug.has(item.same_as));
 if (brokenSameAs.length) {
   console.log('same_as points at a slug that is not in the manifest');

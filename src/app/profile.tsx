@@ -866,6 +866,7 @@ export default function ProfileScreen() {
         <SettingsRow title="Terms" onPress={() => router.push('/terms' as Href)} />
         <SettingsRow title="Privacy policy" onPress={() => router.push('/privacy' as Href)} />
         <SettingsRow title="Contact us" subtitle={CONTACT_EMAIL} onPress={() => void handleContact()} />
+        <SettingsRow title="Photo credits" onPress={() => router.push('/photo-credits' as Href)} />
         <SettingsRow title="App version" subtitle={appVersion} showChevron={false} last />
       </SettingsGroup>
 

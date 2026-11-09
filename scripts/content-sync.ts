@@ -597,12 +597,12 @@ async function reportImages(client: SupabaseClient): Promise<void> {
   line('images  ←  content/images/image-manifest.json');
   const images = asArray(readJson('images/image-manifest.json').images);
   const columns =
-    'id, slug, kind, shot, orientation, brief, same_as, status, url, storage_path, alt_text, licence_source, photographer, source_url, model_release';
+    'id, slug, kind, shot, orientation, brief, same_as, status, url, storage_path, alt_text, licence_source, photographer, photographer_url, source_url, model_release, ai_score, ai_notes';
   const error = await probe(client, 'images', columns);
   line(`  Manifest slugs: ${images.length}`);
   if (error) {
     line(`  Table not usable: ${error}`);
-    line('  Paste supabase/images_manifest.sql first. The app shows placeholders until a photo is ready.');
+    line('  Paste supabase/images_manifest.sql, then supabase/images_ai_columns.sql. The app shows placeholders until a photo is ready.');
     line();
     return;
   }
@@ -620,7 +620,7 @@ async function reportImages(client: SupabaseClient): Promise<void> {
   line(`  Remote rows with a url: ${withUrl}`);
   line(`  Would insert: ${missing.length}`);
   line('  Would update kind, shot, orientation, brief, same_as and alt_text.');
-  line('  Would leave status, url, storage_path, photographer, source_url, licence_source and model_release as they are.');
+  line('  Would leave status, url, storage_path, photographer, photographer_url, source_url, licence_source, model_release, ai_score and ai_notes as they are.');
   line();
 }
 

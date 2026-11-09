@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabase';
 
 export const ROUTINE_COVERS_BUCKET = 'routine-covers';
 
-const CACHE_KEY = 'ascenda.images.v1';
+const CACHE_KEY = 'ascenda.images.v2';
 
 export type ImageKind = 'people' | 'equipment' | 'food';
 
@@ -43,6 +43,7 @@ type ImageRecord = {
   altText: string;
   licenceSource: string | null;
   photographer: string | null;
+  photographerUrl: string | null;
   sourceUrl: string | null;
   modelRelease: string | null;
 };
@@ -58,11 +59,14 @@ type RemoteRow = {
   alt_text?: string | null;
   licence_source?: string | null;
   photographer?: string | null;
+  photographer_url?: string | null;
   source_url?: string | null;
   model_release?: string | null;
 };
 
 const REMOTE_COLUMNS =
+  'id, slug, kind, same_as, status, url, storage_path, alt_text, licence_source, photographer, photographer_url, source_url, model_release';
+const REMOTE_COLUMNS_BASE =
   'id, slug, kind, same_as, status, url, storage_path, alt_text, licence_source, photographer, source_url, model_release';
 
 const manifestImages = (manifestFile as { images: ManifestEntry[] }).images;
@@ -86,6 +90,7 @@ function seedManifest(): void {
       altText: item.brief?.trim() || item.slug,
       licenceSource: null,
       photographer: null,
+      photographerUrl: null,
       sourceUrl: null,
       modelRelease: null,
     });
@@ -109,6 +114,7 @@ function applyRemote(row: RemoteRow): void {
     altText: row.alt_text?.trim() || current?.altText || slug,
     licenceSource: row.licence_source ?? null,
     photographer: row.photographer ?? null,
+    photographerUrl: row.photographer_url ?? current?.photographerUrl ?? null,
     sourceUrl: row.source_url ?? null,
     modelRelease: row.model_release ?? null,
   });
@@ -141,7 +147,9 @@ export async function hydrateImages(): Promise<void> {
     }
   }
 
-  const { data, error } = await supabase.from('images').select(REMOTE_COLUMNS);
+  let result = await supabase.from('images').select(REMOTE_COLUMNS);
+  if (result.error) result = await supabase.from('images').select(REMOTE_COLUMNS_BASE);
+  const { data, error } = result;
   if (error || !Array.isArray(data)) return;
   for (const row of data) applyRemote(row as RemoteRow);
   await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data)).catch(() => {});
@@ -161,6 +169,32 @@ function canonical(slug: string | null | undefined, depth = 0): ImageRecord | nu
 export function publicCoverUrl(storagePath: string): string | null {
   const { data } = supabase.storage.from(ROUTINE_COVERS_BUCKET).getPublicUrl(storagePath);
   return data.publicUrl || null;
+}
+
+export type PhotoCredit = {
+  slug: string;
+  altText: string;
+  photographer: string;
+  photographerUrl: string | null;
+  sourceUrl: string;
+};
+
+/** Ready photos, one line each, for Profile, About, Photo credits. */
+export function photoCredits(): PhotoCredit[] {
+  const credits: PhotoCredit[] = [];
+  for (const row of bySlug.values()) {
+    if (row.sameAs && row.sameAs !== row.slug) continue;
+    if (!isReady(row) || !row.photographer || !row.sourceUrl) continue;
+    credits.push({
+      slug: row.slug,
+      altText: row.altText,
+      photographer: row.photographer,
+      photographerUrl: row.photographerUrl,
+      sourceUrl: row.sourceUrl,
+    });
+  }
+  credits.sort((a, b) => a.altText.localeCompare(b.altText));
+  return credits;
 }
 
 function fileUrl(row: ImageRecord): string | null {

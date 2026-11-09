@@ -16,6 +16,9 @@ alter table public.images add column if not exists status text not null default 
 alter table public.images add column if not exists photographer text;
 alter table public.images add column if not exists source_url text;
 alter table public.images add column if not exists model_release text;
+alter table public.images add column if not exists photographer_url text;
+alter table public.images add column if not exists ai_score numeric;
+alter table public.images add column if not exists ai_notes text;
 
 update public.images set slug = id where slug is null;
 

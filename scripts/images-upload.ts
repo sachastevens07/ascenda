@@ -1,36 +1,64 @@
 /**
- * Upload photos you chose into Supabase storage.
+ * Upload photos you approved on the review page.
  *
- * Put files in assets-src/images named <slug>.jpg (png and webp are accepted).
- * Fill licence_source, photographer and source_url on that slug in
- * content/images/image-manifest.json first. This script refuses any file
- * that is missing those, and it does not pick or download photos.
+ * Reads assets-src/image-review/choices.json and state.json.
+ * Approve uses the pick. Backup 1 and backup 2 use those files.
+ * Reject, and anything you have not chosen, stay needed.
  *
  * Resize needs the sharp library. It is not installed until you agree.
- * Upload needs SUPABASE_SERVICE_ROLE_KEY in .env (never commit that key).
+ * Upload needs SUPABASE_SERVICE_ROLE_KEY in .env or .env.local (never commit it).
  *
  * npm run images:upload
  */
 import { createClient } from '@supabase/supabase-js';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
-const DROP = join(ROOT, 'assets-src', 'images');
+const REVIEW = join(ROOT, 'assets-src', 'image-review');
+const MANIFEST = join(ROOT, 'content', 'images', 'image-manifest.json');
 const BUCKET = 'routine-covers';
 const MAX_BYTES = 2_000_000;
 
-type Entry = {
+type Candidate = {
+  pexels_id: number;
+  score: number;
+  reasons: string;
+  photographer: string;
+  photographer_url: string;
+  source_url: string;
+  licence_source: string;
+  model_release: string;
+  alt_text: string;
+  file: string | null;
+  accepted?: boolean;
+};
+
+type SlugResult = {
   slug: string;
+  kind?: string;
+  brief?: string;
+  orientation?: string;
+  pick: Candidate | null;
+  backups: Candidate[];
+};
+
+type ManifestEntry = {
+  slug: string;
+  status?: string;
+  photographer?: string | null;
+  photographer_url?: string | null;
+  source_url?: string | null;
+  licence_source?: string | null;
+  model_release?: string | null;
+  alt_text?: string | null;
+  ai_score?: number | null;
+  ai_notes?: string | null;
   kind?: string;
   shot?: string;
   orientation?: string;
   brief?: string;
   same_as?: string | null;
-  photographer?: string | null;
-  source_url?: string | null;
-  licence_source?: string | null;
-  model_release?: string | null;
 };
 
 function loadEnv(file: string): void {
@@ -41,182 +69,141 @@ function loadEnv(file: string): void {
     return;
   }
   for (const line of text.split(/\r?\n/)) {
-    const match = /^([A-Z0-9_]+)=(.*)$/.exec(line);
+    const match = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
     if (!match || process.env[match[1]]) continue;
     process.env[match[1]] = match[2].replace(/^"|"$/g, '');
   }
 }
 
-function filled(value: string | null | undefined): value is string {
-  return Boolean(value && value.trim());
-}
-
-function missingFields(entry: Entry): string[] {
-  const missing: string[] = [];
-  if (!filled(entry.licence_source)) missing.push('licence_source');
-  if (!filled(entry.photographer)) missing.push('photographer');
-  if (!filled(entry.source_url)) missing.push('source_url');
-  return missing;
-}
-
-function maxWidth(orientation: string | undefined): number {
+function pixelSize(orientation: string | undefined): { width: number; height: number } {
   const text = (orientation ?? '').toLowerCase();
-  if (text.includes('16:9') || text.includes('landscape')) return 1600;
-  if (text.includes('1:1') || text.includes('square')) return 1200;
-  if (text.includes('4:5') || text.includes('3:4') || text.includes('portrait')) return 1200;
-  return 1400;
+  if (text.includes('1:1') || text.includes('square')) return { width: 1200, height: 1200 };
+  if (text.includes('3:4')) return { width: 1200, height: 1600 };
+  if (text.includes('4:5') || text.includes('portrait')) return { width: 1000, height: 1250 };
+  if (text.includes('4:3')) return { width: 1600, height: 1200 };
+  return { width: 1600, height: 900 };
 }
 
-async function jpeg(input: Buffer, width: number, quality: number): Promise<Buffer> {
-  const sharp = (await import('sharp')).default;
-  return sharp(input)
-    .rotate()
-    .resize({ width, height: width, fit: 'inside', withoutEnlargement: true })
-    .jpeg({ quality, mozjpeg: true })
-    .toBuffer();
+function chosenFile(result: SlugResult, choice: string): Candidate | null {
+  if (choice === 'approve') return result.pick;
+  if (choice === 'backup-1') return result.backups?.[0] ?? null;
+  if (choice === 'backup-2') return result.backups?.[1] ?? null;
+  return null;
 }
 
 async function main(): Promise<void> {
+  loadEnv(join(ROOT, '.env.local'));
   loadEnv(join(ROOT, '.env'));
-  const manifest = JSON.parse(
-    readFileSync(join(ROOT, 'content', 'images', 'image-manifest.json'), 'utf8')
-  ) as { images?: Entry[] };
-  const bySlug = new Map((manifest.images ?? []).map((item) => [item.slug, item]));
-
-  let names: string[] = [];
-  try {
-    names = readdirSync(DROP);
-  } catch {
-    console.log(`No folder at assets-src/images. Create it and drop <slug>.jpg files in.`);
-    process.exitCode = 1;
-    return;
-  }
-
-  const files = names.filter((name) => /\.(jpe?g|png|webp)$/i.test(name) && !name.startsWith('.'));
-  if (!files.length) {
-    console.log('No photos in assets-src/images. Name each file <slug>.jpg and drop it there.');
-    return;
-  }
-
-  const refused: string[] = [];
-  const skipped: string[] = [];
-  const ready: { file: string; entry: Entry }[] = [];
-
-  for (const file of files) {
-    const slug = file.replace(/\.(jpe?g|png|webp)$/i, '');
-    const entry = bySlug.get(slug);
-    if (!entry) {
-      skipped.push(`${file}: no manifest slug "${slug}". Not uploaded.`);
-      continue;
-    }
-    if (entry.same_as) {
-      skipped.push(`${file}: ${slug} reuses ${entry.same_as}. Do not upload a separate file.`);
-      continue;
-    }
-    const missing = missingFields(entry);
-    if (missing.length) {
-      refused.push(`${slug}: missing ${missing.join(', ')}`);
-      continue;
-    }
-    ready.push({ file, entry });
-  }
-
-  if (skipped.length) {
-    console.log('Skipped');
-    for (const line of skipped) console.log(`  ${line}`);
-    console.log();
-  }
-  if (refused.length) {
-    console.log('Refused. Fill these in content/images/image-manifest.json, then run this again.');
-    for (const line of refused) console.log(`  ${line}`);
-    console.log();
-  }
-  if (!ready.length) {
-    console.log('Nothing to upload.');
-    process.exitCode = refused.length || skipped.length ? 1 : 0;
-    return;
-  }
-
-  let resize: ((input: Buffer, width: number, quality: number) => Promise<Buffer>) | null = null;
-  try {
-    await import('sharp');
-    resize = jpeg;
-  } catch {
-    console.log('Cannot resize yet. sharp is not installed, so nothing was uploaded.');
-    console.log('These files are licensed and waiting:');
-    for (const item of ready) console.log(`  ${item.entry.slug}`);
-    console.log('Ask to add sharp, then run: npm install --save-dev sharp');
-    process.exitCode = 1;
-    return;
-  }
-
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
   if (!url || !key) {
-    console.log('Refusing to upload. SUPABASE_SERVICE_ROLE_KEY is not set.');
-    console.log('Add it to .env on this machine only. Do not commit it. Nothing was uploaded.');
+    console.log('Add SUPABASE_SERVICE_ROLE_KEY to .env.local before uploading. Nothing was uploaded.');
     process.exitCode = 1;
     return;
   }
 
-  const client = createClient(url, key, { auth: { persistSession: false } });
+  const state = JSON.parse(readFileSync(join(REVIEW, 'state.json'), 'utf8')) as { slugs?: Record<string, SlugResult> };
+  const choices = existsSync(join(REVIEW, 'choices.json'))
+    ? (JSON.parse(readFileSync(join(REVIEW, 'choices.json'), 'utf8')) as Record<string, string>)
+    : {};
+  const approved = Object.entries(choices).filter(([, choice]) => choice === 'approve' || choice === 'backup-1' || choice === 'backup-2');
+  if (!approved.length) {
+    console.log('No approved photos. Open npm run images:review and choose Approve or a backup.');
+    return;
+  }
+
+  let sharp: typeof import('sharp') | null = null;
+  try {
+    sharp = (await import('sharp')).default;
+  } catch {
+    console.log('Ask to add sharp, then run: npm install --save-dev sharp');
+    console.log('Nothing was uploaded.');
+    process.exitCode = 1;
+    return;
+  }
+
+  const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8')) as { images?: ManifestEntry[] };
+  const bySlug = new Map((manifest.images ?? []).map((item) => [item.slug, item]));
+  const supabase = createClient(url, key, { auth: { persistSession: false } });
   let uploaded = 0;
 
-  for (const item of ready) {
-    const slug = item.entry.slug;
-    const input = readFileSync(join(DROP, item.file));
-    let body = await resize(input, maxWidth(item.entry.orientation), 80);
-    if (body.length > MAX_BYTES) body = await resize(input, maxWidth(item.entry.orientation), 60);
-    if (body.length > MAX_BYTES) {
-      console.log(`  ${slug}: still over 2 MB after compression. Not uploaded.`);
-      process.exitCode = 1;
+  for (const [slug, choice] of approved) {
+    const result = state.slugs?.[slug];
+    const entry = bySlug.get(slug);
+    const photo = result ? chosenFile(result, choice) : null;
+    if (!result || !entry || !photo?.file) {
+      console.log(`${slug}: skipped, that choice has no file`);
       continue;
     }
-    const path = `${slug}.jpg`;
-    const stored = await client.storage.from(BUCKET).upload(path, body, {
+    if (!photo.photographer || !photo.source_url || photo.licence_source !== 'Pexels License') {
+      console.log(`${slug}: skipped, licence details are incomplete`);
+      continue;
+    }
+    const source = join(REVIEW, slug, photo.file);
+    if (!existsSync(source)) {
+      console.log(`${slug}: skipped, ${photo.file} is missing`);
+      continue;
+    }
+    const size = pixelSize(result.orientation ?? entry.orientation);
+    const bytes = await sharp(readFileSync(source))
+      .rotate()
+      .resize(size.width, size.height, { fit: 'cover', position: 'attention' })
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toBuffer();
+    if (bytes.length > MAX_BYTES) {
+      console.log(`${slug}: skipped, still over 2 MB after compression (${bytes.length} bytes)`);
+      continue;
+    }
+    const storagePath = `${slug}.jpg`;
+    const upload = await supabase.storage.from(BUCKET).upload(storagePath, bytes, {
       contentType: 'image/jpeg',
       upsert: true,
     });
-    if (stored.error) {
-      console.log(`  ${slug}: storage upload failed. ${stored.error.message}`);
-      console.log('  If the bucket is missing, paste supabase/routine_covers.sql in the Supabase SQL editor.');
-      process.exitCode = 1;
+    if (upload.error) {
+      console.log(`${slug}: upload failed (${upload.error.message})`);
       continue;
     }
-    const publicUrl = client.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-    const saved = await client.from('images').upsert(
-      {
-        id: slug,
-        slug,
-        kind: item.entry.kind ?? null,
-        shot: item.entry.shot ?? null,
-        orientation: item.entry.orientation ?? null,
-        brief: item.entry.brief ?? null,
-        same_as: null,
-        alt_text: item.entry.brief?.trim() || slug,
-        status: 'ready',
-        storage_path: path,
-        url: publicUrl,
-        photographer: item.entry.photographer,
-        source_url: item.entry.source_url,
-        licence_source: item.entry.licence_source,
-        model_release: item.entry.model_release ?? null,
-      },
-      { onConflict: 'id' }
-    );
+    const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(storagePath).data.publicUrl;
+    const row = {
+      id: slug,
+      slug,
+      kind: entry.kind ?? null,
+      shot: entry.shot ?? null,
+      orientation: entry.orientation ?? null,
+      brief: entry.brief ?? null,
+      same_as: entry.same_as ?? null,
+      status: 'ready',
+      url: publicUrl,
+      storage_path: storagePath,
+      alt_text: photo.alt_text,
+      photographer: photo.photographer,
+      photographer_url: photo.photographer_url,
+      source_url: photo.source_url,
+      licence_source: 'Pexels License',
+      model_release: 'not provided',
+      ai_score: photo.score,
+      ai_notes: photo.reasons,
+    };
+    const saved = await supabase.from('images').upsert(row, { onConflict: 'id' });
     if (saved.error) {
-      console.log(`  ${slug}: file uploaded, but the images row was not updated. ${saved.error.message}`);
-      console.log('  Paste supabase/images_manifest.sql if the new columns are not there yet.');
-      process.exitCode = 1;
+      console.log(`${slug}: saved the file, but the images row failed (${saved.error.message})`);
       continue;
     }
+    entry.status = 'ready';
+    entry.photographer = photo.photographer;
+    entry.photographer_url = photo.photographer_url;
+    entry.source_url = photo.source_url;
+    entry.licence_source = 'Pexels License';
+    entry.model_release = 'not provided';
+    entry.alt_text = photo.alt_text;
+    entry.ai_score = photo.score;
+    entry.ai_notes = photo.reasons;
     uploaded += 1;
-    console.log(`  ${slug}: ready (${Math.round(body.length / 1024)} KB)`);
+    console.log(`${slug}: ready (${size.width}×${size.height}, ${Math.round(bytes.length / 1024)} KB)`);
   }
 
-  console.log();
-  console.log(`Uploaded ${uploaded}. Refused ${refused.length}. Skipped ${skipped.length}.`);
-  if (refused.length) process.exitCode = 1;
+  if (uploaded) writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + '\n');
+  console.log(`${uploaded} uploaded. Rejected and unmatched slugs stay needed.`);
 }
 
 main().catch((error: unknown) => {
