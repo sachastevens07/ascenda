@@ -31,6 +31,7 @@ import {
   reminderCopy,
   restoreCopy,
   safetySettingsTitle,
+  recapCopy,
   referCopy,
   subscriptionStatusCopy,
 } from '@/lib/copy';
@@ -75,6 +76,7 @@ import {
 import { fetchHandOffPreview, saveHandOffPreview } from '@/lib/handOff';
 import { clearOnboardingPaywall } from '@/lib/onboarding';
 import { fetchWelcomeBackPreview, saveWelcomeBackPreview } from '@/lib/welcomeBack';
+import { fetchRecapPreview, saveRecapPreview } from '@/lib/monthlyRecap';
 import { useAuth } from '@/lib/auth';
 import { debugRestartBlock, ensureActiveBlock, missingBlocksMessage } from '@/lib/blocks';
 import { useDevTools } from '@/lib/devFlags';
@@ -169,6 +171,7 @@ export default function ProfileScreen() {
   const [photosEnabled, setPhotosEnabled] = useState(false);
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
   const [handOffPreview, setHandOffPreview] = useState(false);
+  const [recapPreview, setRecapPreview] = useState(false);
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
   const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
   const [timeMenu, setTimeMenu] = useState(false);
@@ -218,6 +221,11 @@ export default function ProfileScreen() {
       fetchHandOffPreview()
         .then((on) => {
           if (isCurrent) setHandOffPreview(on);
+        })
+        .catch(() => {});
+      fetchRecapPreview()
+        .then((on) => {
+          if (isCurrent) setRecapPreview(on);
         })
         .catch(() => {});
       fetchReminderPrefs()
@@ -688,7 +696,7 @@ export default function ProfileScreen() {
         </View>
         <SettingsRow
           title="Show daily quote"
-          subtitle={hideQuote ? 'Hidden on Home' : 'Shown on Home'}
+          subtitle={hideQuote ? 'Hidden on Learn' : 'Shown on Learn'}
           onPress={() => {
             const next = !hideQuote;
             setHideQuote(next);
@@ -918,6 +926,15 @@ export default function ProfileScreen() {
               const next = !handOffPreview;
               setHandOffPreview(next);
               saveHandOffPreview(next).catch(() => setHandOffPreview(!next));
+            }}
+          />
+          <SettingsRow
+            title={recapCopy.preview_row}
+            subtitle={recapPreview ? recapCopy.preview_on : recapCopy.preview_off}
+            onPress={() => {
+              const next = !recapPreview;
+              setRecapPreview(next);
+              saveRecapPreview(next).catch(() => setRecapPreview(!next));
             }}
           />
           <SettingsRow

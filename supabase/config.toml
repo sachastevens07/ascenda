@@ -16,3 +16,10 @@ entrypoint = "./functions/revenuecat-webhook/index.ts"
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/scan-machine/index.ts"
+static_files = [ "./functions/scan-machine/prompt.md" ]
+
+[functions.monthly-recap]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/monthly-recap/index.ts"
+static_files = [ "./functions/monthly-recap/prompt.md" ]

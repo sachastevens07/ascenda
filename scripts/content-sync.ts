@@ -463,6 +463,7 @@ async function main(): Promise<void> {
   reportCardio();
   reportMachineGuides();
   reportAi1();
+  reportAi5();
 
   line('No table in the current schema, skipped');
   const deferred = [
@@ -638,6 +639,25 @@ function reportAi1(): void {
   line('  Edge Function: scan-machine. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai1.sql (ai_usage, ai_quota, machine_scan_misses).');
   line('  Bundled machine list for the function: supabase/functions/scan-machine/machines.json (id, name, visual_features).');
   line('  Live sync does not write AI tables. The function writes usage with the service role.');
+  line();
+}
+
+function reportAi5(): void {
+  line('AI5 recap  ←  content/ai/ai-config.json + prompts/ai5-monthly-recap.md');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai5-monthly-recap'] ?? {};
+  const row = asRecord(config);
+  let promptPresent = false;
+  try {
+    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai5-monthly-recap.md'), 'utf8').length > 0;
+  } catch {
+    promptPresent = false;
+  }
+  line(`  Feature: ${text(row.feature) || 'AI5 Monthly recap'}`);
+  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'}. No daily limit. Once per user per month.`);
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. App calculates stats. Server rejects extra numbers.`);
+  line('  Fallback: "{sessions} sessions and {minutes} minutes of training in {month}. That\'s something to be proud of."');
+  line('  Edge Function: monthly-recap. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai5.sql (monthly_recaps).');
+  line('  Live sync does not write recap rows. The function writes them with the service role.');
   line();
 }
 

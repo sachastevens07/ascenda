@@ -308,6 +308,9 @@ export const machineCopy = microcopy.strings.machines;
 /** AI1 Scan a machine. Prompts stay in content/ai, not here. */
 export const aiCopy = microcopy.strings.ai;
 
+/** AI5 monthly recap. Stats stay in the app. Story from the Edge Function or the template. */
+export const recapCopy = microcopy.strings.recap;
+
 /** H8 challenge copy. Bundled from content/microcopy. Never a countdown. */
 export const challengesCopy = {
   join: challenges.join,

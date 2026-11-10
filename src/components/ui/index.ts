@@ -52,6 +52,7 @@ export {
   AwardsPreview,
   ChallengeHomeCard,
   HomeHeader,
+  RecapHomeCard,
   ReferralBanner,
   ShareStatsCard,
   WeekStripCard,

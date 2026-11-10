@@ -55,7 +55,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   },
   {
     heading: 'Ascenda AI',
-    body: 'Scan a machine sends the photo you take to Anthropic (Claude) so we can match it to our machine list. The photo is not stored, logged or used to train models. We never send your name, email, progress photos, health data or bodyweight. Answers are labelled AI-generated, not medical advice.',
+    body: 'Scan a machine sends the photo you take to Anthropic (Claude) so we can match it to our machine list. The photo is not stored, logged or used to train models. The monthly recap sends session counts, minutes, exercise and machine names, and award names, never weights, photos, health data, your name or email. We never send progress photos, health data or bodyweight. Answers are labelled AI-generated, not medical advice.',
   },
   {
     heading: 'Analytics',

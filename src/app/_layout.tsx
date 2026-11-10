@@ -231,6 +231,7 @@ function RootNavigator() {
         <Stack.Screen name="machines" options={{ headerShown: false }} />
         <Stack.Screen name="paths" options={{ headerShown: false }} />
         <Stack.Screen name="challenges" options={{ headerShown: false }} />
+        <Stack.Screen name="recap" options={{ headerShown: false }} />
         <Stack.Screen name="learn" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="history" options={{ headerShown: false }} />

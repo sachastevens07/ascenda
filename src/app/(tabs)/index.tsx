@@ -30,6 +30,7 @@ import {
   ImageCard,
   OverflowMenu,
   PrimaryButton,
+  RecapHomeCard,
   ReferralBanner,
   SectionHeader,
   ShareStatsCard,
@@ -90,6 +91,7 @@ import {
   type PlannerDayView,
   type PlannerWeek,
 } from '@/lib/planner';
+import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { ensureSubscribed } from '@/lib/paywall';
@@ -293,6 +295,7 @@ export default function HomeScreen() {
   const [welcomeBackMenuAnchor, setWelcomeBackMenuAnchor] = useState<AnchorRect | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [referHidden, setReferHidden] = useState(false);
+  const [recap, setRecap] = useState<MonthlyRecap | null>(null);
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
   const heroHeight = Math.round(Math.min(Math.max(height * 0.45, 260), 380));
@@ -467,6 +470,19 @@ export default function HomeScreen() {
           });
           setReferHidden(hideReferStored);
           setLoadState('ready');
+          void loadMonthlyRecap({
+            sessions,
+            sets,
+            badges,
+            weeklyTarget: normalizeWeeklyTarget(answers?.days_per_week),
+            streakGoal,
+          })
+            .then((next) => {
+              if (isCurrent) setRecap(next);
+            })
+            .catch(() => {
+              if (isCurrent) setRecap(null);
+            });
           if (!hideStreak) void maybeCelebrateStreakGoal(streak);
           void maybeTrackStreakRepair(streak);
           void maybePromptMissedWeek(streak);
@@ -1048,6 +1064,19 @@ export default function HomeScreen() {
             ) : null
           }
         />
+
+        {recap ? (
+          <RecapHomeCard
+            month={recap.stats.month}
+            onOpen={() =>
+              router.push({ pathname: '/recap/[month]', params: { month: recap.monthKey } } as Href)
+            }
+            onDismiss={() => {
+              setRecap(null);
+              void dismissRecap(recap.monthKey);
+            }}
+          />
+        ) : null}
 
         {showFeatured ? (
           <View>

@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View, type ImageSourcePropType, type StyleProp, 
 import type { AnchorHandle } from '@/components/AnchoredMenu';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
-import { challengesCopy, fillCopy, homeCopy, referCopy } from '@/lib/copy';
+import { challengesCopy, fillCopy, homeCopy, recapCopy, referCopy } from '@/lib/copy';
 import type { AchievementBadge, AchievementFamily } from '@/lib/achievements';
 import { FRIEND_TRIAL_DAYS } from '@/lib/referrals';
 
@@ -333,6 +333,59 @@ export function ReferralBanner({
   );
 }
 
+export function RecapHomeCard({
+  month,
+  onOpen,
+  onDismiss,
+  style,
+}: {
+  month: string;
+  onOpen: () => void;
+  onDismiss: () => void;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { colours, radius, spacing, shadow } = useTheme();
+  return (
+    <View
+      style={[
+        styles.recapCard,
+        { backgroundColor: colours.brand, borderRadius: radius.xl, padding: spacing.lg },
+        shadow,
+        style,
+      ]}>
+      <View style={styles.recapTop}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          {recapCopy.eyebrow}
+        </AppText>
+        <IconButton
+          icon="close"
+          variant="overlay"
+          accessibilityLabel={recapCopy.dismiss}
+          onPress={onDismiss}
+        />
+      </View>
+      <AppText variant="displaySm" style={{ color: colours.onBrand, marginTop: spacing.xs }}>
+        {fillCopy(recapCopy.card_title, { month })}
+      </AppText>
+      <AppText variant="bodySm" style={{ color: colours.brandSoft, marginTop: spacing.sm }}>
+        {recapCopy.card_body}
+      </AppText>
+      <Pressable
+        onPress={onOpen}
+        accessibilityRole="button"
+        style={({ pressed }) => [
+          styles.recapCta,
+          { backgroundColor: colours.surface, borderRadius: radius.full },
+          pressed && styles.pressed,
+        ]}>
+        <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+          {recapCopy.card_cta}
+        </AppText>
+      </Pressable>
+    </View>
+  );
+}
+
 export function ShareStatsCard({
   sessions,
   personalBests,
@@ -551,6 +604,20 @@ const styles = StyleSheet.create({
   },
   referClose: {
     alignSelf: 'flex-start',
+  },
+  recapCard: {
+    gap: 0,
+  },
+  recapTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  recapCta: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginTop: 16,
   },
   statsGrid: {
     flexDirection: 'row',

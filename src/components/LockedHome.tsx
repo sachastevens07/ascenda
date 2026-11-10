@@ -8,6 +8,7 @@ import {
   AppText,
   HeroImage,
   PrimaryButton,
+  RecapHomeCard,
   StatTile,
   TabAvatar,
   TextButton,
@@ -20,7 +21,10 @@ import {
   getWeeklyStreak,
   normalizeWeeklyTarget,
 } from '@/lib/activityStats';
+import { EMPTY_ACHIEVEMENT_EXTRAS, fetchAchievementExtras, getAchievementBadges } from '@/lib/achievements';
 import { fillCopy, lockedHomeCopy, referCopy } from '@/lib/copy';
+import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
+import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import { FRIEND_TRIAL_DAYS, openRefer } from '@/lib/referrals';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import { coverForRoutine, imageSourceForSlug, takeCoverSource } from '@/lib/images';
@@ -81,6 +85,7 @@ export function LockedHome() {
   const [trialDays, setTrialDays] = useState<number | null>(null);
   const [loadState, setLoadState] = useState<'loading' | 'ready'>('loading');
   const [exporting, setExporting] = useState(false);
+  const [recap, setRecap] = useState<MonthlyRecap | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -137,6 +142,27 @@ export function LockedHome() {
           const annual = packages.find((item) => item.packageType === 'ANNUAL');
           setTrialDays(annual ? getFreeTrialDays(annual.product) : null);
           setLoadState('ready');
+          const extras = await fetchAchievementExtras(
+            equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used)
+          ).catch(() => ({
+            ...EMPTY_ACHIEVEMENT_EXTRAS,
+            knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
+          }));
+          const badges = getAchievementBadges({
+            sessions,
+            sets,
+            streak,
+            completedRoutines: 0,
+            extras,
+          });
+          const nextRecap = await loadMonthlyRecap({
+            sessions,
+            sets,
+            badges,
+            weeklyTarget: normalizeWeeklyTarget(answers?.days_per_week),
+            streakGoal,
+          }).catch(() => null);
+          if (isCurrent) setRecap(nextRecap);
         } catch {
           if (!isCurrent) return;
           const recommended = recommendPlan(draft);
@@ -258,6 +284,19 @@ export function LockedHome() {
             {fillCopy(referCopy.banner_body, { friend_trial_days: FRIEND_TRIAL_DAYS })}
           </AppText>
         </Pressable>
+
+        {recap ? (
+          <RecapHomeCard
+            month={recap.stats.month}
+            onOpen={() =>
+              router.push({ pathname: '/recap/[month]', params: { month: recap.monthKey } } as Href)
+            }
+            onDismiss={() => {
+              setRecap(null);
+              void dismissRecap(recap.monthKey);
+            }}
+          />
+        ) : null}
 
         {lapsed ? (
           <View style={{ gap: spacing.sm }}>
