@@ -41,6 +41,7 @@ import {
   formatStickyDayHeading,
   isPlannedSessionKind,
   loadPlannerRange,
+  skipPlannedSession,
   monthsInHorizon,
   movePlannedSession,
   parseIsoDate,
@@ -265,6 +266,11 @@ export default function PlannerScreen() {
     await runAction(() => clearPlannerDay(selectedDay.iso), 'Couldn’t update that day');
   }
 
+  async function handleSkip() {
+    if (!selectedDay?.plan) return;
+    await runAction(() => skipPlannedSession(selectedDay.plan!), 'Couldn’t skip that session');
+  }
+
   function startMove() {
     if (!selectedDay?.plan) return;
     setMovingId(selectedDay.plan.id);
@@ -325,27 +331,7 @@ export default function PlannerScreen() {
     if (!day.plan) return;
     closeSheets();
 
-    if (day.kind === 'cardio' && day.plan.cardio_slug) {
-      setBusy(true);
-      try {
-        await openCardioFromPlan(day.plan.cardio_slug, workout.publish);
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-
-    if (day.kind === 'recovery' && day.plan.stretch_slug) {
-      setBusy(true);
-      try {
-        await openRecoveryFromPlan(day.plan.stretch_slug, workout.publish);
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-
-    if (day.plan.routine_day_id) {
+    if (day.plan.routine_day_id && day.kind !== 'cardio') {
       if (!range?.enrolment) {
         showDialog('Start this from Home', 'Open Home to begin this routine session.');
         return;
@@ -360,6 +346,26 @@ export default function PlannerScreen() {
             routineDayId: day.plan.routine_day_id,
           });
         }
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (day.kind === 'cardio' && day.plan.cardio_slug) {
+      setBusy(true);
+      try {
+        await openCardioFromPlan(day.plan.cardio_slug, workout.publish);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (day.kind === 'recovery' && day.plan.stretch_slug) {
+      setBusy(true);
+      try {
+        await openRecoveryFromPlan(day.plan.stretch_slug, workout.publish);
       } finally {
         setBusy(false);
       }
@@ -676,6 +682,9 @@ export default function PlannerScreen() {
             {selectedDay.plan && selectedDay.kind !== 'rest' && (
               <MenuRow label="Move to another day" onPress={startMove} />
             )}
+            {selectedDay.isOptional && selectedDay.plan?.status === 'planned' ? (
+              <MenuRow label={weekRingCopy.skip} onPress={() => void handleSkip()} />
+            ) : null}
             {selectedDay.plan?.status === 'planned' && isPlannedSessionKind(selectedDay.kind) ? (
               <MenuRow
                 label={
@@ -816,6 +825,7 @@ function AgendaDay({
   const rowRef = useRef<AnchorHandle>(null);
   const chipRef = useRef<AnchorHandle>(null);
   const quiet = day.kind === 'rest';
+  const optional = day.isOptional && !quiet;
   const eyebrow =
     day.kind === 'cardio'
       ? weekRingCopy.eyebrow_cardio
@@ -841,7 +851,15 @@ function AgendaDay({
       disabled={disabled}
       style={({ pressed }) => [
         quiet ? styles.quietRow : styles.sessionRow,
-        { backgroundColor: moving ? colours.brandSoft : quiet ? colours.bg : colours.surface },
+        {
+          backgroundColor: moving
+            ? colours.brandSoft
+            : quiet
+              ? colours.bg
+              : optional
+                ? colours.surfaceMuted
+                : colours.surface,
+        },
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"

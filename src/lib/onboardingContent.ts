@@ -31,6 +31,9 @@ export type OnboardingOption = {
   label: string;
   icon?: string;
   sub?: string;
+  insight?: string;
+  insight_source?: string;
+  stat_value?: string;
   image_slug?: string;
   exclusive?: boolean;
 };
@@ -85,11 +88,14 @@ export type OnboardingScreen = {
   why_title: string;
   week_title: string;
   week_template: string;
+  week_extra: string;
   timeline_title: string;
   estimate_label: string;
   alternatives_title: string;
   alternatives_count: number;
   stat: InsightStat | null;
+  extra_stats: InsightStat[];
+  stat_min_value: number | null;
 };
 
 export type WhyLine = { if: string; text: string };
@@ -107,7 +113,16 @@ function parseOption(raw: unknown): OnboardingOption | null {
     sub: text(item.sub) || undefined,
     image_slug: text(item.image_slug) || undefined,
     exclusive: item.exclusive === true,
+    insight: text(item.insight) || undefined,
+    insight_source: text(item.insight_source) || undefined,
+    stat_value: text(item.stat_value) || undefined,
   };
+}
+
+function parseStat(raw: unknown): InsightStat | null {
+  const row = asRecord(raw);
+  if (!text(row.value)) return null;
+  return { value: text(row.value), text: text(row.text), source: text(row.source) };
 }
 
 function parseScreen(raw: unknown): OnboardingScreen {
@@ -177,13 +192,16 @@ function parseScreen(raw: unknown): OnboardingScreen {
     why_title: text(item.why_title),
     week_title: text(item.week_title),
     week_template: text(item.week_template),
+    week_extra: text(item.week_extra),
     timeline_title: text(item.timeline_title),
     estimate_label: text(item.estimate_label),
     alternatives_title: text(item.alternatives_title),
     alternatives_count: num(item.alternatives_count) ?? 2,
-    stat: text(stat.value)
-      ? { value: text(stat.value), text: text(stat.text), source: text(stat.source) }
-      : null,
+    stat: parseStat(stat),
+    extra_stats: asArray(item.extra_stats)
+      .map(parseStat)
+      .filter((row): row is InsightStat => Boolean(row)),
+    stat_min_value: num(item.stat_min_value),
   };
 }
 
@@ -214,6 +232,7 @@ export const STRENGTH_ESTIMATE_DISPLAY = text(asRecord(ROOT.strength_estimate).d
 export const QUESTION_SCREEN_IDS = ONBOARDING_SCREENS.filter(
   (screen) =>
     screen.type !== 'welcome' &&
+    screen.type !== 'name_ack' &&
     screen.type !== 'building' &&
     screen.type !== 'plan_reveal' &&
     screen.type !== 'disclaimer' &&

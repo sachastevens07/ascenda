@@ -79,6 +79,7 @@ import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
 import { openRefer } from '@/lib/referrals';
+import { routineCardDays } from '@/lib/contentRoutines';
 import { coverForChallenge, coverForRoutine, homeHeroSlug, takeCoverSource, takeSlug } from '@/lib/images';
 import {
   addDays,
@@ -245,10 +246,13 @@ function heroCopyFor(input: {
     return {
       eyebrow: homeCopy.hero_planned_today.eyebrow,
       title: fillCopy(homeCopy.hero_planned_today.title, { session_name: input.nextName }),
-      subtitle: fillCopy(homeCopy.hero_planned_today.subtitle, {
-        minutes: input.minutes,
-        exercise_count: input.exercises,
-      }),
+      subtitle:
+        input.exercises > 0
+          ? fillCopy(homeCopy.hero_planned_today.subtitle, {
+              minutes: input.minutes,
+              exercise_count: input.exercises,
+            })
+          : fillCopy(homeCopy.hero_planned_today.subtitle_timed, { minutes: input.minutes }),
       cta: homeCopy.hero_planned_today.cta,
     };
   }
@@ -693,6 +697,24 @@ export default function HomeScreen() {
 
   async function startTodayFromPlanner(today: PlannerDayView) {
     if (!ensureSubscribed()) return;
+    if (today.kind === 'custom' && today.plan?.custom_workout_id) {
+      setIsStarting(true);
+      try {
+        const session = await startCustomSession(today.plan.custom_workout_id);
+        openLogger(session.id);
+      } catch (error) {
+        showDialog('Couldn’t start that session', describeRoutineError(error));
+      } finally {
+        setIsStarting(false);
+      }
+      return;
+    }
+    const dayId = today.plan?.routine_day_id;
+    const day = dayId && data?.routine ? data.routine.weeks.flatMap((week) => week.days).find((item) => item.id === dayId) : null;
+    if (day && today.kind !== 'cardio') {
+      await startDay(day);
+      return;
+    }
     if (today.kind === 'cardio' && today.plan?.cardio_slug) {
       setIsStarting(true);
       try {
@@ -709,24 +731,6 @@ export default function HomeScreen() {
       } finally {
         setIsStarting(false);
       }
-      return;
-    }
-    if (today.kind === 'custom' && today.plan?.custom_workout_id) {
-      setIsStarting(true);
-      try {
-        const session = await startCustomSession(today.plan.custom_workout_id);
-        openLogger(session.id);
-      } catch (error) {
-        showDialog('Couldn’t start that session', describeRoutineError(error));
-      } finally {
-        setIsStarting(false);
-      }
-      return;
-    }
-    const dayId = today.plan?.routine_day_id;
-    const day = dayId && data?.routine ? data.routine.weeks.flatMap((week) => week.days).find((item) => item.id === dayId) : null;
-    if (day) {
-      await startDay(day);
       return;
     }
     if (data?.next) {
@@ -816,7 +820,7 @@ export default function HomeScreen() {
           iso: day.iso,
           label: WEEKDAY_SHORT[index] ?? 'Mo',
           isToday: day.isToday,
-          planned: isPlannedSessionKind(day.kind),
+          planned: isPlannedSessionKind(day.kind) && !day.isOptional,
           completed: day.completed,
         }))
       : fallbackStripDays().map((day, index) => ({
@@ -827,19 +831,20 @@ export default function HomeScreen() {
           completed: false,
         }));
   const upcoming = plannerDays.find(
-    (day) => !day.isToday && !day.isPast && isPlannedSessionKind(day.kind)
+    (day) => !day.isToday && !day.isPast && isPlannedSessionKind(day.kind) && !day.isOptional
   );
   const firstName = profile?.display_name?.trim().split(/\s+/)[0] ?? 'you';
+  const todayLive = todayPlan && isPlannedSessionKind(todayPlan.kind) && !todayPlan.completed ? todayPlan : null;
   const hero = heroCopyFor({
     inProgress,
     welcomeBack,
     enrolment: Boolean(enrolment),
     rest: todayPlan?.kind === 'rest',
-    planned: Boolean(todayPlan && isPlannedSessionKind(todayPlan.kind)) || (!todayPlan && Boolean(next)),
+    planned: Boolean(todayLive) || (!todayPlan && Boolean(next)),
     doneToday: Boolean(todayPlan?.completed),
-    nextName: next?.day.name ?? todayPlan?.title ?? 'your session',
-    minutes: enrolment?.routine.session_minutes ?? todayPlan?.sessionMinutes ?? 45,
-    exercises: next?.day.exercises.length ?? todayPlan?.exercises.length ?? 0,
+    nextName: todayLive?.title ?? next?.day.name ?? 'your session',
+    minutes: todayLive?.sessionMinutes ?? enrolment?.routine.session_minutes ?? 45,
+    exercises: todayLive ? todayLive.exercises.length : (next?.day.exercises.length ?? 0),
     nextDay: upcoming?.title ?? next?.day.name ?? 'your next session',
     name: firstName,
   });
@@ -1065,7 +1070,7 @@ export default function HomeScreen() {
                   <ImageCard
                     key={routine.id}
                     title={routine.name}
-                    subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
+                    subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days / week`}
                     tags={routine.tags}
                     imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
                     letter={routine.name.slice(0, 1)}

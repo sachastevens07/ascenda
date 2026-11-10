@@ -60,16 +60,6 @@ for (const raw of stretchRoot.stretch_routines ?? []) {
   });
 }
 
-function asWeekdaySet(days: Weekday[]): Set<Weekday> {
-  return new Set(days);
-}
-
-function sameWeekdays(a: Weekday[], b: Weekday[]): boolean {
-  if (a.length !== b.length) return false;
-  const set = asWeekdaySet(a);
-  return b.every((day) => set.has(day));
-}
-
 function isLowerOrFullFocus(focus: string): boolean {
   const text = focus.toLowerCase();
   if (/full body|full-body/.test(text)) return true;
@@ -143,11 +133,6 @@ function remapTemplate(
   focusByKey: Map<string, string>
 ): ContentScheduleSlot[] {
   const strengthSlots = template.filter((slot) => slot.type === 'strength');
-  const strengthDays = strengthSlots.map((slot) => slot.weekday);
-  if (preferredDays.length === 0 || sameWeekdays(preferredDays, strengthDays)) {
-    return template;
-  }
-
   const assigned = new Map<Weekday, ContentScheduleSlot>();
   const unusedStrength = [...strengthSlots];
 
@@ -174,34 +159,31 @@ function remapTemplate(
     return isLowerOrFullFocus(focusByKey.get(slot.day_key) ?? '');
   }
 
-  const recoverySlots = template.filter((slot) => slot.type === 'recovery');
-  for (const recovery of recoverySlots) {
+  function placeSupport(slot: ContentScheduleSlot): boolean {
     const free = freeDays();
-    if (free.length === 0) break;
-    const afterLower = WEEKDAYS.filter((day) => isLowerDay(previousWeekday(day)) && free.includes(day));
-    const pick = afterLower[0] ?? takePreferredEmpty(free, preferredDays);
-    if (!pick) break;
-    assigned.set(pick, { ...recovery, weekday: pick });
-  }
-
-  const requiredCardio = template.filter((slot) => slot.type === 'cardio' && !slot.optional);
-  for (const cardio of requiredCardio) {
-    const free = freeDays();
-    if (free.length === 0) break;
+    if (free.length <= 1) return false;
+    if (slot.type === 'recovery') {
+      const afterLower = WEEKDAYS.filter((day) => isLowerDay(previousWeekday(day)) && free.includes(day));
+      const pick = afterLower[0] ?? takePreferredEmpty(free, preferredDays);
+      if (!pick) return false;
+      assigned.set(pick, { ...slot, weekday: pick });
+      return true;
+    }
     const safe = free.filter((day) => !isLowerDay(nextWeekday(day)));
     const pick = takePreferredEmpty(safe.length > 0 ? safe : free, preferredDays);
-    if (!pick) break;
-    assigned.set(pick, { ...cardio, weekday: pick });
+    if (!pick) return false;
+    assigned.set(pick, { ...slot, weekday: pick });
+    return true;
   }
 
-  const optionalCardio = template.filter((slot) => slot.type === 'cardio' && slot.optional);
-  for (const cardio of optionalCardio) {
-    const free = freeDays();
-    if (free.length <= 1) break;
-    const safe = free.filter((day) => !isLowerDay(nextWeekday(day)));
-    const pick = takePreferredEmpty(safe.length > 1 ? safe : free, preferredDays);
-    if (!pick) break;
-    assigned.set(pick, { ...cardio, weekday: pick });
+  for (const cardio of template.filter((slot) => slot.type === 'cardio' && !slot.optional)) {
+    if (!placeSupport(cardio)) break;
+  }
+  for (const cardio of template.filter((slot) => slot.type === 'cardio' && slot.optional)) {
+    if (!placeSupport(cardio)) break;
+  }
+  for (const recovery of template.filter((slot) => slot.type === 'recovery')) {
+    if (!placeSupport(recovery)) break;
   }
 
   return WEEKDAYS.map((weekday) => {
@@ -296,6 +278,13 @@ export function slotsForWeek(input: {
       minutes: null,
     };
   });
+}
+
+export function describeScheduledWeek(overlay: ContentRoutineOverlay): string {
+  return (
+    overlay.schedule_label ||
+    `${overlay.days_per_week} strength days a week, plus optional cardio and stretching`
+  );
 }
 
 export function overlayForRoutine(

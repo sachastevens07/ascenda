@@ -20,6 +20,7 @@
         "eyebrow": "TODAY",
         "title": "{session_name}",
         "subtitle": "About {minutes} min · {exercise_count} exercises",
+        "subtitle_timed": "About {minutes} min",
         "cta": "Start session"
       },
       "hero_rest_day": {
@@ -68,6 +69,7 @@
       "week_ring_cardio": "cardio",
       "week_ring_recovery": "recovery",
       "optional_chip": "Optional",
+      "optional_skip": "Skip",
       "eyebrow_strength": "Strength",
       "eyebrow_cardio": "Cardio",
       "eyebrow_recovery": "Recovery"
@@ -717,9 +719,9 @@
       "dont_save": "Don't save",
       "saved_title": "Cardio saved",
       "saved_body": "That's {minutes} minutes. Cardio counts towards your week. It doesn't count towards strength personal bests.",
-      "discard_title": "End without saving?",
+      "discard_title": "Cancel this session?",
       "discard_body": "Nothing will be saved.",
-      "discard_cta": "End cardio",
+      "discard_cta": "Cancel session",
       "keep_going": "Keep going",
       "progression": "How this builds",
       "coach_note": "Coach note",

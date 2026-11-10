@@ -25,6 +25,7 @@ import {
   fetchChallenges,
   type Challenge,
 } from '@/lib/challenges';
+import { routineCardDays } from '@/lib/contentRoutines';
 import { fillCopy, routineActionsCopy } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeSlug } from '@/lib/images';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
@@ -366,7 +367,7 @@ export function CatalogueCard({
     : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[summary.goal]}`;
   const meta = stretch
     ? `${summary.session_minutes} min`
-    : `${summary.length_weeks} weeks · ${summary.days_per_week} days / week`;
+    : `${summary.length_weeks} weeks · ${routineCardDays(summary)} days / week`;
   const chips = summary.tags.filter((tag) => !stretch || tag !== summary.tags[0]).slice(0, 2);
 
   return (

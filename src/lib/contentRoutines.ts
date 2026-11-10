@@ -92,6 +92,7 @@ export type ContentRoutineOverlay = {
   days_per_week: number;
   session_minutes: number;
   cardio_balanced: boolean;
+  schedule_label: string | null;
   plan_reveal_milestones: ContentPlanMilestone[];
   checkpoint_lifts: string[];
   lighter_weeks: number[];
@@ -288,6 +289,7 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
     days_per_week: num(routine.days_per_week) ?? 0,
     session_minutes: num(routine.session_minutes) ?? 0,
     cardio_balanced: routine.cardio_balanced === true,
+    schedule_label: text(routine.schedule_label) || null,
     plan_reveal_milestones: milestones,
     checkpoint_lifts: asArray(routine.checkpoint_lifts).map((value) => resolveExerciseSlug(String(value))),
     lighter_weeks,
@@ -357,6 +359,26 @@ export function contentDayFor(
   }
   const name = day.name.trim().toLowerCase();
   return days.find((item) => item.name.toLowerCase() === name) ?? null;
+}
+
+/** Card tag: strength days, or the full required week on cardio-balanced routines. */
+export function advertisedDaysPerWeek(
+  overlay: ContentRoutineOverlay | null | undefined,
+  fallback = 3
+): number {
+  if (!overlay) return fallback;
+  if (!overlay.cardio_balanced) return overlay.days_per_week || fallback;
+  const template =
+    overlay.weekly_schedule.fine ?? overlay.weekly_schedule.love ?? overlay.weekly_schedule.avoid ?? [];
+  const required = template.filter((slot) => slot.type !== 'rest' && !slot.optional).length;
+  return required || overlay.days_per_week || fallback;
+}
+
+export function routineCardDays(routine: { slug: string; id?: string; days_per_week: number }): number {
+  return advertisedDaysPerWeek(
+    contentRoutine(routine.slug) ?? (routine.id ? contentRoutine(routine.id) : null),
+    routine.days_per_week
+  );
 }
 
 export function contentWeeklyStructure(

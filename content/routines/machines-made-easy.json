@@ -11,7 +11,7 @@
     "Complete week: strength slots point at the phase day (day_key). Cardio and recovery slots point at support_days, which pick the cardio session or stretch routine by week.",
     "Complete week: a finisher is a cardio block after the strength block on that day (block order warmup, strength, cardio_finisher, cooldown). It's skipped in finisher_skip_weeks (checkpoint and lighter weeks), and she can skip it with one tap at any time.",
     "Complete week: weekdays are defaults. If she picked different training days, place strength days on her days in order, then fill cardio on free days (avoid the day before a lower-body or full-body day where possible), recovery on a free day after a lower-body or full-body day, and keep at least one full rest day.",
-    "Complete week: optional slots are suggestions. They count towards the week when done but aren't part of the weekly target Y. Y = planned_sessions in weekly_structure_summary.",
+    "Complete week: cardio and recovery slots are optional extras (except in cardio_balanced routines); they count towards her weekly target when done but never add to it.",
     "Complete week: lighter week cardio uses the session at its starting length with an easy-effort note. Cardio counts towards the weekly target and streak, never towards strength personal bests."
   ],
   "routine": {
@@ -98,18 +98,19 @@
     "type": "strength",
     "weekly_structure_summary": {
       "avoid": {
-        "text": "3 strength, 1 recovery, plus a 10-minute cardio finisher",
-        "planned_sessions": 4
+        "text": "3 strength, plus optional stretching",
+        "planned_sessions": 3
       },
       "fine": {
-        "text": "3 strength, 1 cardio, 1 recovery, plus a 10-minute cardio finisher and an optional extra cardio session",
-        "planned_sessions": 5
+        "text": "3 strength, plus optional cardio and stretching",
+        "planned_sessions": 3
       },
       "love": {
-        "text": "3 strength, 2 cardio, 1 recovery, plus a 10-minute cardio finisher",
-        "planned_sessions": 6
+        "text": "3 strength, plus optional cardio and stretching",
+        "planned_sessions": 3
       }
-    }
+    },
+    "schedule_label": "3 strength days a week, plus optional cardio and stretching"
   },
   "phases": [
     {
@@ -807,7 +808,8 @@
       {
         "weekday": "thu",
         "type": "recovery",
-        "support_key": "RECOVERY"
+        "support_key": "RECOVERY",
+        "optional": true
       },
       {
         "weekday": "fri",
@@ -837,7 +839,8 @@
       {
         "weekday": "tue",
         "type": "cardio",
-        "support_key": "CARDIO1"
+        "support_key": "CARDIO1",
+        "optional": true
       },
       {
         "weekday": "wed",
@@ -847,7 +850,8 @@
       {
         "weekday": "thu",
         "type": "recovery",
-        "support_key": "RECOVERY"
+        "support_key": "RECOVERY",
+        "optional": true
       },
       {
         "weekday": "fri",
@@ -879,7 +883,8 @@
       {
         "weekday": "tue",
         "type": "cardio",
-        "support_key": "CARDIO1"
+        "support_key": "CARDIO1",
+        "optional": true
       },
       {
         "weekday": "wed",
@@ -889,7 +894,8 @@
       {
         "weekday": "thu",
         "type": "recovery",
-        "support_key": "RECOVERY"
+        "support_key": "RECOVERY",
+        "optional": true
       },
       {
         "weekday": "fri",
@@ -904,7 +910,8 @@
       {
         "weekday": "sat",
         "type": "cardio",
-        "support_key": "CARDIO2"
+        "support_key": "CARDIO2",
+        "optional": true
       },
       {
         "weekday": "sun",

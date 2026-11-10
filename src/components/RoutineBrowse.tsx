@@ -32,6 +32,7 @@ import {
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { routineCardDays } from '@/lib/contentRoutines';
 import { fillCopy, programmesCopy, routineActionsCopy } from '@/lib/copy';
 import { coverForRoutine, takeSlug } from '@/lib/images';
 import {
@@ -349,7 +350,7 @@ export function RoutineBrowse({
                   imageSlug={recommendedSlug}
                   eyebrow={programmesCopy.section_recommended}
                   title={recommended.name}
-                  subtitle={`${recommended.length_weeks} weeks · ${recommended.days_per_week} days / week`}
+                  subtitle={`${recommended.length_weeks} weeks · ${routineCardDays(recommended)} days / week`}
                   onPress={() => openRoutine(recommended)}
                 />
               </View>
@@ -402,7 +403,7 @@ export function RoutineBrowse({
                     <ImageCard
                       key={routine.id}
                       title={routine.name}
-                      subtitle={`${routine.length_weeks} weeks · ${routine.days_per_week} days / week`}
+                      subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days / week`}
                       tags={routine.tags.slice(0, 2).map(formatTagLabel)}
                       imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
                       letter={routine.name.slice(0, 1)}

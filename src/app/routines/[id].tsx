@@ -46,7 +46,7 @@ import {
   resolveNextRoutineOffer,
   type NextRoutineOffer,
 } from '@/lib/handOff';
-import { contentRoutine, contentWeeklyStructure } from '@/lib/contentRoutines';
+import { contentRoutine, contentWeeklyStructure, routineCardDays } from '@/lib/contentRoutines';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
@@ -420,6 +420,7 @@ export default function RoutineDetailScreen() {
   const weekShape = overlay
     ? contentWeeklyStructure(overlay, profile?.cardio_preference)
     : routine.weeklyStructure;
+  const scheduleLabel = overlay?.schedule_label;
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -487,11 +488,16 @@ export default function RoutineDetailScreen() {
             style={{ marginTop: spacing.lg }}
             items={[
               { icon: 'calendar-outline', value: String(routine.length_weeks), label: 'Weeks' },
-              { icon: 'repeat-outline', value: String(routine.days_per_week), label: 'Days a week' },
+              { icon: 'repeat-outline', value: String(routineCardDays(routine)), label: 'Days a week' },
               { icon: 'time-outline', value: String(routine.session_minutes), label: 'Minutes' },
               { icon: 'bar-chart-outline', value: DIFFICULTY_LABELS[routine.difficulty], label: 'Level' },
             ]}
           />
+          {scheduleLabel ? (
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+              {scheduleLabel}
+            </AppText>
+          ) : null}
 
           {routine.type === 'strength' && routine.audience.length > 0 ? (
             <View style={{ marginTop: spacing.lg, gap: 8 }}>

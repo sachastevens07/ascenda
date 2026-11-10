@@ -34,20 +34,23 @@ export function TypeRing({
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius, spacing, shadow } = useTheme();
-  const goal = Math.max(1, target);
+  const goal = Math.max(1, Math.round(target));
   const size = 88;
   const stroke = 10;
   const ringRadius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * ringRadius;
   const centre = size / 2;
+  const origin = `${centre}, ${centre}`;
   const order: TypeKey[] = ['strength', 'cardio', 'recovery'];
-  let offset = 0;
+  const total = order.reduce((sum, key) => sum + Math.max(0, counts[key]), 0);
+  const slice = circumference / Math.max(goal, total, 1);
+  let start = 0;
   const arcs = order.flatMap((key) => {
     const value = Math.max(0, counts[key]);
     if (value <= 0) return [];
-    const length = circumference * Math.min(1, value / goal);
-    const dashoffset = circumference * 0.25 - offset;
-    offset += length;
+    const length = slice * value;
+    const dashoffset = -start;
+    start += length;
     return [{ key, length, dashoffset, colour: typeColour(key, colours.brand) }];
   });
 
@@ -89,6 +92,8 @@ export function TypeRing({
                 strokeDasharray={`${arc.length} ${circumference}`}
                 strokeDashoffset={arc.dashoffset}
                 strokeLinecap="butt"
+                rotation="-90"
+                origin={origin}
               />
             ))}
           </Svg>

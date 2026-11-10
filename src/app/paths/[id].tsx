@@ -7,6 +7,7 @@ import { CoverPhoto } from '@/components/CoverPhoto';
 import { ProgressRing } from '@/components/ProgressRing';
 import { AppText } from '@/components/ui/AppText';
 import { colours } from '@/constants/theme';
+import { routineCardDays } from '@/lib/contentRoutines';
 import { coverForRoutine } from '@/lib/images';
 import {
   describePathError,
@@ -109,7 +110,7 @@ export default function PathDetailScreen() {
                 {step.routine.name}
               </AppText>
               <AppText variant="bodySm" style={styles.meta}>
-                {step.routine.length_weeks} weeks · {step.routine.days_per_week} days / week
+                {step.routine.length_weeks} weeks · {routineCardDays(step.routine)} days / week
               </AppText>
             </View>
           </Pressable>

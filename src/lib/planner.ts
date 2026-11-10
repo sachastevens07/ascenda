@@ -434,6 +434,12 @@ export async function clearPlannerDay(date: string): Promise<void> {
   await clearLivePlan(userId, date);
 }
 
+export async function skipPlannedSession(plan: PlannedSession): Promise<void> {
+  const persisted = isOverlayPlanId(plan.id) ? await persistOverlayPlan(plan) : plan;
+  const { error } = await supabase.from('planned_sessions').update({ status: 'skipped' }).eq('id', persisted.id);
+  if (error) throwPlanner(error);
+}
+
 export async function persistOverlayPlan(plan: PlannedSession): Promise<PlannedSession> {
   if (!isOverlayPlanId(plan.id)) return plan;
   const userId = await requireUserId();
@@ -586,13 +592,72 @@ function daysForPlannerWeek(routine: Routine, weekNumber: number) {
 function occupiedDates(rows: PlannedSession[]): Set<string> {
   return new Set(
     rows
-      .filter((row) => row.status === 'planned' || row.status === 'rest' || row.status === 'done')
+      .filter(
+        (row) =>
+          row.status === 'planned' ||
+          row.status === 'rest' ||
+          row.status === 'done' ||
+          row.status === 'skipped'
+      )
       .map((row) => row.date)
   );
 }
 
 function placedRoutineDayIds(rows: PlannedSession[]): Set<string> {
   return new Set(rows.map((row) => row.routine_day_id).filter((id): id is string => Boolean(id)));
+}
+
+function weekSlots(
+  enrolment: RoutineEnrolment,
+  monday: Date,
+  prefs: WeekPlanPrefs
+): PlacedSlot[] {
+  const overlay = overlayForRoutine(enrolment.routine.slug, enrolment.routine.id);
+  if (!overlay) return [];
+  return slotsForWeek({
+    overlay,
+    weekNumber: currentEnrolmentWeek(enrolment, monday),
+    preferredDays: prefs.preferredDays,
+    cardioPreference: prefs.cardioPreference,
+  });
+}
+
+async function syncSupportOptional(
+  existing: PlannedSession[],
+  slots: PlacedSlot[],
+  monday: Date
+): Promise<PlannedSession[]> {
+  if (slots.length === 0) return existing;
+  const optionalDates = new Set(
+    slots
+      .filter((slot) => (slot.type === 'cardio' || slot.type === 'recovery') && slot.optional)
+      .map((slot) => toIso(addDays(monday, WEEKDAY_KEYS.indexOf(slot.weekday))))
+  );
+  const weekStart = toIso(monday);
+  const weekEnd = toIso(addDays(monday, 6));
+  const updates = existing.filter(
+    (row) =>
+      row.date >= weekStart &&
+      row.date <= weekEnd &&
+      optionalDates.has(row.date) &&
+      !row.is_optional &&
+      !isOverlayPlanId(row.id) &&
+      (row.session_kind === 'cardio' ||
+        row.session_kind === 'recovery' ||
+        Boolean(row.cardio_slug) ||
+        Boolean(row.stretch_slug))
+  );
+  if (updates.length === 0) return existing;
+  const { error } = await supabase
+    .from('planned_sessions')
+    .update({ is_optional: true })
+    .in(
+      'id',
+      updates.map((row) => row.id)
+    );
+  if (error && !isMissingSupportColumn(error)) throwPlanner(error);
+  const mark = new Set(updates.map((row) => row.id));
+  return existing.map((row) => (mark.has(row.id) ? { ...row, is_optional: true } : row));
 }
 
 type WeekInsert = PlanInsert;
@@ -793,7 +858,8 @@ async function ensureWeekFromRoutine(
   const existing = await fetchPlansInRange(userId, weekStart, weekEnd);
   const routine = await fetchRoutine(enrolment.routine_id);
   if (!routine) return;
-  await insertWeekPlans(buildWeekInserts(userId, monday, enrolment, routine, existing, prefs));
+  const remaining = await syncSupportOptional(existing, weekSlots(enrolment, monday, prefs), monday);
+  await insertWeekPlans(buildWeekInserts(userId, monday, enrolment, routine, remaining, prefs));
 }
 
 async function ensureRangeFromRoutine(
@@ -804,8 +870,12 @@ async function ensureRangeFromRoutine(
   routine: Routine,
   prefs: WeekPlanPrefs
 ): Promise<void> {
-  const existing = await fetchPlansInRange(userId, toIso(from), toIso(to));
-  const inserts = mondaysInRange(from, to).flatMap((monday) =>
+  let existing = await fetchPlansInRange(userId, toIso(from), toIso(to));
+  const mondays = mondaysInRange(from, to);
+  for (const monday of mondays) {
+    existing = await syncSupportOptional(existing, weekSlots(enrolment, monday, prefs), monday);
+  }
+  const inserts = mondays.flatMap((monday) =>
     buildWeekInserts(userId, monday, enrolment, routine, existing, prefs)
   );
   await insertWeekPlans(inserts);
@@ -864,6 +934,15 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     subtitle = 'Your workout';
     exercises.push(...(workout?.exercises.map((item) => item.exercise.name) ?? []));
     sessionMinutes = exercises.length > 0 ? Math.max(20, exercises.length * 8) : null;
+  } else if (plan?.routine_day_id) {
+    kind = 'routine';
+    const day = routineDays.find((item) => item.id === plan.routine_day_id);
+    title = day?.name ?? 'Routine session';
+    subtitle = weekLabel(plan.routine_day_id) ?? 'Routine';
+    exercises.push(...(day?.exercises.map((item) => item.exercise.name) ?? []));
+    sessionMinutes = lookups.enrolment?.routine.session_minutes ?? null;
+    isStretch = lookups.routine?.type === 'stretch' || day?.sessionType === 'recovery';
+    if (isStretch) kind = 'recovery';
   } else if (plan?.cardio_slug || plan?.session_kind === 'cardio') {
     kind = 'cardio';
     const def = cardioSession(plan.cardio_slug);
@@ -877,15 +956,6 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     subtitle = weekLabel(null) ?? 'Recovery';
     sessionMinutes = stretch?.minutes ?? 12;
     isStretch = true;
-  } else if (plan?.routine_day_id) {
-    kind = 'routine';
-    const day = routineDays.find((item) => item.id === plan.routine_day_id);
-    title = day?.name ?? 'Routine session';
-    subtitle = weekLabel(plan.routine_day_id) ?? 'Routine';
-    exercises.push(...(day?.exercises.map((item) => item.exercise.name) ?? []));
-    sessionMinutes = lookups.enrolment?.routine.session_minutes ?? null;
-    isStretch = lookups.routine?.type === 'stretch' || day?.sessionType === 'recovery';
-    if (isStretch) kind = 'recovery';
   }
 
   return {
@@ -976,15 +1046,18 @@ function overlayDayFromSlot(
 function applySupportOverlay(
   days: PlannerDayView[],
   enrolment: RoutineEnrolment | null,
-  prefs: WeekPlanPrefs
+  prefs: WeekPlanPrefs,
+  plans: PlannedSession[] = []
 ): PlannerDayView[] {
   if (!enrolment) return days;
   const overlay = overlayForRoutine(enrolment.routine.slug, enrolment.routine.id);
   if (!overlay) return days;
+  const skipped = new Set(plans.filter((row) => row.status === 'skipped').map((row) => row.date));
   const endDate = toIso(addDays(parseIsoDate(enrolment.start_date), enrolment.routine.length_weeks * 7 - 1));
   const byWeek = new Map<number, PlacedSlot[]>();
   return days.map((day) => {
     if (day.kind !== 'empty') return day;
+    if (skipped.has(day.iso)) return day;
     if (day.iso < enrolment.start_date || day.iso > endDate) return day;
     const date = parseIsoDate(day.iso);
     const weekNumber = currentEnrolmentWeek(enrolment, date);
@@ -1045,9 +1118,10 @@ export async function loadPlannerWeek(weekStart: Date = startOfWeekMonday(new Da
   const days = applySupportOverlay(
     WEEKDAYS_MON.map((_, index) => toDayView(addDays(monday, index), lookups)),
     enrolment,
-    prefs
+    prefs,
+    lookups.plans
   );
-  const workoutDays = days.filter((day) => isPlannedSessionKind(day.kind));
+  const workoutDays = days.filter((day) => isPlannedSessionKind(day.kind) && !day.isOptional);
   return {
     weekStart: weekStartIso,
     weekEnd: weekEndIso,
@@ -1080,7 +1154,7 @@ export async function loadPlannerRange(from: Date, to: Date): Promise<PlannerRan
   return {
     from: toIso(from),
     to: toIso(to),
-    days: applySupportOverlay(buildDays(from, to, lookups), enrolment, prefs),
+    days: applySupportOverlay(buildDays(from, to, lookups), enrolment, prefs, lookups.plans),
     enrolment,
   };
 }

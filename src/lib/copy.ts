@@ -127,6 +127,7 @@ export const weekRingCopy = {
   cardio: home.week_ring_cardio,
   recovery: home.week_ring_recovery,
   optional: home.optional_chip,
+  skip: home.optional_skip,
   eyebrow_strength: home.eyebrow_strength,
   eyebrow_cardio: home.eyebrow_cardio,
   eyebrow_recovery: home.eyebrow_recovery,

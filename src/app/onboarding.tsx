@@ -844,9 +844,22 @@ function PlanReveal({
       <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
         {screen.week_title}
       </AppText>
-      <AppText variant="body" style={{ color: colours.inkMuted }}>
-        {fillTemplate(screen.week_template, vars)}
-      </AppText>
+      {plan.recommended.overlay.cardio_balanced && plan.recommended.overlay.schedule_label ? (
+        <AppText variant="body" style={{ color: colours.inkMuted }}>
+          {plan.recommended.overlay.schedule_label}
+        </AppText>
+      ) : (
+        <>
+          <AppText variant="body" style={{ color: colours.inkMuted }}>
+            {fillTemplate(screen.week_template, vars)}
+          </AppText>
+          {screen.week_extra ? (
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
+              {screen.week_extra}
+            </AppText>
+          ) : null}
+        </>
+      )}
       <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
         {screen.timeline_title}
       </AppText>
