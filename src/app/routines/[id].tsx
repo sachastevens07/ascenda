@@ -46,6 +46,7 @@ import {
   resolveNextRoutineOffer,
   type NextRoutineOffer,
 } from '@/lib/handOff';
+import { contentRoutine, contentWeeklyStructure } from '@/lib/contentRoutines';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
@@ -415,6 +416,10 @@ export default function RoutineDetailScreen() {
     ROUTINE_GOAL_LABELS[routine.goal],
     ...routine.tags.map((tag) => formatTagLabel(tag)),
   ];
+  const overlay = contentRoutine(routine.slug) ?? contentRoutine(routine.id);
+  const weekShape = overlay
+    ? contentWeeklyStructure(overlay, profile?.cardio_preference)
+    : routine.weeklyStructure;
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -528,10 +533,12 @@ export default function RoutineDetailScreen() {
             </View>
           ) : null}
 
-          {routine.type === 'strength' && routine.weeklyStructure ? (
+          {routine.type === 'strength' && (weekShape || routine.weeklyStructure) ? (
             <View style={{ marginTop: spacing.lg, gap: 8 }}>
               <AppText variant="title3" style={{ color: colours.ink }}>Your week</AppText>
-              <AppText variant="body" style={{ color: colours.ink }}>{routine.weeklyStructure}</AppText>
+              <AppText variant="body" style={{ color: colours.ink }}>
+                {weekShape ?? routine.weeklyStructure}
+              </AppText>
             </View>
           ) : null}
 

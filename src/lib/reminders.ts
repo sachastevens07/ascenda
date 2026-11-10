@@ -277,7 +277,9 @@ export function sessionReminderCopy(day: PlannerDayView): { title: string; body:
 function shouldRemindOnDay(day: PlannerDayView): boolean {
   if (!day.plan || day.plan.status !== 'planned') return false;
   if (day.kind === 'rest') return false;
-  if (day.kind !== 'routine' && day.kind !== 'custom') return false;
+  if (day.kind !== 'routine' && day.kind !== 'custom' && day.kind !== 'cardio' && day.kind !== 'recovery') {
+    return false;
+  }
   if (day.completed) return false;
   return true;
 }

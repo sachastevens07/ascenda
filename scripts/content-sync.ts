@@ -965,7 +965,7 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   line(`  routine_days.type / day_key: ${dayTypeProbe ? `missing (${dayTypeProbe})` : 'present'}`);
   line(`  routine_day_blocks: ${blocksProbe ? `missing (paste supabase/session_blocks_w1.sql)` : 'present'}`);
   line(`  Planned weeks: ${structure.weeks}`);
-  line(`  Planned days: ${structure.days} (strength days from phases; cardio and recovery days stay in weekly_schedule until W5/W6)`);
+  line(`  Planned days: ${structure.days} (strength days from phases; cardio and recovery days are placed on the planner from weekly_schedule in W5)`);
   line(`  Planned blocks: ${structure.blocks} (warmup ${structure.warmup}, strength ${structure.strength}, cardio ${structure.cardio}, cooldown ${structure.cooldown}, stretch ${structure.stretch})`);
   const n2Probe = await probe(client, 'routines', 'audience_bullets, by_the_end_bullets, split_note, progression_note');
   const n2WeekProbe = await probe(client, 'routine_weeks', 'phase_name, phase_goal, is_lighter_week');

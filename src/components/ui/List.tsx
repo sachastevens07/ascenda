@@ -55,6 +55,7 @@ export function ListRow({
   title,
   subtitle,
   eyebrow,
+  eyebrowColor,
   left,
   right,
   onPress,
@@ -64,6 +65,7 @@ export function ListRow({
   title: string;
   subtitle?: string;
   eyebrow?: string;
+  eyebrowColor?: string;
   left?: ReactNode;
   right?: ReactNode;
   onPress?: () => void;
@@ -81,7 +83,7 @@ export function ListRow({
       {left}
       <View style={styles.rowText}>
         {eyebrow ? (
-          <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 2 }}>
+          <AppText variant="eyebrow" style={{ color: eyebrowColor ?? colours.accent, marginBottom: 2 }}>
             {eyebrow}
           </AppText>
         ) : null}

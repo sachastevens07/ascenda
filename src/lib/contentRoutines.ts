@@ -19,6 +19,12 @@ import upperBodyStrong from '../../content/routines/upper-body-strong-in-6-weeks
 import welcomeBack from '../../content/routines/welcome-back-4-week-restart.json';
 
 import { preferredSwapIds, resolveExerciseSlug } from '@/lib/contentGuides';
+import {
+  CARDIO_PREFERENCES,
+  WEEKDAYS,
+  type CardioPreference,
+  type Weekday,
+} from '@/lib/onboardingAnswers';
 
 export type ContentSlot = {
   slug: string;
@@ -53,6 +59,29 @@ export type ContentPlanMilestone = {
   description: string;
 };
 
+export type ContentSupportWeek = {
+  weeks: number[];
+  cardio_session: string | null;
+  stretch_routine: string | null;
+};
+
+export type ContentSupportDay = {
+  key: string;
+  type: 'cardio' | 'recovery';
+  name: string;
+  by_week: ContentSupportWeek[];
+};
+
+export type ContentScheduleSlot = {
+  weekday: Weekday;
+  type: 'strength' | 'cardio' | 'recovery' | 'rest';
+  day_key: string | null;
+  support_key: string | null;
+  optional: boolean;
+  finisher: string | null;
+  finisher_skip_weeks: number[];
+};
+
 export type ContentRoutineOverlay = {
   slug: string;
   name: string;
@@ -72,6 +101,9 @@ export type ContentRoutineOverlay = {
   how_it_works: string[];
   progression_explained: string;
   weekly_structure: string | null;
+  weekly_structure_by_preference: Partial<Record<CardioPreference, string>>;
+  support_days: ContentSupportDay[];
+  weekly_schedule: Partial<Record<CardioPreference, ContentScheduleSlot[]>>;
   phases: ContentPhase[];
   next_routine_suggestions: string[];
 };
@@ -124,6 +156,73 @@ function parseSlot(raw: unknown): ContentSlot | null {
   };
 }
 
+function parseWeekday(value: unknown): Weekday | null {
+  const day = text(value);
+  return (WEEKDAYS as readonly string[]).includes(day) ? (day as Weekday) : null;
+}
+
+function parseScheduleType(value: unknown): ContentScheduleSlot['type'] | null {
+  const type = text(value);
+  if (type === 'strength' || type === 'cardio' || type === 'recovery' || type === 'rest') return type;
+  return null;
+}
+
+function parseSupportDay(raw: unknown): ContentSupportDay | null {
+  const item = asRecord(raw);
+  const key = text(item.key);
+  const type = text(item.type);
+  if (!key || (type !== 'cardio' && type !== 'recovery')) return null;
+  return {
+    key,
+    type,
+    name: text(item.name) || key,
+    by_week: asArray(item.by_week).flatMap((entry) => {
+      const row = asRecord(entry);
+      const weeks = asArray(row.weeks)
+        .map((value) => num(value))
+        .filter((value): value is number => value != null);
+      if (weeks.length === 0) return [];
+      return [
+        {
+          weeks,
+          cardio_session: text(row.cardio_session) || null,
+          stretch_routine: text(row.stretch_routine) || null,
+        },
+      ];
+    }),
+  };
+}
+
+function parseScheduleSlot(raw: unknown): ContentScheduleSlot | null {
+  const item = asRecord(raw);
+  const weekday = parseWeekday(item.weekday);
+  const type = parseScheduleType(item.type);
+  if (!weekday || !type) return null;
+  return {
+    weekday,
+    type,
+    day_key: text(item.day_key) || null,
+    support_key: text(item.support_key) || null,
+    optional: item.optional === true,
+    finisher: text(item.finisher) || null,
+    finisher_skip_weeks: asArray(item.finisher_skip_weeks)
+      .map((value) => num(value))
+      .filter((value): value is number => value != null),
+  };
+}
+
+function parseWeeklySchedule(raw: unknown): Partial<Record<CardioPreference, ContentScheduleSlot[]>> {
+  const body = asRecord(raw);
+  const schedule: Partial<Record<CardioPreference, ContentScheduleSlot[]>> = {};
+  for (const key of CARDIO_PREFERENCES) {
+    const slots = asArray(body[key])
+      .map(parseScheduleSlot)
+      .filter((item): item is ContentScheduleSlot => Boolean(item));
+    if (slots.length > 0) schedule[key] = slots;
+  }
+  return schedule;
+}
+
 function parseDay(raw: unknown): ContentDay | null {
   const day = asRecord(raw);
   const name = text(day.name);
@@ -144,6 +243,11 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
   if (!slug) return null;
   const summary = asRecord(routine.weekly_structure_summary);
   const fine = asRecord(summary.fine);
+  const weekly_structure_by_preference: Partial<Record<CardioPreference, string>> = {};
+  for (const key of CARDIO_PREFERENCES) {
+    const line = text(asRecord(summary[key]).text);
+    if (line) weekly_structure_by_preference[key] = line;
+  }
   const phases = asArray(body.phases).flatMap((raw) => {
     const phase = asRecord(raw);
     const name = text(phase.name);
@@ -192,7 +296,16 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
     why_this_split: text(routine.why_this_split),
     how_it_works: asArray(routine.how_it_works).map(text).filter(Boolean),
     progression_explained: text(routine.progression_explained),
-    weekly_structure: text(fine.text) || text(asRecord(summary.avoid).text) || null,
+    weekly_structure:
+      text(fine.text) ||
+      text(asRecord(summary.avoid).text) ||
+      text(asRecord(summary.love).text) ||
+      null,
+    weekly_structure_by_preference,
+    support_days: asArray(body.support_days)
+      .map(parseSupportDay)
+      .filter((item): item is ContentSupportDay => Boolean(item)),
+    weekly_schedule: parseWeeklySchedule(body.weekly_schedule),
     phases,
     next_routine_suggestions: asArray(routine.next_routine_suggestions)
       .map((value) => text(value))
@@ -244,6 +357,17 @@ export function contentDayFor(
   }
   const name = day.name.trim().toLowerCase();
   return days.find((item) => item.name.toLowerCase() === name) ?? null;
+}
+
+export function contentWeeklyStructure(
+  overlay: ContentRoutineOverlay,
+  preference: CardioPreference | null | undefined
+): string | null {
+  if (overlay.cardio_balanced) {
+    return overlay.weekly_structure;
+  }
+  const key = preference && overlay.weekly_structure_by_preference[preference] ? preference : null;
+  return (key ? overlay.weekly_structure_by_preference[key] : null) ?? overlay.weekly_structure;
 }
 
 export function contentSlotFor(day: ContentDay, exerciseId: string, position: number): ContentSlot | null {

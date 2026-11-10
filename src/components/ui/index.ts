@@ -36,6 +36,7 @@ export { DetailLayout } from './DetailLayout';
 export { ExerciseThumb, equipmentIconColour, equipmentIconName } from './ExerciseThumb';
 export { ChipScroller, ListRow, SectionHeader, StickyDayHeader } from './List';
 export { ProgressBar, ProgressRing } from './Progress';
+export { TypeRing } from './TypeRing';
 export { NoteChip, RestChip, RestTimerBar, SetRow, SetTableHeader } from './Workout';
 export {
   DisclaimerBody,

@@ -118,6 +118,20 @@ export const homeCopy = {
   share_week: home.share_week,
 } as const;
 
+/** W7 weekly ring. Bundled from content/microcopy. */
+export const weekRingCopy = {
+  label: home.week_ring_label,
+  sessions: home.week_ring_sessions,
+  counts: home.week_ring_counts,
+  strength: home.week_ring_strength,
+  cardio: home.week_ring_cardio,
+  recovery: home.week_ring_recovery,
+  optional: home.optional_chip,
+  eyebrow_strength: home.eyebrow_strength,
+  eyebrow_cardio: home.eyebrow_cardio,
+  eyebrow_recovery: home.eyebrow_recovery,
+} as const;
+
 const programmes = microcopy.strings.programmes;
 
 /** X3 Programmes browse. Bundled from content/microcopy. */

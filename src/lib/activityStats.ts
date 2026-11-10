@@ -1,6 +1,6 @@
 import { fillCopy, streakCopy } from '@/lib/copy';
 import type { Equipment } from '@/lib/exercises';
-import { startOfWeekMonday, toIso } from '@/lib/planner';
+import { addDays, startOfWeekMonday, toIso } from '@/lib/planner';
 import type { ExerciseBests, ProgressSet } from '@/lib/progress';
 import { parseDate } from '@/lib/progress';
 import { usesWeight } from '@/lib/programmes';
@@ -105,6 +105,28 @@ function streakSessionKind(session: FinishedSessionMeta): SessionType {
     return session.type;
   }
   return sessionTypeFromSource(session.source);
+}
+
+export type WeekTypeCounts = {
+  strength: number;
+  cardio: number;
+  recovery: number;
+};
+
+/** Qualifying sessions this week, split by type. Recovery still needs 10 minutes. */
+export function thisWeekTypeCounts(
+  sessions: FinishedSessionMeta[],
+  now = new Date()
+): WeekTypeCounts {
+  const monday = toIso(startOfWeekMonday(now));
+  const sunday = toIso(addDays(startOfWeekMonday(now), 6));
+  const counts: WeekTypeCounts = { strength: 0, cardio: 0, recovery: 0 };
+  for (const session of sessions) {
+    if (session.date < monday || session.date > sunday) continue;
+    if (!sessionCountsTowardStreak(session)) continue;
+    counts[streakSessionKind(session)] += 1;
+  }
+  return counts;
 }
 
 /** Strength and cardio always count. Stretch and recovery count from 10 minutes. */

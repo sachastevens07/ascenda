@@ -31,6 +31,7 @@ import {
   StreakCard,
   TabAvatar,
   TextButton,
+  TypeRing,
   measureAnchor,
   type AnchorHandle,
   type AnchorRect,
@@ -57,7 +58,9 @@ import {
   getWeeklyStreak,
   normalizeWeeklyTarget,
   sessionCountsTowardStreak,
+  thisWeekTypeCounts,
   type FinishedSessionMeta,
+  type WeekTypeCounts,
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import {
@@ -126,6 +129,7 @@ type ActivityData = {
   sets: ProgressSet[];
   sessions: FinishedSessionMeta[];
   streak: WeeklyStreak;
+  weekTypes: WeekTypeCounts;
   hideStreak: boolean;
   hideAchievements: boolean;
   photosEnabled: boolean;
@@ -270,6 +274,7 @@ export default function ActivityScreen() {
             sets,
             sessions,
             streak,
+            weekTypes: thisWeekTypeCounts(sessions),
             hideStreak,
             hideAchievements,
             photosEnabled,
@@ -519,12 +524,11 @@ export default function ActivityScreen() {
           <>
             {highlights}
 
-            <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-              {fillCopy(streakCopy.this_week_progress, {
-                done: data.streak.doneThisWeek,
-                target: data.streak.targetThisWeek,
-              })}
-            </AppText>
+            <TypeRing
+              done={data.streak.doneThisWeek}
+              target={data.streak.targetThisWeek}
+              counts={data.weekTypes}
+            />
 
             {data.hideStreak ? null : <StreakCard streak={data.streak} />}
 

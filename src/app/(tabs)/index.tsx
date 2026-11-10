@@ -35,6 +35,7 @@ import {
   ShareStatsCard,
   TabAvatar,
   TextButton,
+  TypeRing,
   WeekStripCard,
   WeekTodayEmpty,
   WeekTodaySession,
@@ -50,6 +51,8 @@ import {
   getWeeklyStreak,
   normalizeWeeklyTarget,
   sessionDurationSeconds,
+  thisWeekTypeCounts,
+  type WeekTypeCounts,
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import {
@@ -77,7 +80,15 @@ import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
 import { openRefer } from '@/lib/referrals';
 import { coverForChallenge, coverForRoutine, homeHeroSlug, takeCoverSource, takeSlug } from '@/lib/images';
-import { addDays, loadPlannerWeek, startOfWeekMonday, toIso, type PlannerDayView, type PlannerWeek } from '@/lib/planner';
+import {
+  addDays,
+  isPlannedSessionKind,
+  loadPlannerWeek,
+  startOfWeekMonday,
+  toIso,
+  type PlannerDayView,
+  type PlannerWeek,
+} from '@/lib/planner';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { ensureSubscribed } from '@/lib/paywall';
@@ -122,7 +133,8 @@ import {
   saveWelcomeBackPreview,
   type WelcomeBackOffer,
 } from '@/lib/welcomeBack';
-import { openLogger, openRoutineLogger } from '@/lib/startLogger';
+import { openCardioFromPlan, openLogger, openRecoveryFromPlan, openRoutineLogger } from '@/lib/startLogger';
+import { useWorkout } from '@/lib/workout';
 import {
   fetchActiveSession,
   fetchLastFinishedRoutineSession,
@@ -161,6 +173,7 @@ type HomeData = {
   learn: LearnArticle[];
   planner: PlannerWeek | null;
   weekStats: { sessions: number; personalBests: number; minutes: string; awards: number };
+  weekTypes: WeekTypeCounts;
   awardPreview: AchievementBadge[];
   lifetimeSessions: number;
 };
@@ -259,6 +272,7 @@ export default function HomeScreen() {
   const { width, height } = useWindowDimensions();
   const { colours, spacing, radius, shadow } = useTheme();
   const { profile } = useProfile();
+  const workout = useWorkout();
   const answers = getQuizAnswers(profile);
   const subscription = useSubscription();
   const [data, setData] = useState<HomeData | null>(null);
@@ -443,6 +457,7 @@ export default function HomeScreen() {
               minutes: String(Math.max(0, Math.round(weekSeconds / 60))),
               awards: weekAwards,
             },
+            weekTypes: thisWeekTypeCounts(sessions),
             awardPreview: pickAwardsPreview(badges),
             lifetimeSessions: sessions.length,
           });
@@ -678,6 +693,24 @@ export default function HomeScreen() {
 
   async function startTodayFromPlanner(today: PlannerDayView) {
     if (!ensureSubscribed()) return;
+    if (today.kind === 'cardio' && today.plan?.cardio_slug) {
+      setIsStarting(true);
+      try {
+        await openCardioFromPlan(today.plan.cardio_slug, workout.publish);
+      } finally {
+        setIsStarting(false);
+      }
+      return;
+    }
+    if (today.kind === 'recovery' && today.plan?.stretch_slug) {
+      setIsStarting(true);
+      try {
+        await openRecoveryFromPlan(today.plan.stretch_slug, workout.publish);
+      } finally {
+        setIsStarting(false);
+      }
+      return;
+    }
     if (today.kind === 'custom' && today.plan?.custom_workout_id) {
       setIsStarting(true);
       try {
@@ -752,9 +785,11 @@ export default function HomeScreen() {
     learn,
     planner,
     weekStats,
+    weekTypes,
     awardPreview,
     lifetimeSessions,
     hideAchievements,
+    streak,
   } = data;
   const inProgress = Boolean(activeSession);
   const weekDays = routine && next ? daysInWeek(routine, next.weekNumber) : [];
@@ -781,7 +816,7 @@ export default function HomeScreen() {
           iso: day.iso,
           label: WEEKDAY_SHORT[index] ?? 'Mo',
           isToday: day.isToday,
-          planned: day.kind === 'routine' || day.kind === 'custom',
+          planned: isPlannedSessionKind(day.kind),
           completed: day.completed,
         }))
       : fallbackStripDays().map((day, index) => ({
@@ -792,7 +827,7 @@ export default function HomeScreen() {
           completed: false,
         }));
   const upcoming = plannerDays.find(
-    (day) => !day.isToday && !day.isPast && (day.kind === 'routine' || day.kind === 'custom')
+    (day) => !day.isToday && !day.isPast && isPlannedSessionKind(day.kind)
   );
   const firstName = profile?.display_name?.trim().split(/\s+/)[0] ?? 'you';
   const hero = heroCopyFor({
@@ -800,10 +835,7 @@ export default function HomeScreen() {
     welcomeBack,
     enrolment: Boolean(enrolment),
     rest: todayPlan?.kind === 'rest',
-    planned:
-      todayPlan?.kind === 'routine' ||
-      todayPlan?.kind === 'custom' ||
-      (!todayPlan && Boolean(next)),
+    planned: Boolean(todayPlan && isPlannedSessionKind(todayPlan.kind)) || (!todayPlan && Boolean(next)),
     doneToday: Boolean(todayPlan?.completed),
     nextName: next?.day.name ?? todayPlan?.title ?? 'your session',
     minutes: enrolment?.routine.session_minutes ?? todayPlan?.sessionMinutes ?? 45,
@@ -815,7 +847,7 @@ export default function HomeScreen() {
     !inProgress &&
     !welcomeBack &&
     todayPlan &&
-    (todayPlan.kind === 'routine' || todayPlan.kind === 'custom') &&
+    isPlannedSessionKind(todayPlan.kind) &&
     !todayPlan.completed;
   const showTodayEmpty =
     !inProgress &&
@@ -950,7 +982,7 @@ export default function HomeScreen() {
               router.push({ pathname: '/programmes', params: { section: 'stretches' } } as Href);
               return;
             }
-            if (todayPlan && (todayPlan.kind === 'routine' || todayPlan.kind === 'custom')) {
+            if (todayPlan && isPlannedSessionKind(todayPlan.kind)) {
               void startTodayFromPlanner(todayPlan);
               return;
             }
@@ -989,6 +1021,8 @@ export default function HomeScreen() {
             style={shadow}
           />
         ) : null}
+
+        <TypeRing done={streak.doneThisWeek} target={streak.targetThisWeek} counts={weekTypes} />
 
         <WeekStripCard
           days={stripDays}

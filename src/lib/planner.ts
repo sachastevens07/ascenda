@@ -1,12 +1,26 @@
+import { cardioSession } from '@/lib/cardio';
+import {
+  fetchWeekPlanPrefs,
+  isOverlayPlanId,
+  overlayForRoutine,
+  overlayPlanId,
+  slotsForWeek,
+  stretchMeta,
+  type PlacedSlot,
+  type WeekPlanPrefs,
+} from '@/lib/completeWeek';
 import { fetchCustomWorkouts } from '@/lib/customWorkouts';
+import { WEEKDAYS as WEEKDAY_KEYS, type Weekday } from '@/lib/onboardingAnswers';
 import {
   currentEnrolmentWeek,
   daysInWeek,
   fetchActiveEnrolment,
   fetchRoutine,
   type Routine,
+  type RoutineDay,
   type RoutineEnrolment,
 } from '@/lib/routines';
+import type { SessionType } from '@/lib/sessionTypes';
 import { supabase } from '@/lib/supabase';
 
 export type PlannedSessionStatus = 'planned' | 'done' | 'skipped' | 'rest';
@@ -19,6 +33,10 @@ export type PlannedSession = {
   status: PlannedSessionStatus;
   /** HH:MM. Null means use her default reminder time. */
   reminder_time: string | null;
+  session_kind: SessionType | null;
+  cardio_slug: string | null;
+  stretch_slug: string | null;
+  is_optional: boolean;
 };
 
 export type PlannerDayOption = {
@@ -27,7 +45,7 @@ export type PlannerDayOption = {
   isToday: boolean;
 };
 
-export type PlannerDayKind = 'empty' | 'rest' | 'routine' | 'custom';
+export type PlannerDayKind = 'empty' | 'rest' | 'routine' | 'custom' | 'cardio' | 'recovery';
 
 export type PlannerDayView = {
   iso: string;
@@ -45,7 +63,12 @@ export type PlannerDayView = {
   /** Estimate for reminder copy. Null on empty days. */
   sessionMinutes: number | null;
   isStretch: boolean;
+  isOptional: boolean;
 };
+
+export function isPlannedSessionKind(kind: PlannerDayKind): boolean {
+  return kind === 'routine' || kind === 'custom' || kind === 'cardio' || kind === 'recovery';
+}
 
 export type PlannerWeek = {
   weekStart: string;
@@ -97,8 +120,10 @@ const DEFAULT_TRAINING_DAYS: Record<number, number[]> = {
 
 const PLAN_COLUMNS = 'id, date, routine_day_id, custom_workout_id, status';
 const PLAN_COLUMNS_REMINDERS = `${PLAN_COLUMNS}, reminder_time`;
+const PLAN_COLUMNS_W5 = `${PLAN_COLUMNS_REMINDERS}, session_kind, cardio_slug, stretch_slug, is_optional`;
 
-let planSelect = PLAN_COLUMNS_REMINDERS;
+let planSelect = PLAN_COLUMNS_W5;
+let supportColumnsReady: boolean | null = null;
 
 function isMissingPlanner(error: { message?: string; code?: string }): boolean {
   const detail = `${error.code ?? ''} ${error.message ?? ''}`.toLowerCase();
@@ -107,6 +132,16 @@ function isMissingPlanner(error: { message?: string; code?: string }): boolean {
 
 function isMissingReminderTimeColumn(error: { message?: string; code?: string }): boolean {
   return /reminder_time/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isMissingSupportColumn(error: { message?: string; code?: string }): boolean {
+  return /session_kind|cardio_slug|stretch_slug|is_optional|planned_sessions_source_check/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
+}
+
+function parseSessionKind(value: unknown): SessionType | null {
+  return value === 'strength' || value === 'cardio' || value === 'recovery' ? value : null;
 }
 
 function parsePlanTime(value: unknown): string | null {
@@ -119,10 +154,34 @@ function parsePlanTime(value: unknown): string | null {
   return `${pad(hours)}:${pad(minutes)}`;
 }
 
-function toPlannedSession(row: PlannedSession): PlannedSession {
+function asString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function asPlanRow(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+}
+
+function toPlannedSession(row: Record<string, unknown>): PlannedSession {
+  const cardio = asString(row.cardio_slug);
+  const stretch = asString(row.stretch_slug);
+  const routineDayId = asString(row.routine_day_id);
+  const kind =
+    parseSessionKind(row.session_kind) ??
+    (cardio ? 'cardio' : stretch ? 'recovery' : routineDayId ? 'strength' : null);
+  const status =
+    row.status === 'done' || row.status === 'skipped' || row.status === 'rest' ? row.status : 'planned';
   return {
-    ...row,
+    id: asString(row.id) ?? '',
+    date: asString(row.date) ?? '',
+    routine_day_id: routineDayId,
+    custom_workout_id: asString(row.custom_workout_id),
+    status,
     reminder_time: parsePlanTime(row.reminder_time),
+    session_kind: kind,
+    cardio_slug: cardio,
+    stretch_slug: stretch,
+    is_optional: row.is_optional === true,
   };
 }
 
@@ -134,6 +193,10 @@ export function missingPlannerMessage(): string {
   return 'Adding to the planner needs supabase/planned_sessions.sql run in the Supabase SQL editor.';
 }
 
+export function missingCompleteWeekMessage(): string {
+  return 'Cardio and recovery on the planner need supabase/complete_week_w5.sql run in the Supabase SQL editor.';
+}
+
 export function describePlannerError(error: unknown): string {
   const detail =
     error instanceof Error
@@ -141,6 +204,9 @@ export function describePlannerError(error: unknown): string {
       : error && typeof error === 'object' && 'message' in error
         ? String((error as { message: unknown }).message)
         : '';
+  if (/session_kind|cardio_slug|stretch_slug|planned_sessions_source_check/i.test(detail)) {
+    return missingCompleteWeekMessage();
+  }
   if (/42P01|PGRST205|planned_sessions/i.test(detail)) {
     return missingPlannerMessage();
   }
@@ -273,20 +339,37 @@ async function clearLivePlan(userId: string, date: string): Promise<void> {
   if (error) throwPlanner(error);
 }
 
-async function insertPlan(row: {
+type PlanInsert = {
   user_id: string;
   date: string;
   routine_day_id: string | null;
   custom_workout_id: string | null;
   status: PlannedSessionStatus;
-}): Promise<PlannedSession> {
-  const { data, error } = await supabase
-    .from('planned_sessions')
-    .insert(row)
-    .select(PLAN_COLUMNS)
-    .single();
-  if (error) throwPlanner(error);
-  return toPlannedSession(data as PlannedSession);
+  session_kind?: SessionType | null;
+  cardio_slug?: string | null;
+  stretch_slug?: string | null;
+  is_optional?: boolean;
+};
+
+function withoutSupportColumns(row: PlanInsert): PlanInsert {
+  const { session_kind: _kind, cardio_slug: _cardio, stretch_slug: _stretch, is_optional: _optional, ...rest } =
+    row;
+  return rest;
+}
+
+async function insertPlan(row: PlanInsert): Promise<PlannedSession> {
+  const payload = supportColumnsReady === false ? withoutSupportColumns(row) : row;
+  const { data, error } = await supabase.from('planned_sessions').insert(payload).select(planSelect).single();
+  if (error) {
+    if (supportColumnsReady !== false && isMissingSupportColumn(error)) {
+      supportColumnsReady = false;
+      if (planSelect === PLAN_COLUMNS_W5) planSelect = PLAN_COLUMNS_REMINDERS;
+      return insertPlan(row);
+    }
+    throwPlanner(error);
+  }
+  supportColumnsReady = supportColumnsReady ?? true;
+  return toPlannedSession(asPlanRow(data));
 }
 
 /** Next 14 days, starting today, so My workouts can pin a date without opening the week view. */
@@ -351,28 +434,52 @@ export async function clearPlannerDay(date: string): Promise<void> {
   await clearLivePlan(userId, date);
 }
 
-export async function movePlannedSession(id: string, toDate: string): Promise<void> {
+export async function persistOverlayPlan(plan: PlannedSession): Promise<PlannedSession> {
+  if (!isOverlayPlanId(plan.id)) return plan;
+  const userId = await requireUserId();
+  await clearLivePlan(userId, plan.date);
+  return insertPlan({
+    user_id: userId,
+    date: plan.date,
+    routine_day_id: plan.routine_day_id,
+    custom_workout_id: plan.custom_workout_id,
+    status: plan.status === 'rest' ? 'rest' : 'planned',
+    session_kind: plan.session_kind,
+    cardio_slug: plan.cardio_slug,
+    stretch_slug: plan.stretch_slug,
+    is_optional: plan.is_optional,
+  });
+}
+
+export async function movePlannedSession(
+  id: string,
+  toDate: string,
+  overlayPlan?: PlannedSession | null
+): Promise<void> {
+  const persisted =
+    isOverlayPlanId(id) && overlayPlan ? await persistOverlayPlan(overlayPlan) : null;
+  const fromId = persisted?.id ?? id;
   const userId = await requireUserId();
   const { data: source, error: sourceError } = await supabase
     .from('planned_sessions')
-    .select(PLAN_COLUMNS)
-    .eq('id', id)
+    .select(planSelect)
+    .eq('id', fromId)
     .maybeSingle();
   if (sourceError) throwPlanner(sourceError);
   if (!source) throw new Error('That session is no longer on your planner.');
 
-  const from = toPlannedSession(source as PlannedSession);
+  const from = toPlannedSession(asPlanRow(source));
   if (from.date === toDate) return;
 
   const { data: destRows, error: destError } = await supabase
     .from('planned_sessions')
-    .select(PLAN_COLUMNS)
+    .select(planSelect)
     .eq('user_id', userId)
     .eq('date', toDate)
     .in('status', ['planned', 'rest']);
   if (destError) throwPlanner(destError);
 
-  const dest = destRows?.[0] ? toPlannedSession(destRows[0] as PlannedSession) : null;
+  const dest = destRows?.[0] ? toPlannedSession(asPlanRow(destRows[0])) : null;
   if (!dest) {
     const { error } = await supabase.from('planned_sessions').update({ date: toDate }).eq('id', from.id);
     if (error) throwPlanner(error);
@@ -434,13 +541,18 @@ async function fetchPlansInRange(userId: string, from: string, to: string): Prom
     .lte('date', to)
     .order('date');
   if (error) {
+    if (planSelect === PLAN_COLUMNS_W5 && isMissingSupportColumn(error)) {
+      planSelect = PLAN_COLUMNS_REMINDERS;
+      supportColumnsReady = false;
+      return fetchPlansInRange(userId, from, to);
+    }
     if (planSelect !== PLAN_COLUMNS && isMissingReminderTimeColumn(error)) {
       planSelect = PLAN_COLUMNS;
       return fetchPlansInRange(userId, from, to);
     }
     throwPlanner(error);
   }
-  return (data ?? []).map((row) => toPlannedSession(row as unknown as PlannedSession));
+  return (data ?? []).map((row) => toPlannedSession(asPlanRow(row)));
 }
 
 async function fetchFinishedDatesInRange(from: string, to: string): Promise<Set<string>> {
@@ -483,13 +595,7 @@ function placedRoutineDayIds(rows: PlannedSession[]): Set<string> {
   return new Set(rows.map((row) => row.routine_day_id).filter((id): id is string => Boolean(id)));
 }
 
-type WeekInsert = {
-  user_id: string;
-  date: string;
-  routine_day_id: string;
-  custom_workout_id: null;
-  status: 'planned';
-};
+type WeekInsert = PlanInsert;
 
 function mondaysInRange(from: Date, to: Date): Date[] {
   const mondays: Date[] = [];
@@ -508,12 +614,76 @@ function rowsForWeek(rows: PlannedSession[], monday: Date): PlannedSession[] {
   return rows.filter((row) => row.date >= weekStart && row.date <= weekEnd);
 }
 
+function weekdayFromDate(date: Date): Weekday {
+  return WEEKDAY_KEYS[(date.getDay() + 6) % 7];
+}
+
+function dayByKey(days: RoutineDay[], key: string | null): RoutineDay | undefined {
+  if (!key) return undefined;
+  const exact = days.find((day) => (day.day_key ?? '').trim() === key);
+  if (exact) return exact;
+  const needle = ` ${key.toLowerCase()}`;
+  const byName = days.find((day) => {
+    const name = ` ${day.name.toLowerCase()} `;
+    return name.includes(`${needle} `) || day.name.toLowerCase().endsWith(needle.trim());
+  });
+  if (byName) return byName;
+  const index = key.toUpperCase().charCodeAt(0) - 65;
+  return index >= 0 && index < days.length ? days[index] : undefined;
+}
+
+function strengthInsert(
+  userId: string,
+  iso: string,
+  day: RoutineDay
+): WeekInsert {
+  return {
+    user_id: userId,
+    date: iso,
+    routine_day_id: day.id,
+    custom_workout_id: null,
+    status: 'planned',
+    session_kind: 'strength',
+  };
+}
+
+function supportInsert(userId: string, iso: string, slot: PlacedSlot): WeekInsert | null {
+  if (slot.type === 'cardio' && slot.cardio_slug) {
+    return {
+      user_id: userId,
+      date: iso,
+      routine_day_id: null,
+      custom_workout_id: null,
+      status: 'planned',
+      session_kind: 'cardio',
+      cardio_slug: slot.cardio_slug,
+      stretch_slug: null,
+      is_optional: slot.optional,
+    };
+  }
+  if (slot.type === 'recovery' && slot.stretch_slug) {
+    return {
+      user_id: userId,
+      date: iso,
+      routine_day_id: null,
+      custom_workout_id: null,
+      status: 'planned',
+      session_kind: 'recovery',
+      cardio_slug: null,
+      stretch_slug: slot.stretch_slug,
+      is_optional: slot.optional,
+    };
+  }
+  return null;
+}
+
 function buildWeekInserts(
   userId: string,
   monday: Date,
   enrolment: RoutineEnrolment,
   routine: Routine,
-  existing: PlannedSession[]
+  existing: PlannedSession[],
+  prefs: WeekPlanPrefs
 ): WeekInsert[] {
   const weekStart = toIso(monday);
   const weekEnd = toIso(addDays(monday, 6));
@@ -524,38 +694,69 @@ function buildWeekInserts(
   const taken = occupiedDates(weekRows);
   const alreadyPlaced = placedRoutineDayIds(weekRows);
   const weekNumber = currentEnrolmentWeek(enrolment, monday);
-  const routineDays = daysForPlannerWeek(routine, weekNumber).filter((day) => !alreadyPlaced.has(day.id));
-  if (routineDays.length === 0) return [];
+  const routineDays = daysForPlannerWeek(routine, weekNumber);
+  const overlay = overlayForRoutine(enrolment.routine.slug, enrolment.routine.id);
+  const slots = overlay
+    ? slotsForWeek({
+        overlay,
+        weekNumber,
+        preferredDays: prefs.preferredDays,
+        cardioPreference: prefs.cardioPreference,
+      })
+    : [];
+  const inserts: WeekInsert[] = [];
+
+  function takeEmptyIso(preferredIso: string | null): string | null {
+    if (preferredIso && preferredIso <= endDate && !taken.has(preferredIso)) return preferredIso;
+    for (let offset = 0; offset < 7; offset += 1) {
+      const iso = toIso(addDays(monday, offset));
+      if (iso <= endDate && !taken.has(iso)) return iso;
+    }
+    return null;
+  }
+
+  if (slots.length > 0) {
+    for (const slot of slots) {
+      if (slot.type !== 'strength' || !slot.day_key) continue;
+      const day = dayByKey(routineDays, slot.day_key);
+      if (!day || alreadyPlaced.has(day.id)) continue;
+      const preferredIso = toIso(addDays(monday, WEEKDAY_KEYS.indexOf(slot.weekday)));
+      const iso = takeEmptyIso(preferredIso);
+      if (!iso) continue;
+      inserts.push(strengthInsert(userId, iso, day));
+      taken.add(iso);
+      alreadyPlaced.add(day.id);
+    }
+    for (const slot of slots) {
+      if (slot.type !== 'cardio' && slot.type !== 'recovery') continue;
+      const preferredIso = toIso(addDays(monday, WEEKDAY_KEYS.indexOf(slot.weekday)));
+      if (preferredIso > endDate || taken.has(preferredIso)) continue;
+      const row = supportInsert(userId, preferredIso, slot);
+      if (!row) continue;
+      inserts.push(row);
+      taken.add(preferredIso);
+    }
+  }
+
+  const leftoverDays = routineDays.filter((day) => !alreadyPlaced.has(day.id));
+  if (leftoverDays.length === 0) return inserts;
 
   const offsets = defaultTrainingOffsets(enrolment.routine.days_per_week);
-  const inserts: WeekInsert[] = [];
   let dayIndex = 0;
   for (const offset of offsets) {
-    if (dayIndex >= routineDays.length) break;
+    if (dayIndex >= leftoverDays.length) break;
     const iso = toIso(addDays(monday, offset));
     if (iso > endDate || taken.has(iso)) continue;
-    inserts.push({
-      user_id: userId,
-      date: iso,
-      routine_day_id: routineDays[dayIndex].id,
-      custom_workout_id: null,
-      status: 'planned',
-    });
+    inserts.push(strengthInsert(userId, iso, leftoverDays[dayIndex]));
     taken.add(iso);
     dayIndex += 1;
   }
 
-  if (dayIndex < routineDays.length) {
-    for (let offset = 0; offset < 7 && dayIndex < routineDays.length; offset += 1) {
+  if (dayIndex < leftoverDays.length) {
+    for (let offset = 0; offset < 7 && dayIndex < leftoverDays.length; offset += 1) {
       const iso = toIso(addDays(monday, offset));
       if (iso > endDate || taken.has(iso)) continue;
-      inserts.push({
-        user_id: userId,
-        date: iso,
-        routine_day_id: routineDays[dayIndex].id,
-        custom_workout_id: null,
-        status: 'planned',
-      });
+      inserts.push(strengthInsert(userId, iso, leftoverDays[dayIndex]));
       taken.add(iso);
       dayIndex += 1;
     }
@@ -566,21 +767,33 @@ function buildWeekInserts(
 
 async function insertWeekPlans(inserts: WeekInsert[]): Promise<void> {
   if (inserts.length === 0) return;
-  const { error } = await supabase.from('planned_sessions').insert(inserts);
-  if (error && !isUniqueConflict(error)) throwPlanner(error);
+  const payload = supportColumnsReady === false ? inserts.map(withoutSupportColumns) : inserts;
+  const { error } = await supabase.from('planned_sessions').insert(payload);
+  if (error && !isUniqueConflict(error)) {
+    if (supportColumnsReady !== false && isMissingSupportColumn(error)) {
+      supportColumnsReady = false;
+      const strengthOnly = inserts.filter((row) => row.routine_day_id);
+      if (strengthOnly.length === 0) return;
+      await insertWeekPlans(strengthOnly);
+      return;
+    }
+    throwPlanner(error);
+  }
+  if (!error) supportColumnsReady = supportColumnsReady ?? true;
 }
 
 async function ensureWeekFromRoutine(
   userId: string,
   monday: Date,
-  enrolment: RoutineEnrolment
+  enrolment: RoutineEnrolment,
+  prefs: WeekPlanPrefs
 ): Promise<void> {
   const weekStart = toIso(monday);
   const weekEnd = toIso(addDays(monday, 6));
   const existing = await fetchPlansInRange(userId, weekStart, weekEnd);
   const routine = await fetchRoutine(enrolment.routine_id);
   if (!routine) return;
-  await insertWeekPlans(buildWeekInserts(userId, monday, enrolment, routine, existing));
+  await insertWeekPlans(buildWeekInserts(userId, monday, enrolment, routine, existing, prefs));
 }
 
 async function ensureRangeFromRoutine(
@@ -588,11 +801,12 @@ async function ensureRangeFromRoutine(
   from: Date,
   to: Date,
   enrolment: RoutineEnrolment,
-  routine: Routine
+  routine: Routine,
+  prefs: WeekPlanPrefs
 ): Promise<void> {
   const existing = await fetchPlansInRange(userId, toIso(from), toIso(to));
   const inserts = mondaysInRange(from, to).flatMap((monday) =>
-    buildWeekInserts(userId, monday, enrolment, routine, existing)
+    buildWeekInserts(userId, monday, enrolment, routine, existing, prefs)
   );
   await insertWeekPlans(inserts);
 }
@@ -612,7 +826,7 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
   const done = donePlanForDate(lookups.plans, iso);
   const plan = live ?? done;
   const finishedToday = lookups.finished.has(iso);
-  const completed = Boolean(done) || (Boolean(live) && live?.status !== 'rest' && finishedToday);
+  const completed = Boolean(done) || (plan?.status !== 'rest' && finishedToday) || (!plan && finishedToday);
   const workoutNames = new Map(lookups.workouts.map((workout) => [workout.id, workout.name]));
   const routineDays = lookups.routine?.weeks.flatMap((week) => week.days) ?? [];
   const routineWeekByDay = new Map<string, number>();
@@ -630,6 +844,14 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
   const exercises: string[] = [];
   let sessionMinutes: number | null = null;
   let isStretch = false;
+  const isOptional = plan?.is_optional === true;
+  const enrolmentWeek = lookups.enrolment ? currentEnrolmentWeek(lookups.enrolment, date) : null;
+  const weekLabel = (routineDayId: string | null) => {
+    const weekNumber = (routineDayId ? routineWeekByDay.get(routineDayId) : null) ?? enrolmentWeek;
+    return lookups.enrolment && weekNumber
+      ? `${lookups.enrolment.routine.name} · week ${weekNumber}`
+      : (lookups.enrolment?.routine.name ?? null);
+  };
 
   if (plan?.status === 'rest') {
     kind = 'rest';
@@ -642,18 +864,28 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     subtitle = 'Your workout';
     exercises.push(...(workout?.exercises.map((item) => item.exercise.name) ?? []));
     sessionMinutes = exercises.length > 0 ? Math.max(20, exercises.length * 8) : null;
+  } else if (plan?.cardio_slug || plan?.session_kind === 'cardio') {
+    kind = 'cardio';
+    const def = cardioSession(plan.cardio_slug);
+    title = def?.name ?? 'Cardio';
+    subtitle = weekLabel(null) ?? 'Cardio';
+    sessionMinutes = def?.durationMinutes ?? 20;
+  } else if (plan?.stretch_slug || plan?.session_kind === 'recovery') {
+    kind = 'recovery';
+    const stretch = stretchMeta(plan.stretch_slug);
+    title = stretch?.name ?? 'Recovery';
+    subtitle = weekLabel(null) ?? 'Recovery';
+    sessionMinutes = stretch?.minutes ?? 12;
+    isStretch = true;
   } else if (plan?.routine_day_id) {
     kind = 'routine';
     const day = routineDays.find((item) => item.id === plan.routine_day_id);
     title = day?.name ?? 'Routine session';
-    const weekNumber = routineWeekByDay.get(plan.routine_day_id);
-    subtitle =
-      lookups.enrolment && weekNumber
-        ? `${lookups.enrolment.routine.name} · week ${weekNumber}`
-        : (lookups.enrolment?.routine.name ?? 'Routine');
+    subtitle = weekLabel(plan.routine_day_id) ?? 'Routine';
     exercises.push(...(day?.exercises.map((item) => item.exercise.name) ?? []));
     sessionMinutes = lookups.enrolment?.routine.session_minutes ?? null;
     isStretch = lookups.routine?.type === 'stretch' || day?.sessionType === 'recovery';
+    if (isStretch) kind = 'recovery';
   }
 
   return {
@@ -671,6 +903,7 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     kind,
     sessionMinutes,
     isStretch,
+    isOptional,
   };
 }
 
@@ -680,6 +913,95 @@ function buildDays(from: Date, to: Date, lookups: DayLookups): PlannerDayView[] 
     days.push(toDayView(date, lookups));
   }
   return days;
+}
+
+function overlayDayFromSlot(
+  day: PlannerDayView,
+  slot: PlacedSlot,
+  enrolment: RoutineEnrolment
+): PlannerDayView {
+  const date = parseIsoDate(day.iso);
+  const weekNumber = currentEnrolmentWeek(enrolment, date);
+  const subtitle = `${enrolment.routine.name} · week ${weekNumber}`;
+  if (slot.type === 'cardio' && slot.cardio_slug) {
+    const def = cardioSession(slot.cardio_slug);
+    return {
+      ...day,
+      kind: 'cardio',
+      title: def?.name ?? slot.name ?? 'Cardio',
+      subtitle,
+      sessionMinutes: def?.durationMinutes ?? slot.minutes ?? 20,
+      isOptional: slot.optional,
+      plan: {
+        id: overlayPlanId(day.iso, 'cardio'),
+        date: day.iso,
+        routine_day_id: null,
+        custom_workout_id: null,
+        status: 'planned',
+        reminder_time: null,
+        session_kind: 'cardio',
+        cardio_slug: slot.cardio_slug,
+        stretch_slug: null,
+        is_optional: slot.optional,
+      },
+    };
+  }
+  if (slot.type === 'recovery' && slot.stretch_slug) {
+    const stretch = stretchMeta(slot.stretch_slug);
+    return {
+      ...day,
+      kind: 'recovery',
+      title: stretch?.name ?? slot.name ?? 'Recovery',
+      subtitle,
+      sessionMinutes: stretch?.minutes ?? slot.minutes ?? 12,
+      isStretch: true,
+      isOptional: slot.optional,
+      plan: {
+        id: overlayPlanId(day.iso, 'recovery'),
+        date: day.iso,
+        routine_day_id: null,
+        custom_workout_id: null,
+        status: 'planned',
+        reminder_time: null,
+        session_kind: 'recovery',
+        cardio_slug: null,
+        stretch_slug: slot.stretch_slug,
+        is_optional: slot.optional,
+      },
+    };
+  }
+  return day;
+}
+
+function applySupportOverlay(
+  days: PlannerDayView[],
+  enrolment: RoutineEnrolment | null,
+  prefs: WeekPlanPrefs
+): PlannerDayView[] {
+  if (!enrolment) return days;
+  const overlay = overlayForRoutine(enrolment.routine.slug, enrolment.routine.id);
+  if (!overlay) return days;
+  const endDate = toIso(addDays(parseIsoDate(enrolment.start_date), enrolment.routine.length_weeks * 7 - 1));
+  const byWeek = new Map<number, PlacedSlot[]>();
+  return days.map((day) => {
+    if (day.kind !== 'empty') return day;
+    if (day.iso < enrolment.start_date || day.iso > endDate) return day;
+    const date = parseIsoDate(day.iso);
+    const weekNumber = currentEnrolmentWeek(enrolment, date);
+    let slots = byWeek.get(weekNumber);
+    if (!slots) {
+      slots = slotsForWeek({
+        overlay,
+        weekNumber,
+        preferredDays: prefs.preferredDays,
+        cardioPreference: prefs.cardioPreference,
+      });
+      byWeek.set(weekNumber, slots);
+    }
+    const slot = slots.find((item) => item.weekday === weekdayFromDate(date));
+    if (!slot) return day;
+    return overlayDayFromSlot(day, slot, enrolment);
+  });
 }
 
 async function loadLookups(
@@ -709,16 +1031,23 @@ export async function loadPlannerWeek(weekStart: Date = startOfWeekMonday(new Da
   const monday = startOfWeekMonday(weekStart);
   const weekStartIso = toIso(monday);
   const weekEndIso = toIso(addDays(monday, 6));
+  const prefs = await fetchWeekPlanPrefs().catch(
+    (): WeekPlanPrefs => ({ preferredDays: ['mon', 'wed', 'fri'], cardioPreference: 'fine' })
+  );
 
   const enrolment = await fetchActiveEnrolment();
   if (enrolment) {
-    await ensureWeekFromRoutine(userId, monday, enrolment);
+    await ensureWeekFromRoutine(userId, monday, enrolment, prefs);
   }
 
   const routine = enrolment ? await fetchRoutine(enrolment.routine_id).catch(() => null) : null;
   const lookups = await loadLookups(userId, monday, addDays(monday, 6), enrolment, routine);
-  const days = WEEKDAYS_MON.map((_, index) => toDayView(addDays(monday, index), lookups));
-  const workoutDays = days.filter((day) => day.kind === 'routine' || day.kind === 'custom');
+  const days = applySupportOverlay(
+    WEEKDAYS_MON.map((_, index) => toDayView(addDays(monday, index), lookups)),
+    enrolment,
+    prefs
+  );
+  const workoutDays = days.filter((day) => isPlannedSessionKind(day.kind));
   return {
     weekStart: weekStartIso,
     weekEnd: weekEndIso,
@@ -738,17 +1067,20 @@ export type PlannerRange = {
 
 export async function loadPlannerRange(from: Date, to: Date): Promise<PlannerRange> {
   const userId = await requireUserId();
+  const prefs = await fetchWeekPlanPrefs().catch(
+    (): WeekPlanPrefs => ({ preferredDays: ['mon', 'wed', 'fri'], cardioPreference: 'fine' })
+  );
   const enrolment = await fetchActiveEnrolment();
   const routine = enrolment ? await fetchRoutine(enrolment.routine_id).catch(() => null) : null;
   if (enrolment && routine) {
-    await ensureRangeFromRoutine(userId, from, to, enrolment, routine);
+    await ensureRangeFromRoutine(userId, from, to, enrolment, routine, prefs);
   }
 
   const lookups = await loadLookups(userId, from, to, enrolment, routine);
   return {
     from: toIso(from),
     to: toIso(to),
-    days: buildDays(from, to, lookups),
+    days: applySupportOverlay(buildDays(from, to, lookups), enrolment, prefs),
     enrolment,
   };
 }

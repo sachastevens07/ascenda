@@ -39,6 +39,7 @@ import {
   describePlannerError,
   formatAgendaHeading,
   formatStickyDayHeading,
+  isPlannedSessionKind,
   loadPlannerRange,
   monthsInHorizon,
   movePlannedSession,
@@ -52,6 +53,15 @@ import {
   type PlannerDayView,
   type PlannerRange,
 } from '@/lib/planner';
+import { SESSION_TYPE_COLOURS } from '@/lib/completeWeek';
+import { weekRingCopy } from '@/lib/copy';
+import {
+  openCardioFromPlan,
+  openRecoveryFromPlan,
+  openRoutineLogger,
+  openStretchDayFromPlan,
+} from '@/lib/startLogger';
+import { useWorkout } from '@/lib/workout';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed } from '@/lib/paywall';
 import {
@@ -68,7 +78,6 @@ import {
   type ReminderPrefs,
 } from '@/lib/reminders';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
-import { openRoutineLogger } from '@/lib/startLogger';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | 'reminder-time' | null;
@@ -82,6 +91,7 @@ export default function PlannerScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
   const { colours, spacing, radius, shadow } = useTheme();
+  const workout = useWorkout();
   const agendaRef = useRef<SectionList<PlannerDayView, AgendaSection>>(null);
   const fabRef = useRef<AnchorHandle>(null);
   const [range, setRange] = useState<PlannerRange | null>(null);
@@ -165,7 +175,7 @@ export default function PlannerScreen() {
   const canNextWeek = parseIsoDate(weekStartIso) < startOfWeekMonday(horizon.to);
 
   const months = useMemo(() => monthsInHorizon(horizon.from, horizon.to), [horizon.from, horizon.to]);
-  const weekPlanned = weekDays.filter((day) => day.kind === 'routine' || day.kind === 'custom');
+  const weekPlanned = weekDays.filter((day) => isPlannedSessionKind(day.kind) && !day.isOptional);
   const weekDone = weekPlanned.filter((day) => day.completed).length;
   const movingDay = movingId ? (range?.days.find((day) => day.plan?.id === movingId) ?? null) : null;
 
@@ -192,7 +202,10 @@ export default function PlannerScreen() {
 
   function openDay(day: PlannerDayView, from?: AnchorHandle | null) {
     if (movingId) {
-      void runAction(() => movePlannedSession(movingId, day.iso), 'Couldn’t move it').then((ok) => {
+      void runAction(
+        () => movePlannedSession(movingId, day.iso, movingDay?.plan ?? null),
+        'Couldn’t move it'
+      ).then((ok) => {
         if (ok) setMovingId(null);
       });
       return;
@@ -312,6 +325,26 @@ export default function PlannerScreen() {
     if (!day.plan) return;
     closeSheets();
 
+    if (day.kind === 'cardio' && day.plan.cardio_slug) {
+      setBusy(true);
+      try {
+        await openCardioFromPlan(day.plan.cardio_slug, workout.publish);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (day.kind === 'recovery' && day.plan.stretch_slug) {
+      setBusy(true);
+      try {
+        await openRecoveryFromPlan(day.plan.stretch_slug, workout.publish);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (day.plan.routine_day_id) {
       if (!range?.enrolment) {
         showDialog('Start this from Home', 'Open Home to begin this routine session.');
@@ -319,10 +352,14 @@ export default function PlannerScreen() {
       }
       setBusy(true);
       try {
-        await openRoutineLogger({
-          enrolmentId: range.enrolment.id,
-          routineDayId: day.plan.routine_day_id,
-        });
+        if (day.kind === 'recovery' || day.isStretch) {
+          await openStretchDayFromPlan(day.plan.routine_day_id, day.title ?? 'Recovery', workout.publish);
+        } else {
+          await openRoutineLogger({
+            enrolmentId: range.enrolment.id,
+            routineDayId: day.plan.routine_day_id,
+          });
+        }
       } finally {
         setBusy(false);
       }
@@ -445,7 +482,7 @@ export default function PlannerScreen() {
         />
         {stripDays.map((day, index) => {
           const letter = WEEKDAY_LETTERS[index];
-          const planned = day?.kind === 'routine' || day?.kind === 'custom';
+          const planned = day ? isPlannedSessionKind(day.kind) : false;
           const selected = day?.iso === (selectedDay?.iso ?? todayIso);
           return (
             <Pressable
@@ -546,7 +583,7 @@ export default function PlannerScreen() {
                   reminderPrefs?.sessionReminders &&
                   item.plan?.status === 'planned' &&
                   !item.completed &&
-                  (item.kind === 'routine' || item.kind === 'custom')
+                  isPlannedSessionKind(item.kind)
                     ? formatReminderClock(reminderTimeForDay(item, reminderPrefs))
                     : null
                 }
@@ -639,8 +676,7 @@ export default function PlannerScreen() {
             {selectedDay.plan && selectedDay.kind !== 'rest' && (
               <MenuRow label="Move to another day" onPress={startMove} />
             )}
-            {selectedDay.plan?.status === 'planned' &&
-            (selectedDay.kind === 'routine' || selectedDay.kind === 'custom') ? (
+            {selectedDay.plan?.status === 'planned' && isPlannedSessionKind(selectedDay.kind) ? (
               <MenuRow
                 label={
                   reminderPrefs
@@ -780,7 +816,22 @@ function AgendaDay({
   const rowRef = useRef<AnchorHandle>(null);
   const chipRef = useRef<AnchorHandle>(null);
   const quiet = day.kind === 'rest';
-  const eyebrow = day.kind === 'routine' ? 'Routine' : day.kind === 'custom' ? 'Custom' : undefined;
+  const eyebrow =
+    day.kind === 'cardio'
+      ? weekRingCopy.eyebrow_cardio
+      : day.kind === 'recovery'
+        ? weekRingCopy.eyebrow_recovery
+        : day.kind === 'routine'
+          ? weekRingCopy.eyebrow_strength
+          : day.kind === 'custom'
+            ? 'Custom'
+            : undefined;
+  const eyebrowColor =
+    day.kind === 'cardio'
+      ? SESSION_TYPE_COLOURS.cardio
+      : day.kind === 'recovery'
+        ? SESSION_TYPE_COLOURS.recovery
+        : undefined;
 
   return (
     <Pressable
@@ -800,6 +851,7 @@ function AgendaDay({
       ) : (
         <ListRow
           eyebrow={eyebrow}
+          eyebrowColor={eyebrowColor}
           title={day.title ?? 'Session'}
           subtitle={day.subtitle ?? undefined}
           showChevron
@@ -818,14 +870,29 @@ function AgendaDay({
             </View>
           }
           right={
-            reminderLabel ? (
-              <View ref={chipRef} collapsable={false}>
-                <ReminderTimeChip
-                  timeLabel={reminderLabel}
-                  onPress={() => onReminderPress(chipRef.current)}
-                />
-              </View>
-            ) : null
+            <View style={{ alignItems: 'flex-end', gap: 6 }}>
+              {day.isOptional ? (
+                <View
+                  style={{
+                    backgroundColor: colours.surfaceMuted,
+                    borderRadius: radius.full,
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                  }}>
+                  <AppText variant="caption" style={{ color: colours.inkMuted }}>
+                    {weekRingCopy.optional}
+                  </AppText>
+                </View>
+              ) : null}
+              {reminderLabel ? (
+                <View ref={chipRef} collapsable={false}>
+                  <ReminderTimeChip
+                    timeLabel={reminderLabel}
+                    onPress={() => onReminderPress(chipRef.current)}
+                  />
+                </View>
+              ) : null}
+            </View>
           }
         />
       )}
@@ -871,7 +938,7 @@ function MonthBlock({
           const day = daysByIso.get(iso);
           const isToday = day?.isToday ?? false;
           const isSelected = iso === selectedIso;
-          const hasWorkout = day?.kind === 'routine' || day?.kind === 'custom';
+          const hasWorkout = day ? isPlannedSessionKind(day.kind) : false;
           const isMoving = movingId !== null && day?.plan?.id === movingId;
           return (
             <MonthCell

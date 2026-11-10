@@ -60,7 +60,17 @@
       "section_learn": "Learn",
       "see_all": "See all",
       "quote_eyebrow": "TODAY'S THOUGHT",
-      "share_week": "Share"
+      "share_week": "Share",
+      "week_ring_label": "This week",
+      "week_ring_sessions": "{done} of {target}",
+      "week_ring_counts": "{strength} strength · {cardio} cardio · {recovery} recovery",
+      "week_ring_strength": "strength",
+      "week_ring_cardio": "cardio",
+      "week_ring_recovery": "recovery",
+      "optional_chip": "Optional",
+      "eyebrow_strength": "Strength",
+      "eyebrow_cardio": "Cardio",
+      "eyebrow_recovery": "Recovery"
     },
     "programmes": {
       "section_recommended": "Recommended for you",
@@ -754,6 +764,7 @@
       "scan_tip": "Photograph the machine, not people. Photos are never stored.",
       "scan_privacy": "Your photo is checked and then deleted straight away.",
       "camera": "Camera",
+      "take_photo": "Take photo",
       "library": "Photo library",
       "checking": "Checking the photo…",
       "not_equipment": "That doesn't look like gym equipment. Try another photo.",
