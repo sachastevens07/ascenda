@@ -9,7 +9,7 @@ import { RoutineBrowse } from '@/components/RoutineBrowse';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
 import { AppText, IconButton, TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { aiCopy, cardioCopy } from '@/lib/copy';
+import { aiCopy, cardioCopy, programmesCopy } from '@/lib/copy';
 import { ensureSubscribed } from '@/lib/paywall';
 
 const SECTIONS = [
@@ -48,7 +48,7 @@ export default function ProgrammesScreen() {
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <TabAvatar />
-          <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Programmes</AppText>
+          <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>{programmesCopy.tab_title}</AppText>
           <IconButton
             icon="camera-outline"
             accessibilityLabel={aiCopy.scan_title}

@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
   Pressable,
@@ -7,17 +7,17 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AppText,
   ArticleCard,
   CategoryTile,
   HeroImage,
+  IconButton,
   ListRow,
   QuoteCard,
   SectionHeader,
-  TabAvatar,
   openLearnArticle,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
@@ -53,8 +53,8 @@ type LearnData = {
   quotes: DailyQuote[];
 };
 
-export default function LearnScreen() {
-  const tabBarHeight = useTabBarHeight();
+export default function LearnHubScreen() {
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { colours, radius } = useTheme();
   const { profile } = useProfile();
@@ -118,12 +118,23 @@ export default function LearnScreen() {
     saveHideQuote(true).catch(() => setQuoteHidden(false));
   }
 
+  function goBack() {
+    if (router.canGoBack()) router.back();
+    else router.replace('/' as Href);
+  }
+
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 },
+        ]}>
         <View style={styles.header}>
-          <TabAvatar />
-          <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>Learn</AppText>
+          <IconButton icon="chevron-back" variant="muted" accessibilityLabel="Back" onPress={goBack} />
+          <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>
+            Learn
+          </AppText>
         </View>
 
         {showQuote && quote ? (
@@ -195,7 +206,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingTop: 12,
     gap: 20,
   },
   header: {

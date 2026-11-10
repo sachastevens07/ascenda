@@ -228,6 +228,7 @@ function RootNavigator() {
         <Stack.Screen name="singles" options={{ headerShown: false }} />
         <Stack.Screen name="stretches" options={{ headerShown: false }} />
         <Stack.Screen name="cardio" options={{ headerShown: false }} />
+        <Stack.Screen name="food" options={{ headerShown: false }} />
         <Stack.Screen name="machines" options={{ headerShown: false }} />
         <Stack.Screen name="paths" options={{ headerShown: false }} />
         <Stack.Screen name="challenges" options={{ headerShown: false }} />

@@ -464,13 +464,8 @@ async function main(): Promise<void> {
   reportMachineGuides();
   reportAi1();
   reportAi5();
+  reportFood();
 
-  line('No table in the current schema, skipped');
-  const deferred = [
-    ['content/food', 'recipes and collections (F2)'],
-  ];
-  for (const [folder, why] of deferred) line(`  ${folder}: ${why}`);
-  line();
 
   await reportImages(client);
   await reportExercises(client);
@@ -658,6 +653,22 @@ function reportAi5(): void {
   line('  Optional story fallback: "{sessions} sessions and {minutes} minutes of training in {month}. That\'s something to be proud of."');
   line('  Optional Edge Function: monthly-recap. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai5.sql (monthly_recaps).');
   line('  Live sync does not write recap rows. The report UI does not need the SQL or function.');
+  line();
+}
+
+function reportFood(): void {
+  line('food  ←  content/food/recipes.json + collections.json (bundled, F1)');
+  const recipesFile = asRecord(readJson('food/recipes.json'));
+  const collectionsFile = asRecord(readJson('food/collections.json'));
+  const recipes = asArray(recipesFile.recipes).map(asRecord);
+  const collections = asArray(collectionsFile.collections).map(asRecord);
+  const meals = asArray(recipesFile.meal_type_tiles).map((item) => text(asRecord(item).meal_type)).filter(Boolean);
+  const withNutrition = recipes.filter((item) => item.nutrition_per_serving != null).length;
+  const claimCollections = collections.filter((item) => text(item.requires_verified_claim));
+  line(`  Recipes: ${recipes.length}. Meal types: ${meals.join(', ') || 'none'}.`);
+  line(`  Collections: ${collections.length} (${claimCollections.length} need a verified claim and stay hidden until nutrition_calc.py).`);
+  line(`  nutrition_per_serving filled: ${withNutrition} of ${recipes.length} (macros stay hidden until CoFID fills them).`);
+  line('  Bundled in the app for the Food tab. Live sync does not write recipes tables (F2).');
   line();
 }
 

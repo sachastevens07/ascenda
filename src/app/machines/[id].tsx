@@ -24,7 +24,7 @@ export default function MachineGuideScreen() {
 
   function goBack() {
     if (router.canGoBack()) router.back();
-    else router.replace('/(tabs)/learn' as Href);
+    else router.replace('/learn' as Href);
   }
 
   if (!guide) {

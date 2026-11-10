@@ -75,6 +75,7 @@
       "eyebrow_recovery": "Recovery"
     },
     "programmes": {
+      "tab_title": "Train",
       "section_recommended": "Recommended for you",
       "build_plan": "Build my plan",
       "section_styles": "Training styles",
@@ -95,6 +96,29 @@
       "style_busy_gym": "Busy gym",
       "style_cant_get_to_gym": "Days you can't get to the gym",
       "empty_style": "Nothing in this style yet. Try another tile, or Build my plan."
+    },
+    "food": {
+      "title": "Food",
+      "search_a11y": "Search recipes",
+      "favourites_a11y": "Favourites",
+      "favourites_title": "Favourites",
+      "see_all": "See all",
+      "search_placeholder": "Search recipes",
+      "search_title": "Search",
+      "prep_serves": "Prep {prep} min · Serves {servings}",
+      "prep_cook_serves": "Prep {prep} min · Cook {cook} min · Serves {servings}",
+      "empty_meal": "Nothing in this list yet. Try another meal type.",
+      "empty_collection": "Nothing in this collection yet.",
+      "empty_favourites_title": "No favourites yet",
+      "empty_favourites_body": "Recipes you save will show up here.",
+      "empty_search_title": "Nothing found",
+      "empty_search_body": "Try a different word, or browse by meal type.",
+      "recipe_missing_title": "Recipe not found",
+      "recipe_missing_body": "It may have been removed. Browse Food for something else.",
+      "dietary_vegetarian": "Vegetarian",
+      "dietary_vegan": "Vegan",
+      "dietary_gluten_free": "Gluten free",
+      "dietary_dairy_free": "Dairy free"
     },
     "paywall": {
       "_note": "DESIGN.md 9.2. Prices, periods and trial length come from RevenueCat, never hard-coded. {trial_days} is 7, or 14 for referred friends.",

@@ -13,7 +13,8 @@ export default function LearnStackLayout() {
         headerTintColor: colours.brand,
         headerShadowVisible: false,
         headerStyle: { backgroundColor: colours.bg },
-      }}
-    />
+      }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+    </Stack>
   );
 }

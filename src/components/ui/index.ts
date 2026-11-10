@@ -72,6 +72,14 @@ export {
   StyleGrid,
   StyleTile,
 } from './Programmes';
+export {
+  MealTypeTile,
+  RecipeCard,
+  RecipeListRow,
+  dietaryLabel,
+  openRecipe,
+  recipeMetaLine,
+} from './Food';
 
 export {
   AnchoredMenu as OverflowMenu,

@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LockedHome } from '@/components/LockedHome';
 import { PillTabBar, TabBarHeightProvider, useTabBarHeight } from '@/components/PillTabBar';
 import { useTheme } from '@/constants/theme';
+import { foodCopy, programmesCopy } from '@/lib/copy';
 import { useSubscription } from '@/lib/subscription';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
@@ -37,7 +38,11 @@ export default function TabLayout() {
           />
           <TopTabs.Screen
             name="programmes"
-            options={{ title: 'Programmes', tabBarIcon: tabIcon('albums', 'albums-outline') }}
+            options={{ title: programmesCopy.tab_title, tabBarIcon: tabIcon('albums', 'albums-outline') }}
+          />
+          <TopTabs.Screen
+            name="food"
+            options={{ title: foodCopy.title, tabBarIcon: tabIcon('restaurant', 'restaurant-outline') }}
           />
           <TopTabs.Screen
             name="planner"
@@ -46,10 +51,6 @@ export default function TabLayout() {
           <TopTabs.Screen
             name="activity"
             options={{ title: 'Activity', tabBarIcon: tabIcon('stats-chart', 'stats-chart-outline') }}
-          />
-          <TopTabs.Screen
-            name="learn"
-            options={{ title: 'Learn', tabBarIcon: tabIcon('book', 'book-outline') }}
           />
         </TopTabs>
         <LockedOverlay />

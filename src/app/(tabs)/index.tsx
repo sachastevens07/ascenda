@@ -552,7 +552,7 @@ export default function HomeScreen() {
       const started = await fetchRoutine(created.routine_id);
       const day = started ? firstDayOfRoutine(started) : null;
       if (!day) {
-        showDialog('Couldn’t start that session', 'Open Programmes and pick a routine when you’re ready.');
+        showDialog('Couldn’t start that session', 'Open Train and pick a routine when you’re ready.');
         return;
       }
       await startDay(day, { enrolmentId: created.id, easeBack: true, welcomeBack: true });
@@ -1175,7 +1175,7 @@ export default function HomeScreen() {
             <SectionHeader
               title={homeCopy.section_personalised}
               actionLabel={homeCopy.see_all}
-              onAction={() => router.push('/(tabs)/learn' as Href)}
+              onAction={() => router.push('/learn' as Href)}
             />
             <ScrollView
               horizontal

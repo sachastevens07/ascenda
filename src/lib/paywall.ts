@@ -91,9 +91,9 @@ export function ensureSubscribed(): boolean {
 const UNLOCKED_WITHOUT_SUB = new Set([
   '/',
   '/programmes',
+  '/food',
   '/planner',
   '/activity',
-  '/learn',
   '/paywall',
   '/profile',
   '/history',

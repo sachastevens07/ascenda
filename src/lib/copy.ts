@@ -137,6 +137,7 @@ const programmes = microcopy.strings.programmes;
 
 /** X3 Programmes browse. Bundled from content/microcopy. */
 export const programmesCopy = {
+  tab_title: programmes.tab_title,
   section_recommended: programmes.section_recommended,
   build_plan: programmes.build_plan,
   section_styles: programmes.section_styles,
@@ -158,6 +159,11 @@ export const programmesCopy = {
   style_cant_get_to_gym: programmes.style_cant_get_to_gym,
   empty_style: programmes.empty_style,
 } as const;
+
+const food = microcopy.strings.food;
+
+/** F1 Food tab. Bundled from content/microcopy. Recipe bodies stay in /content. */
+export const foodCopy = food;
 
 export const subscriptionBanners = {
   trial_ending: subscription.banner_trial_ending,

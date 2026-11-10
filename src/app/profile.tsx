@@ -696,7 +696,7 @@ export default function ProfileScreen() {
         </View>
         <SettingsRow
           title="Show daily quote"
-          subtitle={hideQuote ? 'Hidden on Learn' : 'Shown on Learn'}
+          subtitle={hideQuote ? 'Hidden on Home and Learn' : 'Shown on Home and Learn'}
           onPress={() => {
             const next = !hideQuote;
             setHideQuote(next);

@@ -1165,7 +1165,7 @@ export async function startRoutine(
 
   const catalogue = await fetchRoutine(routineId);
   if (catalogue?.type === 'stretch') {
-    throw new Error('Stretch sessions start from Programmes, not as a training plan.');
+    throw new Error('Stretch sessions start from Train, not as a training plan.');
   }
 
   const previous = await fetchActiveEnrolment();

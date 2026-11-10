@@ -918,7 +918,7 @@ function CurrentRoutineCard({
               <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
                 {enrolment
                   ? `Week ${week} of ${enrolment.routine.length_weeks}`
-                  : 'Start one from Programmes'}
+                  : 'Start one from Train'}
               </AppText>
               {enrolment ? <ProgressBar progress={doneDays / totalDays} style={{ marginTop: 8 }} /> : null}
             </View>

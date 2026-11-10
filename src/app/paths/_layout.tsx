@@ -12,7 +12,7 @@ export default function PathsLayout() {
         headerShadowVisible: false,
         headerStyle: { backgroundColor: colours.background },
       }}>
-      <Stack.Screen name="[id]" options={{ headerBackTitle: 'Programmes' }} />
+      <Stack.Screen name="[id]" options={{ headerBackTitle: 'Train' }} />
     </Stack>
   );
 }
