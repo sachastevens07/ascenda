@@ -1,9 +1,12 @@
-import { router, type Href } from 'expo-router';
+import { router, useFocusEffect, type Href } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AppText,
+  ArticleCard,
+  FuelSuggestionCard,
   IconButton,
   MealTypeTile,
   RecipeCard,
@@ -13,8 +16,11 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { foodCopy } from '@/lib/copy';
-import { MEAL_TYPE_TILES, mealTypeName, visibleCollections } from '@/lib/food';
+import { MEAL_TYPE_TILES, mealTypeName, recipeBySlug, visibleCollections } from '@/lib/food';
 import { useFoodFavourites } from '@/lib/foodFavourites';
+import { pickTodaysFuelSuggestion, type FuelSuggestion } from '@/lib/foodSuggestions';
+import { articlesInCategory, fetchLearnArticles, type LearnArticle } from '@/lib/learn';
+import { loadPlannerWeek } from '@/lib/planner';
 
 export default function FoodScreen() {
   const tabBarHeight = useTabBarHeight();
@@ -23,7 +29,38 @@ export default function FoodScreen() {
   const tileWidth = width * 0.38;
   const cardWidth = width * 0.72;
   const collections = visibleCollections();
-  const { isFavourite, toggle } = useFoodFavourites();
+  const { slugs, isFavourite, toggle } = useFoodFavourites();
+  const [fuel, setFuel] = useState<FuelSuggestion | null>(null);
+  const [fuelling, setFuelling] = useState<LearnArticle[]>([]);
+  const favouriteRecipes = useMemo(
+    () => slugs.map((slug) => recipeBySlug(slug)).filter((item): item is NonNullable<typeof item> => Boolean(item)),
+    [slugs]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      let isCurrent = true;
+      loadPlannerWeek()
+        .then((week) => {
+          if (!isCurrent) return;
+          const today = week.days.find((day) => day.isToday) ?? null;
+          setFuel(pickTodaysFuelSuggestion(today));
+        })
+        .catch(() => {
+          if (isCurrent) setFuel(null);
+        });
+      fetchLearnArticles()
+        .then((articles) => {
+          if (isCurrent) setFuelling(articlesInCategory(articles, 'fuelling').slice(0, 6));
+        })
+        .catch(() => {
+          if (isCurrent) setFuelling([]);
+        });
+      return () => {
+        isCurrent = false;
+      };
+    }, [])
+  );
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -39,11 +76,23 @@ export default function FoodScreen() {
             onPress={() => router.push('/food/search' as Href)}
           />
           <IconButton
+            icon="basket-outline"
+            accessibilityLabel={foodCopy.list_a11y}
+            onPress={() => router.push('/food/list' as Href)}
+          />
+          <IconButton
             icon="heart-outline"
             accessibilityLabel={foodCopy.favourites_a11y}
             onPress={() => router.push('/food/favourites' as Href)}
           />
         </View>
+
+        {fuel ? (
+          <View>
+            <SectionHeader title={foodCopy.fuel_today} />
+            <FuelSuggestionCard suggestion={fuel} onPress={() => openRecipe(fuel.recipe.slug)} />
+          </View>
+        ) : null}
 
         <ScrollView
           horizontal
@@ -62,6 +111,33 @@ export default function FoodScreen() {
             />
           ))}
         </ScrollView>
+
+        {favouriteRecipes.length > 0 ? (
+          <View>
+            <SectionHeader
+              title={foodCopy.favourites_section}
+              actionLabel={foodCopy.see_all}
+              onAction={() => router.push('/food/favourites' as Href)}
+            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carousel}
+              style={styles.carouselBleed}>
+              {favouriteRecipes.map((recipe) => (
+                <RecipeCard
+                  key={recipe.slug}
+                  recipe={recipe}
+                  mealTypeName={mealTypeName(recipe.mealType)}
+                  saved
+                  onToggleFavourite={() => void toggle(recipe.slug)}
+                  onPress={() => openRecipe(recipe.slug)}
+                  style={{ width: cardWidth }}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
 
         {collections.map((collection) => (
           <View key={collection.slug}>
@@ -91,6 +167,27 @@ export default function FoodScreen() {
             </ScrollView>
           </View>
         ))}
+
+        {fuelling.length > 0 ? (
+          <View>
+            <SectionHeader
+              title={foodCopy.fuelling_section}
+              actionLabel={foodCopy.see_all}
+              onAction={() =>
+                router.push({ pathname: '/learn/category/[category]', params: { category: 'fuelling' } } as Href)
+              }
+            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.carousel}
+              style={styles.carouselBleed}>
+              {fuelling.map((article) => (
+                <ArticleCard key={article.id} article={article} width={cardWidth} />
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );

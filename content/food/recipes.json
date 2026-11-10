@@ -2,9 +2,9 @@
   "_format_version": 1,
   "_loader_notes": [
     "Recipes (AGENTS.md v2.4 F2 and F3). Draft for review by a Registered Dietitian (HCPC) or Registered Nutritionist (AfN). Fill reviewed_by and reviewed_at before publishing.",
-    "nutrition_per_serving is null on purpose. Run tools/routine-generator/nutrition_calc.py with the CoFID spreadsheet from gov.uk to calculate it from real food composition data. Never let an AI estimate it.",
-    "Each ingredient has nutrition_lookup (a CoFID food name to match) and food_id (fill with the CoFID food code once matched).",
-    "intended_claims are what the recipe is designed for. Only show a 'High protein' or 'High fibre' tag once verified_claims includes it: UK nutrition claim rules require at least 20% of energy from protein for 'high protein', and at least 6 g fibre per 100 g or 3 g per 100 kcal for 'high fibre'. nutrition_calc.py fills verified_claims.",
+    "nutrition_per_serving is calculated by scripts/nutrition-calc.mjs from CoFID 2021 plus content/food/nutrition-extras.json. Never let an AI estimate it.",
+    "Each ingredient has nutrition_lookup and food_id (a CoFID code, or ext-... for extras). Household measures use content/food/ingredient-weights.json.",
+    "intended_claims are what the recipe is designed for. verified_claims is filled only when the calculated recipe meets UK high-protein or high-fibre rules.",
     "Allergens are worked out from each ingredient and list the 14 UK major allergens. check_label_notes cover ingredients whose allergens vary by brand. The dietitian should check every recipe.",
     "dietary_tags are calculated: vegetarian (no meat or fish), vegan (no animal products; optional honey ignored), gluten_free (no gluten-containing cereals), dairy_free (no milk).",
     "Servings stepper: scale quantity linearly; round counts sensibly (eggs to whole numbers, spices to the nearest pinch).",
@@ -121,7 +121,7 @@
           "display": "50g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -135,7 +135,7 @@
           "display": "120ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -149,7 +149,7 @@
           "display": "75g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -163,7 +163,7 @@
           "display": "75g frozen mixed berries",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "ext-no-frozen-mixed-berries",
           "nutrition_lookup": "Mixed berries, frozen",
           "allergens": []
         },
@@ -175,7 +175,7 @@
           "display": "10g chia seeds",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "ext-usda-chia-seeds",
           "nutrition_lookup": "Chia seeds, dried",
           "allergens": []
         },
@@ -187,7 +187,7 @@
           "display": "1tsp honey, optional",
           "note": "optional",
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-050",
           "nutrition_lookup": "Honey",
           "allergens": []
         }
@@ -198,7 +198,13 @@
         "Cover and chill overnight, or for at least 4 hours.",
         "Drizzle with honey if you like, and eat cold."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 451,
+        "protein_g": 16.4,
+        "fat_g": 17.4,
+        "carbs_g": 56.7,
+        "fibre_g": 9.6
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
@@ -249,7 +255,7 @@
           "display": "50g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -263,7 +269,7 @@
           "display": "250ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -277,7 +283,7 @@
           "display": "1 bananas, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-318",
           "nutrition_lookup": "Bananas, flesh only",
           "allergens": []
         },
@@ -289,7 +295,7 @@
           "display": "15g smooth peanut butter (no added sugar)",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "14-892",
           "nutrition_lookup": "Peanut butter, smooth",
           "allergens": [
             "peanuts"
@@ -303,7 +309,7 @@
           "display": "¼tsp ground cinnamon",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-874",
           "nutrition_lookup": "Cinnamon, ground",
           "allergens": []
         }
@@ -313,7 +319,13 @@
         "Stir for 4 to 5 minutes until thick and creamy. Add a splash of water if it gets too thick.",
         "Pour into a bowl and top with the banana, peanut butter and cinnamon."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 481,
+        "protein_g": 19.1,
+        "fat_g": 16.3,
+        "carbs_g": 69.7,
+        "fibre_g": 6.6
+      },
       "intended_claims": [
         "high_fibre"
       ],
@@ -365,7 +377,7 @@
           "display": "3 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -379,7 +391,7 @@
           "display": "40g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -391,7 +403,7 @@
           "display": "30g feta",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-525",
           "nutrition_lookup": "Feta cheese",
           "allergens": [
             "milk"
@@ -405,7 +417,7 @@
           "display": "6 cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -417,7 +429,7 @@
           "display": "1tsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -429,7 +441,7 @@
           "display": "1 slice wholemeal bread",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-981",
           "nutrition_lookup": "Bread, wholemeal",
           "allergens": [
             "gluten"
@@ -443,7 +455,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -455,11 +467,19 @@
         "Scatter over the feta and tomatoes, fold in half and cook for 1 more minute.",
         "Serve with the toast."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 432,
+        "protein_g": 29.6,
+        "fat_g": 25.9,
+        "carbs_g": 21.6,
+        "fibre_g": 5
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "gluten",
@@ -507,7 +527,7 @@
           "display": "200g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -521,7 +541,7 @@
           "display": "80g frozen mixed berries, defrosted",
           "note": "defrosted",
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "ext-no-frozen-mixed-berries",
           "nutrition_lookup": "Mixed berries, frozen",
           "allergens": []
         },
@@ -533,7 +553,7 @@
           "display": "15g mixed pumpkin and sunflower seeds",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-842",
           "nutrition_lookup": "Pumpkin seeds",
           "allergens": []
         },
@@ -545,7 +565,7 @@
           "display": "10g walnuts, chopped",
           "note": "chopped",
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-879",
           "nutrition_lookup": "Walnuts, kernel only",
           "allergens": [
             "nuts"
@@ -559,7 +579,7 @@
           "display": "1tsp honey, optional",
           "note": "optional",
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-050",
           "nutrition_lookup": "Honey",
           "allergens": []
         }
@@ -569,7 +589,13 @@
         "Top with the berries, seeds and walnuts.",
         "Drizzle with honey if you like."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 478,
+        "protein_g": 17.3,
+        "fat_g": 34.7,
+        "carbs_g": 23.7,
+        "fibre_g": 3.5
+      },
       "intended_claims": [
         "high_protein"
       ],
@@ -618,7 +644,7 @@
           "display": "2 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -632,7 +658,7 @@
           "display": "50g smoked salmon",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "16-412",
           "nutrition_lookup": "Salmon, smoked",
           "allergens": [
             "fish"
@@ -646,7 +672,7 @@
           "display": "1 slice sourdough bread",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "ext-sainsburys-sourdough",
           "nutrition_lookup": "Bread, sourdough",
           "allergens": [
             "gluten"
@@ -660,7 +686,7 @@
           "display": "1tsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -672,7 +698,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         },
@@ -684,7 +710,7 @@
           "display": "¼ lemons, wedge",
           "note": "wedge",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         }
@@ -695,11 +721,19 @@
         "Add the eggs and stir slowly for 2 to 3 minutes until just set.",
         "Pile onto the toast with the smoked salmon, black pepper and a squeeze of lemon."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 360,
+        "protein_g": 27.3,
+        "fat_g": 19.2,
+        "carbs_g": 18.9,
+        "fibre_g": 1.5
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "fish",
@@ -747,7 +781,7 @@
           "display": "8 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -761,7 +795,7 @@
           "display": "240g tinned black beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "ext-black-beans-canned",
           "nutrition_lookup": "Black beans, canned, drained",
           "allergens": []
         },
@@ -773,7 +807,7 @@
           "display": "1 red peppers, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -785,7 +819,7 @@
           "display": "3 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         },
@@ -797,7 +831,7 @@
           "display": "60g mature Cheddar, grated",
           "note": "grated",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-346",
           "nutrition_lookup": "Cheese, Cheddar, English",
           "allergens": [
             "milk"
@@ -811,7 +845,7 @@
           "display": "4 wholemeal tortilla wraps",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-925",
           "nutrition_lookup": "Tortilla, wheat, wholemeal",
           "allergens": [
             "gluten"
@@ -825,7 +859,7 @@
           "display": "1tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -837,7 +871,7 @@
           "display": "1tsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -849,12 +883,20 @@
         "Divide between the wraps, sprinkle with cheese, then fold in the sides and roll up.",
         "Eat now, or cool, wrap in foil and chill for up to 3 days or freeze for up to a month. Reheat until piping hot all the way through."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 411,
+        "protein_g": 24.5,
+        "fat_g": 18.6,
+        "carbs_g": 34.7,
+        "fibre_g": 7.1
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "gluten",
@@ -903,7 +945,7 @@
           "display": "100g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -917,7 +959,7 @@
           "display": "1 bananas, mashed",
           "note": "mashed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-318",
           "nutrition_lookup": "Bananas, flesh only",
           "allergens": []
         },
@@ -929,7 +971,7 @@
           "display": "1 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -943,7 +985,7 @@
           "display": "150ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -957,7 +999,7 @@
           "display": "100g blueberries",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-325",
           "nutrition_lookup": "Blueberries, raw",
           "allergens": []
         },
@@ -969,7 +1011,7 @@
           "display": "½tsp ground cinnamon",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-874",
           "nutrition_lookup": "Cinnamon, ground",
           "allergens": []
         }
@@ -981,7 +1023,13 @@
         "Bake for 25 minutes until golden and just set.",
         "Eat warm, or chill and eat within 2 days."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 319,
+        "protein_g": 12.4,
+        "fat_g": 7.8,
+        "carbs_g": 53.7,
+        "fibre_g": 5.7
+      },
       "intended_claims": [
         "high_fibre"
       ],
@@ -1033,7 +1081,7 @@
           "display": "8 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -1047,7 +1095,7 @@
           "display": "60g baby spinach, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -1059,7 +1107,7 @@
           "display": "1 red peppers, finely diced",
           "note": "finely diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -1071,7 +1119,7 @@
           "display": "3 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         },
@@ -1083,7 +1131,7 @@
           "display": "50g mature Cheddar, grated",
           "note": "grated",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-346",
           "nutrition_lookup": "Cheese, Cheddar, English",
           "allergens": [
             "milk"
@@ -1097,7 +1145,7 @@
           "display": "50ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -1111,7 +1159,7 @@
           "display": "1tsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -1123,11 +1171,19 @@
         "Bake for 18 to 20 minutes until set and golden.",
         "Cool, then chill for up to 3 days. Eat cold or reheat until piping hot."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 213,
+        "protein_g": 17.1,
+        "fat_g": 15,
+        "carbs_g": 2.8,
+        "fibre_g": 1.3
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "milk"
@@ -1175,7 +1231,7 @@
           "display": "280g firm tofu, drained",
           "note": "drained",
           "aisle": "Chilled",
-          "food_id": null,
+          "food_id": "13-570",
           "nutrition_lookup": "Tofu, soya bean, steamed",
           "allergens": [
             "soya"
@@ -1189,7 +1245,7 @@
           "display": "½tsp ground turmeric",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-861",
           "nutrition_lookup": "Turmeric, ground",
           "allergens": []
         },
@@ -1201,7 +1257,7 @@
           "display": "1 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -1213,7 +1269,7 @@
           "display": "60g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -1225,7 +1281,7 @@
           "display": "10 cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -1237,7 +1293,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -1249,7 +1305,7 @@
           "display": "2 slice wholemeal bread",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-981",
           "nutrition_lookup": "Bread, wholemeal",
           "allergens": [
             "gluten"
@@ -1263,7 +1319,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -1274,11 +1330,19 @@
         "Add the tomatoes and spinach and cook until the spinach wilts.",
         "Season with black pepper and serve on the toast."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 278,
+        "protein_g": 17,
+        "fat_g": 14.4,
+        "carbs_g": 21.6,
+        "fibre_g": 4.6
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "soya"
@@ -1325,7 +1389,7 @@
           "display": "2 slice wholemeal bread",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-981",
           "nutrition_lookup": "Bread, wholemeal",
           "allergens": [
             "gluten"
@@ -1339,7 +1403,7 @@
           "display": "150g cottage cheese",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-539",
           "nutrition_lookup": "Cottage cheese, plain",
           "allergens": [
             "milk"
@@ -1353,7 +1417,7 @@
           "display": "8 cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -1365,7 +1429,7 @@
           "display": "1 pinch chilli flakes",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-873",
           "nutrition_lookup": "Chilli powder",
           "allergens": []
         },
@@ -1377,7 +1441,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -1387,11 +1451,19 @@
         "Spread with the cottage cheese.",
         "Top with the tomatoes, chilli flakes and black pepper."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 358,
+        "protein_g": 23.2,
+        "fat_g": 11.7,
+        "carbs_g": 43.1,
+        "fibre_g": 7.5
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "milk"
@@ -1435,7 +1507,7 @@
           "display": "100g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -1449,7 +1521,7 @@
           "display": "1 apples, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-319",
           "nutrition_lookup": "Apples, eating, raw",
           "allergens": []
         },
@@ -1461,7 +1533,7 @@
           "display": "200ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -1475,7 +1547,7 @@
           "display": "150g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -1489,7 +1561,7 @@
           "display": "½tsp ground cinnamon",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-874",
           "nutrition_lookup": "Cinnamon, ground",
           "allergens": []
         },
@@ -1501,7 +1573,7 @@
           "display": "20g walnuts, chopped",
           "note": "chopped",
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-879",
           "nutrition_lookup": "Walnuts, kernel only",
           "allergens": [
             "nuts"
@@ -1513,7 +1585,13 @@
         "Cover and chill overnight.",
         "Stir, divide between two bowls and top with the walnuts. Keeps for 2 days in the fridge."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 446,
+        "protein_g": 15.3,
+        "fat_g": 20.7,
+        "carbs_g": 53.1,
+        "fibre_g": 5.5
+      },
       "intended_claims": [
         "high_fibre"
       ],
@@ -1564,7 +1642,7 @@
           "display": "50g chia seeds",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "ext-usda-chia-seeds",
           "nutrition_lookup": "Chia seeds, dried",
           "allergens": []
         },
@@ -1576,7 +1654,7 @@
           "display": "300ml unsweetened soya drink",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "12-524",
           "nutrition_lookup": "Soya, non-dairy alternative to milk, unsweetened",
           "allergens": [
             "soya"
@@ -1590,7 +1668,7 @@
           "display": "2tsp maple syrup",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "ext-usda-maple-syrup",
           "nutrition_lookup": "Maple syrup",
           "allergens": []
         },
@@ -1602,7 +1680,7 @@
           "display": "150g frozen mango chunks, defrosted",
           "note": "defrosted",
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "14-378",
           "nutrition_lookup": "Mango, ripe, raw",
           "allergens": []
         }
@@ -1613,11 +1691,19 @@
         "Cover and chill overnight.",
         "Top with the mango to serve. Keeps for 2 days."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 215,
+        "protein_g": 8.4,
+        "fat_g": 10.6,
+        "carbs_g": 15.1,
+        "fibre_g": 10.2
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "soya"
       ],
@@ -1660,7 +1746,7 @@
           "display": "1 slice sourdough bread",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "ext-sainsburys-sourdough",
           "nutrition_lookup": "Bread, sourdough",
           "allergens": [
             "gluten"
@@ -1674,7 +1760,7 @@
           "display": "½ avocados",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-386",
           "nutrition_lookup": "Avocado, flesh only",
           "allergens": []
         },
@@ -1686,7 +1772,7 @@
           "display": "2 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -1700,7 +1786,7 @@
           "display": "¼ lemons, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -1712,7 +1798,7 @@
           "display": "1 pinch chilli flakes",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-873",
           "nutrition_lookup": "Chilli powder",
           "allergens": []
         }
@@ -1722,7 +1808,13 @@
         "Toast the bread and mash the avocado with the lemon juice.",
         "Spread the avocado on the toast, top with the eggs and a pinch of chilli."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 347,
+        "protein_g": 17.1,
+        "fat_g": 21.9,
+        "carbs_g": 19.9,
+        "fibre_g": 3.7
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [
@@ -1769,7 +1861,7 @@
           "display": "240g tinned cannellini beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-666",
           "nutrition_lookup": "Cannellini beans, canned, drained",
           "allergens": []
         },
@@ -1781,7 +1873,7 @@
           "display": "200g passata",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Passata",
           "allergens": []
         },
@@ -1793,7 +1885,7 @@
           "display": "½ onions, finely chopped",
           "note": "finely chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -1805,7 +1897,7 @@
           "display": "1tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -1817,7 +1909,7 @@
           "display": "1tsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -1829,7 +1921,7 @@
           "display": "2 slice wholemeal bread",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-981",
           "nutrition_lookup": "Bread, wholemeal",
           "allergens": [
             "gluten"
@@ -1843,7 +1935,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -1853,11 +1945,19 @@
         "Add the paprika, passata and beans. Simmer for 6 to 8 minutes until thick.",
         "Season with black pepper and serve on toast."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 264,
+        "protein_g": 14.5,
+        "fat_g": 5.5,
+        "carbs_g": 42.7,
+        "fibre_g": 13
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "gluten"
       ],
@@ -1903,7 +2003,7 @@
           "display": "500g skinless chicken breast",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-290",
           "nutrition_lookup": "Chicken, breast, meat only, raw",
           "allergens": []
         },
@@ -1915,7 +2015,7 @@
           "display": "200g quinoa",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-843",
           "nutrition_lookup": "Quinoa, raw",
           "allergens": []
         },
@@ -1927,7 +2027,7 @@
           "display": "300g broccoli, in florets",
           "note": "in florets",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-502",
           "nutrition_lookup": "Broccoli, green, raw",
           "allergens": []
         },
@@ -1939,7 +2039,7 @@
           "display": "2 red peppers, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -1951,7 +2051,7 @@
           "display": "240g tinned chickpeas, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-670",
           "nutrition_lookup": "Chickpeas, canned, drained",
           "allergens": []
         },
@@ -1963,7 +2063,7 @@
           "display": "2tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -1975,7 +2075,7 @@
           "display": "2tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -1987,7 +2087,7 @@
           "display": "1 lemons",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         }
@@ -2000,12 +2100,20 @@
         "Slice the chicken, divide everything between four containers and squeeze over the lemon.",
         "Cool quickly and chill for up to 3 days."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 469,
+        "protein_g": 46,
+        "fat_g": 13.2,
+        "carbs_g": 44.8,
+        "fibre_g": 12.9
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [],
       "allergen_labels": [],
       "check_label_notes": [],
@@ -2047,7 +2155,7 @@
           "display": "180g wholewheat pasta",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-718",
           "nutrition_lookup": "Pasta, wholewheat, raw",
           "allergens": [
             "gluten"
@@ -2061,7 +2169,7 @@
           "display": "220g tinned tuna in spring water, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "16-416",
           "nutrition_lookup": "Tuna, canned in brine, drained",
           "allergens": [
             "fish"
@@ -2075,7 +2183,7 @@
           "display": "165g tinned sweetcorn",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-529",
           "nutrition_lookup": "Sweetcorn, kernels, canned, drained",
           "allergens": []
         },
@@ -2087,7 +2195,7 @@
           "display": "100g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -2101,7 +2209,7 @@
           "display": "½ red onions, finely chopped",
           "note": "finely chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, red, raw",
           "allergens": []
         },
@@ -2113,7 +2221,7 @@
           "display": "½ cucumber, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -2125,7 +2233,7 @@
           "display": "½ lemons, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -2137,7 +2245,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -2148,12 +2256,20 @@
         "Stir in the pasta, tuna, sweetcorn, onion and cucumber.",
         "Divide into containers and chill for up to 2 days."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 381,
+        "protein_g": 29.9,
+        "fat_g": 6.9,
+        "carbs_g": 52.9,
+        "fibre_g": 9.7
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "fish",
         "gluten",
@@ -2197,7 +2313,7 @@
           "display": "200g dried red lentils",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "13-657",
           "nutrition_lookup": "Lentils, red, split, dried, raw",
           "allergens": []
         },
@@ -2209,7 +2325,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -2221,7 +2337,7 @@
           "display": "2 carrots, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-496",
           "nutrition_lookup": "Carrots, old, raw",
           "allergens": []
         },
@@ -2233,7 +2349,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -2245,7 +2361,7 @@
           "display": "2tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -2257,7 +2373,7 @@
           "display": "400g tinned chopped tomatoes",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Tomatoes, canned, whole contents",
           "allergens": []
         },
@@ -2269,7 +2385,7 @@
           "display": "1 vegetable stock cube, made up to 1 litre",
           "note": "made up to 1 litre",
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-727",
           "nutrition_lookup": "Stock cubes, vegetable",
           "allergens": [
             "celery"
@@ -2283,7 +2399,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -2295,7 +2411,7 @@
           "display": "½ lemons, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         }
@@ -2307,11 +2423,19 @@
         "Blend until smooth (or leave it chunky) and stir in the lemon juice.",
         "Chill for up to 3 days or freeze for up to 3 months."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 234,
+        "protein_g": 15.1,
+        "fat_g": 5.3,
+        "carbs_g": 35.8,
+        "fibre_g": 12.1
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "celery"
       ],
@@ -2358,7 +2482,7 @@
           "display": "240g tinned chickpeas, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-670",
           "nutrition_lookup": "Chickpeas, canned, drained",
           "allergens": []
         },
@@ -2370,7 +2494,7 @@
           "display": "1tbsp tahini",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "14-847",
           "nutrition_lookup": "Tahini paste",
           "allergens": [
             "sesame"
@@ -2384,7 +2508,7 @@
           "display": "½ lemons, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -2396,7 +2520,7 @@
           "display": "¼ cucumber, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -2408,7 +2532,7 @@
           "display": "½ red peppers, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -2420,7 +2544,7 @@
           "display": "30g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -2432,7 +2556,7 @@
           "display": "2 wholemeal tortilla wraps",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-925",
           "nutrition_lookup": "Tortilla, wheat, wholemeal",
           "allergens": [
             "gluten"
@@ -2446,7 +2570,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -2457,11 +2581,19 @@
         "Fold through the cucumber and pepper.",
         "Divide between the wraps with the spinach and roll up."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 365,
+        "protein_g": 16.7,
+        "fat_g": 11.7,
+        "carbs_g": 51.5,
+        "fibre_g": 12.5
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "gluten",
         "sesame"
@@ -2507,7 +2639,7 @@
           "display": "250g skinless chicken breast",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-290",
           "nutrition_lookup": "Chicken, breast, meat only, raw",
           "allergens": []
         },
@@ -2519,7 +2651,7 @@
           "display": "1tsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -2531,7 +2663,7 @@
           "display": "60g mixed salad leaves",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-520",
           "nutrition_lookup": "Lettuce, mixed leaves",
           "allergens": []
         },
@@ -2543,7 +2675,7 @@
           "display": "75g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -2557,7 +2689,7 @@
           "display": "20g vegetarian Italian-style hard cheese, finely grated",
           "note": "finely grated",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-526",
           "nutrition_lookup": "Cheese, Parmesan",
           "allergens": [
             "milk"
@@ -2571,7 +2703,7 @@
           "display": "½ lemons, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -2583,7 +2715,7 @@
           "display": "½ garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -2595,7 +2727,7 @@
           "display": "1tsp Dijon mustard",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-364",
           "nutrition_lookup": "Mustard, Dijon",
           "allergens": [
             "mustard"
@@ -2609,7 +2741,7 @@
           "display": "2 wholemeal tortilla wraps",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-925",
           "nutrition_lookup": "Tortilla, wheat, wholemeal",
           "allergens": [
             "gluten"
@@ -2621,11 +2753,19 @@
         "Mix the yoghurt, cheese, lemon juice, garlic and mustard to make the dressing.",
         "Toss the leaves in the dressing, then divide between the wraps with the chicken and roll up."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 395,
+        "protein_g": 40.3,
+        "fat_g": 13.5,
+        "carbs_g": 29.7,
+        "fibre_g": 2.3
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "milk",
@@ -2671,7 +2811,7 @@
           "display": "240g salmon fillets",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "16-356",
           "nutrition_lookup": "Salmon, raw",
           "allergens": [
             "fish"
@@ -2685,7 +2825,7 @@
           "display": "150g brown basmati rice",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-868",
           "nutrition_lookup": "Rice, brown, raw",
           "allergens": []
         },
@@ -2697,7 +2837,7 @@
           "display": "100g frozen edamame beans",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "13-667",
           "nutrition_lookup": "Edamame beans, frozen",
           "allergens": [
             "soya"
@@ -2711,7 +2851,7 @@
           "display": "½ cucumber, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -2723,7 +2863,7 @@
           "display": "1 avocados, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-386",
           "nutrition_lookup": "Avocado, flesh only",
           "allergens": []
         },
@@ -2735,7 +2875,7 @@
           "display": "2tbsp reduced-salt soy sauce",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-721",
           "nutrition_lookup": "Soy sauce, light",
           "allergens": [
             "soya",
@@ -2750,7 +2890,7 @@
           "display": "1tsp toasted sesame oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-043",
           "nutrition_lookup": "Sesame oil",
           "allergens": [
             "sesame"
@@ -2764,7 +2904,7 @@
           "display": "2 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         }
@@ -2775,11 +2915,19 @@
         "Mix the rest of the soy sauce with the sesame oil.",
         "Divide the rice and edamame between bowls. Top with flaked salmon, cucumber, avocado and spring onions, then drizzle with the dressing."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 748,
+        "protein_g": 39.1,
+        "fat_g": 37.9,
+        "carbs_g": 66.6,
+        "fibre_g": 8.3
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "fish",
         "gluten",
@@ -2831,7 +2979,7 @@
           "display": "120g couscous",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-901",
           "nutrition_lookup": "Couscous, raw",
           "allergens": [
             "gluten"
@@ -2845,7 +2993,7 @@
           "display": "160g halloumi, sliced",
           "note": "sliced",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-496",
           "nutrition_lookup": "Halloumi cheese",
           "allergens": [
             "milk"
@@ -2859,7 +3007,7 @@
           "display": "240g tinned chickpeas, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-670",
           "nutrition_lookup": "Chickpeas, canned, drained",
           "allergens": []
         },
@@ -2871,7 +3019,7 @@
           "display": "10 cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -2883,7 +3031,7 @@
           "display": "½ cucumber, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -2895,7 +3043,7 @@
           "display": "1 handful fresh mint, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-836",
           "nutrition_lookup": "Mint, fresh",
           "allergens": []
         },
@@ -2907,7 +3055,7 @@
           "display": "1 lemons, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -2919,7 +3067,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -2930,12 +3078,20 @@
         "Dry-fry the halloumi in a non-stick pan for 2 minutes each side until golden.",
         "Serve the couscous topped with the halloumi."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 717,
+        "protein_g": 38.3,
+        "fat_g": 31.4,
+        "carbs_g": 75.3,
+        "fibre_g": 12.4
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "milk"
@@ -2980,7 +3136,7 @@
           "display": "200g raw king prawns",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "16-387",
           "nutrition_lookup": "Prawns, king, raw",
           "allergens": [
             "crustaceans"
@@ -2994,7 +3150,7 @@
           "display": "80g mixed salad leaves",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-520",
           "nutrition_lookup": "Lettuce, mixed leaves",
           "allergens": []
         },
@@ -3006,7 +3162,7 @@
           "display": "1 avocados, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-386",
           "nutrition_lookup": "Avocado, flesh only",
           "allergens": []
         },
@@ -3018,7 +3174,7 @@
           "display": "10 cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -3030,7 +3186,7 @@
           "display": "½ cucumber, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -3042,7 +3198,7 @@
           "display": "100g tinned sweetcorn",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-529",
           "nutrition_lookup": "Sweetcorn, kernels, canned, drained",
           "allergens": []
         },
@@ -3054,7 +3210,7 @@
           "display": "1 limes, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         },
@@ -3066,7 +3222,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -3076,11 +3232,19 @@
         "Mix the rest of the oil with the lime juice.",
         "Toss the leaves, avocado, tomatoes, cucumber and sweetcorn with the dressing, then top with the prawns."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 332,
+        "protein_g": 22.4,
+        "fat_g": 21.5,
+        "carbs_g": 12.9,
+        "fibre_g": 6
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "crustaceans"
       ],
@@ -3121,7 +3285,7 @@
           "display": "2 wholemeal pitta breads",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-974",
           "nutrition_lookup": "Pitta bread, wholemeal",
           "allergens": [
             "gluten"
@@ -3135,7 +3299,7 @@
           "display": "120g cooked turkey breast slices",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-359",
           "nutrition_lookup": "Turkey, breast, roasted",
           "allergens": []
         },
@@ -3147,7 +3311,7 @@
           "display": "60g hummus",
           "note": null,
           "aisle": "Chilled",
-          "food_id": null,
+          "food_id": "13-556",
           "nutrition_lookup": "Hummus",
           "allergens": [
             "sesame"
@@ -3161,7 +3325,7 @@
           "display": "40g mixed salad leaves",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-520",
           "nutrition_lookup": "Lettuce, mixed leaves",
           "allergens": []
         },
@@ -3173,7 +3337,7 @@
           "display": "¼ cucumber, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -3185,7 +3349,7 @@
           "display": "½ red peppers, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         }
@@ -3195,11 +3359,19 @@
         "Spread the inside with hummus.",
         "Fill with the turkey, leaves, cucumber and pepper."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 353,
+        "protein_g": 28.7,
+        "fat_g": 10.3,
+        "carbs_g": 38.7,
+        "fibre_g": 4.3
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "sesame"
@@ -3245,7 +3417,7 @@
           "display": "600g tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-517",
           "nutrition_lookup": "Tomatoes, standard, raw",
           "allergens": []
         },
@@ -3257,7 +3429,7 @@
           "display": "2 red peppers, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -3269,7 +3441,7 @@
           "display": "1 onions, quartered",
           "note": "quartered",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -3281,7 +3453,7 @@
           "display": "3 garlic cloves",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -3293,7 +3465,7 @@
           "display": "400g tinned cannellini beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-666",
           "nutrition_lookup": "Cannellini beans, canned, drained",
           "allergens": []
         },
@@ -3305,7 +3477,7 @@
           "display": "1 vegetable stock cube, made up to 500 ml",
           "note": "made up to 500 ml",
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-727",
           "nutrition_lookup": "Stock cubes, vegetable",
           "allergens": [
             "celery"
@@ -3319,7 +3491,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -3331,7 +3503,7 @@
           "display": "1 handful fresh basil",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-804",
           "nutrition_lookup": "Basil, fresh",
           "allergens": []
         }
@@ -3342,11 +3514,19 @@
         "Blend with the basil until smooth.",
         "Chill for up to 3 days or freeze for up to 3 months."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 189,
+        "protein_g": 10,
+        "fat_g": 5.8,
+        "carbs_g": 27.3,
+        "fibre_g": 11
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "celery"
       ],
@@ -3392,7 +3572,7 @@
           "display": "150g rice noodles",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "ext-no-rice-noodles-raw",
           "nutrition_lookup": "Noodles, rice, raw",
           "allergens": []
         },
@@ -3404,7 +3584,7 @@
           "display": "150g frozen edamame beans",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "13-667",
           "nutrition_lookup": "Edamame beans, frozen",
           "allergens": [
             "soya"
@@ -3418,7 +3598,7 @@
           "display": "2 carrots, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-496",
           "nutrition_lookup": "Carrots, old, raw",
           "allergens": []
         },
@@ -3430,7 +3610,7 @@
           "display": "1 red peppers, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -3442,7 +3622,7 @@
           "display": "2tbsp smooth peanut butter (no added sugar)",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "14-892",
           "nutrition_lookup": "Peanut butter, smooth",
           "allergens": [
             "peanuts"
@@ -3456,7 +3636,7 @@
           "display": "2tbsp reduced-salt soy sauce",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-721",
           "nutrition_lookup": "Soy sauce, light",
           "allergens": [
             "soya",
@@ -3471,7 +3651,7 @@
           "display": "1 limes, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         },
@@ -3483,7 +3663,7 @@
           "display": "2 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         }
@@ -3494,7 +3674,13 @@
         "Divide the dressing between three jars, then layer in the noodles, edamame, carrot, pepper and spring onions.",
         "Chill for up to 3 days. Shake or stir before eating."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 358,
+        "protein_g": 12.8,
+        "fat_g": 10.1,
+        "carbs_g": 54.6,
+        "fibre_g": 8
+      },
       "intended_claims": [
         "high_fibre"
       ],
@@ -3547,7 +3733,7 @@
           "display": "2 sweet potatoes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-463",
           "nutrition_lookup": "Sweet potato, raw",
           "allergens": []
         },
@@ -3559,7 +3745,7 @@
           "display": "240g tinned kidney beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-660",
           "nutrition_lookup": "Red kidney beans, canned, drained",
           "allergens": []
         },
@@ -3571,7 +3757,7 @@
           "display": "200g passata",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Passata",
           "allergens": []
         },
@@ -3583,7 +3769,7 @@
           "display": "1tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -3595,7 +3781,7 @@
           "display": "1tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -3607,7 +3793,7 @@
           "display": "4tbsp Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -3621,7 +3807,7 @@
           "display": "2 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         }
@@ -3631,11 +3817,19 @@
         "Meanwhile, simmer the beans, passata, cumin and paprika for 10 minutes.",
         "Split the potatoes, spoon over the beans and top with yoghurt and spring onions."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 339,
+        "protein_g": 15.9,
+        "fat_g": 5.4,
+        "carbs_g": 62,
+        "fibre_g": 13.9
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "milk"
       ],
@@ -3677,7 +3871,7 @@
           "display": "250g tinned green lentils, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-661",
           "nutrition_lookup": "Lentils, green, canned, drained",
           "allergens": []
         },
@@ -3689,7 +3883,7 @@
           "display": "80g feta, crumbled",
           "note": "crumbled",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-525",
           "nutrition_lookup": "Feta cheese",
           "allergens": [
             "milk"
@@ -3703,7 +3897,7 @@
           "display": "12 cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -3715,7 +3909,7 @@
           "display": "½ cucumber, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -3727,7 +3921,7 @@
           "display": "½ red onions, finely sliced",
           "note": "finely sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, red, raw",
           "allergens": []
         },
@@ -3739,7 +3933,7 @@
           "display": "40g rocket",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-522",
           "nutrition_lookup": "Rocket, raw",
           "allergens": []
         },
@@ -3751,7 +3945,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -3763,7 +3957,7 @@
           "display": "1tbsp balsamic vinegar",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-339",
           "nutrition_lookup": "Vinegar, balsamic",
           "allergens": [
             "sulphites"
@@ -3776,11 +3970,19 @@
         "Whisk the oil and vinegar and toss through.",
         "Top with the rocket and feta. Keeps for 2 days without the rocket."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 328,
+        "protein_g": 19,
+        "fat_g": 16.9,
+        "carbs_g": 26.3,
+        "fibre_g": 12.3
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "milk",
         "sulphites"
@@ -3826,7 +4028,7 @@
           "display": "4 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -3840,7 +4042,7 @@
           "display": "3tbsp Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -3854,7 +4056,7 @@
           "display": "1tsp Dijon mustard",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-364",
           "nutrition_lookup": "Mustard, Dijon",
           "allergens": [
             "mustard"
@@ -3868,7 +4070,7 @@
           "display": "2 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         },
@@ -3880,7 +4082,7 @@
           "display": "4 slice wholemeal bread",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-981",
           "nutrition_lookup": "Bread, wholemeal",
           "allergens": [
             "gluten"
@@ -3894,7 +4096,7 @@
           "display": "30g mixed salad leaves",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-520",
           "nutrition_lookup": "Lettuce, mixed leaves",
           "allergens": []
         },
@@ -3906,7 +4108,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -3916,11 +4118,19 @@
         "Mash with the yoghurt, mustard, spring onions and black pepper.",
         "Fill the bread with the egg mix and salad leaves."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 343,
+        "protein_g": 22,
+        "fat_g": 13.6,
+        "carbs_g": 35.5,
+        "fibre_g": 6
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "gluten",
@@ -3969,7 +4179,7 @@
           "display": "500g boneless skinless chicken thighs, chopped",
           "note": "chopped",
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-289",
           "nutrition_lookup": "Chicken, thigh, meat only, raw",
           "allergens": []
         },
@@ -3981,7 +4191,7 @@
           "display": "250g orzo",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-716",
           "nutrition_lookup": "Pasta, white, raw",
           "allergens": [
             "gluten"
@@ -3995,7 +4205,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -4007,7 +4217,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -4019,7 +4229,7 @@
           "display": "1 chicken stock cube, made up to 750 ml",
           "note": "made up to 750 ml",
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-726",
           "nutrition_lookup": "Stock cubes, chicken",
           "allergens": [
             "celery"
@@ -4033,7 +4243,7 @@
           "display": "100g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -4045,7 +4255,7 @@
           "display": "1 lemons",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -4057,7 +4267,7 @@
           "display": "30g vegetarian Italian-style hard cheese, grated",
           "note": "grated",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-526",
           "nutrition_lookup": "Cheese, Parmesan",
           "allergens": [
             "milk"
@@ -4071,7 +4281,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -4082,11 +4292,19 @@
         "Stir in the orzo and stock. Cover and simmer for 12 to 15 minutes, stirring now and then, until the orzo is tender and the chicken is cooked through.",
         "Stir in the spinach, lemon zest and juice, and the cheese."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 434,
+        "protein_g": 37.5,
+        "fat_g": 10.8,
+        "carbs_g": 51.1,
+        "fibre_g": 3.7
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "celery",
         "gluten",
@@ -4133,7 +4351,7 @@
           "display": "500g turkey breast mince (2 to 5% fat)",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "ext-tesco-turkey-mince-raw",
           "nutrition_lookup": "Turkey, mince, raw",
           "allergens": []
         },
@@ -4145,7 +4363,7 @@
           "display": "240g tinned kidney beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-660",
           "nutrition_lookup": "Red kidney beans, canned, drained",
           "allergens": []
         },
@@ -4157,7 +4375,7 @@
           "display": "800g tinned chopped tomatoes",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Tomatoes, canned, whole contents",
           "allergens": []
         },
@@ -4169,7 +4387,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -4181,7 +4399,7 @@
           "display": "1 red peppers, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -4193,7 +4411,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -4205,7 +4423,7 @@
           "display": "2tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -4217,7 +4435,7 @@
           "display": "2tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -4229,7 +4447,7 @@
           "display": "½tsp chilli flakes, optional",
           "note": "optional",
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-873",
           "nutrition_lookup": "Chilli powder",
           "allergens": []
         },
@@ -4241,7 +4459,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -4253,7 +4471,7 @@
           "display": "250g brown basmati rice",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-868",
           "nutrition_lookup": "Rice, brown, raw",
           "allergens": []
         }
@@ -4265,12 +4483,20 @@
         "Meanwhile, cook the rice following the packet instructions.",
         "Serve the chilli with the rice. Freezes for up to 3 months."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 502,
+        "protein_g": 45.1,
+        "fat_g": 7.3,
+        "carbs_g": 70,
+        "fibre_g": 10
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [],
       "allergen_labels": [],
       "check_label_notes": [],
@@ -4314,7 +4540,7 @@
           "display": "240g salmon fillets",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "16-356",
           "nutrition_lookup": "Salmon, raw",
           "allergens": [
             "fish"
@@ -4328,7 +4554,7 @@
           "display": "400g new potatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-618",
           "nutrition_lookup": "Potatoes, new, raw",
           "allergens": []
         },
@@ -4340,7 +4566,7 @@
           "display": "200g broccoli, in florets",
           "note": "in florets",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-502",
           "nutrition_lookup": "Broccoli, green, raw",
           "allergens": []
         },
@@ -4352,7 +4578,7 @@
           "display": "10 cherry tomatoes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -4364,7 +4590,7 @@
           "display": "2 garlic cloves, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -4376,7 +4602,7 @@
           "display": "1 lemons",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -4388,7 +4614,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -4399,11 +4625,19 @@
         "Roast for 12 to 15 minutes until the salmon is cooked through.",
         "Serve with the rest of the lemon."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 514,
+        "protein_g": 33.4,
+        "fat_g": 26.1,
+        "carbs_g": 39.2,
+        "fibre_g": 9.1
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "fish"
       ],
@@ -4448,7 +4682,7 @@
           "display": "480g tinned chickpeas, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-670",
           "nutrition_lookup": "Chickpeas, canned, drained",
           "allergens": []
         },
@@ -4460,7 +4694,7 @@
           "display": "400ml light coconut milk",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "14-890",
           "nutrition_lookup": "Coconut milk, reduced fat, canned",
           "allergens": []
         },
@@ -4472,7 +4706,7 @@
           "display": "400g tinned chopped tomatoes",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Tomatoes, canned, whole contents",
           "allergens": []
         },
@@ -4484,7 +4718,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -4496,7 +4730,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -4508,7 +4742,7 @@
           "display": "1 thumb fresh ginger, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-890",
           "nutrition_lookup": "Ginger root, fresh",
           "allergens": []
         },
@@ -4520,7 +4754,7 @@
           "display": "2tsp garam masala",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-829",
           "nutrition_lookup": "Garam masala",
           "allergens": []
         },
@@ -4532,7 +4766,7 @@
           "display": "1tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -4544,7 +4778,7 @@
           "display": "150g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -4556,7 +4790,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -4568,7 +4802,7 @@
           "display": "250g white basmati rice",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-857",
           "nutrition_lookup": "Rice, basmati, white, raw",
           "allergens": []
         }
@@ -4580,7 +4814,13 @@
         "Meanwhile, cook the rice following the packet instructions.",
         "Stir the spinach into the curry until wilted and serve with the rice."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 529,
+        "protein_g": 18.8,
+        "fat_g": 15.5,
+        "carbs_g": 84.6,
+        "fibre_g": 11.9
+      },
       "intended_claims": [
         "high_fibre"
       ],
@@ -4625,7 +4865,7 @@
           "display": "250g lean beef stir-fry strips",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-043",
           "nutrition_lookup": "Beef, rump steak, lean, raw",
           "allergens": []
         },
@@ -4637,7 +4877,7 @@
           "display": "150g medium egg noodles",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-719",
           "nutrition_lookup": "Noodles, egg, raw",
           "allergens": [
             "gluten",
@@ -4652,7 +4892,7 @@
           "display": "200g broccoli, in small florets",
           "note": "in small florets",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-502",
           "nutrition_lookup": "Broccoli, green, raw",
           "allergens": []
         },
@@ -4664,7 +4904,7 @@
           "display": "1 red peppers, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -4676,7 +4916,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -4688,7 +4928,7 @@
           "display": "1 thumb fresh ginger, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-890",
           "nutrition_lookup": "Ginger root, fresh",
           "allergens": []
         },
@@ -4700,7 +4940,7 @@
           "display": "2tbsp reduced-salt soy sauce",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-721",
           "nutrition_lookup": "Soy sauce, light",
           "allergens": [
             "soya",
@@ -4715,7 +4955,7 @@
           "display": "1tsp toasted sesame oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-043",
           "nutrition_lookup": "Sesame oil",
           "allergens": [
             "sesame"
@@ -4729,7 +4969,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -4740,11 +4980,19 @@
         "Add the broccoli, pepper, garlic and ginger and stir-fry for 3 minutes with a splash of water.",
         "Return the beef, add the noodles, soy sauce and sesame oil and toss until hot."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 563,
+        "protein_g": 42.3,
+        "fat_g": 16.5,
+        "carbs_g": 65.4,
+        "fibre_g": 9
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "gluten",
@@ -4794,7 +5042,7 @@
           "display": "150g dried red lentils",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "13-657",
           "nutrition_lookup": "Lentils, red, split, dried, raw",
           "allergens": []
         },
@@ -4806,7 +5054,7 @@
           "display": "250g mushrooms, finely chopped",
           "note": "finely chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-505",
           "nutrition_lookup": "Mushrooms, white, raw",
           "allergens": []
         },
@@ -4818,7 +5066,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -4830,7 +5078,7 @@
           "display": "1 carrots, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-496",
           "nutrition_lookup": "Carrots, old, raw",
           "allergens": []
         },
@@ -4842,7 +5090,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -4854,7 +5102,7 @@
           "display": "800g tinned chopped tomatoes",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Tomatoes, canned, whole contents",
           "allergens": []
         },
@@ -4866,7 +5114,7 @@
           "display": "2tbsp tomato purée",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-531",
           "nutrition_lookup": "Tomato puree",
           "allergens": []
         },
@@ -4878,7 +5126,7 @@
           "display": "2tsp dried mixed herbs",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-884",
           "nutrition_lookup": "Mixed herbs, dried",
           "allergens": []
         },
@@ -4890,7 +5138,7 @@
           "display": "1 vegetable stock cube, made up to 300 ml",
           "note": "made up to 300 ml",
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-727",
           "nutrition_lookup": "Stock cubes, vegetable",
           "allergens": [
             "celery"
@@ -4904,7 +5152,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -4916,7 +5164,7 @@
           "display": "300g wholewheat spaghetti",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-718",
           "nutrition_lookup": "Spaghetti, wholewheat, raw",
           "allergens": [
             "gluten"
@@ -4929,11 +5177,19 @@
         "Add the lentils, tomatoes and stock. Simmer for 25 minutes, stirring now and then, until thick.",
         "Cook the spaghetti following the packet instructions and serve with the sauce."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 465,
+        "protein_g": 23.2,
+        "fat_g": 6.9,
+        "carbs_g": 84.2,
+        "fibre_g": 19.4
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "celery",
         "gluten"
@@ -4981,7 +5237,7 @@
           "display": "500g skinless chicken breast, sliced",
           "note": "sliced",
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-290",
           "nutrition_lookup": "Chicken, breast, meat only, raw",
           "allergens": []
         },
@@ -4993,7 +5249,7 @@
           "display": "3 red peppers, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -5005,7 +5261,7 @@
           "display": "2 red onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, red, raw",
           "allergens": []
         },
@@ -5017,7 +5273,7 @@
           "display": "2tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -5029,7 +5285,7 @@
           "display": "1tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -5041,7 +5297,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -5053,7 +5309,7 @@
           "display": "8 wholemeal tortilla wraps",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-925",
           "nutrition_lookup": "Tortilla, wheat, wholemeal",
           "allergens": [
             "gluten"
@@ -5067,7 +5323,7 @@
           "display": "150g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -5081,7 +5337,7 @@
           "display": "1 avocados, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-386",
           "nutrition_lookup": "Avocado, flesh only",
           "allergens": []
         },
@@ -5093,7 +5349,7 @@
           "display": "1 limes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         }
@@ -5104,11 +5360,19 @@
         "Roast for 20 to 25 minutes until the chicken is cooked through.",
         "Warm the wraps and serve everything at the table with the yoghurt, avocado and remaining lime."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 610,
+        "protein_g": 42.5,
+        "fat_g": 21,
+        "carbs_g": 67.6,
+        "fibre_g": 9.4
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "milk"
@@ -5155,7 +5419,7 @@
           "display": "260g cod fillets",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "16-372",
           "nutrition_lookup": "Cod, raw",
           "allergens": [
             "fish"
@@ -5169,7 +5433,7 @@
           "display": "2tbsp green pesto",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-622",
           "nutrition_lookup": "Pesto, green",
           "allergens": [
             "milk",
@@ -5184,7 +5448,7 @@
           "display": "1 courgettes, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-627",
           "nutrition_lookup": "Courgette, raw",
           "allergens": []
         },
@@ -5196,7 +5460,7 @@
           "display": "12 cherry tomatoes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -5208,7 +5472,7 @@
           "display": "120g quinoa",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-843",
           "nutrition_lookup": "Quinoa, raw",
           "allergens": []
         },
@@ -5220,7 +5484,7 @@
           "display": "1tsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -5231,11 +5495,19 @@
         "Meanwhile, cook the quinoa for 12 to 15 minutes and drain.",
         "Serve the cod and vegetables on the quinoa."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 408,
+        "protein_g": 34.3,
+        "fat_g": 13.5,
+        "carbs_g": 40,
+        "fibre_g": 6.2
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "fish",
         "milk",
@@ -5283,7 +5555,7 @@
           "display": "280g firm tofu, pressed and cubed",
           "note": "pressed and cubed",
           "aisle": "Chilled",
-          "food_id": null,
+          "food_id": "13-570",
           "nutrition_lookup": "Tofu, soya bean, steamed",
           "allergens": [
             "soya"
@@ -5297,7 +5569,7 @@
           "display": "150g rice noodles",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "ext-no-rice-noodles-raw",
           "nutrition_lookup": "Noodles, rice, raw",
           "allergens": []
         },
@@ -5309,7 +5581,7 @@
           "display": "150g broccoli, in small florets",
           "note": "in small florets",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-502",
           "nutrition_lookup": "Broccoli, green, raw",
           "allergens": []
         },
@@ -5321,7 +5593,7 @@
           "display": "1 carrots, in thin strips",
           "note": "in thin strips",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-496",
           "nutrition_lookup": "Carrots, old, raw",
           "allergens": []
         },
@@ -5333,7 +5605,7 @@
           "display": "3 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         },
@@ -5345,7 +5617,7 @@
           "display": "3tbsp reduced-salt soy sauce",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-721",
           "nutrition_lookup": "Soy sauce, light",
           "allergens": [
             "soya",
@@ -5360,7 +5632,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -5372,7 +5644,7 @@
           "display": "1 thumb fresh ginger, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-890",
           "nutrition_lookup": "Ginger root, fresh",
           "allergens": []
         },
@@ -5384,7 +5656,7 @@
           "display": "1tsp maple syrup",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "ext-usda-maple-syrup",
           "nutrition_lookup": "Maple syrup",
           "allergens": []
         },
@@ -5396,7 +5668,7 @@
           "display": "1tsp toasted sesame oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-043",
           "nutrition_lookup": "Sesame oil",
           "allergens": [
             "sesame"
@@ -5410,7 +5682,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -5421,7 +5693,13 @@
         "Stir-fry the broccoli and carrot for 3 minutes with a splash of water.",
         "Add the garlic, ginger, soy sauce, maple syrup and sesame oil, then the noodles and tofu. Toss well and top with spring onions."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 533,
+        "protein_g": 20.7,
+        "fat_g": 16.2,
+        "carbs_g": 76.6,
+        "fibre_g": 6.6
+      },
       "intended_claims": [
         "high_protein"
       ],
@@ -5473,7 +5751,7 @@
           "display": "200g raw king prawns",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "16-387",
           "nutrition_lookup": "Prawns, king, raw",
           "allergens": [
             "crustaceans"
@@ -5487,7 +5765,7 @@
           "display": "160g wholewheat pasta",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-718",
           "nutrition_lookup": "Pasta, wholewheat, raw",
           "allergens": [
             "gluten"
@@ -5501,7 +5779,7 @@
           "display": "250g cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -5513,7 +5791,7 @@
           "display": "2 garlic cloves, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -5525,7 +5803,7 @@
           "display": "½tsp chilli flakes",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-873",
           "nutrition_lookup": "Chilli powder",
           "allergens": []
         },
@@ -5537,7 +5815,7 @@
           "display": "60g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -5549,7 +5827,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -5561,7 +5839,7 @@
           "display": "½ lemons",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         }
@@ -5573,11 +5851,19 @@
         "Add the prawns and cook for 3 to 4 minutes until pink all the way through.",
         "Toss in the pasta, spinach, lemon juice and a splash of the pasta water."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 440,
+        "protein_g": 30.2,
+        "fat_g": 10.5,
+        "carbs_g": 60.2,
+        "fibre_g": 11.9
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "crustaceans",
         "gluten"
@@ -5621,7 +5907,7 @@
           "display": "500g turkey breast mince (2 to 5% fat)",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "ext-tesco-turkey-mince-raw",
           "nutrition_lookup": "Turkey, mince, raw",
           "allergens": []
         },
@@ -5633,7 +5919,7 @@
           "display": "1 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -5647,7 +5933,7 @@
           "display": "30g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -5661,7 +5947,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -5673,7 +5959,7 @@
           "display": "2tsp dried mixed herbs",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-884",
           "nutrition_lookup": "Mixed herbs, dried",
           "allergens": []
         },
@@ -5685,7 +5971,7 @@
           "display": "500g passata",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Passata",
           "allergens": []
         },
@@ -5697,7 +5983,7 @@
           "display": "1 onions, finely chopped",
           "note": "finely chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -5709,7 +5995,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -5721,7 +6007,7 @@
           "display": "300g wholewheat spaghetti",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-718",
           "nutrition_lookup": "Spaghetti, wholewheat, raw",
           "allergens": [
             "gluten"
@@ -5735,7 +6021,7 @@
           "display": "30g vegetarian Italian-style hard cheese, grated",
           "note": "grated",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-526",
           "nutrition_lookup": "Cheese, Parmesan",
           "allergens": [
             "milk"
@@ -5749,11 +6035,19 @@
         "Return the meatballs and simmer for 15 minutes until cooked through.",
         "Cook the spaghetti and serve with the meatballs and cheese."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 536,
+        "protein_g": 48.2,
+        "fat_g": 11.1,
+        "carbs_g": 65,
+        "fibre_g": 11.4
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "gluten",
@@ -5800,7 +6094,7 @@
           "display": "1 sweet potatoes, large, diced",
           "note": "large, diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-463",
           "nutrition_lookup": "Sweet potato, raw",
           "allergens": []
         },
@@ -5812,7 +6106,7 @@
           "display": "240g tinned black beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "ext-black-beans-canned",
           "nutrition_lookup": "Black beans, canned, drained",
           "allergens": []
         },
@@ -5824,7 +6118,7 @@
           "display": "½ red onions, finely sliced",
           "note": "finely sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, red, raw",
           "allergens": []
         },
@@ -5836,7 +6130,7 @@
           "display": "1tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -5848,7 +6142,7 @@
           "display": "1tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -5860,7 +6154,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -5872,7 +6166,7 @@
           "display": "4 wholemeal tortilla wraps, small",
           "note": "small",
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-925",
           "nutrition_lookup": "Tortilla, wheat, wholemeal",
           "allergens": [
             "gluten"
@@ -5886,7 +6180,7 @@
           "display": "60g feta",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-525",
           "nutrition_lookup": "Feta cheese",
           "allergens": [
             "milk"
@@ -5900,7 +6194,7 @@
           "display": "½ avocados",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-386",
           "nutrition_lookup": "Avocado, flesh only",
           "allergens": []
         },
@@ -5912,7 +6206,7 @@
           "display": "1 limes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         },
@@ -5924,7 +6218,7 @@
           "display": "1 handful fresh coriander",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-888",
           "nutrition_lookup": "Coriander leaves, fresh",
           "allergens": []
         }
@@ -5934,7 +6228,13 @@
         "Warm the beans in a pan with a splash of water and the juice of half the lime.",
         "Warm the wraps and fill with the sweet potato, beans, onion, avocado, feta and coriander. Serve with lime wedges."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 684,
+        "protein_g": 22.2,
+        "fat_g": 25.7,
+        "carbs_g": 89,
+        "fibre_g": 16.6
+      },
       "intended_claims": [
         "high_fibre"
       ],
@@ -5983,7 +6283,7 @@
           "display": "300g skinless chicken breast, cubed",
           "note": "cubed",
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-290",
           "nutrition_lookup": "Chicken, breast, meat only, raw",
           "allergens": []
         },
@@ -5995,7 +6295,7 @@
           "display": "200g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -6009,7 +6309,7 @@
           "display": "2tsp garam masala",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-829",
           "nutrition_lookup": "Garam masala",
           "allergens": []
         },
@@ -6021,7 +6321,7 @@
           "display": "1 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -6033,7 +6333,7 @@
           "display": "½ lemons, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         },
@@ -6045,7 +6345,7 @@
           "display": "1 red onions, in chunks",
           "note": "in chunks",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, red, raw",
           "allergens": []
         },
@@ -6057,7 +6357,7 @@
           "display": "1 red peppers, in chunks",
           "note": "in chunks",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -6069,7 +6369,7 @@
           "display": "2 wholemeal pitta breads",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-974",
           "nutrition_lookup": "Pitta bread, wholemeal",
           "allergens": [
             "gluten"
@@ -6083,7 +6383,7 @@
           "display": "¼ cucumber, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -6095,7 +6395,7 @@
           "display": "1 handful fresh mint, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-836",
           "nutrition_lookup": "Mint, fresh",
           "allergens": []
         }
@@ -6107,11 +6407,19 @@
         "Mix the rest of the yoghurt with the cucumber and mint.",
         "Serve with warm pittas and the yoghurt."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 505,
+        "protein_g": 49.6,
+        "fat_g": 13.4,
+        "carbs_g": 49.3,
+        "fibre_g": 5.1
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "milk"
@@ -6158,7 +6466,7 @@
           "display": "200g white basmati rice",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-857",
           "nutrition_lookup": "Rice, basmati, white, raw",
           "allergens": []
         },
@@ -6170,7 +6478,7 @@
           "display": "240g tinned kidney beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-660",
           "nutrition_lookup": "Red kidney beans, canned, drained",
           "allergens": []
         },
@@ -6182,7 +6490,7 @@
           "display": "240g tinned black beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "ext-black-beans-canned",
           "nutrition_lookup": "Black beans, canned, drained",
           "allergens": []
         },
@@ -6194,7 +6502,7 @@
           "display": "165g tinned sweetcorn",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-529",
           "nutrition_lookup": "Sweetcorn, kernels, canned, drained",
           "allergens": []
         },
@@ -6206,7 +6514,7 @@
           "display": "400g tinned chopped tomatoes",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-530",
           "nutrition_lookup": "Tomatoes, canned, whole contents",
           "allergens": []
         },
@@ -6218,7 +6526,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -6230,7 +6538,7 @@
           "display": "1 red peppers, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -6242,7 +6550,7 @@
           "display": "2tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -6254,7 +6562,7 @@
           "display": "2tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -6266,7 +6574,7 @@
           "display": "1 vegetable stock cube, made up to 600 ml",
           "note": "made up to 600 ml",
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-727",
           "nutrition_lookup": "Stock cubes, vegetable",
           "allergens": [
             "celery"
@@ -6280,7 +6588,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -6292,7 +6600,7 @@
           "display": "1 limes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         }
@@ -6303,11 +6611,19 @@
         "Add the tomatoes, stock and beans. Cover and simmer for 18 to 20 minutes until the rice is tender, stirring once or twice.",
         "Stir in the sweetcorn and lime juice and warm through."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 394,
+        "protein_g": 16.4,
+        "fat_g": 6.1,
+        "carbs_g": 71.1,
+        "fibre_g": 13.1
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "celery"
       ],
@@ -6353,7 +6669,7 @@
           "display": "200g feta",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-525",
           "nutrition_lookup": "Feta cheese",
           "allergens": [
             "milk"
@@ -6367,7 +6683,7 @@
           "display": "400g cherry tomatoes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -6379,7 +6695,7 @@
           "display": "3 garlic cloves, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -6391,7 +6707,7 @@
           "display": "2tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -6403,7 +6719,7 @@
           "display": "320g wholewheat pasta",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-718",
           "nutrition_lookup": "Pasta, wholewheat, raw",
           "allergens": [
             "gluten"
@@ -6417,7 +6733,7 @@
           "display": "400g tinned cannellini beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-666",
           "nutrition_lookup": "Cannellini beans, canned, drained",
           "allergens": []
         },
@@ -6429,7 +6745,7 @@
           "display": "100g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -6441,7 +6757,7 @@
           "display": "1 handful fresh basil",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-804",
           "nutrition_lookup": "Basil, fresh",
           "allergens": []
         }
@@ -6452,11 +6768,19 @@
         "Meanwhile, cook the pasta, adding the beans for the last 2 minutes. Drain.",
         "Mash the feta and tomatoes together, then stir in the pasta, beans, spinach and basil."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 585,
+        "protein_g": 27.5,
+        "fat_g": 21.3,
+        "carbs_g": 75.8,
+        "fibre_g": 18.1
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [
         "gluten",
         "milk"
@@ -6500,7 +6824,7 @@
           "display": "500g cod fillets, in chunks",
           "note": "in chunks",
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "16-372",
           "nutrition_lookup": "Cod, raw",
           "allergens": [
             "fish"
@@ -6514,7 +6838,7 @@
           "display": "400ml light coconut milk",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "14-890",
           "nutrition_lookup": "Coconut milk, reduced fat, canned",
           "allergens": []
         },
@@ -6526,7 +6850,7 @@
           "display": "2tbsp mild curry powder",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-876",
           "nutrition_lookup": "Curry powder",
           "allergens": []
         },
@@ -6538,7 +6862,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -6550,7 +6874,7 @@
           "display": "2 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -6562,7 +6886,7 @@
           "display": "1 thumb fresh ginger, grated",
           "note": "grated",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-890",
           "nutrition_lookup": "Ginger root, fresh",
           "allergens": []
         },
@@ -6574,7 +6898,7 @@
           "display": "100g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -6586,7 +6910,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -6598,7 +6922,7 @@
           "display": "250g white basmati rice",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-857",
           "nutrition_lookup": "Rice, basmati, white, raw",
           "allergens": []
         },
@@ -6610,7 +6934,7 @@
           "display": "1 limes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         },
@@ -6622,7 +6946,7 @@
           "display": "1 handful fresh coriander",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-888",
           "nutrition_lookup": "Coriander leaves, fresh",
           "allergens": []
         }
@@ -6634,11 +6958,19 @@
         "Add the fish and simmer gently for 6 to 8 minutes until it flakes. Stir in the spinach.",
         "Cook the rice meanwhile and serve with lime and coriander."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 461,
+        "protein_g": 29.7,
+        "fat_g": 13,
+        "carbs_g": 60.2,
+        "fibre_g": 4.1
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "fish"
       ],
@@ -6684,7 +7016,7 @@
           "display": "500g turkey breast mince (2 to 5% fat)",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "ext-tesco-turkey-mince-raw",
           "nutrition_lookup": "Turkey, mince, raw",
           "allergens": []
         },
@@ -6696,7 +7028,7 @@
           "display": "1 onions, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, raw",
           "allergens": []
         },
@@ -6708,7 +7040,7 @@
           "display": "2 carrots, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-496",
           "nutrition_lookup": "Carrots, old, raw",
           "allergens": []
         },
@@ -6720,7 +7052,7 @@
           "display": "200g mushrooms, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-505",
           "nutrition_lookup": "Mushrooms, white, raw",
           "allergens": []
         },
@@ -6732,7 +7064,7 @@
           "display": "150g frozen peas",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "13-527",
           "nutrition_lookup": "Peas, frozen, raw",
           "allergens": []
         },
@@ -6744,7 +7076,7 @@
           "display": "2tbsp tomato purée",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-531",
           "nutrition_lookup": "Tomato puree",
           "allergens": []
         },
@@ -6756,7 +7088,7 @@
           "display": "1 chicken stock cube, made up to 300 ml",
           "note": "made up to 300 ml",
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "17-726",
           "nutrition_lookup": "Stock cubes, chicken",
           "allergens": [
             "celery"
@@ -6770,7 +7102,7 @@
           "display": "1tsp dried mixed herbs",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-884",
           "nutrition_lookup": "Mixed herbs, dried",
           "allergens": []
         },
@@ -6782,7 +7114,7 @@
           "display": "800g sweet potatoes, peeled and chopped",
           "note": "peeled and chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-463",
           "nutrition_lookup": "Sweet potato, raw",
           "allergens": []
         },
@@ -6794,7 +7126,7 @@
           "display": "50ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -6808,7 +7140,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -6820,12 +7152,20 @@
         "Heat the oven to 200°C (180°C fan). Tip the filling into a baking dish and top with the mash.",
         "Bake for 20 minutes until bubbling. Freezes for up to 3 months."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 415,
+        "protein_g": 38.4,
+        "fat_g": 6.8,
+        "carbs_g": 54.9,
+        "fibre_g": 10.1
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "celery",
         "milk"
@@ -6874,7 +7214,7 @@
           "display": "150g brown basmati rice, cooked and cooled",
           "note": "cooked and cooled",
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-868",
           "nutrition_lookup": "Rice, brown, raw",
           "allergens": []
         },
@@ -6886,7 +7226,7 @@
           "display": "3 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -6900,7 +7240,7 @@
           "display": "100g frozen peas",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "13-527",
           "nutrition_lookup": "Peas, frozen, raw",
           "allergens": []
         },
@@ -6912,7 +7252,7 @@
           "display": "100g frozen edamame beans",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "13-667",
           "nutrition_lookup": "Edamame beans, frozen",
           "allergens": [
             "soya"
@@ -6926,7 +7266,7 @@
           "display": "3 spring onions, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-352",
           "nutrition_lookup": "Spring onions, bulbs and tops, raw",
           "allergens": []
         },
@@ -6938,7 +7278,7 @@
           "display": "1 garlic cloves, crushed",
           "note": "crushed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-244",
           "nutrition_lookup": "Garlic, raw",
           "allergens": []
         },
@@ -6950,7 +7290,7 @@
           "display": "2tbsp reduced-salt soy sauce",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-721",
           "nutrition_lookup": "Soy sauce, light",
           "allergens": [
             "soya",
@@ -6965,7 +7305,7 @@
           "display": "1tsp toasted sesame oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-043",
           "nutrition_lookup": "Sesame oil",
           "allergens": [
             "sesame"
@@ -6979,7 +7319,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         }
@@ -6991,7 +7331,13 @@
         "Push to one side, crack in the eggs and scramble, then mix through.",
         "Add the soy sauce, sesame oil and spring onions."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 554,
+        "protein_g": 24.9,
+        "fat_g": 21.2,
+        "carbs_g": 70.2,
+        "fibre_g": 8.1
+      },
       "intended_claims": [
         "high_protein"
       ],
@@ -7049,7 +7395,7 @@
           "display": "200g halloumi, sliced",
           "note": "sliced",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-496",
           "nutrition_lookup": "Halloumi cheese",
           "allergens": [
             "milk"
@@ -7063,7 +7409,7 @@
           "display": "1 sweet potatoes, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-463",
           "nutrition_lookup": "Sweet potato, raw",
           "allergens": []
         },
@@ -7075,7 +7421,7 @@
           "display": "1 red peppers, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         },
@@ -7087,7 +7433,7 @@
           "display": "1 courgettes, chopped",
           "note": "chopped",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-627",
           "nutrition_lookup": "Courgette, raw",
           "allergens": []
         },
@@ -7099,7 +7445,7 @@
           "display": "1 red onions, in wedges",
           "note": "in wedges",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-499",
           "nutrition_lookup": "Onions, red, raw",
           "allergens": []
         },
@@ -7111,7 +7457,7 @@
           "display": "240g tinned chickpeas, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-670",
           "nutrition_lookup": "Chickpeas, canned, drained",
           "allergens": []
         },
@@ -7123,7 +7469,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -7135,7 +7481,7 @@
           "display": "1tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -7147,7 +7493,7 @@
           "display": "½ lemons",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-277",
           "nutrition_lookup": "Lemon juice, fresh",
           "allergens": []
         }
@@ -7158,12 +7504,20 @@
         "Lay the halloumi on top and roast for 10 more minutes until golden.",
         "Squeeze over the lemon to serve."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 667,
+        "protein_g": 37.9,
+        "fat_g": 34.8,
+        "carbs_g": 54.7,
+        "fibre_g": 14.9
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "milk"
       ],
@@ -7206,7 +7560,7 @@
           "display": "400g lean beef mince (5% fat)",
           "note": null,
           "aisle": "Meat and fish",
-          "food_id": null,
+          "food_id": "18-508",
           "nutrition_lookup": "Beef, mince, extra lean, raw",
           "allergens": []
         },
@@ -7218,7 +7572,7 @@
           "display": "240g tinned black beans, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "ext-black-beans-canned",
           "nutrition_lookup": "Black beans, canned, drained",
           "allergens": []
         },
@@ -7230,7 +7584,7 @@
           "display": "250g white basmati rice",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-857",
           "nutrition_lookup": "Rice, basmati, white, raw",
           "allergens": []
         },
@@ -7242,7 +7596,7 @@
           "display": "165g tinned sweetcorn",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-529",
           "nutrition_lookup": "Sweetcorn, kernels, canned, drained",
           "allergens": []
         },
@@ -7254,7 +7608,7 @@
           "display": "16 cherry tomatoes, quartered",
           "note": "quartered",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -7266,7 +7620,7 @@
           "display": "1 avocados, diced",
           "note": "diced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-386",
           "nutrition_lookup": "Avocado, flesh only",
           "allergens": []
         },
@@ -7278,7 +7632,7 @@
           "display": "1 limes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         },
@@ -7290,7 +7644,7 @@
           "display": "2tsp ground cumin",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-889",
           "nutrition_lookup": "Cumin seed, ground",
           "allergens": []
         },
@@ -7302,7 +7656,7 @@
           "display": "2tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -7314,7 +7668,7 @@
           "display": "150g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -7327,12 +7681,20 @@
         "Mix the tomatoes, avocado and sweetcorn with the lime juice.",
         "Build bowls with rice, beef and beans, the salsa and a spoonful of yoghurt."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 561,
+        "protein_g": 35.5,
+        "fat_g": 16,
+        "carbs_g": 68.8,
+        "fibre_g": 8.5
+      },
       "intended_claims": [
         "high_protein",
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "milk"
       ],
@@ -7379,7 +7741,7 @@
           "display": "100g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -7393,7 +7755,7 @@
           "display": "120g pitted dates",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-394",
           "nutrition_lookup": "Dates, dried, flesh and skin",
           "allergens": []
         },
@@ -7405,7 +7767,7 @@
           "display": "60g smooth peanut butter (no added sugar)",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "14-892",
           "nutrition_lookup": "Peanut butter, smooth",
           "allergens": [
             "peanuts"
@@ -7419,7 +7781,7 @@
           "display": "1tbsp cocoa powder",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "12-545",
           "nutrition_lookup": "Cocoa powder",
           "allergens": []
         },
@@ -7431,7 +7793,7 @@
           "display": "1tbsp chia seeds",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "ext-usda-chia-seeds",
           "nutrition_lookup": "Chia seeds, dried",
           "allergens": []
         }
@@ -7442,7 +7804,13 @@
         "Roll into 12 balls.",
         "Chill for up to a week. A serving is 2 balls."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 185,
+        "protein_g": 5.2,
+        "fat_g": 7.6,
+        "carbs_g": 25.1,
+        "fibre_g": 4.3
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [
@@ -7494,7 +7862,7 @@
           "display": "150g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -7508,7 +7876,7 @@
           "display": "60g frozen mixed berries",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "ext-no-frozen-mixed-berries",
           "nutrition_lookup": "Mixed berries, frozen",
           "allergens": []
         },
@@ -7520,7 +7888,7 @@
           "display": "10g mixed pumpkin and sunflower seeds",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-842",
           "nutrition_lookup": "Pumpkin seeds",
           "allergens": []
         }
@@ -7529,7 +7897,13 @@
         "Spoon the yoghurt into a pot or jar.",
         "Top with the berries and seeds."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 284,
+        "protein_g": 11.5,
+        "fat_g": 20.3,
+        "carbs_g": 13.3,
+        "fibre_g": 2.3
+      },
       "intended_claims": [
         "high_protein"
       ],
@@ -7577,7 +7951,7 @@
           "display": "240g tinned chickpeas, drained",
           "note": null,
           "aisle": "Tins and jars",
-          "food_id": null,
+          "food_id": "13-670",
           "nutrition_lookup": "Chickpeas, canned, drained",
           "allergens": []
         },
@@ -7589,7 +7963,7 @@
           "display": "1tbsp olive oil",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "17-038",
           "nutrition_lookup": "Olive oil",
           "allergens": []
         },
@@ -7601,7 +7975,7 @@
           "display": "1tsp smoked paprika",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-879",
           "nutrition_lookup": "Paprika",
           "allergens": []
         },
@@ -7613,7 +7987,7 @@
           "display": "1 pinch salt",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "17-367",
           "nutrition_lookup": "Salt, table",
           "allergens": []
         }
@@ -7624,11 +7998,19 @@
         "Roast for 25 to 30 minutes, shaking halfway, until crunchy.",
         "Cool completely and keep in an airtight jar for up to 3 days."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 144,
+        "protein_g": 6.8,
+        "fat_g": 7,
+        "carbs_g": 14.6,
+        "fibre_g": 5.9
+      },
       "intended_claims": [
         "high_fibre"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_fibre"
+      ],
       "allergens": [],
       "allergen_labels": [],
       "check_label_notes": [],
@@ -7667,7 +8049,7 @@
           "display": "100g hummus",
           "note": null,
           "aisle": "Chilled",
-          "food_id": null,
+          "food_id": "13-556",
           "nutrition_lookup": "Hummus",
           "allergens": [
             "sesame"
@@ -7681,7 +8063,7 @@
           "display": "2 carrots, in sticks",
           "note": "in sticks",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-496",
           "nutrition_lookup": "Carrots, old, raw",
           "allergens": []
         },
@@ -7693,7 +8075,7 @@
           "display": "½ cucumber, in sticks",
           "note": "in sticks",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -7705,7 +8087,7 @@
           "display": "1 red peppers, in strips",
           "note": "in strips",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-524",
           "nutrition_lookup": "Peppers, capsicum, red, raw",
           "allergens": []
         }
@@ -7715,7 +8097,13 @@
         "Stand the veg sticks in the hummus.",
         "Cover and chill for up to 2 days."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 208,
+        "protein_g": 5.2,
+        "fat_g": 14.3,
+        "carbs_g": 15.8,
+        "fibre_g": 7.9
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [
@@ -7762,7 +8150,7 @@
           "display": "1 apples, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-319",
           "nutrition_lookup": "Apples, eating, raw",
           "allergens": []
         },
@@ -7774,7 +8162,7 @@
           "display": "15g smooth peanut butter (no added sugar)",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "14-892",
           "nutrition_lookup": "Peanut butter, smooth",
           "allergens": [
             "peanuts"
@@ -7788,7 +8176,7 @@
           "display": "1 pinch ground cinnamon",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-874",
           "nutrition_lookup": "Cinnamon, ground",
           "allergens": []
         }
@@ -7797,7 +8185,13 @@
         "Slice the apple.",
         "Serve with the peanut butter for dipping and a pinch of cinnamon."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 170,
+        "protein_g": 4.4,
+        "fat_g": 8.5,
+        "carbs_g": 19.9,
+        "fibre_g": 3
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [
@@ -7844,7 +8238,7 @@
           "display": "150g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -7858,7 +8252,7 @@
           "display": "3 bananas, very ripe, mashed",
           "note": "very ripe, mashed",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-318",
           "nutrition_lookup": "Bananas, flesh only",
           "allergens": []
         },
@@ -7870,7 +8264,7 @@
           "display": "2 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -7884,7 +8278,7 @@
           "display": "80ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -7898,7 +8292,7 @@
           "display": "100g blueberries",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-325",
           "nutrition_lookup": "Blueberries, raw",
           "allergens": []
         },
@@ -7910,7 +8304,7 @@
           "display": "2tsp baking powder",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "17-355",
           "nutrition_lookup": "Baking powder",
           "allergens": []
         },
@@ -7922,7 +8316,7 @@
           "display": "1tsp ground cinnamon",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-874",
           "nutrition_lookup": "Cinnamon, ground",
           "allergens": []
         }
@@ -7934,7 +8328,13 @@
         "Divide between the cases and bake for 20 to 22 minutes until golden and springy.",
         "Keep in an airtight box for 3 days, or freeze."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 104,
+        "protein_g": 3.7,
+        "fat_g": 2.3,
+        "carbs_g": 18.3,
+        "fibre_g": 1.9
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [
@@ -7987,7 +8387,7 @@
           "display": "200g frozen edamame beans",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "13-667",
           "nutrition_lookup": "Edamame beans, frozen",
           "allergens": [
             "soya"
@@ -8001,7 +8401,7 @@
           "display": "½ limes, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         },
@@ -8013,7 +8413,7 @@
           "display": "¼tsp chilli flakes",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-873",
           "nutrition_lookup": "Chilli powder",
           "allergens": []
         },
@@ -8025,7 +8425,7 @@
           "display": "1 pinch salt",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "17-367",
           "nutrition_lookup": "Salt, table",
           "allergens": []
         }
@@ -8034,11 +8434,19 @@
         "Cook the edamame in boiling water for 3 to 4 minutes and drain.",
         "Toss with the lime juice, chilli flakes and a pinch of salt."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 142,
+        "protein_g": 12.3,
+        "fat_g": 7.6,
+        "carbs_g": 6.6,
+        "fibre_g": 6
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "soya"
       ],
@@ -8081,7 +8489,7 @@
           "display": "2 rye crispbreads",
           "note": null,
           "aisle": "Bakery",
-          "food_id": null,
+          "food_id": "11-822",
           "nutrition_lookup": "Crispbread, rye",
           "allergens": [
             "gluten"
@@ -8095,7 +8503,7 @@
           "display": "100g cottage cheese",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-539",
           "nutrition_lookup": "Cottage cheese, plain",
           "allergens": [
             "milk"
@@ -8109,7 +8517,7 @@
           "display": "¼ cucumber, sliced",
           "note": "sliced",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-523",
           "nutrition_lookup": "Cucumber, raw",
           "allergens": []
         },
@@ -8121,7 +8529,7 @@
           "display": "4 cherry tomatoes, halved",
           "note": "halved",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         },
@@ -8133,7 +8541,7 @@
           "display": "1 pinch black pepper",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-880",
           "nutrition_lookup": "Pepper, black",
           "allergens": []
         }
@@ -8142,11 +8550,19 @@
         "Spread the crispbreads with the cottage cheese.",
         "Top with the cucumber, tomatoes and black pepper."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 185,
+        "protein_g": 12.6,
+        "fat_g": 7.1,
+        "carbs_g": 19.1,
+        "fibre_g": 5.5
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "gluten",
         "milk"
@@ -8190,7 +8606,7 @@
           "display": "2 medium eggs",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-937",
           "nutrition_lookup": "Eggs, chicken, whole, raw",
           "allergens": [
             "eggs"
@@ -8204,7 +8620,7 @@
           "display": "2 plain rice cakes",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "ext-sainsburys-rice-cakes",
           "nutrition_lookup": "Rice cakes, plain",
           "allergens": []
         },
@@ -8216,7 +8632,7 @@
           "display": "25g mature Cheddar, in cubes",
           "note": "in cubes",
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-346",
           "nutrition_lookup": "Cheese, Cheddar, English",
           "allergens": [
             "milk"
@@ -8230,7 +8646,7 @@
           "display": "6 cherry tomatoes",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-519",
           "nutrition_lookup": "Tomatoes, cherry, raw",
           "allergens": []
         }
@@ -8240,11 +8656,19 @@
         "Pack everything into a lunchbox.",
         "Keep cool and eat the same day."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 316,
+        "protein_g": 21.3,
+        "fat_g": 18.6,
+        "carbs_g": 15.9,
+        "fibre_g": 1.9
+      },
       "intended_claims": [
         "high_protein"
       ],
-      "verified_claims": [],
+      "verified_claims": [
+        "high_protein"
+      ],
       "allergens": [
         "eggs",
         "milk"
@@ -8290,7 +8714,7 @@
           "display": "100g frozen mixed berries",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "ext-no-frozen-mixed-berries",
           "nutrition_lookup": "Mixed berries, frozen",
           "allergens": []
         },
@@ -8302,7 +8726,7 @@
           "display": "½ bananas",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-318",
           "nutrition_lookup": "Bananas, flesh only",
           "allergens": []
         },
@@ -8314,7 +8738,7 @@
           "display": "100g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -8328,7 +8752,7 @@
           "display": "200ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -8342,7 +8766,7 @@
           "display": "20g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -8353,7 +8777,13 @@
         "Put everything in a blender.",
         "Blend until smooth. Add a splash more milk if it's too thick."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 391,
+        "protein_g": 16.6,
+        "fat_g": 16.1,
+        "carbs_g": 46.4,
+        "fibre_g": 5.3
+      },
       "intended_claims": [
         "high_protein"
       ],
@@ -8401,7 +8831,7 @@
           "display": "1 bananas",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-318",
           "nutrition_lookup": "Bananas, flesh only",
           "allergens": []
         },
@@ -8413,7 +8843,7 @@
           "display": "15g smooth peanut butter (no added sugar)",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "14-892",
           "nutrition_lookup": "Peanut butter, smooth",
           "allergens": [
             "peanuts"
@@ -8427,7 +8857,7 @@
           "display": "250ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -8441,7 +8871,7 @@
           "display": "20g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -8455,7 +8885,7 @@
           "display": "1 pinch ground cinnamon",
           "note": null,
           "aisle": "Herbs and spices",
-          "food_id": null,
+          "food_id": "13-874",
           "nutrition_lookup": "Cinnamon, ground",
           "allergens": []
         }
@@ -8464,7 +8894,13 @@
         "Put everything in a blender.",
         "Blend until smooth."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 367,
+        "protein_g": 15.8,
+        "fat_g": 13.9,
+        "carbs_g": 48.5,
+        "fibre_g": 4.1
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [
@@ -8512,7 +8948,7 @@
           "display": "40g baby spinach",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "13-572",
           "nutrition_lookup": "Spinach, mature, raw",
           "allergens": []
         },
@@ -8524,7 +8960,7 @@
           "display": "100g frozen mango chunks",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "14-378",
           "nutrition_lookup": "Mango, ripe, raw",
           "allergens": []
         },
@@ -8536,7 +8972,7 @@
           "display": "½ bananas",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-318",
           "nutrition_lookup": "Bananas, flesh only",
           "allergens": []
         },
@@ -8548,7 +8984,7 @@
           "display": "250ml unsweetened soya drink",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "12-524",
           "nutrition_lookup": "Soya, non-dairy alternative to milk, unsweetened",
           "allergens": [
             "soya"
@@ -8562,7 +8998,7 @@
           "display": "1tsp chia seeds",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "ext-usda-chia-seeds",
           "nutrition_lookup": "Chia seeds, dried",
           "allergens": []
         },
@@ -8574,7 +9010,7 @@
           "display": "¼ limes, juice",
           "note": "juice",
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-279",
           "nutrition_lookup": "Lime juice, fresh",
           "allergens": []
         }
@@ -8583,7 +9019,13 @@
         "Blend the spinach with the soya drink first until smooth.",
         "Add the rest and blend again."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 185,
+        "protein_g": 9.3,
+        "fat_g": 6.3,
+        "carbs_g": 23.2,
+        "fibre_g": 5.3
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [
@@ -8627,7 +9069,7 @@
           "display": "1 bananas",
           "note": null,
           "aisle": "Fruit and veg",
-          "food_id": null,
+          "food_id": "14-318",
           "nutrition_lookup": "Bananas, flesh only",
           "allergens": []
         },
@@ -8639,7 +9081,7 @@
           "display": "1tbsp cocoa powder",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "12-545",
           "nutrition_lookup": "Cocoa powder",
           "allergens": []
         },
@@ -8651,7 +9093,7 @@
           "display": "100g Greek-style natural yoghurt",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-555",
           "nutrition_lookup": "Yogurt, Greek style, plain",
           "allergens": [
             "milk"
@@ -8665,7 +9107,7 @@
           "display": "200ml semi-skimmed milk",
           "note": null,
           "aisle": "Dairy and eggs",
-          "food_id": null,
+          "food_id": "12-313",
           "nutrition_lookup": "Milk, semi-skimmed, pasteurised",
           "allergens": [
             "milk"
@@ -8679,7 +9121,7 @@
           "display": "2 pitted dates, pitted",
           "note": "pitted",
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "14-394",
           "nutrition_lookup": "Dates, dried, flesh and skin",
           "allergens": []
         }
@@ -8688,7 +9130,13 @@
         "Put everything in a blender.",
         "Blend until completely smooth."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 428,
+        "protein_g": 16.6,
+        "fat_g": 15.8,
+        "carbs_g": 59.2,
+        "fibre_g": 5.4
+      },
       "intended_claims": [
         "high_protein"
       ],
@@ -8737,7 +9185,7 @@
           "display": "100g frozen mixed berries",
           "note": null,
           "aisle": "Frozen",
-          "food_id": null,
+          "food_id": "ext-no-frozen-mixed-berries",
           "nutrition_lookup": "Mixed berries, frozen",
           "allergens": []
         },
@@ -8749,7 +9197,7 @@
           "display": "100g plain soya yoghurt alternative",
           "note": null,
           "aisle": "Chilled",
-          "food_id": null,
+          "food_id": "ext-alpro-soya-yogurt-plain",
           "nutrition_lookup": "Soya, non-dairy alternative to yogurt, plain",
           "allergens": [
             "soya"
@@ -8763,7 +9211,7 @@
           "display": "200ml unsweetened soya drink",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "12-524",
           "nutrition_lookup": "Soya, non-dairy alternative to milk, unsweetened",
           "allergens": [
             "soya"
@@ -8777,7 +9225,7 @@
           "display": "25g rolled oats",
           "note": null,
           "aisle": "Rice, pasta and grains",
-          "food_id": null,
+          "food_id": "11-788",
           "nutrition_lookup": "Oats, rolled",
           "allergens": [
             "gluten"
@@ -8791,7 +9239,7 @@
           "display": "1tsp maple syrup",
           "note": null,
           "aisle": "Oils, sauces and spreads",
-          "food_id": null,
+          "food_id": "ext-usda-maple-syrup",
           "nutrition_lookup": "Maple syrup",
           "allergens": []
         }
@@ -8800,7 +9248,13 @@
         "Put everything in a blender.",
         "Blend until smooth."
       ],
-      "nutrition_per_serving": null,
+      "nutrition_per_serving": {
+        "calories": 255,
+        "protein_g": 12.6,
+        "fat_g": 8.3,
+        "carbs_g": 30.7,
+        "fibre_g": 6.9
+      },
       "intended_claims": [],
       "verified_claims": [],
       "allergens": [

@@ -8,17 +8,20 @@ import { useTheme } from '@/constants/theme';
 export function ChipScroller({
   children,
   style,
+  contentContainerStyle,
 }: {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  contentContainerStyle?: StyleProp<ViewStyle>;
 }) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.chips}
+      contentContainerStyle={[styles.chips, contentContainerStyle]}
       style={style}>
       {children}
+      <View style={styles.chipsEnd} accessibilityElementsHidden />
     </ScrollView>
   );
 }
@@ -149,8 +152,11 @@ const styles = StyleSheet.create({
   chips: {
     gap: 8,
     paddingVertical: 4,
-    paddingRight: 8,
+    paddingRight: 24,
     alignItems: 'center',
+  },
+  chipsEnd: {
+    width: 8,
   },
   section: {
     flexDirection: 'row',

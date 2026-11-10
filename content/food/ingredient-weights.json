@@ -1,0 +1,78 @@
+{
+  "_format_version": 1,
+  "_notes": [
+    "Edible grams used when a recipe quantity is not already in grams. Matches the CoFID row where we can (flesh only, juice not whole fruit).",
+    "tsp is 5ml, tbsp is 15ml, then density or a spice weight is applied. Pinches are 0.3g."
+  ],
+  "tsp_ml": 5,
+  "tbsp_ml": 15,
+  "pinch_g": 0.3,
+  "density_g_per_ml": {
+    "Milk, semi-skimmed, pasteurised": 1.03,
+    "Soya, non-dairy alternative to milk, unsweetened": 1.03,
+    "Coconut milk, reduced fat, canned": 0.96,
+    "Olive oil": 0.91,
+    "Sesame oil": 0.91,
+    "Soy sauce, light": 1.18,
+    "Honey": 1.42,
+    "Maple syrup": 1.32,
+    "Yogurt, Greek style, plain": 1.03,
+    "Vinegar, balsamic": 1.03,
+    "Mustard, Dijon": 1.1,
+    "Peanut butter, smooth": 1.09,
+    "Tahini paste": 1.1,
+    "Pesto, green": 1.05,
+    "Tomato puree": 1.1
+  },
+  "tsp_g": {
+    "Baking powder": 4,
+    "Chilli powder": 2,
+    "Cinnamon, ground": 2.3,
+    "Cumin seed, ground": 2,
+    "Garam masala": 2,
+    "Paprika": 2,
+    "Turmeric, ground": 2,
+    "Mixed herbs, dried": 1,
+    "Chia seeds, dried": 4,
+    "Mustard, Dijon": 5
+  },
+  "tbsp_g": {
+    "Cocoa powder": 8,
+    "Chia seeds, dried": 12
+  },
+  "piece_g": {
+    "Apples, eating, raw": 155,
+    "Avocado, flesh only": 140,
+    "Bananas, flesh only": 100,
+    "Bread, sourdough": 40,
+    "Bread, wholemeal": 40,
+    "Carrots, old, raw": 80,
+    "Courgette, raw": 200,
+    "Crispbread, rye": 10,
+    "Cucumber, raw": 300,
+    "Dates, dried, flesh and skin": 20,
+    "Eggs, chicken, whole, raw": 50,
+    "Garlic, raw": 3,
+    "Lemon juice, fresh": 30,
+    "Lime juice, fresh": 20,
+    "Onions, raw": 150,
+    "Onions, red, raw": 150,
+    "Peppers, capsicum, red, raw": 160,
+    "Pitta bread, wholemeal": 60,
+    "Rice cakes, plain": 7.5,
+    "Spring onions, bulbs and tops, raw": 10,
+    "Stock cubes, chicken": 10,
+    "Stock cubes, vegetable": 10,
+    "Sweet potato, raw": 180,
+    "Tomatoes, cherry, raw": 17,
+    "Tortilla, wheat, wholemeal": 50
+  },
+  "handful_g": {
+    "Basil, fresh": 10,
+    "Coriander leaves, fresh": 10,
+    "Mint, fresh": 10
+  },
+  "thumb_g": {
+    "Ginger root, fresh": 15
+  }
+}

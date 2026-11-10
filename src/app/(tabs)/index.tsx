@@ -25,6 +25,8 @@ import {
   ArticleCard,
   AwardsPreview,
   ChallengeHomeCard,
+  Chip,
+  FuelSuggestionCard,
   HomeHeader,
   IconButton,
   ImageCard,
@@ -42,6 +44,7 @@ import {
   WeekTodaySession,
   WelcomeHero,
   WhatsNextCard,
+  openRecipe,
   pickAwardsPreview,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
@@ -77,8 +80,9 @@ import {
   type Challenge,
 } from '@/lib/challenges';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
+import { pickTodaysFuelSuggestion } from '@/lib/foodSuggestions';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
+import { billingReminderCopy, fillCopy, foodCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
 import { openRefer } from '@/lib/referrals';
 import { routineCardDays } from '@/lib/contentRoutines';
 import { coverForChallenge, coverForRoutine, homeHeroSlug, takeCoverSource, takeSlug } from '@/lib/images';
@@ -296,6 +300,7 @@ export default function HomeScreen() {
   const [isStarting, setIsStarting] = useState(false);
   const [referHidden, setReferHidden] = useState(false);
   const [recap, setRecap] = useState<MonthlyRecap | null>(null);
+  const [weekTab, setWeekTab] = useState<'workouts' | 'meals'>('workouts');
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
   const heroHeight = Math.round(Math.min(Math.max(height * 0.45, 260), 380));
@@ -877,6 +882,8 @@ export default function HomeScreen() {
   const showLearn = learn.length > 0;
   const showStretch = stretches.length > 0;
   const showChallenge = Boolean(challenge);
+  const fuel = pickTodaysFuelSuggestion(todayPlan);
+  const showHeroFuel = Boolean(fuel) && Boolean(todayPlan?.completed) && !inProgress && !welcomeBack;
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -1023,6 +1030,10 @@ export default function HomeScreen() {
           style={[styles.heroBleed, { borderRadius: 0 }]}
         />
 
+        {showHeroFuel && fuel ? (
+          <FuelSuggestionCard suggestion={fuel} onPress={() => openRecipe(fuel.recipe.slug)} />
+        ) : null}
+
         {handOff && handOffCard && !inProgress ? (
           <WhatsNextCard
             title={handOffCard.title}
@@ -1039,25 +1050,51 @@ export default function HomeScreen() {
 
         <TypeRing done={streak.doneThisWeek} target={streak.targetThisWeek} counts={weekTypes} />
 
-        <WeekStripCard
-          days={stripDays}
-          onPressDay={() => router.push('/planner' as Href)}
-          todayCard={
-            showTodaySession && todayPlan ? (
-              <WeekTodaySession
-                title={todayPlan.title ?? next?.day.name ?? 'Today’s session'}
-                subtitle={
-                  todayPlan.subtitle ??
-                  `${enrolment?.routine.session_minutes ?? todayPlan.sessionMinutes ?? 45} min`
-                }
-                image={nextThumb}
-                onPress={() => void startTodayFromPlanner(todayPlan)}
-              />
-            ) : showTodayEmpty ? (
-              <WeekTodayEmpty onExplore={() => router.push('/planner' as Href)} />
-            ) : null
-          }
-        />
+        <View style={{ gap: spacing.sm }}>
+          <View style={styles.weekTabs}>
+            <Chip
+              label={homeCopy.week_tab_workouts}
+              selected={weekTab === 'workouts'}
+              onPress={() => setWeekTab('workouts')}
+            />
+            <Chip
+              label={homeCopy.week_tab_meals}
+              selected={weekTab === 'meals'}
+              onPress={() => setWeekTab('meals')}
+            />
+          </View>
+          <WeekStripCard
+            days={stripDays}
+            onPressDay={() => router.push('/planner' as Href)}
+            todayCard={
+              weekTab === 'meals' ? (
+                fuel ? (
+                  <FuelSuggestionCard
+                    suggestion={fuel}
+                    onPress={() => openRecipe(fuel.recipe.slug)}
+                    style={{ marginTop: spacing.md, shadowOpacity: 0, elevation: 0 }}
+                  />
+                ) : (
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
+                    {homeCopy.meals_empty}
+                  </AppText>
+                )
+              ) : showTodaySession && todayPlan ? (
+                <WeekTodaySession
+                  title={todayPlan.title ?? next?.day.name ?? 'Today’s session'}
+                  subtitle={
+                    todayPlan.subtitle ??
+                    `${enrolment?.routine.session_minutes ?? todayPlan.sessionMinutes ?? 45} min`
+                  }
+                  image={nextThumb}
+                  onPress={() => void startTodayFromPlanner(todayPlan)}
+                />
+              ) : showTodayEmpty ? (
+                <WeekTodayEmpty onExplore={() => router.push('/planner' as Href)} />
+              ) : null
+            }
+          />
+        </View>
 
         {recap ? (
           <RecapHomeCard
@@ -1297,6 +1334,10 @@ const styles = StyleSheet.create({
   },
   heroBleed: {
     marginHorizontal: -24,
+  },
+  weekTabs: {
+    flexDirection: 'row',
+    gap: 8,
   },
   centre: {
     flex: 1,

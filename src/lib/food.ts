@@ -1,7 +1,7 @@
 /**
  * Recipes and collections from content/food (AGENTS.md F1 to F3).
  * Bundled. content:sync reports the files; live writes wait until food_f2.sql is pasted and a live sync is confirmed.
- * nutrition_per_serving stays null until nutrition_calc.py fills it. Never guess macros.
+ * Macros come from CoFID plus nutrition-extras.json. Never guess them.
  */
 import collectionsFile from '../../content/food/collections.json';
 import recipesFile from '../../content/food/recipes.json';
@@ -309,6 +309,13 @@ export function visibleCollections(): VisibleCollection[] {
 export function collectionBySlug(slug: string | null | undefined): VisibleCollection | null {
   if (!slug) return null;
   return visibleCollections().find((collection) => collection.slug === slug) ?? null;
+}
+
+export function recipesInCollection(slug: string | null | undefined): Recipe[] {
+  if (!slug) return [];
+  const collection = COLLECTIONS.find((item) => item.slug === slug);
+  if (!collection) return [];
+  return recipesForCollection(collection);
 }
 
 export function recipeTotalMinutes(recipe: Recipe): number {

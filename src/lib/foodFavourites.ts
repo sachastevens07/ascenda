@@ -1,6 +1,5 @@
 /**
- * Favourite recipes. Saved on-device so hearts work before food_f2.sql.
- * recipe_favourites syncs across phones after that paste (F5 still owns the shopping list).
+ * Favourite recipes. Saved on-device, and synced to recipe_favourites after food_f2.sql.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useState } from 'react';

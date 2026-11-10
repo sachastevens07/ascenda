@@ -1,0 +1,781 @@
+{
+  "_format_version": 1,
+  "_notes": [
+    "Maps recipe nutrition_lookup strings to CoFID 2021 food codes from sheet 1.3 Proximates, plus nutrition-extras.json for foods CoFID does not list.",
+    "food_id is written onto each ingredient in recipes.json. nutrition_per_serving is calculated by scripts/nutrition-calc.mjs.",
+    "status: exact = same CoFID name; likely = clear CoFID equivalent; proxy = nearest CoFID food; extra = not in CoFID, values from nutrition-extras.json."
+  ],
+  "source": "McCance_Widdowsons_Composition_of_Foods_Integrated_Dataset_2021",
+  "summary": {
+    "exact": 48,
+    "likely": 38,
+    "proxy": 14,
+    "extra": 9,
+    "unmatched": 0
+  },
+  "matches": [
+    {
+      "lookup": "Apples, eating, raw",
+      "food_id": "14-319",
+      "cofid_name": "Apples, eating, raw, flesh and skin",
+      "status": "likely",
+      "note": "Eating apple, flesh and skin. Not the 'weighed with core' row."
+    },
+    {
+      "lookup": "Avocado, flesh only",
+      "food_id": "14-386",
+      "cofid_name": "Avocado, Hass, flesh only",
+      "status": "likely",
+      "note": "Hass. Fuerte is 14-039 if you would rather use that."
+    },
+    {
+      "lookup": "Baking powder",
+      "food_id": "17-355",
+      "cofid_name": "Baking powder",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Bananas, flesh only",
+      "food_id": "14-318",
+      "cofid_name": "Bananas, flesh only",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Basil, fresh",
+      "food_id": "13-804",
+      "cofid_name": "Basil, fresh",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Beef, mince, extra lean, raw",
+      "food_id": "18-508",
+      "cofid_name": "Beef, mince, raw, extra lean",
+      "status": "likely",
+      "note": "CoFID name is Beef, mince, raw, extra lean."
+    },
+    {
+      "lookup": "Beef, rump steak, lean, raw",
+      "food_id": "18-043",
+      "cofid_name": "Beef, rump steak, raw, lean",
+      "status": "likely",
+      "note": "Lean only, not lean and fat."
+    },
+    {
+      "lookup": "Black beans, canned, drained",
+      "food_id": "ext-black-beans-canned",
+      "cofid_name": "Black beans, canned, drained",
+      "status": "extra",
+      "note": "USDA FoodData Central"
+    },
+    {
+      "lookup": "Blueberries, raw",
+      "food_id": "14-325",
+      "cofid_name": "Blueberries",
+      "status": "likely",
+      "note": "CoFID name is Blueberries (no 'raw')."
+    },
+    {
+      "lookup": "Bread, sourdough",
+      "food_id": "ext-sainsburys-sourdough",
+      "cofid_name": "Sourdough bread",
+      "status": "extra",
+      "note": "Sainsbury's label"
+    },
+    {
+      "lookup": "Bread, wholemeal",
+      "food_id": "11-981",
+      "cofid_name": "Bread, wholemeal, average",
+      "status": "likely",
+      "note": "Wholemeal average, not toasted."
+    },
+    {
+      "lookup": "Broccoli, green, raw",
+      "food_id": "13-502",
+      "cofid_name": "Broccoli, green, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Cannellini beans, canned, drained",
+      "food_id": "13-666",
+      "cofid_name": "Beans, cannellini, canned, re-heated, drained",
+      "status": "likely",
+      "note": "Canned, re-heated, drained."
+    },
+    {
+      "lookup": "Carrots, old, raw",
+      "food_id": "13-496",
+      "cofid_name": "Carrots, old, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Cheese, Cheddar, English",
+      "food_id": "12-346",
+      "cofid_name": "Cheese, Cheddar, English",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Cheese, Parmesan",
+      "food_id": "12-526",
+      "cofid_name": "Cheese, Parmesan, fresh",
+      "status": "likely",
+      "note": "Parmesan, fresh."
+    },
+    {
+      "lookup": "Chia seeds, dried",
+      "food_id": "ext-usda-chia-seeds",
+      "cofid_name": "Chia seeds",
+      "status": "extra",
+      "note": "USDA FoodData Central"
+    },
+    {
+      "lookup": "Chicken, breast, meat only, raw",
+      "food_id": "18-290",
+      "cofid_name": "Chicken, light meat, raw",
+      "status": "proxy",
+      "note": "CoFID has no raw breast. Used Chicken, light meat, raw."
+    },
+    {
+      "lookup": "Chicken, thigh, meat only, raw",
+      "food_id": "18-289",
+      "cofid_name": "Chicken, dark meat, raw",
+      "status": "proxy",
+      "note": "CoFID has no raw thigh. Used Chicken, dark meat, raw."
+    },
+    {
+      "lookup": "Chickpeas, canned, drained",
+      "food_id": "13-670",
+      "cofid_name": "Beans, chick peas, canned, re-heated, drained",
+      "status": "likely",
+      "note": "Beans, chick peas, canned, re-heated, drained."
+    },
+    {
+      "lookup": "Chilli powder",
+      "food_id": "13-873",
+      "cofid_name": "Chilli powder",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Cinnamon, ground",
+      "food_id": "13-874",
+      "cofid_name": "Cinnamon, ground",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Cocoa powder",
+      "food_id": "12-545",
+      "cofid_name": "Cocoa powder",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Coconut milk, reduced fat, canned",
+      "food_id": "14-890",
+      "cofid_name": "Coconut milk, reduced fat, retail",
+      "status": "likely",
+      "note": "Reduced fat, retail. Not the full-fat coconut milk row."
+    },
+    {
+      "lookup": "Cod, raw",
+      "food_id": "16-372",
+      "cofid_name": "Cod, flesh only, raw",
+      "status": "likely",
+      "note": "Cod, flesh only, raw."
+    },
+    {
+      "lookup": "Coriander leaves, fresh",
+      "food_id": "13-888",
+      "cofid_name": "Coriander leaves, fresh",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Cottage cheese, plain",
+      "food_id": "12-539",
+      "cofid_name": "Cheese, cottage, plain",
+      "status": "likely",
+      "note": "Cheese, cottage, plain. Not reduced fat."
+    },
+    {
+      "lookup": "Courgette, raw",
+      "food_id": "13-627",
+      "cofid_name": "Courgette, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Couscous, raw",
+      "food_id": "11-901",
+      "cofid_name": "Couscous, plain, raw",
+      "status": "likely",
+      "note": "Couscous, plain, raw."
+    },
+    {
+      "lookup": "Crispbread, rye",
+      "food_id": "11-822",
+      "cofid_name": "Crispbread, rye",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Cucumber, raw",
+      "food_id": "13-523",
+      "cofid_name": "Cucumber, raw, flesh and skin",
+      "status": "likely",
+      "note": "Flesh and skin."
+    },
+    {
+      "lookup": "Cumin seed, ground",
+      "food_id": "13-889",
+      "cofid_name": "Cumin seeds",
+      "status": "proxy",
+      "note": "Cumin seeds. CoFID has no separate ground row."
+    },
+    {
+      "lookup": "Curry powder",
+      "food_id": "13-876",
+      "cofid_name": "Curry powder",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Dates, dried, flesh and skin",
+      "food_id": "14-394",
+      "cofid_name": "Dates, dried, flesh and skin",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Edamame beans, frozen",
+      "food_id": "13-667",
+      "cofid_name": "Beans, edamame, frozen, boiled in unsalted water",
+      "status": "proxy",
+      "note": "Only frozen edamame row is boiled in unsalted water, not raw frozen."
+    },
+    {
+      "lookup": "Eggs, chicken, whole, raw",
+      "food_id": "12-937",
+      "cofid_name": "Eggs, chicken, whole, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Feta cheese",
+      "food_id": "12-525",
+      "cofid_name": "Cheese, Feta",
+      "status": "likely",
+      "note": "Cheese, Feta."
+    },
+    {
+      "lookup": "Garam masala",
+      "food_id": "13-829",
+      "cofid_name": "Garam masala",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Garlic, raw",
+      "food_id": "13-244",
+      "cofid_name": "Garlic, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Ginger root, fresh",
+      "food_id": "13-890",
+      "cofid_name": "Ginger, fresh",
+      "status": "likely",
+      "note": "Ginger, fresh."
+    },
+    {
+      "lookup": "Halloumi cheese",
+      "food_id": "12-496",
+      "cofid_name": "Cheese, Halloumi",
+      "status": "likely",
+      "note": "Cheese, Halloumi."
+    },
+    {
+      "lookup": "Honey",
+      "food_id": "17-050",
+      "cofid_name": "Honey",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Hummus",
+      "food_id": "13-556",
+      "cofid_name": "Houmous",
+      "status": "likely",
+      "note": "CoFID spelling is Houmous."
+    },
+    {
+      "lookup": "Lemon juice, fresh",
+      "food_id": "14-277",
+      "cofid_name": "Lemon juice, fresh",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Lentils, green, canned, drained",
+      "food_id": "13-661",
+      "cofid_name": "Lentils, green and brown, whole, dried, boiled in unsalted water",
+      "status": "proxy",
+      "note": "No canned green lentils. Used green and brown, whole, dried, boiled."
+    },
+    {
+      "lookup": "Lentils, red, split, dried, raw",
+      "food_id": "13-657",
+      "cofid_name": "Lentils, red, split, dried, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Lettuce, mixed leaves",
+      "food_id": "13-520",
+      "cofid_name": "Lettuce, average, raw",
+      "status": "proxy",
+      "note": "Lettuce, average, raw. No mixed-leaf row."
+    },
+    {
+      "lookup": "Lime juice, fresh",
+      "food_id": "14-279",
+      "cofid_name": "Lime juice, fresh",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Mango, ripe, raw",
+      "food_id": "14-378",
+      "cofid_name": "Mangoes, ripe, flesh only, raw",
+      "status": "likely",
+      "note": "Mangoes, ripe, flesh only, raw."
+    },
+    {
+      "lookup": "Maple syrup",
+      "food_id": "ext-usda-maple-syrup",
+      "cofid_name": "Maple syrup",
+      "status": "extra",
+      "note": "USDA FoodData Central"
+    },
+    {
+      "lookup": "Milk, semi-skimmed, pasteurised",
+      "food_id": "12-313",
+      "cofid_name": "Milk, semi-skimmed, pasteurised, average",
+      "status": "likely",
+      "note": "Average, not the seasonal rows."
+    },
+    {
+      "lookup": "Mint, fresh",
+      "food_id": "13-836",
+      "cofid_name": "Mint, fresh",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Mixed berries, frozen",
+      "food_id": "ext-no-frozen-mixed-berries",
+      "cofid_name": "Frozen mixed berries",
+      "status": "extra",
+      "note": "Norwegian food composition table"
+    },
+    {
+      "lookup": "Mixed herbs, dried",
+      "food_id": "13-884",
+      "cofid_name": "Mixed herbs, dried",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Mushrooms, white, raw",
+      "food_id": "13-505",
+      "cofid_name": "Mushrooms, white, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Mustard, Dijon",
+      "food_id": "17-364",
+      "cofid_name": "Mustard, smooth",
+      "status": "proxy",
+      "note": "Mustard, smooth. No Dijon row."
+    },
+    {
+      "lookup": "Noodles, egg, raw",
+      "food_id": "11-719",
+      "cofid_name": "Noodles, egg, dried, raw",
+      "status": "likely",
+      "note": "Egg noodles, dried, raw."
+    },
+    {
+      "lookup": "Noodles, rice, raw",
+      "food_id": "ext-no-rice-noodles-raw",
+      "cofid_name": "Rice noodles, raw",
+      "status": "extra",
+      "note": "Norwegian food composition table"
+    },
+    {
+      "lookup": "Oats, rolled",
+      "food_id": "11-788",
+      "cofid_name": "Porridge oats, unfortified",
+      "status": "proxy",
+      "note": "Porridge oats, unfortified."
+    },
+    {
+      "lookup": "Olive oil",
+      "food_id": "17-038",
+      "cofid_name": "Oil, olive",
+      "status": "likely",
+      "note": "Oil, olive."
+    },
+    {
+      "lookup": "Onions, raw",
+      "food_id": "13-499",
+      "cofid_name": "Onions, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Onions, red, raw",
+      "food_id": "13-499",
+      "cofid_name": "Onions, raw",
+      "status": "proxy",
+      "note": "No red onion row. Used Onions, raw."
+    },
+    {
+      "lookup": "Paprika",
+      "food_id": "13-879",
+      "cofid_name": "Paprika",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Passata",
+      "food_id": "13-530",
+      "cofid_name": "Tomatoes, canned, whole contents",
+      "status": "proxy",
+      "note": "No passata. Used canned tomatoes, whole contents, not puree."
+    },
+    {
+      "lookup": "Pasta, white, raw",
+      "food_id": "11-716",
+      "cofid_name": "Pasta, white, dried, raw",
+      "status": "likely",
+      "note": "White pasta, dried, raw."
+    },
+    {
+      "lookup": "Pasta, wholewheat, raw",
+      "food_id": "11-718",
+      "cofid_name": "Pasta, wholewheat, spaghetti, dried, raw",
+      "status": "likely",
+      "note": "Wholewheat spaghetti, dried, raw."
+    },
+    {
+      "lookup": "Peanut butter, smooth",
+      "food_id": "14-892",
+      "cofid_name": "Peanut butter, smooth",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Peas, frozen, raw",
+      "food_id": "13-527",
+      "cofid_name": "Peas, frozen, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Pepper, black",
+      "food_id": "13-880",
+      "cofid_name": "Pepper, black",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Peppers, capsicum, red, raw",
+      "food_id": "13-524",
+      "cofid_name": "Pepper, capsicum, red, raw",
+      "status": "likely",
+      "note": "Sweet red pepper, not chilli."
+    },
+    {
+      "lookup": "Pesto, green",
+      "food_id": "17-622",
+      "cofid_name": "Pesto, green",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Pitta bread, wholemeal",
+      "food_id": "11-974",
+      "cofid_name": "Bread, pitta, white",
+      "status": "proxy",
+      "note": "Only white pitta exists."
+    },
+    {
+      "lookup": "Potatoes, new, raw",
+      "food_id": "13-618",
+      "cofid_name": "Potatoes, new and salad, flesh only, raw",
+      "status": "likely",
+      "note": "New and salad, flesh only, raw."
+    },
+    {
+      "lookup": "Prawns, king, raw",
+      "food_id": "16-387",
+      "cofid_name": "Prawns, king, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Pumpkin seeds",
+      "food_id": "14-842",
+      "cofid_name": "Pumpkin seeds",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Quinoa, raw",
+      "food_id": "14-843",
+      "cofid_name": "Quinoa, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Red kidney beans, canned, drained",
+      "food_id": "13-660",
+      "cofid_name": "Beans, red kidney, canned in water, re-heated, drained",
+      "status": "likely",
+      "note": "Canned in water, re-heated, drained."
+    },
+    {
+      "lookup": "Rice cakes, plain",
+      "food_id": "ext-sainsburys-rice-cakes",
+      "cofid_name": "Rice cakes",
+      "status": "extra",
+      "note": "Sainsbury's label"
+    },
+    {
+      "lookup": "Rice, basmati, white, raw",
+      "food_id": "11-857",
+      "cofid_name": "Rice, white, basmati, raw",
+      "status": "likely",
+      "note": "White basmati, raw. Not easy-cook."
+    },
+    {
+      "lookup": "Rice, brown, raw",
+      "food_id": "11-868",
+      "cofid_name": "Rice, brown, wholegrain, raw",
+      "status": "likely",
+      "note": "Brown wholegrain, raw. Not brown basmati."
+    },
+    {
+      "lookup": "Rocket, raw",
+      "food_id": "13-522",
+      "cofid_name": "Rocket, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Salmon, raw",
+      "food_id": "16-356",
+      "cofid_name": "Salmon, farmed, flesh only, raw",
+      "status": "likely",
+      "note": "Farmed, flesh only, raw. Not rock salmon / dogfish."
+    },
+    {
+      "lookup": "Salmon, smoked",
+      "food_id": "16-412",
+      "cofid_name": "Salmon, smoked (cold-smoked)",
+      "status": "likely",
+      "note": "Cold-smoked, not hot-smoked."
+    },
+    {
+      "lookup": "Salt, table",
+      "food_id": "17-367",
+      "cofid_name": "Salt",
+      "status": "likely",
+      "note": "CoFID name is Salt."
+    },
+    {
+      "lookup": "Sesame oil",
+      "food_id": "17-043",
+      "cofid_name": "Oil, sesame",
+      "status": "likely",
+      "note": "Oil, sesame."
+    },
+    {
+      "lookup": "Soy sauce, light",
+      "food_id": "17-721",
+      "cofid_name": "Soy sauce, light and dark varieties",
+      "status": "likely",
+      "note": "Light and dark varieties combined."
+    },
+    {
+      "lookup": "Soya, non-dairy alternative to milk, unsweetened",
+      "food_id": "12-524",
+      "cofid_name": "Milk, soya, non-dairy alternative to milk, unsweetened, fortified",
+      "status": "likely",
+      "note": "Unsweetened, fortified."
+    },
+    {
+      "lookup": "Soya, non-dairy alternative to yogurt, plain",
+      "food_id": "ext-alpro-soya-yogurt-plain",
+      "cofid_name": "Plain soya yoghurt",
+      "status": "extra",
+      "note": "Alpro label"
+    },
+    {
+      "lookup": "Spaghetti, wholewheat, raw",
+      "food_id": "11-718",
+      "cofid_name": "Pasta, wholewheat, spaghetti, dried, raw",
+      "status": "likely",
+      "note": "Same row as wholewheat pasta."
+    },
+    {
+      "lookup": "Spinach, mature, raw",
+      "food_id": "13-572",
+      "cofid_name": "Spinach, mature, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Spring onions, bulbs and tops, raw",
+      "food_id": "13-352",
+      "cofid_name": "Spring onions, bulbs and tops, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Stock cubes, chicken",
+      "food_id": "17-726",
+      "cofid_name": "Stock cubes, chicken",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Stock cubes, vegetable",
+      "food_id": "17-727",
+      "cofid_name": "Stock cubes, vegetable",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Sweet potato, raw",
+      "food_id": "13-463",
+      "cofid_name": "Sweet potato, raw, flesh only",
+      "status": "likely",
+      "note": "Flesh only."
+    },
+    {
+      "lookup": "Sweetcorn, kernels, canned, drained",
+      "food_id": "13-529",
+      "cofid_name": "Sweetcorn kernels, canned in water, drained",
+      "status": "likely",
+      "note": "Canned in water, drained."
+    },
+    {
+      "lookup": "Tahini paste",
+      "food_id": "14-847",
+      "cofid_name": "Tahini paste",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Tofu, soya bean, steamed",
+      "food_id": "13-570",
+      "cofid_name": "Tofu, soya bean, steamed",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Tomato puree",
+      "food_id": "13-531",
+      "cofid_name": "Tomato puree",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Tomatoes, canned, whole contents",
+      "food_id": "13-530",
+      "cofid_name": "Tomatoes, canned, whole contents",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Tomatoes, cherry, raw",
+      "food_id": "13-519",
+      "cofid_name": "Tomatoes, cherry, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Tomatoes, standard, raw",
+      "food_id": "13-517",
+      "cofid_name": "Tomatoes, standard, raw",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Tortilla, wheat, wholemeal",
+      "food_id": "11-925",
+      "cofid_name": "Tortilla, wheat, soft",
+      "status": "proxy",
+      "note": "Only wheat, soft (not wholemeal)."
+    },
+    {
+      "lookup": "Tuna, canned in brine, drained",
+      "food_id": "16-416",
+      "cofid_name": "Tuna, canned in brine, drained",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Turkey, breast, roasted",
+      "food_id": "18-359",
+      "cofid_name": "Turkey, light meat, roasted",
+      "status": "proxy",
+      "note": "Turkey, light meat, roasted. There is also grilled breast fillet (18-356)."
+    },
+    {
+      "lookup": "Turkey, mince, raw",
+      "food_id": "ext-tesco-turkey-mince-raw",
+      "cofid_name": "Turkey mince, raw",
+      "status": "extra",
+      "note": "Tesco label"
+    },
+    {
+      "lookup": "Turmeric, ground",
+      "food_id": "13-861",
+      "cofid_name": "Turmeric, ground",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Vinegar, balsamic",
+      "food_id": "17-339",
+      "cofid_name": "Vinegar",
+      "status": "proxy",
+      "note": "Generic vinegar. No balsamic row."
+    },
+    {
+      "lookup": "Walnuts, kernel only",
+      "food_id": "14-879",
+      "cofid_name": "Walnuts, kernel only",
+      "status": "exact",
+      "note": ""
+    },
+    {
+      "lookup": "Yogurt, Greek style, plain",
+      "food_id": "12-555",
+      "cofid_name": "Yogurt, Greek style, plain",
+      "status": "exact",
+      "note": ""
+    }
+  ]
+}

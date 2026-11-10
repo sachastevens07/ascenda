@@ -50,6 +50,7 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "content:sync": "node scripts/content-sync.ts",
+    "nutrition:calc": "node scripts/nutrition-calc.mjs",
     "images:find": "node scripts/images-find.ts",
     "images:review": "node scripts/images-review.ts",
     "images:upload": "node scripts/images-upload.ts",

@@ -13,11 +13,14 @@ import {
   ProgressRing,
   TextButton,
   measureAnchor,
+  openRecipe,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { STREAK_STRETCH_MIN_SECONDS } from '@/lib/activityStats';
+import { foodCopy } from '@/lib/copy';
+import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { useSubscriptionGate } from '@/lib/paywall';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
@@ -156,11 +159,24 @@ export default function StretchPlayScreen() {
       await finishSession(sessionId, elapsed);
       workout.end();
       const counts = elapsed >= STREAK_STRETCH_MIN_SECONDS;
+      const fuel = pickFuelSuggestion({
+        moment: 'after',
+        sessionType: 'recovery',
+        dayName: null,
+        reminderTime: null,
+      });
+      const savedBody = counts
+        ? `That’s ${formatClock(elapsed)}. Ten minutes or more counts toward your week.`
+        : `That’s ${formatClock(elapsed)}. From 10 minutes, a stretch counts toward your week.`;
       showDialog(
         'Stretch saved',
-        counts
-          ? `That’s ${formatClock(elapsed)}. Ten minutes or more counts toward your week.`
-          : `That’s ${formatClock(elapsed)}. From 10 minutes, a stretch counts toward your week.`
+        fuel ? `${savedBody}\n\n${fuel.copy}\n${fuel.recipe.title}` : savedBody,
+        fuel
+          ? [
+              { text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) },
+              { text: 'OK', style: 'cancel' },
+            ]
+          : undefined
       );
       router.replace('/programmes' as Href);
       void maybeAskSessionReminders();

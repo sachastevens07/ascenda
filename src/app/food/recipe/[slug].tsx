@@ -15,13 +15,13 @@ import {
   MethodStep,
   NutritionCard,
   OverflowMenu,
+  RecipeStatsRow,
   RelatedLearn,
   ServingsStepper,
   dietaryLabel,
   filterLabel,
   measureAnchor,
   recipeMetaLine,
-  recipePrepLine,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
@@ -36,6 +36,7 @@ import {
 } from '@/lib/food';
 import { useFoodFavourites } from '@/lib/foodFavourites';
 import { fetchHideMacros } from '@/lib/foodPrefs';
+import { addRecipeToShoppingList } from '@/lib/shoppingList';
 
 export default function FoodRecipeScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -105,9 +106,22 @@ export default function FoodRecipeScreen() {
     }
   }
 
-  function addToList() {
+  async function addToList() {
+    if (!recipe) return;
     setMenuOpen(false);
-    showDialog(foodCopy.list_saved_title, foodCopy.list_saved_body);
+    try {
+      const result = await addRecipeToShoppingList(recipe, servings);
+      showDialog(
+        result === 'updated' ? foodCopy.list_updated_title : foodCopy.list_saved_title,
+        result === 'updated' ? foodCopy.list_updated_body : foodCopy.list_saved_body,
+        [
+          { text: foodCopy.list_title, onPress: () => router.push('/food/list' as Href) },
+          { text: 'OK', style: 'cancel' },
+        ]
+      );
+    } catch {
+      showDialog(foodCopy.list_saved_title, foodCopy.list_saved_body);
+    }
   }
 
   if (!recipe) {
@@ -132,6 +146,22 @@ export default function FoodRecipeScreen() {
     ...recipe.dietaryTags.map((tag) => dietaryLabel(tag)),
   ];
   const showNutrition = Boolean(recipe.nutrition) && !hideMacros;
+  const facts = [
+    { icon: 'timer-outline' as const, value: `${recipe.prepMinutes} min`, label: foodCopy.stat_prep },
+    ...(recipe.cookMinutes > 0
+      ? [{ icon: 'flame-outline' as const, value: `${recipe.cookMinutes} min`, label: foodCopy.stat_cook }]
+      : []),
+    { icon: 'people-outline' as const, value: String(servings), label: foodCopy.stat_serves },
+    ...(showNutrition && recipe.nutrition
+      ? [
+          {
+            icon: 'nutrition-outline' as const,
+            value: String(Math.round(recipe.nutrition.calories)),
+            label: foodCopy.stat_kcal,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <View style={styles.screen}>
@@ -160,10 +190,8 @@ export default function FoodRecipeScreen() {
             </View>
           </View>
         }>
-        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md, gap: spacing.md }}>
-          <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-            {recipePrepLine(recipe)}
-          </AppText>
+        <View style={{ gap: spacing.md }}>
+          <RecipeStatsRow items={facts} />
           {recipe.summary ? (
             <AppText variant="body" style={{ color: colours.ink }}>
               {recipe.summary}

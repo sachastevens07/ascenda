@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
@@ -8,9 +9,15 @@ import { IconButton } from '@/components/ui/IconButton';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, foodCopy } from '@/lib/copy';
 import type { DietaryTag, NutritionPerServing, Recipe, RecipeFilter, ScaledIngredient } from '@/lib/food';
+import type { FuelSuggestion } from '@/lib/foodSuggestions';
+import type { ShoppingItem } from '@/lib/shoppingList';
 
 export function openRecipe(slug: string): void {
   router.push({ pathname: '/food/recipe/[slug]', params: { slug } } as Href);
+}
+
+export function openRecipeCollection(slug: string): void {
+  router.push({ pathname: '/food/collection/[slug]', params: { slug } } as Href);
 }
 
 export function recipeMetaLine(recipe: Recipe): string {
@@ -206,6 +213,32 @@ export function RecipeListRow({
   );
 }
 
+export function RecipeStatsRow({
+  items,
+}: {
+  items: { icon: ComponentProps<typeof Ionicons>['name']; value: string; label: string }[];
+}) {
+  const { colours, radius } = useTheme();
+  if (items.length === 0) return null;
+  return (
+    <View style={styles.statsRow}>
+      {items.map((item) => (
+        <View
+          key={item.label}
+          style={[styles.statTile, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+          <Ionicons name={item.icon} size={16} color={colours.brand} />
+          <AppText variant="title3" style={{ color: colours.ink, marginTop: 6 }} numberOfLines={1}>
+            {item.value}
+          </AppText>
+          <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }} numberOfLines={1}>
+            {item.label}
+          </AppText>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export function ServingsStepper({
   servings,
   onChange,
@@ -340,6 +373,93 @@ export function NutritionCard({
   );
 }
 
+export function FuelSuggestionCard({
+  suggestion,
+  onPress,
+  style,
+}: {
+  suggestion: FuelSuggestion;
+  onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { colours, radius, spacing, shadow } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={suggestion.recipe.title}
+      style={({ pressed }) => [
+        styles.fuelCard,
+        { backgroundColor: colours.surface, borderRadius: radius.xl },
+        shadow,
+        pressed && styles.pressed,
+        style,
+      ]}>
+      <View style={[styles.fuelThumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
+        <PhotoFill slug={suggestion.recipe.coverImageSlug} kind="food" label={suggestion.recipe.title} />
+      </View>
+      <View style={styles.listText}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          {foodCopy.fuel_eyebrow}
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.ink, marginTop: 4 }} numberOfLines={2}>
+          {suggestion.copy}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }} numberOfLines={1}>
+          {suggestion.recipe.title}
+        </AppText>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={colours.inkMuted} />
+    </Pressable>
+  );
+}
+
+export function ShoppingListRow({
+  item,
+  onToggle,
+  onRemove,
+}: {
+  item: ShoppingItem;
+  onToggle: () => void;
+  onRemove: () => void;
+}) {
+  const { colours, radius } = useTheme();
+  return (
+    <View style={[styles.shopRow, { borderBottomColor: colours.border, backgroundColor: colours.surface }]}>
+      <Pressable
+        onPress={onToggle}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: item.ticked }}
+        style={({ pressed }) => [styles.shopMain, pressed && styles.pressed]}>
+        <View
+          style={[
+            styles.tick,
+            {
+              borderColor: item.ticked ? colours.brand : colours.border,
+              backgroundColor: item.ticked ? colours.brand : 'transparent',
+              borderRadius: radius.sm,
+            },
+          ]}>
+          {item.ticked ? <Ionicons name="checkmark" size={14} color={colours.onBrand} /> : null}
+        </View>
+        <View style={styles.ingredientText}>
+          <AppText
+            variant="bodyStrong"
+            style={{ color: colours.ink, textDecorationLine: item.ticked ? 'line-through' : 'none' }}>
+            {item.amount}
+          </AppText>
+          <AppText
+            variant="body"
+            style={{ color: colours.ink, textDecorationLine: item.ticked ? 'line-through' : 'none' }}>
+            {item.name}
+          </AppText>
+        </View>
+      </Pressable>
+      <IconButton icon="close" accessibilityLabel={foodCopy.list_remove_item} onPress={onRemove} />
+    </View>
+  );
+}
+
 function formatGrams(value: number): string {
   if (Number.isInteger(value)) return String(value);
   return value.toFixed(1).replace(/\.0$/, '');
@@ -397,6 +517,17 @@ const styles = StyleSheet.create({
   listText: {
     flex: 1,
   },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statTile: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+  },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -451,5 +582,31 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.88,
+  },
+  fuelCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+  },
+  fuelThumb: {
+    width: 72,
+    height: 72,
+    overflow: 'hidden',
+  },
+  shopRow: {
+    minHeight: 56,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  shopMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
   },
 });

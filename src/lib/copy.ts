@@ -108,6 +108,9 @@ export const homeCopy = {
   hero_nothing_planned: home.hero_nothing_planned,
   hero_no_routine: home.hero_no_routine,
   week_strip_empty: home.week_strip_empty,
+  week_tab_workouts: home.week_tab_workouts,
+  week_tab_meals: home.week_tab_meals,
+  meals_empty: home.meals_empty,
   section_featured: home.section_featured,
   section_week_so_far: home.section_week_so_far,
   section_awards: home.section_awards,
@@ -163,7 +166,7 @@ export const programmesCopy = {
 
 const food = microcopy.strings.food;
 
-/** Food tab and recipe pages (F1 to F3). Bundled from content/microcopy. Recipe bodies stay in /content. */
+/** Food tab and recipe pages (F1 to F6). Bundled from content/microcopy. Recipe bodies stay in /content. */
 export const foodCopy = food;
 
 export const subscriptionBanners = {

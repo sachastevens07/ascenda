@@ -38,6 +38,7 @@ import {
   SetTableHeader,
   TextButton,
   measureAnchor,
+  openRecipe,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
@@ -45,7 +46,8 @@ import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
-import { aiCopy, fillCopy, loggerCopy, machineCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
+import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
+import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuideForExercise } from '@/lib/machineGuides';
 import {
   DEFAULT_SLOT,
@@ -934,11 +936,21 @@ export default function SessionScreen() {
       router.back();
       const trained =
         durationSeconds === undefined ? '' : `You trained for ${formatDuration(durationSeconds)}.`;
+      const fuel = pickFuelSuggestion({
+        moment: 'after',
+        sessionType: session?.type ?? 'strength',
+        dayName: day.name,
+        reminderTime: null,
+      });
+      const fuelLine = fuel ? `${fuel.copy}\n${fuel.recipe.title}` : '';
       const body = welcomeBackDone
-        ? [welcomeBackCopy.complete_body, trained].filter(Boolean).join('\n')
-        : [...wins.slice(0, 3), trained].filter(Boolean).join('\n') ||
+        ? [welcomeBackCopy.complete_body, trained, fuelLine].filter(Boolean).join('\n')
+        : [...wins.slice(0, 3), trained, fuelLine].filter(Boolean).join('\n') ||
           'Nice work. That’s another one done.';
       showDialog(welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved', [body, sessionCompleteCopy.invite_nudge].filter(Boolean).join('\n\n'), [
+        ...(fuel
+          ? [{ text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) }]
+          : []),
         { text: referCopy.screen_title, onPress: () => router.push('/refer' as Href) },
         { text: 'OK', style: 'cancel' },
       ]);

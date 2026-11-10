@@ -53,6 +53,9 @@ assets-src/images/*
 # Local photo search, Claude screens and the review grid. Not the app.
 assets-src/image-review/
 
+# Unzipped CoFID spreadsheet while nutrition-calc runs
+tmp_cofid_xlsx/
+
 # Supabase CLI
 supabase/.temp/
 supabase/.branches/

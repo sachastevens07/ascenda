@@ -657,7 +657,7 @@ function reportAi5(): void {
 }
 
 async function reportFood(client: SupabaseClient): Promise<void> {
-  line('food  ←  content/food/recipes.json + collections.json (bundled, F2)');
+  line('food  ←  content/food/recipes.json + collections.json (bundled, F2 to F6)');
   const recipesFile = asRecord(readJson('food/recipes.json'));
   const collectionsFile = asRecord(readJson('food/collections.json'));
   const recipes = asArray(recipesFile.recipes).map(asRecord);
@@ -666,8 +666,9 @@ async function reportFood(client: SupabaseClient): Promise<void> {
   const withNutrition = recipes.filter((item) => item.nutrition_per_serving != null).length;
   const claimCollections = collections.filter((item) => text(item.requires_verified_claim));
   line(`  Recipes: ${recipes.length}. Meal types: ${meals.join(', ') || 'none'}.`);
-  line(`  Collections: ${collections.length} (${claimCollections.length} need a verified claim and stay hidden until nutrition_calc.py).`);
-  line(`  nutrition_per_serving filled: ${withNutrition} of ${recipes.length} (macros stay hidden until CoFID fills them).`);
+  line(`  Collections: ${collections.length} (${claimCollections.length} need a verified claim).`);
+  line(`  nutrition_per_serving filled: ${withNutrition} of ${recipes.length}.`);
+  line('  Training suggestions stay in collections.json. Shopping list is user data (supabase/food_f5.sql).');
   const error = await probe(client, 'recipes', 'id, slug, title');
   if (error) {
     line(`  Table not usable: ${error}`);

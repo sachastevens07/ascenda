@@ -25,6 +25,7 @@ import {
   ProgressRing,
   TextButton,
   measureAnchor,
+  openRecipe,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
@@ -42,7 +43,8 @@ import {
   type CardioSessionDef,
   type CardioSettings,
 } from '@/lib/cardio';
-import { cardioCopy, fillCopy, machineCopy } from '@/lib/copy';
+import { cardioCopy, fillCopy, foodCopy, machineCopy } from '@/lib/copy';
+import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuide } from '@/lib/machineGuides';
 import { useSubscriptionGate } from '@/lib/paywall';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
@@ -380,9 +382,22 @@ export default function CardioPlayScreen() {
             if (!session) throw new Error(cardioCopy.not_found);
             await finishCardioSession(session, def, input);
             workout.end();
+            const fuel = pickFuelSuggestion({
+              moment: 'after',
+              sessionType: 'cardio',
+              dayName: null,
+              reminderTime: null,
+            });
+            const savedBody = fillCopy(cardioCopy.saved_body, { minutes: String(input.minutes) });
             showDialog(
               cardioCopy.saved_title,
-              fillCopy(cardioCopy.saved_body, { minutes: String(input.minutes) })
+              fuel ? `${savedBody}\n\n${fuel.copy}\n${fuel.recipe.title}` : savedBody,
+              fuel
+                ? [
+                    { text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) },
+                    { text: 'OK', style: 'cancel' },
+                  ]
+                : undefined
             );
             router.replace({ pathname: '/programmes', params: { section: 'cardio' } } as Href);
             void maybeAskSessionReminders();

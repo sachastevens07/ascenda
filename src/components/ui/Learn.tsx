@@ -41,9 +41,14 @@ export function ArticleCard({
       onPress={() => openLearnArticle(article)}
       accessibilityRole="button"
       accessibilityLabel={article.title}
-      style={({ pressed }) => [style, pressed && styles.pressed]}>
-      <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, width }, shadow]}>
-        <View style={[styles.photo, { backgroundColor: colours.surfaceMuted, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
+      style={({ pressed }) => [
+        { width, borderRadius: radius.lg, backgroundColor: colours.surface },
+        shadow,
+        style,
+        pressed && styles.pressed,
+      ]}>
+      <View style={{ borderRadius: radius.lg, overflow: 'hidden' }}>
+        <View style={[styles.photo, { backgroundColor: colours.surfaceMuted }]}>
           <PhotoFill slug={article.cover_image_id} kind="people" label={article.title} />
           {kindChip ? (
             <View style={[styles.badge, { backgroundColor: colours.surface, borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 4 }]}>
@@ -183,7 +188,7 @@ export function RelatedLearn({
   const { width } = useWindowDimensions();
   const { colours, spacing } = useTheme();
   const [items, setItems] = useState<LearnArticle[]>([]);
-  const cardWidth = Math.min(260, width * 0.72);
+  const cardWidth = Math.min(240, width * 0.62);
 
   useEffect(() => {
     let isCurrent = true;
@@ -221,7 +226,8 @@ export function RelatedLearn({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: spacing.md, paddingRight: 8 }}>
+        style={styles.relatedCarousel}
+        contentContainerStyle={[styles.relatedContent, { gap: spacing.md }]}>
         {items.map((article) => (
           <ArticleCard key={article.id} article={article} width={cardWidth} />
         ))}
@@ -250,6 +256,7 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     padding: 14,
+    minHeight: 112,
   },
   tileWrap: {
     width: '48%',
@@ -273,6 +280,14 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     paddingVertical: 12,
     paddingHorizontal: 14,
+  },
+  relatedCarousel: {
+    marginHorizontal: -20,
+    overflow: 'visible',
+  },
+  relatedContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   pressed: {
     opacity: 0.8,

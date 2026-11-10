@@ -393,11 +393,13 @@ export function Chip({
   label,
   selected = false,
   onPress,
+  onLongPress,
   size = 'sm',
 }: {
   label: string;
   selected?: boolean;
   onPress?: () => void;
+  onLongPress?: () => void;
   size?: 'sm' | 'lg';
 }) {
   const { colours, radius } = useTheme();
@@ -422,9 +424,13 @@ export function Chip({
       </AppText>
     </View>
   );
-  if (!onPress) return inner;
+  if (!onPress && !onLongPress) return inner;
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected }}>
+    <Pressable
+      onPress={onPress}
+      onLongPress={onLongPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}>
       {inner}
     </Pressable>
   );

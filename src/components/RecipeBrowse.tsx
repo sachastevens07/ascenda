@@ -61,7 +61,7 @@ export function RecipeBrowse({
       ) : null}
 
       {chips.length > 0 ? (
-        <ChipScroller style={styles.chips}>
+        <ChipScroller style={styles.chips} contentContainerStyle={styles.chipsContent}>
           {chips.map((filter) => (
             <Chip
               key={filter}
@@ -116,8 +116,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   chips: {
-    paddingHorizontal: 24,
     marginBottom: 8,
+  },
+  chipsContent: {
+    paddingLeft: 24,
+    paddingRight: 24,
   },
   list: {
     paddingBottom: 32,
