@@ -229,6 +229,13 @@ function RootNavigator() {
         <Stack.Screen name="stretches" options={{ headerShown: false }} />
         <Stack.Screen name="cardio" options={{ headerShown: false }} />
         <Stack.Screen name="food" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="cook-camera"
+          options={{
+            headerShown: false,
+            contentStyle: { backgroundColor: '#000' },
+          }}
+        />
         <Stack.Screen name="machines" options={{ headerShown: false }} />
         <Stack.Screen name="paths" options={{ headerShown: false }} />
         <Stack.Screen name="challenges" options={{ headerShown: false }} />

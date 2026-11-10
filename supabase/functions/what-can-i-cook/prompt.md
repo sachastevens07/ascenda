@@ -16,7 +16,9 @@ You will receive either a typed list of ingredients, a photo of her fridge or cu
 
 Map what she has to ingredient keys from the list only. Include an ingredient if you can clearly see or read it. Treat general items sensibly (for example "pasta" maps to the pasta key, "salmon" to the salmon key). Don't guess hidden items.
 
-Return JSON only, matching the schema:
+Always call the report_ingredients tool. Do not reply with only text.
+
+Tool fields:
 - ingredient_keys: keys from the list that she has
 - unrecognised: up to 10 short names of things she mentioned or that are clearly visible but aren't in the list
 - people_visible: true if a person is clearly visible in the photo (don't describe them)

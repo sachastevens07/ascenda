@@ -28,4 +28,14 @@ static_files = [ "./functions/monthly-recap/prompt.md" ]
 enabled = true
 verify_jwt = true
 entrypoint = "./functions/what-can-i-cook/index.ts"
-static_files = [ "./functions/what-can-i-cook/prompt.md" ]
+static_files = [
+  "./functions/what-can-i-cook/prompt.md",
+  "./functions/what-can-i-cook/ingredients.json",
+  "./functions/what-can-i-cook/recipes.json",
+]
+
+[functions.busy-gym-fix]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/busy-gym-fix/index.ts"
+static_files = [ "./functions/busy-gym-fix/prompt.md" ]

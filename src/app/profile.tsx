@@ -31,6 +31,7 @@ import {
   reminderCopy,
   restoreCopy,
   safetySettingsTitle,
+  aiCopy,
   recapCopy,
   referCopy,
   subscriptionStatusCopy,
@@ -155,7 +156,7 @@ export default function ProfileScreen() {
   const { session } = useAuth();
   const { profile, reload, deleteAccount, saveMainGoals, restartOnboarding } = useProfile();
   const subscription = useSubscription();
-  const { showDevTools, setShowDevTools } = useDevTools();
+  const { showDevTools, bypassAiLimits, setShowDevTools, setBypassAiLimits } = useDevTools();
   const answers = getQuizAnswers(profile);
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
   const weightUnit = useWeightUnit();
@@ -958,6 +959,11 @@ export default function ProfileScreen() {
               setRecapPreview(next);
               saveRecapPreview(next).catch(() => setRecapPreview(!next));
             }}
+          />
+          <SettingsRow
+            title={aiCopy.dev_unlimited}
+            subtitle={bypassAiLimits ? aiCopy.dev_unlimited_on : aiCopy.dev_unlimited_off}
+            onPress={() => setBypassAiLimits(!bypassAiLimits)}
           />
           <SettingsRow
             title="Send a test reminder"

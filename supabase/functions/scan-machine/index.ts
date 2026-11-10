@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { bypassAiLimit } from '../_shared/aiQuota.ts';
 import { userHasAscendaPro } from '../_shared/entitlement.ts';
 import machinesFile from './machines.json' with { type: 'json' };
 
@@ -322,24 +323,26 @@ Deno.serve(async (req) => {
   }
 
   const periodStart = ukToday();
-  const { data: quotaRow } = await admin
-    .from('ai_quota')
-    .select('count')
-    .eq('user_id', userId)
-    .eq('feature', FEATURE)
-    .eq('period_start', periodStart)
-    .maybeSingle();
-  const used = typeof quotaRow?.count === 'number' ? quotaRow.count : 0;
-  if (used >= DAILY_LIMIT) {
-    return fail('limit', 429);
-  }
+  if (!bypassAiLimit(parsedBody)) {
+    const { data: quotaRow } = await admin
+      .from('ai_quota')
+      .select('count')
+      .eq('user_id', userId)
+      .eq('feature', FEATURE)
+      .eq('period_start', periodStart)
+      .maybeSingle();
+    const used = typeof quotaRow?.count === 'number' ? quotaRow.count : 0;
+    if (used >= DAILY_LIMIT) {
+      return fail('limit', 429);
+    }
 
-  const { error: quotaError } = await admin.from('ai_quota').upsert(
-    { user_id: userId, feature: FEATURE, period_start: periodStart, count: used + 1 },
-    { onConflict: 'user_id,feature,period_start' }
-  );
-  if (quotaError && !/ai_quota|schema cache/i.test(quotaError.message)) {
-    console.log('scan-machine quota write failed');
+    const { error: quotaError } = await admin.from('ai_quota').upsert(
+      { user_id: userId, feature: FEATURE, period_start: periodStart, count: used + 1 },
+      { onConflict: 'user_id,feature,period_start' }
+    );
+    if (quotaError && !/ai_quota|schema cache/i.test(quotaError.message)) {
+      console.log('scan-machine quota write failed');
+    }
   }
 
   let lastUsage = { input: null as number | null, output: null as number | null };

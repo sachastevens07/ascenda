@@ -1,15 +1,19 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Camera } from 'expo-camera';
 import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
-import { Stack } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { Stack, router, useFocusEffect, type Href } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
+  type ScrollViewInstance,
 } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
@@ -30,6 +34,7 @@ import { trackAi } from '@/lib/analytics';
 import { aiCopy, fillCopy, foodCopy } from '@/lib/copy';
 import {
   COOK_INGREDIENTS,
+  ingredientKeysFromText,
   rankRecipesForIngredients,
   topCookMatches,
   type CookMatch,
@@ -37,8 +42,11 @@ import {
 import { availableFilters, mealTypeName, type RecipeFilter } from '@/lib/food';
 import { useFoodFavourites } from '@/lib/foodFavourites';
 import { ensureSubscribed, useSubscriptionGate } from '@/lib/paywall';
+import { readCookCameraPhotos, writeCookCameraPhotos } from '@/lib/cookCameraSession';
 import { addMissingIngredientsToShoppingList } from '@/lib/shoppingList';
-import { lookupCookIngredients } from '@/lib/whatCanICook';
+import { lookupCookIngredients, type CookImage } from '@/lib/whatCanICook';
+
+type Mode = 'type' | 'tick' | 'photos';
 
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ['images'],
@@ -46,26 +54,37 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   exif: false,
   base64: false,
   allowsEditing: false,
+  allowsMultipleSelection: true,
 };
 
+const MAX_PHOTOS = 4;
 const MAX_BASE64_CHARS = 2_000_000;
 const FEATURE = 'what_can_i_cook' as const;
+const MODES: { id: Mode; label: string }[] = [
+  { id: 'type', label: aiCopy.cook_mode_type },
+  { id: 'tick', label: aiCopy.cook_mode_tick },
+  { id: 'photos', label: aiCopy.cook_mode_photos },
+];
 
 async function readImageBase64(uri: string): Promise<string> {
   const value = await readAsStringAsync(uri, { encoding: EncodingType.Base64 });
   return value.replace(/\s/g, '');
 }
 
+function photoUri(photo: CookImage): string {
+  return photo.uri || `data:${photo.mediaType};base64,${photo.base64}`;
+}
+
 export default function WhatCanICookScreen() {
   const { colours, radius, type } = useTheme();
   const allowed = useSubscriptionGate();
   const { isFavourite, toggle } = useFoodFavourites();
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const [mode, setMode] = useState<Mode>('type');
   const [typed, setTyped] = useState('');
   const [query, setQuery] = useState('');
   const [ticked, setTicked] = useState<string[]>([]);
-  const [photo, setPhoto] = useState<{ base64: string; mediaType: 'image/jpeg' | 'image/png' } | null>(
-    null
-  );
+  const [photos, setPhotos] = useState<CookImage[]>([]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [peopleTip, setPeopleTip] = useState(false);
@@ -99,13 +118,47 @@ export default function WhatCanICookScreen() {
   }, [matches, filters]);
   const chips = useMemo(() => (matches ? availableFilters(matches.map((item) => item.recipe)) : []), [matches]);
 
+  useFocusEffect(
+    useCallback(() => {
+      setPhotos(readCookCameraPhotos());
+      const frame = requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: false });
+      });
+      return () => cancelAnimationFrame(frame);
+    }, [])
+  );
+
   if (!allowed) return null;
+
+  function clearResults() {
+    setMatches(null);
+    setNotice(null);
+    setPeopleTip(false);
+    setUnrecognised([]);
+    setAddedSlugs([]);
+    setFilters([]);
+  }
+
+  function changeMode(next: Mode) {
+    if (next === mode) return;
+    setMode(next);
+    clearResults();
+    if (next !== 'type') setTyped('');
+    if (next !== 'tick') {
+      setTicked([]);
+      setQuery('');
+    }
+    if (next !== 'photos') {
+      setPhotos([]);
+      writeCookCameraPhotos([]);
+    }
+  }
 
   function toggleKey(key: string) {
     setTicked((current) =>
       current.includes(key) ? current.filter((item) => item !== key) : [...current, key]
     );
-    setMatches(null);
+    clearResults();
   }
 
   function toggleFilter(filter: RecipeFilter) {
@@ -121,95 +174,155 @@ export default function WhatCanICookScreen() {
     if (ranked.length === 0 && showEmpty) setNotice(aiCopy.cook_empty);
   }
 
-  async function findRecipes() {
+  async function runLookup(input: { text?: string; images?: CookImage[] }, keepPhotosOnFail = false) {
     if (!ensureSubscribed()) return;
-    const keys = ticked;
-    const hasText = typed.trim().length > 0;
-    const hasPhoto = Boolean(photo);
-    setNotice(null);
-    setPeopleTip(false);
-    setUnrecognised([]);
-    setAddedSlugs([]);
-    if (!hasText && !hasPhoto) {
-      if (keys.length === 0) {
-        showDialog(aiCopy.cook_title, aiCopy.cook_need_input);
+    setBusy(true);
+    clearResults();
+    try {
+      const outcome = await lookupCookIngredients(input);
+      if (outcome.kind === 'ok') {
+        setPhotos([]);
+        writeCookCameraPhotos([]);
+        setPeopleTip(outcome.peopleVisible);
+        setUnrecognised(outcome.unrecognised);
+        applyLocalRank(outcome.ingredientKeys);
         return;
       }
-      applyLocalRank(keys);
-      return;
-    }
-    setBusy(true);
-    setMatches(null);
-    try {
-      const outcome = await lookupCookIngredients({
-        text: hasText ? typed.trim() : undefined,
-        imageBase64: photo?.base64,
-        mediaType: photo?.mediaType,
-        extraKeys: keys,
-      });
-      setPhoto(null);
+      if (!keepPhotosOnFail) {
+        setPhotos([]);
+        writeCookCameraPhotos([]);
+      }
       if (outcome.kind === 'limit') {
         setNotice(aiCopy.cook_limit);
-        if (keys.length > 0) applyLocalRank(keys, false);
         return;
       }
       if (outcome.kind === 'timeout') {
         setNotice(aiCopy.cook_timeout);
-        if (keys.length > 0) applyLocalRank(keys, false);
         return;
       }
-      if (outcome.kind !== 'ok') {
-        setNotice(`${aiCopy.error} ${aiCopy.cook_fallback}`);
-        if (keys.length > 0) applyLocalRank(keys, false);
-        return;
-      }
-      setPeopleTip(outcome.peopleVisible);
-      setUnrecognised(outcome.unrecognised);
-      if (outcome.ingredientKeys.length > 0) {
-        setTicked((current) => [...new Set([...current, ...outcome.ingredientKeys])]);
-      }
-      applyLocalRank(outcome.ingredientKeys);
-    } catch {
-      setPhoto(null);
       setNotice(`${aiCopy.error} ${aiCopy.cook_fallback}`);
-      if (keys.length > 0) applyLocalRank(keys, false);
+    } catch {
+      if (!keepPhotosOnFail) {
+        setPhotos([]);
+        writeCookCameraPhotos([]);
+      }
+      setNotice(`${aiCopy.error} ${aiCopy.cook_fallback}`);
     } finally {
       setBusy(false);
     }
   }
 
-  async function attachPhoto(fromCamera: boolean) {
+  async function submitType() {
+    Keyboard.dismiss();
+    const text = typed.trim();
+    if (!text) {
+      showDialog(aiCopy.cook_title, aiCopy.cook_need_input);
+      return;
+    }
+    const local = ingredientKeysFromText(text);
+    if (local.keys.length > 0) {
+      clearResults();
+      setUnrecognised(local.unrecognised);
+      applyLocalRank(local.keys);
+      return;
+    }
+    await runLookup({ text });
+  }
+
+  async function submitTicks() {
+    if (ticked.length === 0) {
+      showDialog(aiCopy.cook_title, aiCopy.cook_need_input);
+      return;
+    }
+    clearResults();
+    applyLocalRank(ticked);
+  }
+
+  async function submitPhotos() {
+    if (photos.length === 0) {
+      showDialog(aiCopy.cook_title, aiCopy.cook_need_input);
+      return;
+    }
+    await runLookup({ images: photos }, true);
+  }
+
+  async function addPhotoFromAsset(uri: string, mimeType?: string | null) {
+    const mediaType: CookImage['mediaType'] = (mimeType ?? '').includes('png') ? 'image/png' : 'image/jpeg';
+    const base64 = await readImageBase64(uri);
+    if (base64.length < 100 || base64.length > MAX_BASE64_CHARS) {
+      showDialog(aiCopy.cook_title, aiCopy.error);
+      return false;
+    }
+    setPhotos((current) => {
+      const next = current.length >= MAX_PHOTOS ? current : [...current, { base64, mediaType, uri }];
+      writeCookCameraPhotos(next);
+      return next;
+    });
+    return true;
+  }
+
+  async function openCamera() {
     if (!ensureSubscribed()) return;
+    if (photos.length >= MAX_PHOTOS) {
+      showDialog(aiCopy.cook_title, aiCopy.cook_photo_max);
+      return;
+    }
     try {
-      if (fromCamera) {
-        const permission = await ImagePicker.requestCameraPermissionsAsync();
-        if (!permission.granted) {
-          showDialog('Camera is off', 'Turn the permission on in your phone settings if you want to photograph your fridge.');
-          return;
-        }
-      } else {
-        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!permission.granted) {
-          showDialog('Photos are off', 'Turn the permission on in your phone settings if you want to photograph your fridge.');
-          return;
-        }
-      }
-      const result = fromCamera
-        ? await ImagePicker.launchCameraAsync(PICKER_OPTIONS)
-        : await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
-      const asset = result.canceled ? null : result.assets[0];
-      if (!asset?.uri) return;
-      const mediaType = (asset.mimeType ?? '').includes('png') ? 'image/png' : 'image/jpeg';
-      const base64 = (asset.base64 ?? '').replace(/\s/g, '') || (await readImageBase64(asset.uri));
-      if (base64.length < 100 || base64.length > MAX_BASE64_CHARS) {
-        showDialog(aiCopy.cook_title, aiCopy.error);
+      const permission = Camera.requestCameraPermissionsAsync
+        ? await Camera.requestCameraPermissionsAsync()
+        : await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        showDialog(
+          'Camera is off',
+          'Turn the permission on in your phone settings if you want to photograph your fridge.'
+        );
         return;
       }
-      setPhoto({ base64, mediaType });
-      setMatches(null);
+      writeCookCameraPhotos(photos);
+      router.push('/cook-camera' as Href);
     } catch {
       showDialog(aiCopy.cook_title, aiCopy.error);
     }
+  }
+
+  async function pickLibrary() {
+    if (!ensureSubscribed()) return;
+    const remaining = MAX_PHOTOS - photos.length;
+    if (remaining <= 0) {
+      showDialog(aiCopy.cook_title, aiCopy.cook_photo_max);
+      return;
+    }
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showDialog(
+        'Photos are off',
+        'Turn the permission on in your phone settings if you want to photograph your fridge.'
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      ...PICKER_OPTIONS,
+      selectionLimit: remaining,
+    });
+    if (result.canceled) return;
+    try {
+      for (const asset of result.assets) {
+        if (!asset.uri) continue;
+        await addPhotoFromAsset(asset.uri, asset.mimeType);
+      }
+      clearResults();
+    } catch {
+      showDialog(aiCopy.cook_title, aiCopy.error);
+    }
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((current) => {
+      const next = current.filter((_, itemIndex) => itemIndex !== index);
+      writeCookCameraPhotos(next);
+      return next;
+    });
+    clearResults();
   }
 
   async function addMissing(match: CookMatch) {
@@ -234,102 +347,193 @@ export default function WhatCanICookScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <Stack.Screen options={{ title: aiCopy.cook_title }} />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <AppText variant="body" style={{ color: colours.inkMuted }}>
-          {aiCopy.cook_intro}
-        </AppText>
-        <AppText variant="caption" style={{ color: colours.inkMuted }}>
-          {aiCopy.cook_privacy}
-        </AppText>
-
-        <View
-          style={[
-            styles.search,
-            { borderColor: colours.border, backgroundColor: colours.surface, borderRadius: radius.md },
-          ]}>
-          <TextInput
-            style={[styles.typed, type.body, { color: colours.ink }]}
-            value={typed}
-            onChangeText={(value) => {
-              setTyped(value);
-              setMatches(null);
-            }}
-            placeholder={aiCopy.cook_placeholder}
-            placeholderTextColor={colours.inkMuted}
-            multiline
-            autoCorrect={false}
-          />
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled>
+        <View style={[styles.modes, { backgroundColor: colours.surfaceMuted, borderRadius: radius.full }]}>
+          {MODES.map((option) => {
+            const selected = option.id === mode;
+            return (
+              <Pressable
+                key={option.id}
+                onPress={() => changeMode(option.id)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                style={[
+                  styles.mode,
+                  selected && { backgroundColor: colours.surface, borderRadius: radius.full },
+                ]}>
+                <AppText
+                  variant="bodyStrong"
+                  numberOfLines={1}
+                  style={{ color: selected ? colours.ink : colours.inkMuted }}>
+                  {option.label}
+                </AppText>
+              </Pressable>
+            );
+          })}
         </View>
 
-        <View style={styles.photoRow}>
-          <SecondaryButton
-            label={aiCopy.camera}
-            appearance="outline"
-            onPress={() => void attachPhoto(true)}
-            style={styles.photoBtn}
-          />
-          <SecondaryButton
-            label={aiCopy.library}
-            appearance="outline"
-            onPress={() => void attachPhoto(false)}
-            style={styles.photoBtn}
-          />
-        </View>
-        {photo ? (
-          <View style={styles.photoChip}>
-            <Ionicons name="camera-outline" size={16} color={colours.brand} />
-            <AppText variant="bodySm" style={{ color: colours.brand, flex: 1 }}>
-              {aiCopy.cook_photo_attached}
-            </AppText>
-            <Pressable onPress={() => setPhoto(null)} hitSlop={8} accessibilityLabel={aiCopy.cook_photo_remove}>
-              <Ionicons name="close-circle" size={20} color={colours.inkMuted} />
+        {mode === 'type' ? (
+          <View
+            style={[
+              styles.typeTile,
+              {
+                borderColor: colours.border,
+                backgroundColor: colours.surface,
+                borderRadius: radius.md,
+              },
+            ]}>
+            <TextInput
+              style={[styles.typed, type.body, { color: colours.ink }]}
+              value={typed}
+              onChangeText={(value) => {
+                setTyped(value);
+                clearResults();
+              }}
+              placeholder={aiCopy.cook_placeholder}
+              placeholderTextColor={colours.inkMuted}
+              autoCorrect={false}
+              returnKeyType="go"
+              blurOnSubmit
+              onSubmitEditing={() => void submitType()}
+              editable={!busy}
+            />
+            <Pressable
+              onPress={() => void submitType()}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel={aiCopy.cook_enter}
+              style={({ pressed }) => [
+                styles.enter,
+                { backgroundColor: colours.brand, borderRadius: radius.full },
+                (pressed || busy) && styles.pressed,
+              ]}>
+              {busy ? (
+                <ActivityIndicator color={colours.onBrand} size="small" />
+              ) : (
+                <Ionicons name="arrow-up" size={20} color={colours.onBrand} />
+              )}
             </Pressable>
           </View>
         ) : null}
 
-        <AppText variant="title3" style={{ color: colours.ink, marginTop: 8 }}>
-          {aiCopy.cook_tick}
-        </AppText>
-        <View
-          style={[
-            styles.search,
-            { borderColor: colours.border, backgroundColor: colours.surface, borderRadius: radius.md },
-          ]}>
-          <Ionicons name="search" size={20} color={colours.inkMuted} />
-          <TextInput
-            style={[styles.input, type.bodyStrong, { color: colours.ink }]}
-            value={query}
-            onChangeText={setQuery}
-            placeholder={aiCopy.cook_tick_search}
-            placeholderTextColor={colours.inkMuted}
-            autoCorrect={false}
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-          />
-        </View>
-        {ticked.length > 0 ? (
-          <AppText variant="caption" style={{ color: colours.inkMuted }}>
-            {fillCopy(aiCopy.cook_ticked_count, { count: ticked.length })}
-          </AppText>
-        ) : null}
-        <View style={styles.wrap}>
-          {shownIngredients.map((item) => (
-            <Chip
-              key={item.key}
-              label={item.label}
-              selected={tickedSet.has(item.key)}
-              onPress={() => toggleKey(item.key)}
+        {mode === 'tick' ? (
+          <View style={styles.tickBlock}>
+            <View
+              style={[
+                styles.dropdown,
+                {
+                  borderColor: colours.border,
+                  backgroundColor: colours.surface,
+                  borderRadius: radius.md,
+                },
+              ]}>
+              <View style={[styles.search, { borderColor: colours.border }]}>
+                <Ionicons name="search" size={20} color={colours.inkMuted} />
+                <TextInput
+                  style={[styles.input, type.bodyStrong, { color: colours.ink }]}
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder={aiCopy.cook_tick_search}
+                  placeholderTextColor={colours.inkMuted}
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  clearButtonMode="while-editing"
+                />
+              </View>
+              <ScrollView
+                style={styles.dropdownList}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled>
+                {shownIngredients.map((item) => {
+                  const selected = tickedSet.has(item.key);
+                  return (
+                    <Pressable
+                      key={item.key}
+                      onPress={() => toggleKey(item.key)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      style={({ pressed }) => [
+                        styles.dropdownRow,
+                        { borderBottomColor: colours.border },
+                        pressed && styles.pressed,
+                      ]}>
+                      <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>
+                        {item.label}
+                      </AppText>
+                      <Ionicons
+                        name={selected ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={22}
+                        color={selected ? colours.brand : colours.inkMuted}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </View>
+            <PrimaryButton
+              label={aiCopy.cook_find}
+              onPress={() => void submitTicks()}
+              loading={busy}
+              disabled={busy}
             />
-          ))}
-        </View>
+          </View>
+        ) : null}
 
-        <PrimaryButton
-          label={aiCopy.cook_find}
-          onPress={() => void findRecipes()}
-          loading={busy}
-          disabled={busy}
-        />
-        {busy ? (
+        {mode === 'photos' ? (
+          <View style={styles.photoBlock}>
+            <AppText variant="caption" style={{ color: colours.inkMuted }}>
+              {aiCopy.cook_privacy}
+            </AppText>
+            <View style={styles.photoRow}>
+              <SecondaryButton
+                label={aiCopy.camera}
+                appearance="outline"
+                onPress={() => void openCamera()}
+                style={styles.photoBtn}
+              />
+              <SecondaryButton
+                label={aiCopy.library}
+                appearance="outline"
+                onPress={() => void pickLibrary()}
+                style={styles.photoBtn}
+              />
+            </View>
+            {photos.length > 0 ? (
+              <View style={styles.photoList}>
+                <AppText variant="bodySm" style={{ color: colours.brand }}>
+                  {photos.length === 1
+                    ? aiCopy.cook_photo_one
+                    : fillCopy(aiCopy.cook_photo_attached, { count: photos.length })}
+                </AppText>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbs}>
+                  {photos.map((photo, index) => (
+                    <View key={`photo-${index}`} style={styles.thumbWrap}>
+                      <Image source={{ uri: photoUri(photo) }} style={[styles.thumb, { borderRadius: radius.md }]} />
+                      <Pressable
+                        onPress={() => removePhoto(index)}
+                        style={[styles.thumbRemove, { backgroundColor: colours.surface }]}
+                        accessibilityLabel={aiCopy.cook_photo_remove}>
+                        <Ionicons name="close" size={14} color={colours.ink} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+            <PrimaryButton
+              label={aiCopy.cook_find}
+              onPress={() => void submitPhotos()}
+              loading={busy}
+              disabled={busy}
+            />
+          </View>
+        ) : null}
+
+        {busy && mode !== 'type' ? (
           <View style={styles.checking}>
             <ActivityIndicator color={colours.brand} />
             <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
@@ -404,9 +608,11 @@ export default function WhatCanICookScreen() {
                 </View>
               );
             })}
-            <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 8 }}>
-              {aiCopy.cook_ai_label}
-            </AppText>
+            {mode === 'photos' ? (
+              <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 8 }}>
+                {aiCopy.cook_ai_label}
+              </AppText>
+            ) : null}
             <SafetyNotice />
           </View>
         ) : null}
@@ -431,22 +637,70 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     gap: 12,
   },
+  modes: {
+    flexDirection: 'row',
+    padding: 4,
+    gap: 2,
+  },
+  mode: {
+    flex: 1,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  typeTile: {
+    borderWidth: 1,
+    minHeight: 88,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 52,
+  },
+  typed: {
+    minHeight: 40,
+    paddingRight: 8,
+  },
+  enter: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tickBlock: {
+    gap: 10,
+  },
+  dropdown: {
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     paddingHorizontal: 12,
     minHeight: 48,
-  },
-  typed: {
-    flex: 1,
-    paddingVertical: 10,
-    minHeight: 72,
-    textAlignVertical: 'top',
+    borderBottomWidth: 1,
   },
   input: {
     flex: 1,
     paddingVertical: 10,
+  },
+  dropdownList: {
+    maxHeight: 320,
+  },
+  dropdownRow: {
+    minHeight: 48,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  photoBlock: {
+    gap: 10,
   },
   photoRow: {
     flexDirection: 'row',
@@ -455,15 +709,30 @@ const styles = StyleSheet.create({
   photoBtn: {
     flex: 1,
   },
-  photoChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  photoList: {
     gap: 8,
   },
-  wrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  thumbs: {
+    gap: 10,
+    paddingVertical: 4,
+  },
+  thumbWrap: {
+    position: 'relative',
+  },
+  thumb: {
+    width: 88,
+    height: 88,
+    backgroundColor: '#ddd',
+  },
+  thumbRemove: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   checking: {
     flexDirection: 'row',
@@ -485,5 +754,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: 16,
     paddingBottom: 8,
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

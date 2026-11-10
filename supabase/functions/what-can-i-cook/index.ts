@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
+import { bypassAiLimit } from '../_shared/aiQuota.ts';
 import { userHasAscendaPro } from '../_shared/entitlement.ts';
 import ingredientsFile from './ingredients.json' with { type: 'json' };
 import recipesFile from './recipes.json' with { type: 'json' };
@@ -11,10 +12,9 @@ import recipesFile from './recipes.json' with { type: 'json' };
  */
 
 const FEATURE = 'what_can_i_cook';
-const MODEL = 'claude-haiku-5-5';
+const MODEL = 'claude-sonnet-5-5';
 const DAILY_LIMIT = 10;
-const MAX_TOKENS = 300;
-const TEMPERATURE = 0;
+const MAX_TOKENS = 4096;
 const CLAUDE_TIMEOUT_MS = 25000;
 const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
 const MAX_TEXT = 500;
@@ -143,7 +143,16 @@ function stripDataUri(value: string): string {
 
 function knownKey(value: unknown): string | null {
   const id = text(value);
-  return ingredientKeys.has(id) ? id : null;
+  if (!id) return null;
+  if (ingredientKeys.has(id)) return id;
+  const lower = id.toLowerCase();
+  const asKey = lower.replace(/\s+/g, '_');
+  if (ingredientKeys.has(asKey)) return asKey;
+  const match = ingredients.find((item) => {
+    const name = item.name.toLowerCase();
+    return name === lower || name.replace(/\s+/g, '_') === asKey;
+  });
+  return match?.key ?? null;
 }
 
 function uniqueKeys(value: unknown, limit = 40): string[] {
@@ -200,14 +209,32 @@ function rankRecipes(haveKeys: string[]): CookMatch[] {
 }
 
 function validateCook(raw: unknown): { ingredient_keys: string[]; unrecognised: string[]; people_visible: boolean } | null {
+  if (!raw || typeof raw !== 'object') return null;
   const row = asRecord(raw);
-  if (typeof row.people_visible !== 'boolean') return null;
-  if (!Array.isArray(row.ingredient_keys) || !Array.isArray(row.unrecognised)) return null;
   return {
     ingredient_keys: uniqueKeys(row.ingredient_keys),
     unrecognised: uniqueNames(row.unrecognised),
-    people_visible: row.people_visible,
+    people_visible: row.people_visible === true,
   };
+}
+
+function parseJsonBlob(raw: string): unknown {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const body = fenced?.[1]?.trim() || trimmed;
+  try {
+    return JSON.parse(body);
+  } catch {
+    const start = body.indexOf('{');
+    const end = body.lastIndexOf('}');
+    if (start < 0 || end <= start) return null;
+    try {
+      return JSON.parse(body.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
 }
 
 function parseToolInput(body: unknown): unknown {
@@ -215,16 +242,12 @@ function parseToolInput(body: unknown): unknown {
   if (!Array.isArray(content)) return null;
   for (const item of content) {
     const row = asRecord(item);
-    if (row.type === 'tool_use' && row.name === 'report_ingredients') return row.input;
+    if (row.type === 'tool_use' && row.name === 'report_ingredients') {
+      return typeof row.input === 'string' ? parseJsonBlob(row.input) : row.input;
+    }
   }
   const textBlock = content.find((item) => asRecord(item).type === 'text');
-  const raw = text(asRecord(textBlock).text);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  return parseJsonBlob(text(asRecord(textBlock).text));
 }
 
 function usageFrom(body: unknown): { input: number | null; output: number | null } {
@@ -234,26 +257,44 @@ function usageFrom(body: unknown): { input: number | null; output: number | null
   return { input, output };
 }
 
+type CookImage = { data: string; mediaType: 'image/jpeg' | 'image/png' };
+
+function parseImages(body: Record<string, unknown>): CookImage[] {
+  const out: CookImage[] = [];
+  const fromArray = Array.isArray(body.images) ? body.images : [];
+  for (const item of fromArray) {
+    const row = asRecord(item);
+    const data = stripDataUri(text(row.image_base64));
+    const mediaRaw = text(row.media_type);
+    const mediaType = isJpegOrPng(mediaRaw) ? mediaRaw : 'image/jpeg';
+    if (data.length >= 100 && data.length <= 5_000_000) out.push({ data, mediaType });
+    if (out.length >= 4) break;
+  }
+  if (out.length === 0) {
+    const data = stripDataUri(text(body.image_base64));
+    const mediaRaw = text(body.media_type);
+    const mediaType = isJpegOrPng(mediaRaw) ? mediaRaw : 'image/jpeg';
+    if (data.length >= 100 && data.length <= 5_000_000) out.push({ data, mediaType });
+  }
+  return out;
+}
+
 async function callClaude(
   apiKey: string,
   typed: string,
-  imageBase64: string | null,
-  mediaType: 'image/jpeg' | 'image/png'
+  images: CookImage[],
+  simple = false
 ): Promise<{ status: number; body: unknown; timedOut: boolean }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CLAUDE_TIMEOUT_MS);
-  const userContent: unknown[] = [];
-  if (imageBase64) {
-    userContent.push({
-      type: 'image',
-      source: { type: 'base64', media_type: mediaType, data: imageBase64 },
-    });
-  }
-  const instruction = imageBase64
-    ? typed
-      ? 'Map the ingredients in the photo and the typed list to keys from the list.'
-      : 'Map the ingredients in the photo to keys from the list.'
-    : 'Map the typed list to keys from the list.';
+  const userContent: unknown[] = images.map((image) => ({
+    type: 'image',
+    source: { type: 'base64', media_type: image.mediaType, data: image.data },
+  }));
+  const instruction =
+    images.length > 0
+      ? 'Map the ingredients in the photos to keys from the list.'
+      : 'Map the typed list to keys from the list.';
   userContent.push({
     type: 'text',
     text: `${instruction}\n\n<user_input>\n${typed}\n</user_input>`,
@@ -271,7 +312,7 @@ async function callClaude(
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        temperature: TEMPERATURE,
+        ...(simple ? {} : { output_config: { effort: 'low' } }),
         system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         tools: [
           {
@@ -351,37 +392,32 @@ Deno.serve(async (req) => {
   }
 
   const typed = text(parsedBody.text).slice(0, MAX_TEXT);
-  const image = stripDataUri(text(parsedBody.image_base64));
-  const mediaRaw = text(parsedBody.media_type);
-  const mediaType = isJpegOrPng(mediaRaw) ? mediaRaw : 'image/jpeg';
-  const extraKeys = uniqueKeys(parsedBody.extra_keys);
-  const hasImage = image.length >= 100;
-  if (hasImage && image.length > 5_000_000) {
-    return fail('error', 400);
-  }
-  if (!hasImage && !typed) {
+  const images = parseImages(parsedBody);
+  if (images.length === 0 && !typed) {
     return fail('error', 400);
   }
 
   const periodStart = ukToday();
-  const { data: quotaRow } = await admin
-    .from('ai_quota')
-    .select('count')
-    .eq('user_id', userId)
-    .eq('feature', FEATURE)
-    .eq('period_start', periodStart)
-    .maybeSingle();
-  const used = typeof quotaRow?.count === 'number' ? quotaRow.count : 0;
-  if (used >= DAILY_LIMIT) {
-    return fail('limit', 429);
-  }
+  if (!bypassAiLimit(parsedBody)) {
+    const { data: quotaRow } = await admin
+      .from('ai_quota')
+      .select('count')
+      .eq('user_id', userId)
+      .eq('feature', FEATURE)
+      .eq('period_start', periodStart)
+      .maybeSingle();
+    const used = typeof quotaRow?.count === 'number' ? quotaRow.count : 0;
+    if (used >= DAILY_LIMIT) {
+      return fail('limit', 429);
+    }
 
-  const { error: quotaError } = await admin.from('ai_quota').upsert(
-    { user_id: userId, feature: FEATURE, period_start: periodStart, count: used + 1 },
-    { onConflict: 'user_id,feature,period_start' }
-  );
-  if (quotaError && !/ai_quota|schema cache/i.test(quotaError.message)) {
-    console.log('what-can-i-cook quota write failed');
+    const { error: quotaError } = await admin.from('ai_quota').upsert(
+      { user_id: userId, feature: FEATURE, period_start: periodStart, count: used + 1 },
+      { onConflict: 'user_id,feature,period_start' }
+    );
+    if (quotaError && !/ai_quota|schema cache/i.test(quotaError.message)) {
+      console.log('what-can-i-cook quota write failed');
+    }
   }
 
   let lastUsage = { input: null as number | null, output: null as number | null };
@@ -389,7 +425,7 @@ Deno.serve(async (req) => {
   let result: { ingredient_keys: string[]; unrecognised: string[]; people_visible: boolean } | null = null;
 
   for (let attempt = 0; attempt < 2 && !result; attempt += 1) {
-    const call = await callClaude(apiKey, typed, hasImage ? image : null, mediaType);
+    const call = await callClaude(apiKey, typed, images, attempt > 0);
     lastUsage = usageFrom(call.body);
     if (call.timedOut) {
       timedOut = true;
@@ -403,9 +439,17 @@ Deno.serve(async (req) => {
         text(err.type),
         text(err.message).slice(0, 180)
       );
-      break;
+      continue;
     }
     result = validateCook(parseToolInput(call.body));
+    if (!result) {
+      const content = asRecord(call.body).content;
+      console.log(
+        'what-can-i-cook no tool',
+        text(asRecord(call.body).stop_reason),
+        Array.isArray(content) ? content.map((item) => text(asRecord(item).type)).join(',') : 'none'
+      );
+    }
   }
 
   const { error: usageError } = await admin.from('ai_usage').insert({
@@ -420,7 +464,7 @@ Deno.serve(async (req) => {
   }
 
   if (result) {
-    const ingredientKeysFound = [...new Set([...result.ingredient_keys, ...extraKeys])];
+    const ingredientKeysFound = result.ingredient_keys;
     return json({
       ok: true,
       ingredient_keys: ingredientKeysFound,

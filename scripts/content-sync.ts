@@ -463,6 +463,7 @@ async function main(): Promise<void> {
   reportCardio();
   reportMachineGuides();
   reportAi1();
+  reportAi2();
   reportAi5();
   reportAi6();
   await reportFood(client);
@@ -635,6 +636,25 @@ function reportAi1(): void {
   line('  Edge Function: scan-machine. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai1.sql (ai_usage, ai_quota, machine_scan_misses).');
   line('  Bundled machine list for the function: supabase/functions/scan-machine/machines.json (id, name, visual_features).');
   line('  Live sync does not write AI tables. The function writes usage with the service role.');
+  line();
+}
+
+function reportAi2(): void {
+  line('AI2 busy gym  ←  content/ai/ai-config.json + prompts/ai2-busy-gym-fix.md');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai2-busy-gym-fix'] ?? {};
+  const row = asRecord(config);
+  let promptPresent = false;
+  try {
+    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai2-busy-gym-fix.md'), 'utf8').length > 0;
+  } catch {
+    promptPresent = false;
+  }
+  line(`  Feature: ${text(row.feature) || 'AI2 Busy gym fix'}`);
+  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'}. Daily limit: ${num(row.daily_limit) ?? 10}.`);
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Eligible swaps come from exercise-guide if_its_taken lists.`);
+  line('  Edge Function: busy-gym-fix. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai2.sql (reuses ai_usage, ai_quota from AI1).');
+  line('  Server validates ids, reps, sets and estimated time, then falls back to first eligible swap.');
+  line('  Use this applies to today only. Live sync does not write AI tables. The function writes usage with the service role.');
   line();
 }
 

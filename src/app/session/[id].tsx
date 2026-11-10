@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BusyGymSheet } from '@/components/BusyGymSheet';
 import { showDialog } from '@/components/Dialog';
 import { ExerciseMediaSheet } from '@/components/ExerciseMediaPlayer';
 import { ExercisePicker } from '@/components/ExercisePicker';
@@ -44,6 +45,7 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
+import { applyBusyGymPlanToDay, remainingBusyGymItems, type BusyGymPlan } from '@/lib/busyGym';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
 import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, welcomeBackCopy } from '@/lib/copy';
@@ -271,6 +273,8 @@ export default function SessionScreen() {
   const [reorderMode, setReorderMode] = useState(false);
   const [pbGlowKey, setPbGlowKey] = useState<string | null>(null);
   const [playingExercise, setPlayingExercise] = useState<{ id: string; name: string } | null>(null);
+  const [busyGymOpen, setBusyGymOpen] = useState(false);
+  const [busyGymSeed, setBusyGymSeed] = useState<SlotExercise['equipment'] | null>(null);
   const pendingAdd = useRef<string | null>(null);
 
   const { restEndsAt, publish, startRest, stopRest, adjustRest, end } = useWorkout();
@@ -465,6 +469,82 @@ export default function SessionScreen() {
 
   function openSwap(item: ProgrammeExercise) {
     setSwapItem((current) => (current?.position === item.position ? null : item));
+  }
+
+  function openBusyGym(seed: SlotExercise['equipment'] | null = null) {
+    if (!day) return;
+    if (remainingBusyGymItems(day, entries).length === 0) {
+      showDialog(aiCopy.busy_title, aiCopy.busy_need_remaining);
+      return;
+    }
+    setBusyGymSeed(seed);
+    setBusyGymOpen(true);
+  }
+
+  async function applyBusyGymPlan(plan: BusyGymPlan, byId: Map<string, SlotExercise>) {
+    if (!day) return;
+    const nextDay = applyBusyGymPlanToDay(day, entries, plan, byId);
+    const newIds = [
+      ...new Set(
+        nextDay.exercises
+          .map((item) => item.exercise.id)
+          .filter((exerciseId) => !previous[exerciseId] || !bests[exerciseId])
+      ),
+    ];
+    const extra = newIds.length
+      ? await fetchPreviousSets(newIds, id).catch(() => ({} as Record<string, LoggedSet[]>))
+      : {};
+    const extraBests = newIds.length
+      ? await fetchExerciseBests(newIds, id).catch(() => ({} as Record<string, ExerciseBests>))
+      : {};
+    const extraPrefs = newIds.length
+      ? await fetchExercisePrefs(newIds).catch(() => ({ notes: {}, rest: {} }))
+      : { notes: {}, rest: {} };
+    const keptIds = new Set(nextDay.exercises.map((item) => item.exercise.id));
+    setDay(nextDay);
+    setPrevious((current) => ({ ...current, ...extra }));
+    setBests((current) => ({ ...current, ...extraBests }));
+    setNotes((current) => ({ ...current, ...extraPrefs.notes }));
+    setRestPrefs((current) => ({ ...current, ...extraPrefs.rest }));
+    setEntries((current) => {
+      const next = { ...current };
+      for (const item of day.exercises) {
+        if (keptIds.has(item.exercise.id)) continue;
+        for (const key of Object.keys(next)) {
+          if (key.startsWith(`${item.exercise.id}:`)) delete next[key];
+        }
+      }
+      for (const item of nextDay.exercises) {
+        const allowed = new Set(allSetNumbers(item).map((setNumber) => setKey(item.exercise.id, setNumber)));
+        for (const key of Object.keys(next)) {
+          if (key.startsWith(`${item.exercise.id}:`) && !allowed.has(key)) delete next[key];
+        }
+        const hasAny = Object.keys(next).some((key) => key.startsWith(`${item.exercise.id}:`));
+        if (!hasAny) {
+          Object.assign(
+            next,
+            buildEntries({ ...nextDay, exercises: [item] }, [], { ...previous, ...extra }, true, {
+              weightScale: easeBack?.weightScale,
+            })
+          );
+          continue;
+        }
+        for (const setNumber of allSetNumbers(item)) {
+          const key = setKey(item.exercise.id, setNumber);
+          if (next[key]) continue;
+          const last =
+            next[setKey(item.exercise.id, setNumber - 1)] ?? next[setKey(item.exercise.id, 1)];
+          next[key] = {
+            weight: last?.weight ?? '',
+            reps: last?.reps ?? String(item.rep_min),
+            completed: false,
+          };
+        }
+      }
+      return next;
+    });
+    await persistPlan(nextDay);
+    await saveSessionSwaps(id, swapIds(nextDay));
   }
 
   async function handleSwap(exercise: SlotExercise, scope: SwapScope) {
@@ -1478,6 +1558,18 @@ export default function SessionScreen() {
         onChoose={handleAddExercise}
       />
 
+      <BusyGymSheet
+        open={busyGymOpen}
+        day={day}
+        entries={entries}
+        seedEquipment={busyGymSeed}
+        onClose={() => {
+          setBusyGymOpen(false);
+          setBusyGymSeed(null);
+        }}
+        onApply={applyBusyGymPlan}
+      />
+
       <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={closeMenu}>
         {menuMode === 'days' ? (
           <>
@@ -1504,6 +1596,13 @@ export default function SessionScreen() {
               onPress={() => {
                 closeMenu();
                 setReorderMode(true);
+              }}
+            />
+            <MenuRow
+              label={loggerCopy.header_menu.taken}
+              onPress={() => {
+                closeMenu();
+                openBusyGym(null);
               }}
             />
             <MenuRow
@@ -1554,6 +1653,14 @@ export default function SessionScreen() {
               onPress={() => {
                 setSlotMenuItem(null);
                 router.push('/machines/scan' as Href);
+              }}
+            />
+            <MenuRow
+              label={loggerCopy.exercise_menu.taken}
+              onPress={() => {
+                const item = slotMenuItem;
+                setSlotMenuItem(null);
+                openBusyGym(item.exercise.equipment);
               }}
             />
             <MenuRow

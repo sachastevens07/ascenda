@@ -1,4 +1,5 @@
 import { trackAi } from '@/lib/analytics';
+import { aiLimitBypassPayload } from '@/lib/devFlags';
 import { supabase } from '@/lib/supabase';
 
 export type ScanConfidence = 'high' | 'medium' | 'low';
@@ -86,7 +87,7 @@ export async function scanMachinePhoto(
       data: { session },
     } = await supabase.auth.getSession();
     const { data, error, response } = await supabase.functions.invoke('scan-machine', {
-      body: { action: 'scan', image_base64: image, media_type: mediaType },
+      body: { action: 'scan', image_base64: image, media_type: mediaType, ...aiLimitBypassPayload() },
       headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
     });
     const failBody = await readFailBody(data, response);

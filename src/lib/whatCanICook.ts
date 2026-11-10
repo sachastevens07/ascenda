@@ -1,4 +1,5 @@
 import { trackAi } from '@/lib/analytics';
+import { aiLimitBypassPayload } from '@/lib/devFlags';
 import { supabase } from '@/lib/supabase';
 
 export type CookServerMatch = {
@@ -24,6 +25,12 @@ export type CookLookupOutcome =
   | { kind: 'fallback' }
   | { kind: 'error' };
 
+export type CookImage = {
+  base64: string;
+  mediaType: 'image/jpeg' | 'image/png';
+  uri?: string;
+};
+
 type FunctionOk = {
   ok: true;
   ingredient_keys?: unknown;
@@ -38,6 +45,8 @@ type FunctionFail = {
 };
 
 const FEATURE = 'what_can_i_cook' as const;
+const MAX_BASE64_CHARS = 2_000_000;
+const MAX_PHOTOS = 4;
 
 function stripDataUri(value: string): string {
   const match = value.match(/^data:image\/[a-zA-Z0-9+.-]+;base64,(.+)$/i);
@@ -96,27 +105,37 @@ async function readFailBody(data: unknown, response: Response | undefined): Prom
   return null;
 }
 
+export function sanitizeCookImages(images: CookImage[]): CookImage[] {
+  const out: CookImage[] = [];
+  for (const image of images) {
+    const base64 = stripDataUri(image.base64);
+    if (base64.length < 100 || base64.length > MAX_BASE64_CHARS) continue;
+    out.push({ base64, mediaType: image.mediaType });
+    if (out.length >= MAX_PHOTOS) break;
+  }
+  return out;
+}
+
 export async function lookupCookIngredients(input: {
   text?: string;
-  imageBase64?: string;
-  mediaType?: 'image/jpeg' | 'image/png';
-  extraKeys?: string[];
+  images?: CookImage[];
 }): Promise<CookLookupOutcome> {
-  const image = input.imageBase64 ? stripDataUri(input.imageBase64) : '';
-  if (image && (image.length < 100 || image.length > 2_000_000)) return { kind: 'error' };
+  const images = sanitizeCookImages(input.images ?? []);
+  const typed = input.text?.trim() ?? '';
+  if (!typed && images.length === 0) return { kind: 'error' };
   try {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    const body: Record<string, unknown> = {
-      extra_keys: input.extraKeys ?? [],
-    };
-    const typed = input.text?.trim() ?? '';
+    const body: Record<string, unknown> = {};
     if (typed) body.text = typed;
-    if (image) {
-      body.image_base64 = image;
-      body.media_type = input.mediaType ?? 'image/jpeg';
+    if (images.length > 0) {
+      body.images = images.map((image) => ({
+        image_base64: image.base64,
+        media_type: image.mediaType,
+      }));
     }
+    Object.assign(body, aiLimitBypassPayload());
     const { data, error, response } = await supabase.functions.invoke('what-can-i-cook', {
       body,
       headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
@@ -124,9 +143,8 @@ export async function lookupCookIngredients(input: {
     const failBody = await readFailBody(data, response);
     if (__DEV__) {
       console.log('what-can-i-cook', {
-        hasImage: Boolean(image),
+        photos: images.length,
         hasText: Boolean(typed),
-        extra: (input.extraKeys ?? []).length,
         status: response?.status ?? null,
         error: error?.message ?? null,
         ok: failBody?.ok ?? (data as FunctionOk | null)?.ok ?? null,

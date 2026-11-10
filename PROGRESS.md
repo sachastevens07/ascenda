@@ -83,7 +83,7 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C walks items 1 to 47 in listed order.** Do not skip to the first unchecked box. Content loader (item 5) was Step B and is already in.
 
-Current: **43. AI6** done (What can I cook?). Wait for Sacha to say "next". The next unchecked item is **44. AI2**. Do not start it until she says so.
+Current: **44. AI2** done (Busy gym fix). Wait for Sacha to say "next". The next unchecked item is **45. AI3**. Do not start it until she says so.
 
 The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -159,7 +159,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **43. AI6** What can I cook? (10 Nov 2026). Food tab card opens `/food/cook`. Type ingredients, tick a searchable list, or photograph the fridge or cupboard (`expo-image-picker` already in; photos never stored). Tick-only ranks locally and does not use the quota. Text or photo calls Edge Function `what-can-i-cook` (Haiku 5.5, `ANTHROPIC_API_KEY`). The model returns ingredient keys only; the server ranks recipes (`score = matched non-pantry / total non-pantry`; pantry = salt, pepper, oil, dried spices and herbs). Top 3 to 5 with "You have X of Y" and Add missing to shopping list. Dietary chips on results. Daily limit 10 (UK midnight) via `ai_quota` feature `what_can_i_cook`; `ai_usage` logged. Fallback: tick the list. SQL `supabase/ai6.sql` (reuses AI1 tables; show then paste). `content:sync` reports the prompt and bundled keys. Logger, progression and swaps were not changed. Did not start AI2.
 
 ### Stage 8: The rest of Ascenda AI
-- [ ] **44. AI2** Busy gym fix. Not started.
+- [x] **44. AI2** Busy gym fix (10 Nov 2026). Logger header ⋯ and each exercise ⋯ open "Something's taken": equipment chips from what's left, 15/30/45 min, energy. Edge Function `busy-gym-fix` (Haiku 5.5, daily limit 10, feature `busy_gym`). Eligible alternatives are exercise-guide `if_its_taken` swaps plus catalogue alternatives, filtered off taken kit. Server checks ids, reps, sets and estimated time; retry once; rule-based fallback (first eligible swap, drop accessories to fit). Before/after preview; Use this applies today only (`saveSessionSwaps`, never `saveUserSwap`). SQL `supabase/ai2.sql` (reuses AI1 `ai_usage`/`ai_quota`; skip if already pasted). `content:sync` reports the prompt. Swap engine ranking and the progression rule were not changed. Logger still uses the same persist/swap-today path. Did not start AI3.
 - [ ] **45. AI3** Build me a session. Not started. Do not use WorkoutX's generator.
 - [ ] **46. AI4** Ask Ascenda. Not started.
 - [ ] **47. AI7** AI messaging and fair-use limits. Not started.
