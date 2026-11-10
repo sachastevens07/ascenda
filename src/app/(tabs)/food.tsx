@@ -1,6 +1,7 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
@@ -15,7 +16,7 @@ import {
   openRecipe,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { foodCopy } from '@/lib/copy';
+import { aiCopy, foodCopy } from '@/lib/copy';
 import { MEAL_TYPE_TILES, mealTypeName, recipeBySlug, visibleCollections } from '@/lib/food';
 import { useFoodFavourites } from '@/lib/foodFavourites';
 import { pickTodaysFuelSuggestion, type FuelSuggestion } from '@/lib/foodSuggestions';
@@ -25,7 +26,7 @@ import { loadPlannerWeek } from '@/lib/planner';
 export default function FoodScreen() {
   const tabBarHeight = useTabBarHeight();
   const { width } = useWindowDimensions();
-  const { colours } = useTheme();
+  const { colours, radius } = useTheme();
   const tileWidth = width * 0.38;
   const cardWidth = width * 0.72;
   const collections = visibleCollections();
@@ -86,6 +87,27 @@ export default function FoodScreen() {
             onPress={() => router.push('/food/favourites' as Href)}
           />
         </View>
+
+        <Pressable
+          onPress={() => router.push('/food/cook' as Href)}
+          accessibilityRole="button"
+          accessibilityLabel={foodCopy.cook_a11y}
+          style={({ pressed }) => [
+            styles.cookCard,
+            { backgroundColor: colours.brandSoft, borderRadius: radius.lg },
+            pressed && styles.pressed,
+          ]}>
+          <Ionicons name="restaurant-outline" size={22} color={colours.brand} />
+          <View style={styles.cookText}>
+            <AppText variant="title3" style={{ color: colours.ink }}>
+              {aiCopy.cook_title}
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }} numberOfLines={2}>
+              {aiCopy.cook_card_body}
+            </AppText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colours.brand} />
+        </Pressable>
 
         {fuel ? (
           <View>
@@ -213,5 +235,17 @@ const styles = StyleSheet.create({
   carousel: {
     gap: 12,
     paddingHorizontal: 24,
+  },
+  cookCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+  },
+  cookText: {
+    flex: 1,
+  },
+  pressed: {
+    opacity: 0.88,
   },
 });

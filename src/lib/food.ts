@@ -354,6 +354,10 @@ function formatNumber(value: number, places: number): string {
   return fixed.replace(/\.?0+$/, '');
 }
 
+export function formatIngredientAmount(quantity: number, unit: string | null, name = ''): string {
+  return formatScaledAmount(quantity, unit, name);
+}
+
 function formatScaledAmount(quantity: number, unit: string | null, name: string): string {
   const lower = name.toLowerCase();
   if (unit === 'pinch') {

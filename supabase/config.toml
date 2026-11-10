@@ -23,3 +23,9 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/monthly-recap/index.ts"
 static_files = [ "./functions/monthly-recap/prompt.md" ]
+
+[functions.what-can-i-cook]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/what-can-i-cook/index.ts"
+static_files = [ "./functions/what-can-i-cook/prompt.md" ]

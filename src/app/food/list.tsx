@@ -46,7 +46,12 @@ export default function FoodShoppingListScreen() {
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <Stack.Screen options={{ title: foodCopy.list_title }} />
       {items.length === 0 ? (
-        <EmptyState icon="basket-outline" title={foodCopy.list_empty_title} body={foodCopy.list_empty_body} />
+        <EmptyState
+          icon="basket-outline"
+          title={foodCopy.list_empty_title}
+          body={foodCopy.list_empty_body}
+          style={styles.empty}
+        />
       ) : (
         <SectionList
           sections={sections}
@@ -100,5 +105,10 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: 32,
+  },
+  empty: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
   },
 });

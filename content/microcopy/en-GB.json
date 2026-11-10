@@ -152,14 +152,15 @@
       "list_saved_body": "Tick items off as you shop. Find the full list from the basket on the Food tab.",
       "list_updated_title": "List updated",
       "list_updated_body": "Those ingredients now match the servings on this page.",
-      "list_empty_title": "Your list is empty",
+      "list_empty_title": "Your list is empty.",
       "list_empty_body": "Open a recipe, tap ⋯, then Add to shopping list.",
       "list_clear_ticked": "Clear ticked",
       "list_remove_item": "Remove from list",
       "list_remove_recipe": "Remove recipe",
       "list_aisle_other": "Other",
       "see_recipe": "See recipe",
-      "share_failed": "Could not open the share sheet. Try again."
+      "share_failed": "Could not open the share sheet. Try again.",
+      "cook_a11y": "What can I cook?"
     },
     "paywall": {
       "_note": "DESIGN.md 9.2. Prices, periods and trial length come from RevenueCat, never hard-coded. {trial_days} is 7, or 14 for referred friends.",
@@ -856,7 +857,7 @@
       "preview_off": "Off"
     },
     "ai": {
-      "_note": "AI1 Scan a machine. Prompts stay in content/ai and the Edge Function. No em dashes.",
+      "_note": "AI1 Scan a machine and AI6 What can I cook. Prompts stay in content/ai and the Edge Function. No em dashes.",
       "scan_title": "Scan a machine",
       "scan_tip": "Photograph the machine, not people. Photos are never stored.",
       "scan_privacy": "Your photo is checked and then deleted straight away.",
@@ -872,7 +873,33 @@
       "limit": "You've hit today's limit for Scan a machine. It resets tomorrow.",
       "timeout": "That took too long. Here's another way to find what you need.",
       "error": "Something went wrong. Please try again.",
-      "fallback": "Browse the machine list instead."
+      "fallback": "Browse the machine list instead.",
+      "cook_title": "What can I cook?",
+      "cook_card_body": "Type what you have, tick from the list, or photograph your fridge.",
+      "cook_intro": "Type what you have, tick from the list, or photograph your fridge or cupboard. Photos are never stored.",
+      "cook_privacy": "Photograph the food, not people. The photo is checked and then deleted.",
+      "cook_placeholder": "Eggs, spinach, feta…",
+      "cook_find": "Find recipes",
+      "cook_tick": "Or tick what you have",
+      "cook_tick_search": "Search ingredients",
+      "cook_ticked_count": "{count} ticked",
+      "cook_photo_attached": "Photo attached. It will be deleted after we check it.",
+      "cook_photo_remove": "Remove photo",
+      "cook_checking": "Checking what you have…",
+      "cook_need_input": "Type a few ingredients, tick from the list, or add a photo.",
+      "cook_have": "You have {have} of {need} ingredients",
+      "cook_missing": "Missing: {list}",
+      "cook_complete": "You have everything on this one.",
+      "cook_add_missing": "Add missing to shopping list",
+      "cook_added": "Added to your list",
+      "cook_unrecognised": "We couldn't match: {list}",
+      "cook_people_tip": "Next time, try to photograph just the food.",
+      "cook_empty": "Nothing close enough. Try adding another ingredient, or tick from the list.",
+      "cook_limit": "You've hit today's limit for What can I cook. It resets tomorrow.",
+      "cook_timeout": "That took too long. Tick what you have below instead.",
+      "cook_fallback": "Tick what you have and we'll match recipes from our list.",
+      "cook_results": "Recipes you can make",
+      "cook_ai_label": "AI-generated, not medical advice."
     }
   }
 }

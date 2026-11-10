@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 
-import { recipeBySlug, scaleIngredients, type Recipe } from '@/lib/food';
+import { formatIngredientAmount, recipeBySlug, scaleIngredients, type Recipe } from '@/lib/food';
 import { supabase } from '@/lib/supabase';
 
 const KEY = 'food-shopping-list';
@@ -53,14 +53,20 @@ function asItem(raw: unknown): ShoppingItem | null {
   if (!recipeSlug || !ingredientKey || !name) return null;
   const unit = typeof row.unit === 'string' && row.unit ? row.unit : null;
   const quantity = Number(row.quantity);
+  const qty = Number.isFinite(quantity) ? quantity : 0;
+  const storedAmount = typeof row.amount === 'string' ? row.amount : '';
+  const amount =
+    unit === 'g' || unit === 'ml' || !storedAmount || /^\d+(\.\d+)?$/.test(storedAmount.trim())
+      ? formatIngredientAmount(qty, unit, name)
+      : storedAmount;
   return {
     id: typeof row.id === 'string' && row.id ? row.id : `${recipeSlug}:${ingredientKey}`,
     recipeSlug,
     ingredientKey,
     name,
-    quantity: Number.isFinite(quantity) ? quantity : 0,
+    quantity: qty,
     unit,
-    amount: typeof row.amount === 'string' && row.amount ? row.amount : String(row.quantity ?? ''),
+    amount,
     aisle: typeof row.aisle === 'string' ? row.aisle : '',
     ticked: row.ticked === true,
   };
@@ -135,27 +141,48 @@ async function saveList(items: ShoppingItem[]): Promise<ShoppingItem[]> {
   return items;
 }
 
+function shoppingRow(recipe: Recipe, ingredient: ReturnType<typeof scaleIngredients>[number]): ShoppingItem {
+  return {
+    id: `${recipe.slug}:${ingredient.ingredientKey}`,
+    recipeSlug: recipe.slug,
+    ingredientKey: ingredient.ingredientKey,
+    name: ingredient.note ? `${ingredient.name}, ${ingredient.note}` : ingredient.name,
+    quantity: ingredient.quantity,
+    unit: ingredient.unit,
+    amount: formatIngredientAmount(ingredient.quantity, ingredient.unit, ingredient.name),
+    aisle: ingredient.aisle,
+    ticked: false,
+  };
+}
+
 export async function addRecipeToShoppingList(recipe: Recipe, servings: number): Promise<'added' | 'updated'> {
   const current = await fetchShoppingList();
   const scaled = scaleIngredients(recipe, servings);
   const already = current.some((item) => item.recipeSlug === recipe.slug);
   const without = current.filter((item) => item.recipeSlug !== recipe.slug);
-  const next = [
-    ...without,
-    ...scaled.map((ingredient) => ({
-      id: `${recipe.slug}:${ingredient.ingredientKey}`,
-      recipeSlug: recipe.slug,
-      ingredientKey: ingredient.ingredientKey,
-      name: ingredient.note ? `${ingredient.name}, ${ingredient.note}` : ingredient.name,
-      quantity: ingredient.quantity,
-      unit: ingredient.unit,
-      amount: ingredient.scaledAmount,
-      aisle: ingredient.aisle,
-      ticked: false,
-    })),
-  ];
+  const next = [...without, ...scaled.map((ingredient) => shoppingRow(recipe, ingredient))];
   await saveList(next);
   return already ? 'updated' : 'added';
+}
+
+export async function addMissingIngredientsToShoppingList(
+  recipe: Recipe,
+  missingKeys: string[],
+  servings = recipe.servings
+): Promise<'added' | 'updated'> {
+  const want = new Set(missingKeys);
+  if (want.size === 0) return 'updated';
+  const current = await fetchShoppingList();
+  const scaled = scaleIngredients(recipe, servings).filter((ingredient) => want.has(ingredient.ingredientKey));
+  const existing = new Set(
+    current.filter((item) => item.recipeSlug === recipe.slug).map((item) => item.ingredientKey)
+  );
+  const additions = scaled
+    .filter((ingredient) => !existing.has(ingredient.ingredientKey))
+    .map((ingredient) => shoppingRow(recipe, ingredient));
+  if (additions.length === 0) return 'updated';
+  await saveList([...current, ...additions]);
+  return existing.size > 0 ? 'updated' : 'added';
 }
 
 export async function toggleShoppingItem(id: string): Promise<ShoppingItem[]> {

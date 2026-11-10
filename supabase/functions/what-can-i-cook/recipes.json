@@ -1,0 +1,833 @@
+{
+  "recipes": [
+    {
+      "slug": "berry-overnight-oats",
+      "required": [
+        "oats",
+        "milk",
+        "greek_yog",
+        "berries",
+        "chia"
+      ],
+      "optional": [
+        "honey"
+      ]
+    },
+    {
+      "slug": "peanut-butter-banana-porridge",
+      "required": [
+        "oats",
+        "milk",
+        "banana",
+        "pb",
+        "cinnamon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "spinach-feta-omelette",
+      "required": [
+        "eggs",
+        "spinach",
+        "feta",
+        "cherry_tom",
+        "olive_oil",
+        "wm_bread",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "greek-yoghurt-power-bowl",
+      "required": [
+        "greek_yog",
+        "berries",
+        "seeds",
+        "walnuts"
+      ],
+      "optional": [
+        "honey"
+      ]
+    },
+    {
+      "slug": "smoked-salmon-scrambled-eggs",
+      "required": [
+        "eggs",
+        "smoked_salmon",
+        "sourdough",
+        "olive_oil",
+        "black_pepper",
+        "lemon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "breakfast-burritos",
+      "required": [
+        "eggs",
+        "black_beans",
+        "pepper",
+        "spring_onion",
+        "cheddar",
+        "wrap",
+        "paprika",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "blueberry-baked-oats",
+      "required": [
+        "oats",
+        "banana",
+        "eggs",
+        "milk",
+        "blueberries",
+        "cinnamon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "veggie-egg-muffins",
+      "required": [
+        "eggs",
+        "spinach",
+        "pepper",
+        "spring_onion",
+        "cheddar",
+        "milk",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "tofu-scramble",
+      "required": [
+        "tofu",
+        "turmeric",
+        "garlic",
+        "spinach",
+        "cherry_tom",
+        "olive_oil",
+        "wm_bread",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "cottage-cheese-tomato-toast",
+      "required": [
+        "wm_bread",
+        "cottage",
+        "cherry_tom",
+        "chilli",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "apple-cinnamon-bircher",
+      "required": [
+        "oats",
+        "apple",
+        "milk",
+        "greek_yog",
+        "cinnamon",
+        "walnuts"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "mango-chia-pudding",
+      "required": [
+        "chia",
+        "soya_milk",
+        "maple",
+        "mango"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "avocado-eggs-on-sourdough",
+      "required": [
+        "sourdough",
+        "avocado",
+        "eggs",
+        "lemon",
+        "chilli"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "smoky-beans-on-toast",
+      "required": [
+        "cannellini",
+        "passata",
+        "onion",
+        "paprika",
+        "olive_oil",
+        "wm_bread",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "chicken-quinoa-prep-bowls",
+      "required": [
+        "chicken_breast",
+        "quinoa",
+        "broccoli",
+        "pepper",
+        "chickpeas",
+        "olive_oil",
+        "paprika",
+        "lemon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "tuna-sweetcorn-pasta-salad",
+      "required": [
+        "pasta",
+        "tuna",
+        "sweetcorn",
+        "greek_yog",
+        "red_onion",
+        "cucumber",
+        "lemon",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "red-lentil-soup",
+      "required": [
+        "red_lentils",
+        "onion",
+        "carrot",
+        "garlic",
+        "cumin",
+        "chopped_tom",
+        "veg_stock",
+        "olive_oil",
+        "lemon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "smashed-chickpea-wraps",
+      "required": [
+        "chickpeas",
+        "tahini",
+        "lemon",
+        "cucumber",
+        "pepper",
+        "spinach",
+        "wrap",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "chicken-caesar-wraps",
+      "required": [
+        "chicken_breast",
+        "olive_oil",
+        "leaves",
+        "greek_yog",
+        "hard_cheese",
+        "lemon",
+        "garlic",
+        "dijon",
+        "wrap"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "salmon-rice-bowl",
+      "required": [
+        "salmon",
+        "rice",
+        "edamame",
+        "cucumber",
+        "avocado",
+        "soy",
+        "sesame_oil",
+        "spring_onion"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "halloumi-couscous-salad",
+      "required": [
+        "couscous",
+        "halloumi",
+        "chickpeas",
+        "cherry_tom",
+        "cucumber",
+        "mint",
+        "lemon",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "prawn-avocado-salad",
+      "required": [
+        "prawns",
+        "leaves",
+        "avocado",
+        "cherry_tom",
+        "cucumber",
+        "sweetcorn",
+        "lime",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "turkey-hummus-pittas",
+      "required": [
+        "pitta",
+        "turkey_slices",
+        "hummus",
+        "leaves",
+        "cucumber",
+        "pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "roasted-tomato-bean-soup",
+      "required": [
+        "tomatoes",
+        "pepper",
+        "onion",
+        "garlic",
+        "cannellini",
+        "veg_stock",
+        "olive_oil",
+        "basil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "peanut-noodle-jars",
+      "required": [
+        "rice_noodles",
+        "edamame",
+        "carrot",
+        "pepper",
+        "pb",
+        "soy",
+        "lime",
+        "spring_onion"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "chilli-bean-sweet-potatoes",
+      "required": [
+        "sweet_potato",
+        "kidney_beans",
+        "passata",
+        "cumin",
+        "paprika",
+        "greek_yog",
+        "spring_onion"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "lentil-feta-salad",
+      "required": [
+        "green_lentils",
+        "feta",
+        "cherry_tom",
+        "cucumber",
+        "red_onion",
+        "rocket",
+        "olive_oil",
+        "balsamic"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "egg-salad-sandwiches",
+      "required": [
+        "eggs",
+        "greek_yog",
+        "dijon",
+        "spring_onion",
+        "wm_bread",
+        "leaves",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "one-pot-chicken-orzo",
+      "required": [
+        "chicken_thigh",
+        "orzo",
+        "onion",
+        "garlic",
+        "chicken_stock",
+        "spinach",
+        "lemon",
+        "hard_cheese",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "turkey-chilli",
+      "required": [
+        "turkey_mince",
+        "kidney_beans",
+        "chopped_tom",
+        "onion",
+        "pepper",
+        "garlic",
+        "cumin",
+        "paprika",
+        "olive_oil",
+        "rice"
+      ],
+      "optional": [
+        "chilli"
+      ]
+    },
+    {
+      "slug": "salmon-potato-traybake",
+      "required": [
+        "salmon",
+        "new_potatoes",
+        "broccoli",
+        "cherry_tom",
+        "garlic",
+        "lemon",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "chickpea-spinach-curry",
+      "required": [
+        "chickpeas",
+        "coconut",
+        "chopped_tom",
+        "onion",
+        "garlic",
+        "ginger",
+        "garam",
+        "cumin",
+        "spinach",
+        "olive_oil",
+        "basmati"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "beef-broccoli-noodles",
+      "required": [
+        "beef_strips",
+        "egg_noodles",
+        "broccoli",
+        "pepper",
+        "garlic",
+        "ginger",
+        "soy",
+        "sesame_oil",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "lentil-mushroom-bolognese",
+      "required": [
+        "red_lentils",
+        "mushrooms",
+        "onion",
+        "carrot",
+        "garlic",
+        "chopped_tom",
+        "puree",
+        "herbs",
+        "veg_stock",
+        "olive_oil",
+        "spaghetti"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "chicken-fajita-traybake",
+      "required": [
+        "chicken_breast",
+        "pepper",
+        "red_onion",
+        "paprika",
+        "cumin",
+        "olive_oil",
+        "wrap",
+        "greek_yog",
+        "avocado",
+        "lime"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "pesto-cod-quinoa",
+      "required": [
+        "cod",
+        "pesto",
+        "courgette",
+        "cherry_tom",
+        "quinoa",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "crispy-tofu-noodles",
+      "required": [
+        "tofu",
+        "rice_noodles",
+        "broccoli",
+        "carrot",
+        "spring_onion",
+        "soy",
+        "garlic",
+        "ginger",
+        "maple",
+        "sesame_oil",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "garlic-prawn-pasta",
+      "required": [
+        "prawns",
+        "pasta",
+        "cherry_tom",
+        "garlic",
+        "chilli",
+        "spinach",
+        "olive_oil",
+        "lemon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "turkey-meatballs",
+      "required": [
+        "turkey_mince",
+        "eggs",
+        "oats",
+        "garlic",
+        "herbs",
+        "passata",
+        "onion",
+        "olive_oil",
+        "spaghetti",
+        "hard_cheese"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "black-bean-sweet-potato-tacos",
+      "required": [
+        "sweet_potato",
+        "black_beans",
+        "red_onion",
+        "paprika",
+        "cumin",
+        "olive_oil",
+        "wrap",
+        "feta",
+        "avocado",
+        "lime",
+        "coriander"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "yoghurt-chicken-skewers",
+      "required": [
+        "chicken_breast",
+        "greek_yog",
+        "garam",
+        "garlic",
+        "lemon",
+        "red_onion",
+        "pepper",
+        "pitta",
+        "cucumber",
+        "mint"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "one-pot-bean-rice",
+      "required": [
+        "basmati",
+        "kidney_beans",
+        "black_beans",
+        "sweetcorn",
+        "chopped_tom",
+        "onion",
+        "pepper",
+        "cumin",
+        "paprika",
+        "veg_stock",
+        "olive_oil",
+        "lime"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "baked-feta-bean-pasta",
+      "required": [
+        "feta",
+        "cherry_tom",
+        "garlic",
+        "olive_oil",
+        "pasta",
+        "cannellini",
+        "spinach",
+        "basil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "coconut-fish-curry",
+      "required": [
+        "cod",
+        "coconut",
+        "curry_powder",
+        "onion",
+        "garlic",
+        "ginger",
+        "spinach",
+        "olive_oil",
+        "basmati",
+        "lime",
+        "coriander"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "turkey-cottage-pie",
+      "required": [
+        "turkey_mince",
+        "onion",
+        "carrot",
+        "mushrooms",
+        "peas",
+        "puree",
+        "chicken_stock",
+        "herbs",
+        "sweet_potato",
+        "milk",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "veg-egg-fried-rice",
+      "required": [
+        "rice",
+        "eggs",
+        "peas",
+        "edamame",
+        "spring_onion",
+        "garlic",
+        "soy",
+        "sesame_oil",
+        "olive_oil"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "halloumi-veg-traybake",
+      "required": [
+        "halloumi",
+        "sweet_potato",
+        "pepper",
+        "courgette",
+        "red_onion",
+        "chickpeas",
+        "olive_oil",
+        "paprika",
+        "lemon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "beef-burrito-bowls",
+      "required": [
+        "beef_mince",
+        "black_beans",
+        "basmati",
+        "sweetcorn",
+        "cherry_tom",
+        "avocado",
+        "lime",
+        "cumin",
+        "paprika",
+        "greek_yog"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "peanut-butter-energy-balls",
+      "required": [
+        "oats",
+        "dates",
+        "pb",
+        "cocoa",
+        "chia"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "yoghurt-berry-pot",
+      "required": [
+        "greek_yog",
+        "berries",
+        "seeds"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "smoky-roasted-chickpeas",
+      "required": [
+        "chickpeas",
+        "olive_oil",
+        "paprika",
+        "salt"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "hummus-veg-pots",
+      "required": [
+        "hummus",
+        "carrot",
+        "cucumber",
+        "pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "peanut-butter-apple-slices",
+      "required": [
+        "apple",
+        "pb",
+        "cinnamon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "banana-blueberry-oat-muffins",
+      "required": [
+        "oats",
+        "banana",
+        "eggs",
+        "milk",
+        "blueberries",
+        "baking_powder",
+        "cinnamon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "chilli-lime-edamame",
+      "required": [
+        "edamame",
+        "lime",
+        "chilli",
+        "salt"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "cottage-cheese-crispbreads",
+      "required": [
+        "rye_crackers",
+        "cottage",
+        "cucumber",
+        "cherry_tom",
+        "black_pepper"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "gym-bag-snack-box",
+      "required": [
+        "eggs",
+        "rice_cakes",
+        "cheddar",
+        "cherry_tom"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "berry-yoghurt-smoothie",
+      "required": [
+        "berries",
+        "banana",
+        "greek_yog",
+        "milk",
+        "oats"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "peanut-butter-banana-smoothie",
+      "required": [
+        "banana",
+        "pb",
+        "milk",
+        "oats",
+        "cinnamon"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "green-mango-smoothie",
+      "required": [
+        "spinach",
+        "mango",
+        "banana",
+        "soya_milk",
+        "chia",
+        "lime"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "chocolate-banana-recovery-smoothie",
+      "required": [
+        "banana",
+        "cocoa",
+        "greek_yog",
+        "milk",
+        "dates"
+      ],
+      "optional": []
+    },
+    {
+      "slug": "blueberry-oat-smoothie",
+      "required": [
+        "berries",
+        "soya_yog",
+        "soya_milk",
+        "oats",
+        "maple"
+      ],
+      "optional": []
+    }
+  ]
+}

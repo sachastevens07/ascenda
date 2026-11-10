@@ -173,12 +173,14 @@ export function RecipeListRow({
   onPress,
   saved = false,
   onToggleFavourite,
+  detail,
 }: {
   recipe: Recipe;
   mealTypeName: string;
   onPress: () => void;
   saved?: boolean;
   onToggleFavourite?: () => void;
+  detail?: string;
 }) {
   const { colours, radius } = useTheme();
   const tag = recipeTagLabel(recipe) || mealTypeName;
@@ -202,6 +204,11 @@ export function RecipeListRow({
           <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }} numberOfLines={1}>
             {recipePrepLine(recipe)}
           </AppText>
+          {detail ? (
+            <AppText variant="bodySm" style={{ color: colours.brand, marginTop: 2 }} numberOfLines={2}>
+              {detail}
+            </AppText>
+          ) : null}
         </View>
       </Pressable>
       {onToggleFavourite ? (
@@ -442,7 +449,7 @@ export function ShoppingListRow({
           ]}>
           {item.ticked ? <Ionicons name="checkmark" size={14} color={colours.onBrand} /> : null}
         </View>
-        <View style={styles.ingredientText}>
+        <View style={styles.shopText}>
           <AppText
             variant="bodyStrong"
             style={{ color: colours.ink, textDecorationLine: item.ticked ? 'line-through' : 'none' }}>
@@ -450,7 +457,11 @@ export function ShoppingListRow({
           </AppText>
           <AppText
             variant="body"
-            style={{ color: colours.ink, textDecorationLine: item.ticked ? 'line-through' : 'none' }}>
+            style={{
+              color: colours.ink,
+              flex: 1,
+              textDecorationLine: item.ticked ? 'line-through' : 'none',
+            }}>
             {item.name}
           </AppText>
         </View>
@@ -608,5 +619,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
+  },
+  shopText: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    gap: 6,
   },
 });

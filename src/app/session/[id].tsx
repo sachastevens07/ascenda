@@ -46,7 +46,7 @@ import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
-import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, referCopy, sessionCompleteCopy, welcomeBackCopy } from '@/lib/copy';
+import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, welcomeBackCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuideForExercise } from '@/lib/machineGuides';
 import {
@@ -947,13 +947,16 @@ export default function SessionScreen() {
         ? [welcomeBackCopy.complete_body, trained, fuelLine].filter(Boolean).join('\n')
         : [...wins.slice(0, 3), trained, fuelLine].filter(Boolean).join('\n') ||
           'Nice work. That’s another one done.';
-      showDialog(welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved', [body, sessionCompleteCopy.invite_nudge].filter(Boolean).join('\n\n'), [
-        ...(fuel
-          ? [{ text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) }]
-          : []),
-        { text: referCopy.screen_title, onPress: () => router.push('/refer' as Href) },
-        { text: 'OK', style: 'cancel' },
-      ]);
+      showDialog(
+        welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved',
+        body,
+        fuel
+          ? [
+              { text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) },
+              { text: 'OK', style: 'cancel' },
+            ]
+          : undefined
+      );
       void maybeAskSessionReminders();
       void syncPlannerReminders();
     } catch {

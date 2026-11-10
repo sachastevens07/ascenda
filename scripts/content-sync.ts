@@ -464,6 +464,7 @@ async function main(): Promise<void> {
   reportMachineGuides();
   reportAi1();
   reportAi5();
+  reportAi6();
   await reportFood(client);
 
 
@@ -653,6 +654,46 @@ function reportAi5(): void {
   line('  Optional story fallback: "{sessions} sessions and {minutes} minutes of training in {month}. That\'s something to be proud of."');
   line('  Optional Edge Function: monthly-recap. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai5.sql (monthly_recaps).');
   line('  Live sync does not write recap rows. The report UI does not need the SQL or function.');
+  line();
+}
+
+function reportAi6(): void {
+  line('AI6 cook  ←  content/ai/ai-config.json + prompts/ai6-what-can-i-cook.md');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai6-what-can-i-cook'] ?? {};
+  const row = asRecord(config);
+  let promptPresent = false;
+  try {
+    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai6-what-can-i-cook.md'), 'utf8').length > 0;
+  } catch {
+    promptPresent = false;
+  }
+  line(`  Feature: ${text(row.feature) || 'AI6 What can I cook'}`);
+  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'}. Daily limit: ${num(row.daily_limit) ?? 10}.`);
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Model returns ingredient keys only. Server ranks recipes.`);
+  line('  Photos are discarded. Never stored. Tick-only matching does not use the quota.');
+  line('  Edge Function: what-can-i-cook. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai6.sql (reuses ai_usage, ai_quota from AI1).');
+  const functionDir = join(ROOT, 'supabase/functions/what-can-i-cook');
+  try {
+    const ingredientsFile = JSON.parse(
+      readFileSync(join(functionDir, 'ingredients.json'), 'utf8')
+    ) as Record<string, unknown>;
+    const recipesFile = JSON.parse(readFileSync(join(functionDir, 'recipes.json'), 'utf8')) as Record<string, unknown>;
+    const keys = asArray(ingredientsFile.ingredients)
+      .map((item) => text(asRecord(item).key))
+      .filter(Boolean);
+    const pantry = asArray(ingredientsFile.pantry_keys).map((item) => text(item)).filter(Boolean);
+    const bundled = asArray(recipesFile.recipes);
+    const contentRecipes = asArray(asRecord(readJson('food/recipes.json')).recipes);
+    line(
+      `  Bundled keys: ${keys.length}. Pantry: ${pantry.length}. Function recipes: ${bundled.length}. Content recipes: ${contentRecipes.length}.`
+    );
+    if (bundled.length !== contentRecipes.length) {
+      line('  WARNING: function recipes.json is out of date. Regenerate from content/food/recipes.json.');
+    }
+  } catch {
+    line('  MISSING function assets in supabase/functions/what-can-i-cook.');
+  }
+  line('  Live sync does not write AI tables. The function writes usage with the service role.');
   line();
 }
 

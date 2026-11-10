@@ -1,0 +1,454 @@
+{
+  "ingredients": [
+    {
+      "key": "apple",
+      "name": "apples"
+    },
+    {
+      "key": "avocado",
+      "name": "avocados"
+    },
+    {
+      "key": "baking_powder",
+      "name": "baking powder"
+    },
+    {
+      "key": "balsamic",
+      "name": "balsamic vinegar"
+    },
+    {
+      "key": "banana",
+      "name": "bananas"
+    },
+    {
+      "key": "basil",
+      "name": "fresh basil"
+    },
+    {
+      "key": "basmati",
+      "name": "white basmati rice"
+    },
+    {
+      "key": "beef_mince",
+      "name": "lean beef mince (5% fat)"
+    },
+    {
+      "key": "beef_strips",
+      "name": "lean beef stir-fry strips"
+    },
+    {
+      "key": "berries",
+      "name": "frozen mixed berries"
+    },
+    {
+      "key": "black_beans",
+      "name": "tinned black beans, drained"
+    },
+    {
+      "key": "black_pepper",
+      "name": "black pepper"
+    },
+    {
+      "key": "blueberries",
+      "name": "blueberries"
+    },
+    {
+      "key": "broccoli",
+      "name": "broccoli"
+    },
+    {
+      "key": "cannellini",
+      "name": "tinned cannellini beans, drained"
+    },
+    {
+      "key": "carrot",
+      "name": "carrots"
+    },
+    {
+      "key": "cheddar",
+      "name": "mature Cheddar"
+    },
+    {
+      "key": "cherry_tom",
+      "name": "cherry tomatoes"
+    },
+    {
+      "key": "chia",
+      "name": "chia seeds"
+    },
+    {
+      "key": "chicken_breast",
+      "name": "skinless chicken breast"
+    },
+    {
+      "key": "chicken_stock",
+      "name": "chicken stock cube"
+    },
+    {
+      "key": "chicken_thigh",
+      "name": "boneless skinless chicken thighs"
+    },
+    {
+      "key": "chickpeas",
+      "name": "tinned chickpeas, drained"
+    },
+    {
+      "key": "chilli",
+      "name": "chilli flakes"
+    },
+    {
+      "key": "chopped_tom",
+      "name": "tinned chopped tomatoes"
+    },
+    {
+      "key": "cinnamon",
+      "name": "ground cinnamon"
+    },
+    {
+      "key": "cocoa",
+      "name": "cocoa powder"
+    },
+    {
+      "key": "coconut",
+      "name": "light coconut milk"
+    },
+    {
+      "key": "cod",
+      "name": "cod fillets"
+    },
+    {
+      "key": "coriander",
+      "name": "fresh coriander"
+    },
+    {
+      "key": "cottage",
+      "name": "cottage cheese"
+    },
+    {
+      "key": "courgette",
+      "name": "courgettes"
+    },
+    {
+      "key": "couscous",
+      "name": "couscous"
+    },
+    {
+      "key": "cucumber",
+      "name": "cucumber"
+    },
+    {
+      "key": "cumin",
+      "name": "ground cumin"
+    },
+    {
+      "key": "curry_powder",
+      "name": "mild curry powder"
+    },
+    {
+      "key": "dates",
+      "name": "pitted dates"
+    },
+    {
+      "key": "dijon",
+      "name": "Dijon mustard"
+    },
+    {
+      "key": "edamame",
+      "name": "frozen edamame beans"
+    },
+    {
+      "key": "egg_noodles",
+      "name": "medium egg noodles"
+    },
+    {
+      "key": "eggs",
+      "name": "medium eggs"
+    },
+    {
+      "key": "feta",
+      "name": "feta"
+    },
+    {
+      "key": "garam",
+      "name": "garam masala"
+    },
+    {
+      "key": "garlic",
+      "name": "garlic cloves"
+    },
+    {
+      "key": "ginger",
+      "name": "fresh ginger"
+    },
+    {
+      "key": "greek_yog",
+      "name": "Greek-style natural yoghurt"
+    },
+    {
+      "key": "green_lentils",
+      "name": "tinned green lentils, drained"
+    },
+    {
+      "key": "halloumi",
+      "name": "halloumi"
+    },
+    {
+      "key": "hard_cheese",
+      "name": "vegetarian Italian-style hard cheese"
+    },
+    {
+      "key": "herbs",
+      "name": "dried mixed herbs"
+    },
+    {
+      "key": "honey",
+      "name": "honey"
+    },
+    {
+      "key": "hummus",
+      "name": "hummus"
+    },
+    {
+      "key": "kidney_beans",
+      "name": "tinned kidney beans, drained"
+    },
+    {
+      "key": "leaves",
+      "name": "mixed salad leaves"
+    },
+    {
+      "key": "lemon",
+      "name": "lemons"
+    },
+    {
+      "key": "lime",
+      "name": "limes"
+    },
+    {
+      "key": "mango",
+      "name": "frozen mango chunks"
+    },
+    {
+      "key": "maple",
+      "name": "maple syrup"
+    },
+    {
+      "key": "milk",
+      "name": "semi-skimmed milk"
+    },
+    {
+      "key": "mint",
+      "name": "fresh mint"
+    },
+    {
+      "key": "mushrooms",
+      "name": "mushrooms"
+    },
+    {
+      "key": "new_potatoes",
+      "name": "new potatoes"
+    },
+    {
+      "key": "oats",
+      "name": "rolled oats"
+    },
+    {
+      "key": "olive_oil",
+      "name": "olive oil"
+    },
+    {
+      "key": "onion",
+      "name": "onions"
+    },
+    {
+      "key": "orzo",
+      "name": "orzo"
+    },
+    {
+      "key": "paprika",
+      "name": "smoked paprika"
+    },
+    {
+      "key": "passata",
+      "name": "passata"
+    },
+    {
+      "key": "pasta",
+      "name": "wholewheat pasta"
+    },
+    {
+      "key": "pb",
+      "name": "smooth peanut butter (no added sugar)"
+    },
+    {
+      "key": "peas",
+      "name": "frozen peas"
+    },
+    {
+      "key": "pepper",
+      "name": "red peppers"
+    },
+    {
+      "key": "pesto",
+      "name": "green pesto"
+    },
+    {
+      "key": "pitta",
+      "name": "wholemeal pitta breads"
+    },
+    {
+      "key": "prawns",
+      "name": "raw king prawns"
+    },
+    {
+      "key": "puree",
+      "name": "tomato purée"
+    },
+    {
+      "key": "quinoa",
+      "name": "quinoa"
+    },
+    {
+      "key": "red_lentils",
+      "name": "dried red lentils"
+    },
+    {
+      "key": "red_onion",
+      "name": "red onions"
+    },
+    {
+      "key": "rice",
+      "name": "brown basmati rice"
+    },
+    {
+      "key": "rice_cakes",
+      "name": "plain rice cakes"
+    },
+    {
+      "key": "rice_noodles",
+      "name": "rice noodles"
+    },
+    {
+      "key": "rocket",
+      "name": "rocket"
+    },
+    {
+      "key": "rye_crackers",
+      "name": "rye crispbreads"
+    },
+    {
+      "key": "salmon",
+      "name": "salmon fillets"
+    },
+    {
+      "key": "salt",
+      "name": "salt"
+    },
+    {
+      "key": "seeds",
+      "name": "mixed pumpkin and sunflower seeds"
+    },
+    {
+      "key": "sesame_oil",
+      "name": "toasted sesame oil"
+    },
+    {
+      "key": "smoked_salmon",
+      "name": "smoked salmon"
+    },
+    {
+      "key": "sourdough",
+      "name": "sourdough bread"
+    },
+    {
+      "key": "soy",
+      "name": "reduced-salt soy sauce"
+    },
+    {
+      "key": "soya_milk",
+      "name": "unsweetened soya drink"
+    },
+    {
+      "key": "soya_yog",
+      "name": "plain soya yoghurt alternative"
+    },
+    {
+      "key": "spaghetti",
+      "name": "wholewheat spaghetti"
+    },
+    {
+      "key": "spinach",
+      "name": "baby spinach"
+    },
+    {
+      "key": "spring_onion",
+      "name": "spring onions"
+    },
+    {
+      "key": "sweet_potato",
+      "name": "sweet potatoes"
+    },
+    {
+      "key": "sweetcorn",
+      "name": "tinned sweetcorn"
+    },
+    {
+      "key": "tahini",
+      "name": "tahini"
+    },
+    {
+      "key": "tofu",
+      "name": "firm tofu"
+    },
+    {
+      "key": "tomatoes",
+      "name": "tomatoes"
+    },
+    {
+      "key": "tuna",
+      "name": "tinned tuna in spring water, drained"
+    },
+    {
+      "key": "turkey_mince",
+      "name": "turkey breast mince (2 to 5% fat)"
+    },
+    {
+      "key": "turkey_slices",
+      "name": "cooked turkey breast slices"
+    },
+    {
+      "key": "turmeric",
+      "name": "ground turmeric"
+    },
+    {
+      "key": "veg_stock",
+      "name": "vegetable stock cube"
+    },
+    {
+      "key": "walnuts",
+      "name": "walnuts"
+    },
+    {
+      "key": "wm_bread",
+      "name": "wholemeal bread"
+    },
+    {
+      "key": "wrap",
+      "name": "wholemeal tortilla wraps"
+    }
+  ],
+  "pantry_keys": [
+    "black_pepper",
+    "chilli",
+    "cinnamon",
+    "cumin",
+    "curry_powder",
+    "garam",
+    "herbs",
+    "olive_oil",
+    "paprika",
+    "salt",
+    "sesame_oil",
+    "turmeric"
+  ]
+}

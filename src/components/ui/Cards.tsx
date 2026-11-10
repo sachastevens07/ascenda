@@ -376,7 +376,9 @@ export function EmptyState({
   return (
     <View style={[styles.empty, style]}>
       <Ionicons name={icon} size={36} color={colours.brand} />
-      <AppText variant="title2" style={{ color: colours.ink, textAlign: 'center', marginTop: 12 }}>
+      <AppText
+        variant="title2"
+        style={{ color: colours.ink, textAlign: 'center', marginTop: 12, alignSelf: 'stretch' }}>
         {title}
       </AppText>
       {body ? (
