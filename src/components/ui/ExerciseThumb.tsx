@@ -7,7 +7,7 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useTheme, type Palette } from '@/constants/theme';
 import { EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { getExerciseMedia, peekExerciseMedia } from '@/lib/getExerciseMedia';
+import { getExerciseMedia, hasExerciseMediaMatch, peekExerciseMedia } from '@/lib/getExerciseMedia';
 
 type McName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -77,9 +77,10 @@ export function ExerciseThumb({
   const photo = posterUri ? { uri: posterUri } : stock;
   const tint = equipmentIconColour(exercise.equipment, colours, scheme);
   const iconSize = Math.round(size * 0.42);
+  const canPlay = showPlay && hasExerciseMediaMatch(exercise.id);
 
   useEffect(() => {
-    if (!showPlay) return;
+    if (!canPlay) return;
     let alive = true;
     getExerciseMedia(exercise.id)
       .then((media) => {
@@ -89,7 +90,7 @@ export function ExerciseThumb({
     return () => {
       alive = false;
     };
-  }, [exercise.id, showPlay]);
+  }, [exercise.id, canPlay]);
 
   const body = (
     <View
@@ -112,7 +113,7 @@ export function ExerciseThumb({
           accessibilityLabel={EQUIPMENT_LABELS[exercise.equipment]}
         />
       )}
-      {showPlay ? (
+      {canPlay ? (
         <View style={[styles.play, { backgroundColor: colours.overlay, borderRadius: radius.full }]}>
           <Ionicons name="play" size={12} color={colours.onAccent} />
         </View>
@@ -120,7 +121,7 @@ export function ExerciseThumb({
     </View>
   );
 
-  if (!onPlay) return body;
+  if (!onPlay || !canPlay) return body;
 
   return (
     <Pressable onPress={onPlay} accessibilityRole="button" accessibilityLabel="Play demonstration">

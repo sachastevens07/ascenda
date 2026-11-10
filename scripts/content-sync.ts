@@ -652,12 +652,12 @@ function reportAi5(): void {
   } catch {
     promptPresent = false;
   }
-  line(`  Feature: ${text(row.feature) || 'AI5 Monthly recap'}`);
-  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'}. No daily limit. Once per user per month.`);
-  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. App calculates stats. Server rejects extra numbers.`);
-  line('  Fallback: "{sessions} sessions and {minutes} minutes of training in {month}. That\'s something to be proud of."');
-  line('  Edge Function: monthly-recap. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai5.sql (monthly_recaps).');
-  line('  Live sync does not write recap rows. The function writes them with the service role.');
+  line(`  Feature: ${text(row.feature) || 'AI5 Monthly recap'} (Hevy-style report in the app)`);
+  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'} (optional story path only). No daily limit.`);
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. App calculates stats. Shipped UI has no AI story swipe.`);
+  line('  Optional story fallback: "{sessions} sessions and {minutes} minutes of training in {month}. That\'s something to be proud of."');
+  line('  Optional Edge Function: monthly-recap. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai5.sql (monthly_recaps).');
+  line('  Live sync does not write recap rows. The report UI does not need the SQL or function.');
   line();
 }
 

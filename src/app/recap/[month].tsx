@@ -2,8 +2,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   Share,
@@ -11,41 +9,216 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import Svg, { Rect } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { AppText, PrimaryButton, StatTile, TextButton } from '@/components/ui';
+import { AppText, Chip, PrimaryButton, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import {
-  DEFAULT_STREAK_GOAL,
-  fetchFinishedSessionMeta,
-  fetchStreakGoal,
-  getWeeklyStreak,
-  normalizeWeeklyTarget,
-} from '@/lib/activityStats';
-import { EMPTY_ACHIEVEMENT_EXTRAS, fetchAchievementExtras, getAchievementBadges } from '@/lib/achievements';
+import { fetchFinishedSessionMeta } from '@/lib/activityStats';
 import { fillCopy, recapCopy } from '@/lib/copy';
 import {
-  highlightLabel,
-  highlightValue,
+  formatDelta,
+  formatMetricValue,
+  formatRecapDuration,
+  formatRecapVolume,
   loadMonthlyRecap,
+  metricValue,
   recapShareMessage,
+  reportTitle,
+  type ChartMetric,
   type MonthlyRecap,
 } from '@/lib/monthlyRecap';
-import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
-import { getQuizAnswers, useProfile } from '@/lib/profile';
+import { useProfile } from '@/lib/profile';
 import { fetchProgressSets } from '@/lib/progress';
-import { fetchCompletedEnrolmentCount } from '@/lib/routines';
 
-type RecapPage = {
-  key: string;
-  eyebrow: string;
-  title: string;
-  body?: string;
-  tiles?: { value: string; label: string; icon?: 'barbell-outline' | 'time-outline' | 'trophy-outline' | 'ribbon-outline' | 'flame-outline' | 'walk-outline' }[];
-  names?: string[];
-  story?: boolean;
-};
+const METRICS: { id: ChartMetric; label: string }[] = [
+  { id: 'workouts', label: recapCopy.workouts },
+  { id: 'duration', label: recapCopy.duration },
+  { id: 'volume', label: recapCopy.volume },
+  { id: 'sets', label: recapCopy.sets },
+];
+
+function DeltaLine({
+  current,
+  previous,
+  format,
+}: {
+  current: number;
+  previous: number;
+  format?: (value: number) => string;
+}) {
+  const { colours } = useTheme();
+  const delta = formatDelta(current, previous, format);
+  if (delta.flat || !delta.text) return null;
+  return (
+    <AppText
+      variant="caption"
+      style={{ color: delta.up ? colours.success : colours.inkMuted, marginTop: 2 }}>
+      {delta.up ? '↑' : '↓'} {delta.text}
+    </AppText>
+  );
+}
+
+function MonthBarChart({
+  recap,
+  metric,
+  width,
+}: {
+  recap: MonthlyRecap;
+  metric: ChartMetric;
+  width: number;
+}) {
+  const { colours, radius } = useTheme();
+  const height = 140;
+  const chartWidth = Math.max(240, width - 48);
+  const values = recap.yearBars.map((bar) => metricValue(bar, metric));
+  const max = Math.max(1, ...values);
+  const gap = 6;
+  const barWidth = (chartWidth - gap * 11) / 12;
+
+  return (
+    <View>
+      <Svg width={chartWidth} height={height}>
+        {recap.yearBars.map((bar, index) => {
+          const value = values[index];
+          const barHeight = Math.max(value > 0 ? 4 : 0, (value / max) * (height - 24));
+          const active = bar.monthKey === recap.monthKey;
+          return (
+            <Rect
+              key={bar.monthKey}
+              x={index * (barWidth + gap)}
+              y={height - 18 - barHeight}
+              width={barWidth}
+              height={barHeight}
+              rx={4}
+              fill={active ? colours.brand : colours.surfaceMuted}
+            />
+          );
+        })}
+      </Svg>
+      <View style={[styles.barLabels, { width: chartWidth }]}>
+        {recap.yearBars.map((bar) => (
+          <AppText
+            key={bar.monthKey}
+            variant="caption"
+            style={{
+              color: bar.monthKey === recap.monthKey ? colours.brand : colours.inkMuted,
+              width: barWidth + gap,
+              textAlign: 'center',
+            }}>
+            {bar.label}
+          </AppText>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function ShareCards({ recap }: { recap: MonthlyRecap }) {
+  const { colours, radius, spacing, shadow } = useTheme();
+  const { width } = useWindowDimensions();
+  const cardWidth = Math.min(320, width - 64);
+
+  return (
+    <ScrollView
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ gap: spacing.md, paddingHorizontal: spacing.lg }}>
+      <View
+        style={[
+          styles.shareCard,
+          {
+            width: cardWidth,
+            backgroundColor: colours.ink,
+            borderRadius: radius.xl,
+            padding: spacing.lg,
+          },
+          shadow,
+        ]}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          {recap.monthName} {recap.year}
+        </AppText>
+        <AppText variant="title1" style={{ color: colours.bg, marginTop: spacing.sm }}>
+          {recapCopy.workouts}
+        </AppText>
+        <View style={[styles.shareGrid, { marginTop: spacing.lg, gap: spacing.md }]}>
+          {(
+            [
+              ['workouts', recap.totals.workouts, recap.previous.workouts, String] as const,
+              [
+                'duration',
+                recap.totals.durationSeconds,
+                recap.previous.durationSeconds,
+                formatRecapDuration,
+              ] as const,
+              ['volume', recap.totals.volumeKg, recap.previous.volumeKg, formatRecapVolume] as const,
+              ['sets', recap.totals.sets, recap.previous.sets, String] as const,
+            ] as const
+          ).map(([key, current, previous, format]) => (
+            <View key={key} style={styles.shareStat}>
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>
+                {recapCopy[key]}
+              </AppText>
+              <AppText variant="title2" style={{ color: colours.bg, marginTop: 4 }}>
+                {format(current)}
+              </AppText>
+              <DeltaLine current={current} previous={previous} format={format} />
+            </View>
+          ))}
+        </View>
+        <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 'auto' }}>
+          Ascenda
+        </AppText>
+      </View>
+
+      <View
+        style={[
+          styles.shareCard,
+          {
+            width: cardWidth,
+            backgroundColor: colours.ink,
+            borderRadius: radius.xl,
+            padding: spacing.lg,
+          },
+          shadow,
+        ]}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          {recap.monthName} {recap.year}
+        </AppText>
+        <AppText variant="title1" style={{ color: colours.bg, marginTop: spacing.sm }}>
+          {recapCopy.personal_records}
+        </AppText>
+        <View style={{ marginTop: spacing.lg, gap: spacing.md, flex: 1 }}>
+          {recap.personalBests.slice(0, 3).map((pb) => (
+            <View key={pb.exerciseId}>
+              <AppText variant="bodyStrong" style={{ color: colours.bg }}>
+                {pb.name}
+              </AppText>
+              <AppText variant="body" style={{ color: colours.accent, marginTop: 2 }}>
+                {pb.detail}
+              </AppText>
+            </View>
+          ))}
+          {recap.personalBests.length === 0 ? (
+            <AppText variant="body" style={{ color: colours.inkMuted }}>
+              No personal bests this month yet.
+            </AppText>
+          ) : null}
+          {recap.personalBests.length > 3 ? (
+            <AppText variant="caption" style={{ color: colours.inkMuted }}>
+              {fillCopy(recapCopy.more_prs, { count: recap.personalBests.length - 3 })}
+            </AppText>
+          ) : null}
+        </View>
+        <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
+          Ascenda
+        </AppText>
+      </View>
+    </ScrollView>
+  );
+}
 
 export default function MonthlyRecapScreen() {
   const { month } = useLocalSearchParams<{ month: string }>();
@@ -53,43 +226,22 @@ export default function MonthlyRecapScreen() {
   const { width } = useWindowDimensions();
   const { colours, radius, spacing, shadow } = useTheme();
   const { profile } = useProfile();
-  const answers = getQuizAnswers(profile);
   const [recap, setRecap] = useState<MonthlyRecap | null>(null);
-  const [page, setPage] = useState(0);
-  const [includePb, setIncludePb] = useState(false);
+  const [metric, setMetric] = useState<ChartMetric>('workouts');
+  const [shareMode, setShareMode] = useState(false);
   const [loading, setLoading] = useState(true);
-  const pageWidth = Math.max(280, width);
+  const firstName = profile?.display_name?.trim().split(/\s+/)[0] || 'you';
 
   useEffect(() => {
     let isCurrent = true;
     (async () => {
-      const [sessions, sets, extras, completedRoutines, streakGoal] = await Promise.all([
+      const [sessions, sets] = await Promise.all([
         fetchFinishedSessionMeta().catch(() => []),
         fetchProgressSets().catch(() => []),
-        fetchAchievementExtras(equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used)).catch(
-          () => ({
-            ...EMPTY_ACHIEVEMENT_EXTRAS,
-            knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
-          })
-        ),
-        fetchCompletedEnrolmentCount().catch(() => 0),
-        fetchStreakGoal().catch(() => DEFAULT_STREAK_GOAL),
       ]);
-      const weeklyTarget = normalizeWeeklyTarget(answers?.days_per_week);
-      const streak = getWeeklyStreak(sessions, weeklyTarget, streakGoal);
-      const badges = getAchievementBadges({
-        sessions,
-        sets,
-        streak,
-        completedRoutines,
-        extras,
-      });
       const loaded = await loadMonthlyRecap({
         sessions,
         sets,
-        badges,
-        weeklyTarget,
-        streakGoal,
         monthKey: month && /^\d{4}-\d{2}/.test(month) ? `${month.slice(0, 7)}-01` : undefined,
       });
       if (!isCurrent) return;
@@ -101,116 +253,30 @@ export default function MonthlyRecapScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [answers?.days_per_week, month, profile?.onboarding_answers?.machines_used]);
+  }, [month]);
 
-  const pages = useMemo((): RecapPage[] => {
-    if (!recap) return [];
-    const { stats } = recap;
-    const list: RecapPage[] = [
-      {
-        key: 'overview',
-        eyebrow: recapCopy.eyebrow,
-        title: fillCopy(recapCopy.card_title, { month: stats.month }),
-        body: recapCopy.stats_note,
-        tiles: [
-          { value: String(stats.sessions), label: recapCopy.page_sessions, icon: 'barbell-outline' },
-          { value: String(stats.minutes), label: recapCopy.page_minutes, icon: 'time-outline' },
-          ...(stats.personal_bests
-            ? [{ value: String(stats.personal_bests), label: recapCopy.page_pbs, icon: 'trophy-outline' as const }]
-            : []),
-          ...(stats.awards
-            ? [{ value: String(stats.awards), label: recapCopy.page_awards, icon: 'ribbon-outline' as const }]
-            : []),
-        ],
-      },
-    ];
+  const hero = useMemo(() => {
+    if (!recap) return null;
+    return {
+      value: formatMetricValue(recap.totals, metric),
+      delta: formatDelta(
+        metricValue(recap.totals, metric),
+        metricValue(recap.previous, metric),
+        metric === 'duration'
+          ? formatRecapDuration
+          : metric === 'volume'
+            ? formatRecapVolume
+            : String
+      ),
+    };
+  }, [metric, recap]);
 
-    const mixTiles = [
-      ...(stats.strength_sessions
-        ? [{ value: String(stats.strength_sessions), label: recapCopy.page_strength, icon: 'barbell-outline' as const }]
-        : []),
-      ...(stats.cardio_sessions
-        ? [{ value: String(stats.cardio_sessions), label: recapCopy.page_cardio, icon: 'walk-outline' as const }]
-        : []),
-      ...(stats.recovery_sessions
-        ? [{ value: String(stats.recovery_sessions), label: recapCopy.page_recovery, icon: 'flame-outline' as const }]
-        : []),
-    ];
-    if (mixTiles.length > 0) {
-      list.push({
-        key: 'mix',
-        eyebrow: recapCopy.page_mix,
-        title: `${stats.sessions} ${stats.sessions === 1 ? 'session' : 'sessions'} logged`,
-        tiles: mixTiles,
-      });
-    }
-
-    if (stats.personal_bests || stats.new_exercises || stats.new_machines) {
-      list.push({
-        key: 'firsts',
-        eyebrow: recapCopy.page_pbs,
-        title: stats.personal_bests
-          ? `${stats.personal_bests} ${stats.personal_bests === 1 ? 'personal best' : 'personal bests'}`
-          : stats.new_exercises
-            ? `${stats.new_exercises} new ${stats.new_exercises === 1 ? 'exercise' : 'exercises'}`
-            : `${stats.new_machines} new ${stats.new_machines === 1 ? 'machine' : 'machines'}`,
-        tiles: [
-          ...(stats.new_exercises
-            ? [{ value: String(stats.new_exercises), label: recapCopy.page_new_exercises }]
-            : []),
-          ...(stats.new_machines
-            ? [{ value: String(stats.new_machines), label: recapCopy.page_new_machines }]
-            : []),
-        ],
-        names: [
-          ...stats.pb_names,
-          ...stats.new_exercise_names.filter((name) => !stats.pb_names.includes(name)),
-          ...stats.new_machine_names,
-        ].slice(0, 6),
-      });
-    }
-
-    if (stats.weeks_trained || stats.gold_weeks || stats.longest_run) {
-      list.push({
-        key: 'weeks',
-        eyebrow: recapCopy.page_weeks,
-        title: stats.longest_run
-          ? `${stats.longest_run} ${stats.longest_run === 1 ? 'week' : 'weeks'} in a row`
-          : `${stats.weeks_trained} ${stats.weeks_trained === 1 ? 'week' : 'weeks'} trained`,
-        tiles: [
-          { value: String(stats.weeks_trained), label: recapCopy.page_weeks, icon: 'flame-outline' },
-          ...(stats.gold_weeks
-            ? [{ value: String(stats.gold_weeks), label: recapCopy.page_gold, icon: 'trophy-outline' as const }]
-            : []),
-          ...(stats.awards
-            ? [{ value: String(stats.awards), label: recapCopy.page_awards, icon: 'ribbon-outline' as const }]
-            : []),
-        ],
-        names: stats.award_names.slice(0, 4),
-      });
-    }
-
-    list.push({
-      key: 'story',
-      eyebrow: recapCopy.page_story,
-      title: recap.headline,
-      body: recap.story,
-      story: true,
-    });
-    return list;
-  }, [recap]);
-
-  function onScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const next = Math.round(event.nativeEvent.contentOffset.x / pageWidth);
-    setPage(Math.max(0, Math.min(next, pages.length - 1)));
-  }
-
-  async function shareCard() {
+  async function shareReport() {
     if (!recap) return;
     try {
       await Share.share({
-        message: recapShareMessage(recap, includePb),
-        title: fillCopy(recapCopy.card_title, { month: recap.stats.month }),
+        message: recapShareMessage(recap),
+        title: reportTitle(recap),
       });
     } catch {
       showDialog('Could not share', 'You can still screenshot the card.');
@@ -241,167 +307,187 @@ export default function MonthlyRecapScreen() {
     );
   }
 
+  if (shareMode) {
+    return (
+      <View style={[styles.screen, { backgroundColor: colours.bg, paddingBottom: insets.bottom + 16 }]}>
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.sm }}>
+          <AppText variant="title2" style={{ color: colours.ink }}>
+            {recapCopy.share_prompt}
+          </AppText>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+            {recapCopy.share_note}
+          </AppText>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', paddingVertical: spacing.lg }}>
+          <ShareCards recap={recap} />
+        </View>
+        <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}>
+          <PrimaryButton label={recapCopy.share} onPress={() => void shareReport()} />
+          <TextButton label="Back to report" onPress={() => setShareMode(false)} />
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.screen, { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12 }]}>
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onMomentumScrollEnd={onScrollEnd}
-        style={styles.pager}>
-        {pages.map((item) => (
-          <ScrollView
-            key={item.key}
-            style={{ width: pageWidth }}
-            contentContainerStyle={[
-              styles.page,
-              { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
-            ]}
-            showsVerticalScrollIndicator={false}>
-            <AppText variant="eyebrow" style={{ color: colours.accent }}>
-              {item.eyebrow}
+        contentContainerStyle={{
+          paddingHorizontal: spacing.lg,
+          paddingBottom: insets.bottom + 120,
+          gap: spacing.lg,
+        }}>
+        <View>
+          <AppText variant="title1" style={{ color: colours.ink }}>
+            {recap.monthName} {recap.year}
+          </AppText>
+          <AppText variant="display" style={{ color: colours.ink, marginTop: spacing.sm }}>
+            {hero?.value}
+          </AppText>
+          {hero && !hero.delta.flat && hero.delta.text ? (
+            <AppText
+              variant="body"
+              style={{
+                color: hero.delta.up ? colours.success : colours.inkMuted,
+                marginTop: 4,
+              }}>
+              {hero.delta.up ? '↑' : '↓'} {hero.delta.text}
             </AppText>
-            <AppText variant="displaySm" style={{ color: colours.ink }}>
-              {item.title}
-            </AppText>
-            {item.body && !item.story ? (
-              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                {item.body}
-              </AppText>
-            ) : null}
+          ) : null}
+        </View>
 
-            {item.tiles && item.tiles.length > 0 ? (
-              <View style={[styles.grid, { gap: spacing.sm }]}>
-                {item.tiles.map((tile) => (
-                  <StatTile
-                    key={`${tile.label}-${tile.value}`}
-                    value={tile.value}
-                    label={tile.label}
-                    icon={tile.icon}
-                    style={styles.tile}
-                  />
-                ))}
-              </View>
-            ) : null}
+        <MonthBarChart recap={recap} metric={metric} width={width} />
 
-            {item.names && item.names.length > 0 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {METRICS.map((item) => (
+            <Chip
+              key={item.id}
+              label={item.label}
+              selected={metric === item.id}
+              onPress={() => setMetric(item.id)}
+            />
+          ))}
+        </ScrollView>
+
+        <View>
+          <AppText variant="eyebrow" style={{ color: colours.inkMuted, marginBottom: spacing.sm }}>
+            {recapCopy.summary}
+          </AppText>
+          <View style={[styles.grid, { gap: spacing.sm }]}>
+            {(
+              [
+                [recapCopy.workouts, recap.totals.workouts, recap.previous.workouts, String] as const,
+                [
+                  recapCopy.duration,
+                  recap.totals.durationSeconds,
+                  recap.previous.durationSeconds,
+                  formatRecapDuration,
+                ] as const,
+                [
+                  recapCopy.volume,
+                  recap.totals.volumeKg,
+                  recap.previous.volumeKg,
+                  formatRecapVolume,
+                ] as const,
+                [recapCopy.sets, recap.totals.sets, recap.previous.sets, String] as const,
+              ] as const
+            ).map(([label, current, previous, format]) => (
               <View
+                key={label}
                 style={[
-                  styles.listCard,
-                  { backgroundColor: colours.surface, borderRadius: radius.lg, padding: spacing.md },
+                  styles.summaryTile,
+                  {
+                    backgroundColor: colours.surface,
+                    borderRadius: radius.lg,
+                    padding: spacing.md,
+                  },
                   shadow,
                 ]}>
-                {item.names.map((name) => (
-                  <AppText
-                    key={name}
-                    variant="body"
-                    style={{ color: colours.ink, paddingVertical: 6 }}>
-                    {name}
-                  </AppText>
-                ))}
+                <AppText variant="caption" style={{ color: colours.inkMuted }}>
+                  {label}
+                </AppText>
+                <AppText variant="title2" style={{ color: colours.ink, marginTop: 6 }}>
+                  {format(current)}
+                </AppText>
+                <DeltaLine current={current} previous={previous} format={format} />
               </View>
-            ) : null}
+            ))}
+          </View>
+        </View>
 
-            {item.story ? (
-              <>
-                <View
-                  style={[
-                    styles.storyCard,
-                    {
-                      backgroundColor: colours.surface,
-                      borderRadius: radius.xl,
-                      padding: spacing.lg,
-                      borderColor: colours.border,
-                    },
-                    shadow,
-                  ]}>
-                  <AppText variant="body" style={{ color: colours.ink, lineHeight: 24 }}>
-                    {item.body}
-                  </AppText>
-                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
-                    {recap.usedFallback ? recapCopy.stats_note : recapCopy.ai_label}
-                  </AppText>
-                </View>
-
-                <View
-                  style={[
-                    styles.shareCard,
-                    { backgroundColor: colours.ink, borderRadius: radius.xl, padding: spacing.lg },
-                    shadow,
-                  ]}
-                  accessibilityLabel="Share card">
-                  <AppText variant="eyebrow" style={{ color: colours.accent }}>
-                    Ascenda
-                  </AppText>
-                  <AppText variant="title2" style={{ color: colours.bg, marginTop: spacing.sm }}>
-                    {fillCopy(recapCopy.card_title, { month: recap.stats.month })}
-                  </AppText>
-                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.lg }}>
-                    {highlightLabel(recap.highlight)}
-                  </AppText>
-                  <AppText variant="display" style={{ color: colours.accent, marginTop: 4 }}>
-                    {highlightValue(recap.stats, recap.highlight)}
-                  </AppText>
-                  <View style={{ marginTop: spacing.md, gap: 4 }}>
-                    <AppText variant="bodySm" style={{ color: colours.bg }}>
-                      {recap.stats.sessions} sessions · {recap.stats.minutes} min
-                    </AppText>
-                    {includePb && recap.personalBests[0] ? (
-                      <AppText variant="bodySm" style={{ color: colours.bg }}>
-                        {recap.personalBests[0].weightKg != null
-                          ? `${recap.personalBests[0].name}, ${recap.personalBests[0].weightKg} kg`
-                          : recap.personalBests[0].name}
-                      </AppText>
-                    ) : null}
-                  </View>
-                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.lg }}>
-                    {recapCopy.share_note}
-                  </AppText>
-                </View>
-              </>
-            ) : null}
-          </ScrollView>
-        ))}
-      </ScrollView>
-
-      <View style={[styles.dots, { gap: spacing.xs }]}>
-        {pages.map((item, index) => (
-          <View
-            key={item.key}
-            style={[
-              styles.dot,
-              { backgroundColor: index === page ? colours.brand : colours.surfaceMuted },
-            ]}
-          />
-        ))}
-      </View>
-
-      {pages[page]?.story ? (
-        <View style={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}>
-          {recap.personalBests.length > 0 ? (
-            <Pressable
-              onPress={() => setIncludePb((value) => !value)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: includePb }}
+        {recap.exercises.length > 0 ? (
+          <View>
+            <AppText variant="eyebrow" style={{ color: colours.inkMuted, marginBottom: spacing.sm }}>
+              {recapCopy.exercises}
+            </AppText>
+            <View
               style={[
-                styles.toggle,
                 {
                   backgroundColor: colours.surface,
-                  borderRadius: radius.lg,
-                  paddingHorizontal: spacing.md,
+                  borderRadius: radius.xl,
+                  overflow: 'hidden',
                 },
+                shadow,
               ]}>
-              <AppText variant="body" style={{ color: colours.ink }}>
-                {recapCopy.include_pb}
-              </AppText>
-              <AppText variant="bodyStrong" style={{ color: colours.brand }}>
-                {includePb ? 'On' : 'Off'}
-              </AppText>
-            </Pressable>
-          ) : null}
-          <PrimaryButton label={recapCopy.share} onPress={() => void shareCard()} />
+              {recap.exercises.slice(0, 12).map((row, index) => (
+                <View
+                  key={row.exerciseId}
+                  style={[
+                    styles.exerciseRow,
+                    {
+                      borderTopWidth: index === 0 ? 0 : StyleSheet.hairlineWidth,
+                      borderTopColor: colours.border,
+                      paddingHorizontal: spacing.md,
+                      paddingVertical: spacing.md,
+                    },
+                  ]}>
+                  <AppText variant="bodyStrong" style={{ color: colours.ink, flex: 1 }}>
+                    {row.name}
+                  </AppText>
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+                    {fillCopy(recapCopy.times, { count: row.times })}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        <View
+          style={[
+            {
+              backgroundColor: colours.accentSoft,
+              borderRadius: radius.xl,
+              padding: spacing.lg,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: colours.accent,
+            },
+            shadow,
+          ]}>
+          <AppText style={{ fontSize: 36, lineHeight: 42, marginBottom: spacing.sm }}>
+            {recapCopy.congrats_emoji}
+          </AppText>
+          <AppText variant="title3" style={{ color: colours.ink }}>
+            {fillCopy(recapCopy.congrats, { month: recap.monthName, name: firstName })}
+          </AppText>
+          <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+            {recapCopy.congrats_body}
+          </AppText>
         </View>
-      ) : null}
+      </ScrollView>
+
+      <View
+        style={[
+          styles.footer,
+          {
+            paddingBottom: insets.bottom + 12,
+            paddingHorizontal: spacing.lg,
+            backgroundColor: colours.bg,
+            borderTopColor: colours.border,
+          },
+        ]}>
+        <PrimaryButton label={recapCopy.share} onPress={() => setShareMode(true)} />
+      </View>
     </View>
   );
 }
@@ -415,43 +501,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  pager: {
-    flex: 1,
+  barLabels: {
+    flexDirection: 'row',
+    marginTop: 4,
   },
-  page: {
-    paddingTop: 8,
+  chips: {
+    gap: 8,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  tile: {
+  summaryTile: {
     width: '48%',
     flexGrow: 1,
+    minHeight: 96,
   },
-  listCard: {
-    gap: 0,
+  exerciseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  storyCard: {
-    borderWidth: StyleSheet.hairlineWidth,
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 12,
   },
   shareCard: {
-    width: '100%',
+    minHeight: 420,
   },
-  dots: {
+  shareGrid: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 10,
+    flexWrap: 'wrap',
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  toggle: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
+  shareStat: {
+    width: '48%',
   },
 });

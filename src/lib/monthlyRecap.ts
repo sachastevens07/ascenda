@@ -1,26 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
-  getWeeklyStreak,
-  sessionCountsTowardStreak,
   sessionDurationSeconds,
   type FinishedSessionMeta,
-  type StreakGoal,
 } from '@/lib/activityStats';
-import type { AchievementBadge } from '@/lib/achievements';
-import { trackAi } from '@/lib/analytics';
-import { fetchCardioLogs } from '@/lib/cardio';
 import { fillCopy, recapCopy } from '@/lib/copy';
-import { machineGuide, machineGuideForExercise } from '@/lib/machineGuides';
-import { addDays, startOfWeekMonday, toIso } from '@/lib/planner';
 import { parseDate, type ProgressSet } from '@/lib/progress';
 import { usesWeight } from '@/lib/programmes';
-import { supabase } from '@/lib/supabase';
 
-const FEATURE = 'monthly_recap' as const;
 const PREVIEW_KEY = 'monthly_recap_preview';
 const DISMISS_KEY = 'monthly_recap_dismissed';
-const CACHE_PREFIX = 'monthly_recap_cache:';
 const MIN_SESSIONS = 2;
 const MONTH_NAMES = [
   'January',
@@ -36,74 +25,50 @@ const MONTH_NAMES = [
   'November',
   'December',
 ] as const;
+const MONTH_SHORT = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'] as const;
 
-export const RECAP_HIGHLIGHT_KEYS = [
-  'sessions',
-  'minutes',
-  'strength_sessions',
-  'cardio_sessions',
-  'recovery_sessions',
-  'personal_bests',
-  'new_exercises',
-  'new_machines',
-  'weeks_trained',
-  'current_run',
-  'longest_run',
-  'gold_weeks',
-  'awards',
-] as const;
+export type ChartMetric = 'workouts' | 'duration' | 'volume' | 'sets';
 
-export type RecapHighlightKey = (typeof RECAP_HIGHLIGHT_KEYS)[number];
+export type MonthTotals = {
+  workouts: number;
+  durationSeconds: number;
+  volumeKg: number;
+  sets: number;
+};
 
-export type RecapStats = {
-  month: string;
-  year: number;
-  sessions: number;
-  minutes: number;
-  strength_sessions: number;
-  cardio_sessions: number;
-  recovery_sessions: number;
-  personal_bests: number;
-  pb_names: string[];
-  new_exercises: number;
-  new_exercise_names: string[];
-  new_machines: number;
-  new_machine_names: string[];
-  weeks_trained: number;
-  current_run: number;
-  longest_run: number;
-  gold_weeks: number;
-  awards: number;
-  award_names: string[];
+export type YearBar = {
+  monthKey: string;
+  label: string;
+  workouts: number;
+  durationSeconds: number;
+  volumeKg: number;
+  sets: number;
+};
+
+export type ExerciseMonthRow = {
+  exerciseId: string;
+  name: string;
+  times: number;
 };
 
 export type RecapPersonalBest = {
+  exerciseId: string;
   name: string;
+  kind: 'weight' | 'assisted' | 'reps';
   weightKg: number | null;
+  reps: number;
+  detail: string;
 };
 
 export type MonthlyRecap = {
   monthKey: string;
-  stats: RecapStats;
-  headline: string;
-  story: string;
-  highlight: RecapHighlightKey;
-  usedFallback: boolean;
+  monthName: string;
+  year: number;
+  totals: MonthTotals;
+  previous: MonthTotals;
+  yearBars: YearBar[];
+  exercises: ExerciseMonthRow[];
   personalBests: RecapPersonalBest[];
-};
-
-type FunctionOk = {
-  ok: true;
-  month?: string;
-  headline?: string;
-  story?: string;
-  highlight?: string;
-  used_fallback?: boolean;
-};
-
-type FunctionFail = {
-  ok?: false;
-  reason?: string;
 };
 
 function pad(value: number): string {
@@ -115,20 +80,28 @@ export function monthKeyFromDate(year: number, monthIndex: number): string {
 }
 
 export function monthLabel(monthKey: string): string {
-  const [year, month] = monthKey.split('-').map(Number);
-  if (!year || !month) return recapCopy.card_title.replace('{month}', 'month');
-  return MONTH_NAMES[month - 1] ?? 'this month';
+  const [, month] = monthKey.split('-').map(Number);
+  return MONTH_NAMES[(month ?? 1) - 1] ?? 'this month';
 }
 
-function monthBounds(monthKey: string): { start: string; end: string; lastDay: Date } {
+function monthBounds(monthKey: string): { start: string; end: string } {
   const [year, month] = monthKey.split('-').map(Number);
   const startDate = new Date(year, month - 1, 1);
   const lastDay = new Date(year, month, 0);
-  return { start: toIso(startDate), end: toIso(lastDay), lastDay };
+  return {
+    start: `${year}-${pad(month)}-01`,
+    end: `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())}`,
+  };
 }
 
 function previousMonthKey(now: Date): string {
   const cursor = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return monthKeyFromDate(cursor.getFullYear(), cursor.getMonth());
+}
+
+function shiftMonth(monthKey: string, delta: number): string {
+  const [year, month] = monthKey.split('-').map(Number);
+  const cursor = new Date(year, month - 1 + delta, 1);
   return monthKeyFromDate(cursor.getFullYear(), cursor.getMonth());
 }
 
@@ -144,13 +117,34 @@ function hasWeight(set: ProgressSet): set is ProgressSet & { weightKg: number } 
   return usesWeight(set.equipment) && set.weightKg !== null;
 }
 
-function pbKind(sets: ProgressSet[]): 'weight' | 'assisted' | 'reps' {
-  const weighted = sets.filter(hasWeight);
-  if (weighted.length === 0) return 'reps';
-  return isAssisted(sets[0]) ? 'assisted' : 'weight';
+function emptyTotals(): MonthTotals {
+  return { workouts: 0, durationSeconds: 0, volumeKg: 0, sets: 0 };
 }
 
-function isBetter(kind: 'weight' | 'assisted' | 'reps', set: ProgressSet, best: ProgressSet): boolean {
+function totalsForMonth(
+  monthKey: string,
+  sessions: FinishedSessionMeta[],
+  sets: ProgressSet[]
+): MonthTotals {
+  const { start, end } = monthBounds(monthKey);
+  const monthSessions = sessions.filter((session) => inMonth(session.date, start, end));
+  const monthSets = sets.filter((set) => inMonth(set.date, start, end));
+  return {
+    workouts: monthSessions.length,
+    durationSeconds: monthSessions.reduce((sum, session) => sum + sessionDurationSeconds(session), 0),
+    volumeKg: monthSets.reduce((sum, set) => {
+      if (!hasWeight(set)) return sum;
+      return sum + Math.abs(set.weightKg) * set.reps;
+    }, 0),
+    sets: monthSets.length,
+  };
+}
+
+function isBetter(
+  kind: 'weight' | 'assisted' | 'reps',
+  set: ProgressSet,
+  best: ProgressSet
+): boolean {
   if (kind === 'reps') return set.reps > best.reps;
   if (!hasWeight(set) || !hasWeight(best)) return false;
   if (kind === 'weight') {
@@ -159,7 +153,7 @@ function isBetter(kind: 'weight' | 'assisted' | 'reps', set: ProgressSet, best: 
   return set.weightKg < best.weightKg || (set.weightKg === best.weightKg && set.reps > best.reps);
 }
 
-function personalBestsInRange(sets: ProgressSet[], start: string, end: string): RecapPersonalBest[] {
+function personalBestsInMonth(sets: ProgressSet[], start: string, end: string): RecapPersonalBest[] {
   const byExercise = new Map<string, ProgressSet[]>();
   for (const set of sets) {
     const group = byExercise.get(set.exerciseId) ?? [];
@@ -168,190 +162,123 @@ function personalBestsInRange(sets: ProgressSet[], start: string, end: string): 
   }
   const hits: RecapPersonalBest[] = [];
   for (const group of byExercise.values()) {
-    const kind = pbKind(group);
-    const candidates = kind === 'reps' ? group : group.filter(hasWeight);
+    const weighted = group.filter(hasWeight);
+    const kind: RecapPersonalBest['kind'] =
+      weighted.length === 0 ? 'reps' : isAssisted(group[0]) ? 'assisted' : 'weight';
+    const candidates = kind === 'reps' ? group : weighted;
     let best: ProgressSet | null = null;
+    let firstHit: ProgressSet | null = null;
     for (const set of candidates) {
       if (!best || isBetter(kind, set, best)) {
-        if (inMonth(set.date, start, end)) {
-          hits.push({
-            name: set.exerciseName,
-            weightKg: kind === 'reps' ? null : set.weightKg,
-          });
-        }
+        if (inMonth(set.date, start, end)) firstHit = set;
         best = set;
       }
     }
-  }
-  return hits;
-}
-
-function firstDatesById(entries: { id: string; name: string; date: string }[]): { id: string; name: string; date: string }[] {
-  const seen = new Map<string, { id: string; name: string; date: string }>();
-  for (const entry of entries) {
-    const current = seen.get(entry.id);
-    if (!current || entry.date < current.date) seen.set(entry.id, entry);
-  }
-  return [...seen.values()];
-}
-
-function weeksInMonth(
-  sessions: FinishedSessionMeta[],
-  start: string,
-  end: string,
-  weeklyTarget: number
-): { trained: number; gold: number } {
-  const counted = sessions.filter(sessionCountsTowardStreak);
-  let cursor = startOfWeekMonday(parseDate(start));
-  const last = parseDate(end);
-  let trained = 0;
-  let gold = 0;
-  while (cursor.getTime() <= last.getTime()) {
-    const weekStart = toIso(cursor);
-    const weekEnd = toIso(addDays(cursor, 6));
-    const overlaps = weekEnd >= start && weekStart <= end;
-    cursor = addDays(cursor, 7);
-    if (!overlaps) continue;
-    const done = counted.filter((session) => session.date >= weekStart && session.date <= weekEnd).length;
-    if (done > 0) trained += 1;
-    if (weeklyTarget > 0 && done >= weeklyTarget) gold += 1;
-  }
-  return { trained, gold };
-}
-
-export function buildRecapStats(input: {
-  monthKey: string;
-  sessions: FinishedSessionMeta[];
-  sets: ProgressSet[];
-  badges: AchievementBadge[];
-  weeklyTarget: number;
-  streakGoal: StreakGoal;
-  cardio: { sessionId: string; machineId: string; createdAt: string }[];
-}): { stats: RecapStats; personalBests: RecapPersonalBest[] } {
-  const { start, end, lastDay } = monthBounds(input.monthKey);
-  const monthSessions = input.sessions.filter((session) => inMonth(session.date, start, end));
-  const minutes = Math.max(
-    0,
-    Math.round(monthSessions.reduce((sum, session) => sum + sessionDurationSeconds(session), 0) / 60)
-  );
-  let strength = 0;
-  let cardio = 0;
-  let recovery = 0;
-  for (const session of monthSessions) {
-    if (session.type === 'cardio') cardio += 1;
-    else if (session.type === 'recovery') recovery += 1;
-    else strength += 1;
-  }
-
-  const pbs = personalBestsInRange(input.sets, start, end);
-  const pbNames = [...new Set(pbs.map((item) => item.name))];
-
-  const firstExercise = firstDatesById(
-    input.sets.map((set) => ({ id: set.exerciseId, name: set.exerciseName, date: set.date }))
-  );
-  const newExercises = firstExercise.filter((item) => inMonth(item.date, start, end));
-
-  const machineEntries: { id: string; name: string; date: string }[] = [];
-  for (const set of input.sets) {
-    const guide = machineGuideForExercise(set.exerciseId);
-    if (guide) machineEntries.push({ id: guide.id, name: guide.name, date: set.date });
-  }
-  const sessionDate = new Map(input.sessions.map((session) => [session.id, session.date]));
-  for (const log of input.cardio) {
-    const guide = machineGuide(log.machineId);
-    const date = sessionDate.get(log.sessionId) ?? log.createdAt.slice(0, 10);
-    if (!date) continue;
-    machineEntries.push({
-      id: log.machineId,
-      name: guide?.name ?? log.machineId.replace(/_/g, ' '),
-      date,
+    if (!firstHit || !best) continue;
+    const detail =
+      kind === 'reps'
+        ? `${firstHit.reps} reps`
+        : kind === 'assisted'
+          ? `${firstHit.weightKg} kg assist`
+          : `${firstHit.weightKg} kg`;
+    hits.push({
+      exerciseId: firstHit.exerciseId,
+      name: firstHit.exerciseName,
+      kind,
+      weightKg: kind === 'reps' ? null : firstHit.weightKg,
+      reps: firstHit.reps,
+      detail,
     });
   }
-  const newMachines = firstDatesById(machineEntries).filter((item) => inMonth(item.date, start, end));
-
-  const weeks = weeksInMonth(input.sessions, start, end, input.weeklyTarget);
-  const streak = getWeeklyStreak(input.sessions, input.weeklyTarget, input.streakGoal, lastDay);
-  const awards = input.badges.filter(
-    (item) => item.unlocked && item.unlockedOn && inMonth(item.unlockedOn, start, end)
-  );
-
-  return {
-    stats: {
-      month: monthLabel(input.monthKey),
-      year: Number(input.monthKey.slice(0, 4)),
-      sessions: monthSessions.length,
-      minutes,
-      strength_sessions: strength,
-      cardio_sessions: cardio,
-      recovery_sessions: recovery,
-      personal_bests: pbNames.length,
-      pb_names: pbNames,
-      new_exercises: newExercises.length,
-      new_exercise_names: newExercises.map((item) => item.name),
-      new_machines: newMachines.length,
-      new_machine_names: newMachines.map((item) => item.name),
-      weeks_trained: weeks.trained,
-      current_run: streak.current,
-      longest_run: streak.best,
-      gold_weeks: weeks.gold,
-      awards: awards.length,
-      award_names: awards.map((item) => item.title),
-    },
-    personalBests: pbs,
-  };
+  return hits.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function fallbackRecap(stats: RecapStats): Pick<MonthlyRecap, 'headline' | 'story' | 'highlight'> {
-  return {
-    headline: `Your ${stats.month} in the gym`,
-    story: fillCopy(recapCopy.fallback_story, {
-      sessions: stats.sessions,
-      minutes: stats.minutes,
-      month: stats.month,
-    }),
-    highlight: 'sessions',
-  };
-}
-
-function parseHighlight(value: unknown): RecapHighlightKey {
-  return RECAP_HIGHLIGHT_KEYS.includes(value as RecapHighlightKey)
-    ? (value as RecapHighlightKey)
-    : 'sessions';
-}
-
-export function highlightLabel(key: RecapHighlightKey): string {
-  switch (key) {
-    case 'sessions':
-      return recapCopy.page_sessions;
-    case 'minutes':
-      return recapCopy.page_minutes;
-    case 'strength_sessions':
-      return recapCopy.page_strength;
-    case 'cardio_sessions':
-      return recapCopy.page_cardio;
-    case 'recovery_sessions':
-      return recapCopy.page_recovery;
-    case 'personal_bests':
-      return recapCopy.page_pbs;
-    case 'new_exercises':
-      return recapCopy.page_new_exercises;
-    case 'new_machines':
-      return recapCopy.page_new_machines;
-    case 'weeks_trained':
-      return recapCopy.page_weeks;
-    case 'current_run':
-    case 'longest_run':
-      return recapCopy.page_run;
-    case 'gold_weeks':
-      return recapCopy.page_gold;
-    case 'awards':
-      return recapCopy.page_awards;
+function exercisesInMonth(sets: ProgressSet[], start: string, end: string): ExerciseMonthRow[] {
+  const counts = new Map<string, { name: string; sessions: Set<string> }>();
+  for (const set of sets) {
+    if (!inMonth(set.date, start, end)) continue;
+    const current = counts.get(set.exerciseId) ?? { name: set.exerciseName, sessions: new Set<string>() };
+    current.sessions.add(set.date);
+    current.name = set.exerciseName;
+    counts.set(set.exerciseId, current);
   }
+  return [...counts.entries()]
+    .map(([exerciseId, value]) => ({
+      exerciseId,
+      name: value.name,
+      times: value.sessions.size,
+    }))
+    .sort((a, b) => b.times - a.times || a.name.localeCompare(b.name));
 }
 
-export function highlightValue(stats: RecapStats, key: RecapHighlightKey): string {
-  const value = stats[key];
-  return String(value);
+function yearBarsFor(
+  monthKey: string,
+  sessions: FinishedSessionMeta[],
+  sets: ProgressSet[]
+): YearBar[] {
+  const year = Number(monthKey.slice(0, 4));
+  return Array.from({ length: 12 }, (_, index) => {
+    const key = monthKeyFromDate(year, index);
+    const totals = totalsForMonth(key, sessions, sets);
+    return {
+      monthKey: key,
+      label: MONTH_SHORT[index],
+      ...totals,
+    };
+  });
+}
+
+export function buildMonthlyRecap(
+  monthKey: string,
+  sessions: FinishedSessionMeta[],
+  sets: ProgressSet[]
+): MonthlyRecap | null {
+  const totals = totalsForMonth(monthKey, sessions, sets);
+  if (totals.workouts < MIN_SESSIONS) return null;
+  const { start, end } = monthBounds(monthKey);
+  const [year] = monthKey.split('-').map(Number);
+  return {
+    monthKey,
+    monthName: monthLabel(monthKey),
+    year,
+    totals,
+    previous: totalsForMonth(shiftMonth(monthKey, -1), sessions, sets),
+    yearBars: yearBarsFor(monthKey, sessions, sets),
+    exercises: exercisesInMonth(sets, start, end),
+    personalBests: personalBestsInMonth(sets, start, end),
+  };
+}
+
+/** Last 3 days of a month, or the first 7 days of the next. */
+export function isInRecapWindow(monthKey: string, now = new Date()): boolean {
+  const current = monthKeyFromDate(now.getFullYear(), now.getMonth());
+  const previous = previousMonthKey(now);
+  const day = now.getDate();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  if (monthKey === current && day >= lastDay - 2) return true;
+  if (monthKey === previous && day <= 7) return true;
+  return false;
+}
+
+function monthHasEnoughSessions(sessions: FinishedSessionMeta[], monthKey: string): boolean {
+  const { start, end } = monthBounds(monthKey);
+  return sessions.filter((session) => inMonth(session.date, start, end)).length >= MIN_SESSIONS;
+}
+
+function pickMonth(sessions: FinishedSessionMeta[], now: Date, preview: boolean): string | null {
+  const current = monthKeyFromDate(now.getFullYear(), now.getMonth());
+  const previous = previousMonthKey(now);
+  const day = now.getDate();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  if ((preview || day <= 7) && monthHasEnoughSessions(sessions, previous)) return previous;
+  if ((preview || day >= lastDay - 2) && monthHasEnoughSessions(sessions, current)) return current;
+  if (!preview) return null;
+  const months = new Set(sessions.map((session) => `${session.date.slice(0, 7)}-01`));
+  for (const key of [...months].sort().reverse()) {
+    if (monthHasEnoughSessions(sessions, key)) return key;
+  }
+  return null;
 }
 
 export async function fetchRecapPreview(): Promise<boolean> {
@@ -379,200 +306,95 @@ async function isDismissed(monthKey: string): Promise<boolean> {
   }
 }
 
-function cacheKey(userId: string, monthKey: string): string {
-  return `${CACHE_PREFIX}${userId}:${monthKey}`;
-}
-
-async function readCache(userId: string, monthKey: string): Promise<MonthlyRecap | null> {
-  try {
-    const raw = await AsyncStorage.getItem(cacheKey(userId, monthKey));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as MonthlyRecap;
-    if (!parsed?.story || parsed.monthKey !== monthKey) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-async function writeCache(userId: string, recap: MonthlyRecap): Promise<void> {
-  try {
-    await AsyncStorage.setItem(cacheKey(userId, recap.monthKey), JSON.stringify(recap));
-  } catch {
-    /* Cache is optional. */
-  }
-}
-
-/** Last 3 days of a month, or the first 7 days of the next. Matches AGENTS.md "on the 1st". */
-export function isInRecapWindow(monthKey: string, now = new Date()): boolean {
-  const current = monthKeyFromDate(now.getFullYear(), now.getMonth());
-  const previous = previousMonthKey(now);
-  const day = now.getDate();
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  if (monthKey === current && day >= lastDay - 2) return true;
-  if (monthKey === previous && day <= 7) return true;
-  return false;
-}
-
-function monthHasEnoughSessions(
-  sessions: FinishedSessionMeta[],
-  monthKey: string
-): boolean {
-  const { start, end } = monthBounds(monthKey);
-  return sessions.filter((session) => inMonth(session.date, start, end)).length >= MIN_SESSIONS;
-}
-
-function pickMonth(sessions: FinishedSessionMeta[], now: Date, preview: boolean): string | null {
-  const current = monthKeyFromDate(now.getFullYear(), now.getMonth());
-  const previous = previousMonthKey(now);
-  const day = now.getDate();
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-
-  if (preview || (day <= 7 && monthHasEnoughSessions(sessions, previous))) {
-    if (monthHasEnoughSessions(sessions, previous)) return previous;
-  }
-  if (preview || (day >= lastDay - 2 && monthHasEnoughSessions(sessions, current))) {
-    if (monthHasEnoughSessions(sessions, current)) return current;
-  }
-  if (!preview) return null;
-  const months = new Set(sessions.map((session) => `${session.date.slice(0, 7)}-01`));
-  const sorted = [...months].sort().reverse();
-  for (const key of sorted) {
-    if (monthHasEnoughSessions(sessions, key)) return key;
-  }
-  return null;
-}
-
-function shouldShow(monthKey: string, now: Date, preview: boolean): boolean {
-  return preview || isInRecapWindow(monthKey, now);
-}
-
-async function storyFromServer(
-  monthKey: string,
-  stats: RecapStats
-): Promise<{ headline: string; story: string; highlight: RecapHighlightKey; usedFallback: boolean } | null> {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const { data, error } = await supabase.functions.invoke('monthly-recap', {
-      body: { month: monthKey, stats },
-      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
-    });
-    if (error) return null;
-    const body = (data ?? {}) as FunctionOk | FunctionFail;
-    if (body.ok !== true || !body.story) return null;
-    return {
-      headline: body.headline?.trim() || `Your ${stats.month} in the gym`,
-      story: body.story.trim(),
-      highlight: parseHighlight(body.highlight),
-      usedFallback: body.used_fallback === true,
-    };
-  } catch {
-    return null;
-  }
-}
-
-async function storyFromTable(
-  userId: string,
-  monthKey: string,
-  stats: RecapStats
-): Promise<{ headline: string; story: string; highlight: RecapHighlightKey; usedFallback: boolean } | null> {
-  const { data, error } = await supabase
-    .from('monthly_recaps')
-    .select('headline, story_text, highlight, used_fallback')
-    .eq('user_id', userId)
-    .eq('month', monthKey)
-    .maybeSingle();
-  if (error || !data || !String(data.story_text ?? '').trim()) return null;
-  return {
-    headline: String(data.headline ?? '').trim() || `Your ${stats.month} in the gym`,
-    story: String(data.story_text).trim(),
-    highlight: parseHighlight(data.highlight),
-    usedFallback: data.used_fallback === true,
-  };
-}
-
 export async function loadMonthlyRecap(input: {
   sessions: FinishedSessionMeta[];
   sets: ProgressSet[];
-  badges: AchievementBadge[];
-  weeklyTarget: number;
-  streakGoal: StreakGoal;
   now?: Date;
   monthKey?: string;
 }): Promise<MonthlyRecap | null> {
   const now = input.now ?? new Date();
   const preview = await fetchRecapPreview();
   const month = input.monthKey ?? pickMonth(input.sessions, now, preview);
-  if (!month || !shouldShow(month, now, preview)) return null;
+  if (!month) return null;
+  if (!preview && !isInRecapWindow(month, now)) return null;
   if (!preview && (await isDismissed(month))) return null;
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? 'local';
-  const cached = await readCache(userId, month);
-
-  const logs = await fetchCardioLogs().catch(() => []);
-  const built = buildRecapStats({
-    monthKey: month,
-    sessions: input.sessions,
-    sets: input.sets,
-    badges: input.badges,
-    weeklyTarget: input.weeklyTarget,
-    streakGoal: input.streakGoal,
-    cardio: logs.map((log) => ({
-      sessionId: log.sessionId,
-      machineId: log.machineId,
-      createdAt: log.createdAt,
-    })),
-  });
-  if (built.stats.sessions < MIN_SESSIONS) return null;
-
-  // Keep a good AI story. Retry the server if we only have the template cached.
-  if (cached && !cached.usedFallback) {
-    return { ...cached, stats: built.stats, personalBests: built.personalBests };
-  }
-
-  const stored = userId !== 'local' ? await storyFromTable(userId, month, built.stats) : null;
-  const remote = stored ?? (await storyFromServer(month, built.stats));
-  const usedFallback = !remote || remote.usedFallback;
-  const copy = usedFallback ? fallbackRecap(built.stats) : remote;
-  if (usedFallback) trackAi('ai_fallback_used', FEATURE);
-  else trackAi('ai_feature_used', FEATURE);
-
-  const recap: MonthlyRecap = {
-    monthKey: month,
-    stats: built.stats,
-    headline: copy.headline,
-    story: copy.story,
-    highlight: copy.highlight,
-    usedFallback,
-    personalBests: built.personalBests,
-  };
-  await writeCache(userId, recap);
-  return recap;
+  return buildMonthlyRecap(month, input.sessions, input.sets);
 }
 
-export function recapShareMessage(
-  recap: MonthlyRecap,
-  includePb: boolean
-): string {
+export function formatRecapDuration(seconds: number): string {
+  const total = Math.max(0, Math.round(seconds / 60));
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  if (hours <= 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}min`;
+}
+
+export function formatRecapVolume(kg: number): string {
+  const value = Math.max(0, Math.round(kg));
+  if (value >= 10_000) return `${Math.round(value / 1000)}k kg`;
+  return `${value.toLocaleString('en-GB')} kg`;
+}
+
+export function formatDelta(
+  current: number,
+  previous: number,
+  format: (value: number) => string = String
+): { text: string; up: boolean; flat: boolean } {
+  const diff = current - previous;
+  if (diff === 0 || previous === 0 && current === 0) {
+    return { text: '', up: false, flat: true };
+  }
+  const abs = Math.abs(diff);
+  return {
+    text: format(abs),
+    up: diff > 0,
+    flat: false,
+  };
+}
+
+export function metricValue(totals: MonthTotals, metric: ChartMetric): number {
+  switch (metric) {
+    case 'workouts':
+      return totals.workouts;
+    case 'duration':
+      return totals.durationSeconds;
+    case 'volume':
+      return totals.volumeKg;
+    case 'sets':
+      return totals.sets;
+  }
+}
+
+export function formatMetricValue(totals: MonthTotals, metric: ChartMetric): string {
+  switch (metric) {
+    case 'workouts':
+      return String(totals.workouts);
+    case 'duration':
+      return formatRecapDuration(totals.durationSeconds);
+    case 'volume':
+      return formatRecapVolume(totals.volumeKg);
+    case 'sets':
+      return String(totals.sets);
+  }
+}
+
+export function recapShareMessage(recap: MonthlyRecap): string {
+  const { totals, monthName, year, personalBests } = recap;
   const lines = [
-    `Your ${recap.stats.month} in the gym`,
-    recap.headline,
-    recap.story,
-    `${highlightLabel(recap.highlight)}: ${highlightValue(recap.stats, recap.highlight)}`,
+    `${monthName} ${year}`,
+    `${totals.workouts} workouts`,
+    formatRecapDuration(totals.durationSeconds),
+    formatRecapVolume(totals.volumeKg),
+    `${totals.sets} sets`,
   ];
-  if (includePb && recap.personalBests[0]) {
-    const pb = recap.personalBests[0];
-    lines.push(
-      pb.weightKg != null
-        ? `Personal best: ${pb.name}, ${pb.weightKg} kg`
-        : `Personal best: ${pb.name}`
-    );
+  if (personalBests[0]) {
+    lines.push(`PR: ${personalBests[0].name} · ${personalBests[0].detail}`);
   }
   lines.push('Ascenda');
-  return lines.filter(Boolean).join('\n');
+  return lines.join('\n');
+}
+
+export function reportTitle(recap: MonthlyRecap): string {
+  return fillCopy(recapCopy.report_title, { month: recap.monthName });
 }

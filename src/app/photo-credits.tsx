@@ -6,7 +6,7 @@ import { AppText } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { hydrateImages, photoCredits, type PhotoCredit } from '@/lib/images';
 
-/** Pexels asks for the photographer's name and a link back to the photo. */
+/** Unsplash asks for the photographer's name and a link back to Unsplash. */
 export default function PhotoCreditsScreen() {
   const insets = useSafeAreaInsets();
   const { colours } = useTheme();
@@ -28,7 +28,7 @@ export default function PhotoCreditsScreen() {
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
       showsVerticalScrollIndicator={false}>
       <AppText variant="body" style={{ color: colours.ink, marginBottom: 16 }}>
-        Photos from Pexels. Each photographer keeps their credit.
+        Photos from Unsplash. Each photographer keeps their credit.
       </AppText>
       {credits.length === 0 ? (
         <AppText variant="body" style={{ color: colours.inkMuted }}>
@@ -47,7 +47,7 @@ export default function PhotoCreditsScreen() {
               {credit.altText}
             </AppText>
             <AppText variant="caption" style={{ color: colours.brand, marginTop: 4 }}>
-              View on Pexels
+              View on Unsplash
             </AppText>
           </Pressable>
         ))

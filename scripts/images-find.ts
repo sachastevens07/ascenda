@@ -1,7 +1,7 @@
 /**
- * Find and screen Pexels photos for manifest slugs that are still needed.
+ * Find and screen Unsplash photos for manifest slugs that are still needed.
  *
- * Keys live in .env.local: PEXELS_API_KEY and ANTHROPIC_API_KEY. Never commit them.
+ * Keys live in .env.local: UNSPLASH_ACCESS_KEY and ANTHROPIC_API_KEY. Never commit them.
  * This script does not run inside the app. Results stay in assets-src/image-review,
  * which is gitignored.
  *
@@ -13,9 +13,10 @@ import { join } from 'node:path';
 const ROOT = join(import.meta.dirname, '..');
 const REVIEW = join(ROOT, 'assets-src', 'image-review');
 const STATE_PATH = join(REVIEW, 'state.json');
-const MODEL = 'claude-sonnet-5-5';
-const INPUT_USD_PER_TOKEN = 2 / 1_000_000;
-const OUTPUT_USD_PER_TOKEN = 10 / 1_000_000;
+const MODEL = 'claude-haiku-5-5';
+const INPUT_USD_PER_TOKEN = 0.1 / 1_000_000;
+const OUTPUT_USD_PER_TOKEN = 0.5 / 1_000_000;
+const UTM = { utm_source: 'ascenda', utm_medium: 'referral' };
 
 type ManifestEntry = {
   slug: string;
@@ -36,6 +37,8 @@ type ScreenFlags = {
   dark_or_black_and_white: boolean;
   matches_brief: boolean;
   matches_dish: boolean;
+  looks_athletic: boolean;
+  looks_young: boolean;
 };
 
 type Screen = {
@@ -46,7 +49,7 @@ type Screen = {
 };
 
 type Candidate = {
-  pexels_id: number;
+  photo_id: string;
   score: number;
   pass: boolean;
   accepted: boolean;
@@ -55,7 +58,8 @@ type Candidate = {
   photographer: string;
   photographer_url: string;
   source_url: string;
-  licence_source: 'Pexels License';
+  download_location: string;
+  licence_source: 'Unsplash License';
   model_release: 'not provided';
   alt_text: string;
   file: string | null;
@@ -76,17 +80,17 @@ type SlugResult = {
 type State = {
   updated_at: string;
   spent_usd: number;
-  used_pexels_ids: number[];
+  used_photo_ids: string[];
   slugs: Record<string, SlugResult>;
 };
 
-type PexelsPhoto = {
-  id: number;
-  url: string;
-  photographer: string;
-  photographer_url: string;
-  alt: string;
-  src: { large: string; medium: string };
+type UnsplashPhoto = {
+  id: string;
+  alt_description?: string | null;
+  description?: string | null;
+  urls: { raw?: string; regular?: string; small?: string };
+  links: { html?: string; download_location?: string };
+  user?: { name?: string; links?: { html?: string } };
 };
 
 function loadEnv(file: string): void {
@@ -96,22 +100,47 @@ function loadEnv(file: string): void {
   } catch {
     return;
   }
+  if (raw.charCodeAt(0) === 0xfeff) raw = raw.slice(1);
   for (const line of raw.split(/\r?\n/)) {
-    const match = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const match = /^(?:export\s+)?([A-Z0-9_]+)=(.*)$/.exec(trimmed);
     if (!match || process.env[match[1]]) continue;
-    process.env[match[1]] = match[2].replace(/^"|"$/g, '');
+    process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
+  }
+}
+
+function unsplashKey(): string {
+  return (
+    process.env.UNSPLASH_ACCESS_KEY ||
+    process.env.UNSPLASH_API_KEY ||
+    process.env.UNSPLASH_CLIENT_ID ||
+    process.env.UNSPLASH_KEY ||
+    ''
+  );
+}
+
+function withUtm(url: string | undefined, fallback: string): string {
+  try {
+    const parsed = new URL(url || fallback);
+    parsed.searchParams.set('utm_source', UTM.utm_source);
+    parsed.searchParams.set('utm_medium', UTM.utm_medium);
+    return parsed.toString();
+  } catch {
+    return fallback;
   }
 }
 
 function readState(): State {
   try {
-    const parsed = JSON.parse(readFileSync(STATE_PATH, 'utf8')) as State;
+    const parsed = JSON.parse(readFileSync(STATE_PATH, 'utf8')) as State & { used_pexels_ids?: unknown[] };
     parsed.slugs ??= {};
-    parsed.used_pexels_ids ??= [];
     parsed.spent_usd ??= 0;
+    const leftover = Array.isArray(parsed.used_pexels_ids) ? parsed.used_pexels_ids.map(String) : [];
+    parsed.used_photo_ids = [...new Set([...(parsed.used_photo_ids ?? []), ...leftover].map(String))];
     return parsed;
   } catch {
-    return { updated_at: '', spent_usd: 0, used_pexels_ids: [], slugs: {} };
+    return { updated_at: '', spent_usd: 0, used_photo_ids: [], slugs: {} };
   }
 }
 
@@ -127,54 +156,156 @@ function argLimit(): number {
   return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 10;
 }
 
-function pexelsOrientation(orientation: string | undefined): 'portrait' | 'landscape' | 'square' {
+function onlySlugs(): Set<string> | null {
+  const index = process.argv.indexOf('--only');
+  if (index < 0) return null;
+  const raw = process.argv[index + 1] ?? '';
+  const slugs = raw.split(',').map((item) => item.trim()).filter(Boolean);
+  return slugs.length ? new Set(slugs) : null;
+}
+
+function retryFailed(state: State): void {
+  const replace = process.argv.includes('--replace');
+  if (!process.argv.includes('--retry-failed') && !replace) return;
+  const only = onlySlugs();
+  const release = new Set<string>();
+  for (const [slug, result] of Object.entries(state.slugs)) {
+    if (!replace && result.pick) continue;
+    if (only && !only.has(slug)) continue;
+    for (const item of [result.pick, ...(result.backups ?? [])]) {
+      if (item?.photo_id) release.add(item.photo_id);
+    }
+    delete state.slugs[slug];
+  }
+  if (process.argv.includes('--rescreen')) {
+    const keep = new Set(
+      Object.values(state.slugs)
+        .map((item) => item.pick?.photo_id)
+        .filter((id): id is string => Boolean(id))
+    );
+    state.used_photo_ids = state.used_photo_ids.filter((id) => keep.has(id));
+  } else if (!replace) {
+    state.used_photo_ids = state.used_photo_ids.filter((id) => !release.has(id));
+  }
+}
+
+function unsplashOrientation(orientation: string | undefined): 'portrait' | 'landscape' | 'squarish' {
   const text = (orientation ?? '').toLowerCase();
-  if (text.includes('square') || text.includes('1:1')) return 'square';
+  if (text.includes('square') || text.includes('1:1')) return 'squarish';
   if (text.includes('portrait')) return 'portrait';
   return 'landscape';
 }
 
+function clipQuery(text: string): string {
+  const stop = new Set([
+    'a',
+    'an',
+    'the',
+    'at',
+    'in',
+    'on',
+    'of',
+    'with',
+    'towards',
+    'toward',
+    'her',
+    'his',
+    'their',
+    'for',
+    'and',
+    'or',
+    'to',
+    'from',
+    'just',
+    'off',
+    'under',
+    'behind',
+    'softly',
+    'blurred',
+    'looking',
+    'holding',
+    'plenty',
+    'space',
+    'above',
+    'head',
+    'text',
+    'camera',
+    'like',
+    'reference',
+    'headline',
+    'headroom',
+  ]);
+  return text
+    .replace(/\(.*?\)/g, ' ')
+    .split(/[^a-zA-Z0-9]+/)
+    .filter((word) => word && !stop.has(word.toLowerCase()))
+    .slice(0, 7)
+    .join(' ')
+    .toLowerCase();
+}
+
 function queriesFor(entry: ManifestEntry): string[] {
-  const terms = (entry.search_terms ?? []).map((item) => item.trim()).filter(Boolean);
-  const brief = (entry.brief ?? '').split(/[.]/)[0]?.trim() ?? '';
-  const queries = [...terms];
-  if (brief && !queries.some((item) => item.toLowerCase() === brief.toLowerCase())) queries.push(brief);
-  const unique = [...new Set(queries.map((item) => item.replace(/\s+/g, ' ').trim()))].filter(Boolean).slice(0, 3);
-  while (unique.length < 2 && brief) {
-    unique.push(brief.slice(0, 80));
-    break;
+  const queries: string[] = [];
+  for (const term of entry.search_terms ?? []) {
+    const clipped = clipQuery(term);
+    if (clipped) queries.push(clipped);
   }
-  if (entry.kind !== 'people') return unique.slice(0, 3);
-  return unique.slice(0, 3).map((query) => {
-    let text = query;
-    if (!/\b(woman|women)\b/i.test(text)) text += ' woman';
-    if (!/\bgym\b/i.test(text)) text += ' gym';
-    return text;
-  });
+  const fromBrief = clipQuery((entry.brief ?? '').split(/[.]/)[0] ?? '');
+  if (fromBrief && !queries.includes(fromBrief)) queries.push(fromBrief);
+  let unique = [...new Set(queries)].slice(0, 2);
+  if (entry.kind === 'people') {
+    unique = unique.map((query) => {
+      let text = query;
+      if (!/\b(woman|women)\b/i.test(text)) text = `woman ${text}`;
+      if (!/\bgym\b/i.test(text)) text = `${text} gym`;
+      return text.replace(/\s+/g, ' ').trim();
+    });
+  }
+  if (entry.kind === 'food' && unique.length < 2) unique.push('healthy bowl kitchen natural light');
+  return unique.slice(0, 2);
 }
 
 async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function pexelsSearch(query: string, orientation: string, key: string): Promise<PexelsPhoto[]> {
-  const url = new URL('https://api.pexels.com/v1/search');
+async function unsplashSearch(
+  query: string,
+  orientation: string,
+  key: string,
+  page = 1
+): Promise<{ photos: UnsplashPhoto[]; remaining: number | null }> {
+  const url = new URL('https://api.unsplash.com/search/photos');
   url.searchParams.set('query', query);
   url.searchParams.set('orientation', orientation);
   url.searchParams.set('per_page', '8');
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const response = await fetch(url, { headers: { Authorization: key } });
-    if (response.status === 429) {
-      const wait = Number(response.headers.get('retry-after') ?? '20');
-      console.log(`  Pexels rate limit. Waiting ${wait}s.`);
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('content_filter', 'high');
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Client-ID ${key}`,
+        'Accept-Version': 'v1',
+      },
+    });
+    const remaining = Number(response.headers.get('x-ratelimit-remaining'));
+    if (response.status === 403 || response.status === 429) {
+      const wait = Number(response.headers.get('retry-after') ?? '60');
+      console.log(`  Unsplash rate limit. Waiting ${wait}s.`);
       await sleep(Math.max(wait, 1) * 1000);
       continue;
     }
-    if (!response.ok) throw new Error(`Pexels search failed (${response.status}).`);
-    const body = (await response.json()) as { photos?: PexelsPhoto[] };
-    return body.photos ?? [];
+    if (!response.ok) {
+      const detail = (await response.text()).slice(0, 200);
+      throw new Error(`Unsplash search failed (${response.status}). ${detail}`);
+    }
+    const body = (await response.json()) as { results?: UnsplashPhoto[] };
+    return {
+      photos: body.results ?? [],
+      remaining: Number.isFinite(remaining) ? remaining : null,
+    };
   }
-  throw new Error('Pexels kept rate-limiting this search.');
+  throw new Error('Unsplash kept rate-limiting this search.');
 }
 
 function styleText(guide: unknown): string {
@@ -189,6 +320,8 @@ function emptyFlags(): ScreenFlags {
     dark_or_black_and_white: true,
     matches_brief: false,
     matches_dish: false,
+    looks_athletic: false,
+    looks_young: false,
   };
 }
 
@@ -212,37 +345,53 @@ function parseScreen(text: string): Screen | null {
 }
 
 function accepted(screen: Screen, kind: string | undefined): boolean {
-  if (!screen.pass) return false;
   const flags = screen.flags;
-  if (flags.men_in_frame || flags.visible_logo_or_text || flags.body_focused_crop || flags.dark_or_black_and_white) {
-    return false;
-  }
-  if (!flags.matches_brief) return false;
+  if (flags.men_in_frame || flags.visible_logo_or_text || flags.body_focused_crop) return false;
+  if (kind === 'people' && (!flags.looks_athletic || !flags.looks_young)) return false;
   if (kind === 'food' && !flags.matches_dish) return false;
-  return true;
+  if (screen.pass && flags.matches_brief) return true;
+  return screen.score >= 5 && flags.matches_brief;
+}
+
+function screenUrl(photo: UnsplashPhoto): string | null {
+  return photo.urls.small || photo.urls.regular || null;
+}
+
+function saveUrl(photo: UnsplashPhoto): string | null {
+  if (photo.urls.regular) return photo.urls.regular;
+  if (photo.urls.raw) return `${photo.urls.raw}&w=1400&fm=jpg&q=80`;
+  return photo.urls.small ?? null;
 }
 
 async function screenPhoto(
-  photo: PexelsPhoto,
+  photo: UnsplashPhoto,
   entry: ManifestEntry,
   guide: string,
   apiKey: string
 ): Promise<{ screen: Screen; cost: number } | null> {
-  const image = await fetch(photo.src.medium);
+  const url = screenUrl(photo);
+  if (!url) return null;
+  const image = await fetch(url);
   if (!image.ok) return null;
   const bytes = Buffer.from(await image.arrayBuffer());
   const type = image.headers.get('content-type') ?? 'image/jpeg';
-  const mediaType = type.includes('png') ? 'image/png' : type.includes('webp') ? 'image/webp' : type.includes('gif') ? 'image/gif' : 'image/jpeg';
+  const mediaType = type.includes('png')
+    ? 'image/png'
+    : type.includes('webp')
+      ? 'image/webp'
+      : type.includes('gif')
+        ? 'image/gif'
+        : 'image/jpeg';
   const prompt = [
-    'You screen stock photos for a gym app. Reply with one JSON object and no other text.',
-    'Schema: {"pass":boolean,"score":number,"reasons":string,"flags":{"men_in_frame":boolean,"visible_logo_or_text":boolean,"body_focused_crop":boolean,"dark_or_black_and_white":boolean,"matches_brief":boolean,"matches_dish":boolean}}',
-    'score is 0 to 10. pass is true only when every style rule holds.',
-    'men_in_frame: any man visible, including the background.',
-    'visible_logo_or_text: brand logos, gym names, watermarks, captions or stock-site UI.',
-    'body_focused_crop: stomach, chest or bum is the focal point.',
-    'dark_or_black_and_white: black and white, or a gritty low-key grade. A dark gym is fine when she is well lit and the photo feels warm.',
-    'matches_brief: the photo shows what the brief asks for.',
-    'matches_dish: for food, this is that exact dish. For other kinds set it true.',
+    'You screen stock photos for a gym app for women. Reply with one JSON object and no other text.',
+    'Schema: {"pass":boolean,"score":number,"reasons":string,"flags":{"men_in_frame":boolean,"visible_logo_or_text":boolean,"body_focused_crop":boolean,"dark_or_black_and_white":boolean,"matches_brief":boolean,"matches_dish":boolean,"looks_athletic":boolean,"looks_young":boolean}}',
+    'score is 0 to 10.',
+    'Hard rejects: men in frame including the background; brand logos, gym names, watermarks or stock UI; stomach, chest or bum as the focal point; she does not look athletic; she does not look young (about 18 to 30). Set dark_or_black_and_white true only for black and white or a very gritty low-key grade. A dim gym is fine if she is well lit.',
+    'looks_athletic: she looks like she trains. Real gym clothes, capable posture, not a posed fashion or casual street portrait.',
+    'looks_young: she reads as a young adult, about 18 to 30, not 40s or older.',
+    'matches_brief: true if this is the right kind of photo for the slot (a woman in a real gym for people heroes; food for food). Missing a bag, bottle, laugh, towel, phone or exact pose is OK. Only reject the brief if it is clearly the wrong kind of moment, such as a food photo for a gym hero.',
+    'matches_dish: for food, true if it is a similar healthy meal in natural light, not a different kind of food. For other kinds set it true.',
+    'pass is true when there is no hard reject, she looks athletic and young if this is a people photo, and matches_brief is true.',
     `Kind: ${entry.kind}. Shot: ${entry.shot}. Brief: ${entry.brief}`,
     `Style guide: ${guide}`,
   ].join('\n');
@@ -302,20 +451,29 @@ async function saveJpeg(slug: string, name: string, url: string): Promise<void> 
   writeFileSync(join(folder, name), Buffer.from(await response.arrayBuffer()));
 }
 
-function toCandidate(photo: PexelsPhoto, screen: Screen, kind: string | undefined, brief: string, file: string | null): Candidate {
+function toCandidate(
+  photo: UnsplashPhoto,
+  screen: Screen,
+  kind: string | undefined,
+  brief: string,
+  file: string | null
+): Candidate {
+  const profile = withUtm(photo.user?.links?.html, 'https://unsplash.com');
+  const page = withUtm(photo.links.html, profile);
   return {
-    pexels_id: photo.id,
+    photo_id: photo.id,
     score: screen.score,
     pass: screen.pass,
     accepted: accepted(screen, kind),
     reasons: screen.reasons,
     flags: screen.flags,
-    photographer: photo.photographer,
-    photographer_url: photo.photographer_url,
-    source_url: photo.url,
-    licence_source: 'Pexels License',
+    photographer: photo.user?.name?.trim() || 'Unsplash photographer',
+    photographer_url: profile,
+    source_url: page,
+    download_location: photo.links.download_location ?? '',
+    licence_source: 'Unsplash License',
     model_release: 'not provided',
-    alt_text: brief.trim() || photo.alt || '',
+    alt_text: brief.trim() || photo.alt_description || photo.description || '',
     file,
   };
 }
@@ -323,11 +481,11 @@ function toCandidate(photo: PexelsPhoto, screen: Screen, kind: string | undefine
 async function main(): Promise<void> {
   loadEnv(join(ROOT, '.env.local'));
   loadEnv(join(ROOT, '.env'));
-  const pexelsKey = process.env.PEXELS_API_KEY ?? '';
+  const accessKey = unsplashKey();
   const anthropicKey = process.env.ANTHROPIC_API_KEY ?? '';
-  if (!pexelsKey || !anthropicKey) {
-    console.log('Missing PEXELS_API_KEY or ANTHROPIC_API_KEY.');
-    console.log('Add both to .env.local (this file stays off git). Nothing was searched.');
+  if (!accessKey || !anthropicKey) {
+    console.log('Missing UNSPLASH_ACCESS_KEY or ANTHROPIC_API_KEY.');
+    console.log('Add both to .env.local (this file stays off git). UNSPLASH_API_KEY is also accepted. Nothing was searched.');
     process.exitCode = 1;
     return;
   }
@@ -338,36 +496,53 @@ async function main(): Promise<void> {
   };
   const guide = styleText(manifest.style_guide ?? {});
   const state = readState();
+  retryFailed(state);
   const limit = argLimit();
-  const queue = (manifest.images ?? []).filter(
-    (entry) => entry.status === 'needed' && !entry.same_as && !state.slugs[entry.slug]
-  );
+  const only = onlySlugs();
+  const queue = (manifest.images ?? []).filter((entry) => {
+    if (only) return only.has(entry.slug) && !state.slugs[entry.slug];
+    return entry.status === 'needed' && !entry.same_as && !state.slugs[entry.slug];
+  });
   const batch = queue.slice(0, limit);
-  console.log(`images:find  ${batch.length} slugs (${queue.length} still needed, skipping ones that already have a pick)`);
-  console.log(`Model: ${MODEL} at low effort. About $0.05 to $0.15 per slug, so this batch is roughly $${(batch.length * 0.1).toFixed(2)}.`);
-  console.log('Pexels search is included with the API key. Photos are saved only under assets-src/image-review.');
+  console.log(`images:find  ${batch.length} slugs (${queue.length} still needed, skipping ones that already have a result)`);
+  console.log(`Model: ${MODEL} at low effort. About $0.003 to $0.01 per slug, so this batch is roughly $${(batch.length * 0.005).toFixed(2)}.`);
+  console.log('Unsplash search uses your access key. Photos are saved only under assets-src/image-review.');
   console.log();
 
   let index = 0;
+  let stopUnsplash = false;
   for (const entry of batch) {
+    if (stopUnsplash) {
+      console.log(`Skipping ${entry.slug}: Unsplash hourly limit is nearly used.`);
+      continue;
+    }
     index += 1;
     const queries = queriesFor(entry);
-    const orientation = pexelsOrientation(entry.orientation);
+    const orientation = unsplashOrientation(entry.orientation);
     console.log(`[${index}/${batch.length}] ${entry.slug}`);
     console.log(`  ${queries.join(' | ') || '(no query)'}  ·  ${orientation}`);
-    const seen = new Set<number>(state.used_pexels_ids);
-    const photos: PexelsPhoto[] = [];
+    const seen = new Set(
+      Object.values(state.slugs)
+        .map((item) => item.pick?.photo_id)
+        .filter((id): id is string => Boolean(id))
+    );
+    const photos: UnsplashPhoto[] = [];
     for (const query of queries) {
       if (photos.length >= 8) break;
-      const found = await pexelsSearch(query, orientation, pexelsKey);
-      await sleep(350);
-      for (const photo of found) {
-        if (seen.has(photo.id) || photos.some((item) => item.id === photo.id)) continue;
+      const found = await unsplashSearch(query, orientation, accessKey, 1);
+      if (found.remaining !== null) {
+        console.log(`  Unsplash remaining this hour: ${found.remaining}`);
+        if (found.remaining < 4) stopUnsplash = true;
+      }
+      await sleep(800);
+      for (const photo of found.photos) {
+        if (!photo.id || seen.has(photo.id) || photos.some((item) => item.id === photo.id)) continue;
         photos.push(photo);
         if (photos.length >= 8) break;
       }
+      if (stopUnsplash) break;
     }
-    const ranked: { photo: PexelsPhoto; screen: Screen }[] = [];
+    const ranked: { photo: UnsplashPhoto; screen: Screen }[] = [];
     for (const photo of photos) {
       const result = await screenPhoto(photo, entry, guide, anthropicKey);
       await sleep(200);
@@ -388,17 +563,18 @@ async function main(): Promise<void> {
     const rest = ranked.filter((item) => item !== chosen).slice(0, 2);
     const saved: Candidate[] = [];
     if (chosen) {
-      await saveJpeg(entry.slug, 'pick.jpg', chosen.photo.src.large);
-      saved.push(toCandidate(chosen.photo, chosen.screen, entry.kind, entry.brief ?? '', 'pick.jpg'));
-      state.used_pexels_ids.push(chosen.photo.id);
+      const url = saveUrl(chosen.photo);
+      if (url) await saveJpeg(entry.slug, 'pick.jpg', url);
+      saved.push(toCandidate(chosen.photo, chosen.screen, entry.kind, entry.brief ?? '', url ? 'pick.jpg' : null));
+      state.used_photo_ids.push(chosen.photo.id);
     }
     let backup = 0;
     for (const item of rest) {
       backup += 1;
       const name = `backup-${backup}.jpg`;
-      await saveJpeg(entry.slug, name, item.photo.src.large);
-      saved.push(toCandidate(item.photo, item.screen, entry.kind, entry.brief ?? '', name));
-      state.used_pexels_ids.push(item.photo.id);
+      const url = saveUrl(item.photo);
+      if (url) await saveJpeg(entry.slug, name, url);
+      saved.push(toCandidate(item.photo, item.screen, entry.kind, entry.brief ?? '', url ? name : null));
     }
     const [pick, ...backups] = chosen ? saved : [null, ...saved];
     state.slugs[entry.slug] = {
@@ -413,7 +589,7 @@ async function main(): Promise<void> {
       passed: passing.length,
     };
     writeState(state);
-    if (pick) console.log(`  pick ${pick.pexels_id} by ${pick.photographer} (${pick.score.toFixed(1)})`);
+    if (pick) console.log(`  pick ${pick.photo_id} by ${pick.photographer} (${pick.score.toFixed(1)})`);
     else console.log('  no photo passed the style rules');
     const left = batch.length - index;
     console.log(`  spent $${state.spent_usd.toFixed(2)}. About $${(left * 0.1).toFixed(2)} left in this batch if the rest look like this.`);

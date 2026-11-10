@@ -21,10 +21,8 @@ import {
   getWeeklyStreak,
   normalizeWeeklyTarget,
 } from '@/lib/activityStats';
-import { EMPTY_ACHIEVEMENT_EXTRAS, fetchAchievementExtras, getAchievementBadges } from '@/lib/achievements';
 import { fillCopy, lockedHomeCopy, referCopy } from '@/lib/copy';
 import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
-import { equipmentFromMachinesUsed } from '@/lib/onboardingAnswers';
 import { FRIEND_TRIAL_DAYS, openRefer } from '@/lib/referrals';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import { coverForRoutine, imageSourceForSlug, takeCoverSource } from '@/lib/images';
@@ -142,26 +140,7 @@ export function LockedHome() {
           const annual = packages.find((item) => item.packageType === 'ANNUAL');
           setTrialDays(annual ? getFreeTrialDays(annual.product) : null);
           setLoadState('ready');
-          const extras = await fetchAchievementExtras(
-            equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used)
-          ).catch(() => ({
-            ...EMPTY_ACHIEVEMENT_EXTRAS,
-            knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
-          }));
-          const badges = getAchievementBadges({
-            sessions,
-            sets,
-            streak,
-            completedRoutines: 0,
-            extras,
-          });
-          const nextRecap = await loadMonthlyRecap({
-            sessions,
-            sets,
-            badges,
-            weeklyTarget: normalizeWeeklyTarget(answers?.days_per_week),
-            streakGoal,
-          }).catch(() => null);
+          const nextRecap = await loadMonthlyRecap({ sessions, sets }).catch(() => null);
           if (isCurrent) setRecap(nextRecap);
         } catch {
           if (!isCurrent) return;
@@ -287,7 +266,7 @@ export function LockedHome() {
 
         {recap ? (
           <RecapHomeCard
-            month={recap.stats.month}
+            month={recap.monthName}
             onOpen={() =>
               router.push({ pathname: '/recap/[month]', params: { month: recap.monthKey } } as Href)
             }

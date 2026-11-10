@@ -39,7 +39,7 @@ const cache = new Map<string, CacheEntry>();
 const inflight = new Map<string, Promise<ExerciseMedia | null>>();
 const MATCHES = (bundled as { matches?: { slug?: string; workoutx_id?: string }[] }).matches ?? [];
 
-function hasMatch(exerciseId: string): boolean {
+export function hasExerciseMediaMatch(exerciseId: string): boolean {
   return MATCHES.some(
     (row) => row.slug === exerciseId && typeof row.workoutx_id === 'string' && /^ex_[A-Za-z0-9]+$/.test(row.workoutx_id)
   );
@@ -113,7 +113,7 @@ async function fetchMedia(exerciseId: string): Promise<ExerciseMedia | null> {
 
 export async function getExerciseMedia(exerciseId: string): Promise<ExerciseMedia | null> {
   const id = exerciseId.trim();
-  if (!id || !hasMatch(id)) return null;
+  if (!id || !hasExerciseMediaMatch(id)) return null;
   return fetchMedia(id);
 }
 

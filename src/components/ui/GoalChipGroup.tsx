@@ -6,7 +6,7 @@ import { useTheme } from '@/constants/theme';
 import {
   GOAL_LABELS,
   GOAL_MAIN_LABEL,
-  GOALS,
+  ONBOARDING_GOALS,
   MAX_MAIN_GOALS,
   toggleMainGoal,
   type Goal,
@@ -15,9 +15,11 @@ import {
 export function GoalChipGroup({
   selected,
   onChange,
+  choices = ONBOARDING_GOALS,
 }: {
   selected: Goal[];
   onChange: (next: Goal[]) => void;
+  choices?: Goal[];
 }) {
   const { colours, radius } = useTheme();
   const [hint, setHint] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function GoalChipGroup({
   return (
     <View>
       <View style={styles.cloud}>
-        {GOALS.map((value) => {
+        {choices.map((value) => {
           const index = selected.indexOf(value);
           const isSelected = index >= 0;
           const isMain = index === 0;

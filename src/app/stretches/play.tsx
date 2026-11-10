@@ -18,6 +18,7 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { STREAK_STRETCH_MIN_SECONDS } from '@/lib/activityStats';
+import { useSubscriptionGate } from '@/lib/paywall';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { discardSession, fetchSession, finishSession } from '@/lib/sessions';
@@ -35,6 +36,7 @@ type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 const RING_SIZE = 180;
 
 export default function StretchPlayScreen() {
+  const allowed = useSubscriptionGate();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const insets = useSafeAreaInsets();
   const { colours, spacing, radius } = useTheme();
@@ -66,6 +68,7 @@ export default function StretchPlayScreen() {
   }, []);
 
   useEffect(() => {
+    if (!allowed) return;
     if (!sessionId) {
       setLoadState('not-found');
       return;
@@ -104,7 +107,7 @@ export default function StretchPlayScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [sessionId, workout.publish]);
+  }, [allowed, sessionId, workout.publish]);
 
   useEffect(() => {
     if (!holdDone || !running) return;
@@ -191,7 +194,7 @@ export default function StretchPlayScreen() {
     }
   }
 
-  if (loadState !== 'ready' || !step) {
+  if (!allowed || loadState !== 'ready' || !step) {
     return (
       <View style={[styles.centre, { backgroundColor: colours.bg }]}>
         {loadState === 'loading' ? (

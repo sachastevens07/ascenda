@@ -470,13 +470,7 @@ export default function HomeScreen() {
           });
           setReferHidden(hideReferStored);
           setLoadState('ready');
-          void loadMonthlyRecap({
-            sessions,
-            sets,
-            badges,
-            weeklyTarget: normalizeWeeklyTarget(answers?.days_per_week),
-            streakGoal,
-          })
+          void loadMonthlyRecap({ sessions, sets })
             .then((next) => {
               if (isCurrent) setRecap(next);
             })
@@ -1067,7 +1061,7 @@ export default function HomeScreen() {
 
         {recap ? (
           <RecapHomeCard
-            month={recap.stats.month}
+            month={recap.monthName}
             onOpen={() =>
               router.push({ pathname: '/recap/[month]', params: { month: recap.monthKey } } as Href)
             }

@@ -65,6 +65,8 @@ export default function SignInScreen() {
         router.replace({ pathname: '/check-inbox', params: { email: trimmedEmail } } as Href);
         setIsSubmitting(false);
         return;
+      } else {
+        router.replace('/onboarding' as Href);
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });

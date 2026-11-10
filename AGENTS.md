@@ -581,10 +581,10 @@ Build after v2.4 (or earlier if I say so), one task at a time. AI1 and AI5 can b
 - UI: suggested question chips on open and on exercise and routine pages ("Why this exercise?", "What can I swap?", "How should this feel?"); answers short (under about 120 words) with links to the relevant guide or article; thumbs up/down feedback.
 - Conversations are stored for 30 days for her own history only, deletable from Profile → Privacy; never used for training models.
 
-**AI5. Monthly recap** (free for everyone, shareable)
-- On the 1st of each month, if she trained at least twice last month, Home shows "Your [Month] in the gym".
-- The app calculates all stats (sessions, minutes, strength vs cardio vs recovery, PBs, new machines and exercises, longest run of weeks, gold weeks). The model only writes a warm 3 to 4 sentence story around those exact numbers; it never adds numbers.
-- A swipeable recap (4 to 5 screens) and a shareable 9:16 image card with Ascenda branding and no body data, faces or weights unless she chooses to include a PB.
+**AI5. Monthly recap** (free for everyone, shareable; Hevy-style month report)
+- Visibility: Home card only in the last 3 days of a month or the first 7 days of the next, if she trained at least twice in that month. Not a permanent archive; dismiss hides it for that month. Dev preview can force the window for testing.
+- Report screen (shipped): year bar chart with Workouts / Duration / Volume / Sets chips, 2×2 summary with month-over-month deltas, exercises done that month with counts, an encouraging congrats tile (emoji + warm copy), then in-app share cards (summary + personal records) plus native Share. Numbers only on share cards: no photos, faces or body data.
+- The app calculates every number. No AI-written story swipe in the shipped UI. Optional Edge Function `monthly-recap` and `monthly_recaps` (`supabase/ai5.sql`) may remain for a future story layer; they are not required for the report.
 - Copy rules: celebratory, never comparing her to others, never mentioning missed sessions.
 
 **AI6. What can I cook?** (up to 10 a day; needs v2.4)

@@ -62,12 +62,16 @@
         "woman arriving gym smiling"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Taylor Daugherty",
+      "source_url": "https://unsplash.com/photos/a-woman-in-a-sports-bra-top-and-leggings-h1jFtAgDJbI?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@tayloradaugherty?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman arriving at a bright gym in the morning, gym bag on shoulder, smiling towards the camera, dumbbell rack softly blurred behind. Space above her head for text.",
+      "ai_score": 6,
+      "ai_notes": "Woman alone in a bright gym by large windows, facing the camera with a warm, natural grade and no visible logos, text or men. It works as a connection shot, though she is not smiling, there is no gym bag, and the dumbbell rack is not clearly visible. Her torso is part of a full-length framing rather than a body crop, and there is space on the left for text."
     },
     {
       "slug": "hero-home-evening",
@@ -79,15 +83,21 @@
       "orientation": "portrait 4:5",
       "brief": "Woman relaxed between sets on a bench under warm evening lighting, water bottle in hand, laughing, looking just off camera.",
       "search_terms": [
-        "woman gym bench smiling evening"
+        "woman gym bench smiling evening",
+        "woman sitting bench gym laughing",
+        "woman water bottle gym smile"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "LOGAN WEAVER | @LGNWVR",
+      "source_url": "https://unsplash.com/photos/woman-in-black-tank-top-4vrvhK8qVHk?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@lgnwvr?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman relaxed between sets on a bench under warm evening lighting, water bottle in hand, laughing, looking just off camera.",
+      "ai_score": 8,
+      "ai_notes": "Single woman, smiling and laughing, relaxed and looking down/off camera, warm natural light with a soft blurred background. No men, no visible logos or text, face and expression are the focal point rather than the body. Gym equipment is only partly visible (a dark bench or machine edge), and no water bottle is shown, which is acceptable under the brief. Colour is warm and not black and white."
     },
     {
       "slug": "hero-home-rest-day",
@@ -102,12 +112,16 @@
         "woman stretching gym studio calm"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Spencer Davis",
+      "source_url": "https://unsplash.com/photos/woman-holding-black-rope-0ShTs8iPY28?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@spencerdavis?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman stretching calmly on a mat in a quiet corner of a gym studio, eyes closed or soft smile, window light.",
+      "ai_score": 6,
+      "ai_notes": "Single woman in a warm, brick-walled gym with real equipment (battle ropes) and no visible men, logos or text. Face and rope are the focal points, not the torso. Lighting on her is good, though the foreground blur and darker background make it moodier than the brief's window-light stretching scene. She is holding ropes rather than stretching on a mat, so it is a loose fit for the brief. The smartwatch is not a readable logo."
     },
     {
       "slug": "hero-home-done",
@@ -119,15 +133,21 @@
       "orientation": "portrait 4:5",
       "brief": "Woman sitting on the gym floor against a wall after training, towel round her neck, big genuine smile at the camera (like reference 6).",
       "search_terms": [
-        "woman sitting gym floor smiling after workout"
+        "woman sitting gym floor smiling after workout",
+        "woman sitting gym floor smiling",
+        "woman after workout gym smile"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Mina Rad",
+      "source_url": "https://unsplash.com/photos/woman-giving-fist-bump-in-gym-prbmux92JTU?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@miinrad?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman sitting on the gym floor against a wall after training, towel round her neck, big genuine smile at the camera (like reference 6).",
+      "ai_score": 7,
+      "ai_notes": "Warm, genuine smile at camera with a connection gesture (handshake or high-five reaching in from the right), framed on face and arm, not the body. She is well lit against a dim gym with recognisable equipment-style background. No visible logos or text, no men visible, not black and white. Pose differs from the brief (standing, not seated against a wall, no towel visible), but it is the right kind of connection moment for a people hero."
     },
     {
       "slug": "hero-welcome-back",
@@ -139,15 +159,21 @@
       "orientation": "portrait 4:5",
       "brief": "Woman walking back into a gym, half-smile, holding a water bottle, natural light from the entrance. Feels like a warm return.",
       "search_terms": [
-        "woman walking into gym"
+        "young athletic woman walking gym",
+        "young woman entering gym smiling",
+        "athletic woman gym bag walking"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Irving Trejo",
+      "source_url": "https://unsplash.com/photos/woman-is-working-out-in-a-gym-bIabWP6JSvM?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@irvingtt?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman walking back into a gym, half-smile, holding a water bottle, natural light from the entrance. Feels like a warm return.",
+      "ai_score": 5,
+      "ai_notes": "Real gym with a recognisable red plate-loaded machine, a young woman in training clothes with capable posture, no men, no visible logos or text, and warm, well-lit skin tones. Framing is on face and hands, not the body. It falls short of the brief: she is not smiling or walking back in, and there is no water bottle. The expression is calm focus, closer to an in-action shot than a warm connection shot."
     },
     {
       "slug": "hero-paywall",
@@ -159,15 +185,21 @@
       "orientation": "portrait 4:5",
       "brief": "Confident woman mid-way through a dumbbell exercise, smiling towards the camera, bright gym, plenty of headroom for the headline.",
       "search_terms": [
-        "woman dumbbells smiling gym"
+        "young athletic woman dumbbells gym",
+        "young woman lifting dumbbell smile",
+        "athletic woman dumbbell workout"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Scott Webb",
+      "source_url": "https://unsplash.com/photos/woman-doing-exercise-in-power-tower-KblIFRq1jkg?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@scottwebb?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Confident woman mid-way through a dumbbell exercise, smiling towards the camera, bright gym, plenty of headroom for the headline.",
+      "ai_score": 6,
+      "ai_notes": "A woman in a real gym, mid-exercise on a pull-up rack, with recognisable equipment, no men, no visible logos or text, and a non-body-focused crop. She looks athletic and young. Weaknesses: the brief asked for a dumbbell exercise, smiling at camera, and a bright gym; here she is looking away, not smiling, and the room is dim, though she is reasonably lit. Usable as a people photo, but not an ideal match for this slot."
     },
     {
       "slug": "hero-locked-home",
@@ -179,15 +211,21 @@
       "orientation": "landscape 16:9",
       "brief": "Woman looking at her phone on a gym bench, relaxed and pleased, gym softly blurred behind (screen not visible).",
       "search_terms": [
-        "woman phone gym bench"
+        "woman sitting gym bench smiling",
+        "woman resting gym bench",
+        "woman gym bench portrait"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Anastase Maragos",
+      "source_url": "https://unsplash.com/photos/woman-in-white-long-sleeve-shirt-sitting-on-black-and-brown-bench-FenwySkU7fQ?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@visualsbyroyalz?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman looking at her phone on a gym bench, relaxed and pleased, gym softly blurred behind (screen not visible).",
+      "ai_score": 6,
+      "ai_notes": "Woman seated on a gym bench with a blurred gym behind her, no men, no visible logos or text, and a bright, warm enough grade. It is a reasonable connection shot, but she is not looking at a phone and her hand-on-head pose with eyes lowered reads closer to tired than relaxed and pleased. Usable, though not the strongest match for the brief."
     },
     {
       "slug": "hero-programmes",
@@ -202,12 +240,16 @@
         "two women dumbbells gym together"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Duncan Sanchez",
+      "source_url": "https://unsplash.com/photos/woman-in-black-tank-top-holding-dumbbell-ccXh65EDP-8?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@joseph3088?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Two women training side by side on benches with dumbbells, one laughing, both focused on their own sets (like reference 5).",
+      "ai_score": 6,
+      "ai_notes": "Two women training with dumbbells in a gym, faces and hands are the focus, no men, no visible logos or text, and the blurred foreground framing works. Weaker points: the brief asks for one woman laughing and both on benches, but here both are focused and the bench setup is unclear. The background is fairly dark and the grade reads cool rather than warm, though she is well lit."
     },
     {
       "slug": "hero-learn",
@@ -222,12 +264,16 @@
         "woman reading phone gym"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Gold's Gym Nepal",
+      "source_url": "https://unsplash.com/photos/a-woman-sitting-on-the-ground-in-a-gym-Jr-7ElUR3d0?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@goldsgymnepal?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman reading on her phone while sitting on a bench in a gym, calm, focused expression.",
+      "ai_score": 6,
+      "ai_notes": "Warm, bright gym photo of a smiling woman seated on the rubber floor with real dumbbell racks behind her, shallow depth of field and no visible text or logos. She is not on a bench or reading a phone, so it only loosely fits the brief, but it works as a relaxed connection shot. A blurred figure in the background is hard to read and could be a man, so check it before use."
     },
     {
       "slug": "hero-food",
@@ -242,12 +288,16 @@
         "healthy bowl kitchen counter natural light"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Ella Olsson",
+      "source_url": "https://unsplash.com/photos/vegetable-salad-KPDbRyFOTnE?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@ellaolsson?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Bright home kitchen counter with a colourful grain bowl, fruit and a water bottle, natural window light, no people or hands only.",
+      "ai_score": 7,
+      "ai_notes": "Overhead flat lay of a healthy plated meal with green beans, salmon, cauliflower rice and cherry tomatoes on a wooden board, in bright natural light. No people or hands, no visible logos or text. It fits the brief's colourful grain bowl and fruit, though there is no water bottle."
     },
     {
       "slug": "hero-challenges",
@@ -262,12 +312,16 @@
         "woman fist bump camera gym"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Sandra Seitamaa",
+      "source_url": "https://unsplash.com/photos/woman-in-black-sports-bra-and-black-shorts-doing-exercise-kY7vJYbnYGs?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@seitamaaphotography?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman giving a fist bump towards the camera in a gym, big smile, motion blur on the fist (exactly the mood of reference 1).",
+      "ai_score": 6,
+      "ai_notes": "Woman in a gym, well lit with a warm, bright grade, framed on face and raised fist with no visible logos or text. Fist is toward the camera as the brief asks. Misses the big smile and the motion blur on the fist; her expression is focused rather than a connection smile. Foreground figure at left is partly cropped and unclear, so confirm no man is present before use."
     },
     {
       "slug": "hero-refer",
@@ -282,12 +336,16 @@
         "two women high five gym"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Mina Rad",
+      "source_url": "https://unsplash.com/photos/women-in-locker-room-tying-shoelaces-AD_ZixJClBo?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@miinrad?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Two women high-fiving or fist-bumping in a gym, both smiling, natural light.",
+      "ai_score": 6,
+      "ai_notes": "Two young women in real gym clothes sit on a gym floor by lockers, smiling and relaxed, with faces visible and the body not the focus. It is warm and reasonably lit, with no visible logos or text. It is a connection moment but not the requested high-five or fist bump, so the brief match is loose. A cropped figure at the far left edge has legs only and its gender cannot be confirmed, so check it before use."
     },
     {
       "slug": "onboarding-welcome",
@@ -322,12 +380,16 @@
         "woman goblet squat gym"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Rachel Moore",
+      "source_url": "https://unsplash.com/photos/a-person-in-a-gym-vCOd2HJ97AI?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@rachmoorephoto?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman in a squat rack area, focused, mid-movement with a light barbell or goblet squat, side-on.",
+      "ai_score": 7,
+      "ai_notes": "Real gym with a loaded barbell and squat rack, and she is focused mid-squat with clear athletic form. No men, no visible logos or text, and the warm light on her reads well. Framing is front-on rather than the requested side-on, but the moment matches the brief. Face and movement are the focus, not the body."
     },
     {
       "slug": "onboarding-insight-not-alone",
@@ -362,12 +424,16 @@
         "woman phone gym machine smiling"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Alan Quirvan",
+      "source_url": "https://unsplash.com/photos/a-person-holding-a-pair-of-scissors-jo6y5JxSxzE?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@quirvan?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman checking her plan on her phone next to a cable machine, smiling.",
+      "ai_score": 6,
+      "ai_notes": "A woman in a real gym in pink training wear, focused on a seated machine with her hands on the handles. No men, no visible logos or text, and the framing is on her face, hands and movement. She is well lit against a dim gym and reads as athletic and young. It misses the brief's connection moment (no phone check, not smiling, not a cable machine), but it is still a training photo of the right kind."
     },
     {
       "slug": "strong-foundations-cover",
@@ -382,12 +448,16 @@
         "woman goblet squat dumbbell"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Aparna Johri",
+      "source_url": "https://unsplash.com/photos/a-woman-squatting-on-the-floor-FfLGXDs-s_k?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@healthywithaparna?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman doing a goblet squat with one dumbbell next to a bench in a quiet corner, focused but relaxed, dumbbell rack behind.",
+      "ai_score": 6.5,
+      "ai_notes": "Bright, well-lit real gym with dumbbell racks behind her, no men, no visible logos or text, and the framing is full-body rather than body-focused. She is in gym clothes mid-squat with a capable posture. Weaker on the brief: no dumbbell is visible and her hands are clasped at the chest rather than holding a goblet weight, so it is a squat moment rather than the exact goblet setup."
     },
     {
       "slug": "two-day-start-cover",
@@ -402,12 +472,16 @@
         "woman bench dumbbells smiling"
       ],
       "same_as": null,
-      "status": "needed",
+      "status": "ready",
       "file": null,
-      "photographer": null,
-      "source_url": null,
-      "licence_source": null,
-      "model_release": null
+      "photographer": "Devin Santiago",
+      "source_url": "https://unsplash.com/photos/woman-smiles-happily-in-her-home-gym-gbGwsI0BTRM?utm_source=ascenda&utm_medium=referral",
+      "licence_source": "Unsplash License",
+      "model_release": "not provided",
+      "photographer_url": "https://unsplash.com/@ydcphotography?utm_source=ascenda&utm_medium=referral",
+      "alt_text": "Woman sitting on a bench holding a pair of light dumbbells, smiling towards the camera between sets.",
+      "ai_score": 7,
+      "ai_notes": "Woman seated in a real gym, smiling toward the camera in a relaxed between-sets connection moment. Face and expression are the focus, and the body is not the focal point. Background equipment is recognisable, with no visible logos, text or men. Lighting is warm and well exposed. Minor gaps: no light dumbbells are visible, and her age reads near the upper edge of the 18 to 30 range."
     },
     {
       "slug": "the-climb-cover",

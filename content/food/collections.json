@@ -1,0 +1,445 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Recipe collections (F2). recipe_slugs are in display order. A recipe can be in several collections.",
+    "Collections with requires_verified_claim only show recipes whose verified_claims include it; hide the collection if fewer than 5 qualify.",
+    "Food tab: meal-type tiles, then these collections as carousels in sort_order, with 'See all'."
+  ],
+  "collections": [
+    {
+      "slug": "strong-and-nourished",
+      "name": "Strong and nourished",
+      "description": "Balanced meals with protein, carbs and plenty of veg to fuel your training.",
+      "sort_order": 1,
+      "is_pro": false,
+      "cover_image_slug": "collection-strong-and-nourished",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "chicken-quinoa-prep-bowls",
+        "salmon-rice-bowl",
+        "halloumi-couscous-salad",
+        "salmon-potato-traybake",
+        "pesto-cod-quinoa",
+        "halloumi-veg-traybake",
+        "beef-burrito-bowls"
+      ]
+    },
+    {
+      "slug": "ten-breakfasts",
+      "name": "Ten breakfasts to start with",
+      "description": "Our pick of easy breakfasts to try first.",
+      "sort_order": 2,
+      "is_pro": false,
+      "cover_image_slug": "collection-ten-breakfasts",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "berry-overnight-oats",
+        "peanut-butter-banana-porridge",
+        "spinach-feta-omelette",
+        "greek-yoghurt-power-bowl",
+        "smoked-salmon-scrambled-eggs",
+        "blueberry-baked-oats",
+        "veggie-egg-muffins",
+        "tofu-scramble",
+        "avocado-eggs-on-sourdough",
+        "smoky-beans-on-toast"
+      ]
+    },
+    {
+      "slug": "high-protein-dinners",
+      "name": "High-protein dinners",
+      "description": "Dinners built around a good source of protein.",
+      "sort_order": 3,
+      "is_pro": false,
+      "cover_image_slug": "collection-high-protein-dinners",
+      "requires_verified_claim": "high_protein",
+      "recipe_slugs": [
+        "one-pot-chicken-orzo",
+        "turkey-chilli",
+        "salmon-potato-traybake",
+        "beef-broccoli-noodles",
+        "chicken-fajita-traybake",
+        "pesto-cod-quinoa",
+        "garlic-prawn-pasta",
+        "turkey-meatballs",
+        "yoghurt-chicken-skewers",
+        "coconut-fish-curry",
+        "turkey-cottage-pie",
+        "beef-burrito-bowls"
+      ]
+    },
+    {
+      "slug": "prep-ahead-lunches",
+      "name": "Prep-ahead lunches",
+      "description": "Cook once, eat well all week.",
+      "sort_order": 4,
+      "is_pro": false,
+      "cover_image_slug": "collection-prep-ahead-lunches",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "chicken-quinoa-prep-bowls",
+        "tuna-sweetcorn-pasta-salad",
+        "red-lentil-soup",
+        "roasted-tomato-bean-soup",
+        "peanut-noodle-jars",
+        "lentil-feta-salad"
+      ]
+    },
+    {
+      "slug": "dinner-in-30",
+      "name": "Dinner in 30",
+      "description": "On the table in half an hour or less.",
+      "sort_order": 5,
+      "is_pro": false,
+      "cover_image_slug": "collection-dinner-in-30",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "beef-broccoli-noodles",
+        "pesto-cod-quinoa",
+        "crispy-tofu-noodles",
+        "garlic-prawn-pasta",
+        "yoghurt-chicken-skewers",
+        "coconut-fish-curry",
+        "veg-egg-fried-rice",
+        "beef-burrito-bowls"
+      ]
+    },
+    {
+      "slug": "busy-days",
+      "name": "Busy days",
+      "description": "Ready in 20 minutes or less.",
+      "sort_order": 6,
+      "is_pro": false,
+      "cover_image_slug": "collection-busy-days",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "berry-overnight-oats",
+        "peanut-butter-banana-porridge",
+        "spinach-feta-omelette",
+        "greek-yoghurt-power-bowl",
+        "smoked-salmon-scrambled-eggs",
+        "breakfast-burritos",
+        "tofu-scramble",
+        "cottage-cheese-tomato-toast",
+        "apple-cinnamon-bircher",
+        "mango-chia-pudding",
+        "avocado-eggs-on-sourdough",
+        "smoky-beans-on-toast",
+        "smashed-chickpea-wraps",
+        "halloumi-couscous-salad",
+        "prawn-avocado-salad",
+        "turkey-hummus-pittas",
+        "peanut-noodle-jars",
+        "lentil-feta-salad",
+        "egg-salad-sandwiches",
+        "beef-broccoli-noodles",
+        "garlic-prawn-pasta",
+        "veg-egg-fried-rice"
+      ]
+    },
+    {
+      "slug": "one-pot",
+      "name": "One pot",
+      "description": "Less washing up, more time for you.",
+      "sort_order": 7,
+      "is_pro": false,
+      "cover_image_slug": "collection-one-pot",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "red-lentil-soup",
+        "one-pot-chicken-orzo",
+        "turkey-chilli",
+        "chickpea-spinach-curry",
+        "lentil-mushroom-bolognese",
+        "one-pot-bean-rice",
+        "coconut-fish-curry"
+      ]
+    },
+    {
+      "slug": "prep-ahead-breakfasts",
+      "name": "Prep-ahead breakfasts",
+      "description": "Make it the night before or at the weekend.",
+      "sort_order": 8,
+      "is_pro": false,
+      "cover_image_slug": "collection-prep-ahead-breakfasts",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "berry-overnight-oats",
+        "breakfast-burritos",
+        "blueberry-baked-oats",
+        "veggie-egg-muffins",
+        "apple-cinnamon-bircher",
+        "mango-chia-pudding"
+      ]
+    },
+    {
+      "slug": "smoothies",
+      "name": "Smoothie favourites",
+      "description": "Blend, pour, go.",
+      "sort_order": 9,
+      "is_pro": false,
+      "cover_image_slug": "collection-smoothies",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "berry-yoghurt-smoothie",
+        "peanut-butter-banana-smoothie",
+        "green-mango-smoothie",
+        "chocolate-banana-recovery-smoothie",
+        "blueberry-oat-smoothie"
+      ]
+    },
+    {
+      "slug": "snacks",
+      "name": "Snacks that keep you going",
+      "description": "Something to tide you over between meals.",
+      "sort_order": 10,
+      "is_pro": false,
+      "cover_image_slug": "collection-snacks",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "peanut-butter-energy-balls",
+        "yoghurt-berry-pot",
+        "smoky-roasted-chickpeas",
+        "hummus-veg-pots",
+        "peanut-butter-apple-slices",
+        "banana-blueberry-oat-muffins",
+        "chilli-lime-edamame",
+        "cottage-cheese-crispbreads",
+        "gym-bag-snack-box"
+      ]
+    },
+    {
+      "slug": "family-friendly",
+      "name": "Family friendly",
+      "description": "Meals everyone at the table will enjoy.",
+      "sort_order": 11,
+      "is_pro": false,
+      "cover_image_slug": "collection-family-friendly",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "peanut-butter-banana-porridge",
+        "breakfast-burritos",
+        "blueberry-baked-oats",
+        "veggie-egg-muffins",
+        "smoky-beans-on-toast",
+        "tuna-sweetcorn-pasta-salad",
+        "turkey-hummus-pittas",
+        "chilli-bean-sweet-potatoes",
+        "egg-salad-sandwiches",
+        "one-pot-chicken-orzo",
+        "turkey-chilli",
+        "chickpea-spinach-curry",
+        "lentil-mushroom-bolognese",
+        "chicken-fajita-traybake",
+        "turkey-meatballs",
+        "black-bean-sweet-potato-tacos",
+        "one-pot-bean-rice",
+        "baked-feta-bean-pasta",
+        "turkey-cottage-pie",
+        "veg-egg-fried-rice",
+        "beef-burrito-bowls",
+        "banana-blueberry-oat-muffins",
+        "peanut-butter-banana-smoothie"
+      ]
+    },
+    {
+      "slug": "high-protein",
+      "name": "High protein",
+      "description": "Recipes with a good amount of protein per serving.",
+      "sort_order": 12,
+      "is_pro": false,
+      "cover_image_slug": "collection-high-protein",
+      "requires_verified_claim": "high_protein",
+      "recipe_slugs": [
+        "spinach-feta-omelette",
+        "greek-yoghurt-power-bowl",
+        "smoked-salmon-scrambled-eggs",
+        "breakfast-burritos",
+        "veggie-egg-muffins",
+        "tofu-scramble",
+        "cottage-cheese-tomato-toast",
+        "chicken-quinoa-prep-bowls",
+        "tuna-sweetcorn-pasta-salad",
+        "chicken-caesar-wraps",
+        "salmon-rice-bowl",
+        "turkey-chilli",
+        "chicken-fajita-traybake",
+        "turkey-meatballs",
+        "yoghurt-chicken-skewers",
+        "beef-burrito-bowls",
+        "yoghurt-berry-pot",
+        "chilli-lime-edamame",
+        "cottage-cheese-crispbreads",
+        "gym-bag-snack-box"
+      ]
+    },
+    {
+      "slug": "seasonal-favourites",
+      "name": "Autumn and winter favourites",
+      "description": "Warming bowls for colder days.",
+      "sort_order": 13,
+      "is_pro": false,
+      "cover_image_slug": "collection-seasonal-favourites",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "peanut-butter-banana-porridge",
+        "blueberry-baked-oats",
+        "apple-cinnamon-bircher",
+        "smoky-beans-on-toast",
+        "red-lentil-soup",
+        "roasted-tomato-bean-soup",
+        "chilli-bean-sweet-potatoes",
+        "turkey-chilli",
+        "chickpea-spinach-curry",
+        "lentil-mushroom-bolognese",
+        "coconut-fish-curry",
+        "turkey-cottage-pie"
+      ]
+    },
+    {
+      "slug": "before-an-evening-session",
+      "name": "Before an evening session",
+      "description": "Lighter bites to have a couple of hours before you train.",
+      "sort_order": 14,
+      "is_pro": false,
+      "cover_image_slug": "collection-before-an-evening-session",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "berry-overnight-oats",
+        "greek-yoghurt-power-bowl",
+        "peanut-butter-energy-balls",
+        "yoghurt-berry-pot",
+        "peanut-butter-apple-slices",
+        "banana-blueberry-oat-muffins",
+        "berry-yoghurt-smoothie",
+        "blueberry-oat-smoothie"
+      ]
+    },
+    {
+      "slug": "after-leg-day",
+      "name": "After leg day",
+      "description": "Satisfying meals with protein and carbs to help you recover.",
+      "sort_order": 15,
+      "is_pro": false,
+      "cover_image_slug": "collection-after-leg-day",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "chicken-quinoa-prep-bowls",
+        "chicken-caesar-wraps",
+        "salmon-rice-bowl",
+        "turkey-chilli",
+        "salmon-potato-traybake",
+        "chicken-fajita-traybake",
+        "yoghurt-chicken-skewers",
+        "turkey-cottage-pie",
+        "veg-egg-fried-rice",
+        "beef-burrito-bowls",
+        "chocolate-banana-recovery-smoothie"
+      ]
+    },
+    {
+      "slug": "gym-bag-snacks",
+      "name": "Gym bag snacks",
+      "description": "Easy to pack and eat on the go.",
+      "sort_order": 16,
+      "is_pro": false,
+      "cover_image_slug": "collection-gym-bag-snacks",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "veggie-egg-muffins",
+        "peanut-butter-energy-balls",
+        "smoky-roasted-chickpeas",
+        "hummus-veg-pots",
+        "banana-blueberry-oat-muffins",
+        "gym-bag-snack-box"
+      ]
+    },
+    {
+      "slug": "lunches",
+      "name": "Lunches",
+      "description": "All our lunch recipes.",
+      "sort_order": 17,
+      "is_pro": false,
+      "cover_image_slug": "collection-lunches",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "chicken-quinoa-prep-bowls",
+        "tuna-sweetcorn-pasta-salad",
+        "red-lentil-soup",
+        "smashed-chickpea-wraps",
+        "chicken-caesar-wraps",
+        "salmon-rice-bowl",
+        "halloumi-couscous-salad",
+        "prawn-avocado-salad",
+        "turkey-hummus-pittas",
+        "roasted-tomato-bean-soup",
+        "peanut-noodle-jars",
+        "chilli-bean-sweet-potatoes",
+        "lentil-feta-salad",
+        "egg-salad-sandwiches"
+      ]
+    },
+    {
+      "slug": "dinners",
+      "name": "Dinners",
+      "description": "All our dinner recipes.",
+      "sort_order": 18,
+      "is_pro": false,
+      "cover_image_slug": "collection-dinners",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "one-pot-chicken-orzo",
+        "turkey-chilli",
+        "salmon-potato-traybake",
+        "chickpea-spinach-curry",
+        "beef-broccoli-noodles",
+        "lentil-mushroom-bolognese",
+        "chicken-fajita-traybake",
+        "pesto-cod-quinoa",
+        "crispy-tofu-noodles",
+        "garlic-prawn-pasta",
+        "turkey-meatballs",
+        "black-bean-sweet-potato-tacos",
+        "yoghurt-chicken-skewers",
+        "one-pot-bean-rice",
+        "baked-feta-bean-pasta",
+        "coconut-fish-curry",
+        "turkey-cottage-pie",
+        "veg-egg-fried-rice",
+        "halloumi-veg-traybake",
+        "beef-burrito-bowls"
+      ]
+    }
+  ],
+  "training_suggestions": {
+    "_how": "F4: one suggestion at most, shown on the Home hero after a session and on the post-session wins screen. Never framed as a requirement or a reward for training.",
+    "rules": [
+      {
+        "if": "session.type == 'strength' and day.name starts with 'Lower' or 'Glutes' or 'Full body'",
+        "collection": "after-leg-day",
+        "copy": "Fuel for later: a dinner with protein and carbs"
+      },
+      {
+        "if": "session.type == 'strength'",
+        "collection": "strong-and-nourished",
+        "copy": "Fuel for later: something balanced and filling"
+      },
+      {
+        "if": "planned_session.reminder_time >= 17:00 and now < 15:00",
+        "collection": "before-an-evening-session",
+        "copy": "Training this evening? A lighter bite a couple of hours before helps",
+        "placement": "home_hero_before_session"
+      },
+      {
+        "if": "session.type in ['cardio','recovery']",
+        "collection": "strong-and-nourished",
+        "copy": "Fuel for later: something balanced and filling"
+      }
+    ],
+    "routine_day_recipe_suggestions": "Optional per routine day override, for example a glute day pointing at 'after-leg-day'. Not needed at launch; the rules above cover it.",
+    "respect": [
+      "profiles.hide_macros hides nutrition, never suggestions",
+      "Never mention calories, earning food or making up for food"
+    ]
+  }
+}

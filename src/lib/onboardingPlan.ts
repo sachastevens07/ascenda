@@ -78,10 +78,12 @@ export function defaultRoutineSlug(draft: OnboardingDraft): string {
   return BEGINNER_DEFAULT;
 }
 
-export function firstMilestone(slug: string): { week: number; title: string } | null {
+export function firstMilestone(
+  slug: string
+): { week: number; title: string; description: string } | null {
   const overlay = overlayFor(slug);
   const first = overlay?.plan_reveal_milestones[0];
-  return first ? { week: first.week, title: first.title } : null;
+  return first ? { week: first.week, title: first.title, description: first.description } : null;
 }
 
 export function estimateStrength(overlay: ContentRoutineOverlay): StrengthEstimate | null {

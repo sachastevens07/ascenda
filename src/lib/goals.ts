@@ -149,6 +149,11 @@ export function parseGoal(value: unknown): Goal | null {
   return GOAL_ALIASES[raw] ?? null;
 }
 
+/** Goals offered in onboarding. Full `GOALS` stays for saved answers and Profile. */
+export const ONBOARDING_GOALS: Goal[] = asArray(GOALS_SCREEN.options)
+  .map((item) => parseGoal(asRecord(item).value))
+  .filter((goal): goal is Goal => Boolean(goal));
+
 export function parseMainGoals(value: unknown): Goal[] {
   const raw = Array.isArray(value) ? value : [];
   const unique: Goal[] = [];

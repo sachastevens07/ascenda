@@ -34,6 +34,30 @@ type FunctionFail = {
 
 const FEATURE = 'scan_machine' as const;
 
+function stripDataUri(value: string): string {
+  const match = value.match(/^data:image\/[a-zA-Z0-9+.-]+;base64,(.+)$/i);
+  return (match?.[1] ?? value).replace(/\s/g, '');
+}
+
+async function readFailBody(
+  data: unknown,
+  response: Response | undefined
+): Promise<FunctionFail | null> {
+  if (data && typeof data === 'object' && 'reason' in data) {
+    return data as FunctionFail;
+  }
+  if (!response) return null;
+  try {
+    const parsed: unknown = await response.clone().json();
+    if (parsed && typeof parsed === 'object' && 'reason' in parsed) {
+      return parsed as FunctionFail;
+    }
+  } catch {
+    /* Gateway errors are not JSON. */
+  }
+  return null;
+}
+
 function asMatch(body: FunctionOk): ScanMatch | null {
   const confidence = body.confidence;
   if (confidence !== 'high' && confidence !== 'medium' && confidence !== 'low') return null;
@@ -55,19 +79,34 @@ export async function scanMachinePhoto(
   imageBase64: string,
   mediaType: 'image/jpeg' | 'image/png'
 ): Promise<ScanOutcome> {
-  const image = imageBase64.replace(/\s/g, '');
+  const image = stripDataUri(imageBase64);
   if (image.length < 100) return { kind: 'error' };
   try {
-    const { data, error } = await supabase.functions.invoke('scan-machine', {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const { data, error, response } = await supabase.functions.invoke('scan-machine', {
       body: { action: 'scan', image_base64: image, media_type: mediaType },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
     });
+    const failBody = await readFailBody(data, response);
+    if (__DEV__) {
+      console.log('scan-machine', {
+        chars: image.length,
+        status: response?.status ?? null,
+        error: error?.message ?? null,
+        ok: failBody?.ok ?? (data as FunctionOk | null)?.ok ?? null,
+        reason: failBody?.reason ?? null,
+      });
+    }
     if (error) {
-      const status = (error as { context?: { status?: number } }).context?.status;
-      if (status === 429) {
+      const status = response?.status;
+      const reason = failBody?.reason;
+      if (status === 429 || reason === 'limit') {
         trackAi('ai_limit_reached', FEATURE);
         return { kind: 'limit' };
       }
-      if (status === 504) {
+      if (status === 504 || reason === 'timeout') {
         trackAi('ai_fallback_used', FEATURE);
         return { kind: 'timeout' };
       }

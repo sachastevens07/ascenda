@@ -1,0 +1,5 @@
+-- Split for the SQL editor. Paste these in order, one at a time:
+--   1. supabase/content_routines_1.sql
+--   2. supabase/content_routines_2.sql
+--   3. supabase/content_routines_3.sql
+-- Do not paste this file.

@@ -1,6 +1,8 @@
+import { Camera, CameraView } from 'expo-camera';
+import { EncodingType, readAsStringAsync } from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { router, type Href } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,18 +19,54 @@ import {
   type ScanMatch,
 } from '@/lib/scanMachine';
 
-type Phase = 'idle' | 'checking' | 'choices';
+type Phase = 'idle' | 'camera' | 'checking' | 'choices';
+
+const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ['images'],
+  quality: 0.2,
+  exif: false,
+  base64: false,
+  allowsEditing: false,
+};
+
+const MAX_BASE64_CHARS = 2_000_000;
+
+async function readImageBase64(uri: string): Promise<string> {
+  const value = await readAsStringAsync(uri, { encoding: EncodingType.Base64 });
+  return value.replace(/\s/g, '');
+}
+
+function pickScanSize(sizes: string[]): string | undefined {
+  const parsed = sizes
+    .map((value) => {
+      const [width, height] = value.split('x').map(Number);
+      return { value, pixels: (width || 0) * (height || 0) };
+    })
+    .filter((row) => row.pixels > 0)
+    .sort((a, b) => a.pixels - b.pixels);
+  const largeEnough = parsed.find((row) => row.pixels >= 640 * 480);
+  return (largeEnough ?? parsed[0])?.value;
+}
 
 export default function ScanMachineScreen() {
   const insets = useSafeAreaInsets();
   const { colours, spacing, radius } = useTheme();
   const allowed = useSubscriptionGate();
+  const cameraRef = useRef<CameraView>(null);
+  const capturing = useRef(false);
   const [phase, setPhase] = useState<Phase>('idle');
+  const [cameraReady, setCameraReady] = useState(false);
+  const [pictureSize, setPictureSize] = useState<string | undefined>();
   const [choices, setChoices] = useState<string[]>([]);
   const [guess, setGuess] = useState<string | null>(null);
   const [peopleTip, setPeopleTip] = useState(false);
 
   function goBack() {
+    if (phase === 'camera') {
+      setPhase('idle');
+      setCameraReady(false);
+      return;
+    }
     if (router.canGoBack()) router.back();
     else router.replace('/machines' as Href);
   }
@@ -45,45 +83,15 @@ export default function ScanMachineScreen() {
     } as Href);
   }
 
-  async function pick(source: 'camera' | 'library') {
-    if (!ensureSubscribed()) return;
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      showDialog(
-        source === 'camera' ? 'Camera is off' : 'Photos are off',
-        'Turn the permission on in your phone settings if you want to scan a machine.'
-      );
+  async function runScan(base64: string, mediaType: 'image/jpeg' | 'image/png') {
+    if (base64.length < 100 || base64.length > MAX_BASE64_CHARS) {
+      showDialog(aiCopy.scan_title, aiCopy.error);
+      setPhase('idle');
       return;
     }
-    const result =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync({
-            mediaTypes: ['images'],
-            quality: 0.45,
-            exif: false,
-            base64: true,
-          })
-        : await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            quality: 0.45,
-            exif: false,
-            base64: true,
-          });
-    const asset = result.canceled ? null : result.assets[0];
-    if (!asset) return;
     setPhase('checking');
     setPeopleTip(false);
     try {
-      const base64 = asset.base64 ?? '';
-      if (!base64) {
-        showDialog(aiCopy.scan_title, aiCopy.error);
-        setPhase('idle');
-        return;
-      }
-      const mediaType = (asset.mimeType ?? '').includes('png') ? 'image/png' : 'image/jpeg';
       const outcome = await scanMachinePhoto(base64, mediaType);
       if (outcome.kind === 'limit') {
         showDialog(aiCopy.scan_title, aiCopy.limit, [{ text: 'OK', onPress: browse }]);
@@ -103,6 +111,95 @@ export default function ScanMachineScreen() {
         return;
       }
       applyMatch(outcome.result);
+    } catch {
+      showDialog(aiCopy.scan_title, `${aiCopy.error} ${aiCopy.fallback}`, [
+        { text: machineCopy.browse, onPress: browse },
+      ]);
+      setPhase('idle');
+    }
+  }
+
+  async function openCamera() {
+    if (!ensureSubscribed()) return;
+    try {
+      const permission = Camera.requestCameraPermissionsAsync
+        ? await Camera.requestCameraPermissionsAsync()
+        : await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        showDialog(
+          'Camera is off',
+          'Turn the permission on in your phone settings if you want to scan a machine.'
+        );
+        return;
+      }
+      capturing.current = false;
+      setCameraReady(false);
+      setPictureSize(undefined);
+      setPhase('camera');
+    } catch {
+      showDialog(aiCopy.scan_title, aiCopy.error);
+    }
+  }
+
+  async function onCameraReady() {
+    setCameraReady(true);
+    try {
+      const sizes = await cameraRef.current?.getAvailablePictureSizesAsync();
+      const chosen = pickScanSize(sizes ?? []);
+      if (chosen) setPictureSize(chosen);
+    } catch {
+      /* Device list is optional; quality still keeps the JPEG small. */
+    }
+  }
+
+  async function capture() {
+    if (!ensureSubscribed() || capturing.current || !cameraReady) return;
+    capturing.current = true;
+    try {
+      const photo = await cameraRef.current?.takePictureAsync({
+        quality: 0.2,
+        base64: true,
+        exif: false,
+        shutterSound: false,
+      });
+      const raw = photo?.base64 ?? '';
+      const base64 = raw.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/i, '').replace(/\s/g, '');
+      if (base64) {
+        await runScan(base64, 'image/jpeg');
+        return;
+      }
+      if (photo?.uri) {
+        await runScan(await readImageBase64(photo.uri), 'image/jpeg');
+        return;
+      }
+      showDialog(aiCopy.scan_title, aiCopy.error);
+      setPhase('idle');
+    } catch {
+      showDialog(aiCopy.scan_title, `${aiCopy.error} ${aiCopy.fallback}`, [
+        { text: machineCopy.browse, onPress: browse },
+      ]);
+      setPhase('idle');
+    } finally {
+      capturing.current = false;
+    }
+  }
+
+  async function pickLibrary() {
+    if (!ensureSubscribed()) return;
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showDialog(
+        'Photos are off',
+        'Turn the permission on in your phone settings if you want to scan a machine.'
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
+    const asset = result.canceled ? null : result.assets[0];
+    if (!asset?.uri) return;
+    try {
+      const mediaType = (asset.mimeType ?? '').includes('png') ? 'image/png' : 'image/jpeg';
+      await runScan(await readImageBase64(asset.uri), mediaType);
     } catch {
       showDialog(aiCopy.scan_title, `${aiCopy.error} ${aiCopy.fallback}`, [
         { text: machineCopy.browse, onPress: browse },
@@ -137,6 +234,36 @@ export default function ScanMachineScreen() {
 
   if (!allowed) {
     return <View style={[styles.screen, { backgroundColor: colours.bg }]} />;
+  }
+
+  if (phase === 'camera') {
+    return (
+      <View style={styles.cameraScreen}>
+        <CameraView
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          facing="back"
+          mode="picture"
+          mute
+          animateShutter={false}
+          pictureSize={pictureSize}
+          onCameraReady={() => void onCameraReady()}
+        />
+        <View style={[styles.cameraTop, { paddingTop: insets.top + 8 }]}>
+          <IconButton icon="close" variant="overlay" accessibilityLabel="Close camera" onPress={goBack} />
+          <AppText variant="bodySm" style={styles.cameraTip}>
+            {aiCopy.scan_tip}
+          </AppText>
+        </View>
+        <View style={[styles.cameraBottom, { paddingBottom: insets.bottom + 24 }]}>
+          <PrimaryButton
+            label={aiCopy.take_photo}
+            onPress={() => void capture()}
+            disabled={!cameraReady}
+          />
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -205,8 +332,8 @@ export default function ScanMachineScreen() {
         </View>
       ) : (
         <View style={{ marginTop: spacing.lg, gap: spacing.sm }}>
-          <PrimaryButton label={aiCopy.camera} onPress={() => void pick('camera')} />
-          <SecondaryButton label={aiCopy.library} appearance="outline" onPress={() => void pick('library')} />
+          <PrimaryButton label={aiCopy.camera} onPress={() => void openCamera()} />
+          <SecondaryButton label={aiCopy.library} appearance="outline" onPress={() => void pickLibrary()} />
           <TextLink label={machineCopy.browse} onPress={browse} />
         </View>
       )}
@@ -234,6 +361,26 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     paddingHorizontal: 24,
+  },
+  cameraScreen: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  cameraTop: {
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  cameraTip: {
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  cameraBottom: {
+    position: 'absolute',
+    left: 24,
+    right: 24,
+    bottom: 0,
   },
   centre: {
     flex: 1,

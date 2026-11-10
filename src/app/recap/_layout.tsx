@@ -13,7 +13,7 @@ export default function RecapLayout() {
         headerShadowVisible: false,
         headerStyle: { backgroundColor: colours.bg },
       }}>
-      <Stack.Screen name="[month]" options={{ headerBackTitle: 'Home' }} />
+      <Stack.Screen name="[month]" options={{ title: 'Month report', headerBackTitle: 'Home' }} />
     </Stack>
   );
 }

@@ -29,6 +29,7 @@ import {
   upcomingPlannerDays,
 } from '@/lib/planner';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
+import { ensureSubscribed } from '@/lib/paywall';
 import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 
 type LoadState = 'loading' | 'error' | 'ready';
@@ -73,6 +74,7 @@ export default function WorkoutsScreen() {
   }
 
   async function handleStartBlank() {
+    if (!ensureSubscribed()) return;
     setBusyId('blank');
     try {
       const allowed = await confirmFirstSessionSafety();
@@ -102,6 +104,7 @@ export default function WorkoutsScreen() {
   }
 
   async function handleStart(workout: CustomWorkout) {
+    if (!ensureSubscribed()) return;
     setBusyId(workout.id);
     try {
       const allowed = await confirmFirstSessionSafety();

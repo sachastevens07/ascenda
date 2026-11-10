@@ -35,6 +35,7 @@ export {
   GOAL_MAIN_LABEL,
   GOAL_SCREEN_TITLE,
   GOALS,
+  ONBOARDING_GOALS,
   toggleMainGoal,
 } from '@/lib/goals';
 export { MAX_MAIN_GOALS, parseGoal, parseMainGoals, toLegacyGoal };

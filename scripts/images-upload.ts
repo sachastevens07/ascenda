@@ -21,12 +21,14 @@ const BUCKET = 'routine-covers';
 const MAX_BYTES = 2_000_000;
 
 type Candidate = {
-  pexels_id: number;
+  photo_id?: string;
+  pexels_id?: number;
   score: number;
   reasons: string;
   photographer: string;
   photographer_url: string;
   source_url: string;
+  download_location?: string;
   licence_source: string;
   model_release: string;
   alt_text: string;
@@ -84,6 +86,28 @@ function pixelSize(orientation: string | undefined): { width: number; height: nu
   return { width: 1600, height: 900 };
 }
 
+async function trackUnsplashDownload(location: string | undefined): Promise<void> {
+  if (!location) return;
+  const accessKey =
+    process.env.UNSPLASH_ACCESS_KEY ||
+    process.env.UNSPLASH_API_KEY ||
+    process.env.UNSPLASH_CLIENT_ID ||
+    process.env.UNSPLASH_KEY ||
+    '';
+  if (!accessKey) {
+    console.log('  Unsplash download was not tracked (missing UNSPLASH_ACCESS_KEY).');
+    return;
+  }
+  try {
+    const response = await fetch(location, {
+      headers: { Authorization: `Client-ID ${accessKey}`, 'Accept-Version': 'v1' },
+    });
+    if (!response.ok) console.log(`  Unsplash download track failed (${response.status}).`);
+  } catch {
+    console.log('  Unsplash download track failed.');
+  }
+}
+
 function chosenFile(result: SlugResult, choice: string): Candidate | null {
   if (choice === 'approve') return result.pick;
   if (choice === 'backup-1') return result.backups?.[0] ?? null;
@@ -135,10 +159,11 @@ async function main(): Promise<void> {
       console.log(`${slug}: skipped, that choice has no file`);
       continue;
     }
-    if (!photo.photographer || !photo.source_url || photo.licence_source !== 'Pexels License') {
+    if (!photo.photographer || !photo.source_url || photo.licence_source !== 'Unsplash License') {
       console.log(`${slug}: skipped, licence details are incomplete`);
       continue;
     }
+    await trackUnsplashDownload(photo.download_location);
     const source = join(REVIEW, slug, photo.file);
     if (!existsSync(source)) {
       console.log(`${slug}: skipped, ${photo.file} is missing`);
@@ -179,7 +204,7 @@ async function main(): Promise<void> {
       photographer: photo.photographer,
       photographer_url: photo.photographer_url,
       source_url: photo.source_url,
-      licence_source: 'Pexels License',
+      licence_source: 'Unsplash License',
       model_release: 'not provided',
       ai_score: photo.score,
       ai_notes: photo.reasons,
@@ -193,7 +218,7 @@ async function main(): Promise<void> {
     entry.photographer = photo.photographer;
     entry.photographer_url = photo.photographer_url;
     entry.source_url = photo.source_url;
-    entry.licence_source = 'Pexels License';
+    entry.licence_source = 'Unsplash License';
     entry.model_release = 'not provided';
     entry.alt_text = photo.alt_text;
     entry.ai_score = photo.score;

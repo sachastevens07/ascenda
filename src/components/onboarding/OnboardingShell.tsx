@@ -1,6 +1,14 @@
-import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { SlideInLeft, SlideInRight, SlideOutLeft, SlideOutRight } from 'react-native-reanimated';
+import { useEffect, useRef, type ReactNode } from 'react';
+import {
+  Animated,
+  Dimensions,
+  Easing,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconButton, PrimaryButton, ProgressBar, TextButton } from '@/components/ui';
@@ -48,11 +56,26 @@ export function OnboardingShell({
 }) {
   const insets = useSafeAreaInsets();
   const { colours } = useTheme();
-  const entering = direction >= 0 ? SlideInRight.duration(TRANSITION_MS) : SlideInLeft.duration(TRANSITION_MS);
-  const exiting = direction >= 0 ? SlideOutLeft.duration(TRANSITION_MS) : SlideOutRight.duration(TRANSITION_MS);
+  const slideX = useRef(new Animated.Value(0)).current;
+  const lastKey = useRef(screenKey);
+
+  useEffect(() => {
+    if (lastKey.current === screenKey) return;
+    lastKey.current = screenKey;
+    const width = Dimensions.get('window').width;
+    slideX.setValue(direction >= 0 ? width : -width);
+    Animated.timing(slideX, {
+      toValue: 0,
+      duration: TRANSITION_MS,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [direction, screenKey, slideX]);
 
   return (
-    <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.topBar}>
         {showBack ? (
           backIsCancel ? (
@@ -69,11 +92,7 @@ export function OnboardingShell({
       ) : null}
 
       <View style={styles.slideClip}>
-        <Animated.View
-          key={screenKey}
-          entering={entering}
-          exiting={exiting}
-          style={styles.slidePane}>
+        <Animated.View style={[styles.slidePane, { transform: [{ translateX: slideX }] }]}>
           <ScrollView
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
@@ -104,7 +123,7 @@ export function OnboardingShell({
           <TextButton label={secondaryLabel} onPress={onSecondary} style={styles.skip} />
         ) : null}
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

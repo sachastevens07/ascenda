@@ -11,7 +11,7 @@ import machinesFile from './machines.json' with { type: 'json' };
 const FEATURE = 'scan_machine';
 const MODEL = 'claude-sonnet-5-5';
 const DAILY_LIMIT = 20;
-const MAX_TOKENS = 200;
+const MAX_TOKENS = 4096;
 const CLAUDE_TIMEOUT_MS = 25000;
 const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
 
@@ -58,9 +58,9 @@ const toolSchema = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    machine_id: { type: ['string', 'null'] },
-    confidence: { enum: ['high', 'medium', 'low'] },
-    alternatives: { type: 'array', items: { type: 'string' }, maxItems: 3 },
+    machine_id: { type: 'string' },
+    confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+    alternatives: { type: 'array', items: { type: 'string' } },
     is_gym_equipment: { type: 'boolean' },
     people_visible: { type: 'boolean' },
   },
@@ -96,9 +96,46 @@ function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function envString(...names: string[]): string {
+  for (const name of names) {
+    const value = (Deno.env.get(name) ?? '').trim();
+    if (value) return value;
+  }
+  return '';
+}
+
+function jsonSecret(envName: string, keys: string[]): string {
+  const raw = (Deno.env.get(envName) ?? '').trim();
+  if (!raw) return '';
+  if (!raw.startsWith('{')) return raw;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    for (const key of keys) {
+      const value = parsed[key];
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    const first = Object.values(parsed).find((value) => typeof value === 'string' && value.trim());
+    return typeof first === 'string' ? first.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+function stripDataUri(value: string): string {
+  const match = value.match(/^data:image\/[a-zA-Z0-9+.-]+;base64,(.+)$/i);
+  return (match?.[1] ?? value).replace(/\s/g, '');
+}
+
 function knownId(value: unknown): string | null {
   const id = text(value);
   return machineIds.has(id) ? id : null;
+}
+
+function machineIdFromTool(value: unknown): string | null | undefined {
+  if (value == null) return null;
+  if (typeof value === 'string' && value.trim() === '') return null;
+  const id = knownId(value);
+  return id ?? undefined;
 }
 
 function validateScan(raw: unknown): ScanOk | null {
@@ -107,8 +144,8 @@ function validateScan(raw: unknown): ScanOk | null {
   if (typeof row.people_visible !== 'boolean') return null;
   const confidence = row.confidence;
   if (confidence !== 'high' && confidence !== 'medium' && confidence !== 'low') return null;
-  const machineId = row.machine_id == null ? null : knownId(row.machine_id);
-  if (row.machine_id != null && machineId == null) return null;
+  const machineId = machineIdFromTool(row.machine_id);
+  if (machineId === undefined) return null;
   const alternatives = Array.isArray(row.alternatives)
     ? row.alternatives.map(knownId).filter((id): id is string => Boolean(id) && id !== machineId)
     : [];
@@ -159,6 +196,7 @@ async function callClaude(
       method: 'POST',
       signal: controller.signal,
       headers: {
+        Authorization: `Bearer ${apiKey}`,
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         'content-type': 'application/json',
@@ -166,16 +204,16 @@ async function callClaude(
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        temperature: 0,
+        output_config: { effort: 'low' },
         system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         tools: [
           {
             name: 'report_machine',
-            description: 'Identify the gym machine in the photo.',
+            description: 'Identify the gym machine in the photo. Always call this tool.',
             input_schema: toolSchema,
           },
         ],
-        tool_choice: { type: 'tool', name: 'report_machine' },
+        tool_choice: { type: 'auto' },
         messages: [
           {
             role: 'user',
@@ -218,12 +256,20 @@ Deno.serve(async (req) => {
     return fail('unauthorized', 401);
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-  const serviceKey = (Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '').trim();
-  const apiKey = (Deno.env.get('ANTHROPIC_API_KEY') ?? '').trim();
+  const supabaseUrl = envString('SUPABASE_URL');
+  const anonKey =
+    envString('SUPABASE_ANON_KEY') || jsonSecret('SUPABASE_PUBLISHABLE_KEYS', ['default', 'anon']);
+  const serviceKey =
+    envString('SUPABASE_SERVICE_ROLE_KEY') ||
+    jsonSecret('SUPABASE_SECRET_KEYS', ['default', 'service_role']);
+  const apiKey = envString('ANTHROPIC_API_KEY');
   if (!supabaseUrl || !anonKey || !serviceKey || !apiKey) {
-    console.log('scan-machine misconfigured');
+    console.log('scan-machine misconfigured', {
+      url: Boolean(supabaseUrl),
+      anon: Boolean(anonKey),
+      service: Boolean(serviceKey),
+      anthropic: Boolean(apiKey),
+    });
     return fail('unavailable', 503);
   }
 
@@ -238,6 +284,7 @@ Deno.serve(async (req) => {
 
   const entitled = await userHasAscendaPro(userClient);
   if (entitled === false) {
+    console.log('scan-machine not entitled');
     return fail('unauthorized', 401);
   }
 
@@ -267,7 +314,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  const image = text(parsedBody.image_base64).replace(/\s/g, '');
+  const image = stripDataUri(text(parsedBody.image_base64));
   const mediaRaw = text(parsedBody.media_type);
   const mediaType = isJpegOrPng(mediaRaw) ? mediaRaw : 'image/jpeg';
   if (image.length < 100 || image.length > 5_000_000) {
@@ -307,6 +354,13 @@ Deno.serve(async (req) => {
       break;
     }
     if (call.status < 200 || call.status >= 300) {
+      const err = asRecord(asRecord(call.body).error);
+      console.log(
+        'scan-machine claude',
+        call.status,
+        text(err.type),
+        text(err.message).slice(0, 180)
+      );
       break;
     }
     result = validateScan(parseToolInput(call.body));
