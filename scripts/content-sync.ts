@@ -464,7 +464,7 @@ async function main(): Promise<void> {
   reportMachineGuides();
   reportAi1();
   reportAi5();
-  reportFood();
+  await reportFood(client);
 
 
   await reportImages(client);
@@ -656,8 +656,8 @@ function reportAi5(): void {
   line();
 }
 
-function reportFood(): void {
-  line('food  ←  content/food/recipes.json + collections.json (bundled, F1)');
+async function reportFood(client: SupabaseClient): Promise<void> {
+  line('food  ←  content/food/recipes.json + collections.json (bundled, F2)');
   const recipesFile = asRecord(readJson('food/recipes.json'));
   const collectionsFile = asRecord(readJson('food/collections.json'));
   const recipes = asArray(recipesFile.recipes).map(asRecord);
@@ -668,7 +668,15 @@ function reportFood(): void {
   line(`  Recipes: ${recipes.length}. Meal types: ${meals.join(', ') || 'none'}.`);
   line(`  Collections: ${collections.length} (${claimCollections.length} need a verified claim and stay hidden until nutrition_calc.py).`);
   line(`  nutrition_per_serving filled: ${withNutrition} of ${recipes.length} (macros stay hidden until CoFID fills them).`);
-  line('  Bundled in the app for the Food tab. Live sync does not write recipes tables (F2).');
+  const error = await probe(client, 'recipes', 'id, slug, title');
+  if (error) {
+    line(`  Table not usable: ${error}`);
+    line('  Skipped. Paste supabase/food_f2.sql first. The app still uses bundled /content.');
+    line();
+    return;
+  }
+  line(`  Plan when a live sync is confirmed: upsert ${recipes.length} recipes and ${collections.length} collections by slug.`);
+  line('  Does not delete. Favourites are user data and are not touched.');
   line();
 }
 

@@ -57,6 +57,7 @@ import { isAnalyticsEnabled, track } from '@/lib/analytics';
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { CONTACT_EMAIL, openContactEmail } from '@/lib/legal';
 import { fetchHideQuote, saveHideQuote } from '@/lib/quotes';
+import { fetchHideMacros, saveHideMacros } from '@/lib/foodPrefs';
 import {
   REST_TIMER_DEFAULTS,
   fetchDefaultRestSeconds,
@@ -168,6 +169,7 @@ export default function ProfileScreen() {
   const [hideStreak, setHideStreak] = useState(false);
   const [hideAchievements, setHideAchievements] = useState(false);
   const [hideQuote, setHideQuote] = useState(false);
+  const [hideMacros, setHideMacros] = useState(false);
   const [photosEnabled, setPhotosEnabled] = useState(false);
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
   const [handOffPreview, setHandOffPreview] = useState(false);
@@ -206,6 +208,11 @@ export default function ProfileScreen() {
       fetchHideQuote()
         .then((hidden) => {
           if (isCurrent) setHideQuote(hidden);
+        })
+        .catch(() => {});
+      fetchHideMacros()
+        .then((hidden) => {
+          if (isCurrent) setHideMacros(hidden);
         })
         .catch(() => {});
       fetchPhotosEnabled()
@@ -751,6 +758,21 @@ export default function ProfileScreen() {
       ) : null}
 
       <SettingsGroup title="Privacy">
+        <SettingsRow
+          title={privacySettingsCopy.hide_macros}
+          subtitle={hideMacros ? 'Hidden on recipe pages' : 'Shown on recipe pages when numbers are ready'}
+          onPress={() => {
+            const next = !hideMacros;
+            setHideMacros(next);
+            saveHideMacros(next).catch((error) => {
+              setHideMacros(!next);
+              showDialog(
+                'Couldn’t save that',
+                error instanceof Error ? error.message : 'Check your connection and try again.'
+              );
+            });
+          }}
+        />
         <SettingsRow
           title={privacySettingsCopy.photos}
           subtitle={

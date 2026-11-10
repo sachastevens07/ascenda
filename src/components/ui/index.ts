@@ -73,12 +73,19 @@ export {
   StyleTile,
 } from './Programmes';
 export {
+  IngredientRow,
   MealTypeTile,
+  MethodStep,
+  NutritionCard,
   RecipeCard,
   RecipeListRow,
+  ServingsStepper,
   dietaryLabel,
+  filterLabel,
   openRecipe,
   recipeMetaLine,
+  recipePrepLine,
+  recipeTagLabel,
 } from './Food';
 
 export {

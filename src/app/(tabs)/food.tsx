@@ -14,14 +14,16 @@ import {
 import { useTheme } from '@/constants/theme';
 import { foodCopy } from '@/lib/copy';
 import { MEAL_TYPE_TILES, mealTypeName, visibleCollections } from '@/lib/food';
+import { useFoodFavourites } from '@/lib/foodFavourites';
 
 export default function FoodScreen() {
   const tabBarHeight = useTabBarHeight();
   const { width } = useWindowDimensions();
   const { colours } = useTheme();
-  const tileWidth = Math.max(148, width * 0.42);
+  const tileWidth = width * 0.38;
   const cardWidth = width * 0.72;
   const collections = visibleCollections();
+  const { isFavourite, toggle } = useFoodFavourites();
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -47,7 +49,7 @@ export default function FoodScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carousel}
-          style={styles.bleed}>
+          style={styles.carouselBleed}>
           {MEAL_TYPE_TILES.map((tile) => (
             <MealTypeTile
               key={tile.mealType}
@@ -74,12 +76,14 @@ export default function FoodScreen() {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.carousel}
-              style={styles.bleed}>
+              style={styles.carouselBleed}>
               {collection.recipes.map((recipe) => (
                 <RecipeCard
                   key={recipe.slug}
                   recipe={recipe}
                   mealTypeName={mealTypeName(recipe.mealType)}
+                  saved={isFavourite(recipe.slug)}
+                  onToggleFavourite={() => void toggle(recipe.slug)}
                   onPress={() => openRecipe(recipe.slug)}
                   style={{ width: cardWidth }}
                 />
@@ -106,11 +110,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  carouselBleed: {
+    marginHorizontal: -24,
+  },
   carousel: {
     gap: 12,
-    paddingRight: 8,
-  },
-  bleed: {
-    marginHorizontal: -4,
+    paddingHorizontal: 24,
   },
 });

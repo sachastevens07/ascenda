@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { EmptyState, RecipeListRow, openRecipe } from '@/components/ui';
+import { RecipeBrowse } from '@/components/RecipeBrowse';
 import { useTheme } from '@/constants/theme';
 import { foodCopy } from '@/lib/copy';
 import { isMealType, mealTypeName, recipesForMealType } from '@/lib/food';
@@ -16,20 +16,7 @@ export default function FoodMealScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <Stack.Screen options={{ title }} />
-      {recipes.length === 0 ? (
-        <EmptyState icon="restaurant-outline" title={foodCopy.empty_meal} />
-      ) : (
-        <ScrollView contentContainerStyle={styles.list}>
-          {recipes.map((recipe) => (
-            <RecipeListRow
-              key={recipe.slug}
-              recipe={recipe}
-              mealTypeName={title}
-              onPress={() => openRecipe(recipe.slug)}
-            />
-          ))}
-        </ScrollView>
-      )}
+      <RecipeBrowse recipes={recipes} emptyTitle={foodCopy.empty_meal} />
     </View>
   );
 }
@@ -37,8 +24,5 @@ export default function FoodMealScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  list: {
-    paddingBottom: 32,
   },
 });

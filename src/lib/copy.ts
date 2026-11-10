@@ -18,6 +18,7 @@ export const privacySettingsCopy = {
   hide_streak: profile.privacy.hide_streak,
   hide_achievements: profile.privacy.hide_achievements,
   hide_quote: profile.privacy.hide_quote,
+  hide_macros: profile.privacy.hide_macros,
 } as const;
 
 /** Surrounding safety strings. The full disclaimer body stays in src/lib/disclaimer.ts. */
@@ -162,7 +163,7 @@ export const programmesCopy = {
 
 const food = microcopy.strings.food;
 
-/** F1 Food tab. Bundled from content/microcopy. Recipe bodies stay in /content. */
+/** Food tab and recipe pages (F1 to F3). Bundled from content/microcopy. Recipe bodies stay in /content. */
 export const foodCopy = food;
 
 export const subscriptionBanners = {
