@@ -487,8 +487,24 @@ export async function fetchSessionSets(sessionId: string): Promise<LoggedSet[]> 
   return (data ?? []).map(toLoggedSet);
 }
 
-/** Saves one set, replacing anything already logged for that set in this session. */
+export function describeSetSaveError(error: unknown): string {
+  const message =
+    error && typeof error === 'object' && 'message' in error ? String((error as { message: unknown }).message) : '';
+  if (/set_number/i.test(message)) {
+    return 'Warm-up ticks stay on this phone. Working sets still save to your account.';
+  }
+  if (/foreign key|exercises/i.test(message)) {
+    return 'That exercise isn’t in your library. Swap it and try again.';
+  }
+  if (/invalid input syntax|uuid/i.test(message)) {
+    return 'This session did not start properly. Close it and start again.';
+  }
+  return 'Check your connection and try again.';
+}
+
+/** Saves one working set, replacing anything already logged for that set in this session. */
 export async function saveSet(set: LoggedSet): Promise<void> {
+  if (set.set_number < 1) return;
   const { error } = await supabase.from('sets').upsert(
     { ...set, completed_at: set.completed ? new Date().toISOString() : null },
     { onConflict: 'session_id,exercise_id,set_number' }

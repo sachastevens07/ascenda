@@ -39,3 +39,9 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/busy-gym-fix/index.ts"
 static_files = [ "./functions/busy-gym-fix/prompt.md" ]
+
+[functions.build-session]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/build-session/index.ts"
+static_files = [ "./functions/build-session/prompt.md" ]

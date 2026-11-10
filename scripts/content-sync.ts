@@ -464,6 +464,7 @@ async function main(): Promise<void> {
   reportMachineGuides();
   reportAi1();
   reportAi2();
+  reportAi3();
   reportAi5();
   reportAi6();
   await reportFood(client);
@@ -655,6 +656,25 @@ function reportAi2(): void {
   line('  Edge Function: busy-gym-fix. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai2.sql (reuses ai_usage, ai_quota from AI1).');
   line('  Server validates ids, reps, sets and estimated time, then falls back to first eligible swap.');
   line('  Use this applies to today only. Live sync does not write AI tables. The function writes usage with the service role.');
+  line();
+}
+
+function reportAi3(): void {
+  line('AI3 build session  ←  content/ai/ai-config.json + prompts/ai3-build-session.md');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai3-build-session'] ?? {};
+  const row = asRecord(config);
+  let promptPresent = false;
+  try {
+    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai3-build-session.md'), 'utf8').length > 0;
+  } catch {
+    promptPresent = false;
+  }
+  line(`  Feature: ${text(row.feature) || 'AI3 Build me a session'}`);
+  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'}. Daily limit: ${num(row.daily_limit) ?? 5}.`);
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Blocks use the W1 warmup/strength/cardio/cooldown/stretch shape.`);
+  line('  Edge Function: build-session. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai3.sql (reuses ai_usage, ai_quota from AI1).');
+  line('  Server calculates time from 40s/set plus rest_by_role, then checks minutes +/- 5. Fallback is the closest gym single session.');
+  line('  Live sync does not write AI tables. The function writes usage with the service role.');
   line();
 }
 

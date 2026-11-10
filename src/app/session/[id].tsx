@@ -3,6 +3,7 @@ import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -26,6 +27,7 @@ import {
   AppText,
   DestructiveTextButton,
   EmptyState,
+  ExerciseNameHit,
   ExerciseThumb,
   IconButton,
   MenuHeader,
@@ -33,6 +35,7 @@ import {
   NoteChip,
   OverflowMenu,
   PrimaryButton,
+  SecondaryButton,
   RestChip,
   RestTimerBar,
   SetRow,
@@ -53,10 +56,8 @@ import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuideForExercise } from '@/lib/machineGuides';
 import {
   DEFAULT_SLOT,
-  MAX_REPS,
   MAX_SETS,
   MAX_WORKOUT_EXERCISES,
-  MIN_REPS,
   MIN_SETS,
   STARTER_WORKOUT_ID,
   appendCustomWorkoutExercise,
@@ -65,6 +66,7 @@ import {
   describeCustomWorkoutError,
   duplicateRoutineDay,
   replaceCustomWorkoutExercise,
+  saveCustomWorkout,
 } from '@/lib/customWorkouts';
 import {
   EXERCISE_REST_OPTIONS,
@@ -110,6 +112,7 @@ import {
   fetchSession,
   fetchSessionSets,
   finishSession,
+  describeSetSaveError,
   saveSessionSwaps,
   saveSet,
   updateSessionRoutineDay,
@@ -122,6 +125,7 @@ import { useNow, useWorkout } from '@/lib/workout';
 import {
   RECORD_LABELS,
   allSetNumbers,
+  applyWarmupCompletions,
   buildEntries,
   clearSessionPlan,
   completedWorkingSetCount,
@@ -134,6 +138,7 @@ import {
   isWarmupSetNumber,
   loadSessionLog,
   parseReps,
+  warmupSetNumbers,
   parseWeight,
   saveSessionPlan,
   sessionPlanFromDay,
@@ -147,6 +152,7 @@ import {
 import {
   applyRampUp,
   blockForSession,
+  getWarmupTemplate,
   playStepsFromBlock,
   type BlockPlayStatus,
   type ResolvedBlock,
@@ -208,6 +214,33 @@ function lastSetPlaceholders(
   };
 }
 
+const EXERCISE_GAP = 16;
+
+function targetReorderIndex(from: number, dy: number, heights: number[]): number {
+  const count = heights.length;
+  if (count === 0) return from;
+  if (dy >= 0) {
+    let remaining = dy;
+    let index = from;
+    while (index < count - 1) {
+      const step = ((heights[index] ?? 72) + (heights[index + 1] ?? 72)) / 2 + EXERCISE_GAP;
+      if (remaining < step * 0.5) break;
+      remaining -= step;
+      index += 1;
+    }
+    return index;
+  }
+  let remaining = -dy;
+  let index = from;
+  while (index > 0) {
+    const step = ((heights[index] ?? 72) + (heights[index - 1] ?? 72)) / 2 + EXERCISE_GAP;
+    if (remaining < step * 0.5) break;
+    remaining -= step;
+    index -= 1;
+  }
+  return index;
+}
+
 function SlotMenuButton({
   name,
   onOpen,
@@ -229,7 +262,8 @@ function SlotMenuButton({
 }
 
 export default function SessionScreen() {
-  const { id, addExercise } = useLocalSearchParams<{ id: string; addExercise?: string }>();
+  const { id: idParam, addExercise } = useLocalSearchParams<{ id: string; addExercise?: string }>();
+  const id = Array.isArray(idParam) ? idParam[0] : idParam;
   const insets = useSafeAreaInsets();
   const { colours, spacing, radius, shadow } = useTheme();
   const weightUnit = useWeightUnit();
@@ -260,6 +294,8 @@ export default function SessionScreen() {
   const [coachOpen, setCoachOpen] = useState(true);
   const [warmupStatus, setWarmupStatus] = useState<BlockPlayStatus>('pending');
   const [cooldownStatus, setCooldownStatus] = useState<BlockPlayStatus>('pending');
+  const [warmupTemplateId, setWarmupTemplateId] = useState<string | null>(null);
+  const [cooldownTemplateId, setCooldownTemplateId] = useState<string | null>(null);
   const [rampUpApplied, setRampUpApplied] = useState(false);
   const [playingBlock, setPlayingBlock] = useState<ResolvedBlock | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -267,10 +303,12 @@ export default function SessionScreen() {
   const [noteItem, setNoteItem] = useState<ProgrammeExercise | null>(null);
   const [noteDraft, setNoteDraft] = useState('');
   const [restItem, setRestItem] = useState<ProgrammeExercise | null>(null);
-  const [repItem, setRepItem] = useState<ProgrammeExercise | null>(null);
-  const [repMinText, setRepMinText] = useState('');
-  const [repMaxText, setRepMaxText] = useState('');
-  const [reorderMode, setReorderMode] = useState(false);
+  const [dragFrom, setDragFrom] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState(0);
+  const dragDy = useRef(new Animated.Value(0)).current;
+  const dragFromRef = useRef<number | null>(null);
+  const dragOverRef = useRef(0);
+  const heightsRef = useRef<number[]>([]);
   const [pbGlowKey, setPbGlowKey] = useState<string | null>(null);
   const [playingExercise, setPlayingExercise] = useState<{ id: string; name: string } | null>(null);
   const [busyGymOpen, setBusyGymOpen] = useState(false);
@@ -292,12 +330,20 @@ export default function SessionScreen() {
     [routine, weekNumber]
   );
   const warmupBlock = useMemo(
-    () => (day ? blockForSession('warmup', day, routine?.session_minutes) : null),
-    [day, routine?.session_minutes]
+    () =>
+      day
+        ? (warmupTemplateId ? getWarmupTemplate(warmupTemplateId) : null) ??
+          blockForSession('warmup', day, routine?.session_minutes)
+        : null,
+    [day, routine?.session_minutes, warmupTemplateId]
   );
   const cooldownBlock = useMemo(
-    () => (day ? blockForSession('cooldown', day, routine?.session_minutes) : null),
-    [day, routine?.session_minutes]
+    () =>
+      day
+        ? (cooldownTemplateId ? getWarmupTemplate(cooldownTemplateId) : null) ??
+          blockForSession('cooldown', day, routine?.session_minutes)
+        : null,
+    [day, routine?.session_minutes, cooldownTemplateId]
   );
 
   useEffect(() => {
@@ -332,9 +378,12 @@ export default function SessionScreen() {
         ]);
         if (!isCurrent) return;
         setSession(log.session);
-        const built = buildEntries(log.day, log.logged, log.previous, true, {
-          weightScale: log.easeBack?.weightScale,
-        });
+        const built = applyWarmupCompletions(
+          buildEntries(log.day, log.logged, log.previous, true, {
+            weightScale: log.easeBack?.weightScale,
+          }),
+          log.plan
+        );
         const ramped = applyRampUp(log.day, built, log.rampUpApplied);
         setDay(ramped.day);
         setCoachOpen(true);
@@ -347,6 +396,8 @@ export default function SessionScreen() {
         setStartedAt(log.timerStartedAt);
         setWarmupStatus(log.warmupStatus);
         setCooldownStatus(log.cooldownStatus);
+        setWarmupTemplateId(log.plan?.warmupTemplateId ?? null);
+        setCooldownTemplateId(log.plan?.cooldownTemplateId ?? null);
         setRampUpApplied(true);
         setLoadState('ready');
         if (!log.rampUpApplied) {
@@ -356,6 +407,8 @@ export default function SessionScreen() {
               warmupStatus: log.warmupStatus,
               cooldownStatus: log.cooldownStatus,
               rampUpApplied: true,
+              warmupTemplateId: log.plan?.warmupTemplateId ?? null,
+              cooldownTemplateId: log.plan?.cooldownTemplateId ?? null,
             })
           );
         }
@@ -392,23 +445,38 @@ export default function SessionScreen() {
   async function persistPlan(
     nextDay: ProgrammeDay,
     timerAt: number | null = startedAt,
-    extras?: { warmupStatus?: BlockPlayStatus; cooldownStatus?: BlockPlayStatus; rampUpApplied?: boolean }
+    extras?: {
+      warmupStatus?: BlockPlayStatus;
+      cooldownStatus?: BlockPlayStatus;
+      rampUpApplied?: boolean;
+      warmupTemplateId?: string | null;
+      cooldownTemplateId?: string | null;
+    },
+    mergedEntries: Record<string, SetEntry> = entries,
+    patch?: { position: number; setNumber: number; completed: boolean }
   ) {
     await saveSessionPlan(
       id,
-      sessionPlanFromDay(nextDay, easeBack ?? undefined, timerAt, {
-        warmupStatus: extras?.warmupStatus ?? warmupStatus,
-        cooldownStatus: extras?.cooldownStatus ?? cooldownStatus,
-        rampUpApplied: extras?.rampUpApplied ?? rampUpApplied,
-      })
+      sessionPlanFromDay(
+        nextDay,
+        easeBack ?? undefined,
+        timerAt,
+        {
+          warmupStatus: extras?.warmupStatus ?? warmupStatus,
+          cooldownStatus: extras?.cooldownStatus ?? cooldownStatus,
+          rampUpApplied: extras?.rampUpApplied ?? rampUpApplied,
+          warmupTemplateId: extras?.warmupTemplateId ?? warmupTemplateId,
+          cooldownTemplateId: extras?.cooldownTemplateId ?? cooldownTemplateId,
+        },
+        mergedEntries,
+        patch
+      )
     );
   }
 
   function startTimer() {
     if (startedAt !== null) return;
-    const at = Date.now();
-    setStartedAt(at);
-    if (day) void persistPlan(day, at);
+    setStartedAt(Date.now());
   }
 
   function updateEntry(key: string, change: Partial<SetEntry>) {
@@ -417,6 +485,16 @@ export default function SessionScreen() {
 
   async function persistSet(item: ProgrammeExercise, setNumber: number, next: SetEntry) {
     const weighted = usesWeight(item.exercise.equipment);
+    const merged = { ...entries, [setKey(item.exercise.id, setNumber)]: next };
+    const timerAt = startedAt ?? Date.now();
+    if (day) {
+      await persistPlan(day, timerAt, undefined, merged, {
+        position: item.position,
+        setNumber,
+        completed: next.completed,
+      });
+    }
+    if (isWarmupSetNumber(setNumber)) return;
     await saveSet({
       session_id: id,
       exercise_id: item.exercise.id,
@@ -430,9 +508,10 @@ export default function SessionScreen() {
   function saveEdit(item: ProgrammeExercise, setNumber: number) {
     const next = entries[setKey(item.exercise.id, setNumber)];
     if (!next) return;
-    persistSet(item, setNumber, next).catch(() =>
-      showDialog('Couldn’t save that set', 'Check your connection and try again.')
-    );
+    persistSet(item, setNumber, next).catch((error) => {
+      if (__DEV__) console.warn('save set failed', error);
+      showDialog('Couldn’t save that set', describeSetSaveError(error));
+    });
   }
 
   function toggleSet(item: ProgrammeExercise, setNumber: number) {
@@ -461,9 +540,10 @@ export default function SessionScreen() {
         Vibration.vibrate(40);
       }
     }
-    persistSet(item, setNumber, next).catch(() => {
+    persistSet(item, setNumber, next).catch((error) => {
+      if (__DEV__) console.warn('save set failed', error);
       updateEntry(key, { completed: current.completed });
-      showDialog('Couldn’t save that set', 'Check your connection and try again.');
+      showDialog('Couldn’t save that set', describeSetSaveError(error));
     });
   }
 
@@ -794,31 +874,89 @@ export default function SessionScreen() {
     updateSlot(item.position, { warmup_sets: count + 1 });
   }
 
-  function removeSet(item: ProgrammeExercise) {
-    if (item.sets <= MIN_SETS) return;
-    const lastKey = setKey(item.exercise.id, item.sets);
-    if (entries[lastKey]?.completed) {
-      showDialog('Remove that set?', 'It is already ticked. You can add it back if you change your mind.', [
-        { text: 'Remove set', style: 'destructive', onPress: () => updateSlot(item.position, { sets: item.sets - 1 }) },
-        { text: 'Keep it', style: 'cancel' },
-      ]);
-      return;
-    }
-    updateSlot(item.position, { sets: item.sets - 1 });
+  function removeLoggedSet(item: ProgrammeExercise, setNumber: number) {
+    if (!day) return;
+    const drop = () => {
+      if (isWarmupSetNumber(setNumber)) {
+        const oldNumbers = warmupSetNumbers(item.warmup_sets ?? 0);
+        const remaining = oldNumbers.filter((number) => number !== setNumber);
+        const nextDay: ProgrammeDay = {
+          ...day,
+          exercises: day.exercises.map((slot) =>
+            slot.position === item.position ? { ...slot, warmup_sets: remaining.length } : slot
+          ),
+        };
+        const nextEntries = { ...entries };
+        const kept = remaining.map((number) => entries[setKey(item.exercise.id, number)]);
+        for (const number of oldNumbers) delete nextEntries[setKey(item.exercise.id, number)];
+        kept.forEach((entry, index) => {
+          if (entry) nextEntries[setKey(item.exercise.id, -index)] = entry;
+        });
+        setDay(nextDay);
+        setEntries(nextEntries);
+        void persistPlan(nextDay, startedAt, undefined, nextEntries);
+        return;
+      }
+      if (item.sets <= MIN_SETS) return;
+      const nextDay: ProgrammeDay = {
+        ...day,
+        exercises: day.exercises.map((slot) =>
+          slot.position === item.position ? { ...slot, sets: item.sets - 1 } : slot
+        ),
+      };
+      const nextEntries = { ...entries };
+      for (let number = setNumber; number < item.sets; number += 1) {
+        const from = entries[setKey(item.exercise.id, number + 1)];
+        if (from) nextEntries[setKey(item.exercise.id, number)] = from;
+        else delete nextEntries[setKey(item.exercise.id, number)];
+      }
+      delete nextEntries[setKey(item.exercise.id, item.sets)];
+      setDay(nextDay);
+      setEntries(nextEntries);
+      void persistPlan(nextDay, startedAt, undefined, nextEntries);
+    };
+    drop();
   }
 
-  function moveExercise(position: number, direction: -1 | 1) {
+  function moveExerciseTo(fromIndex: number, toIndex: number) {
     if (!day) return;
-    const list = day.exercises.slice();
-    const index = list.findIndex((item) => item.position === position);
-    const nextIndex = index + direction;
-    if (index < 0 || nextIndex < 0 || nextIndex >= list.length) return;
-    const copy = list.slice();
-    const [moved] = copy.splice(index, 1);
-    copy.splice(nextIndex, 0, moved);
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || toIndex >= day.exercises.length) return;
+    const copy = day.exercises.slice();
+    const [moved] = copy.splice(fromIndex, 1);
+    copy.splice(toIndex, 0, moved);
     const nextDay = { ...day, exercises: copy.map((item, order) => ({ ...item, position: order + 1 })) };
     setDay(nextDay);
     void persistPlan(nextDay);
+  }
+
+  function beginExerciseDrag(index: number) {
+    if (!day || day.exercises.length < 2) return;
+    dragFromRef.current = index;
+    dragOverRef.current = index;
+    heightsRef.current = day.exercises.map(() => 68);
+    dragDy.setValue(0);
+    setDragFrom(index);
+    setDragOver(index);
+    Vibration.vibrate(12);
+  }
+
+  function moveExerciseDrag(dy: number) {
+    dragDy.setValue(dy);
+    const from = dragFromRef.current;
+    if (from === null) return;
+    const over = targetReorderIndex(from, dy, heightsRef.current);
+    if (over === dragOverRef.current) return;
+    dragOverRef.current = over;
+    setDragOver(over);
+  }
+
+  function endExerciseDrag() {
+    const from = dragFromRef.current;
+    const over = dragOverRef.current;
+    dragFromRef.current = null;
+    dragDy.setValue(0);
+    setDragFrom(null);
+    if (from !== null) moveExerciseTo(from, over);
   }
 
   async function saveRestPref(item: ProgrammeExercise, seconds: number) {
@@ -848,20 +986,6 @@ export default function SessionScreen() {
     } catch {
       showDialog('Couldn’t save that note', 'Check your connection and try again.');
     }
-  }
-
-  function saveRepTarget() {
-    if (!repItem) return;
-    const min = Number.parseInt(repMinText, 10);
-    const max = Number.parseInt(repMaxText, 10);
-    if (!Number.isFinite(min) || !Number.isFinite(max)) {
-      showDialog('Check the numbers', 'Enter a rep range, for example 8 to 12.');
-      return;
-    }
-    const repMin = Math.min(MAX_REPS, Math.max(MIN_REPS, min));
-    const repMax = Math.min(MAX_REPS, Math.max(repMin, max));
-    updateSlot(repItem.position, { rep_min: repMin, rep_max: repMax });
-    setRepItem(null);
   }
 
   async function applyDifferentDay(nextDay: RoutineDay) {
@@ -936,22 +1060,33 @@ export default function SessionScreen() {
   }
 
   async function handleSaveWorkout() {
-    if (!routine || !day || day.exercises.length === 0) return;
+    if (!day || day.exercises.length === 0) return;
     setIsSavingWorkout(true);
     try {
-      const copy = await duplicateRoutineDay(
-        routine,
-        {
-          name: day.name,
-          exercises: day.exercises.map((item) => ({
-            exercise: item.exercise,
-            sets: item.sets,
-            rep_min: item.rep_min,
-            rep_max: item.rep_max,
-          })),
-        },
-        copyWorkoutName(day.name)
-      );
+      const copy = routine
+        ? await duplicateRoutineDay(
+            routine,
+            {
+              name: day.name,
+              exercises: day.exercises.map((item) => ({
+                exercise: item.exercise,
+                sets: item.sets,
+                rep_min: item.rep_min,
+                rep_max: item.rep_max,
+              })),
+            },
+            copyWorkoutName(day.name)
+          )
+        : await saveCustomWorkout(
+            null,
+            copyWorkoutName(day.name),
+            day.exercises.map((item) => ({
+              exercise: item.exercise,
+              sets: item.sets,
+              rep_min: item.rep_min,
+              rep_max: item.rep_max,
+            }))
+          );
       showDialog('Saved to My workouts', `${copy.name} is in your list.`, [
         {
           text: 'Open it',
@@ -1161,6 +1296,12 @@ export default function SessionScreen() {
           <AppText variant="title3" style={[styles.flex, { color: colours.ink, textAlign: 'center' }]} numberOfLines={1}>
             {day.name}
           </AppText>
+          <IconButton
+            icon="camera-outline"
+            variant="muted"
+            accessibilityLabel={aiCopy.whats_this}
+            onPress={() => router.push('/machines/scan' as Href)}
+          />
           <View ref={menuRef} collapsable={false}>
             <IconButton
               icon="ellipsis-horizontal"
@@ -1227,7 +1368,8 @@ export default function SessionScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={dragFrom === null}>
         {showGuideTip ? (
           <View style={[styles.tip, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
             <Ionicons name="information-circle-outline" size={20} color={colours.brand} />
@@ -1290,12 +1432,6 @@ export default function SessionScreen() {
           />
         ) : null}
 
-        {reorderMode ? (
-          <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-            Use the arrows to move a lift. Changes apply to today only.
-          </AppText>
-        ) : null}
-
         {day.exercises.map((item, index) => {
           const weighted = usesWeight(item.exercise.equipment);
           const suggestion =
@@ -1305,71 +1441,85 @@ export default function SessionScreen() {
           const note = notes[item.exercise.id];
           const firstTime = !previous[item.exercise.id]?.length;
           const machine = machineGuideForExercise(item.exercise.id);
+          const reordering = dragFrom !== null;
+          const dragging = dragFrom === index;
+          let shift = 0;
+          if (dragFrom !== null && !dragging) {
+            if (dragFrom < dragOver && index > dragFrom && index <= dragOver) {
+              shift = -(heightsRef.current[dragFrom] ?? 72) - EXERCISE_GAP;
+            } else if (dragFrom > dragOver && index < dragFrom && index >= dragOver) {
+              shift = (heightsRef.current[dragFrom] ?? 72) + EXERCISE_GAP;
+            }
+          }
           return (
-            <View
-              key={item.position}
-              style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
-              <Pressable
-                onLongPress={() => setReorderMode(true)}
-                delayLongPress={280}
-                style={styles.cardHeader}>
+            <Animated.View
+              key={item.exercise.id}
+              onLayout={(event) => {
+                heightsRef.current[index] = event.nativeEvent.layout.height;
+              }}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colours.surface,
+                  borderRadius: radius.lg,
+                  zIndex: dragging ? 20 : 1,
+                  elevation: dragging ? 8 : 0,
+                  transform: dragging
+                    ? [{ translateY: dragDy }, { scale: 1.03 }]
+                    : [{ translateY: shift }],
+                  ...(dragging ? shadow : null),
+                },
+              ]}>
+              <View style={[styles.cardHeader, reordering && { marginBottom: 0 }]}>
                 <View style={styles.exerciseHeader}>
                   <ExerciseThumb
                     exercise={item.exercise}
                     size={40}
-                    showPlay
-                    onPlay={() => setPlayingExercise({ id: item.exercise.id, name: item.exercise.name })}
+                    showPlay={!reordering}
+                    onPlay={
+                      reordering
+                        ? undefined
+                        : () => setPlayingExercise({ id: item.exercise.id, name: item.exercise.name })
+                    }
                   />
-                  <Pressable
+                  <ExerciseNameHit
                     onPress={() => openGuide(item.exercise.id)}
-                    style={({ pressed }) => [styles.flex, pressed && styles.pressed]}
-                    accessibilityRole="button"
-                    accessibilityHint="Shows how to do this exercise">
-                    {roleLabel(item.role) ? (
+                    onDragStart={() => beginExerciseDrag(index)}
+                    onDragMove={moveExerciseDrag}
+                    onDragEnd={endExerciseDrag}
+                    onMoveUp={index > 0 ? () => moveExerciseTo(index, index - 1) : undefined}
+                    onMoveDown={
+                      index < day.exercises.length - 1 ? () => moveExerciseTo(index, index + 1) : undefined
+                    }
+                    dragEnabled={day.exercises.length > 1 && (dragFrom === null || dragging)}>
+                    {reordering || !roleLabel(item.role) ? null : (
                       <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 4 }}>
                         {roleLabel(item.role)}
                       </AppText>
-                    ) : null}
+                    )}
                     <AppText variant="title3" style={{ color: colours.brand }} numberOfLines={2}>
                       {item.exercise.name}
                     </AppText>
-                    {item.original && equipment && exerciseFits(item.original, equipment) ? (
+                    {reordering || !(item.original && equipment && exerciseFits(item.original, equipment)) ? null : (
                       <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                         Instead of {item.original.name}
                       </AppText>
-                    ) : null}
-                    {note ? (
+                    )}
+                    {reordering || !note ? null : (
                       <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }} numberOfLines={2}>
                         {note}
                       </AppText>
-                    ) : null}
-                  </Pressable>
+                    )}
+                  </ExerciseNameHit>
                 </View>
-                {reorderMode ? (
-                  <View style={styles.reorderBtns}>
-                    <IconButton
-                      icon="chevron-up"
-                      variant="muted"
-                      accessibilityLabel={`Move ${item.exercise.name} up`}
-                      onPress={() => moveExercise(item.position, -1)}
-                      disabled={index === 0}
-                    />
-                    <IconButton
-                      icon="chevron-down"
-                      variant="muted"
-                      accessibilityLabel={`Move ${item.exercise.name} down`}
-                      onPress={() => moveExercise(item.position, 1)}
-                      disabled={index === day.exercises.length - 1}
-                    />
-                  </View>
-                ) : (
+                {reordering ? null : (
                   <SlotMenuButton name={item.exercise.name} onOpen={(anchor) => openSlotMenu(item, anchor)} />
                 )}
-              </Pressable>
+              </View>
 
-              {reorderMode ? null : (
-                <>
-                  <View style={styles.chipRow}>
+              {reordering ? null : (
+              <>
+              <View style={styles.chipRow}>
                     <RestChip
                       label={fillCopy(loggerCopy.rest_chip, { time: formatRestChipTime(restSeconds) })}
                       onPress={() => setRestItem(item)}
@@ -1473,6 +1623,11 @@ export default function SessionScreen() {
                             : undefined
                         }
                         onRecord={setRecords ? () => showRecords(setRecords) : undefined}
+                        onDelete={
+                          isWarmupSetNumber(setNumber) || item.sets > MIN_SETS
+                            ? () => removeLoggedSet(item, setNumber)
+                            : undefined
+                        }
                         style={{ marginTop: spacing.sm }}
                       />
                     );
@@ -1483,9 +1638,9 @@ export default function SessionScreen() {
                     onLongPress={() => addWarmupSet(item)}
                     style={[styles.addSet, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}
                   />
-                </>
+              </>
               )}
-            </View>
+            </Animated.View>
           );
         })}
 
@@ -1501,16 +1656,20 @@ export default function SessionScreen() {
           />
         ) : null}
 
-        {reorderMode ? (
-          <PrimaryButton label="Done" onPress={() => setReorderMode(false)} />
-        ) : (
-          <PrimaryButton
-            label={isAdding ? 'Adding…' : loggerCopy.add_exercise}
-            onPress={() => setPickerOpen(true)}
-            disabled={isAdding || isFinishing || day.exercises.length >= MAX_WORKOUT_EXERCISES}
-            loading={isAdding}
-          />
-        )}
+        {dragFrom === null ? (
+          <>
+            <SecondaryButton
+              label={loggerCopy.header_menu.taken}
+              onPress={() => openBusyGym(null)}
+            />
+            <PrimaryButton
+              label={isAdding ? 'Adding…' : loggerCopy.add_exercise}
+              onPress={() => setPickerOpen(true)}
+              disabled={isAdding || isFinishing || day.exercises.length >= MAX_WORKOUT_EXERCISES}
+              loading={isAdding}
+            />
+          </>
+        ) : null}
         {doneSets > 0 ? (
           <DestructiveTextButton label="Discard" onPress={confirmDiscard} disabled={isFinishing} />
         ) : null}
@@ -1591,28 +1750,7 @@ export default function SessionScreen() {
                 onPress={() => setMenuMode('days')}
               />
             ) : null}
-            <MenuRow
-              label={loggerCopy.header_menu.reorder}
-              onPress={() => {
-                closeMenu();
-                setReorderMode(true);
-              }}
-            />
-            <MenuRow
-              label={loggerCopy.header_menu.taken}
-              onPress={() => {
-                closeMenu();
-                openBusyGym(null);
-              }}
-            />
-            <MenuRow
-              label={aiCopy.whats_this}
-              onPress={() => {
-                closeMenu();
-                router.push('/machines/scan' as Href);
-              }}
-            />
-            {routine ? (
+            {day.exercises.length > 0 && (routine || !customWorkoutId) ? (
               <MenuRow
                 label={saveLabel}
                 onPress={() => {
@@ -1641,29 +1779,6 @@ export default function SessionScreen() {
           <>
             <MenuHeader label={slotMenuItem.exercise.name} detail={loggerCopy.today_only_note} />
             <MenuRow
-              label={loggerCopy.exercise_menu.guide}
-              onPress={() => {
-                const item = slotMenuItem;
-                setSlotMenuItem(null);
-                openGuide(item.exercise.id);
-              }}
-            />
-            <MenuRow
-              label={aiCopy.whats_this}
-              onPress={() => {
-                setSlotMenuItem(null);
-                router.push('/machines/scan' as Href);
-              }}
-            />
-            <MenuRow
-              label={loggerCopy.exercise_menu.taken}
-              onPress={() => {
-                const item = slotMenuItem;
-                setSlotMenuItem(null);
-                openBusyGym(item.exercise.equipment);
-              }}
-            />
-            <MenuRow
               label={loggerCopy.exercise_menu.swap}
               onPress={() => {
                 const item = slotMenuItem;
@@ -1678,30 +1793,6 @@ export default function SessionScreen() {
                 const item = slotMenuItem;
                 setSlotMenuItem(null);
                 handleRemove(item);
-              }}
-            />
-            <MenuRow
-              label={loggerCopy.exercise_menu.add_set}
-              onPress={() => {
-                addSet(slotMenuItem);
-                setSlotMenuItem(null);
-              }}
-            />
-            <MenuRow
-              label={loggerCopy.exercise_menu.remove_set}
-              onPress={() => {
-                removeSet(slotMenuItem);
-                setSlotMenuItem(null);
-              }}
-            />
-            <MenuRow
-              label={loggerCopy.exercise_menu.rep_target}
-              onPress={() => {
-                const item = slotMenuItem;
-                setSlotMenuItem(null);
-                setRepMinText(String(item.rep_min));
-                setRepMaxText(String(item.rep_max));
-                setRepItem(item);
               }}
             />
           </>
@@ -1788,55 +1879,6 @@ export default function SessionScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-
-      <Modal visible={repItem !== null} transparent animationType="fade" onRequestClose={() => setRepItem(null)}>
-        <Pressable style={styles.sheetBackdrop} onPress={() => setRepItem(null)}>
-          <Pressable
-            style={[styles.sheet, { backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}
-            onPress={() => {}}>
-            <AppText variant="title3" style={{ color: colours.ink }}>
-              {loggerCopy.exercise_menu.rep_target}
-            </AppText>
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
-              {loggerCopy.today_only_note}
-            </AppText>
-            <View style={styles.repRow}>
-              <TextInput
-                value={repMinText}
-                onChangeText={setRepMinText}
-                keyboardType="number-pad"
-                accessibilityLabel="Minimum reps"
-                style={[
-                  styles.repField,
-                  {
-                    color: colours.ink,
-                    borderColor: colours.border,
-                    backgroundColor: colours.surfaceMuted,
-                    borderRadius: radius.md,
-                  },
-                ]}
-              />
-              <AppText variant="body" style={{ color: colours.inkMuted }}>to</AppText>
-              <TextInput
-                value={repMaxText}
-                onChangeText={setRepMaxText}
-                keyboardType="number-pad"
-                accessibilityLabel="Maximum reps"
-                style={[
-                  styles.repField,
-                  {
-                    color: colours.ink,
-                    borderColor: colours.border,
-                    backgroundColor: colours.surfaceMuted,
-                    borderRadius: radius.md,
-                  },
-                ]}
-              />
-            </View>
-            <PrimaryButton label="Save" onPress={saveRepTarget} />
-          </Pressable>
-        </Pressable>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -1914,10 +1956,6 @@ const styles = StyleSheet.create({
   addSet: {
     marginTop: 8,
   },
-  reorderBtns: {
-    flexDirection: 'row',
-    gap: 4,
-  },
   flex: {
     flex: 1,
   },
@@ -1948,16 +1986,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 12,
     textAlignVertical: 'top',
-  },
-  repRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  repField: {
-    flex: 1,
-    minHeight: 44,
-    borderWidth: 1,
-    textAlign: 'center',
   },
 });

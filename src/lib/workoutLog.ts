@@ -35,6 +35,8 @@ export type SessionPlanSlot = {
   exercise: SlotExercise;
   /** Extra warm-up sets logged as set_number 0, -1, -2. Today only. */
   warmup_sets?: number;
+  /** Ticked warm-up set numbers. Kept on-device because `sets.set_number` must be 1 or more. */
+  warmup_completed?: number[];
   role?: ExerciseRole;
   target_rir?: number;
   tempo?: string;
@@ -62,6 +64,9 @@ export type SessionPlan = {
   title?: string;
   focus?: string | null;
   coach_note?: string | null;
+  /** AI3 / content template ids. Logger uses these instead of guessing from the day name. */
+  warmupTemplateId?: string | null;
+  cooldownTemplateId?: string | null;
 };
 
 function sessionPlanKey(id: string): string {
@@ -86,13 +91,50 @@ export async function clearSessionPlan(sessionId: string): Promise<void> {
   await AsyncStorage.removeItem(sessionPlanKey(sessionId));
 }
 
+/** What's in the boxes for one set. Kept as text so she can type freely. */
+export type SetEntry = { weight: string; reps: string; completed: boolean };
+
 export const FALLBACK_REST_SECONDS = 90;
+
+export function warmupCompletedNumbers(
+  item: Pick<ProgrammeExercise, 'exercise' | 'warmup_sets'>,
+  entries: Record<string, SetEntry>,
+  patch?: { setNumber: number; completed: boolean }
+): number[] {
+  const done = warmupSetNumbers(item.warmup_sets ?? 0).filter((setNumber) => {
+    if (patch && setNumber === patch.setNumber) return patch.completed;
+    return entries[setKey(item.exercise.id, setNumber)]?.completed === true;
+  });
+  return done;
+}
+
+export function applyWarmupCompletions(
+  entries: Record<string, SetEntry>,
+  plan: SessionPlan | null
+): Record<string, SetEntry> {
+  if (!plan) return entries;
+  const next = { ...entries };
+  for (const slot of plan.slots) {
+    for (const setNumber of slot.warmup_completed ?? []) {
+      if (!isWarmupSetNumber(setNumber)) continue;
+      const key = setKey(slot.exercise.id, setNumber);
+      if (!next[key]) continue;
+      next[key] = { ...next[key], completed: true };
+    }
+  }
+  return next;
+}
 
 export function sessionPlanFromDay(
   day: ProgrammeDay,
   easeBack?: SessionEaseBack,
   timerStartedAt?: number | null,
-  extras?: Pick<SessionPlan, 'warmupStatus' | 'cooldownStatus' | 'rampUpApplied'>
+  extras?: Pick<
+    SessionPlan,
+    'warmupStatus' | 'cooldownStatus' | 'rampUpApplied' | 'warmupTemplateId' | 'cooldownTemplateId'
+  >,
+  entries?: Record<string, SetEntry>,
+  patch?: { position: number; setNumber: number; completed: boolean }
 ): SessionPlan {
   return {
     title: day.name,
@@ -106,6 +148,11 @@ export function sessionPlanFromDay(
       rest_seconds: item.rest_seconds ?? getDefaultRestSeconds(),
       exercise: item.exercise,
       warmup_sets: item.warmup_sets ?? 0,
+      warmup_completed: warmupCompletedNumbers(
+        item,
+        entries ?? {},
+        patch && patch.position === item.position ? patch : undefined
+      ),
       role: item.role,
       target_rir: item.target_rir,
       tempo: item.tempo,
@@ -118,6 +165,8 @@ export function sessionPlanFromDay(
     warmupStatus: extras?.warmupStatus,
     cooldownStatus: extras?.cooldownStatus,
     rampUpApplied: extras?.rampUpApplied,
+    warmupTemplateId: extras?.warmupTemplateId,
+    cooldownTemplateId: extras?.cooldownTemplateId,
   };
 }
 
@@ -167,9 +216,6 @@ export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): Programm
     }),
   };
 }
-
-/** What's in the boxes for one set. Kept as text so she can type freely. */
-export type SetEntry = { weight: string; reps: string; completed: boolean };
 
 /** The next set to do in a session. */
 export type NextSet = {
@@ -285,6 +331,7 @@ export type SessionLog = {
   warmupStatus: 'pending' | 'done' | 'skipped';
   cooldownStatus: 'pending' | 'done' | 'skipped';
   rampUpApplied: boolean;
+  plan: SessionPlan | null;
 };
 
 /** Everything needed to show a session in the logger. Null if the session or its day is gone. */
@@ -355,6 +402,7 @@ export async function loadSessionLog(
     warmupStatus: plan?.warmupStatus ?? 'pending',
     cooldownStatus: plan?.cooldownStatus ?? 'pending',
     rampUpApplied: Boolean(plan?.rampUpApplied),
+    plan,
   };
 }
 

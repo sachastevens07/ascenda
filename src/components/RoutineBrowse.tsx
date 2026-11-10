@@ -33,7 +33,8 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { routineCardDays } from '@/lib/contentRoutines';
-import { fillCopy, programmesCopy, routineActionsCopy } from '@/lib/copy';
+import { aiCopy, fillCopy, programmesCopy, routineActionsCopy } from '@/lib/copy';
+import { ensureSubscribed } from '@/lib/paywall';
 import { coverForRoutine, takeSlug } from '@/lib/images';
 import {
   recommendedBrowseRoutine,
@@ -358,6 +359,13 @@ export function RoutineBrowse({
 
             <BuildPlanButton
               onPress={() => router.push({ pathname: '/onboarding', params: { rebuild: '1' } } as Href)}
+            />
+            <BuildPlanButton
+              label={aiCopy.build_title}
+              onPress={() => {
+                if (!ensureSubscribed()) return;
+                router.push('/build-session' as Href);
+              }}
             />
 
             {trainingStyles.length > 0 ? (

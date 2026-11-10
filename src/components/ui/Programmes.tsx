@@ -151,13 +151,22 @@ export function SingleSessionCard({
   );
 }
 
-export function BuildPlanButton({ onPress, style }: { onPress: () => void; style?: StyleProp<ViewStyle> }) {
+export function BuildPlanButton({
+  onPress,
+  label,
+  style,
+}: {
+  onPress: () => void;
+  label?: string;
+  style?: StyleProp<ViewStyle>;
+}) {
   const { colours, radius } = useTheme();
+  const title = label ?? programmesCopy.build_plan;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={programmesCopy.build_plan}
+      accessibilityLabel={title}
       style={({ pressed }) => [
         styles.build,
         { backgroundColor: colours.brandSoft, borderRadius: radius.full },
@@ -166,7 +175,7 @@ export function BuildPlanButton({ onPress, style }: { onPress: () => void; style
       ]}>
       <Ionicons name="sparkles-outline" size={18} color={colours.brand} />
       <AppText variant="bodyStrong" style={{ color: colours.brand }}>
-        {programmesCopy.build_plan}
+        {title}
       </AppText>
     </Pressable>
   );

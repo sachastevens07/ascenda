@@ -3,6 +3,7 @@ import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -82,7 +83,7 @@ import {
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { pickTodaysFuelSuggestion } from '@/lib/foodSuggestions';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { billingReminderCopy, fillCopy, foodCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
+import { aiCopy, billingReminderCopy, fillCopy, foodCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
 import { openRefer } from '@/lib/referrals';
 import { routineCardDays } from '@/lib/contentRoutines';
 import { coverForChallenge, coverForRoutine, homeHeroSlug, takeCoverSource, takeSlug } from '@/lib/images';
@@ -1108,6 +1109,26 @@ export default function HomeScreen() {
             }}
           />
         ) : null}
+
+        <Pressable
+          onPress={() => {
+            if (!ensureSubscribed()) return;
+            router.push('/build-session' as Href);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={aiCopy.build_title}
+          style={({ pressed }) => [
+            styles.card,
+            { backgroundColor: colours.surface, borderRadius: radius.lg, opacity: pressed ? 0.92 : 1 },
+            shadow,
+          ]}>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            {aiCopy.build_title}
+          </AppText>
+          <AppText variant="body" style={{ color: colours.ink, marginTop: 6 }}>
+            {aiCopy.build_card_body}
+          </AppText>
+        </Pressable>
 
         {showFeatured ? (
           <View>
