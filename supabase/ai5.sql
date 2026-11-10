@@ -4,6 +4,7 @@
 -- The monthly-recap Edge Function writes these rows with the service role.
 -- Stats are calculated in the app. The story is validated on the server.
 
+-- ai_usage may already exist from supabase/ai1.sql. Keep RLS on either way.
 create table if not exists public.ai_usage (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
@@ -13,6 +14,15 @@ create table if not exists public.ai_usage (
   output_tokens integer,
   created_at timestamptz not null default now()
 );
+
+alter table public.ai_usage enable row level security;
+
+drop policy if exists "Users can read their own AI usage" on public.ai_usage;
+create policy "Users can read their own AI usage" on public.ai_usage
+  for select to authenticated using (user_id = (select auth.uid()));
+
+revoke insert, update, delete on public.ai_usage from authenticated;
+grant select on public.ai_usage to authenticated;
 
 create table if not exists public.monthly_recaps (
   id uuid primary key default gen_random_uuid(),

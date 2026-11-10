@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { AppText, PrimaryButton, TextButton } from '@/components/ui';
+import { AppText, PrimaryButton, StatTile, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
   DEFAULT_STREAK_GOAL,
@@ -24,7 +24,7 @@ import {
   normalizeWeeklyTarget,
 } from '@/lib/activityStats';
 import { EMPTY_ACHIEVEMENT_EXTRAS, fetchAchievementExtras, getAchievementBadges } from '@/lib/achievements';
-import { recapCopy } from '@/lib/copy';
+import { fillCopy, recapCopy } from '@/lib/copy';
 import {
   highlightLabel,
   highlightValue,
@@ -42,7 +42,7 @@ type RecapPage = {
   eyebrow: string;
   title: string;
   body?: string;
-  rows?: { label: string; value: string }[];
+  tiles?: { value: string; label: string; icon?: 'barbell-outline' | 'time-outline' | 'trophy-outline' | 'ribbon-outline' | 'flame-outline' | 'walk-outline' }[];
   names?: string[];
   story?: boolean;
 };
@@ -91,7 +91,6 @@ export default function MonthlyRecapScreen() {
         weeklyTarget,
         streakGoal,
         monthKey: month && /^\d{4}-\d{2}/.test(month) ? `${month.slice(0, 7)}-01` : undefined,
-        ignoreDismissed: true,
       });
       if (!isCurrent) return;
       setRecap(loaded);
@@ -109,66 +108,88 @@ export default function MonthlyRecapScreen() {
     const { stats } = recap;
     const list: RecapPage[] = [
       {
-        key: 'title',
+        key: 'overview',
         eyebrow: recapCopy.eyebrow,
-        title: recap.headline,
-        body: `Your ${stats.month} in the gym`,
-      },
-      {
-        key: 'mix',
-        eyebrow: recapCopy.page_mix,
-        title: `${stats.sessions} ${stats.sessions === 1 ? 'session' : 'sessions'}`,
-        rows: [
-          { label: recapCopy.page_minutes, value: String(stats.minutes) },
-          ...(stats.strength_sessions
-            ? [{ label: recapCopy.page_strength, value: String(stats.strength_sessions) }]
+        title: fillCopy(recapCopy.card_title, { month: stats.month }),
+        body: recapCopy.stats_note,
+        tiles: [
+          { value: String(stats.sessions), label: recapCopy.page_sessions, icon: 'barbell-outline' },
+          { value: String(stats.minutes), label: recapCopy.page_minutes, icon: 'time-outline' },
+          ...(stats.personal_bests
+            ? [{ value: String(stats.personal_bests), label: recapCopy.page_pbs, icon: 'trophy-outline' as const }]
             : []),
-          ...(stats.cardio_sessions
-            ? [{ label: recapCopy.page_cardio, value: String(stats.cardio_sessions) }]
-            : []),
-          ...(stats.recovery_sessions
-            ? [{ label: recapCopy.page_recovery, value: String(stats.recovery_sessions) }]
+          ...(stats.awards
+            ? [{ value: String(stats.awards), label: recapCopy.page_awards, icon: 'ribbon-outline' as const }]
             : []),
         ],
       },
     ];
+
+    const mixTiles = [
+      ...(stats.strength_sessions
+        ? [{ value: String(stats.strength_sessions), label: recapCopy.page_strength, icon: 'barbell-outline' as const }]
+        : []),
+      ...(stats.cardio_sessions
+        ? [{ value: String(stats.cardio_sessions), label: recapCopy.page_cardio, icon: 'walk-outline' as const }]
+        : []),
+      ...(stats.recovery_sessions
+        ? [{ value: String(stats.recovery_sessions), label: recapCopy.page_recovery, icon: 'flame-outline' as const }]
+        : []),
+    ];
+    if (mixTiles.length > 0) {
+      list.push({
+        key: 'mix',
+        eyebrow: recapCopy.page_mix,
+        title: `${stats.sessions} ${stats.sessions === 1 ? 'session' : 'sessions'} logged`,
+        tiles: mixTiles,
+      });
+    }
+
     if (stats.personal_bests || stats.new_exercises || stats.new_machines) {
       list.push({
         key: 'firsts',
         eyebrow: recapCopy.page_pbs,
         title: stats.personal_bests
           ? `${stats.personal_bests} ${stats.personal_bests === 1 ? 'personal best' : 'personal bests'}`
-          : recapCopy.page_new_exercises,
+          : stats.new_exercises
+            ? `${stats.new_exercises} new ${stats.new_exercises === 1 ? 'exercise' : 'exercises'}`
+            : `${stats.new_machines} new ${stats.new_machines === 1 ? 'machine' : 'machines'}`,
+        tiles: [
+          ...(stats.new_exercises
+            ? [{ value: String(stats.new_exercises), label: recapCopy.page_new_exercises }]
+            : []),
+          ...(stats.new_machines
+            ? [{ value: String(stats.new_machines), label: recapCopy.page_new_machines }]
+            : []),
+        ],
         names: [
           ...stats.pb_names,
           ...stats.new_exercise_names.filter((name) => !stats.pb_names.includes(name)),
           ...stats.new_machine_names,
-        ].slice(0, 8),
-        rows: [
-          ...(stats.new_exercises
-            ? [{ label: recapCopy.page_new_exercises, value: String(stats.new_exercises) }]
-            : []),
-          ...(stats.new_machines
-            ? [{ label: recapCopy.page_new_machines, value: String(stats.new_machines) }]
-            : []),
-        ],
+        ].slice(0, 6),
       });
     }
-    if (stats.weeks_trained || stats.gold_weeks || stats.awards || stats.longest_run) {
+
+    if (stats.weeks_trained || stats.gold_weeks || stats.longest_run) {
       list.push({
         key: 'weeks',
         eyebrow: recapCopy.page_weeks,
         title: stats.longest_run
           ? `${stats.longest_run} ${stats.longest_run === 1 ? 'week' : 'weeks'} in a row`
-          : recapCopy.page_weeks,
-        rows: [
-          { label: recapCopy.page_weeks, value: String(stats.weeks_trained) },
-          ...(stats.gold_weeks ? [{ label: recapCopy.page_gold, value: String(stats.gold_weeks) }] : []),
-          ...(stats.awards ? [{ label: recapCopy.page_awards, value: String(stats.awards) }] : []),
+          : `${stats.weeks_trained} ${stats.weeks_trained === 1 ? 'week' : 'weeks'} trained`,
+        tiles: [
+          { value: String(stats.weeks_trained), label: recapCopy.page_weeks, icon: 'flame-outline' },
+          ...(stats.gold_weeks
+            ? [{ value: String(stats.gold_weeks), label: recapCopy.page_gold, icon: 'trophy-outline' as const }]
+            : []),
+          ...(stats.awards
+            ? [{ value: String(stats.awards), label: recapCopy.page_awards, icon: 'ribbon-outline' as const }]
+            : []),
         ],
-        names: stats.award_names.slice(0, 6),
+        names: stats.award_names.slice(0, 4),
       });
     }
+
     list.push({
       key: 'story',
       eyebrow: recapCopy.page_story,
@@ -189,7 +210,7 @@ export default function MonthlyRecapScreen() {
     try {
       await Share.share({
         message: recapShareMessage(recap, includePb),
-        title: `Your ${recap.stats.month} in the gym`,
+        title: fillCopy(recapCopy.card_title, { month: recap.stats.month }),
       });
     } catch {
       showDialog('Could not share', 'You can still screenshot the card.');
@@ -208,6 +229,11 @@ export default function MonthlyRecapScreen() {
     return (
       <View style={[styles.centre, { backgroundColor: colours.bg, padding: spacing.lg }]}>
         <AppText variant="title2" style={{ color: colours.ink, textAlign: 'center' }}>
+          {recapCopy.window_closed}
+        </AppText>
+        <AppText
+          variant="body"
+          style={{ color: colours.inkMuted, textAlign: 'center', marginTop: spacing.sm }}>
           {recapCopy.empty_month}
         </AppText>
         <TextButton label="Back" onPress={() => router.back()} style={{ marginTop: spacing.md }} />
@@ -216,7 +242,7 @@ export default function MonthlyRecapScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: colours.bg, paddingBottom: insets.bottom + 16 }]}>
+    <View style={[styles.screen, { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12 }]}>
       <ScrollView
         horizontal
         pagingEnabled
@@ -224,72 +250,117 @@ export default function MonthlyRecapScreen() {
         onMomentumScrollEnd={onScrollEnd}
         style={styles.pager}>
         {pages.map((item) => (
-          <View key={item.key} style={[styles.page, { width: pageWidth, paddingHorizontal: spacing.lg }]}>
+          <ScrollView
+            key={item.key}
+            style={{ width: pageWidth }}
+            contentContainerStyle={[
+              styles.page,
+              { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
+            ]}
+            showsVerticalScrollIndicator={false}>
             <AppText variant="eyebrow" style={{ color: colours.accent }}>
               {item.eyebrow}
             </AppText>
-            <AppText variant="display" style={{ color: colours.ink, marginTop: spacing.sm }}>
+            <AppText variant="displaySm" style={{ color: colours.ink }}>
               {item.title}
             </AppText>
-            {item.body ? (
-              <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
+            {item.body && !item.story ? (
+              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                 {item.body}
               </AppText>
             ) : null}
-            {item.rows?.map((row) => (
-              <View key={row.label} style={[styles.row, { marginTop: spacing.md }]}>
-                <AppText variant="body" style={{ color: colours.inkMuted }}>
-                  {row.label}
-                </AppText>
-                <AppText variant="title2" style={{ color: colours.accent }}>
-                  {row.value}
-                </AppText>
-              </View>
-            ))}
-            {item.names?.map((name) => (
-              <AppText key={name} variant="body" style={{ color: colours.ink, marginTop: spacing.xs }}>
-                {name}
-              </AppText>
-            ))}
-            {item.story ? (
-              <View
-                style={[
-                  styles.shareCard,
-                  {
-                    backgroundColor: colours.ink,
-                    borderRadius: radius.xl,
-                    aspectRatio: 9 / 16,
-                    maxHeight: 420,
-                    marginTop: spacing.lg,
-                  },
-                  shadow,
-                ]}
-                accessibilityLabel="Share card">
-                <AppText variant="eyebrow" style={{ color: colours.accent }}>
-                  Ascenda
-                </AppText>
-                <AppText variant="title2" style={{ color: colours.bg, marginTop: spacing.sm }}>
-                  Your {recap.stats.month} in the gym
-                </AppText>
-                <AppText variant="title3" style={{ color: colours.accent, marginTop: spacing.lg }}>
-                  {highlightLabel(recap.highlight)}
-                </AppText>
-                <AppText variant="display" style={{ color: colours.bg, marginTop: spacing.xs }}>
-                  {highlightValue(recap.stats, recap.highlight)}
-                </AppText>
-                {includePb && recap.personalBests[0] ? (
-                  <AppText variant="body" style={{ color: colours.bg, marginTop: spacing.md }}>
-                    {recap.personalBests[0].weightKg != null
-                      ? `${recap.personalBests[0].name}, ${recap.personalBests[0].weightKg} kg`
-                      : recap.personalBests[0].name}
-                  </AppText>
-                ) : null}
-                <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 'auto' }}>
-                  {recapCopy.share_note}
-                </AppText>
+
+            {item.tiles && item.tiles.length > 0 ? (
+              <View style={[styles.grid, { gap: spacing.sm }]}>
+                {item.tiles.map((tile) => (
+                  <StatTile
+                    key={`${tile.label}-${tile.value}`}
+                    value={tile.value}
+                    label={tile.label}
+                    icon={tile.icon}
+                    style={styles.tile}
+                  />
+                ))}
               </View>
             ) : null}
-          </View>
+
+            {item.names && item.names.length > 0 ? (
+              <View
+                style={[
+                  styles.listCard,
+                  { backgroundColor: colours.surface, borderRadius: radius.lg, padding: spacing.md },
+                  shadow,
+                ]}>
+                {item.names.map((name) => (
+                  <AppText
+                    key={name}
+                    variant="body"
+                    style={{ color: colours.ink, paddingVertical: 6 }}>
+                    {name}
+                  </AppText>
+                ))}
+              </View>
+            ) : null}
+
+            {item.story ? (
+              <>
+                <View
+                  style={[
+                    styles.storyCard,
+                    {
+                      backgroundColor: colours.surface,
+                      borderRadius: radius.xl,
+                      padding: spacing.lg,
+                      borderColor: colours.border,
+                    },
+                    shadow,
+                  ]}>
+                  <AppText variant="body" style={{ color: colours.ink, lineHeight: 24 }}>
+                    {item.body}
+                  </AppText>
+                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
+                    {recap.usedFallback ? recapCopy.stats_note : recapCopy.ai_label}
+                  </AppText>
+                </View>
+
+                <View
+                  style={[
+                    styles.shareCard,
+                    { backgroundColor: colours.ink, borderRadius: radius.xl, padding: spacing.lg },
+                    shadow,
+                  ]}
+                  accessibilityLabel="Share card">
+                  <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                    Ascenda
+                  </AppText>
+                  <AppText variant="title2" style={{ color: colours.bg, marginTop: spacing.sm }}>
+                    {fillCopy(recapCopy.card_title, { month: recap.stats.month })}
+                  </AppText>
+                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.lg }}>
+                    {highlightLabel(recap.highlight)}
+                  </AppText>
+                  <AppText variant="display" style={{ color: colours.accent, marginTop: 4 }}>
+                    {highlightValue(recap.stats, recap.highlight)}
+                  </AppText>
+                  <View style={{ marginTop: spacing.md, gap: 4 }}>
+                    <AppText variant="bodySm" style={{ color: colours.bg }}>
+                      {recap.stats.sessions} sessions · {recap.stats.minutes} min
+                    </AppText>
+                    {includePb && recap.personalBests[0] ? (
+                      <AppText variant="bodySm" style={{ color: colours.bg }}>
+                        {recap.personalBests[0].weightKg != null
+                          ? `${recap.personalBests[0].name}, ${recap.personalBests[0].weightKg} kg`
+                          : recap.personalBests[0].name}
+                      </AppText>
+                    ) : null}
+                  </View>
+                  <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.lg }}>
+                    {recapCopy.share_note}
+                  </AppText>
+                </View>
+              </>
+            ) : null}
+          </ScrollView>
         ))}
       </ScrollView>
 
@@ -299,9 +370,7 @@ export default function MonthlyRecapScreen() {
             key={item.key}
             style={[
               styles.dot,
-              {
-                backgroundColor: index === page ? colours.brand : colours.surfaceMuted,
-              },
+              { backgroundColor: index === page ? colours.brand : colours.surfaceMuted },
             ]}
           />
         ))}
@@ -314,7 +383,14 @@ export default function MonthlyRecapScreen() {
               onPress={() => setIncludePb((value) => !value)}
               accessibilityRole="button"
               accessibilityState={{ selected: includePb }}
-              style={styles.toggle}>
+              style={[
+                styles.toggle,
+                {
+                  backgroundColor: colours.surface,
+                  borderRadius: radius.lg,
+                  paddingHorizontal: spacing.md,
+                },
+              ]}>
               <AppText variant="body" style={{ color: colours.ink }}>
                 {recapCopy.include_pb}
               </AppText>
@@ -324,9 +400,6 @@ export default function MonthlyRecapScreen() {
             </Pressable>
           ) : null}
           <PrimaryButton label={recapCopy.share} onPress={() => void shareCard()} />
-          <AppText variant="caption" style={{ color: colours.inkMuted, textAlign: 'center' }}>
-            {recap.usedFallback ? recapCopy.share_note : recapCopy.ai_label}
-          </AppText>
         </View>
       ) : null}
     </View>
@@ -346,24 +419,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   page: {
-    flex: 1,
     paddingTop: 8,
   },
-  row: {
+  grid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    gap: 12,
+    flexWrap: 'wrap',
+  },
+  tile: {
+    width: '48%',
+    flexGrow: 1,
+  },
+  listCard: {
+    gap: 0,
+  },
+  storyCard: {
+    borderWidth: StyleSheet.hairlineWidth,
   },
   shareCard: {
-    width: '72%',
-    alignSelf: 'center',
-    padding: 20,
+    width: '100%',
   },
   dots: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   dot: {
     width: 8,
@@ -374,6 +452,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
 });

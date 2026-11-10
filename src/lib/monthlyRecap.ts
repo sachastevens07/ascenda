@@ -403,27 +403,48 @@ async function writeCache(userId: string, recap: MonthlyRecap): Promise<void> {
   }
 }
 
+/** Last 3 days of a month, or the first 7 days of the next. Matches AGENTS.md "on the 1st". */
+export function isInRecapWindow(monthKey: string, now = new Date()): boolean {
+  const current = monthKeyFromDate(now.getFullYear(), now.getMonth());
+  const previous = previousMonthKey(now);
+  const day = now.getDate();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  if (monthKey === current && day >= lastDay - 2) return true;
+  if (monthKey === previous && day <= 7) return true;
+  return false;
+}
+
+function monthHasEnoughSessions(
+  sessions: FinishedSessionMeta[],
+  monthKey: string
+): boolean {
+  const { start, end } = monthBounds(monthKey);
+  return sessions.filter((session) => inMonth(session.date, start, end)).length >= MIN_SESSIONS;
+}
+
 function pickMonth(sessions: FinishedSessionMeta[], now: Date, preview: boolean): string | null {
-  const last = previousMonthKey(now);
-  const { start, end } = monthBounds(last);
-  const lastCount = sessions.filter((session) => inMonth(session.date, start, end)).length;
-  if (lastCount >= MIN_SESSIONS) return last;
+  const current = monthKeyFromDate(now.getFullYear(), now.getMonth());
+  const previous = previousMonthKey(now);
+  const day = now.getDate();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  if (preview || (day <= 7 && monthHasEnoughSessions(sessions, previous))) {
+    if (monthHasEnoughSessions(sessions, previous)) return previous;
+  }
+  if (preview || (day >= lastDay - 2 && monthHasEnoughSessions(sessions, current))) {
+    if (monthHasEnoughSessions(sessions, current)) return current;
+  }
   if (!preview) return null;
-  const months = new Set(sessions.map((session) => session.date.slice(0, 7) + '-01'));
+  const months = new Set(sessions.map((session) => `${session.date.slice(0, 7)}-01`));
   const sorted = [...months].sort().reverse();
   for (const key of sorted) {
-    if (key >= monthKeyFromDate(now.getFullYear(), now.getMonth())) continue;
-    const bounds = monthBounds(key);
-    const count = sessions.filter((session) => inMonth(session.date, bounds.start, bounds.end)).length;
-    if (count >= MIN_SESSIONS) return key;
+    if (monthHasEnoughSessions(sessions, key)) return key;
   }
   return null;
 }
 
 function shouldShow(monthKey: string, now: Date, preview: boolean): boolean {
-  if (preview) return true;
-  const current = monthKeyFromDate(now.getFullYear(), now.getMonth());
-  return current > monthKey;
+  return preview || isInRecapWindow(monthKey, now);
 }
 
 async function storyFromServer(
@@ -480,20 +501,18 @@ export async function loadMonthlyRecap(input: {
   streakGoal: StreakGoal;
   now?: Date;
   monthKey?: string;
-  ignoreDismissed?: boolean;
 }): Promise<MonthlyRecap | null> {
   const now = input.now ?? new Date();
   const preview = await fetchRecapPreview();
   const month = input.monthKey ?? pickMonth(input.sessions, now, preview);
-  if (!month || (!input.monthKey && !shouldShow(month, now, preview))) return null;
-  if (!preview && !input.ignoreDismissed && (await isDismissed(month))) return null;
+  if (!month || !shouldShow(month, now, preview)) return null;
+  if (!preview && (await isDismissed(month))) return null;
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
   const userId = user?.id ?? 'local';
   const cached = await readCache(userId, month);
-  if (cached) return cached;
 
   const logs = await fetchCardioLogs().catch(() => []);
   const built = buildRecapStats({
@@ -511,12 +530,17 @@ export async function loadMonthlyRecap(input: {
   });
   if (built.stats.sessions < MIN_SESSIONS) return null;
 
+  // Keep a good AI story. Retry the server if we only have the template cached.
+  if (cached && !cached.usedFallback) {
+    return { ...cached, stats: built.stats, personalBests: built.personalBests };
+  }
+
   const stored = userId !== 'local' ? await storyFromTable(userId, month, built.stats) : null;
   const remote = stored ?? (await storyFromServer(month, built.stats));
-  const copy = remote ?? fallbackRecap(built.stats);
-  if (remote?.usedFallback) trackAi('ai_fallback_used', FEATURE);
-  else if (remote) trackAi('ai_feature_used', FEATURE);
-  else trackAi('ai_fallback_used', FEATURE);
+  const usedFallback = !remote || remote.usedFallback;
+  const copy = usedFallback ? fallbackRecap(built.stats) : remote;
+  if (usedFallback) trackAi('ai_fallback_used', FEATURE);
+  else trackAi('ai_feature_used', FEATURE);
 
   const recap: MonthlyRecap = {
     monthKey: month,
@@ -524,7 +548,7 @@ export async function loadMonthlyRecap(input: {
     headline: copy.headline,
     story: copy.story,
     highlight: copy.highlight,
-    usedFallback: remote ? remote.usedFallback : true,
+    usedFallback,
     personalBests: built.personalBests,
   };
   await writeCache(userId, recap);
