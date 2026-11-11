@@ -465,6 +465,7 @@ async function main(): Promise<void> {
   reportAi1();
   reportAi2();
   reportAi3();
+  reportAi4();
   reportAi5();
   reportAi6();
   await reportFood(client);
@@ -675,6 +676,32 @@ function reportAi3(): void {
   line('  Edge Function: build-session. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai3.sql (reuses ai_usage, ai_quota from AI1).');
   line('  Server calculates time from 40s/set plus rest_by_role, then checks minutes +/- 5. Fallback is the closest gym single session.');
   line('  Live sync does not write AI tables. The function writes usage with the service role.');
+  line();
+}
+
+function reportAi4(): void {
+  line('AI4 ask  ←  content/ai/ai-config.json + prompts/ai4-ask-ascenda.md');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai4-ask-ascenda'] ?? {};
+  const row = asRecord(config);
+  let promptPresent = false;
+  try {
+    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai4-ask-ascenda.md'), 'utf8').length > 0;
+  } catch {
+    promptPresent = false;
+  }
+  const chips = asRecord(asRecord(readJson('ai/ai-config.json')).ask_ascenda_chips);
+  const chipCount =
+    asArray(chips.on_open).length +
+    asArray(chips.exercise_page).length +
+    asArray(chips.machine_page).length +
+    asArray(chips.routine_page).length +
+    asArray(chips.logger).length;
+  line(`  Feature: ${text(row.feature) || 'AI4 Ask Ascenda'}`);
+  line(`  Model: ${text(row.model) || 'claude-sonnet-5-5'}. Daily limit: ${num(row.daily_limit) ?? 30}.`);
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Chips: ${chipCount}. Never sends name, email, bodyweight or health info.`);
+  line('  Edge Function: ask-ascenda. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai4.sql (ai_conversations, ai_messages; reuses ai_usage, ai_quota).');
+  line('  Server checks link ids, move_session ownership and to_date within 14 days, strips em dashes. Emergency flag shows the emergency card.');
+  line('  Conversations kept 30 days and deletable from Profile, Privacy. Live sync does not write AI tables.');
   line();
 }
 

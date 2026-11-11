@@ -36,6 +36,7 @@ import {
   referCopy,
   subscriptionStatusCopy,
 } from '@/lib/copy';
+import { deleteAskHistory } from '@/lib/askAscenda';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import {
   DEFAULT_REMINDER_TIME,
@@ -807,6 +808,29 @@ export default function ProfileScreen() {
                 );
               });
             });
+          }}
+        />
+        <SettingsRow
+          title={aiCopy.ask_delete_history}
+          subtitle="Removes questions and answers kept for 30 days."
+          onPress={() => {
+            showDialog(aiCopy.ask_delete_history, aiCopy.ask_delete_body, [
+              {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: () => {
+                  void deleteAskHistory()
+                    .then(() => showDialog(aiCopy.ask_title, aiCopy.ask_deleted))
+                    .catch((error) =>
+                      showDialog(
+                        aiCopy.ask_title,
+                        error instanceof Error ? error.message : 'Check your connection and try again.'
+                      )
+                    );
+                },
+              },
+              { text: 'Keep them', style: 'cancel' },
+            ]);
           }}
         />
         <SettingsRow

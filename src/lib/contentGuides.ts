@@ -85,6 +85,10 @@ export function guideForExercise(exerciseId: string): ExerciseGuide | null {
   return GUIDES.get(exerciseId) ?? GUIDES.get(slug) ?? null;
 }
 
+export function allExerciseGuides(): ExerciseGuide[] {
+  return [...GUIDES.values()];
+}
+
 /** Guide swap list first, then catalogue alternatives. Order from /content is kept. */
 export function preferredSwapIds(exerciseId: string, extra: string[] = []): string[] {
   const slug = resolveExerciseSlug(exerciseId);

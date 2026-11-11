@@ -45,3 +45,9 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/build-session/index.ts"
 static_files = [ "./functions/build-session/prompt.md" ]
+
+[functions.ask-ascenda]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/ask-ascenda/index.ts"
+static_files = [ "./functions/ask-ascenda/prompt.md" ]

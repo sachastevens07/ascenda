@@ -99,6 +99,7 @@ import {
 import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
+import { openAsk } from '@/lib/askAscenda';
 import { ensureSubscribed } from '@/lib/paywall';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -893,6 +894,10 @@ export default function HomeScreen() {
           leading={<TabAvatar />}
           onSearch={() => router.push('/programmes' as Href)}
           onPlanner={() => router.push('/planner' as Href)}
+          onAsk={() => {
+            if (!ensureSubscribed()) return;
+            openAsk({ screen: 'open' });
+          }}
         />
 
         {subscription.status === 'grace' ? (

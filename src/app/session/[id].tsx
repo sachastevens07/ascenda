@@ -51,6 +51,7 @@ import { collectSessionWins } from '@/lib/activityStats';
 import { applyBusyGymPlanToDay, remainingBusyGymItems, type BusyGymPlan } from '@/lib/busyGym';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
+import { openAsk } from '@/lib/askAscenda';
 import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, welcomeBackCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuideForExercise } from '@/lib/machineGuides';
@@ -1658,6 +1659,10 @@ export default function SessionScreen() {
 
         {dragFrom === null ? (
           <>
+            <TextButton
+              label={aiCopy.ask_title}
+              onPress={() => openAsk({ screen: 'logger' })}
+            />
             <SecondaryButton
               label={loggerCopy.header_menu.taken}
               onPress={() => openBusyGym(null)}

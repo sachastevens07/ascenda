@@ -18,16 +18,21 @@ export function HomeHeader({
   leading,
   onSearch,
   onPlanner,
+  onAsk,
 }: {
   leading: ReactNode;
   onSearch: () => void;
   onPlanner: () => void;
+  onAsk?: () => void;
 }) {
   return (
     <View style={styles.header}>
       {leading}
       <View style={styles.headerSpacer} />
       <View style={styles.headerActions}>
+        {onAsk ? (
+          <IconButton icon="chatbubbles-outline" accessibilityLabel="Ask Ascenda" onPress={onAsk} />
+        ) : null}
         <IconButton icon="search" accessibilityLabel="Search programmes" onPress={onSearch} />
         <IconButton icon="calendar-outline" accessibilityLabel="Open Planner" onPress={onPlanner} />
       </View>

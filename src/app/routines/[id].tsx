@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AskChips } from '@/components/AskChips';
 import { showDialog } from '@/components/Dialog';
 import {
   AppText,
@@ -474,6 +475,8 @@ export default function RoutineDetailScreen() {
               ))}
             </View>
           ) : null}
+
+          <AskChips screen="routine" entityId={routine.slug || routine.id} />
 
           {isCurrent && enrolment ? (
             <View style={styles.progressBlock}>

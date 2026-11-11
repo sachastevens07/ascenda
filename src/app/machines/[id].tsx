@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AskChips } from '@/components/AskChips';
 import { showDialog } from '@/components/Dialog';
 import { AppText, DetailLayout, PrimaryButton, RelatedLearn, SafetyNotice, SecondaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
@@ -98,6 +99,7 @@ export default function MachineGuideScreen() {
           </View>
         ) : undefined
       }>
+      <AskChips screen="machine" entityId={guide.id} />
       <GuideSection title={machineCopy.find} steps={guide.whereToFind ? [guide.whereToFind] : []} />
       <GuideSection title={machineCopy.setup} steps={guide.setup} />
       <GuideSection title={useTitle} steps={guide.startAndStop} />

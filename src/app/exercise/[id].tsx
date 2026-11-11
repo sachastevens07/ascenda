@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AskChips } from '@/components/AskChips';
 import { ExerciseMediaPlayer } from '@/components/ExerciseMediaPlayer';
 import { equipmentIconName, RelatedLearn } from '@/components/ui';
 import { AppText } from '@/components/ui/AppText';
@@ -163,6 +164,8 @@ export default function ExerciseScreen() {
           fallback={mediaFallback}
         />
       </View>
+
+      <AskChips screen="exercise" entityId={exercise.id} />
 
       <View style={styles.firstTime}>
         <AppText variant="eyebrow" style={styles.firstTimeLabel}>

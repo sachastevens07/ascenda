@@ -862,7 +862,7 @@
       "preview_off": "Off"
     },
     "ai": {
-      "_note": "AI1 Scan a machine, AI2 Busy gym fix, AI3 Build me a session and AI6 What can I cook. Prompts stay in content/ai and the Edge Function. No em dashes.",
+      "_note": "AI1 Scan a machine, AI2 Busy gym fix, AI3 Build me a session, AI4 Ask Ascenda and AI6 What can I cook. Prompts stay in content/ai and the Edge Function. No em dashes.",
       "scan_title": "Scan a machine",
       "scan_tip": "Photograph the machine, not people. Photos are never stored.",
       "scan_privacy": "Your photo is checked and then deleted straight away.",
@@ -914,7 +914,7 @@
       "cook_results": "Recipes you can make",
       "cook_ai_label": "AI-generated, not medical advice.",
       "dev_unlimited": "Remove AI daily limits",
-      "dev_unlimited_on": "On. Scan, Busy gym fix, Build me a session and What can I cook skip today's cap.",
+      "dev_unlimited_on": "On. Scan, Busy gym fix, Build me a session, Ask Ascenda and What can I cook skip today's cap.",
       "dev_unlimited_off": "Off. Daily limits apply.",
       "busy_title": "Something's taken",
       "busy_body": "Tell us what's busy, how long you have, and how you're feeling. We'll rework the rest of today only.",
@@ -967,7 +967,26 @@
       "build_limit": "You've hit today's limit for Build me a session. It resets tomorrow.",
       "build_fallback": "Couldn't reach the usual helper, so this uses a session from our library.",
       "build_error": "Something went wrong. Please try again.",
-      "build_ai_label": "AI-generated, not medical advice."
+      "build_ai_label": "AI-generated, not medical advice.",
+      "ask_title": "Ask Ascenda",
+      "ask_placeholder": "Ask about your training…",
+      "ask_send": "Send",
+      "ask_empty": "Ask about your plan, an exercise, or how to use the gym. I only help with training and Ascenda.",
+      "ask_limit": "You've hit today's limit for Ask Ascenda. It resets tomorrow.",
+      "ask_move_title": "Move this session?",
+      "ask_move_body": "Move {name} to {date}. Your plan only changes if you confirm.",
+      "ask_move_confirm": "Move it",
+      "ask_move_cancel": "Not now",
+      "ask_moved": "Moved. You can still change it in Planner.",
+      "ask_delete_history": "Delete Ask Ascenda history",
+      "ask_delete_body": "Removes your questions and answers from the last 30 days. This cannot be undone.",
+      "ask_deleted": "Ask Ascenda history deleted.",
+      "ask_card_medical": "This is not medical advice. Stop anything that hurts and speak to a doctor or physiotherapist.",
+      "ask_card_pregnancy": "This is not pregnancy or postnatal advice. Speak to your doctor or midwife, and a qualified trainer.",
+      "ask_card_body": "Ascenda focuses on strength and fuelling your training, not calorie targets or comments on bodies.",
+      "ask_card_off_topic": "I can only help with your training, the gym and using Ascenda.",
+      "ask_card_wellbeing": "Please speak to a doctor about how you are feeling. Beat can help if eating feels hard: beat.org.uk.",
+      "ask_fallback": "Couldn't reach the usual helper, so this uses matching guides from our library."
     }
   }
 }

@@ -251,6 +251,17 @@ function RootNavigator() {
             headerStyle: { backgroundColor: colours.bg },
           }}
         />
+        <Stack.Screen
+          name="ask"
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Back',
+            headerTintColor: colours.brand,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+          }}
+        />
         <Stack.Screen name="learn" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="history" options={{ headerShown: false }} />
