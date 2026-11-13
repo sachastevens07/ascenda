@@ -49,10 +49,13 @@ import {
 import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { applyBusyGymPlanToDay, remainingBusyGymItems, type BusyGymPlan } from '@/lib/busyGym';
+import { cardioSession } from '@/lib/cardio';
+import { contentDayFor, contentRoutine } from '@/lib/contentRoutines';
+import { finisherForDay } from '@/lib/completeWeek';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
 import { openAsk } from '@/lib/askAscenda';
-import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, welcomeBackCopy } from '@/lib/copy';
+import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, weekRingCopy, welcomeBackCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuideForExercise } from '@/lib/machineGuides';
 import {
@@ -295,6 +298,7 @@ export default function SessionScreen() {
   const [coachOpen, setCoachOpen] = useState(true);
   const [warmupStatus, setWarmupStatus] = useState<BlockPlayStatus>('pending');
   const [cooldownStatus, setCooldownStatus] = useState<BlockPlayStatus>('pending');
+  const [finisherStatus, setFinisherStatus] = useState<BlockPlayStatus>('pending');
   const [warmupTemplateId, setWarmupTemplateId] = useState<string | null>(null);
   const [cooldownTemplateId, setCooldownTemplateId] = useState<string | null>(null);
   const [rampUpApplied, setRampUpApplied] = useState(false);
@@ -346,6 +350,25 @@ export default function SessionScreen() {
         : null,
     [day, routine?.session_minutes, cooldownTemplateId]
   );
+  const finisher = useMemo(() => {
+    if (!routine || !day || weekNumber == null) return null;
+    const overlay = contentRoutine(routine.slug) ?? contentRoutine(routine.id);
+    if (!overlay) return null;
+    const contentDay = contentDayFor(overlay, weekNumber, { name: day.name });
+    const slug = finisherForDay(
+      overlay,
+      weekNumber,
+      contentDay?.key ?? null,
+      profile?.cardio_preference ?? 'fine'
+    );
+    if (!slug) return null;
+    const def = cardioSession(slug);
+    return {
+      slug,
+      name: def?.name ?? 'Cardio finisher',
+      minutes: def?.durationMinutes ?? 10,
+    };
+  }, [routine, day, weekNumber, profile?.cardio_preference]);
 
   useEffect(() => {
     if (!pbGlowKey) return;
@@ -1655,6 +1678,55 @@ export default function SessionScreen() {
               if (day) void persistPlan(day, startedAt, { cooldownStatus: 'skipped' });
             }}
           />
+        ) : null}
+
+        {finisher ? (
+          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, padding: 14 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Ionicons
+                name={
+                  finisherStatus === 'done'
+                    ? 'checkmark-circle'
+                    : finisherStatus === 'skipped'
+                      ? 'remove-circle-outline'
+                      : 'ellipse-outline'
+                }
+                size={22}
+                color={finisherStatus === 'done' ? colours.success : colours.inkMuted}
+              />
+              <View style={{ flex: 1 }}>
+                <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                  {fillCopy(weekRingCopy.finisher_block, { minutes: finisher.minutes })}
+                </AppText>
+                <AppText variant="body" style={{ color: colours.ink, marginTop: 2 }}>
+                  {finisher.name}
+                </AppText>
+                {finisherStatus === 'skipped' ? (
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
+                    {loggerCopy.block_skipped}
+                  </AppText>
+                ) : finisherStatus === 'done' ? (
+                  <AppText variant="bodySm" style={{ color: colours.success, marginTop: 2 }}>
+                    Done
+                  </AppText>
+                ) : (
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
+                    Optional. Skip with one tap, or do it after your last set.
+                  </AppText>
+                )}
+              </View>
+              {finisherStatus === 'pending' ? (
+                <TextButton label={loggerCopy.block_skip} onPress={() => setFinisherStatus('skipped')} />
+              ) : null}
+            </View>
+            {finisherStatus === 'pending' ? (
+              <PrimaryButton
+                label="Mark done"
+                onPress={() => setFinisherStatus('done')}
+                style={{ marginTop: 10 }}
+              />
+            ) : null}
+          </View>
         ) : null}
 
         {dragFrom === null ? (

@@ -69,7 +69,7 @@ export function routineMatchesStyle(routine: RoutineSummary, style: TrainingStyl
     case 'cardio':
       return overlay?.cardio_balanced === true;
     case 'busy_gym':
-      return tags.some((tag) => tag.includes('busy gym'));
+      return tags.some((tag) => tag.includes('dumbbell') && tag.includes('bench'));
     case 'cant_get_to_gym':
       return isGymBackupRoutine(routine);
     case 'stretch':

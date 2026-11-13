@@ -6,6 +6,7 @@ import {
   type ContentRoutineOverlay,
   type ContentScheduleSlot,
   type ContentSupportDay,
+  type ContentWeeklyPlan,
 } from '@/lib/contentRoutines';
 import {
   CARDIO_PREFERENCES,
@@ -34,6 +35,8 @@ export type PlacedSlot = {
   optional: boolean;
   name: string | null;
   minutes: number | null;
+  finisher_slug: string | null;
+  anytime: boolean;
 };
 
 export type WeekPlanPrefs = {
@@ -95,6 +98,139 @@ export function pickScheduleTemplate(
     );
   }
   return schedule[preference] ?? schedule.fine ?? schedule.avoid ?? schedule.love ?? [];
+}
+
+function emptySlot(weekday: Weekday): PlacedSlot {
+  return {
+    weekday,
+    type: 'rest',
+    day_key: null,
+    cardio_slug: null,
+    stretch_slug: null,
+    optional: false,
+    name: null,
+    minutes: null,
+    finisher_slug: null,
+    anytime: false,
+  };
+}
+
+function phaseNameForKey(overlay: ContentRoutineOverlay, weekNumber: number, dayKey: string): string | null {
+  const phase = contentPhaseForWeek(overlay, weekNumber);
+  const days = phase?.days ?? overlay.phases.flatMap((item) => item.days);
+  return days.find((day) => day.key === dayKey)?.name ?? null;
+}
+
+function finisherSlugFor(
+  plan: ContentWeeklyPlan,
+  preference: CardioPreference,
+  dayKey: string,
+  weekNumber: number
+): string | null {
+  const list = plan.finishers[preference] ?? plan.finishers.fine ?? [];
+  const match = list.find((item) => item.day_key === dayKey);
+  if (!match) return null;
+  if (match.skip_weeks.includes(weekNumber)) return null;
+  return match.cardio_session;
+}
+
+export function finisherForDay(
+  overlay: ContentRoutineOverlay,
+  weekNumber: number,
+  dayKey: string | null | undefined,
+  preference: CardioPreference
+): string | null {
+  if (!dayKey || !overlay.weekly_plan) return null;
+  return finisherSlugFor(overlay.weekly_plan, preference, dayKey, weekNumber);
+}
+
+function slotsFromWeeklyPlan(input: {
+  overlay: ContentRoutineOverlay;
+  plan: ContentWeeklyPlan;
+  weekNumber: number;
+  preferredDays: Weekday[];
+  cardioPreference: CardioPreference;
+}): { days: PlacedSlot[]; anytime: PlacedSlot[] } {
+  const gymCap = Math.min(input.preferredDays.length, 5);
+  const assigned = new Map<Weekday, PlacedSlot>();
+  let used = 0;
+
+  function nextPreferred(): Weekday | null {
+    if (used >= gymCap) return null;
+    return input.preferredDays[used] ?? null;
+  }
+
+  for (const dayKey of input.plan.strength_days) {
+    const weekday = nextPreferred();
+    if (!weekday) break;
+    used += 1;
+    assigned.set(weekday, {
+      weekday,
+      type: 'strength',
+      day_key: dayKey,
+      cardio_slug: null,
+      stretch_slug: null,
+      optional: false,
+      name: phaseNameForKey(input.overlay, input.weekNumber, dayKey),
+      minutes: input.overlay.session_minutes || null,
+      finisher_slug: finisherSlugFor(input.plan, input.cardioPreference, dayKey, input.weekNumber),
+      anytime: false,
+    });
+  }
+
+  function placeSupport(key: string, optional: boolean): boolean {
+    const weekday = nextPreferred();
+    if (!weekday) return false;
+    const support = supportForWeek(input.overlay.support_days, key, input.weekNumber);
+    const cardioSlug = support?.cardio_session ?? null;
+    const stretchSlug = support?.stretch_routine ?? null;
+    if (!cardioSlug && !stretchSlug) return false;
+    used += 1;
+    const stretch = stretchMeta(stretchSlug);
+    assigned.set(weekday, {
+      weekday,
+      type: stretchSlug ? 'recovery' : 'cardio',
+      day_key: null,
+      cardio_slug: cardioSlug,
+      stretch_slug: stretchSlug,
+      optional,
+      name: stretch?.name ?? supportName(input.overlay.support_days, key),
+      minutes: stretch?.minutes ?? null,
+      finisher_slug: null,
+      anytime: false,
+    });
+    return true;
+  }
+
+  for (const key of input.plan.required_cardio_days) {
+    if (!placeSupport(key, false)) break;
+  }
+  const spare = input.plan.spare_day_cardio[input.cardioPreference] ?? [];
+  for (const key of spare) {
+    if (!placeSupport(key, true)) break;
+  }
+
+  const days = WEEKDAYS.map((weekday) => assigned.get(weekday) ?? emptySlot(weekday));
+  const anytime: PlacedSlot[] = [];
+  for (const key of input.plan.anytime_extras) {
+    const support = supportForWeek(input.overlay.support_days, key, input.weekNumber);
+    const stretchSlug = support?.stretch_routine ?? null;
+    if (!stretchSlug) continue;
+    const stretch = stretchMeta(stretchSlug);
+    anytime.push({
+      weekday: WEEKDAYS[0],
+      type: 'recovery',
+      day_key: null,
+      cardio_slug: null,
+      stretch_slug: stretchSlug,
+      optional: true,
+      name: stretch?.name ?? supportName(input.overlay.support_days, key),
+      minutes: stretch?.minutes ?? null,
+      finisher_slug: null,
+      anytime: true,
+    });
+  }
+  return { days, anytime };
 }
 
 function supportForWeek(
@@ -207,6 +343,15 @@ export function slotsForWeek(input: {
   preferredDays: Weekday[];
   cardioPreference: CardioPreference;
 }): PlacedSlot[] {
+  if (input.overlay.weekly_plan) {
+    return slotsFromWeeklyPlan({
+      overlay: input.overlay,
+      plan: input.overlay.weekly_plan,
+      weekNumber: input.weekNumber,
+      preferredDays: input.preferredDays,
+      cardioPreference: input.cardioPreference,
+    }).days;
+  }
   const template = pickScheduleTemplate(input.overlay, input.cardioPreference);
   if (template.length === 0) return [];
 
@@ -231,18 +376,7 @@ export function slotsForWeek(input: {
     if (slot.type === 'cardio' || slot.type === 'recovery') {
       const cardioSlug = support?.cardio_session ?? null;
       const stretchSlug = support?.stretch_routine ?? null;
-      if (!cardioSlug && !stretchSlug) {
-        return {
-          weekday,
-          type: 'rest',
-          day_key: null,
-          cardio_slug: null,
-          stretch_slug: null,
-          optional: false,
-          name: null,
-          minutes: null,
-        };
-      }
+      if (!cardioSlug && !stretchSlug) return emptySlot(weekday);
       const stretch = stretchMeta(stretchSlug);
       return {
         weekday,
@@ -253,9 +387,12 @@ export function slotsForWeek(input: {
         optional: slot.optional,
         name: stretch?.name ?? supportName(input.overlay.support_days, slot.support_key),
         minutes: stretch?.minutes ?? null,
+        finisher_slug: null,
+        anytime: false,
       };
     }
     if (slot.type === 'strength') {
+      const skip = slot.finisher_skip_weeks.includes(input.weekNumber);
       return {
         weekday,
         type: 'strength',
@@ -265,19 +402,22 @@ export function slotsForWeek(input: {
         optional: false,
         name: null,
         minutes: input.overlay.session_minutes || null,
+        finisher_slug: skip ? null : slot.finisher,
+        anytime: false,
       };
     }
-    return {
-      weekday,
-      type: 'rest',
-      day_key: null,
-      cardio_slug: null,
-      stretch_slug: null,
-      optional: false,
-      name: null,
-      minutes: null,
-    };
+    return emptySlot(weekday);
   });
+}
+
+export function anytimeSlotsForWeek(input: {
+  overlay: ContentRoutineOverlay;
+  weekNumber: number;
+  preferredDays: Weekday[];
+  cardioPreference: CardioPreference;
+}): PlacedSlot[] {
+  if (!input.overlay.weekly_plan) return [];
+  return slotsFromWeeklyPlan({ ...input, plan: input.overlay.weekly_plan }).anytime;
 }
 
 export function describeScheduledWeek(overlay: ContentRoutineOverlay): string {

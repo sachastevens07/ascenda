@@ -178,6 +178,9 @@ export default function OnboardingScreen() {
       routine_subtitle: plan?.recommended.subtitle ?? '',
       'routine.session_minutes': plan?.recommended.overlay.session_minutes ?? '',
       'routine.length_weeks': plan?.recommended.overlay.length_weeks ?? '',
+      'routine.schedule_strength_days': plan?.recommended.overlay.weekly_plan?.strength_days.length ?? plan?.recommended.overlay.days_per_week ?? '',
+      'routine.gym_days_needed': plan?.recommended.overlay.weekly_plan?.gym_days_needed ?? '',
+      'routine.cardio_days': plan?.recommended.overlay.weekly_plan?.required_cardio_days.length ?? '',
     });
   }, [draft, plan]);
 
@@ -844,22 +847,18 @@ function PlanReveal({
       <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
         {screen.week_title}
       </AppText>
-      {plan.recommended.overlay.cardio_balanced && plan.recommended.overlay.schedule_label ? (
-        <AppText variant="body" style={{ color: colours.inkMuted }}>
-          {plan.recommended.overlay.schedule_label}
+      <AppText variant="body" style={{ color: colours.inkMuted }}>
+        {fillTemplate(screen.week_template, vars)}
+      </AppText>
+      {plan.recommended.overlay.cardio_balanced && screen.week_extras_line_balanced ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
+          {fillTemplate(screen.week_extras_line_balanced, vars)}
         </AppText>
-      ) : (
-        <>
-          <AppText variant="body" style={{ color: colours.inkMuted }}>
-            {fillTemplate(screen.week_template, vars)}
-          </AppText>
-          {screen.week_extra ? (
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
-              {screen.week_extra}
-            </AppText>
-          ) : null}
-        </>
-      )}
+      ) : screen.week_extras_line || screen.week_extra ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
+          {fillTemplate(screen.week_extras_line || screen.week_extra, vars)}
+        </AppText>
+      ) : null}
       <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
         {screen.timeline_title}
       </AppText>

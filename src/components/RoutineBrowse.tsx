@@ -351,7 +351,7 @@ export function RoutineBrowse({
                   imageSlug={recommendedSlug}
                   eyebrow={programmesCopy.section_recommended}
                   title={recommended.name}
-                  subtitle={`${recommended.length_weeks} weeks · ${routineCardDays(recommended)} days / week`}
+                  subtitle={`${recommended.length_weeks} weeks · ${routineCardDays(recommended)} days a week`}
                   onPress={() => openRoutine(recommended)}
                 />
               </View>
@@ -411,7 +411,7 @@ export function RoutineBrowse({
                     <ImageCard
                       key={routine.id}
                       title={routine.name}
-                      subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days / week`}
+                      subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days a week`}
                       tags={routine.tags.slice(0, 2).map(formatTagLabel)}
                       imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
                       letter={routine.name.slice(0, 1)}

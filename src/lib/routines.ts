@@ -8,7 +8,7 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
-import { contentDayFor, contentRoutine, contentSlotFor } from '@/lib/contentRoutines';
+import { contentDayFor, contentRoutine, contentSlotFor, overlayCardTags, routineCardDays } from '@/lib/contentRoutines';
 import {
   briefForRoutine,
   coachNoteForDay,
@@ -41,6 +41,8 @@ export const LAUNCH_ROUTINE_IDS = [
   'summit',
   WELCOME_BACK_ROUTINE_ID,
   '30-day-glute-challenge',
+  'the-four-day-foundation',
+  'twice-a-week-strong',
 ] as const;
 
 export type RoutineGoal = 'strength' | 'glutes_legs' | 'general' | 'confidence';
@@ -334,9 +336,9 @@ export function toSummary(row: SummaryRow): RoutineSummary {
   const byTheEnd = (row.by_the_end_bullets ?? []).filter(Boolean);
   return {
     id: row.id,
-    name: displayRoutineName(row.id, row.name, row.equipment),
+    name: overlay?.name || displayRoutineName(row.id, row.name, row.equipment),
     slug: row.slug,
-    description: row.description,
+    description: overlay?.short_description || row.description,
     cover: oneCover(row.cover),
     goal: row.goal,
     length_weeks: row.length_weeks,
@@ -349,7 +351,10 @@ export function toSummary(row: SummaryRow): RoutineSummary {
     sort_order: row.sort_order,
     source_programme_id: row.source_programme_id,
     type,
-    tags: (row.routine_tags ?? []).map((item) => item.tag),
+    tags: (() => {
+      const fromContent = overlayCardTags(overlay);
+      return fromContent.length > 0 ? fromContent : (row.routine_tags ?? []).map((item) => item.tag);
+    })(),
     audience: audience.length > 0 ? audience : (overlay?.who_its_for ?? brief?.audience ?? []),
     byTheEnd: byTheEnd.length > 0 ? byTheEnd : (overlay?.by_the_end ?? brief?.byTheEnd ?? []),
     splitNote: row.split_note?.trim() || overlay?.why_this_split || brief?.splitNote || null,
@@ -778,7 +783,7 @@ function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   else if (answers.equipment === 'full_gym') score += 2;
   else if (answers.equipment === 'dumbbells' && routine.equipment === 'full_gym') score += 1;
 
-  const dayGap = Math.abs(routine.days_per_week - answers.days_per_week);
+  const dayGap = Math.abs(routineCardDays(routine) - answers.days_per_week);
   if (dayGap === 0) score += 6;
   else if (dayGap === 1) score += 1;
 
@@ -803,10 +808,9 @@ function scoreRoutine(routine: RoutineSummary, answers: QuizAnswers): number {
   if (answers.experience === 'some' && routine.difficulty !== 'experienced') score += 2;
   if (answers.experience === 'confident' && routine.difficulty !== 'beginner') score += 2;
 
-  if (answers.confidence <= 2 && routine.tags.includes('one spot')) {
+  if (answers.confidence <= 2 && /dumbbells and a bench/i.test(routine.tags.join(' '))) {
     score += 2;
   }
-  if (answers.equipment === 'full_gym' && routine.tags.includes('busy gym friendly')) score += 1;
   if (
     (routine.id === 'strong-foundations-6-weeks' || routine.id === 'gym-confidence-6') &&
     dayGap === 0 &&
@@ -845,10 +849,10 @@ export function pickFeaturedRoutines(
   });
   const size = Math.min(5, Math.max(3, Math.min(count, ranked.length)));
   const picked = ranked.slice(0, size);
-  if (picked.length > 0 && !picked.some((routine) => routine.days_per_week === answers.days_per_week)) {
+  if (picked.length > 0 && !picked.some((routine) => routineCardDays(routine) === answers.days_per_week)) {
     replaceFeaturedSlot(
       picked,
-      ranked.find((routine) => routine.days_per_week === answers.days_per_week)
+      ranked.find((routine) => routineCardDays(routine) === answers.days_per_week)
     );
   }
   return picked;
@@ -858,7 +862,7 @@ export function collectRoutineTags(routines: RoutineSummary[]): string[] {
   return [...new Set(routines.flatMap((routine) => routine.tags))].sort((a, b) => a.localeCompare(b));
 }
 
-/** Sentence-case a stored tag such as "one spot" or "beginner-friendly". */
+/** Sentence-case a stored tag such as "dumbbells and a bench" or "beginner-friendly". */
 export function formatTagLabel(tag: string): string {
   const cleaned = tag.replace(/-/g, ' ').trim();
   if (!cleaned) return tag;

@@ -367,7 +367,7 @@ export function CatalogueCard({
     : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[summary.goal]}`;
   const meta = stretch
     ? `${summary.session_minutes} min`
-    : `${summary.length_weeks} weeks · ${routineCardDays(summary)} days / week`;
+    : `${summary.length_weeks} weeks · ${routineCardDays(summary)} days a week`;
   const chips = summary.tags.filter((tag) => !stretch || tag !== summary.tags[0]).slice(0, 2);
 
   return (

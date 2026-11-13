@@ -89,6 +89,8 @@ export type OnboardingScreen = {
   week_title: string;
   week_template: string;
   week_extra: string;
+  week_extras_line: string;
+  week_extras_line_balanced: string;
   timeline_title: string;
   estimate_label: string;
   alternatives_title: string;
@@ -193,6 +195,8 @@ function parseScreen(raw: unknown): OnboardingScreen {
     week_title: text(item.week_title),
     week_template: text(item.week_template),
     week_extra: text(item.week_extra),
+    week_extras_line: text(item.week_extras_line),
+    week_extras_line_balanced: text(item.week_extras_line_balanced),
     timeline_title: text(item.timeline_title),
     estimate_label: text(item.estimate_label),
     alternatives_title: text(item.alternatives_title),
@@ -257,6 +261,9 @@ export type RuleContext = {
     goal: string;
     secondary_goals: string[];
     cardio_balanced: boolean;
+    gym_days_needed: number;
+    schedule_strength_days: number;
+    cardio_days: number;
   } | null;
 };
 
@@ -367,6 +374,9 @@ function lookupIdent(name: string, ctx: RuleContext): EvalValue {
   if (name === 'routine.goal') return ctx.routine?.goal ?? null;
   if (name === 'routine.secondary_goals') return ctx.routine?.secondary_goals ?? [];
   if (name === 'routine.cardio_balanced') return ctx.routine?.cardio_balanced ?? false;
+  if (name === 'routine.gym_days_needed') return ctx.routine?.gym_days_needed ?? null;
+  if (name === 'routine.schedule_strength_days') return ctx.routine?.schedule_strength_days ?? null;
+  if (name === 'routine.cardio_days') return ctx.routine?.cardio_days ?? null;
   return null;
 }
 

@@ -73,6 +73,8 @@
       "week_ring_recovery": "recovery",
       "optional_chip": "Optional",
       "optional_skip": "Skip",
+      "anytime_this_week": "Anytime this week",
+      "finisher_block": "Cardio finisher · {minutes} min",
       "eyebrow_strength": "Strength",
       "eyebrow_cardio": "Cardio",
       "eyebrow_recovery": "Recovery"

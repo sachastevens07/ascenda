@@ -157,7 +157,7 @@ export function copyWorkoutName(name: string): string {
   return trimWorkoutName(`${trimmed} (copy)`);
 }
 
-/** Library rows for the builder. Includes zone so she can filter; any zone is allowed. */
+/** Library rows for the builder. Filter by equipment, not gym-layout zones. */
 export async function fetchExercisesForBuilder(): Promise<SlotExercise[]> {
   const { data, error } = await supabase
     .from('exercises')

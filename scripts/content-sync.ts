@@ -224,6 +224,18 @@ function finisherSlug(schedule: Json, dayKey: string, weekNumber: number): strin
   return text(slot.finisher) || null;
 }
 
+function finisherFromWeeklyPlan(plan: Json, dayKey: string, weekNumber: number): string | null {
+  const finishers = (plan.finishers ?? {}) as Json;
+  const list = asArray(finishers.fine).length > 0 ? asArray(finishers.fine) : asArray(finishers.avoid);
+  const match = list.find((item) => text(item.day_key) === dayKey);
+  if (!match) return null;
+  const skip = asArray(match.skip_weeks)
+    .map((value) => num(value))
+    .filter((value): value is number => value != null);
+  if (skip.includes(weekNumber)) return null;
+  return text(match.cardio_session) || null;
+}
+
 type StructureCounts = {
   weeks: number;
   days: number;
@@ -273,9 +285,18 @@ function planStrengthRoutine(
   const weeks = asArray(file.weeks);
   const phases = asArray(file.phases);
   const schedule = (file.weekly_schedule ?? {}) as Json;
+  const weeklyPlan = (file.weekly_plan ?? {}) as Json;
   counts.weeks = weeks.length;
   counts.supportDays = asArray(file.support_days).length;
-  counts.scheduleVariants = ['avoid', 'fine', 'love'].filter((name) => asArray(schedule[name]).length > 0).length;
+  const planVariants = asArray(weeklyPlan.strength_days).length > 0
+    ? ['avoid', 'fine', 'love'].filter((name) => {
+        const finishers = (weeklyPlan.finishers ?? {}) as Json;
+        return asArray(finishers[name]).length > 0 || asArray(((weeklyPlan.spare_day_cardio ?? {}) as Json)[name]).length > 0;
+      }).length
+    : 0;
+  counts.scheduleVariants =
+    planVariants ||
+    ['avoid', 'fine', 'love'].filter((name) => asArray(schedule[name]).length > 0).length;
 
   for (const week of weeks) {
     const weekNumber = num(week.week) ?? 0;
@@ -288,9 +309,10 @@ function planStrengthRoutine(
     for (const day of days) {
       const dayKey = text(day.key);
       const names = asArray(day.blocks).map((item) => (typeof item === 'string' ? item : text(item)));
-      const finisher = names.includes('cardio_finisher') || names.includes('cardio')
-        ? finisherSlug(schedule, dayKey, weekNumber)
-        : null;
+      const finisher =
+        names.includes('cardio_finisher') || names.includes('cardio')
+          ? finisherFromWeeklyPlan(weeklyPlan, dayKey, weekNumber) ?? finisherSlug(schedule, dayKey, weekNumber)
+          : finisherFromWeeklyPlan(weeklyPlan, dayKey, weekNumber);
       for (const name of names) {
         const blockType = mapBlockType(name);
         if (!blockType) continue;
@@ -1044,6 +1066,8 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   const typeProbe = await probe(client, 'routines', 'type');
   const activeProbe = await probe(client, 'routines', 'is_active');
   const scheduleProbe = await probe(client, 'routines', 'support_days, weekly_schedule');
+  const weeklyPlanProbe = await probe(client, 'routines', 'weekly_plan');
+  const tagProbe = await probe(client, 'routine_tags', 'routine_id, tag');
   const dayTypeProbe = await probe(client, 'routine_days', 'type, day_key');
   const blocksProbe = await probe(client, 'routine_day_blocks', 'id, routine_day_id, sort_order, block_type');
   const hasType = typeProbe === null;
@@ -1110,10 +1134,12 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   line(`  is_active column: ${hasActive ? 'present' : 'missing (paste supabase/routines_is_active.sql)'}`);
   line(`  type column: ${hasType ? 'present' : `not confirmed (${typeProbe ?? 'unknown'})`}`);
   line(`  support_days / weekly_schedule columns: ${scheduleProbe ? `missing (paste supabase/session_blocks_w1.sql)` : 'present'}`);
+  line(`  weekly_plan column: ${weeklyPlanProbe ? `missing (paste supabase/weekly_plan.sql)` : 'present'}`);
+  line(`  routine_tags: ${tagProbe ? `not readable (${tagProbe})` : 'present. content:sql deletes then inserts so old tags are replaced, not added to.'}`);
   line(`  routine_days.type / day_key: ${dayTypeProbe ? `missing (${dayTypeProbe})` : 'present'}`);
   line(`  routine_day_blocks: ${blocksProbe ? `missing (paste supabase/session_blocks_w1.sql)` : 'present'}`);
   line(`  Planned weeks: ${structure.weeks}`);
-  line(`  Planned days: ${structure.days} (strength days from phases; cardio and recovery days are placed on the planner from weekly_schedule in W5)`);
+  line(`  Planned days: ${structure.days} (strength days from phases; Planner places the week from weekly_plan)`);
   line(`  Planned blocks: ${structure.blocks} (warmup ${structure.warmup}, strength ${structure.strength}, cardio ${structure.cardio}, cooldown ${structure.cooldown}, stretch ${structure.stretch})`);
   const n2Probe = await probe(client, 'routines', 'audience_bullets, by_the_end_bullets, split_note, progression_note');
   const n2WeekProbe = await probe(client, 'routine_weeks', 'phase_name, phase_goal, is_lighter_week');
@@ -1128,7 +1154,40 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   line(`  N2 day columns: ${n2DayProbe ? `missing (paste supabase/n2_routines.sql) (${n2DayProbe})` : 'present'}`);
   line(`  N2 exercise columns: ${n2SlotProbe ? `missing (paste supabase/n2_routines.sql) (${n2SlotProbe})` : 'present'}`);
   line(`  Planned strength exercise slots: ${structure.exercises}`);
-  line(`  support_days rows: ${structure.supportDays}. weekly_schedule variants: ${structure.scheduleVariants} (avoid / fine / love).`);
+  line(`  support_days rows: ${structure.supportDays}. weekly_plan preference variants: ${structure.scheduleVariants} (avoid / fine / love).`);
+  const planFiles = files.map((file) => {
+    const body = readJson(join('routines', file));
+    const routine = body.routine as Json;
+    const plan = (body.weekly_plan ?? {}) as Json;
+    const tags = asArray(routine.tags).map((item) => text(item)).filter(Boolean);
+    const retired = tags.filter((tag) => /one spot|busy gym friendly|whole gym/i.test(tag));
+    return {
+      slug: text(routine.slug),
+      name: text(routine.name),
+      hasPlan: asArray(plan.strength_days).length > 0,
+      hasOldSchedule: body.weekly_schedule != null,
+      gymDays: num(plan.gym_days_needed),
+      tags,
+      retired,
+    };
+  });
+  line(`  weekly_plan present: ${planFiles.filter((item) => item.hasPlan).length} of ${planFiles.length} strength routines`);
+  line(`  weekly_schedule leftover in JSON: ${planFiles.filter((item) => item.hasOldSchedule).length} (ignored when weekly_plan exists)`);
+  const missingPlan = planFiles.filter((item) => !item.hasPlan).map((item) => item.slug);
+  if (missingPlan.length > 0) {
+    line(`  Missing weekly_plan: ${missingPlan.join(', ')}`);
+  }
+  const retiredTags = planFiles.filter((item) => item.retired.length > 0);
+  if (retiredTags.length > 0) {
+    line(`  Retired layout tags still in content (must be gone): ${retiredTags.map((item) => `${item.slug}=${item.retired.join('/')}`).join(', ')}`);
+  } else {
+    line('  Tags in /content use equipment, level and days. No "one spot", "busy gym friendly" or "whole gym".');
+  }
+  for (const item of planFiles) {
+    line(`  ${item.slug}: "${item.name}" · gym_days_needed ${item.gymDays ?? '—'} · tags [${item.tags.join(', ')}]`);
+  }
+  line('  Tags write path: DELETE routine_tags for these routine ids, then INSERT the new list. Existing enrolments stay on the same slug.');
+  line('  Exercise lists in the logger stay as the database until you paste content_routines SQL. After that paste, enrolled weeks show the rebuilt exercises.');
   if (structure.missingWarmupTemplates > 0) {
     line(`  Warm-up or cool-down template ids not in content/warmups-cooldowns: ${structure.missingWarmupTemplates}`);
   }
@@ -1139,7 +1198,7 @@ async function reportRoutines(client: SupabaseClient): Promise<void> {
   if (hiddenNote('routines', remote.error, remote.hidden)) {
     line(`  Plan when a service role can read: upsert ${content.length - unmappedGoals.length - badDifficulty.length} catalogue rows by slug (id = slug).`);
     line('  Stretch rows use type = stretch. Strength rows use type = strength.');
-    line('  Then upsert weeks, days, blocks and exercise slots. Store support_days and weekly_schedule jsonb on the routine.');
+    line('  Then upsert weeks, days, blocks and exercise slots. Store weekly_plan jsonb after supabase/weekly_plan.sql. Tags are delete-then-insert.');
     line('  Old routines whose slug is not in /content would be set is_active = false. No delete.');
     line('  Do not live-run that flip until you confirm a live sync: the new slugs are extra rows, and hiding the current 14 plans would leave the logger with nothing to train from.');
     line();

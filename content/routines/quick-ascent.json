@@ -6,12 +6,12 @@
     "Lighter week: use about 60 to 70% of the normal sets (round down, minimum 1) at the same weights, with 3 reps in reserve.",
     "Exercises sharing a superset_group are done back to back, resting after the pair.",
     "Draft for coach review before launch.",
-    "Complete week (AGENTS.md W1, W5, W6, W7): weekly_schedule has one 7-day template per profiles.cardio_preference (avoid, fine, love). Routines with cardio_balanced=true use the same template for everyone.",
-    "Complete week: strength slots point at the phase day (day_key). Cardio and recovery slots point at support_days, which pick the cardio session or stretch routine by week.",
-    "Complete week: a finisher is a cardio block after the strength block on that day (block order warmup, strength, cardio_finisher, cooldown). It's skipped in finisher_skip_weeks (checkpoint and lighter weeks), and she can skip it with one tap at any time.",
-    "Complete week: weekdays are defaults. If she picked different training days, place strength days on her days in order, then fill cardio on free days (avoid the day before a lower-body or full-body day where possible), recovery on a free day after a lower-body or full-body day, and keep at least one full rest day.",
-    "Complete week: cardio and recovery slots are optional extras (except in cardio_balanced routines); they count towards her weekly target when done but never add to it.",
-    "Complete week: lighter week cardio uses the session at its starting length with an easy-effort note. Cardio counts towards the weekly target and streak, never towards strength personal bests."
+    "Complete week: her onboarding days-per-week is the number of gym days she can do. Never plan more gym days than that.",
+    "Complete week: weekly_plan.strength_days go on her chosen days in order. Finishers (by profiles.cardio_preference) are a cardio block after the strength block on that day; skipped in skip_weeks (checkpoint and lighter weeks) and skippable with one tap.",
+    "Complete week: if she picked more days than gym_days_needed, fill the spare days with spare_day_cardio for her preference, in order (CARDIO1 first). Avoid placing cardio the day before a lower-body day where possible. If she picked fewer days than strength_days, recommend a different routine instead.",
+    "Complete week: anytime_extras (the recovery stretch) aren't tied to a day. Show them as 'Anytime this week' in the Planner. They're optional.",
+    "Complete week: cardio_balanced routines need gym_days_needed days (strength plus required_cardio_days). Only recommend them when she picked at least that many days.",
+    "Complete week: her weekly target is her onboarding days-per-week. Any session counts towards it (strength, cardio, or a stretch or recovery session of 10+ minutes). schedule_label is the line shown on the routine page; the card shows '{days_per_week} days a week' (or gym_days_needed for cardio_balanced routines)."
   ],
   "routine": {
     "is_flagship": false,
@@ -37,16 +37,16 @@
     "session_minutes": 30,
     "cover_image_slug": "quick-ascent-cover",
     "tags": [
-      "30 minutes",
+      "30-minute sessions",
+      "3 days a week",
       "Full body",
-      "Busy weeks",
-      "Supersets"
+      "Beginner friendly"
     ],
     "display_tags": [
-      "30 minutes",
+      "30-minute sessions",
       "Full body"
     ],
-    "equipment_summary": "Dumbbells, a bench and a few machines",
+    "equipment_summary": "Dumbbells and common machines",
     "short_description": "In and out in 30 minutes. Exercises are paired up so you rest less and still train your whole body.",
     "who_its_for": [
       "You're short on time",
@@ -60,10 +60,9 @@
     ],
     "why_this_split": "Pairing exercises that use different muscles (like a squat with a row) means one recovers while the other works. You get a full session's work in about half the time.",
     "how_it_works": [
-      "Do each pair back to back, then rest.",
-      "Weeks 1 to 3: moderate reps.",
-      "Weeks 4 to 6: heavier.",
-      "Re-test in weeks 3 and 6."
+      "Weeks 1 to 3: full-body sessions in supersets: two exercises back to back, then rest.",
+      "Weeks 4 to 6: new pairs, including the Smith squat and hip thrust machine, and a little more weight.",
+      "In weeks 3 and 6 you'll re-test your key lifts to see how far you've come."
     ],
     "progression_explained": "Hit the top of the range on every set and we'll suggest more weight.",
     "effort_explained": "Finish most sets with 2 reps left. Rest 60 to 90 seconds after each pair.",
@@ -85,9 +84,9 @@
       }
     ],
     "checkpoint_lifts": [
-      "goblet-squat",
       "dumbbell-romanian-deadlift",
-      "dumbbell-bench-press"
+      "dumbbell-bench-press",
+      "lat-pulldown"
     ],
     "checkpoint_weeks": [
       3,
@@ -95,21 +94,12 @@
     ],
     "checkpoint_protocol": "Warm up as normal. Then work up to one set of 8 reps where you could have done about 2 more. Log the weight. This isn't a maximum test, so never push to failure.",
     "type": "strength",
+    "schedule_label": "3 strength days a week, plus optional cardio and stretching",
     "weekly_structure_summary": {
-      "avoid": {
-        "text": "3 strength, plus optional stretching",
-        "planned_sessions": 3
-      },
-      "fine": {
-        "text": "3 strength, plus optional cardio and stretching",
-        "planned_sessions": 3
-      },
-      "love": {
-        "text": "3 strength, plus optional cardio and stretching",
-        "planned_sessions": 3
-      }
-    },
-    "schedule_label": "3 strength days a week, plus optional cardio and stretching"
+      "avoid": "3 strength days, a short cardio finisher, and an optional recovery stretch you can do anytime",
+      "fine": "3 strength days, a short cardio finisher, up to 1 cardio session on any spare gym days you picked, and an optional recovery stretch you can do anytime",
+      "love": "3 strength days, 2 short cardio finishers, up to 2 cardio sessions on any spare gym days you picked, and an optional recovery stretch you can do anytime"
+    }
   },
   "phases": [
     {
@@ -120,40 +110,26 @@
         2,
         3
       ],
-      "goal": "Get used to pairing exercises with short rests.",
+      "goal": "Full-body sessions in supersets: two exercises back to back, then rest.",
       "days": [
         {
           "key": "A",
           "name": "Quick A",
-          "focus": "Squat and push",
-          "coach_note": "Set up next to a bench with your dumbbells so you can move straight between each pair.",
+          "focus": "Squat, push and pull",
+          "coach_note": "Do each pair back to back, then rest. Set up both stations before you start.",
           "exercises": [
             {
-              "slug": "goblet-squat",
+              "slug": "leg-press",
               "role": "main",
-              "sets": 3,
-              "rep_min": 8,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "1",
-              "load_increment_kg": 2,
-              "notes": "Checkpoint lift."
-            },
-            {
-              "slug": "one-arm-dumbbell-row",
-              "role": "secondary",
               "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 75,
-              "per_side": true,
-              "superset_group": "1",
-              "load_increment_kg": 2,
-              "notes": "Then rest 60 to 90 seconds."
+              "rest_seconds": 120,
+              "superset_group": "A",
+              "load_increment_kg": 5,
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
@@ -163,36 +139,37 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "2",
+              "rest_seconds": 90,
+              "superset_group": "A",
               "load_increment_kg": 2,
-              "notes": "Checkpoint lift."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-glute-bridge",
+              "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "superset_group": "B",
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "dumbbell-hip-thrust",
               "role": "accessory",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
-              "rest_seconds": 60,
-              "superset_group": "2",
+              "rest_seconds": 75,
+              "superset_group": "B",
               "load_increment_kg": 2,
-              "notes": "Then rest."
-            },
-            {
-              "slug": "dead-bug",
-              "role": "core",
-              "sets": 2,
-              "rep_min": 6,
-              "rep_max": 8,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 45,
-              "per_side": true,
-              "load_increment_kg": null,
-              "notes": "Finish strong."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -202,14 +179,15 @@
           "blocks": [
             "warmup",
             "strength",
+            "cardio_finisher",
             "cooldown"
           ]
         },
         {
           "key": "B",
           "name": "Quick B",
-          "focus": "Hinge and pull",
-          "coach_note": "Two pairs and a finisher. Keep the rests honest and you'll be done in half an hour.",
+          "focus": "Hinge and shoulders",
+          "coach_note": "Keep rests short, but never rush a rep.",
           "exercises": [
             {
               "slug": "dumbbell-romanian-deadlift",
@@ -219,10 +197,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "1",
+              "rest_seconds": 120,
+              "superset_group": "A",
               "load_increment_kg": 2,
-              "notes": "Checkpoint lift."
+              "notes": ""
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -232,48 +210,51 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 75,
-              "superset_group": "1",
+              "rest_seconds": 90,
+              "superset_group": "A",
               "load_increment_kg": 2,
-              "notes": "Then rest."
+              "notes": ""
             },
             {
               "slug": "dumbbell-reverse-lunge",
               "role": "secondary",
-              "sets": 3,
+              "sets": 2,
               "rep_min": 8,
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 30,
+              "rest_seconds": 90,
               "per_side": true,
-              "superset_group": "2",
+              "superset_group": "B",
               "load_increment_kg": 2,
-              "notes": "Alternate legs."
+              "notes": ""
             },
             {
-              "slug": "chest-supported-dumbbell-row",
-              "role": "accessory",
-              "sets": 3,
+              "slug": "seated-cable-row",
+              "role": "secondary",
+              "sets": 2,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 60,
-              "superset_group": "2",
-              "load_increment_kg": 2,
-              "notes": "Then rest."
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "superset_group": "B",
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             },
             {
-              "slug": "side-plank",
+              "slug": "dead-bug",
               "role": "core",
               "sets": 2,
-              "duration_min_seconds": 20,
-              "duration_max_seconds": 30,
-              "progression_rule": "time",
+              "rep_min": 8,
+              "rep_max": 10,
+              "target_rir": 2,
+              "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "Knees bent is fine."
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -289,35 +270,35 @@
         {
           "key": "C",
           "name": "Quick C",
-          "focus": "Machines",
-          "coach_note": "Machine day. If one of the pair is busy, swap it rather than waiting.",
+          "focus": "Legs and back",
+          "coach_note": "A legs-and-back pair, then glutes and chest.",
           "exercises": [
             {
-              "slug": "leg-press",
+              "slug": "goblet-squat",
               "role": "main",
               "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "1",
-              "load_increment_kg": 5,
-              "notes": "Feet shoulder-width."
+              "rest_seconds": 120,
+              "superset_group": "A",
+              "load_increment_kg": 2,
+              "notes": ""
             },
             {
-              "slug": "lat-pulldown",
+              "slug": "one-arm-dumbbell-row",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 75,
-              "superset_group": "1",
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Then rest."
+              "rest_seconds": 90,
+              "per_side": true,
+              "superset_group": "A",
+              "load_increment_kg": 2,
+              "notes": ""
             },
             {
               "slug": "incline-dumbbell-press",
@@ -327,10 +308,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "2",
+              "rest_seconds": 90,
+              "superset_group": "B",
               "load_increment_kg": 2,
-              "notes": "Low incline."
+              "notes": ""
             },
             {
               "slug": "cable-pull-through",
@@ -340,25 +321,11 @@
               "rep_max": 15,
               "target_rir": 2,
               "progression_rule": "reps",
-              "rest_seconds": 60,
-              "superset_group": "2",
+              "rest_seconds": 75,
+              "superset_group": "B",
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Then rest."
-            },
-            {
-              "slug": "pallof-press",
-              "role": "core",
-              "sets": 2,
-              "rep_min": 8,
-              "rep_max": 10,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 45,
-              "per_side": true,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Resist the twist."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -382,40 +349,27 @@
         5,
         6
       ],
-      "goal": "Heavier weights in the same 30 minutes.",
+      "goal": "New pairs, including the Smith squat and hip thrust machine, and a little more weight.",
       "days": [
         {
           "key": "A",
           "name": "Quick A",
-          "focus": "Squat and push",
-          "coach_note": "Heavier pairs now. Still 30 minutes.",
+          "focus": "Squat, push and pull",
+          "coach_note": "Smith machine squats join the session. Set the safety stops first.",
           "exercises": [
             {
-              "slug": "goblet-squat",
+              "slug": "smith-machine-squat",
               "role": "main",
-              "sets": 3,
-              "rep_min": 6,
-              "rep_max": 10,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "1",
-              "load_increment_kg": 2,
-              "notes": "Checkpoint lift."
-            },
-            {
-              "slug": "one-arm-dumbbell-row",
-              "role": "secondary",
               "sets": 3,
               "rep_min": 8,
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 75,
-              "per_side": true,
-              "superset_group": "1",
-              "load_increment_kg": 2,
-              "notes": "Then rest 60 to 90 seconds."
+              "rest_seconds": 120,
+              "superset_group": "A",
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
@@ -425,36 +379,38 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "2",
+              "rest_seconds": 90,
+              "superset_group": "A",
               "load_increment_kg": 2,
-              "notes": "Checkpoint lift."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-glute-bridge",
+              "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 10,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "superset_group": "B",
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "hip-thrust-machine",
               "role": "accessory",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
-              "rest_seconds": 60,
-              "superset_group": "2",
-              "load_increment_kg": 2,
-              "notes": "Then rest."
-            },
-            {
-              "slug": "dead-bug",
-              "role": "core",
-              "sets": 2,
-              "rep_min": 6,
-              "rep_max": 8,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 45,
-              "per_side": true,
+              "rest_seconds": 75,
+              "superset_group": "B",
               "load_increment_kg": null,
-              "notes": "Finish strong."
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -464,78 +420,84 @@
           "blocks": [
             "warmup",
             "strength",
+            "cardio_finisher",
             "cooldown"
           ]
         },
         {
           "key": "B",
           "name": "Quick B",
-          "focus": "Hinge and pull",
-          "coach_note": "Two pairs and a finisher. Keep the rests honest and you'll be done in half an hour.",
+          "focus": "Hinge and shoulders",
+          "coach_note": "Heavier Romanian deadlifts. Same tempo.",
           "exercises": [
             {
               "slug": "dumbbell-romanian-deadlift",
               "role": "main",
               "sets": 3,
-              "rep_min": 6,
-              "rep_max": 10,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "1",
-              "load_increment_kg": 2,
-              "notes": "Checkpoint lift."
-            },
-            {
-              "slug": "seated-dumbbell-shoulder-press",
-              "role": "secondary",
-              "sets": 3,
               "rep_min": 8,
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 75,
-              "superset_group": "1",
+              "rest_seconds": 120,
+              "superset_group": "A",
               "load_increment_kg": 2,
-              "notes": "Then rest."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-reverse-lunge",
+              "slug": "shoulder-press-machine",
               "role": "secondary",
-              "sets": 3,
-              "rep_min": 8,
-              "rep_max": 10,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 30,
-              "per_side": true,
-              "superset_group": "2",
-              "load_increment_kg": 2,
-              "notes": "Alternate legs."
-            },
-            {
-              "slug": "chest-supported-dumbbell-row",
-              "role": "accessory",
               "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 60,
-              "superset_group": "2",
-              "load_increment_kg": 2,
-              "notes": "Then rest."
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "superset_group": "A",
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             },
             {
-              "slug": "side-plank",
+              "slug": "walking-lunge",
+              "role": "secondary",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "per_side": true,
+              "superset_group": "B",
+              "load_increment_kg": 2,
+              "notes": ""
+            },
+            {
+              "slug": "single-arm-cable-row",
+              "role": "secondary",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "per_side": true,
+              "superset_group": "B",
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "cable-crunch",
               "role": "core",
               "sets": 2,
-              "duration_min_seconds": 20,
-              "duration_max_seconds": 30,
-              "progression_rule": "time",
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "reps",
               "rest_seconds": 45,
-              "per_side": true,
-              "notes": "Knees bent is fine."
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -551,62 +513,62 @@
         {
           "key": "C",
           "name": "Quick C",
-          "focus": "Machines",
-          "coach_note": "Machine day. If one of the pair is busy, swap it rather than waiting.",
+          "focus": "Legs and back",
+          "coach_note": "Leg press and rows, then chest and hamstrings.",
           "exercises": [
             {
               "slug": "leg-press",
               "role": "main",
               "sets": 3,
-              "rep_min": 6,
-              "rep_max": 10,
+              "rep_min": 8,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "1",
+              "rest_seconds": 120,
+              "superset_group": "A",
               "load_increment_kg": 5,
-              "notes": "Feet shoulder-width."
+              "notes": ""
             },
             {
-              "slug": "lat-pulldown",
+              "slug": "chest-supported-dumbbell-row",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 8,
-              "rep_max": 10,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 75,
-              "superset_group": "1",
+              "rest_seconds": 90,
+              "superset_group": "A",
+              "load_increment_kg": 2,
+              "notes": ""
+            },
+            {
+              "slug": "chest-press-machine",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "superset_group": "B",
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Then rest."
+              "notes": ""
             },
             {
-              "slug": "incline-dumbbell-press",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 8,
-              "rep_max": 10,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 30,
-              "superset_group": "2",
-              "load_increment_kg": 2,
-              "notes": "Low incline."
-            },
-            {
-              "slug": "cable-pull-through",
+              "slug": "seated-leg-curl",
               "role": "accessory",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
-              "rest_seconds": 60,
-              "superset_group": "2",
+              "rest_seconds": 75,
+              "superset_group": "B",
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Then rest."
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -620,7 +582,7 @@
               "per_side": true,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Resist the twist."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -726,7 +688,7 @@
     {
       "key": "RECOVERY",
       "type": "recovery",
-      "name": "Recovery: stretch",
+      "name": "Recovery stretch",
       "by_week": [
         {
           "weeks": [
@@ -747,133 +709,82 @@
       ]
     }
   ],
-  "weekly_schedule": {
-    "avoid": [
-      {
-        "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "rest"
-      },
-      {
-        "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
-      },
-      {
-        "weekday": "fri",
-        "type": "strength",
-        "day_key": "C",
-        "finisher": "incline-walk-finisher-10",
-        "finisher_skip_weeks": [
-          3,
-          6
-        ]
-      },
-      {
-        "weekday": "sat",
-        "type": "rest"
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
-      }
+  "weekly_plan": {
+    "strength_days": [
+      "A",
+      "B",
+      "C"
     ],
-    "fine": [
-      {
-        "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "cardio",
-        "support_key": "CARDIO1",
-        "optional": true
-      },
-      {
-        "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
-      },
-      {
-        "weekday": "fri",
-        "type": "strength",
-        "day_key": "C",
-        "finisher": "incline-walk-finisher-10",
-        "finisher_skip_weeks": [
-          3,
-          6
-        ]
-      },
-      {
-        "weekday": "sat",
-        "type": "cardio",
-        "support_key": "CARDIO2",
-        "optional": true
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
-      }
+    "required_cardio_days": [],
+    "gym_days_needed": 3,
+    "finishers": {
+      "avoid": [
+        {
+          "day_key": "C",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            3,
+            6
+          ]
+        }
+      ],
+      "fine": [
+        {
+          "day_key": "C",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            3,
+            6
+          ]
+        }
+      ],
+      "love": [
+        {
+          "day_key": "C",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            3,
+            6
+          ]
+        },
+        {
+          "day_key": "A",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            3,
+            6
+          ]
+        }
+      ]
+    },
+    "spare_day_cardio": {
+      "avoid": [],
+      "fine": [
+        "CARDIO1"
+      ],
+      "love": [
+        "CARDIO1",
+        "CARDIO2"
+      ]
+    },
+    "anytime_extras": [
+      "RECOVERY"
     ],
-    "love": [
+    "default_week": [
       {
         "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "cardio",
-        "support_key": "CARDIO1",
-        "optional": true
+        "day_key": "A",
+        "name": "Quick A"
       },
       {
         "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
+        "day_key": "B",
+        "name": "Quick B"
       },
       {
         "weekday": "fri",
-        "type": "strength",
         "day_key": "C",
-        "finisher": "incline-walk-finisher-10",
-        "finisher_skip_weeks": [
-          3,
-          6
-        ]
-      },
-      {
-        "weekday": "sat",
-        "type": "cardio",
-        "support_key": "CARDIO2",
-        "optional": true
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
+        "name": "Quick C"
       }
     ]
   }

@@ -6,12 +6,12 @@
     "Lighter week: use about 60 to 70% of the normal sets (round down, minimum 1) at the same weights, with 3 reps in reserve.",
     "Exercises sharing a superset_group are done back to back, resting after the pair.",
     "Draft for coach review before launch.",
-    "Complete week (AGENTS.md W1, W5, W6, W7): weekly_schedule has one 7-day template per profiles.cardio_preference (avoid, fine, love). Routines with cardio_balanced=true use the same template for everyone.",
-    "Complete week: strength slots point at the phase day (day_key). Cardio and recovery slots point at support_days, which pick the cardio session or stretch routine by week.",
-    "Complete week: a finisher is a cardio block after the strength block on that day (block order warmup, strength, cardio_finisher, cooldown). It's skipped in finisher_skip_weeks (checkpoint and lighter weeks), and she can skip it with one tap at any time.",
-    "Complete week: weekdays are defaults. If she picked different training days, place strength days on her days in order, then fill cardio on free days (avoid the day before a lower-body or full-body day where possible), recovery on a free day after a lower-body or full-body day, and keep at least one full rest day.",
-    "Complete week: cardio and recovery slots are optional extras (except in cardio_balanced routines); they count towards her weekly target when done but never add to it.",
-    "Complete week: lighter week cardio uses the session at its starting length with an easy-effort note. Cardio counts towards the weekly target and streak, never towards strength personal bests."
+    "Complete week: her onboarding days-per-week is the number of gym days she can do. Never plan more gym days than that.",
+    "Complete week: weekly_plan.strength_days go on her chosen days in order. Finishers (by profiles.cardio_preference) are a cardio block after the strength block on that day; skipped in skip_weeks (checkpoint and lighter weeks) and skippable with one tap.",
+    "Complete week: if she picked more days than gym_days_needed, fill the spare days with spare_day_cardio for her preference, in order (CARDIO1 first). Avoid placing cardio the day before a lower-body day where possible. If she picked fewer days than strength_days, recommend a different routine instead.",
+    "Complete week: anytime_extras (the recovery stretch) aren't tied to a day. Show them as 'Anytime this week' in the Planner. They're optional.",
+    "Complete week: cardio_balanced routines need gym_days_needed days (strength plus required_cardio_days). Only recommend them when she picked at least that many days.",
+    "Complete week: her weekly target is her onboarding days-per-week. Any session counts towards it (strength, cardio, or a stretch or recovery session of 10+ minutes). schedule_label is the line shown on the routine page; the card shows '{days_per_week} days a week' (or gym_days_needed for cardio_balanced routines)."
   ],
   "routine": {
     "is_flagship": false,
@@ -42,13 +42,13 @@
       "Strength and cardio",
       "Get fitter",
       "Full body",
-      "3 days a week"
+      "3 strength days"
     ],
     "display_tags": [
       "Strength and cardio",
       "Get fitter"
     ],
-    "equipment_summary": "Dumbbells, common machines, cables and the cardio machines",
+    "equipment_summary": "Dumbbells, machines, cables and the cardio machines",
     "short_description": "Get stronger and fitter at the same time. Three full-body strength sessions and two cardio sessions a week, with a recovery day in between.",
     "who_its_for": [
       "You'd like your fitness and strength to improve together",
@@ -62,10 +62,10 @@
     ],
     "why_this_split": "Three full-body strength days train every muscle often, while two cardio days build your heart and lung fitness. Strength and cardio sit on different days so each one gets your full effort, and a recovery day keeps the week sustainable.",
     "how_it_works": [
-      "Weeks 1 to 3: build a base. Steady cardio only.",
-      "Weeks 4 to 6: heavier main lifts. One cardio day becomes intervals.",
-      "Week 7: a lighter week to recharge.",
-      "Week 8: test your key lifts."
+      "Weeks 1 to 3: moderate reps on full-body strength days while steady cardio builds your fitness.",
+      "Weeks 4 to 6: heavier main lifts, the Smith squat and barbell hip thrust, and one interval cardio day.",
+      "Weeks 7 to 8: a lighter week, then a checkpoint on your lifts and your cardio.",
+      "In weeks 4 and 8 you'll re-test your key lifts to see how far you've come."
     ],
     "progression_explained": "Strength: hit the top of the rep range on every set and we'll suggest more weight next time. Cardio: add minutes first, then effort.",
     "effort_explained": "Strength sets finish with 2 reps left in the tank. Steady cardio should feel like you can still chat.",
@@ -87,7 +87,7 @@
       }
     ],
     "checkpoint_lifts": [
-      "goblet-squat",
+      "leg-press",
       "dumbbell-romanian-deadlift",
       "dumbbell-bench-press"
     ],
@@ -97,21 +97,12 @@
     ],
     "checkpoint_protocol": "Warm up as normal. Then work up to one set of 8 reps where you could have done about 2 more. Log the weight. This isn't a maximum test, so never push to failure.",
     "type": "strength",
+    "schedule_label": "3 strength + 2 cardio days a week",
     "weekly_structure_summary": {
-      "avoid": {
-        "text": "3 strength, 2 cardio, plus optional stretching",
-        "planned_sessions": 5
-      },
-      "fine": {
-        "text": "3 strength, 2 cardio, plus optional stretching",
-        "planned_sessions": 5
-      },
-      "love": {
-        "text": "3 strength, 2 cardio, plus optional stretching",
-        "planned_sessions": 5
-      }
-    },
-    "schedule_label": "3 strength + 2 cardio days a week"
+      "avoid": "3 strength days and 2 cardio days, plus an optional recovery stretch",
+      "fine": "3 strength days and 2 cardio days, plus an optional recovery stretch",
+      "love": "3 strength days and 2 cardio days, plus an optional recovery stretch"
+    }
   },
   "phases": [
     {
@@ -122,26 +113,25 @@
         2,
         3
       ],
-      "goal": "Learn the lifts with moderate reps while steady cardio builds your fitness.",
+      "goal": "Moderate reps on full-body strength days while steady cardio builds your fitness.",
       "days": [
         {
           "key": "A",
           "name": "Full body A",
           "focus": "Squat and push",
-          "coach_note": "Squats first, while you're fresh. Slow on the way down.",
+          "coach_note": "Leg press first, then chest and back.",
           "exercises": [
             {
-              "slug": "goblet-squat",
+              "slug": "leg-press",
               "role": "main",
               "sets": 3,
-              "rep_min": 8,
+              "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "tempo": "3-1-1",
-              "load_increment_kg": 2,
-              "notes": "Lower for 3 seconds."
+              "load_increment_kg": 5,
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
@@ -153,7 +143,7 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": 2,
-              "notes": "Shoulder blades gently together."
+              "notes": ""
             },
             {
               "slug": "seated-cable-row",
@@ -166,7 +156,7 @@
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Sit tall, pull to your belly button."
+              "notes": ""
             },
             {
               "slug": "dumbbell-reverse-lunge",
@@ -179,32 +169,20 @@
               "rest_seconds": 75,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Step back, front knee over your foot."
-            },
-            {
-              "slug": "dumbbell-lateral-raise",
-              "role": "accessory",
-              "sets": 2,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 75,
-              "load_increment_kg": 2,
-              "notes": "Light weights, lead with your elbows."
+              "notes": ""
             },
             {
               "slug": "dead-bug",
               "role": "core",
               "sets": 2,
-              "rep_min": 6,
-              "rep_max": 8,
+              "rep_min": 8,
+              "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
               "load_increment_kg": null,
-              "notes": "Lower back gently pressed into the mat."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -221,7 +199,7 @@
           "key": "B",
           "name": "Full body B",
           "focus": "Hinge and pull",
-          "coach_note": "Romanian deadlifts lead today. Push your hips back and keep the dumbbells close.",
+          "coach_note": "Romanian deadlifts and pulldowns.",
           "exercises": [
             {
               "slug": "dumbbell-romanian-deadlift",
@@ -234,7 +212,7 @@
               "rest_seconds": 120,
               "tempo": "3-1-1",
               "load_increment_kg": 2,
-              "notes": "Soft knees, flat back."
+              "notes": ""
             },
             {
               "slug": "lat-pulldown",
@@ -247,7 +225,7 @@
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Pull the bar to your upper chest."
+              "notes": ""
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -259,7 +237,7 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": 2,
-              "notes": "Press without arching your back."
+              "notes": ""
             },
             {
               "slug": "dumbbell-step-up",
@@ -272,7 +250,7 @@
               "rest_seconds": 75,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Drive through the heel on the box."
+              "notes": ""
             },
             {
               "slug": "side-plank",
@@ -283,7 +261,7 @@
               "progression_rule": "time",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "Knees bent is a great start."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -300,10 +278,10 @@
           "key": "C",
           "name": "Full body C",
           "focus": "Legs, glutes and carries",
-          "coach_note": "A strong finish to the week. Carries make your whole body work together.",
+          "coach_note": "Carries make your whole body work together.",
           "exercises": [
             {
-              "slug": "leg-press",
+              "slug": "goblet-squat",
               "role": "main",
               "sets": 3,
               "rep_min": 10,
@@ -311,20 +289,20 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": 5,
-              "notes": "Feet hip-width, lower under control."
+              "load_increment_kg": 2,
+              "notes": ""
             },
             {
-              "slug": "incline-dumbbell-press",
+              "slug": "dumbbell-hip-thrust",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 8,
+              "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": 2,
-              "notes": "Bench on a low incline."
+              "notes": ""
             },
             {
               "slug": "one-arm-dumbbell-row",
@@ -337,19 +315,19 @@
               "rest_seconds": 90,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Pull towards your hip."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-hip-thrust",
+              "slug": "incline-dumbbell-press",
               "role": "accessory",
-              "sets": 3,
+              "sets": 2,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": 2,
-              "notes": "Pause and squeeze at the top."
+              "notes": ""
             },
             {
               "slug": "farmer-carry",
@@ -359,7 +337,7 @@
               "duration_max_seconds": 40,
               "progression_rule": "time",
               "rest_seconds": 45,
-              "notes": "Heavy dumbbells, tall posture."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -382,41 +360,40 @@
         5,
         6
       ],
-      "goal": "Heavier main lifts, and one cardio day becomes intervals.",
+      "goal": "Heavier main lifts, the Smith squat and barbell hip thrust, and one interval cardio day.",
       "days": [
         {
           "key": "A",
           "name": "Full body A",
           "focus": "Squat and push",
-          "coach_note": "Four sets on your squat now, with fewer reps. Go a little heavier than phase 1.",
+          "coach_note": "Four sets on the leg press now.",
           "exercises": [
             {
-              "slug": "goblet-squat",
+              "slug": "leg-press",
               "role": "main",
               "sets": 4,
-              "rep_min": 6,
+              "rep_min": 8,
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "tempo": "3-1-1",
-              "load_increment_kg": 2,
-              "notes": "Lower for 3 seconds."
+              "load_increment_kg": 5,
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
               "role": "secondary",
               "sets": 3,
               "rep_min": 8,
-              "rep_max": 12,
+              "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": 2,
-              "notes": "Shoulder blades gently together."
+              "notes": ""
             },
             {
-              "slug": "seated-cable-row",
+              "slug": "single-arm-cable-row",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
@@ -424,47 +401,37 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
+              "per_side": true,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Sit tall, pull to your belly button."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-reverse-lunge",
+              "slug": "walking-lunge",
               "role": "accessory",
               "sets": 2,
-              "rep_min": 8,
-              "rep_max": 10,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Step back, front knee over your foot."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-lateral-raise",
-              "role": "accessory",
-              "sets": 2,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 75,
-              "load_increment_kg": 2,
-              "notes": "Light weights, lead with your elbows."
-            },
-            {
-              "slug": "dead-bug",
+              "slug": "pallof-press",
               "role": "core",
               "sets": 2,
-              "rep_min": 6,
-              "rep_max": 8,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
               "load_increment_kg": null,
-              "notes": "Lower back gently pressed into the mat."
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -481,7 +448,7 @@
           "key": "B",
           "name": "Full body B",
           "focus": "Hinge and pull",
-          "coach_note": "Heavier Romanian deadlifts. Keep the same smooth tempo.",
+          "coach_note": "Heavier Romanian deadlifts, same smooth tempo.",
           "exercises": [
             {
               "slug": "dumbbell-romanian-deadlift",
@@ -492,12 +459,24 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "tempo": "3-1-1",
               "load_increment_kg": 2,
-              "notes": "Soft knees, flat back."
+              "notes": ""
             },
             {
               "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 10,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "shoulder-press-machine",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
@@ -507,22 +486,10 @@
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Pull the bar to your upper chest."
+              "notes": ""
             },
             {
-              "slug": "seated-dumbbell-shoulder-press",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 8,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": 2,
-              "notes": "Press without arching your back."
-            },
-            {
-              "slug": "dumbbell-step-up",
+              "slug": "bulgarian-split-squat",
               "role": "accessory",
               "sets": 2,
               "rep_min": 8,
@@ -532,18 +499,17 @@
               "rest_seconds": 75,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Drive through the heel on the box."
+              "notes": ""
             },
             {
-              "slug": "side-plank",
+              "slug": "forearm-plank",
               "role": "core",
               "sets": 2,
               "duration_min_seconds": 30,
               "duration_max_seconds": 45,
               "progression_rule": "time",
               "rest_seconds": 45,
-              "per_side": true,
-              "notes": "Knees bent is a great start."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -560,22 +526,23 @@
           "key": "C",
           "name": "Full body C",
           "focus": "Legs, glutes and carries",
-          "coach_note": "Add weight to the leg press in small steps.",
+          "coach_note": "Smith machine squats and barbell hip thrusts join today. Start light.",
           "exercises": [
             {
-              "slug": "leg-press",
+              "slug": "smith-machine-squat",
               "role": "main",
-              "sets": 4,
-              "rep_min": 6,
+              "sets": 3,
+              "rep_min": 8,
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": 5,
-              "notes": "Feet hip-width, lower under control."
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             },
             {
-              "slug": "incline-dumbbell-press",
+              "slug": "barbell-hip-thrust",
               "role": "secondary",
               "sets": 3,
               "rep_min": 8,
@@ -583,11 +550,11 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
-              "load_increment_kg": 2,
-              "notes": "Bench on a low incline."
+              "load_increment_kg": 2.5,
+              "notes": ""
             },
             {
-              "slug": "one-arm-dumbbell-row",
+              "slug": "chest-supported-dumbbell-row",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
@@ -595,31 +562,30 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
-              "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Pull towards your hip."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-hip-thrust",
+              "slug": "incline-dumbbell-press",
               "role": "accessory",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": 2,
-              "notes": "Pause and squeeze at the top."
+              "notes": ""
             },
             {
               "slug": "farmer-carry",
               "role": "core",
               "sets": 2,
               "duration_min_seconds": 30,
-              "duration_max_seconds": 45,
+              "duration_max_seconds": 40,
               "progression_rule": "time",
               "rest_seconds": 45,
-              "notes": "Heavy dumbbells, tall posture."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -647,35 +613,34 @@
           "key": "A",
           "name": "Full body A",
           "focus": "Squat and push",
-          "coach_note": "Four sets on your squat now, with fewer reps. Go a little heavier than phase 1.",
+          "coach_note": "Four sets on the leg press now.",
           "exercises": [
             {
-              "slug": "goblet-squat",
+              "slug": "leg-press",
               "role": "main",
               "sets": 4,
-              "rep_min": 6,
+              "rep_min": 8,
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "tempo": "3-1-1",
-              "load_increment_kg": 2,
-              "notes": "Lower for 3 seconds."
+              "load_increment_kg": 5,
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
               "role": "secondary",
               "sets": 3,
               "rep_min": 8,
-              "rep_max": 12,
+              "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": 2,
-              "notes": "Shoulder blades gently together."
+              "notes": ""
             },
             {
-              "slug": "seated-cable-row",
+              "slug": "single-arm-cable-row",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
@@ -683,47 +648,37 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
+              "per_side": true,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Sit tall, pull to your belly button."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-reverse-lunge",
+              "slug": "walking-lunge",
               "role": "accessory",
               "sets": 2,
-              "rep_min": 8,
-              "rep_max": 10,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Step back, front knee over your foot."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-lateral-raise",
-              "role": "accessory",
-              "sets": 2,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 75,
-              "load_increment_kg": 2,
-              "notes": "Light weights, lead with your elbows."
-            },
-            {
-              "slug": "dead-bug",
+              "slug": "pallof-press",
               "role": "core",
               "sets": 2,
-              "rep_min": 6,
-              "rep_max": 8,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
               "load_increment_kg": null,
-              "notes": "Lower back gently pressed into the mat."
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -740,7 +695,7 @@
           "key": "B",
           "name": "Full body B",
           "focus": "Hinge and pull",
-          "coach_note": "Heavier Romanian deadlifts. Keep the same smooth tempo.",
+          "coach_note": "Heavier Romanian deadlifts, same smooth tempo.",
           "exercises": [
             {
               "slug": "dumbbell-romanian-deadlift",
@@ -751,12 +706,24 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "tempo": "3-1-1",
               "load_increment_kg": 2,
-              "notes": "Soft knees, flat back."
+              "notes": ""
             },
             {
               "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 10,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "shoulder-press-machine",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
@@ -766,22 +733,10 @@
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Pull the bar to your upper chest."
+              "notes": ""
             },
             {
-              "slug": "seated-dumbbell-shoulder-press",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 8,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": 2,
-              "notes": "Press without arching your back."
-            },
-            {
-              "slug": "dumbbell-step-up",
+              "slug": "bulgarian-split-squat",
               "role": "accessory",
               "sets": 2,
               "rep_min": 8,
@@ -791,18 +746,17 @@
               "rest_seconds": 75,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Drive through the heel on the box."
+              "notes": ""
             },
             {
-              "slug": "side-plank",
+              "slug": "forearm-plank",
               "role": "core",
               "sets": 2,
               "duration_min_seconds": 30,
               "duration_max_seconds": 45,
               "progression_rule": "time",
               "rest_seconds": 45,
-              "per_side": true,
-              "notes": "Knees bent is a great start."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -819,22 +773,23 @@
           "key": "C",
           "name": "Full body C",
           "focus": "Legs, glutes and carries",
-          "coach_note": "Add weight to the leg press in small steps.",
+          "coach_note": "Smith machine squats and barbell hip thrusts join today. Start light.",
           "exercises": [
             {
-              "slug": "leg-press",
+              "slug": "smith-machine-squat",
               "role": "main",
-              "sets": 4,
-              "rep_min": 6,
+              "sets": 3,
+              "rep_min": 8,
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": 5,
-              "notes": "Feet hip-width, lower under control."
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             },
             {
-              "slug": "incline-dumbbell-press",
+              "slug": "barbell-hip-thrust",
               "role": "secondary",
               "sets": 3,
               "rep_min": 8,
@@ -842,11 +797,11 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
-              "load_increment_kg": 2,
-              "notes": "Bench on a low incline."
+              "load_increment_kg": 2.5,
+              "notes": ""
             },
             {
-              "slug": "one-arm-dumbbell-row",
+              "slug": "chest-supported-dumbbell-row",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
@@ -854,31 +809,30 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
-              "per_side": true,
               "load_increment_kg": 2,
-              "notes": "Pull towards your hip."
+              "notes": ""
             },
             {
-              "slug": "dumbbell-hip-thrust",
+              "slug": "incline-dumbbell-press",
               "role": "accessory",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
+              "sets": 2,
+              "rep_min": 8,
+              "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": 2,
-              "notes": "Pause and squeeze at the top."
+              "notes": ""
             },
             {
               "slug": "farmer-carry",
               "role": "core",
               "sets": 2,
               "duration_min_seconds": 30,
-              "duration_max_seconds": 45,
+              "duration_max_seconds": 40,
               "progression_rule": "time",
               "rest_seconds": 45,
-              "notes": "Heavy dumbbells, tall posture."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -1001,7 +955,7 @@
     {
       "key": "RECOVERY",
       "type": "recovery",
-      "name": "Recovery: stretch",
+      "name": "Recovery stretch",
       "by_week": [
         {
           "weeks": [
@@ -1024,116 +978,45 @@
       ]
     }
   ],
-  "weekly_schedule": {
-    "avoid": [
-      {
-        "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "cardio",
-        "support_key": "CARDIO1"
-      },
-      {
-        "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
-      },
-      {
-        "weekday": "fri",
-        "type": "strength",
-        "day_key": "C"
-      },
-      {
-        "weekday": "sat",
-        "type": "cardio",
-        "support_key": "CARDIO2"
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
-      }
+  "weekly_plan": {
+    "strength_days": [
+      "A",
+      "B",
+      "C"
     ],
-    "fine": [
-      {
-        "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "cardio",
-        "support_key": "CARDIO1"
-      },
-      {
-        "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
-      },
-      {
-        "weekday": "fri",
-        "type": "strength",
-        "day_key": "C"
-      },
-      {
-        "weekday": "sat",
-        "type": "cardio",
-        "support_key": "CARDIO2"
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
-      }
+    "required_cardio_days": [
+      "CARDIO1",
+      "CARDIO2"
     ],
-    "love": [
+    "gym_days_needed": 5,
+    "finishers": {
+      "avoid": [],
+      "fine": [],
+      "love": []
+    },
+    "spare_day_cardio": {
+      "avoid": [],
+      "fine": [],
+      "love": []
+    },
+    "anytime_extras": [
+      "RECOVERY"
+    ],
+    "default_week": [
       {
         "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "cardio",
-        "support_key": "CARDIO1"
+        "day_key": "A",
+        "name": "Full body A"
       },
       {
         "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
+        "day_key": "B",
+        "name": "Full body B"
       },
       {
         "weekday": "fri",
-        "type": "strength",
-        "day_key": "C"
-      },
-      {
-        "weekday": "sat",
-        "type": "cardio",
-        "support_key": "CARDIO2"
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
+        "day_key": "C",
+        "name": "Full body C"
       }
     ]
   }

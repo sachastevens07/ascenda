@@ -48,6 +48,7 @@ import {
   type NextRoutineOffer,
 } from '@/lib/handOff';
 import { contentRoutine, contentWeeklyStructure, routineCardDays } from '@/lib/contentRoutines';
+import { WEEKDAY_LONG } from '@/lib/onboardingAnswers';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
@@ -107,7 +108,7 @@ function phaseLabel(phase: RoutinePhase, index: number, routine: Routine): strin
   const equipment = dominantEquipment(phase);
   let stage = '';
   if (equipment === 'dumbbell' || equipment === 'kettlebell') {
-    stage = routine.tags.includes('one spot') || routine.id === 'gym-confidence-6' ? 'One spot' : 'Dumbbells';
+    stage = 'Dumbbells';
   } else if (equipment === 'machine' || equipment === 'cable') {
     stage = 'Machines';
   } else if (equipment === 'barbell') {
@@ -500,6 +501,15 @@ export default function RoutineDetailScreen() {
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
               {scheduleLabel}
             </AppText>
+          ) : null}
+          {overlay?.weekly_plan?.default_week.length ? (
+            <View style={{ marginTop: spacing.sm, gap: 4 }}>
+              {overlay.weekly_plan.default_week.map((item) => (
+                <AppText key={`${item.weekday}-${item.day_key}`} variant="bodySm" style={{ color: colours.inkMuted }}>
+                  {WEEKDAY_LONG[item.weekday]}: {item.name}
+                </AppText>
+              ))}
+            </View>
           ) : null}
 
           {routine.type === 'strength' && routine.audience.length > 0 ? (

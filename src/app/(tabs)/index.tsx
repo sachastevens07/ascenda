@@ -1156,7 +1156,7 @@ export default function HomeScreen() {
                   <ImageCard
                     key={routine.id}
                     title={routine.name}
-                    subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days / week`}
+                    subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days a week`}
                     tags={routine.tags}
                     imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
                     letter={routine.name.slice(0, 1)}

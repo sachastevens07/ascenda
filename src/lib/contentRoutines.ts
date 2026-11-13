@@ -14,7 +14,9 @@ import strongFoundations from '../../content/routines/strong-foundations-6-weeks
 import strongForLife from '../../content/routines/strong-for-life.json';
 import summit from '../../content/routines/summit.json';
 import theClimb from '../../content/routines/the-climb-in-8-weeks.json';
+import theFourDayFoundation from '../../content/routines/the-four-day-foundation.json';
 import theTwoDayStart from '../../content/routines/the-two-day-start.json';
+import twiceAWeekStrong from '../../content/routines/twice-a-week-strong.json';
 import upperBodyStrong from '../../content/routines/upper-body-strong-in-6-weeks.json';
 import welcomeBack from '../../content/routines/welcome-back-4-week-restart.json';
 
@@ -82,10 +84,33 @@ export type ContentScheduleSlot = {
   finisher_skip_weeks: number[];
 };
 
+export type ContentFinisher = {
+  day_key: string;
+  cardio_session: string;
+  skip_weeks: number[];
+};
+
+export type ContentDefaultWeekDay = {
+  weekday: Weekday;
+  day_key: string;
+  name: string;
+};
+
+export type ContentWeeklyPlan = {
+  strength_days: string[];
+  required_cardio_days: string[];
+  gym_days_needed: number;
+  finishers: Partial<Record<CardioPreference, ContentFinisher[]>>;
+  spare_day_cardio: Partial<Record<CardioPreference, string[]>>;
+  anytime_extras: string[];
+  default_week: ContentDefaultWeekDay[];
+};
+
 export type ContentRoutineOverlay = {
   slug: string;
   name: string;
   subtitle: string;
+  short_description: string;
   goal: string;
   secondary_goals: string[];
   length_weeks: number;
@@ -93,6 +118,8 @@ export type ContentRoutineOverlay = {
   session_minutes: number;
   cardio_balanced: boolean;
   schedule_label: string | null;
+  tags: string[];
+  display_tags: string[];
   plan_reveal_milestones: ContentPlanMilestone[];
   checkpoint_lifts: string[];
   lighter_weeks: number[];
@@ -105,6 +132,7 @@ export type ContentRoutineOverlay = {
   weekly_structure_by_preference: Partial<Record<CardioPreference, string>>;
   support_days: ContentSupportDay[];
   weekly_schedule: Partial<Record<CardioPreference, ContentScheduleSlot[]>>;
+  weekly_plan: ContentWeeklyPlan | null;
   phases: ContentPhase[];
   next_routine_suggestions: string[];
 };
@@ -224,6 +252,57 @@ function parseWeeklySchedule(raw: unknown): Partial<Record<CardioPreference, Con
   return schedule;
 }
 
+function parseFinisher(raw: unknown): ContentFinisher | null {
+  const item = asRecord(raw);
+  const day_key = text(item.day_key);
+  const cardio_session = text(item.cardio_session);
+  if (!day_key || !cardio_session) return null;
+  return {
+    day_key,
+    cardio_session,
+    skip_weeks: asArray(item.skip_weeks)
+      .map((value) => num(value))
+      .filter((value): value is number => value != null),
+  };
+}
+
+function parseWeeklyPlan(raw: unknown): ContentWeeklyPlan | null {
+  const body = asRecord(raw);
+  const strength_days = asArray(body.strength_days).map((value) => text(value)).filter(Boolean);
+  if (strength_days.length === 0) return null;
+  const finishers: Partial<Record<CardioPreference, ContentFinisher[]>> = {};
+  const finisherBody = asRecord(body.finishers);
+  for (const key of CARDIO_PREFERENCES) {
+    const list = asArray(finisherBody[key])
+      .map(parseFinisher)
+      .filter((item): item is ContentFinisher => Boolean(item));
+    if (list.length > 0) finishers[key] = list;
+  }
+  const spare_day_cardio: Partial<Record<CardioPreference, string[]>> = {};
+  const spareBody = asRecord(body.spare_day_cardio);
+  for (const key of CARDIO_PREFERENCES) {
+    const list = asArray(spareBody[key]).map((value) => text(value)).filter(Boolean);
+    if (list.length > 0) spare_day_cardio[key] = list;
+  }
+  const default_week = asArray(body.default_week).flatMap((rawDay) => {
+    const item = asRecord(rawDay);
+    const weekday = parseWeekday(item.weekday);
+    const day_key = text(item.day_key);
+    if (!weekday || !day_key) return [];
+    return [{ weekday, day_key, name: text(item.name) || day_key }];
+  });
+  const required_cardio_days = asArray(body.required_cardio_days).map((value) => text(value)).filter(Boolean);
+  return {
+    strength_days,
+    required_cardio_days,
+    gym_days_needed: num(body.gym_days_needed) ?? strength_days.length + required_cardio_days.length,
+    finishers,
+    spare_day_cardio,
+    anytime_extras: asArray(body.anytime_extras).map((value) => text(value)).filter(Boolean),
+    default_week,
+  };
+}
+
 function parseDay(raw: unknown): ContentDay | null {
   const day = asRecord(raw);
   const name = text(day.name);
@@ -283,6 +362,7 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
     slug,
     name: text(routine.name),
     subtitle: text(routine.subtitle),
+    short_description: text(routine.short_description),
     goal: text(routine.goal),
     secondary_goals: asArray(routine.secondary_goals).map(text).filter(Boolean),
     length_weeks: num(routine.length_weeks) ?? 0,
@@ -290,6 +370,8 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
     session_minutes: num(routine.session_minutes) ?? 0,
     cardio_balanced: routine.cardio_balanced === true,
     schedule_label: text(routine.schedule_label) || null,
+    tags: asArray(routine.tags).map(text).filter(Boolean),
+    display_tags: asArray(routine.display_tags).map(text).filter(Boolean),
     plan_reveal_milestones: milestones,
     checkpoint_lifts: asArray(routine.checkpoint_lifts).map((value) => resolveExerciseSlug(String(value))),
     lighter_weeks,
@@ -308,6 +390,7 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
       .map(parseSupportDay)
       .filter((item): item is ContentSupportDay => Boolean(item)),
     weekly_schedule: parseWeeklySchedule(body.weekly_schedule),
+    weekly_plan: parseWeeklyPlan(body.weekly_plan),
     phases,
     next_routine_suggestions: asArray(routine.next_routine_suggestions)
       .map((value) => text(value))
@@ -319,6 +402,8 @@ const BY_SLUG = new Map<string, ContentRoutineOverlay>();
 for (const file of [
   strongFoundations,
   theTwoDayStart,
+  theFourDayFoundation,
+  twiceAWeekStrong,
   busyGym,
   quickAscent,
   theClimb,
@@ -361,17 +446,36 @@ export function contentDayFor(
   return days.find((item) => item.name.toLowerCase() === name) ?? null;
 }
 
-/** Card tag: strength days, or the full required week on cardio-balanced routines. */
+export function gymDaysNeeded(overlay: ContentRoutineOverlay | null | undefined, fallback = 3): number {
+  if (!overlay) return fallback;
+  return overlay.weekly_plan?.gym_days_needed || overlay.days_per_week || fallback;
+}
+
+export function scheduleStrengthDays(overlay: ContentRoutineOverlay | null | undefined): number {
+  if (!overlay) return 0;
+  return overlay.weekly_plan?.strength_days.length || overlay.days_per_week || 0;
+}
+
+export function requiredCardioDays(overlay: ContentRoutineOverlay | null | undefined): number {
+  return overlay?.weekly_plan?.required_cardio_days.length ?? 0;
+}
+
+/** Card tag: gym_days_needed for cardio-balanced routines, otherwise strength days. */
 export function advertisedDaysPerWeek(
   overlay: ContentRoutineOverlay | null | undefined,
   fallback = 3
 ): number {
   if (!overlay) return fallback;
-  if (!overlay.cardio_balanced) return overlay.days_per_week || fallback;
-  const template =
-    overlay.weekly_schedule.fine ?? overlay.weekly_schedule.love ?? overlay.weekly_schedule.avoid ?? [];
-  const required = template.filter((slot) => slot.type !== 'rest' && !slot.optional).length;
-  return required || overlay.days_per_week || fallback;
+  if (overlay.cardio_balanced) return gymDaysNeeded(overlay, fallback);
+  return overlay.days_per_week || overlay.weekly_plan?.strength_days.length || fallback;
+}
+
+export function overlayCardTags(overlay: ContentRoutineOverlay | null | undefined): string[] {
+  if (!overlay) return [];
+  const tags = overlay.display_tags.length > 0 ? overlay.display_tags : overlay.tags;
+  return tags
+    .filter((tag) => !/one spot|busy gym friendly|whole gym/i.test(tag))
+    .slice(0, 2);
 }
 
 export function routineCardDays(routine: { slug: string; id?: string; days_per_week: number }): number {
@@ -379,6 +483,10 @@ export function routineCardDays(routine: { slug: string; id?: string; days_per_w
     contentRoutine(routine.slug) ?? (routine.id ? contentRoutine(routine.id) : null),
     routine.days_per_week
   );
+}
+
+export function daysAWeekLabel(days: number): string {
+  return `${days} days a week`;
 }
 
 export function contentWeeklyStructure(

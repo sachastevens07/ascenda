@@ -1,5 +1,6 @@
 import { cardioSession } from '@/lib/cardio';
 import {
+  anytimeSlotsForWeek,
   fetchWeekPlanPrefs,
   isOverlayPlanId,
   overlayForRoutine,
@@ -64,6 +65,7 @@ export type PlannerDayView = {
   sessionMinutes: number | null;
   isStretch: boolean;
   isOptional: boolean;
+  anytime: boolean;
 };
 
 export function isPlannedSessionKind(kind: PlannerDayKind): boolean {
@@ -287,6 +289,7 @@ function ordinal(value: number): string {
 }
 
 export function formatAgendaHeading(day: PlannerDayView): string {
+  if (day.anytime) return day.title ?? 'Anytime this week';
   const date = parseIsoDate(day.iso);
   const label = `${WEEKDAYS_FULL[date.getDay()]}, ${ordinal(day.dayNumber)} ${MONTHS_FULL[date.getMonth()]}`;
   return day.isToday ? `Today · ${label}` : label;
@@ -294,6 +297,7 @@ export function formatAgendaHeading(day: PlannerDayView): string {
 
 /** Compact sticky header: “Wed 4 Nov”. Eyebrow style uppercases it. */
 export function formatStickyDayHeading(day: PlannerDayView): string {
+  if (day.anytime) return 'Anytime this week';
   const date = parseIsoDate(day.iso);
   return `${WEEKDAYS[date.getDay()]} ${day.dayNumber} ${MONTHS[date.getMonth()]}`;
 }
@@ -804,6 +808,7 @@ function buildWeekInserts(
   }
 
   const leftoverDays = routineDays.filter((day) => !alreadyPlaced.has(day.id));
+  if (overlay?.weekly_plan) return inserts;
   if (leftoverDays.length === 0) return inserts;
 
   const offsets = defaultTrainingOffsets(enrolment.routine.days_per_week);
@@ -974,6 +979,7 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     sessionMinutes,
     isStretch,
     isOptional,
+    anytime: false,
   };
 }
 
@@ -1002,6 +1008,7 @@ function overlayDayFromSlot(
       subtitle,
       sessionMinutes: def?.durationMinutes ?? slot.minutes ?? 20,
       isOptional: slot.optional,
+      anytime: false,
       plan: {
         id: overlayPlanId(day.iso, 'cardio'),
         date: day.iso,
@@ -1026,6 +1033,7 @@ function overlayDayFromSlot(
       sessionMinutes: stretch?.minutes ?? slot.minutes ?? 12,
       isStretch: true,
       isOptional: slot.optional,
+      anytime: false,
       plan: {
         id: overlayPlanId(day.iso, 'recovery'),
         date: day.iso,
@@ -1041,6 +1049,68 @@ function overlayDayFromSlot(
     };
   }
   return day;
+}
+
+function anytimeViews(
+  enrolment: RoutineEnrolment,
+  prefs: WeekPlanPrefs,
+  from: Date,
+  to: Date,
+  plans: PlannedSession[]
+): PlannerDayView[] {
+  const overlay = overlayForRoutine(enrolment.routine.slug, enrolment.routine.id);
+  if (!overlay?.weekly_plan) return [];
+  const skipped = new Set(plans.filter((row) => row.status === 'skipped').map((row) => row.id));
+  const finished = new Set(plans.filter((row) => row.status === 'done').map((row) => row.id));
+  const endDate = toIso(addDays(parseIsoDate(enrolment.start_date), enrolment.routine.length_weeks * 7 - 1));
+  const views: PlannerDayView[] = [];
+  for (const monday of mondaysInRange(from, to)) {
+    const weekStart = toIso(monday);
+    const weekEnd = toIso(addDays(monday, 6));
+    if (weekEnd < enrolment.start_date || weekStart > endDate) continue;
+    const weekNumber = currentEnrolmentWeek(enrolment, monday);
+    const slots = anytimeSlotsForWeek({
+      overlay,
+      weekNumber,
+      preferredDays: prefs.preferredDays,
+      cardioPreference: prefs.cardioPreference,
+    });
+    for (const slot of slots) {
+      const id = overlayPlanId(weekStart, 'recovery');
+      if (skipped.has(id)) continue;
+      const stretch = stretchMeta(slot.stretch_slug);
+      views.push({
+        iso: weekStart,
+        weekday: 'Anytime',
+        dayNumber: monday.getDate(),
+        month: MONTHS[monday.getMonth()],
+        isToday: false,
+        isPast: weekEnd < toIso(startOfDay(new Date())),
+        plan: {
+          id,
+          date: weekStart,
+          routine_day_id: null,
+          custom_workout_id: null,
+          status: finished.has(id) ? 'done' : 'planned',
+          reminder_time: null,
+          session_kind: 'recovery',
+          cardio_slug: null,
+          stretch_slug: slot.stretch_slug,
+          is_optional: true,
+        },
+        title: stretch?.name ?? slot.name ?? 'Recovery stretch',
+        subtitle: `${enrolment.routine.name} · week ${weekNumber}`,
+        exercises: [],
+        completed: finished.has(id),
+        kind: 'recovery',
+        sessionMinutes: stretch?.minutes ?? slot.minutes ?? 12,
+        isStretch: true,
+        isOptional: true,
+        anytime: true,
+      });
+    }
+  }
+  return views;
 }
 
 function applySupportOverlay(
@@ -1137,6 +1207,7 @@ export type PlannerRange = {
   to: string;
   days: PlannerDayView[];
   enrolment: RoutineEnrolment | null;
+  anytime: PlannerDayView[];
 };
 
 export async function loadPlannerRange(from: Date, to: Date): Promise<PlannerRange> {
@@ -1156,6 +1227,7 @@ export async function loadPlannerRange(from: Date, to: Date): Promise<PlannerRan
     to: toIso(to),
     days: applySupportOverlay(buildDays(from, to, lookups), enrolment, prefs, lookups.plans),
     enrolment,
+    anytime: enrolment ? anytimeViews(enrolment, prefs, from, to, lookups.plans) : [],
   };
 }
 

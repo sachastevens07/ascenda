@@ -1,7 +1,7 @@
 {
   "_format_version": 1,
   "_loader_notes": [
-    "Master list of strength exercises used by every routine. zone: 1 one spot, 2 dumbbell area and cables, 3 machines, 4 barbell and rack. First-time guides are written separately."
+    "Master list of strength exercises used by every routine. Filter the library by equipment (dumbbell, barbell, machine, cable, kettlebell, bodyweight). zone is legacy (1 dumbbells and a bench, 2 cables, 3 machines, 4 barbell and rack): keep the column, but don't show it or use it for tags. First-time guides are written separately."
   ],
   "exercises": [
     {

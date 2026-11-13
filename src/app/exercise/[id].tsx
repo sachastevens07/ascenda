@@ -23,7 +23,6 @@ import {
   EQUIPMENT_LABELS,
   EXERCISE_MEDIA_BUCKET,
   MUSCLE_LABELS,
-  ZONE_LABELS,
   fetchExercise,
   type Exercise,
 } from '@/lib/exercises';
@@ -202,9 +201,6 @@ export default function ExerciseScreen() {
         <AppText variant="bodySm" style={[styles.tag, styles.tagEquipment]}>
           {EQUIPMENT_LABELS[exercise.equipment]}
         </AppText>
-        <AppText variant="bodySm" style={styles.tag}>
-          {ZONE_LABELS[exercise.zone]}
-        </AppText>
       </View>
 
       <View style={styles.card}>
@@ -285,7 +281,7 @@ export default function ExerciseScreen() {
                   {option.name}
                 </AppText>
                 <AppText variant="bodySm" style={styles.muted}>
-                  {EQUIPMENT_LABELS[option.equipment]} · {ZONE_LABELS[option.zone]}
+                  {EQUIPMENT_LABELS[option.equipment]}
                 </AppText>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colours.textMuted} />

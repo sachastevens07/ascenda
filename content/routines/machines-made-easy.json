@@ -7,12 +7,12 @@
     "Lighter week: use about 60 to 70% of the normal sets (round down, minimum 1) at the same weights, with 3 reps in reserve.",
     "Exercises sharing a superset_group are done back to back, resting after the pair.",
     "Draft for coach review before launch.",
-    "Complete week (AGENTS.md W1, W5, W6, W7): weekly_schedule has one 7-day template per profiles.cardio_preference (avoid, fine, love). Routines with cardio_balanced=true use the same template for everyone.",
-    "Complete week: strength slots point at the phase day (day_key). Cardio and recovery slots point at support_days, which pick the cardio session or stretch routine by week.",
-    "Complete week: a finisher is a cardio block after the strength block on that day (block order warmup, strength, cardio_finisher, cooldown). It's skipped in finisher_skip_weeks (checkpoint and lighter weeks), and she can skip it with one tap at any time.",
-    "Complete week: weekdays are defaults. If she picked different training days, place strength days on her days in order, then fill cardio on free days (avoid the day before a lower-body or full-body day where possible), recovery on a free day after a lower-body or full-body day, and keep at least one full rest day.",
-    "Complete week: cardio and recovery slots are optional extras (except in cardio_balanced routines); they count towards her weekly target when done but never add to it.",
-    "Complete week: lighter week cardio uses the session at its starting length with an easy-effort note. Cardio counts towards the weekly target and streak, never towards strength personal bests."
+    "Complete week: her onboarding days-per-week is the number of gym days she can do. Never plan more gym days than that.",
+    "Complete week: weekly_plan.strength_days go on her chosen days in order. Finishers (by profiles.cardio_preference) are a cardio block after the strength block on that day; skipped in skip_weeks (checkpoint and lighter weeks) and skippable with one tap.",
+    "Complete week: if she picked more days than gym_days_needed, fill the spare days with spare_day_cardio for her preference, in order (CARDIO1 first). Avoid placing cardio the day before a lower-body day where possible. If she picked fewer days than strength_days, recommend a different routine instead.",
+    "Complete week: anytime_extras (the recovery stretch) aren't tied to a day. Show them as 'Anytime this week' in the Planner. They're optional.",
+    "Complete week: cardio_balanced routines need gym_days_needed days (strength plus required_cardio_days). Only recommend them when she picked at least that many days.",
+    "Complete week: her weekly target is her onboarding days-per-week. Any session counts towards it (strength, cardio, or a stretch or recovery session of 10+ minutes). schedule_label is the line shown on the routine page; the card shows '{days_per_week} days a week' (or gym_days_needed for cardio_balanced routines)."
   ],
   "routine": {
     "is_flagship": false,
@@ -39,16 +39,16 @@
     "week1_learning": true,
     "cover_image_slug": "machines-cover",
     "tags": [
-      "Beginner friendly",
       "Machines",
-      "Gym confidence",
-      "4 weeks"
+      "3 days a week",
+      "Beginner friendly",
+      "Gym confidence"
     ],
     "display_tags": [
-      "Beginner friendly",
-      "Machines"
+      "Machines",
+      "Beginner friendly"
     ],
-    "equipment_summary": "Common resistance machines and the cable station",
+    "equipment_summary": "Resistance machines and cables",
     "short_description": "Machines guide the movement for you, which makes them a brilliant way to start. Learn the main ones, one session at a time.",
     "who_its_for": [
       "You're brand new to the gym",
@@ -62,9 +62,9 @@
     ],
     "why_this_split": "Three full-body machine circuits cover every major muscle. Machines guide the movement, so you can focus on effort and set-up rather than balance.",
     "how_it_works": [
-      "Weeks 1 to 2: lighter weights to learn each machine.",
-      "Weeks 3 to 4: make them yours with heavier weights.",
-      "Re-test three machines in weeks 2 and 4."
+      "Weeks 1 to 2: learn the most common machines, a few each session.",
+      "Weeks 3 to 4: heavier on the machines you know, plus the cable station and hack squat.",
+      "In weeks 2 and 4 you'll re-test your key lifts to see how far you've come."
     ],
     "progression_explained": "Add one plate when you hit the top of the range on every set.",
     "effort_explained": "Finish most sets with 2 to 3 reps left.",
@@ -96,21 +96,12 @@
     ],
     "checkpoint_protocol": "Warm up as normal. Then work up to one set of 8 reps where you could have done about 2 more. Log the weight. This isn't a maximum test, so never push to failure.",
     "type": "strength",
+    "schedule_label": "3 strength days a week, plus optional cardio and stretching",
     "weekly_structure_summary": {
-      "avoid": {
-        "text": "3 strength, plus optional stretching",
-        "planned_sessions": 3
-      },
-      "fine": {
-        "text": "3 strength, plus optional cardio and stretching",
-        "planned_sessions": 3
-      },
-      "love": {
-        "text": "3 strength, plus optional cardio and stretching",
-        "planned_sessions": 3
-      }
-    },
-    "schedule_label": "3 strength days a week, plus optional cardio and stretching"
+      "avoid": "3 strength days, a short cardio finisher, and an optional recovery stretch you can do anytime",
+      "fine": "3 strength days, a short cardio finisher, up to 1 cardio session on any spare gym days you picked, and an optional recovery stretch you can do anytime",
+      "love": "3 strength days, 2 short cardio finishers, up to 2 cardio sessions on any spare gym days you picked, and an optional recovery stretch you can do anytime"
+    }
   },
   "phases": [
     {
@@ -120,90 +111,78 @@
         1,
         2
       ],
-      "goal": "Learn how to set up each machine with light weights.",
+      "goal": "Learn the most common machines, a few each session.",
       "days": [
         {
           "key": "A",
           "name": "Machines A",
           "focus": "Legs, chest and back",
-          "coach_note": "Before each machine, open its guide and check the seat height. Every machine has a picture on it showing the movement.",
+          "coach_note": "Leg press, chest press and lat pulldown: three of the most useful machines in any gym.",
           "exercises": [
             {
               "slug": "leg-press",
               "role": "main",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
               "load_increment_kg": 5,
-              "notes": "Checkpoint lift. Never lock your knees."
+              "notes": ""
             },
             {
               "slug": "chest-press-machine",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Checkpoint lift. Handles at mid-chest."
+              "notes": ""
             },
             {
               "slug": "lat-pulldown",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Checkpoint lift. Thighs under the pads."
+              "notes": ""
             },
             {
               "slug": "seated-leg-curl",
               "role": "accessory",
               "sets": 2,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Knee lined up with the pivot."
+              "notes": ""
             },
             {
-              "slug": "hip-abduction-machine",
-              "role": "accessory",
-              "sets": 2,
-              "rep_min": 15,
-              "rep_max": 20,
-              "target_rir": 3,
-              "progression_rule": "reps",
-              "rest_seconds": 75,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Smooth and controlled."
-            },
-            {
-              "slug": "dead-bug",
+              "slug": "pallof-press",
               "role": "core",
               "sets": 2,
-              "rep_min": 6,
-              "rep_max": 8,
+              "rep_min": 8,
+              "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
               "load_increment_kg": null,
-              "notes": "On a mat nearby."
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -213,17 +192,18 @@
           "blocks": [
             "warmup",
             "strength",
+            "cardio_finisher",
             "cooldown"
           ]
         },
         {
           "key": "B",
           "name": "Machines B",
-          "focus": "Squat, shoulders and rows",
-          "coach_note": "The Smith machine looks intimidating but it's just a bar on rails. Twist the bar to unhook it and start with no plates.",
+          "focus": "Glutes, shoulders and back",
+          "coach_note": "The hip thrust machine and shoulder press today. Adjust the seat before your first set.",
           "exercises": [
             {
-              "slug": "smith-machine-squat",
+              "slug": "hip-thrust-machine",
               "role": "main",
               "sets": 3,
               "rep_min": 10,
@@ -233,70 +213,59 @@
               "rest_seconds": 120,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Feet slightly forward."
+              "notes": ""
             },
             {
               "slug": "shoulder-press-machine",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Handles at shoulder height."
+              "notes": ""
             },
             {
               "slug": "seated-cable-row",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Sit tall."
+              "notes": ""
             },
             {
-              "slug": "lying-leg-curl",
+              "slug": "leg-extension",
               "role": "accessory",
               "sets": 2,
               "rep_min": 12,
               "rep_max": 15,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Hips down on the pad."
+              "notes": ""
             },
             {
-              "slug": "calf-raise-machine",
+              "slug": "hip-abduction-machine",
               "role": "accessory",
               "sets": 2,
               "rep_min": 12,
               "rep_max": 15,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Full range."
-            },
-            {
-              "slug": "side-plank",
-              "role": "core",
-              "sets": 2,
-              "duration_min_seconds": 20,
-              "duration_max_seconds": 30,
-              "progression_rule": "time",
-              "rest_seconds": 45,
-              "per_side": true,
-              "notes": "Knees bent."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -312,60 +281,60 @@
         {
           "key": "C",
           "name": "Machines C",
-          "focus": "Glutes, chest and upper back",
-          "coach_note": "Three new ones today: hip thrust machine, pec deck and assisted pull-up. If your gym doesn't have one, use the swap.",
+          "focus": "Squat and pull",
+          "coach_note": "The Smith machine squat: set the safety stops at the bottom first.",
           "exercises": [
             {
-              "slug": "hip-thrust-machine",
+              "slug": "smith-machine-squat",
               "role": "main",
               "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 8,
+              "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Squeeze at the top."
-            },
-            {
-              "slug": "pec-deck",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 3,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Soft elbows."
+              "notes": ""
             },
             {
               "slug": "assisted-pull-up",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 8,
+              "rep_min": 6,
               "rep_max": 10,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Plenty of assistance."
+              "notes": ""
             },
             {
-              "slug": "leg-extension",
+              "slug": "pec-deck",
               "role": "accessory",
               "sets": 2,
               "rep_min": 12,
               "rep_max": 15,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Pause at the top."
+              "notes": ""
+            },
+            {
+              "slug": "lying-leg-curl",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             },
             {
               "slug": "reverse-pec-deck",
@@ -373,26 +342,22 @@
               "sets": 2,
               "rep_min": 12,
               "rep_max": 15,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Face the pad."
+              "notes": ""
             },
             {
-              "slug": "pallof-press",
+              "slug": "forearm-plank",
               "role": "core",
               "sets": 2,
-              "rep_min": 8,
-              "rep_max": 10,
-              "target_rir": 2,
-              "progression_rule": "reps",
+              "duration_min_seconds": 20,
+              "duration_max_seconds": 30,
+              "progression_rule": "time",
               "rest_seconds": 45,
-              "per_side": true,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Cable at chest height."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -415,41 +380,125 @@
         3,
         4
       ],
-      "goal": "Heavier weights on the machines you now know.",
+      "goal": "Heavier on the machines you know, plus the cable station and hack squat.",
       "days": [
         {
           "key": "A",
           "name": "Machines A",
           "focus": "Legs, chest and back",
-          "coach_note": "You know these machines now. Add a plate where last week felt easy.",
+          "coach_note": "Same three key machines, a little heavier.",
           "exercises": [
             {
               "slug": "leg-press",
               "role": "main",
               "sets": 3,
-              "rep_min": 10,
+              "rep_min": 8,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
               "load_increment_kg": 5,
-              "notes": "Checkpoint lift. Never lock your knees."
+              "notes": ""
             },
             {
               "slug": "chest-press-machine",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 10,
+              "rep_min": 8,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Checkpoint lift. Handles at mid-chest."
+              "notes": ""
             },
             {
               "slug": "lat-pulldown",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "cable-glute-kickback",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 12,
+              "rep_max": 15,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "per_side": true,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "cable-crunch",
+              "role": "core",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 45,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            }
+          ],
+          "warmup_id": "warmup-full-body",
+          "cooldown_id": "cooldown-full-body",
+          "estimated_minutes": 40,
+          "type": "strength",
+          "blocks": [
+            "warmup",
+            "strength",
+            "cardio_finisher",
+            "cooldown"
+          ]
+        },
+        {
+          "key": "B",
+          "name": "Machines B",
+          "focus": "Glutes, shoulders and back",
+          "coach_note": "Hip thrusts, shoulders and single-arm rows at the cable station.",
+          "exercises": [
+            {
+              "slug": "hip-thrust-machine",
+              "role": "main",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "shoulder-press-machine",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 8,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "load",
+              "rest_seconds": 90,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "single-arm-cable-row",
               "role": "secondary",
               "sets": 3,
               "rep_min": 10,
@@ -457,12 +506,13 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
+              "per_side": true,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Checkpoint lift. Thighs under the pads."
+              "notes": ""
             },
             {
-              "slug": "seated-leg-curl",
+              "slug": "leg-extension",
               "role": "accessory",
               "sets": 2,
               "rep_min": 12,
@@ -472,7 +522,7 @@
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Knee lined up with the pivot."
+              "notes": ""
             },
             {
               "slug": "hip-abduction-machine",
@@ -485,113 +535,7 @@
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Smooth and controlled."
-            },
-            {
-              "slug": "dead-bug",
-              "role": "core",
-              "sets": 2,
-              "rep_min": 6,
-              "rep_max": 8,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 45,
-              "per_side": true,
-              "load_increment_kg": null,
-              "notes": "On a mat nearby."
-            }
-          ],
-          "warmup_id": "warmup-full-body",
-          "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 40,
-          "type": "strength",
-          "blocks": [
-            "warmup",
-            "strength",
-            "cooldown"
-          ]
-        },
-        {
-          "key": "B",
-          "name": "Machines B",
-          "focus": "Squat, shoulders and rows",
-          "coach_note": "The Smith machine looks intimidating but it's just a bar on rails. Twist the bar to unhook it and start with no plates.",
-          "exercises": [
-            {
-              "slug": "smith-machine-squat",
-              "role": "main",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 120,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Feet slightly forward."
-            },
-            {
-              "slug": "shoulder-press-machine",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Handles at shoulder height."
-            },
-            {
-              "slug": "seated-cable-row",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Sit tall."
-            },
-            {
-              "slug": "lying-leg-curl",
-              "role": "accessory",
-              "sets": 2,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 75,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Hips down on the pad."
-            },
-            {
-              "slug": "calf-raise-machine",
-              "role": "accessory",
-              "sets": 2,
-              "rep_min": 12,
-              "rep_max": 15,
-              "target_rir": 2,
-              "progression_rule": "reps",
-              "rest_seconds": 75,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Full range."
-            },
-            {
-              "slug": "side-plank",
-              "role": "core",
-              "sets": 2,
-              "duration_min_seconds": 25,
-              "duration_max_seconds": 40,
-              "progression_rule": "time",
-              "rest_seconds": 45,
-              "per_side": true,
-              "notes": "Knees bent."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -607,50 +551,37 @@
         {
           "key": "C",
           "name": "Machines C",
-          "focus": "Glutes, chest and upper back",
-          "coach_note": "Try one less step of assistance on the pull-up.",
+          "focus": "Squat and pull",
+          "coach_note": "Meet the hack squat. Shoulders under the pads and release the handles.",
           "exercises": [
             {
-              "slug": "hip-thrust-machine",
+              "slug": "hack-squat",
               "role": "main",
               "sets": 3,
-              "rep_min": 10,
+              "rep_min": 8,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Squeeze at the top."
-            },
-            {
-              "slug": "pec-deck",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": "Soft elbows."
+              "notes": ""
             },
             {
               "slug": "assisted-pull-up",
               "role": "secondary",
               "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
+              "rep_min": 6,
+              "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 90,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Plenty of assistance."
+              "notes": ""
             },
             {
-              "slug": "leg-extension",
+              "slug": "face-pull",
               "role": "accessory",
               "sets": 2,
               "rep_min": 12,
@@ -660,10 +591,23 @@
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Pause at the top."
+              "notes": ""
             },
             {
-              "slug": "reverse-pec-deck",
+              "slug": "seated-leg-curl",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_kg": null,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
+            },
+            {
+              "slug": "calf-raise-machine",
               "role": "accessory",
               "sets": 2,
               "rep_min": 12,
@@ -673,21 +617,21 @@
               "rest_seconds": 75,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Face the pad."
+              "notes": ""
             },
             {
               "slug": "pallof-press",
               "role": "core",
               "sets": 2,
-              "rep_min": 8,
-              "rep_max": 10,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
               "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "Cable at chest height."
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -770,7 +714,7 @@
     {
       "key": "RECOVERY",
       "type": "recovery",
-      "name": "Recovery: stretch",
+      "name": "Recovery stretch",
       "by_week": [
         {
           "weeks": [
@@ -789,133 +733,82 @@
       ]
     }
   ],
-  "weekly_schedule": {
-    "avoid": [
-      {
-        "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "rest"
-      },
-      {
-        "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
-      },
-      {
-        "weekday": "fri",
-        "type": "strength",
-        "day_key": "C",
-        "finisher": "incline-walk-finisher-10",
-        "finisher_skip_weeks": [
-          2,
-          4
-        ]
-      },
-      {
-        "weekday": "sat",
-        "type": "rest"
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
-      }
+  "weekly_plan": {
+    "strength_days": [
+      "A",
+      "B",
+      "C"
     ],
-    "fine": [
-      {
-        "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "cardio",
-        "support_key": "CARDIO1",
-        "optional": true
-      },
-      {
-        "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
-      },
-      {
-        "weekday": "fri",
-        "type": "strength",
-        "day_key": "C",
-        "finisher": "incline-walk-finisher-10",
-        "finisher_skip_weeks": [
-          2,
-          4
-        ]
-      },
-      {
-        "weekday": "sat",
-        "type": "cardio",
-        "support_key": "CARDIO2",
-        "optional": true
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
-      }
+    "required_cardio_days": [],
+    "gym_days_needed": 3,
+    "finishers": {
+      "avoid": [
+        {
+          "day_key": "C",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            2,
+            4
+          ]
+        }
+      ],
+      "fine": [
+        {
+          "day_key": "C",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            2,
+            4
+          ]
+        }
+      ],
+      "love": [
+        {
+          "day_key": "C",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            2,
+            4
+          ]
+        },
+        {
+          "day_key": "A",
+          "cardio_session": "incline-walk-finisher-10",
+          "skip_weeks": [
+            2,
+            4
+          ]
+        }
+      ]
+    },
+    "spare_day_cardio": {
+      "avoid": [],
+      "fine": [
+        "CARDIO1"
+      ],
+      "love": [
+        "CARDIO1",
+        "CARDIO2"
+      ]
+    },
+    "anytime_extras": [
+      "RECOVERY"
     ],
-    "love": [
+    "default_week": [
       {
         "weekday": "mon",
-        "type": "strength",
-        "day_key": "A"
-      },
-      {
-        "weekday": "tue",
-        "type": "cardio",
-        "support_key": "CARDIO1",
-        "optional": true
+        "day_key": "A",
+        "name": "Machines A"
       },
       {
         "weekday": "wed",
-        "type": "strength",
-        "day_key": "B"
-      },
-      {
-        "weekday": "thu",
-        "type": "recovery",
-        "support_key": "RECOVERY",
-        "optional": true
+        "day_key": "B",
+        "name": "Machines B"
       },
       {
         "weekday": "fri",
-        "type": "strength",
         "day_key": "C",
-        "finisher": "incline-walk-finisher-10",
-        "finisher_skip_weeks": [
-          2,
-          4
-        ]
-      },
-      {
-        "weekday": "sat",
-        "type": "cardio",
-        "support_key": "CARDIO2",
-        "optional": true
-      },
-      {
-        "weekday": "sun",
-        "type": "rest"
+        "name": "Machines C"
       }
     ]
   }

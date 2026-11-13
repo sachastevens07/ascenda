@@ -1,4 +1,10 @@
-import { contentRoutine, type ContentRoutineOverlay } from '@/lib/contentRoutines';
+import {
+  contentRoutine,
+  gymDaysNeeded,
+  requiredCardioDays,
+  scheduleStrengthDays,
+  type ContentRoutineOverlay,
+} from '@/lib/contentRoutines';
 import {
   NEVER_AUTO_RECOMMEND,
   RECOMMEND_RULES,
@@ -45,6 +51,9 @@ function routineContext(overlay: ContentRoutineOverlay): RuleContext['routine'] 
     goal: overlay.goal,
     secondary_goals: overlay.secondary_goals,
     cardio_balanced: overlay.cardio_balanced,
+    gym_days_needed: gymDaysNeeded(overlay),
+    schedule_strength_days: scheduleStrengthDays(overlay),
+    cardio_days: requiredCardioDays(overlay),
   };
 }
 
@@ -58,9 +67,11 @@ function toChoice(overlay: ContentRoutineOverlay): PlanChoice {
 }
 
 function daysFit(overlay: ContentRoutineOverlay, days: number): boolean {
-  if (!overlay.days_per_week) return true;
-  if (overlay.days_per_week <= days) return true;
-  return overlay.days_per_week - days <= 1;
+  return gymDaysNeeded(overlay) <= days;
+}
+
+function fitFallbackSlug(draft: OnboardingDraft): string {
+  return draft.gym_experience === 'regularly' ? 'twice-a-week-strong' : 'the-two-day-start';
 }
 
 function canAutoRecommend(slug: string, draft: OnboardingDraft): boolean {
@@ -139,6 +150,9 @@ function whyLinesFor(draft: OnboardingDraft, overlay: ContentRoutineOverlay): st
       fillTemplate(line.text, {
         days_per_week: draft.days_per_week,
         'routine.session_minutes': overlay.session_minutes,
+        'routine.gym_days_needed': gymDaysNeeded(overlay),
+        'routine.schedule_strength_days': scheduleStrengthDays(overlay),
+        'routine.cardio_days': requiredCardioDays(overlay),
         main_goal_label: main ? GOAL_LABELS[main] : '',
       })
     );
@@ -161,28 +175,39 @@ function pickFromRule(
 export function recommendPlan(draft: OnboardingDraft, chosenSlug?: string): RecommendedPlan | null {
   const ctx = ruleContextFromDraft(draft);
   let recommended: ContentRoutineOverlay | null = chosenSlug ? overlayFor(chosenSlug) : null;
+  if (recommended && chosenSlug && !daysFit(recommended, draft.days_per_week)) {
+    recommended = null;
+  }
   const matched: ContentRoutineOverlay[] = [];
   const fallbackAlts: string[] = [];
 
   for (const rule of RECOMMEND_RULES) {
     if (!evalCondition(rule.if, ctx)) continue;
-    const overlay = pickFromRule(rule.recommend, draft);
-    if (!overlay) continue;
-    if (!recommended) {
-      recommended = overlay;
+    const candidates = [rule.recommend, ...rule.alternatives];
+    const fitted = candidates
+      .map((slug) => pickFromRule(slug, draft))
+      .filter((item): item is ContentRoutineOverlay => Boolean(item));
+    for (const overlay of fitted) {
+      if (!matched.some((item) => item.slug === overlay.slug)) matched.push(overlay);
+    }
+    if (!recommended && fitted.length > 0) {
+      recommended = fitted[0];
       fallbackAlts.push(...rule.alternatives);
     }
-    if (!matched.some((item) => item.slug === overlay.slug)) matched.push(overlay);
   }
 
-  if (!recommended) {
-    recommended = overlayFor(defaultRoutineSlug(draft));
+  if (!recommended || !daysFit(recommended, draft.days_per_week)) {
+    recommended =
+      pickFromRule(fitFallbackSlug(draft), draft) ??
+      overlayFor(fitFallbackSlug(draft)) ??
+      overlayFor(defaultRoutineSlug(draft));
   }
   if (!recommended) return null;
 
   const altSlugs: string[] = [];
   for (const overlay of matched) {
     if (overlay.slug === recommended.slug) continue;
+    if (!daysFit(overlay, draft.days_per_week)) continue;
     if (!canAutoRecommend(overlay.slug, draft) && overlay.slug !== 'summit') continue;
     altSlugs.push(overlay.slug);
     if (altSlugs.length >= 2) break;
@@ -191,7 +216,7 @@ export function recommendPlan(draft: OnboardingDraft, chosenSlug?: string): Reco
     for (const slug of fallbackAlts) {
       if (slug === recommended.slug || altSlugs.includes(slug)) continue;
       const overlay = overlayFor(slug);
-      if (!overlay) continue;
+      if (!overlay || !daysFit(overlay, draft.days_per_week)) continue;
       altSlugs.push(slug);
       if (altSlugs.length >= 2) break;
     }

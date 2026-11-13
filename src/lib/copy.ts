@@ -132,6 +132,8 @@ export const weekRingCopy = {
   recovery: home.week_ring_recovery,
   optional: home.optional_chip,
   skip: home.optional_skip,
+  anytime_this_week: home.anytime_this_week,
+  finisher_block: home.finisher_block,
   eyebrow_strength: home.eyebrow_strength,
   eyebrow_cardio: home.eyebrow_cardio,
   eyebrow_recovery: home.eyebrow_recovery,

@@ -9,22 +9,14 @@ import { ExerciseThumb } from '@/components/ui';
 import { colours, type } from '@/constants/theme';
 import { fetchExercisesForBuilder } from '@/lib/customWorkouts';
 import {
-  BUILDER_TAGS,
-  BUILDER_TAG_LABELS,
   EQUIPMENT,
   EQUIPMENT_LABELS,
   MUSCLES,
   MUSCLE_LABELS,
-  ZONE_LABELS,
-  ZONES,
-  exerciseMatchesBuilderTag,
-  type BuilderTag,
   type Equipment,
   type Muscle,
 } from '@/lib/exercises';
 import type { SlotExercise } from '@/lib/programmes';
-
-type ZoneFilter = '1' | '2' | '3' | '4';
 
 function matchesSearch(exercise: SlotExercise, query: string): boolean {
   if (!query) return true;
@@ -32,7 +24,6 @@ function matchesSearch(exercise: SlotExercise, query: string): boolean {
     exercise.name,
     EQUIPMENT_LABELS[exercise.equipment],
     MUSCLE_LABELS[exercise.primary_muscle],
-    ZONE_LABELS[exercise.zone],
   ]
     .join(' ')
     .toLowerCase();
@@ -55,8 +46,6 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
   const [query, setQuery] = useState('');
   const [muscle, setMuscle] = useState<Muscle | null>(null);
   const [equipment, setEquipment] = useState<Equipment | null>(null);
-  const [zone, setZone] = useState<ZoneFilter | null>(null);
-  const [tag, setTag] = useState<BuilderTag | null>(null);
 
   useEffect(() => {
     if (!open || exercises.length > 0) return;
@@ -72,11 +61,9 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
         !taken.has(exercise.id) &&
         (!muscle || exercise.primary_muscle === muscle) &&
         (!equipment || exercise.equipment === equipment) &&
-        (!zone || String(exercise.zone) === zone) &&
-        (!tag || exerciseMatchesBuilderTag(exercise, tag)) &&
         matchesSearch(exercise, query.trim())
     );
-  }, [exercises, takenIds, muscle, equipment, zone, tag, query]);
+  }, [exercises, takenIds, muscle, equipment, query]);
 
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
@@ -118,25 +105,6 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
             value={equipment}
             onChange={setEquipment}
           />
-          <FilterSheet
-            fill={false}
-            label="Zone"
-            allLabel="All zones"
-            options={ZONES.map((value) => ({
-              value: String(value) as ZoneFilter,
-              label: ZONE_LABELS[value],
-            }))}
-            value={zone}
-            onChange={setZone}
-          />
-          <FilterSheet
-            fill={false}
-            label="Tag"
-            allLabel="All tags"
-            options={BUILDER_TAGS.map((value) => ({ value, label: BUILDER_TAG_LABELS[value] }))}
-            value={tag}
-            onChange={setTag}
-          />
         </View>
         <ScrollView keyboardShouldPersistTaps="handled">
           {filtered.map((exercise) => (
@@ -151,8 +119,7 @@ export function ExercisePicker({ open, takenIds, onClose, onChoose }: ExercisePi
                   {exercise.name}
                 </AppText>
                 <AppText variant="bodySm" style={{ color: colours.textMuted, marginTop: 2 }}>
-                  {ZONE_LABELS[exercise.zone]} · {MUSCLE_LABELS[exercise.primary_muscle]} ·{' '}
-                  {EQUIPMENT_LABELS[exercise.equipment]}
+                  {MUSCLE_LABELS[exercise.primary_muscle]} · {EQUIPMENT_LABELS[exercise.equipment]}
                 </AppText>
               </View>
               <Ionicons name="add-circle-outline" size={24} color={colours.accent} />

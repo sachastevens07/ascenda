@@ -4,10 +4,10 @@
 A strength-training app for women that feels lively, clear and encouraging. She picks (or is recommended) a routine with a clear finish line, sees exactly what's planned each day, logs sessions in seconds, and watches her progress and achievements build up.
 
 **Positioning: the gym, made less intimidating.** Many target users feel anxious in the gym. Instead of abstract "confidence levels", the app makes gym confidence concrete and measurable:
-- routines tagged "one spot", "minimal equipment", "beginner-friendly", "busy gym friendly";
+- routines tagged by the equipment they need ("Dumbbells and a bench", "Machines", "Free weights", "Barbell", "Full gym") plus level, days a week and goal;
 - "first time" guides for each exercise (where to find it, how to set it up, what to do if it's taken, quick swap);
 - "Gym unlocked" progress: how many pieces of equipment and exercises she's tried, with first-time badges;
-- a flagship routine, "Gym Confidence: 6 weeks", that starts with one-spot dumbbell sessions and gradually adds machines and free weights.
+- a flagship routine, "Strong Foundations in 6 Weeks", that starts with just dumbbells and a bench and gradually adds machines and the first barbell lifts.
 
 Target user: women aged 18–40 who lift or want to start, training 2–4 times a week. Tone is calm, warm and empowering. Never shaming, never weight-loss pressure, no "bikini body" language.
 
@@ -26,7 +26,13 @@ One-line pitch: "Ascenda helps women feel at home in the gym: a complete weekly 
 | Stretch and recovery | Warm-ups and cool-downs inside every strength session, recovery days, stretch library | Short, quiet, doable in a corner of the gym |
 | Nutrition | Recipes, fuelling guidance linked to training days | "Fuel your training", never "eat less". No calorie targets, no food logging, no weight-loss meal plans |
 
-**A routine is a complete week**, not just lifting days: strength days (with warm-up and cool-down blocks), cardio days or finishers, and recovery days, all shown in the Planner and counted towards the weekly target and streak.
+**A routine is a complete week**, not just lifting days: strength days (with warm-up and cool-down blocks), cardio finishers or cardio days, and recovery stretches, all shown in the Planner and counted towards the weekly target and streak.
+
+**Decided 11 November 2026: gym days, variety and tags**
+- **Days per week = gym days.** Onboarding asks "How many days a week can you get to the gym?". A routine never plans more gym days than she picked. Strength days go on her chosen days; cardio finishers sit inside strength days (by cardio preference); spare gym days (if she picked more days than the routine's strength days) get cardio sessions; recovery stretches are optional "anytime this week" extras, not a day. Each routine file's `weekly_plan` defines this. Recommendations only pick routines whose `gym_days_needed` fits her days (see `fit_rule` in onboarding.json). The two strength-and-cardio routines advertise their full total and need that many days.
+- **Variety and progression.** Routines follow progression ladders (squat: leg press or goblet squat, then Smith squat, then barbell back squat; hinge: dumbbell RDL, then barbell RDL and hip thrust; push: machine, then dumbbells, then barbell; pull: pulldown and rows, then assisted pull-ups). Every phase changes at least one main lift and some accessories; the same main lift is never used on two days in a phase; no exercise more than twice a week; core work rotates. Beginner routines finish on light barbell basics (Smith squat, barbell hip thrust, sometimes barbell RDL). Checkpoint lifts stay in the routine throughout so "start vs now" compares the same lift.
+- **Tags are objective.** "One spot", "One spot start", "Busy gym friendly", "Whole gym" and zone-based tags and filters are retired (they depend on the gym's layout). Use equipment tags ("Dumbbells and a bench", "Machines", "Free weights", "Barbell", "Full gym"), level, days a week, length and goal. The exercise library filters by equipment. Keep the `zone` column but don't show or use it. Anywhere else in this file that mentions "one spot" or zones, read it as "dumbbells and a bench" or the equipment filter.
+- Routines at launch: 17 (incl. The Four-Day Foundation for beginners on 4 days and Twice a Week Strong for intermediates on 2 days). "Busy Gym? No Problem" is renamed "Dumbbells and a Bench" (slug unchanged).
 
 ## Pricing and access (decided 4 November 2026: hard paywall)
 Ascenda is a **subscription app**. She can download it and complete onboarding for free; using the app's content needs a subscription (free trial included). This replaces the earlier free/Pro split. **Anywhere else in this file that mentions free vs Pro content, Pro badges, locked previews, free limits or "Pro only", read it as: included in the subscription. Where this section and an older task disagree, this section wins.**
@@ -154,21 +160,15 @@ Build in this order, one task at a time. Each task modifies existing code where 
 - Keep a consistent visual style (lighting, colour grading). Compress images and serve from Supabase storage; use placeholders while loading.
 - Add a simple `images` reference so photos can be swapped without code changes.
 
-**M1 (revised): WorkoutX exercise media**
-- Exercise demo videos and images come from the WorkoutX API, female models where available.
-- The API key is a Supabase Edge Function secret (`WORKOUTX_API_KEY`), never in the app or `.env`. The app never calls WorkoutX directly: an authenticated, rate-limited Edge Function returns the media for an exercise.
-- All media goes through one provider-agnostic function in the app, `getExerciseMedia(exerciseId)`, so we can change provider later without touching screens.
-- Match our exercises (`content/exercises/strength-catalogue.json`) to WorkoutX exercises with a one-off match script. Store the WorkoutX id on each exercise. Show me the unmatched and doubtful matches to review.
-- Tap-to-play thumbnail, no autoplay, front and side views if WorkoutX provides them, and a fallback to the text cues in the exercise guide on any error, including rate limits.
-- Don't use WorkoutX's AI workout generator: Ascenda's own AI3 builds sessions from our library.
-- Never log media URLs or keys. Track media usage so we can see how close we are to the plan's limit.
-- WorkoutX terms: [PASTE WHAT WORKOUTX CONFIRMED: caching allowed or not and for how long, attribution required, licence covers commercial app use, monthly media views on my plan]
+**M1. MuscleWiki exercise videos (female model)**
+- Exercise demos come from the MuscleWiki API (stream-only). Rules: API key only as a Supabase Edge Function secret (`MUSCLEWIKI_API_KEY`), never in the app or `.env`; never download or cache video files; exercise text/metadata may be cached for up to 30 days; use the video URLs the API returns; the app plays `<video_url>?token=<media token>` minted by our Edge Function (one token per session); never log video URLs or tokens.
+- Pieces: `exercises.musclewiki_id`, `mw_video_urls`, `mw_cached_at`; a one-off match script (reviewed by me); Edge Functions `mw-exercise` and `mw-media-token` (authenticated, rate-limited); tap-to-play thumbnail with front/side toggle, no autoplay, fallback to text cues on any error including 429.
 - This needs the Supabase CLI and a `supabase/functions` folder, which don't exist yet; set them up when starting this task.
 
 Milestone: TestFlight with 15–20 testers after R10, before any later phase.
 
 ### Phase v2.1 — programmes and polish
-Build in this order, one task at a time. If any v2.0 task (R1–R11) or the exercise media (WorkoutX) task is unfinished, tell me before starting v2.1.
+Build in this order, one task at a time. If any v2.0 task (R1–R11) or the MuscleWiki video task is unfinished, tell me before starting v2.1.
 
 **Superseded by v2.2 (read v2.2 before building these):** S5 streak rules are replaced by H1. S6 achievements are replaced by H6 and D7. The progress photo prompts in S9 are removed (see H7). S9 challenges must use rolling starts (H8). The session detail screen from R4 is removed and merged into the logger (N3).
 
@@ -211,7 +211,7 @@ Build in this order, one task at a time. If any v2.0 task (R1–R11) or the exer
 **S8. Stretches**
 - Stretch routines stored as data like routines (same tables or a `type` field: 'strength' | 'stretch').
 - 5–20 minute sessions, organised by area and occasion (e.g. full body, hips, lower back, post-leg day, desk stretch, morning mobility).
-- Timed holds rather than sets and reps: each step has duration_seconds and a demo (exercise media (WorkoutX) where available; check coverage first and list any gaps).
+- Timed holds rather than sets and reps: each step has duration_seconds and a demo (MuscleWiki where available; check coverage first and list any gaps).
 - Logged as sessions with source 'stretch' and duration, counting towards the streak per S5.
 - 6–8 stretch routines at launch; 2–3 free, the rest Pro.
 
@@ -226,7 +226,7 @@ Build in this order, one task at a time. If any v2.0 task (R1–R11) or the exer
 **S10. Routine content: grow to 12–15 routines**
 - Add routines as data until there are 12–15 strength routines plus the 6–8 stretch routines from S8.
 - Cover a range: beginner, gym confidence, glutes & legs, upper body, full body, minimal equipment, 2/3/4 days per week, 4/6/8 weeks.
-- Each needs: cover photo, description, tags, week-by-week plan, exercise media (WorkoutX) matches, and a coach review before launch.
+- Each needs: cover photo, description, tags, week-by-week plan, MuscleWiki video matches, and a coach review before launch.
 - Target after launch: add 2–4 routines a month, working towards 30.
 
 **S11. Remove em dashes**
@@ -269,7 +269,7 @@ Before starting: compare PROGRESS.md and the code against v2.0, v2.1 and this li
   - changes apply to today only, never to the routine.
 - The session timer starts when she ticks her first set (or taps "Start timer"), not when the screen opens, so browsing the session first doesn't distort time trained.
 - If she leaves without ticking any set, nothing is saved and no "discard" prompt is needed.
-- Logger improvements at the same time (DESIGN.md 6.3): last-time weight shown as placeholder in each kg cell, a suggested-weight chip when the progression rule says go up, bigger tick buttons in `brand` that fill `success` when done, rest timer bar after each ticked set, real exercise thumbnails (exercise media (WorkoutX)) instead of letters.
+- Logger improvements at the same time (DESIGN.md 6.3): last-time weight shown as placeholder in each kg cell, a suggested-weight chip when the progression rule says go up, bigger tick buttons in `brand` that fill `success` when done, rest timer bar after each ticked set, real exercise thumbnails (MuscleWiki) instead of letters.
 
 **N1. Clear safety disclaimer**
 - Replace the one-line disclaimer with the full text in the "Safety disclaimer" section below.
@@ -278,7 +278,7 @@ Before starting: compare PROGRESS.md and the code against v2.0, v2.1 and this li
 - Profile → About → "Safety and disclaimer": full text.
 - Before her first ever session: a one-time sheet with the short version ("Train within your limits" summary, 4 bullets) and a link to the full text.
 - Routine detail pages and Learn articles: one small line at the bottom, "Train within your limits. Read the safety guidance", linking to the full text. No disclaimer on other screens.
-- I will have the wording checked legally; keep the text in one file so it's easy to update. Write for any country: no GP, 999, solicitor, or other UK-only terms.
+- I will have the wording checked by a solicitor; keep the text in one file so it's easy to update.
 
 **N4. More main goals, choose up to three**
 - Onboarding goal screen becomes multi-select chips, up to 3. The first one she picks is her main goal (show a small "Main" label on it; she can change which is main).
@@ -394,7 +394,7 @@ Rules for every task in this group:
 - Every section hides itself if it has nothing useful to show.
 
 **X3. Programmes as a discovery page** (DESIGN.md 8.3)
-- Routines section becomes a WEGLOW-style browse page: Recommended for you hero card, "Build my plan" button (re-runs the plan questions from onboarding and recommends a routine; becomes AI3 later), Training style tiles, carousels (Start here, Popular once we have real data, New, Single sessions).
+- Routines section becomes a WEGLOW-style browse page: Recommended for you hero card, "Find a routine" filter (days, level, goal, equipment; AI plan help lives in Ascenda Coach), Training style tiles, carousels (Start here, Popular once we have real data, New, Single sessions).
 - Add **single sessions**: standalone one-off workouts (strength, cardio, stretch) built from existing routine days and stored as data, so she can do one workout without starting a programme.
 - No invented trainers or coach personas. Show "Coach reviewed" on content once a qualified coach has reviewed it.
 
@@ -512,7 +512,7 @@ Rules for every task in this phase:
 - Macros (calories, protein, carbs, fat, fibre per serving) are shown on each recipe, calculated from a nutrition database (e.g. UK CoFID or USDA FoodData Central), never guessed by AI. Macros can be hidden in Profile settings.
 - All recipes and nutrition articles are reviewed by a Registered Dietitian (HCPC) or Registered Nutritionist (AfN) before launch; store `reviewed_by` and `reviewed_at`.
 - Allergens listed on every recipe (the 14 UK major allergens), plus dietary tags (vegetarian, vegan, gluten free, dairy free).
-- Recipe disclaimer at the bottom: general information, not personal nutritional or medical advice; check with a doctor or dietitian if you have a medical condition, allergy, are pregnant or have a history of disordered eating.
+- Recipe disclaimer at the bottom: general information, not personal nutritional or medical advice; check with a GP or dietitian if you have a medical condition, allergy, are pregnant or have a history of disordered eating.
 
 **F1. Food tab and navigation**
 - Navigation becomes: **Home, Train, Food, Planner, Activity**. "Programmes" is renamed "Train" (Routines / Cardio / Stretches / Exercises). Learn moves out of the tab bar: a "Learn" section on Home with "See all" opening the Learn hub, and related articles inside Train and Food. Profile stays as the header avatar.
@@ -537,66 +537,43 @@ Rules for every task in this phase:
 **F6. Fuelling basics in Learn**
 - Articles: protein for training, eating enough to train, pre- and post-workout food, hydration, caffeine and training, supplements basics (what has evidence, what doesn't), eating around periods of low appetite. Reviewed by the dietitian or nutritionist; sources listed; no calorie targets.
 
-### Phase v2.5 — Ascenda AI
-Build after v2.4 (or earlier if I say so), one task at a time. AI1 and AI5 can be built before Food exists; AI6 needs v2.4.
+### Phase v2.5 — Ascenda AI: one Coach chat (revised 11 November 2026)
+Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec is content/ai/ai-config.json and content/ai/prompts.
 
-**Why:** AI gives women another reason to subscribe and creates shareable moments (scans, recaps). Research shows AI features boost revenue per payer but can increase churn if they're novelty only, so every AI feature must support her training habit.
+**Why:** AI gives women another reason to subscribe, but only if it's genuinely useful and easy to find. So all AI lives in one place, **Ascenda Coach**, a chat that understands her in her own words and can act on her training using Ascenda's own rules. Scan a machine is removed (gyms label their machines and our demos show them). The earlier separate features (Busy gym fix, Build me a session, Ask Ascenda, What can I cook) become Coach tools.
 
 **AI rules (apply to every task in this phase)**
-- **Architecture:** all AI calls go through Supabase Edge Functions; the Claude API key is an Edge Function secret, never in the app. Default model Claude Haiku 5.5; use Claude Sonnet 5.5 only where quality testing shows Haiku isn't good enough (likely AI1 image recognition and AI4 answers). Use prompt caching for fixed system prompts and library lists.
-- **Grounding:** the AI only chooses from or talks about our own data: exercises, machines, routines, Learn articles, recipes and her own logged history. It never invents exercises, machines, recipes, weights or stats.
-- **Structured output and validation:** every response that drives the app (scan results, session changes, built sessions, recipe matches) is structured JSON, validated on the server against our database. If validation fails, retry once, then fall back to a non-AI option.
-- **Weights:** suggested weights always come from our progression rule and her history, never from the AI.
-- **Safety:** no diagnosis, injury treatment, pregnancy or postnatal advice, or medication advice; if pain, injury, pregnancy or a medical condition comes up, the reply says to stop and speak to a doctor or physiotherapist. No calorie targets, weight-loss plans, comments on bodies or appearance. Label every AI answer "AI-generated, not medical advice". Link to the Safety disclaimer.
-- **Never build:** calorie counting from food photos, body scans or physique ratings, "future body" or any AI-generated images of her, AI form checking from video.
-- **Privacy:** photos are processed and immediately discarded, never stored, logged or used for training. The scan screen tells her to photograph the machine, not people. Never send progress photos, health data or bodyweight to the AI. Don't send her name or email. Update the privacy policy to name the AI provider and what's sent.
-- **Limits and cost:** per-user daily limits (see each task), friendly message when reached, `ai_usage` logging (user_id, feature, model, input_tokens, output_tokens, created_at) with RLS, a monthly budget alert in the provider console. Timeouts with a friendly error and a non-AI fallback.
-- **Quality:** before launch, a qualified coach reviews a sample of 50 Ask Ascenda answers, 20 built sessions and 20 busy-gym fixes; fix the prompts until they pass.
-- **Analytics (PostHog):** ai_feature_used, ai_result_accepted, ai_result_rejected, ai_limit_reached, ai_fallback_used; never send prompt or answer text.
+- **Architecture:** all AI calls go through Supabase Edge Functions; the Claude API key is an Edge Function secret. Default model Claude Haiku 5.5; Claude Sonnet 5.5 only where the evals show it's needed. Prompt caching for the system prompt and fixed indexes.
+- **The AI understands, our code decides:** the model chooses a tool and its inputs; Ascenda's own code (session builder, swap engine, recommendation rules, Planner) produces the result. The model never writes exercises, sessions, routines, recipes, weights or stats itself.
+- **Grounding:** answers come from our guides, articles, routines, recipes and her own history, re-sent or fetched every turn.
+- **Weights:** always from the progression rule, never from the AI.
+- **Safety:** no diagnosis, injury treatment, pregnancy or postnatal advice, or medication advice; redirect to a GP or physiotherapist. No calorie targets, weight-loss plans or comments on bodies. Never save a preference for a medical reason. Label answers "AI-generated, not medical advice" with a link to the safety guidance. Emergency signs show the 999 card.
+- **Never build:** photo analysis of bodies or food for calories, body scans, AI images of her, AI form checking from video.
+- **Privacy:** never send her name, email, bodyweight, progress photos, onboarding statement answers or health information. Conversations kept 30 days, deletable, never used for training. Privacy policy names the AI provider and what's sent.
+- **Limits and cost:** 40 Coach messages a day (fair use), max 3 tool calls per turn, `ai_usage` logging, monthly budget alert, timeouts with a non-AI fallback.
+- **Quality:** the evals in ai-config.json (including multi-turn and context cases) must pass; a qualified coach reviews 50 conversations before launch.
+- **Analytics (PostHog):** ai_chat_started (with entry point), ai_tool_called, ai_card_used, ai_limit_reached, ai_fallback_used; never prompt or answer text.
 
-**AI1. Scan a machine** (subscribers: up to 20 a day)
-- Entry points: a camera button on the Train tab header, in the exercise library, and "What's this machine?" inside the logger.
-- Flow: she takes or picks a photo of a machine → Edge Function sends the image plus our list of machines and their key features → model returns `{ machine_id, confidence, alternatives: [machine_id] }`.
-- Confidence high: open our machine guide (W4) for that machine, with "Exercises you can do on this" (from our library, with exercise media (WorkoutX) demos) and "Add to today's session".
-- Confidence low or no match: "Is it one of these?" with the top 3 options, plus "None of these" which logs the miss (no photo kept) so we can add machines later.
-- Counts towards Gym unlocked when she then does an exercise on it.
-- Share option: a card "I just unlocked the [machine] with Ascenda" (no photo of her, no gym name).
+**AI1. Ascenda Coach chat**
+- **Where:** a Coach icon next to the profile avatar in the header of every tab, plus contextual "Ask Coach" buttons and suggested-question chips on exercise pages, the logger, routine pages, machine guides, recipes and Learn articles.
+- **Context:** contextual entry points open a NEW chat with a context object (exercise, machine, today's session, routine, recipe or article), shown as a chip ("About: Leg extension"). Every turn re-sends the context with its guide, her training summary and the guides retrieved for that message, so "this exercise" always works and earlier answers are never retracted.
+- **Conversations:** separate chats. Contextual entry always starts a new chat; the header button reopens her latest chat if used in the last 6 hours, otherwise starts a new one; a New chat button; a list of past chats titled from her first message. Send the last 12 messages plus a running summary.
+- **Answers:** short (about 120 words), with up to 3 links to guides, articles or routines; thumbs up and down.
 
-**AI2. Busy gym fix** (up to 10 a day)
-- In the logger header "⋯" and on each exercise card: "Something's taken".
-- She chooses: what's unavailable (equipment chips), time left (15 / 30 / 45 min), energy (low / normal / high).
-- Model receives today's remaining exercises, her available equipment, our swap rules and eligible alternatives; returns a revised list of `{ exercise_id, sets, rep_min, rep_max, order }` that keeps the day's movement patterns.
-- Validate against the library and swap rules; show a before/after preview; "Use this" applies it to today only.
+**AI2. Coach actions (tools that return cards)**
+- `adjust_today`: something's taken, short on time, low energy, or remove or swap exercises (replaces Busy gym fix). Before and after card, "Use this", today only. Also reachable from "Something's taken" in the logger, which opens Coach with today's session as context.
+- `build_session`: a one-off session from her words (replaces Build me a session). Built by a deterministic session builder from the progression ladders, her level, recent training and preferences; she can ask for tweaks and the tool runs again. "Start" or "Save to My workouts".
+- `recommend_routine`: conversational plan help. Coach asks at most one follow-up, runs the recommendation rules and fit_rule, and explains the pick in her terms. The non-AI "Build my plan" button in Programmes becomes a simple **Find a routine** filter (days, level, goal, equipment).
+- `move_session`: move a planned session, confirmed by her.
+- `save_preference`: lasting preferences ("never give me lunges", "my gym has no hack squat"), stored in `coach_preferences`, applied everywhere by the swap engine and session builder, editable in Profile, Coach preferences.
+- `lookup` and `my_training`: fetch guides, articles and her own history when needed.
+- `find_recipes` (needs v2.4, replaces What can I cook): ingredients she types; the server ranks our reviewed recipes. Fridge photos later, if at all.
 
-**AI3. Build me a session** (up to 5 a day)
-- On Home and in Train: time (20 / 30 / 45 / 60 min), focus (full body, upper, lower, glutes and legs, cardio, recovery), equipment available or "busy gym", energy level.
-- Model chooses only from a pre-filtered list of eligible exercises, cardio blocks and stretch moves; returns structured blocks (warm-up, main, optional finisher, cool-down) matching the W1 block format.
-- Opens in the logger as a custom session; she can save it to My workouts (counts towards the free custom workout limit if she later downgrades).
+**AI3. Monthly recap** (unchanged): on the 1st of each month, if she trained at least twice, Home shows "Your [Month] in the gym". The app calculates every stat; the model only writes a warm 3 to 4 sentence story around those exact numbers. Swipeable recap and a shareable 9:16 card with no body data, faces or weights unless she adds a PB. She can also open it from Coach.
 
-**AI4. Ask Ascenda** (up to 30 questions a day)
-- A coach chat scoped to her training, not an open-ended assistant.
-- Context sent: her current routine and week, last 5 sessions (exercise names, sets, reps, weights), the relevant exercise cues and machine guides, and matching Learn article summaries. Nothing else about her.
-- It can answer: why an exercise or split is in her plan, technique questions, how to adjust her week ("Can I move leg day?" and it can offer to move it in the Planner with her confirmation), gym etiquette, general fuelling (linked to Learn), how to use the app.
-- It must refuse or redirect: medical and injury questions (stop and see a professional), pregnancy and postnatal training, calorie targets or weight-loss plans, comments on her body, anything unrelated to training.
-- UI: suggested question chips on open and on exercise and routine pages ("Why this exercise?", "What can I swap?", "How should this feel?"); answers short (under about 120 words) with links to the relevant guide or article; thumbs up/down feedback.
-- Conversations are stored for 30 days for her own history only, deletable from Profile → Privacy; never used for training models.
-
-**AI5. Monthly recap** (free for everyone, shareable; Hevy-style month report)
-- Visibility: Home card only in the last 3 days of a month or the first 7 days of the next, if she trained at least twice in that month. Not a permanent archive; dismiss hides it for that month. Dev preview can force the window for testing.
-- Report screen (shipped): year bar chart with Workouts / Duration / Volume / Sets chips, 2×2 summary with month-over-month deltas, exercises done that month with counts, an encouraging congrats tile (emoji + warm copy), then in-app share cards (summary + personal records) plus native Share. Numbers only on share cards: no photos, faces or body data.
-- The app calculates every number. No AI-written story swipe in the shipped UI. Optional Edge Function `monthly-recap` and `monthly_recaps` (`supabase/ai5.sql`) may remain for a future story layer; they are not required for the report.
-- Copy rules: celebratory, never comparing her to others, never mentioning missed sessions.
-
-**AI6. What can I cook?** (up to 10 a day; needs v2.4)
-- In the Food tab: type or pick ingredients she has, or take a photo of her fridge or cupboard.
-- Model returns `{ recipe_ids, missing_ingredients }` chosen only from our reviewed recipes; never generates new recipes.
-- Results show the best 3 to 5 matches with "You have 6 of 8 ingredients" and "Add missing to shopping list".
-- Photo is processed and discarded.
-
-**AI7. AI access and messaging**
-- All AI features are included in the subscription (and the trial), with the daily limits above as fair-use protection. When a daily limit is reached: a friendly "You've hit today's limit, it resets tomorrow" message.
-- Showcase AI on the paywall benefits and in onboarding ("Scan any machine and we'll show you how to use it").
-- Marketing line for the paywall and App Store: "The app that knows every machine in your gym."
+**AI4. Access and messaging**
+- Included in the subscription and the trial, with the fair-use limit above ("You've reached today's limit for Coach. It resets tomorrow.").
+- Showcase Coach on the paywall and in onboarding, e.g. "Busy gym? Tell Coach what's free and it reworks your session" and "Ask anything about any exercise". Marketing line: "A coach in your pocket for every gym session."
 
 ### Later phases (do not build yet)
 **Gym buddy (after launch):** invite one friend; see each other's weekly progress (sessions, not weights); send a high five. Later small private groups. No public leaderboards, ever.
@@ -616,33 +593,30 @@ Build after v2.4 (or earlier if I say so), one task at a time. AI1 and AI5 can b
 9. **Checkpoints:** re-test 2 to 3 key lifts at the midpoint and the end, shown as start vs now.
 10. **Coaching notes:** one short note per day (what to focus on, how it should feel).
 11. **Safety:** conservative starting loads ("find a weight you could lift 3 more times"), no maximal testing for beginners, coach review before launch.
+12. **Variety and progression:** follow the progression ladders and rules in "Decided 11 November 2026" above. Prefer the lifts women commonly do in the gym (hip thrust, leg press, Smith and barbell squats, Romanian deadlifts, split squats and lunges, cable kickbacks, abductor machine, leg curls, pulldowns and rows) over repeating the same beginner movement every session.
 
-## Safety disclaimer (full text, v2; to be checked legally)
-
-Write for any country. Do not use GP, 999, solicitor, or other UK-only terms.
-
+## Safety disclaimer (full text, v1; to be checked by a solicitor)
 > **Train safely with Ascenda**
 >
-> Ascenda gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor or other qualified health professional.
+> Ascenda gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor, physiotherapist or other qualified professional.
 >
-> **Check with a doctor or other qualified professional before you start if you:**
+> **Check with your GP or a qualified professional before you start if you:**
+> - are pregnant, have given birth in the last year, or are trying to conceive
+> - have a heart condition, high blood pressure, diabetes, asthma or another long-term health condition
+> - have an injury, joint or back problem, or have had recent surgery
+> - take medication that affects your heart rate, blood pressure or balance
+> - have been told by a professional to limit exercise, or are unsure whether exercise is safe for you
 >
-> - Are pregnant, have given birth in the last year, or are trying to conceive
-> - Have a heart condition, high blood pressure, diabetes, asthma or another long-term health condition
-> - Have an injury, joint or back problem, or have had recent surgery
-> - Take medication that affects your heart rate, blood pressure or balance
-> - Have been told by a professional to limit exercise, or are unsure whether exercise is safe for you
->
-> **Stop straight away and get medical help.** Stop if you feel chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call your local emergency number.
+> **Stop straight away and get medical help if you feel** chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call 999 (or your local emergency number).
 >
 > **Train within your limits.** Warm up, use weights you can lift with good form, and never train through pain. Suggested weights are estimates based on what you log, not personal prescriptions. Exercise demos and tips are for guidance only; if you're unsure how to do a movement, ask a qualified instructor at your gym.
 >
 > You choose how and when you train, and you're responsible for doing so safely.
 
-Short version (first-session sheet, 4 bullets): This is general fitness information, not medical advice. Check with a doctor first if you are pregnant, injured or have a health condition. Stop and get help if you feel chest pain, dizziness or sharp pain. Use weights you can lift with good form, and never train through pain.
+Short version (first-session sheet, 4 bullets): not medical advice; check with your GP first if you're pregnant, injured or have a health condition; stop and get help if you feel chest pain, dizziness or sharp pain; use weights you can lift with good form and never train through pain.
 
 ## Out of scope (do not build unless I ask)
-Video classes, open-ended AI chatbot, home-specific features, food logging or meal-plan diets, social feed or leaderboards (a private gym buddy is planned for later), wearable sync, any AI analysis of bodies or food photos for calories (machine scanning and fridge-to-recipe matching in v2.5 are allowed), AI form checking from video, cycle tracking, BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
+Video classes, an open-ended AI chatbot (Ascenda Coach stays scoped to training, the gym, fuelling and the app), home-specific features, food logging or meal-plan diets, social feed or leaderboards (a private gym buddy is planned for later), wearable sync, any AI analysis of bodies or food photos for calories, AI machine scanning, AI form checking from video, cycle tracking, BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
 
 ## Data model
 Check the actual schema before changing anything. Existing tables include `profiles`, `exercises` (with `zone`), `programmes` / `programme_days` / `programme_exercises`, `sessions`, `sets`, `confidence_history`, and cycle-notes storage (to be removed in R1).
@@ -703,8 +677,8 @@ Pricing (P1, C3):
 New in v2.5:
 - `ai_usage`: id, user_id, feature, model, input_tokens, output_tokens, created_at
 - `ai_quota`: user_id, feature, period_start, count (for daily fair-use limits)
-- `ai_conversations` and `ai_messages` (Ask Ascenda): id, user_id, created_at; message role, content, created_at; auto-delete after 30 days; deletable by her
-- `machine_scan_misses`: id, model_guess, created_at (no image, no user content)
+- `ai_conversations` (id, user_id, context_type, context_id, title, last_message_at, created_at) and `ai_messages` (conversation_id, role, content, cards jsonb, retrieved_ids, created_at); auto-delete after 30 days; deletable by her
+- `coach_preferences`: id, user_id, kind ('avoid_exercise' | 'no_equipment_at_my_gym'), exercise_id, equipment, reason, created_at (RLS; editable in Profile)
 - `monthly_recaps`: user_id, month, stats (jsonb), story_text, created_at
 
 ## Design direction
@@ -724,7 +698,7 @@ New in v2.5:
 - DESIGN.md is the source of truth for tokens, components and screen layouts.
 
 ## Working rules for the AI
-- Current work is the Roadmap to completion in PROGRESS.md. v2.0, v2.1 and v2.2 below are the spec history. Do not rebuild a roadmap item marked done. Do not start gym buddy or price experiments. Phases after the current roadmap item stay in order: remaining v2.2, then v2.3, then v2.4, then v2.5 (unless I ask for an AI task earlier). Build the data structures for later phases (W1 blocks) in a way that doesn't need redoing.
+- Current phase: v2.2, then v2.3, then v2.4, then v2.5, in that order (unless I ask for an AI task earlier). First reconcile v2.0, v2.1 and v2.2 against the code and PROGRESS.md. Unfinished v2.1 tasks that aren't superseded go after v2.2 Group 2 unless I say otherwise. Build the data structures for later phases (W1 blocks) in a way that doesn't need redoing. Do not start "Later phases".
 - Read the existing code before changing anything; change only what the current task needs.
 - Build ONE task at a time, in order. Stop and tell me how to test it before moving on.
 - For any database change, write a migration, explain it, and wait for my confirmation. Never delete users' workout history (sessions and sets).

@@ -110,7 +110,7 @@ export default function PathDetailScreen() {
                 {step.routine.name}
               </AppText>
               <AppText variant="bodySm" style={styles.meta}>
-                {step.routine.length_weeks} weeks · {routineCardDays(step.routine)} days / week
+                {step.routine.length_weeks} weeks · {routineCardDays(step.routine)} days a week
               </AppText>
             </View>
           </Pressable>

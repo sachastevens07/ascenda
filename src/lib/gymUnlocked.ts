@@ -1,11 +1,8 @@
 import {
   EQUIPMENT,
   EQUIPMENT_LABELS,
-  ZONE_LABELS,
-  ZONES,
   type Equipment,
   type Exercise,
-  type Zone,
 } from '@/lib/exercises';
 import type { ProgressSet } from '@/lib/progress';
 
@@ -33,13 +30,6 @@ const EQUIPMENT_FIRST: Record<Equipment, { title: string; detail: string }> = {
   bodyweight: { title: 'First bodyweight move', detail: 'You trained with just you.' },
 };
 
-const ZONE_FIRST: Record<Zone, { title: string; detail: string }> = {
-  1: { title: 'Corner unlocked', detail: 'You trained in one quiet spot.' },
-  2: { title: 'Dumbbell area unlocked', detail: 'You used the open dumbbell floor.' },
-  3: { title: 'Machines unlocked', detail: 'You used the machine area.' },
-  4: { title: 'Rack unlocked', detail: 'You used the barbell or squat rack.' },
-};
-
 const EXERCISE_MILESTONES = [1, 5, 10, 25] as const;
 
 function firstDate(sets: ProgressSet[], match: (set: ProgressSet) => boolean): string | null {
@@ -63,17 +53,6 @@ export function getGymUnlocked(
       id: `equipment-${equipment}`,
       title: EQUIPMENT_FIRST[equipment].title,
       detail: EQUIPMENT_FIRST[equipment].detail,
-      unlocked: unlockedOn !== null,
-      unlockedOn,
-    });
-  }
-
-  for (const zone of ZONES) {
-    const unlockedOn = firstDate(sets, (set) => set.zone === zone);
-    badges.push({
-      id: `zone-${zone}`,
-      title: ZONE_FIRST[zone].title,
-      detail: ZONE_FIRST[zone].detail,
       unlocked: unlockedOn !== null,
       unlockedOn,
     });
@@ -169,4 +148,4 @@ export function exerciseListLabel(count: number): string {
   return count === 1 ? '1 exercise tried' : `${count} exercises tried`;
 }
 
-export { EQUIPMENT_LABELS, ZONE_LABELS };
+export { EQUIPMENT_LABELS };

@@ -29,7 +29,7 @@ import {
   trimWorkoutName,
   type WorkoutDraftSlot,
 } from '@/lib/customWorkouts';
-import { EQUIPMENT_LABELS, ZONE_LABELS } from '@/lib/exercises';
+import { EQUIPMENT_LABELS } from '@/lib/exercises';
 import type { SlotExercise } from '@/lib/programmes';
 
 export default function WorkoutEditorScreen() {
@@ -180,7 +180,7 @@ export default function WorkoutEditorScreen() {
                   {slot.exercise.name}
                 </AppText>
                 <AppText variant="bodySm" style={styles.meta}>
-                  {ZONE_LABELS[slot.exercise.zone]} · {EQUIPMENT_LABELS[slot.exercise.equipment]}
+                  {EQUIPMENT_LABELS[slot.exercise.equipment]}
                 </AppText>
               </View>
               <Pressable

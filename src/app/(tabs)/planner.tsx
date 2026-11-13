@@ -177,6 +177,7 @@ export default function PlannerScreen() {
 
   const months = useMemo(() => monthsInHorizon(horizon.from, horizon.to), [horizon.from, horizon.to]);
   const weekPlanned = weekDays.filter((day) => isPlannedSessionKind(day.kind) && !day.isOptional);
+  const weekAnytime = (range?.anytime ?? []).filter((item) => item.iso === weekStartIso);
   const weekDone = weekPlanned.filter((day) => day.completed).length;
   const movingDay = movingId ? (range?.days.find((day) => day.plan?.id === movingId) ?? null) : null;
 
@@ -601,6 +602,24 @@ export default function PlannerScreen() {
           }
           ListFooterComponent={
             <View style={styles.footer}>
+              {weekAnytime.length > 0 ? (
+                <View style={{ gap: 8, marginBottom: 16 }}>
+                  <AppText variant="title3" style={{ color: colours.ink }}>
+                    {weekRingCopy.anytime_this_week}
+                  </AppText>
+                  {weekAnytime.map((item) => (
+                    <AgendaDay
+                      key={item.plan?.id ?? item.title ?? 'anytime'}
+                      day={item}
+                      moving={false}
+                      reminderLabel={null}
+                      onPress={() => void handleOpen(item)}
+                      onReminderPress={() => {}}
+                      disabled={busy}
+                    />
+                  ))}
+                </View>
+              ) : null}
               {!range.enrolment ? (
                 <TextButton label="Browse routines" onPress={() => router.push('/programmes' as Href)} />
               ) : null}

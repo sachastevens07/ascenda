@@ -6,7 +6,7 @@ import { showDialog } from '@/components/Dialog';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { preferredSwapIds } from '@/lib/contentGuides';
-import { EQUIPMENT_LABELS, ZONE_LABELS, type Zone } from '@/lib/exercises';
+import { EQUIPMENT_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import type { ProgrammeExercise, SlotExercise } from '@/lib/programmes';
 import { exerciseFits, fetchAlternatives, type SwapScope } from '@/lib/swaps';
@@ -195,7 +195,7 @@ export function SwapSheet({
           {trySomethingNew && (
             <Pill
               title={trySomethingNew.name}
-              detail={`Try something new · ${ZONE_LABELS[trySomethingNew.zone]}`}
+              detail={`Try something new · ${EQUIPMENT_LABELS[trySomethingNew.equipment]}`}
               icon="sparkles-outline"
               onPress={() => setChosen(trySomethingNew)}
             />

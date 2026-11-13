@@ -103,7 +103,7 @@ export const ROUTINE_BRIEFS: Record<string, RoutineBrief> = {
       'Have logged six weeks of the same movements',
     ],
     splitNote:
-      'Full body, one spot. Every session uses dumbbells and floor work so you do not need to move around the gym.',
+      'Full body with dumbbells and a bench. Every session stays on that kit, so you do not need to wait for machines.',
     progressionNote:
       'Add 1 to 2 kg on main dumbbell lifts when you hit the top of the range. Accessories add reps first.',
   },
@@ -274,12 +274,12 @@ export const ROUTINE_BRIEFS: Record<string, RoutineBrief> = {
       'Happy with eight weeks of the same two days',
     ],
     byTheEnd: [
-      'Have two one-spot sessions you could do anywhere there are dumbbells',
+      'Have two dumbbell and bench sessions you could do in any gym',
       'Know how to add 1 to 2 kg from your log',
       'Have taken a lighter week before the last checkpoint',
     ],
     splitNote:
-      'Two full-body dumbbell days. You stay in one spot. The week still covers squat, hinge, push, pull, single-leg and core.',
+      'Two full-body dumbbell days. You stay on a bench and a pair of dumbbells. The week still covers squat, hinge, push, pull, single-leg and core.',
     progressionNote:
       'Add 1 to 2 kg on main dumbbell lifts when you hit the top of the range. Week 7 is lighter. Leave two or three reps in the tank.',
   },
@@ -387,15 +387,14 @@ export function focusFromDayName(name: string): string {
   if (lower.includes('lower') || lower.includes('glute')) return 'Glutes and legs';
   if (lower.includes('push')) return 'Push';
   if (lower.includes('pull')) return 'Pull';
-  if (lower.includes('one spot')) return 'Full body, one spot';
   return 'Full body';
 }
 
 export function coachNoteForDay(name: string, difficulty: RoutineDifficulty): string {
   const focus = focusFromDayName(name).toLowerCase();
   if (difficulty === 'beginner') {
-    if (focus.includes('one spot')) {
-      return 'Stay in your spot. The first set of each lift is for finding a weight you could still lift three more times.';
+    if (focus.includes('dumbbell')) {
+      return 'Stay with the bench and dumbbells. The first set of each lift is for finding a weight you could still lift three more times.';
     }
     return 'Move kindly. Find a weight you could lift three more times, and stop if anything feels sharp.';
   }
