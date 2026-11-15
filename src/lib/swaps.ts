@@ -1,3 +1,4 @@
+import { preferenceAvoidIds, preferenceBlockedEquipment, fetchCoachPreferences } from '@/lib/coachPreferences';
 import { preferredSwapIds } from '@/lib/contentGuides';
 import { EQUIPMENT, type Equipment, type Muscle, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
@@ -210,6 +211,9 @@ export async function fetchAlternatives(
   preferredIds: string[] = []
 ): Promise<SwapOptions> {
   const guideIds = preferredIds.length > 0 ? preferredIds : preferredSwapIds(current.id);
+  const prefs = await fetchCoachPreferences().catch(() => []);
+  const avoid = new Set(preferenceAvoidIds(prefs));
+  const blockedEq = new Set(preferenceBlockedEquipment(prefs));
   const { data, error } = await supabase
     .from('exercises')
     .select(`${SLOT_EXERCISE_COLUMNS}, secondary_muscles`)
@@ -240,6 +244,8 @@ export async function fetchAlternatives(
   const allowed = (row: RankedExercise) =>
     row.id !== current.id &&
     !excludeIds.includes(row.id) &&
+    !avoid.has(row.id) &&
+    !blockedEq.has(row.equipment) &&
     EQUIPMENT_FOR_ACCESS[access].includes(row.equipment) &&
     (maxZone === undefined || row.zone <= maxZone);
 

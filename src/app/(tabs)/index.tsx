@@ -99,7 +99,7 @@ import {
 import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
-import { openAsk } from '@/lib/askAscenda';
+import { openCoach, openCoachFromHeader } from '@/lib/coach';
 import { ensureSubscribed } from '@/lib/paywall';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -896,7 +896,7 @@ export default function HomeScreen() {
           onPlanner={() => router.push('/planner' as Href)}
           onAsk={() => {
             if (!ensureSubscribed()) return;
-            openAsk({ screen: 'open' });
+            void openCoachFromHeader();
           }}
         />
 
@@ -1118,7 +1118,7 @@ export default function HomeScreen() {
         <Pressable
           onPress={() => {
             if (!ensureSubscribed()) return;
-            router.push('/build-session' as Href);
+            openCoach({ question: 'Build me a 30-minute session', entry: 'home' });
           }}
           accessibilityRole="button"
           accessibilityLabel={aiCopy.build_title}

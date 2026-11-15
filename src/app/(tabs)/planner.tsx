@@ -15,6 +15,7 @@ import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AppText,
+  CoachButton,
   IconButton,
   ListRow,
   MenuHeader,
@@ -472,6 +473,7 @@ export default function PlannerScreen() {
       <View style={[styles.top, { paddingTop: Math.max(insets.top, 16) + 8 }]}>
         <TabAvatar />
         <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Planner</AppText>
+        <CoachButton />
         <IconButton
           icon={viewMode === 'agenda' ? 'calendar-outline' : 'list-outline'}
           variant="muted"

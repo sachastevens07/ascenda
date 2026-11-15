@@ -19,7 +19,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import type { SetEntry } from '@/lib/workoutLog';
 
-export const BUSY_GYM_FEATURE = 'busy_gym' as const;
+export const BUSY_GYM_FEATURE = 'coach' as const;
 
 export type BusyGymOutcome =
   | { kind: 'ok'; plan: BusyGymPlan; byId: Map<string, SlotExercise> }

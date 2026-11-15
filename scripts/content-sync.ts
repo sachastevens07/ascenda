@@ -484,12 +484,8 @@ async function main(): Promise<void> {
   reportSingleSessions();
   reportCardio();
   reportMachineGuides();
-  reportAi1();
-  reportAi2();
-  reportAi3();
-  reportAi4();
+  reportCoach();
   reportAi5();
-  reportAi6();
   await reportFood(client);
 
 
@@ -644,92 +640,33 @@ function reportMachineGuides(): void {
   line();
 }
 
-function reportAi1(): void {
-  line('AI1 scan  ←  content/ai/ai-config.json + prompts/ai1-scan-machine.md');
-  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai1-scan-machine'] ?? {};
+function reportCoach(): void {
+  line('Coach  ←  content/ai/ai-config.json + prompts/coach.md');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features).coach ?? {};
   const row = asRecord(config);
   let promptPresent = false;
   try {
-    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai1-scan-machine.md'), 'utf8').length > 0;
+    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/coach.md'), 'utf8').length > 0;
   } catch {
     promptPresent = false;
   }
-  line(`  Feature: ${text(row.feature) || 'AI1 Scan a machine'}`);
-  line(`  Model: ${text(row.model) || 'claude-sonnet-5-5'}. Daily limit: ${num(row.daily_limit) ?? 20}.`);
-  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Photos are discarded. Never stored.`);
-  line('  Edge Function: scan-machine. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai1.sql (ai_usage, ai_quota, machine_scan_misses).');
-  line('  Bundled machine list for the function: supabase/functions/scan-machine/machines.json (id, name, visual_features).');
+  const tools = asArray(row.tools).map((item) => text(asRecord(item).name)).filter(Boolean);
+  const evals = asArray(asRecord(readJson('ai/ai-config.json')).evals);
+  line(`  Feature: ${text(row.feature) || 'Ascenda Coach'}`);
+  line(
+    `  Model: ${text(row.model) || 'claude-haiku-5-5'}. Daily limit: ${num(row.daily_message_limit) ?? 40} messages. Max tools: ${num(row.max_tool_calls_per_turn) ?? 3}.`
+  );
+  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Tools: ${tools.join(', ') || 'none'}.`);
+  line(`  Evals: ${evals.length}. Scan a machine is removed. Monthly recap stays.`);
+  line('  Edge Function: coach. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai7_coach.sql (conversations, messages, coach_preferences).');
+  line('  Bundled indexes: supabase/functions/coach/indexes.json (regenerate with node scripts/emit-coach-indexes.ts).');
   line('  Live sync does not write AI tables. The function writes usage with the service role.');
-  line();
-}
-
-function reportAi2(): void {
-  line('AI2 busy gym  ←  content/ai/ai-config.json + prompts/ai2-busy-gym-fix.md');
-  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai2-busy-gym-fix'] ?? {};
-  const row = asRecord(config);
-  let promptPresent = false;
-  try {
-    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai2-busy-gym-fix.md'), 'utf8').length > 0;
-  } catch {
-    promptPresent = false;
-  }
-  line(`  Feature: ${text(row.feature) || 'AI2 Busy gym fix'}`);
-  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'}. Daily limit: ${num(row.daily_limit) ?? 10}.`);
-  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Eligible swaps come from exercise-guide if_its_taken lists.`);
-  line('  Edge Function: busy-gym-fix. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai2.sql (reuses ai_usage, ai_quota from AI1).');
-  line('  Server validates ids, reps, sets and estimated time, then falls back to first eligible swap.');
-  line('  Use this applies to today only. Live sync does not write AI tables. The function writes usage with the service role.');
-  line();
-}
-
-function reportAi3(): void {
-  line('AI3 build session  ←  content/ai/ai-config.json + prompts/ai3-build-session.md');
-  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai3-build-session'] ?? {};
-  const row = asRecord(config);
-  let promptPresent = false;
-  try {
-    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai3-build-session.md'), 'utf8').length > 0;
-  } catch {
-    promptPresent = false;
-  }
-  line(`  Feature: ${text(row.feature) || 'AI3 Build me a session'}`);
-  line(`  Model: ${text(row.model) || 'claude-haiku-5-5'}. Daily limit: ${num(row.daily_limit) ?? 5}.`);
-  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Blocks use the W1 warmup/strength/cardio/cooldown/stretch shape.`);
-  line('  Edge Function: build-session. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai3.sql (reuses ai_usage, ai_quota from AI1).');
-  line('  Server calculates time from 40s/set plus rest_by_role, then checks minutes +/- 5. Fallback is the closest gym single session.');
-  line('  Live sync does not write AI tables. The function writes usage with the service role.');
-  line();
-}
-
-function reportAi4(): void {
-  line('AI4 ask  ←  content/ai/ai-config.json + prompts/ai4-ask-ascenda.md');
-  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai4-ask-ascenda'] ?? {};
-  const row = asRecord(config);
-  let promptPresent = false;
-  try {
-    promptPresent = readFileSync(join(CONTENT, 'ai/prompts/ai4-ask-ascenda.md'), 'utf8').length > 0;
-  } catch {
-    promptPresent = false;
-  }
-  const chips = asRecord(asRecord(readJson('ai/ai-config.json')).ask_ascenda_chips);
-  const chipCount =
-    asArray(chips.on_open).length +
-    asArray(chips.exercise_page).length +
-    asArray(chips.machine_page).length +
-    asArray(chips.routine_page).length +
-    asArray(chips.logger).length;
-  line(`  Feature: ${text(row.feature) || 'AI4 Ask Ascenda'}`);
-  line(`  Model: ${text(row.model) || 'claude-sonnet-5-5'}. Daily limit: ${num(row.daily_limit) ?? 30}.`);
-  line(`  Prompt file: ${promptPresent ? 'present' : 'MISSING'}. Chips: ${chipCount}. Never sends name, email, bodyweight or health info.`);
-  line('  Edge Function: ask-ascenda. Secret: ANTHROPIC_API_KEY. SQL: supabase/ai4.sql (ai_conversations, ai_messages; reuses ai_usage, ai_quota).');
-  line('  Server checks link ids, move_session ownership and to_date within 14 days, strips em dashes. Emergency flag shows the emergency card.');
-  line('  Conversations kept 30 days and deletable from Profile, Privacy. Live sync does not write AI tables.');
   line();
 }
 
 function reportAi5(): void {
-  line('AI5 recap  ←  content/ai/ai-config.json + prompts/ai5-monthly-recap.md');
-  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features)['ai5-monthly-recap'] ?? {};
+  line('Recap  ←  content/ai/ai-config.json features.recap (kept)');
+  const config = asRecord(asRecord(readJson('ai/ai-config.json')).features).recap ?? {};
   const row = asRecord(config);
   let promptPresent = false;
   try {

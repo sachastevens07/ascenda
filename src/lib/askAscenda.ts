@@ -16,7 +16,7 @@ import { addDays, loadPlannerWeek, startOfWeekMonday, toIso, type PlannedSession
 import { currentEnrolmentWeek, fetchActiveEnrolment } from '@/lib/routines';
 import { supabase } from '@/lib/supabase';
 
-export const ASK_FEATURE = 'ask_ascenda' as const;
+export const ASK_FEATURE = 'coach' as const;
 export const ASK_DAILY_LIMIT = 30;
 export const ASK_HISTORY_LIMIT = 6;
 
@@ -99,7 +99,13 @@ export type AskContext = {
   app_help: { id: string; text: string }[];
 };
 
-const CHIPS = aiConfig.ask_ascenda_chips;
+const CHIPS = {
+  on_open: aiConfig.chips.new_chat,
+  exercise_page: aiConfig.chips.exercise,
+  machine_page: aiConfig.chips.machine,
+  routine_page: aiConfig.chips.routine,
+  logger: aiConfig.chips.session_today,
+};
 export const ASK_UI = aiConfig.ui_copy;
 
 export const APP_HELP: { id: string; text: string }[] = [

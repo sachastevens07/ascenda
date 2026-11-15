@@ -33,7 +33,7 @@ type FunctionFail = {
   reason?: string;
 };
 
-const FEATURE = 'scan_machine' as const;
+const FEATURE = 'coach' as const;
 
 function stripDataUri(value: string): string {
   const match = value.match(/^data:image\/[a-zA-Z0-9+.-]+;base64,(.+)$/i);

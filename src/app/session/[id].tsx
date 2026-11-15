@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BusyGymSheet } from '@/components/BusyGymSheet';
 import { showDialog } from '@/components/Dialog';
 import { ExerciseMediaSheet } from '@/components/ExerciseMediaPlayer';
 import { ExercisePicker } from '@/components/ExercisePicker';
@@ -48,13 +47,14 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
-import { applyBusyGymPlanToDay, remainingBusyGymItems, type BusyGymPlan } from '@/lib/busyGym';
+import { applyBusyGymPlanToDay, remainingBusyGymItems, toBusyGymRemaining, type BusyGymPlan } from '@/lib/busyGym';
+import { fetchBusyGymSlots } from '@/lib/busyGymFix';
+import { openCoach, takeCoachPlan } from '@/lib/coach';
 import { cardioSession } from '@/lib/cardio';
 import { contentDayFor, contentRoutine } from '@/lib/contentRoutines';
 import { finisherForDay } from '@/lib/completeWeek';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
-import { openAsk } from '@/lib/askAscenda';
 import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, weekRingCopy, welcomeBackCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuideForExercise } from '@/lib/machineGuides';
@@ -316,8 +316,6 @@ export default function SessionScreen() {
   const heightsRef = useRef<number[]>([]);
   const [pbGlowKey, setPbGlowKey] = useState<string | null>(null);
   const [playingExercise, setPlayingExercise] = useState<{ id: string; name: string } | null>(null);
-  const [busyGymOpen, setBusyGymOpen] = useState(false);
-  const [busyGymSeed, setBusyGymSeed] = useState<SlotExercise['equipment'] | null>(null);
   const pendingAdd = useRef<string | null>(null);
 
   const { restEndsAt, publish, startRest, stopRest, adjustRest, end } = useWorkout();
@@ -375,6 +373,21 @@ export default function SessionScreen() {
     const timer = setTimeout(() => setPbGlowKey(null), 1400);
     return () => clearTimeout(timer);
   }, [pbGlowKey]);
+
+  useEffect(() => {
+    if (!id || !day) return;
+    let current = true;
+    void takeCoachPlan(id).then(async (plan) => {
+      if (!plan || !current) return;
+      const ids = plan.exercises.map((row) => row.exercise_id);
+      const byId = await fetchBusyGymSlots(ids);
+      if (!current) return;
+      await applyBusyGymPlan(plan, byId);
+    });
+    return () => {
+      current = false;
+    };
+  }, [id, day]);
 
   useEffect(() => {
     if (!equipment) return;
@@ -575,14 +588,18 @@ export default function SessionScreen() {
     setSwapItem((current) => (current?.position === item.position ? null : item));
   }
 
-  function openBusyGym(seed: SlotExercise['equipment'] | null = null) {
+  function openBusyGym(_seed: SlotExercise['equipment'] | null = null) {
     if (!day) return;
     if (remainingBusyGymItems(day, entries).length === 0) {
       showDialog(aiCopy.busy_title, aiCopy.busy_need_remaining);
       return;
     }
-    setBusyGymSeed(seed);
-    setBusyGymOpen(true);
+    openCoach({
+      context: { type: 'session_today', id, label: day.name },
+      question: "Something's taken",
+      entry: 'logger',
+      sessionToday: toBusyGymRemaining(day, entries),
+    });
   }
 
   async function applyBusyGymPlan(plan: BusyGymPlan, byId: Map<string, SlotExercise>) {
@@ -1321,10 +1338,16 @@ export default function SessionScreen() {
             {day.name}
           </AppText>
           <IconButton
-            icon="camera-outline"
+            icon="sparkles-outline"
             variant="muted"
-            accessibilityLabel={aiCopy.whats_this}
-            onPress={() => router.push('/machines/scan' as Href)}
+            accessibilityLabel="Ask Coach"
+            onPress={() =>
+              openCoach({
+                context: { type: 'session_today', id, label: day.name },
+                entry: 'logger',
+                sessionToday: toBusyGymRemaining(day, entries),
+              })
+            }
           />
           <View ref={menuRef} collapsable={false}>
             <IconButton
@@ -1732,8 +1755,14 @@ export default function SessionScreen() {
         {dragFrom === null ? (
           <>
             <TextButton
-              label={aiCopy.ask_title}
-              onPress={() => openAsk({ screen: 'logger' })}
+              label="Ask Coach"
+              onPress={() =>
+                openCoach({
+                  context: { type: 'session_today', id, label: day.name },
+                  entry: 'logger',
+                  sessionToday: toBusyGymRemaining(day, entries),
+                })
+              }
             />
             <SecondaryButton
               label={loggerCopy.header_menu.taken}
@@ -1794,18 +1823,6 @@ export default function SessionScreen() {
         onChoose={handleAddExercise}
       />
 
-      <BusyGymSheet
-        open={busyGymOpen}
-        day={day}
-        entries={entries}
-        seedEquipment={busyGymSeed}
-        onClose={() => {
-          setBusyGymOpen(false);
-          setBusyGymSeed(null);
-        }}
-        onApply={applyBusyGymPlan}
-      />
-
       <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={closeMenu}>
         {menuMode === 'days' ? (
           <>
@@ -1821,6 +1838,13 @@ export default function SessionScreen() {
         ) : (
           <>
             <MenuHeader label={day.name} detail={loggerCopy.today_only_note} />
+            <MenuRow
+              label={loggerCopy.header_menu.taken}
+              onPress={() => {
+                closeMenu();
+                openBusyGym(null);
+              }}
+            />
             {weekDays.length > 1 ? (
               <MenuRow
                 label={loggerCopy.header_menu.different_day}
@@ -1861,6 +1885,13 @@ export default function SessionScreen() {
                 const item = slotMenuItem;
                 setSlotMenuItem(null);
                 openSwap(item);
+              }}
+            />
+            <MenuRow
+              label={loggerCopy.header_menu.taken}
+              onPress={() => {
+                setSlotMenuItem(null);
+                openBusyGym(slotMenuItem?.exercise.equipment ?? null);
               }}
             />
             <MenuRow

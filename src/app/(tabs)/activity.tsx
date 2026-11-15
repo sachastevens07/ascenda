@@ -29,6 +29,7 @@ import {
   SecondaryButton,
   SectionHeader,
   StreakCard,
+  CoachButton,
   TabAvatar,
   TextButton,
   TypeRing,
@@ -494,6 +495,7 @@ export default function ActivityScreen() {
         <View style={styles.titleRow}>
           <TabAvatar />
           <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Activity</AppText>
+          <CoachButton />
         </View>
         <View style={[styles.tabRow, { borderBottomColor: colours.border }]} accessibilityRole="tablist">
           {TABS.map((item) => {

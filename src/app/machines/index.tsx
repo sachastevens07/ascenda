@@ -32,11 +32,7 @@ export default function MachineListScreen() {
     <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top + 8 }]}>
       <View style={styles.top}>
         <IconButton icon="chevron-back" accessibilityLabel="Back" onPress={goBack} />
-        <IconButton
-          icon="camera-outline"
-          accessibilityLabel={aiCopy.scan_title}
-          onPress={() => router.push('/machines/scan' as Href)}
-        />
+        <View />
       </View>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 32 }}>
         <SectionHeader title={machineCopy.browse} />

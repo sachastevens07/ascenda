@@ -82,7 +82,7 @@
     "programmes": {
       "tab_title": "Train",
       "section_recommended": "Recommended for you",
-      "build_plan": "Build my plan",
+      "build_plan": "Find a routine",
       "section_styles": "Training styles",
       "section_start_here": "Start here",
       "section_single_sessions": "Single sessions",
@@ -100,7 +100,7 @@
       "style_stretch": "Stretch and recovery",
       "style_busy_gym": "Busy gym",
       "style_cant_get_to_gym": "Days you can't get to the gym",
-      "empty_style": "Nothing in this style yet. Try another tile, or Build my plan."
+      "empty_style": "Nothing in this style yet. Try another tile, or Find a routine."
     },
     "food": {
       "title": "Food",
@@ -864,7 +864,7 @@
       "preview_off": "Off"
     },
     "ai": {
-      "_note": "AI1 Scan a machine, AI2 Busy gym fix, AI3 Build me a session, AI4 Ask Ascenda and AI6 What can I cook. Prompts stay in content/ai and the Edge Function. No em dashes.",
+      "_note": "Leftover labels for Coach safety cards and a few buttons. Coach copy lives in content/ai/ai-config.json ui_copy. Prompts stay in content/ai. No em dashes.",
       "scan_title": "Scan a machine",
       "scan_tip": "Photograph the machine, not people. Photos are never stored.",
       "scan_privacy": "Your photo is checked and then deleted straight away.",

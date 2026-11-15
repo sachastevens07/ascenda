@@ -44,7 +44,7 @@ type FunctionFail = {
   reason?: string;
 };
 
-const FEATURE = 'what_can_i_cook' as const;
+const FEATURE = 'coach' as const;
 const MAX_BASE64_CHARS = 2_000_000;
 const MAX_PHOTOS = 4;
 

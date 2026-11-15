@@ -12,11 +12,14 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/revenuecat-webhook/index.ts"
 
-[functions.scan-machine]
+[functions.coach]
 enabled = true
 verify_jwt = true
-entrypoint = "./functions/scan-machine/index.ts"
-static_files = [ "./functions/scan-machine/prompt.md" ]
+entrypoint = "./functions/coach/index.ts"
+static_files = [
+  "./functions/coach/prompt.md",
+  "./functions/coach/indexes.json",
+]
 
 [functions.monthly-recap]
 enabled = true
@@ -24,8 +27,14 @@ verify_jwt = true
 entrypoint = "./functions/monthly-recap/index.ts"
 static_files = [ "./functions/monthly-recap/prompt.md" ]
 
+[functions.scan-machine]
+enabled = false
+verify_jwt = true
+entrypoint = "./functions/scan-machine/index.ts"
+static_files = [ "./functions/scan-machine/prompt.md" ]
+
 [functions.what-can-i-cook]
-enabled = true
+enabled = false
 verify_jwt = true
 entrypoint = "./functions/what-can-i-cook/index.ts"
 static_files = [
@@ -35,19 +44,19 @@ static_files = [
 ]
 
 [functions.busy-gym-fix]
-enabled = true
+enabled = false
 verify_jwt = true
 entrypoint = "./functions/busy-gym-fix/index.ts"
 static_files = [ "./functions/busy-gym-fix/prompt.md" ]
 
 [functions.build-session]
-enabled = true
+enabled = false
 verify_jwt = true
 entrypoint = "./functions/build-session/index.ts"
 static_files = [ "./functions/build-session/prompt.md" ]
 
 [functions.ask-ascenda]
-enabled = true
+enabled = false
 verify_jwt = true
 entrypoint = "./functions/ask-ascenda/index.ts"
 static_files = [ "./functions/ask-ascenda/prompt.md" ]

@@ -9,6 +9,7 @@ export {
   TextButton,
 } from './Buttons';
 export { IconButton } from './IconButton';
+export { CoachButton } from './CoachButton';
 export {
   AchievementBadge,
   BadgeSheet,

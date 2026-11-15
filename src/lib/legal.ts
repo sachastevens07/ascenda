@@ -51,11 +51,11 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   },
   {
     heading: 'What we do not store',
-    body: 'We do not collect cycle data, calorie or macro targets, BMI or body-fat estimates. Progress photos are never sent to an AI service. Machine-scan photos are processed and discarded straight away. We do not store them.',
+    body: 'We do not collect cycle data, calorie or macro targets, BMI or body-fat estimates. Progress photos are never sent to an AI service. We do not store them.',
   },
   {
     heading: 'Ascenda AI',
-    body: 'Scan a machine sends the photo you take to Anthropic (Claude) so we can match it to our machine list. The photo is not stored, logged or used to train models. The monthly recap sends session counts, minutes, exercise and machine names, and award names, never weights, photos, health data, your name or email. We never send progress photos, health data or bodyweight. Answers are labelled AI-generated, not medical advice.',
+    body: 'Ascenda Coach sends your question, the current exercise or session context, retrieved guides, and a short training summary to Anthropic (Claude) so it can answer. We never send your name, email, bodyweight, progress photos, onboarding statement answers or health information. Conversations are kept for 30 days and you can delete them in Profile, Privacy. The monthly recap sends session counts, minutes, exercise and machine names, and award names, never weights, photos, health data, your name or email. Answers are labelled AI-generated, not medical advice.',
   },
   {
     heading: 'Analytics',

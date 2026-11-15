@@ -31,7 +31,7 @@ export function HomeHeader({
       <View style={styles.headerSpacer} />
       <View style={styles.headerActions}>
         {onAsk ? (
-          <IconButton icon="chatbubbles-outline" accessibilityLabel="Ask Ascenda" onPress={onAsk} />
+          <IconButton icon="sparkles-outline" accessibilityLabel="Ascenda Coach" onPress={onAsk} />
         ) : null}
         <IconButton icon="search" accessibilityLabel="Search programmes" onPress={onSearch} />
         <IconButton icon="calendar-outline" accessibilityLabel="Open Planner" onPress={onPlanner} />

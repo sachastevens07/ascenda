@@ -12,10 +12,12 @@ import {
   MealTypeTile,
   RecipeCard,
   SectionHeader,
+  CoachButton,
   TabAvatar,
   openRecipe,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { openCoach } from '@/lib/coach';
 import { aiCopy, foodCopy } from '@/lib/copy';
 import { MEAL_TYPE_TILES, mealTypeName, recipeBySlug, visibleCollections } from '@/lib/food';
 import { useFoodFavourites } from '@/lib/foodFavourites';
@@ -71,6 +73,7 @@ export default function FoodScreen() {
           <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>
             {foodCopy.title}
           </AppText>
+          <CoachButton />
           <IconButton
             icon="search-outline"
             accessibilityLabel={foodCopy.search_a11y}
@@ -89,7 +92,12 @@ export default function FoodScreen() {
         </View>
 
         <Pressable
-          onPress={() => router.push('/food/cook' as Href)}
+          onPress={() =>
+            openCoach({
+              question: 'What can I cook with what I have?',
+              entry: 'food',
+            })
+          }
           accessibilityRole="button"
           accessibilityLabel={foodCopy.cook_a11y}
           style={({ pressed }) => [

@@ -36,6 +36,9 @@ export const ANALYTICS_EVENTS = [
   'ai_result_rejected',
   'ai_limit_reached',
   'ai_fallback_used',
+  'ai_chat_started',
+  'ai_tool_called',
+  'ai_card_used',
   'dev_test_event',
 ] as const;
 
@@ -66,14 +69,7 @@ const BLOCKED_KEY =
 const HAD_TRIAL_PREFIX = 'analytics_had_trial:';
 
 /** AI features from AGENTS.md v2.5. Call sites arrive with AI1 to AI6. Never send prompt or answer text. */
-export const AI_FEATURES = [
-  'scan_machine',
-  'busy_gym',
-  'build_session',
-  'ask_ascenda',
-  'monthly_recap',
-  'what_can_i_cook',
-] as const;
+export const AI_FEATURES = ['coach', 'monthly_recap'] as const;
 
 export type AiFeature = (typeof AI_FEATURES)[number];
 

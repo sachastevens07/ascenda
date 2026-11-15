@@ -115,7 +115,7 @@ export function BusyGymSheet({
     setApplying(true);
     try {
       await onApply(plan, byId);
-      trackAi('ai_result_accepted', 'busy_gym');
+      trackAi('ai_result_accepted', 'coach');
       onClose();
     } catch {
       setNotice(aiCopy.busy_error);
@@ -125,7 +125,7 @@ export function BusyGymSheet({
   }
 
   function keepOriginal() {
-    if (plan) trackAi('ai_result_rejected', 'busy_gym');
+    if (plan) trackAi('ai_result_rejected', 'coach');
     onClose();
   }
 

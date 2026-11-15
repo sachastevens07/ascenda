@@ -7,11 +7,9 @@ import { ExerciseLibrary } from '@/components/ExerciseLibrary';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import { RoutineBrowse } from '@/components/RoutineBrowse';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
-import { AppText, IconButton, TabAvatar } from '@/components/ui';
+import { AppText, CoachButton, IconButton, TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { openAsk } from '@/lib/askAscenda';
-import { aiCopy, cardioCopy, programmesCopy } from '@/lib/copy';
-import { ensureSubscribed } from '@/lib/paywall';
+import { cardioCopy, programmesCopy } from '@/lib/copy';
 
 const SECTIONS = [
   { id: 'routines', label: 'Routines' },
@@ -50,22 +48,7 @@ export default function ProgrammesScreen() {
         <View style={styles.titleRow}>
           <TabAvatar />
           <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>{programmesCopy.tab_title}</AppText>
-          <IconButton
-            icon="chatbubbles-outline"
-            accessibilityLabel={aiCopy.ask_title}
-            onPress={() => {
-              if (!ensureSubscribed()) return;
-              openAsk({ screen: 'open' });
-            }}
-          />
-          <IconButton
-            icon="camera-outline"
-            accessibilityLabel={aiCopy.scan_title}
-            onPress={() => {
-              if (!ensureSubscribed()) return;
-              router.push('/machines/scan' as Href);
-            }}
-          />
+          <CoachButton />
         </View>
         <View
           style={[styles.tabRow, { borderBottomColor: colours.border }]}

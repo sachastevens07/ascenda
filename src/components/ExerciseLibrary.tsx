@@ -12,9 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
-import { Chip, ChipScroller, ExerciseThumb, IconButton, PrimaryButton } from '@/components/ui';
-import { aiCopy } from '@/lib/copy';
-import { ensureSubscribed } from '@/lib/paywall';
+import { Chip, ChipScroller, ExerciseThumb, PrimaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { useDevTools } from '@/lib/devFlags';
 import {
@@ -113,14 +111,6 @@ export function ExerciseLibrary({
           ) : (
             <View style={styles.flex} />
           )}
-          <IconButton
-            icon="camera-outline"
-            accessibilityLabel={aiCopy.scan_title}
-            onPress={() => {
-              if (!ensureSubscribed()) return;
-              router.push('/machines/scan');
-            }}
-          />
         </View>
 
         <View

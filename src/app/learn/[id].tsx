@@ -23,6 +23,7 @@ import {
   type LearnArticle,
 } from '@/lib/learn';
 import { canonicalLearnArticleId } from '@/lib/learnArticles';
+import { CoachChips } from '@/components/CoachChips';
 import { trackLearnArticleOpened } from '@/lib/analytics';
 
 type LoadState = 'loading' | 'missing' | 'ready';
@@ -113,6 +114,9 @@ export default function LearnArticleScreen() {
           </AppText>
         </View>
         <AppText variant="body" style={{ color: colours.inkMuted }}>{article.summary}</AppText>
+        <View style={{ marginTop: spacing.md }}>
+          <CoachChips type="article" id={article.id} label={article.title} />
+        </View>
 
         <ArticleBody markdown={article.body_markdown} />
 

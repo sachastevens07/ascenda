@@ -15,6 +15,7 @@ import { CatalogueCard } from '@/components/RoutineCatalogue';
 import {
   AppText,
   BuildPlanButton,
+  Chip,
   IconButton,
   ImageCard,
   MenuHeader,
@@ -33,8 +34,7 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { routineCardDays } from '@/lib/contentRoutines';
-import { aiCopy, fillCopy, programmesCopy, routineActionsCopy } from '@/lib/copy';
-import { ensureSubscribed } from '@/lib/paywall';
+import { fillCopy, programmesCopy, routineActionsCopy } from '@/lib/copy';
 import { coverForRoutine, takeSlug } from '@/lib/images';
 import {
   recommendedBrowseRoutine,
@@ -71,7 +71,8 @@ type BrowseView =
   | { kind: 'home' }
   | { kind: 'style'; style: TrainingStyleId; title: string }
   | { kind: 'start_here' }
-  | { kind: 'singles' };
+  | { kind: 'singles' }
+  | { kind: 'find' };
 
 export function RoutineBrowse({
   bottomInset,
@@ -96,6 +97,10 @@ export function RoutineBrowse({
   const [isLeaving, setIsLeaving] = useState(false);
   const [startingSlug, setStartingSlug] = useState<string | null>(null);
   const [view, setView] = useState<BrowseView>({ kind: 'home' });
+  const [findDays, setFindDays] = useState<number | null>(null);
+  const [findLevel, setFindLevel] = useState<string | null>(null);
+  const [findGoal, setFindGoal] = useState<string | null>(null);
+  const [findEquipment, setFindEquipment] = useState<string | null>(null);
   const singles = listSingleSessions();
   const featuredSingles = featuredSingleSessions();
   const menuRef = useRef<AnchorHandle>(null);
@@ -202,16 +207,43 @@ export function RoutineBrowse({
     if (view.kind === 'start_here') {
       return { title: programmesCopy.section_start_here, onBack: () => setView({ kind: 'home' }) };
     }
+    if (view.kind === 'find') {
+      return { title: programmesCopy.build_plan, onBack: () => setView({ kind: 'home' }) };
+    }
     return { title: programmesCopy.section_single_sessions, onBack: () => setView({ kind: 'home' }) };
   }
 
   const nested = headerForView();
+  const foundRoutines =
+    view.kind === 'find'
+      ? routines.filter((routine) => {
+          if (findDays != null && routine.days_per_week !== findDays && routineCardDays(routine) !== findDays) {
+            return false;
+          }
+          if (findLevel && routine.difficulty !== findLevel) return false;
+          if (findGoal && routine.goal !== findGoal && !routine.tags.some((tag) => tag.toLowerCase().includes(findGoal))) {
+            return false;
+          }
+          if (findEquipment === 'machines' && !/machine/i.test(`${routine.equipment} ${routine.tags.join(' ')}`)) {
+            return false;
+          }
+          if (findEquipment === 'dumbbells' && !/dumbbell/i.test(`${routine.equipment} ${routine.tags.join(' ')}`)) {
+            return false;
+          }
+          if (findEquipment === 'barbell' && !/barbell|full gym/i.test(`${routine.equipment} ${routine.tags.join(' ')}`)) {
+            return false;
+          }
+          return true;
+        })
+      : [];
   const styleRoutines =
     view.kind === 'style'
       ? routines.filter((routine) => routineMatchesStyle(routine, view.style))
       : view.kind === 'start_here'
         ? startHere
-        : [];
+        : view.kind === 'find'
+          ? foundRoutines
+          : [];
   const styleSingles =
     view.kind === 'style'
       ? singles.filter((session) => singleMatchesStyle(session, view.style))
@@ -263,6 +295,58 @@ export function RoutineBrowse({
 
         {nested ? (
           <>
+            {view.kind === 'find' ? (
+              <View style={{ gap: 10, marginBottom: 12 }}>
+                <AppText variant="caption" style={{ color: colours.inkMuted }}>Days a week</AppText>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {[2, 3, 4, 5].map((days) => (
+                    <Chip
+                      key={days}
+                      label={`${days} days`}
+                      selected={findDays === days}
+                      onPress={() => setFindDays(findDays === days ? null : days)}
+                    />
+                  ))}
+                </View>
+                <AppText variant="caption" style={{ color: colours.inkMuted }}>Level</AppText>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {['beginner', 'intermediate', 'experienced'].map((level) => (
+                    <Chip
+                      key={level}
+                      label={level}
+                      selected={findLevel === level}
+                      onPress={() => setFindLevel(findLevel === level ? null : level)}
+                    />
+                  ))}
+                </View>
+                <AppText variant="caption" style={{ color: colours.inkMuted }}>Goal</AppText>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {['confidence', 'strength', 'glutes_legs', 'general'].map((goal) => (
+                    <Chip
+                      key={goal}
+                      label={goal.replace('_', ' ')}
+                      selected={findGoal === goal}
+                      onPress={() => setFindGoal(findGoal === goal ? null : goal)}
+                    />
+                  ))}
+                </View>
+                <AppText variant="caption" style={{ color: colours.inkMuted }}>Equipment</AppText>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {[
+                    ['machines', 'Machines'],
+                    ['dumbbells', 'Dumbbells and a bench'],
+                    ['barbell', 'Barbell'],
+                  ].map(([id, label]) => (
+                    <Chip
+                      key={id}
+                      label={label}
+                      selected={findEquipment === id}
+                      onPress={() => setFindEquipment(findEquipment === id ? null : id)}
+                    />
+                  ))}
+                </View>
+              </View>
+            ) : null}
             {styleRoutines.map((summary) => (
               <CatalogueCard
                 key={summary.id}
@@ -358,14 +442,7 @@ export function RoutineBrowse({
             ) : null}
 
             <BuildPlanButton
-              onPress={() => router.push({ pathname: '/onboarding', params: { rebuild: '1' } } as Href)}
-            />
-            <BuildPlanButton
-              label={aiCopy.build_title}
-              onPress={() => {
-                if (!ensureSubscribed()) return;
-                router.push('/build-session' as Href);
-              }}
+              onPress={() => setView({ kind: 'find' })}
             />
 
             {trainingStyles.length > 0 ? (

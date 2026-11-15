@@ -26,6 +26,7 @@ import {
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { CoachChips } from '@/components/CoachChips';
 import { foodCopy } from '@/lib/copy';
 import {
   RECIPE_DISCLAIMER,
@@ -197,6 +198,7 @@ export default function FoodRecipeScreen() {
               {recipe.summary}
             </AppText>
           ) : null}
+          <CoachChips type="recipe" id={recipe.slug} label={recipe.title} />
 
           <ServingsStepper
             servings={servings}

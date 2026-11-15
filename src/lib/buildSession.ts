@@ -59,7 +59,7 @@ export const BUILD_SESSION_TIMING = {
   slack_minutes: 5,
 } as const;
 
-export const BUILD_SESSION_FEATURE = 'build_session' as const;
+export const BUILD_SESSION_FEATURE = 'coach' as const;
 
 const ROLES: ExerciseRole[] = ['main', 'secondary', 'accessory', 'core', 'finisher'];
 const PATTERNS_BY_FOCUS: Record<Exclude<BuildSessionFocus, 'cardio' | 'recovery'>, string[]> = {
@@ -283,12 +283,18 @@ export function eligibleExercisesFor(input: {
   kit: BuildSessionKit;
   level: BuildSessionLevel;
   loggedBarbellIds: string[];
+  avoidExerciseIds?: string[];
+  blockedEquipment?: string[];
 }): EligibleExercise[] {
   if (input.focus === 'cardio' || input.focus === 'recovery') return [];
   const patterns = PATTERNS_BY_FOCUS[input.focus];
   const allowed = new Set(kitEquipment(input.kit));
   const logged = new Set(input.loggedBarbellIds.map(resolveExerciseSlug));
+  const avoid = new Set(input.avoidExerciseIds ?? []);
+  const blocked = new Set(input.blockedEquipment ?? []);
   const rows = CATALOGUE.filter((item) => {
+    if (avoid.has(item.slug)) return false;
+    if (blocked.has(item.equipment)) return false;
     if (!patterns.includes(item.pattern)) return false;
     if (!allowed.has(item.equipment)) return false;
     if (input.kit === 'busy_gym' && item.zone > 1) return false;

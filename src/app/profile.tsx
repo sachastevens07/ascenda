@@ -36,7 +36,7 @@ import {
   referCopy,
   subscriptionStatusCopy,
 } from '@/lib/copy';
-import { deleteAskHistory } from '@/lib/askAscenda';
+import { COACH_UI, deleteAllCoachChats } from '@/lib/coach';
 import { DEFAULT_STREAK_GOAL, STREAK_GOALS, saveStreakGoal, type StreakGoal } from '@/lib/activityStats';
 import {
   DEFAULT_REMINDER_TIME,
@@ -759,6 +759,15 @@ export default function ProfileScreen() {
         </SettingsGroup>
       ) : null}
 
+      <SettingsGroup title="Coach">
+        <SettingsRow
+          title="Coach preferences"
+          subtitle="Exercises and kit Coach should skip"
+          onPress={() => router.push('/coach-preferences' as Href)}
+          last
+        />
+      </SettingsGroup>
+
       <SettingsGroup title="Privacy">
         <SettingsRow
           title={privacySettingsCopy.hide_macros}
@@ -811,19 +820,19 @@ export default function ProfileScreen() {
           }}
         />
         <SettingsRow
-          title={aiCopy.ask_delete_history}
-          subtitle="Removes questions and answers kept for 30 days."
+          title={COACH_UI.delete_all}
+          subtitle="Removes Coach chats kept for 30 days. Delete one chat from Coach, Your chats."
           onPress={() => {
-            showDialog(aiCopy.ask_delete_history, aiCopy.ask_delete_body, [
+            showDialog(COACH_UI.delete_all, COACH_UI.delete_all_body, [
               {
                 text: 'Delete',
                 style: 'destructive',
                 onPress: () => {
-                  void deleteAskHistory()
-                    .then(() => showDialog(aiCopy.ask_title, aiCopy.ask_deleted))
+                  void deleteAllCoachChats()
+                    .then(() => showDialog(COACH_UI.title, 'Your Coach chats have been deleted.'))
                     .catch((error) =>
                       showDialog(
-                        aiCopy.ask_title,
+                        COACH_UI.title,
                         error instanceof Error ? error.message : 'Check your connection and try again.'
                       )
                     );
