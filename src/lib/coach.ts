@@ -9,7 +9,7 @@ import aiConfig from '../../content/ai/ai-config.json';
 
 import { startBuiltStrengthSession, type BuiltSession } from '@/lib/buildSession';
 import type { BusyGymPlan } from '@/lib/busyGym';
-import { saveCoachPreference } from '@/lib/coachPreferences';
+import { isHealthPreferenceText, saveCoachPreference } from '@/lib/coachPreferences';
 import { recipeBySlug } from '@/lib/food';
 import { movePlannedSession } from '@/lib/planner';
 import { startRoutine } from '@/lib/routines';
@@ -342,6 +342,7 @@ export async function applyCoachCard(
       }),
       summary: text(card.summary),
       fallback: false,
+      lighter: card.lighter === true || text(card.energy) === 'low',
     };
     if (sessionId) await stashCoachPlan(sessionId, plan);
     return COACH_UI.card_applied;
@@ -376,6 +377,9 @@ export async function applyCoachCard(
     return COACH_UI.card_moved.replace('{day}', day);
   }
   if (card.type === 'confirm' && (card.kind === 'avoid_exercise' || card.kind === 'no_equipment_at_my_gym') && button === 'Save') {
+    if (isHealthPreferenceText(JSON.stringify(card))) {
+      throw new Error('Do not save a preference for a health or medical reason.');
+    }
     await saveCoachPreference({
       kind: card.kind,
       exercise_id: text(card.exercise_id) || null,

@@ -59,6 +59,8 @@ export type BusyGymPlan = {
   exercises: BusyGymPlanRow[];
   summary: string;
   fallback: boolean;
+  /** True when Coach asked for a lighter day. Applied with lightenSessionPlan, not copied here. */
+  lighter?: boolean;
 };
 
 type Json = Record<string, unknown>;

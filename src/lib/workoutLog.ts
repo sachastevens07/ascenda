@@ -247,6 +247,15 @@ export function lightenSessionPlan(
   };
 }
 
+/** Same B2 check-in lighter rules, used by the logger card and Coach adjust_today. */
+export function applyCheckinLighter(
+  day: ProgrammeDay,
+  options?: LightenSessionOptions
+): { day: ProgrammeDay; plan: SessionPlan } {
+  const plan = lightenSessionPlan(sessionPlanFromDay(day), { mode: 'checkin', ...options });
+  return { day: applySessionPlan(day, plan), plan };
+}
+
 /** Welcome-back: 10% lower, nearest 0.5 kg. */
 export function scaleEaseWeight(kg: number, scale: number): number {
   return Math.max(0, Math.round(kg * scale * 2) / 2);

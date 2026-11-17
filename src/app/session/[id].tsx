@@ -134,7 +134,6 @@ import { useNow, useWorkout } from '@/lib/workout';
 import {
   RECORD_LABELS,
   allSetNumbers,
-  applySessionPlan,
   applyWarmupCompletions,
   buildEntries,
   clearSessionPlan,
@@ -146,7 +145,7 @@ import {
   getNextSet,
   getSetRecords,
   isWarmupSetNumber,
-  lightenSessionPlan,
+  applyCheckinLighter,
   loadSessionLog,
   parseReps,
   warmupSetNumbers,
@@ -530,13 +529,14 @@ export default function SessionScreen() {
       checkinFinisherSlug?: string | null;
     },
     mergedEntries: Record<string, SetEntry> = entries,
-    patch?: { position: number; setNumber: number; completed: boolean }
+    patch?: { position: number; setNumber: number; completed: boolean },
+    easeOverride?: SessionEaseBack | null
   ) {
     await saveSessionPlan(
       id,
       sessionPlanFromDay(
         nextDay,
-        easeBack ?? undefined,
+        (easeOverride !== undefined ? easeOverride : easeBack) ?? undefined,
         timerAt,
         {
           warmupStatus: extras?.warmupStatus ?? warmupStatus,
@@ -573,12 +573,9 @@ export default function SessionScreen() {
     let nextEntries = entries;
     let nextFinisher = checkinFinisherSlug;
     if (day && !alreadyLight) {
-      const light = lightenSessionPlan(sessionPlanFromDay(day, undefined, startedAt), {
-        mode: 'checkin',
-        scaleWeights,
-      });
-      nextDay = applySessionPlan(day, light);
-      nextEase = light.easeBack ?? null;
+      const light = applyCheckinLighter(day, { scaleWeights });
+      nextDay = light.day;
+      nextEase = light.plan.easeBack ?? null;
       nextEntries = buildEntries(nextDay, [], previous, true, { easeBack: nextEase ?? undefined });
       setDay(nextDay);
       setEaseBack(nextEase);
@@ -711,7 +708,25 @@ export default function SessionScreen() {
 
   async function applyBusyGymPlan(plan: BusyGymPlan, byId: Map<string, SlotExercise>) {
     if (!day) return;
-    const nextDay = applyBusyGymPlanToDay(day, entries, plan, byId);
+    let nextDay = applyBusyGymPlanToDay(day, entries, plan, byId);
+    let nextEase = easeBack;
+    const alreadyLight = Boolean(easeBack) || session?.lighter_session === true;
+    if (plan.lighter && !alreadyLight) {
+      const light = applyCheckinLighter(nextDay);
+      nextDay = light.day;
+      nextEase = light.plan.easeBack ?? nextEase;
+    }
+    if (plan.lighter) {
+      setEaseBack(nextEase);
+      setLighterChosen(true);
+      setCheckinResolved(true);
+      setSession((current) => (current ? { ...current, lighter_session: true } : current));
+      try {
+        await markSessionLighter(id);
+      } catch {
+        /* Column missing or offline: the on-device plan still keeps today lighter. */
+      }
+    }
     const newIds = [
       ...new Set(
         nextDay.exercises
@@ -752,7 +767,7 @@ export default function SessionScreen() {
           Object.assign(
             next,
             buildEntries({ ...nextDay, exercises: [item] }, [], { ...previous, ...extra }, true, {
-              easeBack: easeBack ?? undefined,
+              easeBack: nextEase ?? undefined,
             })
           );
           continue;
@@ -771,7 +786,14 @@ export default function SessionScreen() {
       }
       return next;
     });
-    await persistPlan(nextDay);
+    await persistPlan(
+      nextDay,
+      startedAt,
+      plan.lighter ? { checkinResolved: true, lighterChosen: true } : undefined,
+      undefined,
+      undefined,
+      nextEase
+    );
     await saveSessionSwaps(id, swapIds(nextDay));
   }
 

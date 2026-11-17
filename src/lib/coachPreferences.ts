@@ -53,12 +53,23 @@ export async function fetchCoachPreferences(): Promise<CoachPreference[]> {
   });
 }
 
+/** Periods, menopause, symptoms and other health reasons must never be stored as a preference. */
+export function isHealthPreferenceText(value: string): boolean {
+  return /period|menopause|perimenopause|hot flush|hrt|symptom|cycle phase|follicular|luteal|ovulat|cramp|pms|health|injur|pain|medication|supplement/.test(
+    value.toLowerCase()
+  );
+}
+
 export async function saveCoachPreference(input: {
   kind: CoachPreferenceKind;
   exercise_id: string | null;
   equipment: string | null;
   reason: CoachPreferenceReason;
 }): Promise<void> {
+  const blob = `${input.kind} ${input.exercise_id ?? ''} ${input.equipment ?? ''} ${input.reason}`;
+  if (isHealthPreferenceText(blob)) {
+    throw new Error('Do not save a preference for a health or medical reason.');
+  }
   const {
     data: { user },
   } = await supabase.auth.getUser();

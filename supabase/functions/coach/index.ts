@@ -103,7 +103,7 @@ const TOOLS = [
   {
     name: 'adjust_today',
     description:
-      "Rework the rest of today's session when something's taken, she's short on time, her energy is low, or she wants to remove or swap an exercise.",
+      "Rework the rest of today's session when something's taken, she's short on time, her energy is low, or she wants to remove or swap an exercise. For low energy, set energy to low so the app can apply the same lighter-session rules as the check-in.",
     input_schema: {
       type: 'object',
       additionalProperties: false,
@@ -176,7 +176,7 @@ const TOOLS = [
   {
     name: 'save_preference',
     description:
-      'Save a lasting preference when she asks to always avoid an exercise, or says her gym does not have some equipment. Never use this for pain or injury.',
+      'Save a lasting preference when she asks to always avoid an exercise, or says her gym does not have some equipment. Never use this for pain, injury, periods, menopause, symptoms, HRT or other health reasons.',
     input_schema: {
       type: 'object',
       additionalProperties: false,
@@ -299,6 +299,9 @@ function detectSafetyFlag(question: string): SafetyFlag {
   }
   if (/pregnan|trying to conceive|postnatal|post-natal|given birth|after birth|breastfeed/.test(q)) {
     return 'pregnancy';
+  }
+  if (/\bhrt\b|hormone replacement/.test(q)) {
+    return 'medical';
   }
   if (/skipping meals|guilty when i eat|hate my body|don'?t deserve to eat|purging|binge/.test(q)) {
     return 'wellbeing';
@@ -545,7 +548,26 @@ type TurnState = {
   userId: string | null;
   admin: SupabaseClient | null;
   isEval: boolean;
+  question: string;
 };
+
+/** Period, menopause, symptoms or other health reasons must never become a saved preference. */
+function isHealthPreferenceText(value: string): boolean {
+  const q = value.toLowerCase();
+  return /period|menopause|perimenopause|hot flush|hrt|symptom|cycle phase|follicular|luteal|ovulat|cramp|pms|health|injur|pain|medication|supplement/.test(
+    q
+  );
+}
+
+/** Strip special-category fields. life_stage must never go to the model. */
+function omitHealthFromPayload(value: Json): Json {
+  const out: Json = {};
+  for (const [key, item] of Object.entries(value)) {
+    if (/life_stage|bodyweight|health|menopause|perimenopause/.test(key)) continue;
+    out[key] = item;
+  }
+  return out;
+}
 
 async function runTool(name: string, input: Json, state: TurnState): Promise<Json> {
   if (name === 'lookup') {
@@ -569,9 +591,15 @@ async function runTool(name: string, input: Json, state: TurnState): Promise<Jso
     return result.ok ? result.card : { error: result.error };
   }
   if (name === 'save_preference') {
-    const detected = detectSafetyFlag(JSON.stringify(input));
-    if (detected === 'medical' || detected === 'pregnancy' || detected === 'emergency') {
-      return { error: 'Do not save a preference for a medical reason. Redirect to a GP or physiotherapist.' };
+    const blob = `${JSON.stringify(input)} ${state.question}`;
+    const detected = detectSafetyFlag(blob);
+    if (
+      detected === 'medical' ||
+      detected === 'pregnancy' ||
+      detected === 'emergency' ||
+      isHealthPreferenceText(blob)
+    ) {
+      return { error: 'Do not save a preference for a health or medical reason. Redirect to a GP or physiotherapist.' };
     }
     const kind = text(input.kind);
     let exerciseId = text(input.exercise_id);
@@ -725,7 +753,9 @@ Deno.serve(async (req) => {
 
   let prefs = fixturePrefs;
   let planned = fixturePlanned;
-  let herTraining: Json = asRecord(asRecord(parsedBody.eval_fixtures).her_training ?? parsedBody.her_training);
+  let herTraining: Json = omitHealthFromPayload(
+    asRecord(asRecord(parsedBody.eval_fixtures).her_training ?? parsedBody.her_training)
+  );
   let recentIds: string[] = asArray(herTraining.recent_exercise_ids).map(text).filter(Boolean);
 
   if (!isEval && userId && admin) {
@@ -757,12 +787,12 @@ Deno.serve(async (req) => {
       coach_preferences: prefs,
     };
   }
-  herTraining = {
+  herTraining = omitHealthFromPayload({
     ...herTraining,
     today: ukToday(),
     next_saturday: nextWeekdayIso(6),
     next_monday: nextWeekdayIso(1),
-  };
+  });
 
   const retrieved = retrieve(indexes, question, context);
   const retrievedIds = retrieved.map((item) => ({ type: item.type, id: item.id }));
@@ -834,6 +864,7 @@ Deno.serve(async (req) => {
     userId,
     admin,
     isEval,
+    question,
   };
 
   try {

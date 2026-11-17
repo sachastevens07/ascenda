@@ -351,7 +351,8 @@ export function adjustTodayTool(
 
   const scaled = kept.map((item) => ({
     ...item,
-    sets: energy === 'low' ? Math.max(1, Math.ceil((item.remaining_sets || item.sets) * (2 / 3))) : item.remaining_sets || item.sets,
+    // Low energy does not change sets here. The app applies lightenSessionPlan (check-in rules).
+    sets: item.remaining_sets || item.sets,
   }));
   const cap = (minutesLeft ?? 45) + 3;
   const dropOrder = (role: string) =>
@@ -395,10 +396,14 @@ export function adjustTodayTool(
       buttons: ['Use this', 'Not now'],
       before: remaining.map((item) => ({ exercise_id: item.exercise_id, name: item.name, sets: item.remaining_sets || item.sets })),
       after: exercises,
+      energy,
+      lighter: energy === 'low',
       summary:
         exercises.length === 0
           ? 'Nothing we can swap in from the list. Try marking less as taken, or swap one lift yourself.'
-          : 'Swapped taken kit where we could, and trimmed the rest to fit the time you have.',
+          : energy === 'low'
+            ? 'A lighter version of today. Tap Use this and Ascenda will ease the sets and suggestions, the same way as the check-in.'
+            : 'Swapped taken kit where we could, and trimmed the rest to fit the time you have.',
     },
   };
 }
