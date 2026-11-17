@@ -472,6 +472,7 @@ async function main(): Promise<void> {
   line('  content/microcopy: bundled in the app (N1 safety surrounding strings)');
   line('  content/achievements: bundled in the app (H6 badge definitions)');
   line('  content/ai: Edge Functions, not the app database');
+  line('  content/checkin: bundled in the app (B2 logger card)');
   line();
   reportOnboardingGoals();
   reportSafetyCopy();

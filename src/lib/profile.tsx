@@ -212,6 +212,22 @@ export type Profile = {
   onboarding_answers: OnboardingAnswersJson;
   age_band: StoredAgeBand | null;
   cardio_preference: CardioPreference | null;
+  /** True hides the logger check-in. Default false (the card is shown). */
+  hide_checkin: boolean;
+  /** Null unless she consented. Never send to Coach, PostHog or notifications. */
+  life_stage: LifeStage | null;
+};
+
+export const LIFE_STAGES = ['perimenopause', 'menopause'] as const;
+export type LifeStage = (typeof LIFE_STAGES)[number];
+
+export type HealthConsent = {
+  id: string;
+  user_id: string;
+  purpose: string;
+  consent_version: number;
+  granted_at: string;
+  withdrawn_at: string | null;
 };
 
 const PROFILE_COLUMNS =
@@ -224,6 +240,7 @@ const PROFILE_COLUMNS_DISCLAIMER = `${PROFILE_COLUMNS_THEME}, disclaimer_version
 const PROFILE_COLUMNS_GOALS = `${PROFILE_COLUMNS_DISCLAIMER}, main_goals`;
 const PROFILE_COLUMNS_G1 = `${PROFILE_COLUMNS_GOALS}, gym_experience`;
 const PROFILE_COLUMNS_X5 = `${PROFILE_COLUMNS_G1}, onboarding_answers, age_band, cardio_preference`;
+const PROFILE_COLUMNS_GROUP8 = `${PROFILE_COLUMNS_X5}, hide_checkin, life_stage`;
 
 function isMissingOnboardingV2(error: { message?: string; code?: string }): boolean {
   return /main_goal(?!s)|training_location|session_minutes|focus_areas|gym_comfort|streak_goal_weeks|display_name/i.test(
@@ -249,6 +266,14 @@ function isMissingGymExperience(error: { message?: string; code?: string }): boo
 
 function isMissingOnboardingX5(error: { message?: string; code?: string }): boolean {
   return /onboarding_answers|age_band|cardio_preference/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isMissingGroup8Health(error: { message?: string; code?: string }): boolean {
+  return /hide_checkin|life_stage/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function parseLifeStage(value: unknown): LifeStage | null {
+  return (LIFE_STAGES as readonly string[]).includes(String(value)) ? (value as LifeStage) : null;
 }
 
 function isMissingAgeConfirmed(error: { message?: string; code?: string }): boolean {
@@ -430,6 +455,8 @@ function toProfile(row: unknown, disclaimerReady = false): Profile {
     onboarding_answers: parseOnboardingAnswers(profile.onboarding_answers),
     age_band: parseStoredAgeBand(profile.age_band),
     cardio_preference: parseCardioPreference(profile.cardio_preference),
+    hide_checkin: profile.hide_checkin === true,
+    life_stage: parseLifeStage(profile.life_stage),
   };
 }
 
@@ -479,6 +506,25 @@ async function selectOwnProfile(
 
 async function loadProfile(userId: string | null): Promise<LoadedProfile> {
   if (!userId) return { userId, profile: null, error: null };
+  const withGroup8 = await selectOwnProfile(userId, PROFILE_COLUMNS_GROUP8);
+  if (!withGroup8.error) {
+    return {
+      userId,
+      profile: withGroup8.data ? toProfile(withGroup8.data, true) : null,
+      error: null,
+    };
+  }
+  if (
+    !isMissingGroup8Health(withGroup8.error) &&
+    !isMissingOnboardingX5(withGroup8.error) &&
+    !isMissingGymExperience(withGroup8.error) &&
+    !isMissingMainGoals(withGroup8.error) &&
+    !isMissingDisclaimer(withGroup8.error) &&
+    !isMissingThemePreference(withGroup8.error) &&
+    !isMissingOnboardingV2(withGroup8.error)
+  ) {
+    return { userId, profile: null, error: withGroup8.error.message ?? 'Couldn’t load profile' };
+  }
   const withX5 = await selectOwnProfile(userId, PROFILE_COLUMNS_X5);
   if (!withX5.error) {
     return {

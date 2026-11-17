@@ -39,6 +39,8 @@ export const ANALYTICS_EVENTS = [
   'ai_chat_started',
   'ai_tool_called',
   'ai_card_used',
+  'checkin_shown',
+  'lighter_session_chosen',
   'dev_test_event',
 ] as const;
 
@@ -61,6 +63,7 @@ const ALLOWED_KEYS = new Set([
   'version',
   'product',
   'feature',
+  'chosen',
 ]);
 
 const BLOCKED_KEY =
@@ -195,6 +198,18 @@ export async function trackOnce(
     return;
   }
   track(event, properties);
+}
+
+/** B2: the check-in card appeared. Never send the option she picked. */
+export function trackCheckinShown(sessionId: string): void {
+  const id = sessionId.trim();
+  if (!id) return;
+  void trackOnce(`checkin_shown:${id}`, 'checkin_shown');
+}
+
+/** B2: she accepted or declined the lighter offer. Boolean only. */
+export function trackLighterSessionChosen(chosen: boolean): void {
+  track('lighter_session_chosen', { chosen });
 }
 
 /** Learn article screens. Id only, never title or body. */

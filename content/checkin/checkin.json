@@ -1,0 +1,64 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "AGENTS.md B2: the 'How are you feeling today?' check-in at the top of the logger.",
+    "Only sessions.lighter_session (true/false) is saved. Never save, log or send which option she picked.",
+    "PostHog: checkin_shown and lighter_session_chosen (true/false) only."
+  ],
+  "card": {
+    "title": "How are you feeling today?",
+    "helper": "Pick one if you like. You can always skip this.",
+    "skip": "Skip",
+    "show_when": "Before her first ticked set in a strength session, unless profiles.hide_checkin is true. Not shown for cardio or stretch sessions, or if she has already answered for this session."
+  },
+  "options": [
+    {
+      "id": "ready",
+      "label": "Ready to go",
+      "offers_lighter": false
+    },
+    {
+      "id": "low_energy",
+      "label": "A bit low on energy",
+      "offers_lighter": true
+    },
+    {
+      "id": "period",
+      "label": "Period symptoms",
+      "offers_lighter": true
+    },
+    {
+      "id": "sleep_flushes",
+      "label": "Poor sleep or hot flushes",
+      "offers_lighter": true
+    },
+    {
+      "id": "short_time",
+      "label": "Short on time",
+      "offers_lighter": true
+    }
+  ],
+  "lighter_offer": {
+    "title": "Lighter day? That still counts.",
+    "body": "We'll keep your main lift, take a set off the others and suggest slightly lighter weights. It's just for today.",
+    "accept": "Make it lighter",
+    "decline": "No thanks, keep it as planned",
+    "short_time_body": "We'll keep your main lift and the key exercises, and take a set off the rest so you finish sooner. It's just for today."
+  },
+  "lighter_rules": {
+    "main_lift": "Keep all sets. Suggested weight about 10% lower, rounded down to the nearest available increment, never below the bar or the lightest dumbbell.",
+    "secondary_and_accessory": "Remove one set (minimum 1 set). Suggested weight about 10% lower, rounded as above.",
+    "core_and_finisher": "Keep as planned, or let her skip with one tap.",
+    "cardio_finisher": "Offer a gentle swap: steady effort, same machine, same or shorter time.",
+    "short_time": "Same set changes, but keep suggested weights as normal.",
+    "scope": "Today only. Never changes the routine.",
+    "progression": "The progression rule ignores sessions where lighter_session is true and uses her last normal session for each exercise.",
+    "streak": "A lighter session counts fully towards the weekly target and streak."
+  },
+  "logger_badge": "Lighter session",
+  "settings": {
+    "row_title": "Daily check-in",
+    "row_sub": "Ask how I'm feeling before a session",
+    "stores_to": "profiles.hide_checkin (inverted: switched on = hide_checkin false)"
+  }
+}

@@ -67,6 +67,10 @@ export type SessionPlan = {
   /** AI3 / content template ids. Logger uses these instead of guessing from the day name. */
   warmupTemplateId?: string | null;
   cooldownTemplateId?: string | null;
+  /** She answered or skipped the B2 card. Never store which option she picked. */
+  checkinResolved?: boolean;
+  /** She accepted a lighter session for today. Badge only until the next B2 step applies it. */
+  lighterChosen?: boolean;
 };
 
 function sessionPlanKey(id: string): string {
@@ -131,7 +135,13 @@ export function sessionPlanFromDay(
   timerStartedAt?: number | null,
   extras?: Pick<
     SessionPlan,
-    'warmupStatus' | 'cooldownStatus' | 'rampUpApplied' | 'warmupTemplateId' | 'cooldownTemplateId'
+    | 'warmupStatus'
+    | 'cooldownStatus'
+    | 'rampUpApplied'
+    | 'warmupTemplateId'
+    | 'cooldownTemplateId'
+    | 'checkinResolved'
+    | 'lighterChosen'
   >,
   entries?: Record<string, SetEntry>,
   patch?: { position: number; setNumber: number; completed: boolean }
@@ -167,6 +177,8 @@ export function sessionPlanFromDay(
     rampUpApplied: extras?.rampUpApplied,
     warmupTemplateId: extras?.warmupTemplateId,
     cooldownTemplateId: extras?.cooldownTemplateId,
+    checkinResolved: extras?.checkinResolved,
+    lighterChosen: extras?.lighterChosen,
   };
 }
 

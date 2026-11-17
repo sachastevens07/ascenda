@@ -26,6 +26,8 @@ export type Session = {
   routine_day_id: string | null;
   /** Strength, cardio or recovery. Defaults from source until W1 SQL is pasted. */
   type: SessionType;
+  /** True when she chose a lighter session for today. Never stores the reason. */
+  lighter_session: boolean;
 };
 
 /** One row of the `sets` table. */
@@ -66,11 +68,16 @@ function isMissingSessionTypeColumn(error: { message?: string; code?: string }):
   );
 }
 
+function isMissingLighterSessionColumn(error: { message?: string; code?: string }): boolean {
+  return /lighter_session/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
 function isRejectedCardioSource(error: { message?: string; code?: string }): boolean {
   return /sessions_source_check|source.*cardio/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
 const SESSION_COLUMNS_ROUTINES_W1 = `${SESSION_COLUMNS_ROUTINES}, type`;
+const SESSION_COLUMNS_GROUP8 = `${SESSION_COLUMNS_ROUTINES_W1}, lighter_session`;
 
 function toSession(row: Session | null): Session | null {
   if (!row) return null;
@@ -83,6 +90,7 @@ function toSession(row: Session | null): Session | null {
     routine_day_id: row.routine_day_id ?? null,
     exercise_swaps: row.exercise_swaps ?? {},
     type: parseSessionType(row.type, sessionTypeFromSource(row.source ?? 'programme')),
+    lighter_session: row.lighter_session === true,
   };
 }
 
@@ -127,6 +135,16 @@ type SessionQueryResult = {
 async function selectSession(
   run: (columns: string) => PromiseLike<SessionQueryResult>
 ): Promise<Session | null> {
+  const withGroup8 = await run(SESSION_COLUMNS_GROUP8);
+  if (!withGroup8.error) return toSession(withGroup8.data as Session | null);
+  if (
+    !isMissingLighterSessionColumn(withGroup8.error) &&
+    !isMissingSessionTypeColumn(withGroup8.error)
+  ) {
+    if (!isMissingRoutineSessionColumns(withGroup8.error) && !isMissingBlockColumn(withGroup8.error)) {
+      if (!isMissingCustomSessionColumns(withGroup8.error)) throw withGroup8.error;
+    }
+  }
   const withType = await run(SESSION_COLUMNS_ROUTINES_W1);
   if (!withType.error) return toSession(withType.data as Session | null);
   if (!isMissingSessionTypeColumn(withType.error)) {

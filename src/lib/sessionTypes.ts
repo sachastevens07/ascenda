@@ -29,6 +29,17 @@ export function isCardioSession(session: {
   return Boolean(session.exercise_swaps?.[CARDIO_SLUG_KEY]);
 }
 
+/** Strength logger only. Cardio, stretch and recovery days never show the B2 check-in. */
+export function isStrengthSession(session: {
+  source?: string | null;
+  type?: string | null;
+  exercise_swaps?: Record<string, string> | null;
+}): boolean {
+  if (isCardioSession(session)) return false;
+  if (session.source === 'stretch' || session.type === 'recovery') return false;
+  return true;
+}
+
 export function parseSessionType(value: unknown, fallback: SessionType = 'strength'): SessionType {
   return value === 'strength' || value === 'cardio' || value === 'recovery' ? value : fallback;
 }

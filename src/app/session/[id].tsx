@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CheckinCard } from '@/components/CheckinCard';
 import { showDialog } from '@/components/Dialog';
 import { ExerciseMediaSheet } from '@/components/ExerciseMediaPlayer';
 import { ExercisePicker } from '@/components/ExercisePicker';
@@ -24,6 +25,7 @@ import { SessionBlockCard } from '@/components/SessionBlockCard';
 import { SwapSheet } from '@/components/SwapSheet';
 import {
   AppText,
+  Chip,
   DestructiveTextButton,
   EmptyState,
   ExerciseNameHit,
@@ -47,6 +49,8 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
+import { trackCheckinShown, trackLighterSessionChosen } from '@/lib/analytics';
+import { CHECKIN, shouldShowCheckin } from '@/lib/checkin';
 import { applyBusyGymPlanToDay, remainingBusyGymItems, toBusyGymRemaining, type BusyGymPlan } from '@/lib/busyGym';
 import { fetchBusyGymSlots } from '@/lib/busyGymFix';
 import { openCoach, takeCoachPlan } from '@/lib/coach';
@@ -123,7 +127,7 @@ import {
   type LoggedSet,
   type Session,
 } from '@/lib/sessions';
-import { isCardioSession } from '@/lib/sessionTypes';
+import { isCardioSession, isStrengthSession } from '@/lib/sessionTypes';
 import { deleteUserSwap, exerciseFits, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
 import { useNow, useWorkout } from '@/lib/workout';
 import {
@@ -302,6 +306,8 @@ export default function SessionScreen() {
   const [warmupTemplateId, setWarmupTemplateId] = useState<string | null>(null);
   const [cooldownTemplateId, setCooldownTemplateId] = useState<string | null>(null);
   const [rampUpApplied, setRampUpApplied] = useState(false);
+  const [checkinResolved, setCheckinResolved] = useState(false);
+  const [lighterChosen, setLighterChosen] = useState(false);
   const [playingBlock, setPlayingBlock] = useState<ResolvedBlock | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [restPrefs, setRestPrefs] = useState<Record<string, number>>({});
@@ -327,6 +333,14 @@ export default function SessionScreen() {
   const totalSets = day ? workingSetCount(day) : 0;
   const doneSets = day ? completedWorkingSetCount(day, entries) : 0;
   const volumeKg = day ? sessionVolumeKg(day, entries) : 0;
+  const hasTickedSet = Object.values(entries).some((entry) => entry.completed);
+  const showCheckin = shouldShowCheckin({
+    isStrength: session ? isStrengthSession(session) : false,
+    hideCheckin: profile?.hide_checkin === true,
+    resolved: checkinResolved,
+    hasTickedSet,
+  });
+  const showLighterBadge = lighterChosen || session?.lighter_session === true;
 
   const weekDays = useMemo(
     () => (routine && weekNumber !== null ? daysInWeek(routine, weekNumber) : []),
@@ -436,6 +450,13 @@ export default function SessionScreen() {
         setWarmupTemplateId(log.plan?.warmupTemplateId ?? null);
         setCooldownTemplateId(log.plan?.cooldownTemplateId ?? null);
         setRampUpApplied(true);
+        const resolved =
+          Boolean(log.plan?.checkinResolved) ||
+          log.logged.some((set) => set.completed) ||
+          log.session.lighter_session;
+        const lighter = Boolean(log.plan?.lighterChosen) || log.session.lighter_session;
+        setCheckinResolved(resolved);
+        setLighterChosen(lighter);
         setLoadState('ready');
         if (!log.rampUpApplied) {
           await saveSessionPlan(
@@ -446,6 +467,8 @@ export default function SessionScreen() {
               rampUpApplied: true,
               warmupTemplateId: log.plan?.warmupTemplateId ?? null,
               cooldownTemplateId: log.plan?.cooldownTemplateId ?? null,
+              checkinResolved: resolved,
+              lighterChosen: lighter,
             })
           );
         }
@@ -479,6 +502,11 @@ export default function SessionScreen() {
     ensureRestTimerPermission().catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!showCheckin || !id) return;
+    trackCheckinShown(id);
+  }, [showCheckin, id]);
+
   async function persistPlan(
     nextDay: ProgrammeDay,
     timerAt: number | null = startedAt,
@@ -488,6 +516,8 @@ export default function SessionScreen() {
       rampUpApplied?: boolean;
       warmupTemplateId?: string | null;
       cooldownTemplateId?: string | null;
+      checkinResolved?: boolean;
+      lighterChosen?: boolean;
     },
     mergedEntries: Record<string, SetEntry> = entries,
     patch?: { position: number; setNumber: number; completed: boolean }
@@ -504,11 +534,22 @@ export default function SessionScreen() {
           rampUpApplied: extras?.rampUpApplied ?? rampUpApplied,
           warmupTemplateId: extras?.warmupTemplateId ?? warmupTemplateId,
           cooldownTemplateId: extras?.cooldownTemplateId ?? cooldownTemplateId,
+          checkinResolved: extras?.checkinResolved ?? checkinResolved,
+          lighterChosen: extras?.lighterChosen ?? lighterChosen,
         },
         mergedEntries,
         patch
       )
     );
+  }
+
+  function resolveCheckin(lighter: boolean, fromOffer: boolean) {
+    setCheckinResolved(true);
+    setLighterChosen(lighter);
+    if (fromOffer) trackLighterSessionChosen(lighter);
+    if (day) {
+      void persistPlan(day, startedAt, { checkinResolved: true, lighterChosen: lighter });
+    }
   }
 
   function startTimer() {
@@ -525,11 +566,17 @@ export default function SessionScreen() {
     const merged = { ...entries, [setKey(item.exercise.id, setNumber)]: next };
     const timerAt = startedAt ?? Date.now();
     if (day) {
-      await persistPlan(day, timerAt, undefined, merged, {
-        position: item.position,
-        setNumber,
-        completed: next.completed,
-      });
+      await persistPlan(
+        day,
+        timerAt,
+        next.completed ? { checkinResolved: true } : undefined,
+        merged,
+        {
+          position: item.position,
+          setNumber,
+          completed: next.completed,
+        }
+      );
     }
     if (isWarmupSetNumber(setNumber)) return;
     await saveSet({
@@ -563,6 +610,7 @@ export default function SessionScreen() {
     if (completing) {
       startTimer();
       if (!isWarmupSetNumber(setNumber)) startRest(slotRestSeconds(item, restPrefs));
+      if (!checkinResolved) setCheckinResolved(true);
     } else stopRest();
     const next = { ...current, completed: completing };
     updateEntry(key, { completed: completing });
@@ -1058,7 +1106,18 @@ export default function SessionScreen() {
           fetchExerciseBests(exerciseIds, id).catch(() => ({})),
           fetchExercisePrefs(exerciseIds).catch(() => ({ notes: {}, rest: {} })),
         ]);
-        await saveSessionPlan(id, sessionPlanFromDay(programmeDay, easeBack ?? undefined, startedAt));
+        await saveSessionPlan(
+          id,
+          sessionPlanFromDay(programmeDay, easeBack ?? undefined, startedAt, {
+            warmupStatus,
+            cooldownStatus,
+            rampUpApplied,
+            warmupTemplateId,
+            cooldownTemplateId,
+            checkinResolved,
+            lighterChosen,
+          })
+        );
         await saveSessionSwaps(id, {});
         setSession((current) =>
           current
@@ -1371,6 +1430,11 @@ export default function SessionScreen() {
             size="compact"
           />
         </View>
+        {showLighterBadge && CHECKIN.loggerBadge ? (
+          <View style={{ marginTop: 6, alignItems: 'flex-start' }}>
+            <Chip label={CHECKIN.loggerBadge} selected />
+          </View>
+        ) : null}
         {eyebrow ? (
           <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: 6 }}>
             {eyebrow}
@@ -1417,6 +1481,14 @@ export default function SessionScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         scrollEnabled={dragFrom === null}>
+        {showCheckin ? (
+          <CheckinCard
+            onDismiss={() => resolveCheckin(false, false)}
+            onDeclineLighter={() => resolveCheckin(false, true)}
+            onAcceptLighter={() => resolveCheckin(true, true)}
+          />
+        ) : null}
+
         {showGuideTip ? (
           <View style={[styles.tip, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
             <Ionicons name="information-circle-outline" size={20} color={colours.brand} />
