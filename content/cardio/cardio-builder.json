@@ -1,0 +1,317 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "AGENTS.md W8: build your own cardio session and Just log it.",
+    "A built session is saved as custom_workouts (type 'cardio') with cardio_plan in the same shape as a cardio session in content/cardio/cardio-sessions.json (machine_id, style, effort_target, intervals[] with label, seconds, effort, settings, optional machine_id per block), so the existing cardio player plays it.",
+    "Effort labels come from effort_scale in cardio-sessions.json. Settings defaults are picked by effort: 1 to 4 easy, 5 to 6 steady, 7 to 10 hard.",
+    "Never estimate calories or distance."
+  ],
+  "entry": {
+    "card_title": "Create your own",
+    "card_sub": "Pick a machine and go, or build your own intervals",
+    "actions": [
+      {
+        "id": "quick",
+        "label": "Quick start"
+      },
+      {
+        "id": "intervals",
+        "label": "Build intervals"
+      },
+      {
+        "id": "log",
+        "label": "Just log it"
+      }
+    ]
+  },
+  "machines_order": [
+    "treadmill",
+    "bike",
+    "cross_trainer",
+    "rower",
+    "stair_climber"
+  ],
+  "quick_start": {
+    "title": "Quick start",
+    "machine_title": "Which machine?",
+    "type_title": "What kind of session?",
+    "types": [
+      {
+        "id": "steady",
+        "label": "Steady",
+        "sub": "One comfortable pace the whole way",
+        "effort": 5
+      },
+      {
+        "id": "intervals",
+        "label": "Intervals",
+        "sub": "Easy and harder bits, taking turns",
+        "work_seconds": 60,
+        "work_effort": 7,
+        "recover_seconds": 120,
+        "recover_effort": 4
+      }
+    ],
+    "minutes_title": "How long?",
+    "minutes": {
+      "min": 10,
+      "max": 60,
+      "step": 5,
+      "default": 20
+    },
+    "warmup_cooldown": {
+      "label": "Add a 3-minute warm-up and cool-down",
+      "default": true,
+      "seconds_each": 180,
+      "effort": 3,
+      "note": "Included in the time you picked, so 20 minutes stays 20 minutes."
+    },
+    "intervals_fill_rule": "After warm-up and cool-down, repeat work and recover blocks to fill the remaining time. If the last full repeat doesn't fit, end on extra easy time.",
+    "start_button": "Start",
+    "save_link": "Save for next time"
+  },
+  "build_intervals": {
+    "title": "Build intervals",
+    "machine_title": "Machine",
+    "work_label": "Work",
+    "recover_label": "Recover",
+    "repeats_label": "Repeats",
+    "defaults": {
+      "work_seconds": 60,
+      "work_effort": 7,
+      "recover_seconds": 120,
+      "recover_effort": 4,
+      "repeats": 6
+    },
+    "steppers": {
+      "seconds_step": 15,
+      "seconds_min": 15,
+      "seconds_max": 600,
+      "repeats_min": 1,
+      "repeats_max": 20
+    },
+    "total_label": "Total {minutes} min, including warm-up and cool-down",
+    "timeline_hint": "Taller bars are harder parts",
+    "advanced": {
+      "label": "Add a block",
+      "hidden_by_default": true,
+      "sub": "Build your own ladder, or switch machines part-way",
+      "block_fields": [
+        "machine",
+        "seconds",
+        "effort"
+      ],
+      "machine_change_note": "Switching machines? Allow a minute to move and set up. We'll add it as an easy block."
+    },
+    "max_minutes": 90,
+    "save_button": "Save",
+    "start_button": "Start"
+  },
+  "naming": {
+    "steady": "{machine} steady, {minutes} min",
+    "intervals": "{machine} intervals, {minutes} min",
+    "mixed": "Mixed cardio, {minutes} min",
+    "rename_label": "Name"
+  },
+  "effort_picker": {
+    "title": "How hard should it feel?",
+    "show_number_small": true,
+    "beginner_tip_9_10": "Efforts of 9 and 10 are very hard. Keep them short, and build up to them over a few weeks.",
+    "beginner_definition": "gym_experience is 'not_yet' or 'just_started', or fewer than 4 weeks since her first session"
+  },
+  "settings_defaults": {
+    "treadmill": {
+      "easy": {
+        "speed_kmh": [
+          4.0,
+          5.0
+        ],
+        "incline_percent": [
+          0,
+          4
+        ]
+      },
+      "steady": {
+        "speed_kmh": [
+          4.5,
+          5.5
+        ],
+        "incline_percent": [
+          4,
+          8
+        ]
+      },
+      "hard": {
+        "speed_kmh": [
+          6.0,
+          8.0
+        ],
+        "incline_percent": [
+          0,
+          4
+        ],
+        "note": "A power walk or easy jog"
+      }
+    },
+    "bike": {
+      "easy": {
+        "cadence_rpm": [
+          70,
+          80
+        ],
+        "resistance": "Low"
+      },
+      "steady": {
+        "cadence_rpm": [
+          75,
+          85
+        ],
+        "resistance": "Low to moderate"
+      },
+      "hard": {
+        "cadence_rpm": [
+          85,
+          100
+        ],
+        "resistance": "Add 2 to 3 levels"
+      }
+    },
+    "cross_trainer": {
+      "easy": {
+        "strides_per_minute": [
+          100,
+          120
+        ],
+        "resistance": "Low"
+      },
+      "steady": {
+        "strides_per_minute": [
+          110,
+          140
+        ],
+        "resistance": "Low to moderate"
+      },
+      "hard": {
+        "strides_per_minute": [
+          130,
+          150
+        ],
+        "resistance": "Add 2 levels"
+      }
+    },
+    "rower": {
+      "easy": {
+        "damper": [
+          3,
+          5
+        ],
+        "strokes_per_minute": [
+          18,
+          20
+        ]
+      },
+      "steady": {
+        "damper": [
+          3,
+          5
+        ],
+        "strokes_per_minute": [
+          20,
+          24
+        ]
+      },
+      "hard": {
+        "damper": [
+          3,
+          5
+        ],
+        "strokes_per_minute": [
+          24,
+          28
+        ]
+      }
+    },
+    "stair_climber": {
+      "easy": {
+        "level": "Low (about 3 on most machines)",
+        "steps_per_minute": [
+          40,
+          50
+        ]
+      },
+      "steady": {
+        "level": "Low to moderate (about 3 to 5)",
+        "steps_per_minute": [
+          45,
+          60
+        ]
+      },
+      "hard": {
+        "level": "Add 1 to 2 levels",
+        "steps_per_minute": [
+          55,
+          70
+        ]
+      }
+    }
+  },
+  "settings_note": "Starting points from the machine guide. Every machine is a little different, so go by how it feels.",
+  "just_log_it": {
+    "title": "Log a cardio session",
+    "sub": "Done some cardio without the app? Add it here.",
+    "fields": [
+      {
+        "id": "machine",
+        "label": "Machine",
+        "type": "machine_picker",
+        "required": true,
+        "extra_option": {
+          "id": "other",
+          "label": "Other cardio"
+        }
+      },
+      {
+        "id": "minutes",
+        "label": "Minutes",
+        "type": "stepper",
+        "min": 1,
+        "max": 180,
+        "default": 20,
+        "required": true
+      },
+      {
+        "id": "effort",
+        "label": "How hard did it feel?",
+        "type": "effort_picker",
+        "required": true,
+        "default": 5
+      },
+      {
+        "id": "date",
+        "label": "When",
+        "type": "date",
+        "default": "today",
+        "max": "today",
+        "min_days_ago": 7
+      },
+      {
+        "id": "distance_km",
+        "label": "Distance (optional)",
+        "type": "number",
+        "required": false
+      }
+    ],
+    "save_button": "Save",
+    "saved_toast": "Saved. That counts towards your week.",
+    "short_note": "Sessions under 10 minutes are saved but don't count towards your weekly target."
+  },
+  "counting": {
+    "weekly_target": "A cardio session counts towards the weekly target and streak when it lasts 10 minutes or more, whether played or logged.",
+    "pbs": "Cardio never counts towards strength PBs."
+  },
+  "my_workouts": {
+    "cardio_chip": "Cardio",
+    "repeat_label": "Do it again",
+    "add_to_planner": "Add to Planner"
+  }
+}
