@@ -83,9 +83,9 @@ Git: `main`, ahead of origin. User is Sacha.
 
 **Step C items 1 to 48 are in.** Do not skip to later phases (gym buddy, period log).
 
-Current: **Group 8 B1 is in** (17 Nov 2026). Learn category Your body and training plus Iron-rich and Calcium and bone health collections. Do not start the optional period log.
+Current: **Group 8 is finished** (17 Nov 2026). Privacy policy and DPIA notes are in. Do not start the optional period log or gym buddy.
 
-**Handover (17 Nov 2026).** Group 8 is periods and menopause as "train with how you feel". No cycle tracking, no phase-based plans, no period log (Later phases). B1 Learn/Food content, B2 check-in, B3 life stage and Coach rule 9 are in. Workspace `AGENTS.md` does not yet include Group 8.
+**Handover (17 Nov 2026).** Group 8 is periods and menopause as "train with how you feel". No cycle tracking, no phase-based plans, no period log (Later phases). B1 Learn/Food content, B2 check-in, B3 life stage, Coach rule 9, in-app privacy copy and DPIA notes are in. Workspace `AGENTS.md` does not yet include Group 8.
 
 The hard-paywall decision supersedes C2, S1 and S3 as future work (P1). Do not redo S1 or S3.
 
@@ -167,7 +167,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **47. AI7** Ascenda Coach (15 Nov 2026). One chat at `/coach` replaces Scan a machine, Busy gym fix, Build me a session, Ask Ascenda and What can I cook. Edge Function `coach` (Haiku 5.5, prompt caching, 40 messages/day UK midnight, max 3 tools, 20s timeout, `ai_usage`). Tools run our code: lookup, my_training, adjust_today, build_session, recommend_routine, move_session, save_preference, find_recipes. Cards need a tap. Header sparkles icon on every tab (reopens within 6 hours); contextual chips always start a new chat. Programmes "Find a routine" is a non-AI filter (days, level, goal, equipment). Scan screens and camera buttons are gone. Monthly recap stays. SQL: `supabase/ai7_coach.sql` and `supabase/ai7_drop_scan.sql` (show then paste). `npm run ai:evals` (17 Nov 2026, after rule 9): 26/27 passed against the deployed function. The three new period / follicular / HRT evals all passed. The one fail is the existing two-turn `build_session` lunge tweak (first call only). Swap ranking still uses the same engine, now filtered by `coach_preferences`. Progression rule unchanged. No new library.
 - [x] **48. Gym days, variety and tags** (13 Nov 2026). `/content` has 17 rebuilt strength routines with `weekly_plan` (strength days on her chosen days, finishers inside those sessions by `cardio_preference` and skippable, spare-day cardio only on extra gym days, anytime extras as optional "Anytime this week"). `gym_days_needed` must fit `days_per_week` (`fit_rule`); cardio-balanced plans advertise that total. Routine cards say "{n} days a week". Detail shows `schedule_label` and `default_week`. Onboarding asks "How many days a week can you get to the gym?", plan reveal uses `week_template` + `week_extras_line`. Tags and the exercise library filter by equipment; "one spot", "busy gym friendly" and zone chips are gone from the UI (`zone` column stays). `content:sync --dry-run` reports 17 weekly_plans and tag replace (delete-then-insert). Live sync refused without a service role. Regenerated `content_routines_1/2/3.sql`. Optional `supabase/weekly_plan.sql` (show, then paste). Logger, double-progression (`getWeightSuggestion`) and swap ranking were not changed. Did not start AI7.
 
-### Group 8: your body and training (in, 17 Nov 2026)
+### Group 8: your body and training (finished, 17 Nov 2026)
 
 Train with how she feels. Never plan around cycle phases. Never track or predict periods. Cycle notes stay gone (R1). Life stage is special category health data: explicit consent, off by default, deletable on its own, never sent to Coach, PostHog, RevenueCat or notifications. Optional period log is Later phases only.
 
@@ -175,6 +175,7 @@ Train with how she feels. Never plan around cycle phases. Never track or predict
 - [x] **Coach rule 9** (17 Nov 2026, with B2/B3). Periods and menopause: offer a lighter session via `adjust_today` (`energy: low`). The app applies the same `lightenSessionPlan` check-in rules as B2 (not a copied 2/3 cut) and sets `sessions.lighter_session = true`. `save_preference` refuses period, menopause, symptom and other health reasons on the Edge Function and in the app. `life_stage` is stripped from `<her_training>` and is never in the client payload. Prompt from `content/ai/prompts/coach.md` via `node scripts/emit-coach-indexes.ts`. `content:sync` reports AI as bundled (27 evals). Deployed `coach`. `npm run ai:evals`: 26/27, including the three new cases.
 - [x] **50. B2** "How are you feeling today?" check-in (17 Nov 2026). Strength logger only, before the first ticked set, unless `profiles.hide_checkin`. Copy from `content/checkin/checkin.json`. Accepting **Make it lighter** applies today's session only via `lightenSessionPlan` (H2 helper, check-in role rules): main keeps sets; secondary/accessory drop one set (min 1); core/finisher unchanged with a one-tap Skip; cardio finisher swaps to a same-machine steady session of the same or shorter time. Suggested weights about 10% lower, rounded down to the increment, never below the bar or lightest dumbbell, except **Short on time** which keeps normal suggestions. Saves only `sessions.lighter_session = true`. Progression (`fetchPreviousSets`) skips lighter sessions so they never lower the next suggestion. Counts fully towards the weekly target, gold weeks and the streak. Profile → Training: Daily check-in toggle (on = `hide_checkin` false). PostHog: `checkin_shown` and `lighter_session_chosen` (`chosen` boolean) only, never the option. SQL: `supabase/group8_health.sql` (pasted). Welcome-back (H2) sessions are also marked `lighter_session` so they are skipped for next time too.
 - [x] **51. B3** Optional life stage (17 Nov 2026). Copy from `content/onboarding/onboarding.json` (`life_stage` after bodyweight, `life_stage_consent` only if she picks Perimenopause or Menopause or after). Prefer not to say is pre-selected. Consent checkbox required before Save and continue. Accept writes `profiles.life_stage` and a `health_consents` row (`purpose` `life_stage_personalisation`, version 1). Don't save it / None of these / Prefer not to say write nothing. Profile → Your answers can change it (consent again if there is no active row). Profile → Privacy Delete and withdraw consent clears `life_stage` and sets `withdrawn_at`. Recommendation tweaks from `life_stage_adjustments` (routine pick + Featured ranking). Learn Recommended for you shows Your body and training first (B1). Never in `onboarding_answers`, PostHog, RevenueCat, Coach, notifications, share cards or recaps. SQL: `supabase/group8_health.sql` (already pasted). Solicitor to check consent wording before launch.
+- [x] **Group 8 wrap** Privacy policy and DPIA notes (17 Nov 2026). In-app policy lives in `content/legal/privacy.json` (Profile → About → Privacy policy). Life stage: collected only with explicit consent, used only to personalise recommendations, never shared, deletable in Profile → Privacy. Coach: anything she types is sent to Anthropic and kept in her chat history for 30 days. DPIA notes for the solicitor are in the section below. Logger, progression, swaps, onboarding and account-deletion SQL re-tested in this wrap. User-facing copy searched for cycle-syncing, fertility, ovulation and symptom-treatment claims (none found; honest NHS-style mentions listed in the wrap notes).
 
 After launch, not in this build: price experiments, Gym buddy, optional period log.
 
@@ -199,12 +200,62 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 
 ---
 
+### DPIA notes (Group 8)
+
+For the solicitor. Short data-protection impact note for optional life stage (B3). Not legal advice. Draft 17 November 2026.
+
+**What health data is stored**
+
+Only two things, and only after she ticks the consent screen:
+
+1. `profiles.life_stage`: `perimenopause` or `menopause`. Null for everyone else, including Prefer not to say and None of these.
+2. `health_consents`: one row per user for purpose `life_stage_personalisation` (version 1), with `granted_at` and optional `withdrawn_at`.
+
+We do not store cycle dates, period logs, fertility or ovulation data, check-in reasons, symptoms, HRT use, or why a session was lighter. `sessions.lighter_session` is a yes/no flag with no reason column.
+
+**Why**
+
+UK GDPR Article 9 special category data. Lawful basis: explicit consent, Article 9(2)(a). Purpose is narrow: personalise which routines, featured plans and Learn articles we show. It never changes suggested weights, predictions, streaks, Coach replies, analytics, billing, notifications, share cards or monthly recaps.
+
+**Where**
+
+Postgres on Supabase in the UK or EU. Row Level Security: she can only read and write her own `health_consents` and profile. The column is never sent to Ascenda Coach, PostHog, RevenueCat or Apple.
+
+**Who can access it**
+
+- She can, signed in, her own row only.
+- The app operator (Supabase dashboard / service role) can see the table, as with other profile data.
+- Anthropic (Coach) does not receive `life_stage`. If she types health details into Coach, that free text is sent to Anthropic and stored in her chat for 30 days. That is separate from this column.
+- Analytics, advertisers and RevenueCat do not receive it.
+
+**How it is deleted**
+
+- Profile → Privacy, Delete and withdraw consent: sets `life_stage` to null and `withdrawn_at` on the consent row. The consent row is kept as a record that consent was given and later withdrawn, until she deletes her account.
+- Profile → Privacy, Delete account: `delete_own_account` deletes `health_consents`, clears `life_stage`, then deletes the auth user (profiles cascade). Coach chats go with the account.
+- She can delete Coach chats on their own without deleting life stage.
+
+**Risks and how we reduce them**
+
+| Risk | What we do |
+|---|---|
+| Collecting more health data than needed | Only two allowed values. No dates, no symptoms, no period log. Check-in options are not saved. |
+| Using it for something else later | Code paths for Coach, PostHog, RevenueCat, notifications, recaps and share cards omit it. Weights use the progression rule only. |
+| Sending it to the AI provider | `life_stage` is stripped from the Coach payload. Residual risk: she may type health information into the chat; that text is sent to Anthropic and kept 30 days, and she can delete chats. |
+| Other people reading it | RLS on `health_consents`. Authenticated only. Anon and public have no grants. |
+| Hard to get it deleted | Withdrawal in Privacy does not require account deletion. Account deletion removes the rows. |
+| Consent not really freely given | Prefer not to say is pre-selected. She can skip saving it and still use the app. Consent copy is in `content/onboarding/onboarding.json` for legal review. |
+| Leftover data in backups | Supabase backups may hold rows until they expire. Flag for the solicitor. |
+
+In-app privacy policy: `content/legal/privacy.json`. Consent screen: `life_stage_consent` in `content/onboarding/onboarding.json`. SQL: `supabase/group8_health.sql` (pasted 17 Nov 2026).
+
+---
+
 ### Known bugs or issues
 
 - **Open / manual for gym days (13 Nov 2026):** paste `supabase/weekly_plan.sql` if you want the jsonb column (the Planner already uses bundled JSON). Then paste `content_routines_1.sql`, `content_routines_2.sql`, `content_routines_3.sql` so logger days match the rebuilt exercises. Until then, enrolments stay on the same slug but the logger still shows the old database exercise lists. Phone-test onboarding at 2, 3 and 5 gym days, a routine page (`schedule_label` + default week), and Planner (strength on chosen days, optional Anytime this week, no extra gym days).
 - **Group 8 B1 in (17 Nov 2026):** Learn hub shows a Your body and training tile (placeholder cover). Open it for the six articles; each has Sources (NHS links) and a "See your GP if" block. Food tab carousels include Iron-rich and Calcium and bone health (existing recipes, placeholder collection covers). With a consented Perimenopause or Menopause life stage, Recommended for you leads with those articles. `learn_n6.sql` is still unpasted; bundled JSON is enough to test. Do not paste `learn_your_body_b1.sql` unless the old category check is already in the remote.
 - **Group 8 Coach rule 9 in (17 Nov 2026):** `supabase/group8_health.sql` pasted. Check-in (B2), optional life stage (B3) and Coach periods/menopause rules are in. `remove_cycle_notes.sql` is still unconfirmed; do not bring cycle data back. DPIA notes and solicitor check of life-stage consent are launch gates, not code gates. Phone-test: from Coach, "I'm on my period and feel rubbish"; tap Use this in an open strength session and confirm sets/suggestions match the check-in lighter day and `lighter_session` is true; "never give me lunges" still saves; a period/menopause message does not.
-- **B3 DPIA (short):** `life_stage` is special category health data (UK GDPR Art. 9). Lawful basis: explicit consent (Art. 9(2)(a)). Stored on `profiles.life_stage` only after a `health_consents` row (`purpose` `life_stage_personalisation`, version 1). Used to tweak routine recommendations, Featured ranking, and Learn Recommended for you (Your body first). Never used for weights, predictions, Coach, PostHog, RevenueCat, notifications, share cards or recaps. Withdrawable in Profile → Privacy. Solicitor to check the consent screen wording before launch.
+- **B3 DPIA:** see **DPIA notes (Group 8)** above. Solicitor to check consent screen wording and the in-app privacy policy before launch.
 - **Open / manual for AI7 (15 Nov 2026):** paste `supabase/ai7_coach.sql` (skip `ai_usage`/`ai_quota` if they already exist). Chats and Coach preferences will not persist until then. After you confirm, paste `supabase/ai7_drop_scan.sql` to drop `machine_scan_misses`. Phone-test: header Coach icon, exercise "How should this feel?", logger "Something's taken", Find a routine filters, Profile → Coach preferences, Profile → Privacy → Delete all chats. `ANTHROPIC_API_KEY` is already a project secret. Coach omits `temperature` (Claude 5.5 rejects it) and disables extended thinking. Old functions (`scan-machine`, `ask-ascenda`, `busy-gym-fix`, `build-session`, `what-can-i-cook`) are disabled in `config.toml`.
 - **Open / manual for AI5:** no SQL or Edge Function deploy required for the shipped report. Optional later: paste `supabase/ai5.sql`, set `ANTHROPIC_API_KEY` on `monthly-recap`, deploy that function, if you want the unused story path. To test mid-month, turn on the Profile developer "Preview monthly report" toggle.
 - **Parked with AI5 (not a roadmap step):** extra image/cover assets and SQL emit helpers (`content_routines_*.sql`, `heroes_batch1.sql`), plus local polish that landed alongside AI5 (scan-machine UX, onboarding input polish, image-find Unsplash path, `expo-camera` / `sharp` in package.json). Treat those as unfinished side work unless a later step owns them. `content/food/*.json` is used by F1 to F3.
@@ -266,7 +317,7 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 - F1 (10 Nov 2026): tabs are Home, Train, Food, Planner, Activity. The `/programmes` route stays so existing links work; the label is Train. Learn hub is `/learn` (not a tab). Food is bundled from `content/food` with no SQL. High-protein collections stay hidden until verified claims exist. No calorie filters. Logger, progression and swaps unchanged. Did not add a library.
 - F2 + F3 + X7 (10 Nov 2026): recipe bodies stay in `/content` (62 recipes). Nutrition is calculated by `scripts/nutrition-calc.mjs` from CoFID 2021 plus `content/food/nutrition-extras.json` (9 foods CoFID does not list: USDA, Norwegian table, or supermarket labels Sacha supplied). Household measures are in `content/food/ingredient-weights.json`. High protein / High fibre tags use `verified_claims` only. Favourites and hide-macros save on-device if SQL is missing. Disclaimer copy is used as written from `recipes.json` (includes "GP"). Meal-tile carousel peeks the next tile; Smoothies stays on one line. No new library. Logger, progression and swaps unchanged.
 - F4 to F6 (10 Nov 2026): suggestions use `training_suggestions` copy only ("Fuel for later", never earn/reward). Shopping list is on-device until `food_f5.sql` is pasted. Fuelling articles were already in `content/learn`; Food now shows that category. `routine_day_recipe_suggestions` is not needed at launch (the JSON rules cover it). No new library. Logger progression and swaps unchanged.
-- **Group 8 (17 Nov 2026, B1 to B3 and Coach rule 9 in):** periods and menopause as "train with how you feel". Four stages: Learn/Food content (B1 done), logger check-in (B2 done), optional perimenopause/menopause life stage with explicit consent (B3 done), Coach rule 9 (done), optional period log only if testers ask (Later phases). Never cycle-sync, never predict periods, never claim to ease symptoms. Safe lines: "Lighter day? Ascenda adjusts your session", "Strength training for every stage of life". `sessions.lighter_session` is a boolean with no reason column. `life_stage` is null unless she consents and is never sent to Coach. Copy lives in `content/onboarding/onboarding.json`, `content/learn/articles.json`, `content/food/collections.json` and `content/ai/prompts/coach.md`. Workspace `AGENTS.md` still needs the 17 Nov Group 8 text copied in.
+- **Group 8 (17 Nov 2026, finished):** periods and menopause as "train with how you feel". B1 Learn/Food, B2 check-in, B3 life stage, Coach rule 9, in-app privacy (`content/legal/privacy.json`) and DPIA notes are in. Optional period log only if testers ask (Later phases). Never cycle-sync, never predict periods, never claim to ease symptoms. Safe lines: "Lighter day? Ascenda adjusts your session", "Strength training for every stage of life". `sessions.lighter_session` is a boolean with no reason column. `life_stage` is null unless she consents and is never sent to Coach. Workspace `AGENTS.md` still needs the 17 Nov Group 8 text copied in.
 
 ---
 

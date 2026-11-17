@@ -1,0 +1,45 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "In-app Privacy policy (Profile → About → Privacy policy). Bundled, not written to Supabase.",
+    "This file is the source of truth for the website version too. Plain English. No em dashes."
+  ],
+  "title": "Privacy policy",
+  "sections": [
+    {
+      "body": "This describes how Ascenda uses data today. It will be checked legally before the App Store listing goes live."
+    },
+    {
+      "heading": "What we store",
+      "body": "Your email, onboarding answers, workout sessions and sets, optional bodyweight, optional life stage (only with explicit consent), optional progress photos, subscription status, reminder preferences, and a few display choices such as theme and units. If you use Ascenda Coach, we also keep your chat messages for 30 days."
+    },
+    {
+      "heading": "Life stage",
+      "body": "If you choose Perimenopause or Menopause, that is health information. We only collect it after you tick the consent screen. We use it only to personalise recommendations: which routines, featured plans and Learn articles we show you. It never changes your weights. We never share it with anyone else, including Ascenda Coach, analytics, advertisers, Apple, RevenueCat, notifications, share cards or monthly recaps. You can delete it and withdraw consent in Profile, Privacy, without deleting your account."
+    },
+    {
+      "heading": "What we do not store",
+      "body": "We do not collect cycle dates, fertility or ovulation data, calorie or macro targets, BMI or body-fat estimates. We do not store which daily check-in option you pick, only whether today's session was a lighter day. Progress photos are off unless you switch them on; if you do, they are never sent to an AI service."
+    },
+    {
+      "heading": "Ascenda Coach",
+      "body": "Anything you type in Ascenda Coach is sent to our AI provider, Anthropic (Claude), so it can answer, and is kept in your chat history for 30 days. We also send the current exercise or session context, retrieved guides, and a short training summary. We never send your name, email, bodyweight, progress photos, onboarding statement answers, life stage or other health information we hold about you. You can delete your chats in Profile, Privacy. The monthly recap sends session counts, minutes, exercise and machine names, and award names, never weights, photos, health data, your name or email. Answers are labelled AI-generated, not medical advice."
+    },
+    {
+      "heading": "Analytics",
+      "body": "Named events such as finishing a session or opening the paywall may go to PostHog in the EU. We do not send health data, photos, prompts, answers or free-text notes."
+    },
+    {
+      "heading": "Progress photos",
+      "body": "Photos are off until you switch them on in Profile. They live in a private folder and are shown with short-lived links. You can delete one photo or all of them."
+    },
+    {
+      "heading": "Where data lives",
+      "body": "App data is stored with Supabase in the UK or EU. Subscriptions use RevenueCat. Coach answers are processed by Anthropic. You can export your workout history as a spreadsheet from Profile."
+    },
+    {
+      "heading": "Delete your data",
+      "body": "Profile, Privacy, Delete account removes your account and the data stored with it, including life stage, health consents and Coach chats. You can also write to hello@ascenda.app."
+    }
+  ]
+}

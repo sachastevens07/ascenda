@@ -1,5 +1,7 @@
 import { Linking } from 'react-native';
 
+import privacy from '../../content/legal/privacy.json';
+
 export const CONTACT_EMAIL = 'hello@ascenda.app';
 
 export type LegalSection = {
@@ -39,45 +41,12 @@ export const TERMS_SECTIONS: LegalSection[] = [
   },
 ];
 
-export const PRIVACY_TITLE = 'Privacy policy';
+export const PRIVACY_TITLE = privacy.title;
 
-export const PRIVACY_SECTIONS: LegalSection[] = [
-  {
-    body: 'This describes how Ascenda uses data today. It will be checked legally before the App Store listing goes live.',
-  },
-  {
-    heading: 'What we store',
-    body: 'Your email, onboarding answers, workout sessions and sets, optional bodyweight, optional life stage (only with explicit consent), optional progress photos, subscription status, reminder preferences, and a few display choices such as theme and units.',
-  },
-  {
-    heading: 'Life stage',
-    body: 'If you choose to save perimenopause or menopause, that is health information. We only store it after you tick the consent screen. It is used to suggest routines, cardio and articles that may suit you. It never changes your weights. It is never sent to Ascenda Coach, analytics, advertisers, notifications, share cards or monthly recaps. You can delete it and withdraw consent in Profile, Privacy.',
-  },
-  {
-    heading: 'What we do not store',
-    body: 'We do not collect cycle data, calorie or macro targets, BMI or body-fat estimates. Progress photos are never sent to an AI service. We do not store them.',
-  },
-  {
-    heading: 'Ascenda AI',
-    body: 'Ascenda Coach sends your question, the current exercise or session context, retrieved guides, and a short training summary to Anthropic (Claude) so it can answer. We never send your name, email, bodyweight, progress photos, onboarding statement answers or health information. Conversations are kept for 30 days and you can delete them in Profile, Privacy. The monthly recap sends session counts, minutes, exercise and machine names, and award names, never weights, photos, health data, your name or email. Answers are labelled AI-generated, not medical advice.',
-  },
-  {
-    heading: 'Analytics',
-    body: 'Named events such as finishing a session or opening the paywall may go to PostHog in the EU. We do not send health data, photos, prompts, answers or free-text notes.',
-  },
-  {
-    heading: 'Progress photos',
-    body: 'Photos are off until you switch them on in Profile. They live in a private folder and are shown with short-lived links. You can delete one photo or all of them.',
-  },
-  {
-    heading: 'Where data lives',
-    body: 'App data is stored with Supabase in the UK or EU. Subscriptions use RevenueCat. You can export your workout history as a spreadsheet from Profile.',
-  },
-  {
-    heading: 'Delete your data',
-    body: `Profile, Privacy, Delete account removes your account and the data stored with it. You can also write to ${CONTACT_EMAIL}.`,
-  },
-];
+export const PRIVACY_SECTIONS: LegalSection[] = privacy.sections.map((section) => ({
+  heading: 'heading' in section ? section.heading : undefined,
+  body: section.body,
+}));
 
 export async function openContactEmail(): Promise<boolean> {
   const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Ascenda')}`;
