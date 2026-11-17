@@ -431,7 +431,12 @@ export default function HomeScreen() {
               }).catch(() => null)
             : null;
           const learnArticles = await fetchLearnArticles().catch(() => []);
-          const learn = recommendArticles(learnArticles, answers, { limit: 4 });
+          const learn = recommendArticles(learnArticles, answers, {
+            limit: 4,
+            // Consented profiles.life_stage only. Ranking stays on-device.
+            preferYourBody:
+              profile?.life_stage === 'perimenopause' || profile?.life_stage === 'menopause',
+          });
           const badges = getAchievementBadges({
             sessions,
             sets,

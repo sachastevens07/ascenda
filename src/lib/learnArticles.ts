@@ -20,6 +20,7 @@ const CATEGORY_MAP: Record<string, LearnCategory> = {
   fuelling: 'fuelling',
   mindset: 'mindset',
   myths: 'myths',
+  your_body: 'your_body',
 };
 
 /** Older bundled ids → content slugs so marked-as-read and deep links still resolve. */

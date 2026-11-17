@@ -79,6 +79,9 @@ export default function LearnHubScreen() {
         const recommended = recommendArticles(articles, answers, {
           excludeIds: featured ? [featured.id] : [],
           limit: 4,
+          // Consented profiles.life_stage only. Ranking stays on-device.
+          preferYourBody:
+            profile?.life_stage === 'perimenopause' || profile?.life_stage === 'menopause',
         });
         if (!isCurrent) return;
         setQuoteHidden(hideQuote);
@@ -105,7 +108,7 @@ export default function LearnHubScreen() {
       return () => {
         isCurrent = false;
       };
-    }, [answers])
+    }, [answers, profile?.life_stage])
   );
 
   const featured = data?.featured ?? null;

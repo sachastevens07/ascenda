@@ -2218,6 +2218,24 @@
       "model_release": null
     },
     {
+      "slug": "learn-category-your_body",
+      "used_in": [
+        "Learn category tile: Your body and training"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "square 1:1",
+      "brief": "Gym photo that says 'Your body and training' at a glance; distinct from every other tile. Warm, not clinical.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
       "slug": "learn-your-first-gym-session",
       "used_in": [
         "Learn article: Your first gym session, step by step"
@@ -2820,6 +2838,114 @@
       "shot": "in_action",
       "orientation": "landscape 16:9",
       "brief": "Smoothie and a bowl of porridge on a table, soft light.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-training-on-your-period",
+      "used_in": [
+        "Learn article: Training on your period"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman in a gym, mid-session, looking calm and capable. Not clinical.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-period-pain-and-low-energy",
+      "used_in": [
+        "Learn article: Period pain and low energy in the gym"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 16:9",
+      "brief": "Woman sitting on a bench in a gym, pausing, not in distress.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-heavy-periods-and-iron",
+      "used_in": [
+        "Learn article: Heavy periods and iron"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A meal with leafy greens, beans or red meat and a vitamin C food such as peppers or tomatoes.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-perimenopause-and-strength-training",
+      "used_in": [
+        "Learn article: Perimenopause and strength training"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman in her 40s or 50s lifting in a bright gym, looking towards the camera.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-menopause-and-bones",
+      "used_in": [
+        "Learn article: Menopause and bones"
+      ],
+      "kind": "people",
+      "shot": "in_action",
+      "orientation": "landscape 16:9",
+      "brief": "Woman in her 50s or 60s doing a controlled strength move in a gym.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "learn-sleep-and-hot-flushes",
+      "used_in": [
+        "Learn article: Sleep, hot flushes and training"
+      ],
+      "kind": "people",
+      "shot": "connection",
+      "orientation": "landscape 16:9",
+      "brief": "Woman in gym layers, pausing with a water bottle, looking composed.",
       "search_terms": [],
       "same_as": null,
       "status": "needed",
@@ -4384,6 +4510,42 @@
       "shot": "food",
       "orientation": "landscape 16:9",
       "brief": "A different photo of one recipe from this collection (One-pot lemony chicken orzo), or a styled spread of two or three of its dishes. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-iron-rich",
+      "used_in": [
+        "Recipe collection: Iron-rich"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A meal from this collection with iron foods and a vitamin C food alongside, such as chickpea spinach curry or beef and broccoli. Must not be the same file as any recipe card on the Food tab.",
+      "search_terms": [],
+      "same_as": null,
+      "status": "needed",
+      "file": null,
+      "photographer": null,
+      "source_url": null,
+      "licence_source": null,
+      "model_release": null
+    },
+    {
+      "slug": "collection-calcium-and-bones",
+      "used_in": [
+        "Recipe collection: Calcium and bone health"
+      ],
+      "kind": "food",
+      "shot": "food",
+      "orientation": "landscape 16:9",
+      "brief": "A meal from this collection with a calcium-rich food, such as Greek yoghurt power bowl or cottage cheese toast. Must not be the same file as any recipe card on the Food tab.",
       "search_terms": [],
       "same_as": null,
       "status": "needed",

@@ -409,6 +409,45 @@
         "halloumi-veg-traybake",
         "beef-burrito-bowls"
       ]
+    },
+    {
+      "slug": "iron-rich",
+      "name": "Iron-rich",
+      "description": "Meals with iron foods and a vitamin C food alongside, to help you take the iron in. General food information, not a treatment for low iron.",
+      "sort_order": 19,
+      "is_pro": false,
+      "cover_image_slug": "collection-iron-rich",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "spinach-feta-omelette",
+        "chickpea-spinach-curry",
+        "beef-broccoli-noodles",
+        "chilli-bean-sweet-potatoes",
+        "lentil-mushroom-bolognese",
+        "turkey-chilli",
+        "lentil-feta-salad",
+        "black-bean-sweet-potato-tacos"
+      ]
+    },
+    {
+      "slug": "calcium-and-bones",
+      "name": "Calcium and bone health",
+      "description": "Meals with calcium-rich foods to sit alongside your strength training. General food information, not a treatment plan.",
+      "sort_order": 20,
+      "is_pro": false,
+      "cover_image_slug": "collection-calcium-and-bones",
+      "requires_verified_claim": null,
+      "recipe_slugs": [
+        "greek-yoghurt-power-bowl",
+        "yoghurt-berry-pot",
+        "cottage-cheese-tomato-toast",
+        "cottage-cheese-crispbreads",
+        "berry-overnight-oats",
+        "baked-feta-bean-pasta",
+        "halloumi-couscous-salad",
+        "berry-yoghurt-smoothie",
+        "tofu-scramble"
+      ]
     }
   ],
   "training_suggestions": {

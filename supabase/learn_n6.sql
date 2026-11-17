@@ -25,7 +25,7 @@ alter table public.learn_articles drop constraint if exists learn_articles_categ
 alter table public.learn_articles add constraint learn_articles_category_check
   check (category in (
     'getting_started', 'gym_confidence', 'technique', 'programmes',
-    'recovery', 'fuelling', 'mindset', 'myths'
+    'recovery', 'fuelling', 'mindset', 'myths', 'your_body'
   ));
 
 create table if not exists public.learn_links (

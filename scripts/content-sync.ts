@@ -48,6 +48,7 @@ const LEARN_CATEGORY_MAP: Record<string, string> = {
   fuelling: 'fuelling',
   mindset: 'mindset',
   myths: 'myths',
+  your_body: 'your_body',
 };
 const ROUTINE_GOAL_MAP: Record<string, string> = {
   strength: 'strength',

@@ -47,6 +47,11 @@
       "id": "myths",
       "name": "Myths busted",
       "sort_order": 8
+    },
+    {
+      "id": "your_body",
+      "name": "Your body and training",
+      "sort_order": 9
     }
   ],
   "articles": [
@@ -951,6 +956,191 @@
       "reviewed_by": null,
       "reviewed_at": null,
       "sort_order": 34
+    },
+    {
+      "slug": "training-on-your-period",
+      "title": "Training on your period",
+      "summary": "You can still train if you want to. How you feel that day matters more than the calendar.",
+      "category": "your_body",
+      "read_minutes": 3,
+      "cover_image_slug": "learn-training-on-your-period",
+      "body_markdown": "Lots of women train through their period. Some feel about the same as usual. Some feel stronger. Some want a lighter day, or a rest day. All of those are fine.\n\nThere is no rule that you should lift heavier or easier in a particular week of your cycle. Research on cycle-phase training is mixed, and what works for one person often does not work for another. Train by how you feel today.\n\n## If you feel up to it\n\nKeep your planned session. Warm up as usual, and use a weight you can lift with good form. If a set feels harder than normal, stop with more in the tank than you usually would.\n\n## If you feel low on energy\n\nA lighter session still counts. In Ascenda you can take a set off the extras and ease the suggested weights, just for today. Easy cardio or a stretch session of 10 minutes or more also counts towards your week.\n\n## If you'd rather rest\n\nRest is a valid choice. It does not undo your progress. Start again when you feel ready.\n\n## See your GP if\n\nSpeak to your GP if periods are very heavy or painful, if they suddenly change, or if symptoms are getting in the way of daily life. Bleeding after menopause also needs a GP appointment.\n\nAscenda is not medical advice. We will never plan your training around a predicted cycle, and we will never save period details as a preference.",
+      "sources": [
+        {
+          "title": "NHS: Periods",
+          "url": "https://www.nhs.uk/conditions/periods/"
+        },
+        {
+          "title": "NHS: Physical activity guidelines for adults aged 19 to 64",
+          "url": "https://www.nhs.uk/live-well/exercise/physical-activity-guidelines-for-adults-aged-19-to-64/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "gym_confidence",
+        "more_energy",
+        "strong_for_life"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 35
+    },
+    {
+      "slug": "period-pain-and-low-energy",
+      "title": "Period pain and low energy in the gym",
+      "summary": "Cramps and tiredness are common. A lighter session or a rest day both count.",
+      "category": "your_body",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-period-pain-and-low-energy",
+      "body_markdown": "Period pain and feeling wiped out can make the gym feel like a lot. You do not have to push through it.\n\n## What often helps\n\n- **A thorough warm-up.** Easy movement can take the edge off stiffness.\n- **A lighter session.** Keep the main lift, drop a set on the extras, and use slightly easier weights for today.\n- **Shorter work.** Skip the finisher, or swap it for an easy walk.\n- **Heat and rest at home** if that is what you usually use for cramps.\n\n## What not to do\n\nDo not train through sharp or worsening pain. Do not treat a low-energy day as something you have to make up for later.\n\n## See your GP if\n\nSpeak to your GP if period pain is severe, if painkillers you have used before no longer help, or if cramps or fatigue are affecting daily life. Very heavy bleeding, bleeding after menopause, or pain that is new and intense also need a GP appointment.\n\nIf you are already in the gym and something feels wrong, stop and get help.",
+      "sources": [
+        {
+          "title": "NHS: Period pain",
+          "url": "https://www.nhs.uk/conditions/period-pain/"
+        },
+        {
+          "title": "NHS: Periods",
+          "url": "https://www.nhs.uk/conditions/periods/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "stress_relief",
+        "gym_confidence"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 36
+    },
+    {
+      "slug": "heavy-periods-and-iron",
+      "title": "Heavy periods and iron",
+      "summary": "Heavy bleeding can leave you low in iron. Food can help, and your GP can check if you need more support.",
+      "category": "your_body",
+      "read_minutes": 3,
+      "cover_image_slug": "learn-heavy-periods-and-iron",
+      "body_markdown": "Heavy periods are common, and they can drain your iron stores over time. Low iron can leave you tired, short of breath in the gym, or finding sessions harder than usual.\n\nThis is not a diagnosis. Only a GP can check whether your iron is low.\n\n## Food that helps\n\nThe NHS lists these as useful iron sources:\n\n- red meat, beans, pulses, nuts and dark leafy veg such as spinach\n- fortified breakfast cereals\n\nHaving a vitamin C food in the same meal, such as peppers, tomatoes, broccoli or fruit, helps your body take in iron from plants.\n\nAscenda's **Iron-rich** collection groups meals that do this. It is general food information, not a treatment plan.\n\n## Training on heavy days\n\nTrain if you want to. Choose a lighter session or rest if you feel faint, dizzy or unusually wiped out. Stop if you feel unwell.\n\n## See your GP if\n\nSpeak to your GP if periods are very heavy, if you soak through a pad or tampon hourly, if you pass large clots, or if you feel faint, breathless or exhausted. Bleeding after menopause also needs a GP appointment.\n\nDo not start iron tablets or other supplements on the app's advice. Your GP or a dietitian can tell you if you need them.",
+      "sources": [
+        {
+          "title": "NHS: Heavy periods",
+          "url": "https://www.nhs.uk/conditions/heavy-periods/"
+        },
+        {
+          "title": "NHS: Iron deficiency anaemia",
+          "url": "https://www.nhs.uk/conditions/iron-deficiency-anaemia/"
+        },
+        {
+          "title": "NHS: Iron",
+          "url": "https://www.nhs.uk/conditions/vitamins-and-minerals/iron/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "strong_for_life"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 37
+    },
+    {
+      "slug": "perimenopause-and-strength-training",
+      "title": "Perimenopause and strength training",
+      "summary": "Strength work is still a good idea. How you feel can change from week to week, so keep the plan flexible.",
+      "category": "your_body",
+      "read_minutes": 3,
+      "cover_image_slug": "learn-perimenopause-and-strength-training",
+      "body_markdown": "Perimenopause is the time leading up to menopause, when periods can become irregular and symptoms such as poor sleep, hot flushes or low mood can show up. Strength training is still useful through this stage.\n\nIt does not have to look perfect. Two or three good sessions a week, with rest around them, is a solid base.\n\n## What to keep\n\n- **The main lifts you know**, at a weight you can control.\n- **A warm-up** so joints and muscles are ready.\n- **Rest days.** Recovery is part of getting stronger.\n\n## What can flex\n\nSleep and energy can swing. On a rough day, use a lighter session or swap to easy cardio or stretching. That still counts towards your week. On a good day, train as planned.\n\nAscenda will not change your suggested weights because of perimenopause, and it will not cap what you lift.\n\n## See your GP if\n\nSpeak to your GP if symptoms are affecting daily life, if periods are very heavy or painful, or if you have bleeding after a year without periods. Those checks sit with your GP, not with this app.\n\nWe do not give advice on HRT, medication or supplements.",
+      "sources": [
+        {
+          "title": "NHS: Menopause",
+          "url": "https://www.nhs.uk/conditions/menopause/"
+        },
+        {
+          "title": "NHS: Physical activity guidelines for adults aged 19 to 64",
+          "url": "https://www.nhs.uk/live-well/exercise/physical-activity-guidelines-for-adults-aged-19-to-64/"
+        }
+      ],
+      "related_routines": [
+        "strong-for-life",
+        "welcome-back-4-week-restart"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "strong_for_life",
+        "more_energy",
+        "stress_relief"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 38
+    },
+    {
+      "slug": "menopause-and-bones",
+      "title": "Menopause and bones",
+      "summary": "Strength training is one of the useful things you can do for bone health. Food with calcium sits alongside it.",
+      "category": "your_body",
+      "read_minutes": 3,
+      "cover_image_slug": "learn-menopause-and-bones",
+      "body_markdown": "After menopause, bone density can fall more quickly. The NHS notes that being active, including muscle-strengthening work, helps keep bones healthier.\n\nThis is not a treatment for osteoporosis. If you have been told you have low bone density, follow the plan from your GP or specialist.\n\n## Training that helps bones\n\n- **Strength sessions** two or more times a week, using weights you can lift with good form.\n- **Impact you can tolerate**, such as brisk walking. Some people add short bouts of jogging or step-ups; walking is always a solid choice if impact does not feel right.\n- **Balance and control**, so everyday movements feel steady.\n\nStart where you are. You do not need heavy barbell lifts on day one. Machines, dumbbells and a bench are enough to begin.\n\n## Food that sits alongside\n\nCalcium-rich foods include dairy, fortified plant drinks, tofu set with calcium, and some leafy greens. Vitamin D also matters for bones; the NHS has separate guidance on that, including when a supplement is recommended for UK adults. We will not prescribe doses here.\n\nSee the **Calcium and bone health** collection for meals built from our recipes.\n\n## See your GP if\n\nSpeak to your GP if you have a sudden loss of height, unexplained back pain, a fracture from a minor fall, or bleeding after menopause. Symptoms that affect daily life also deserve a GP appointment.\n\nWe do not give HRT or medication advice.",
+      "sources": [
+        {
+          "title": "NHS: Osteoporosis",
+          "url": "https://www.nhs.uk/conditions/osteoporosis/"
+        },
+        {
+          "title": "NHS: Calcium",
+          "url": "https://www.nhs.uk/conditions/vitamins-and-minerals/calcium/"
+        },
+        {
+          "title": "NHS: Physical activity guidelines for older adults",
+          "url": "https://www.nhs.uk/live-well/exercise/physical-activity-guidelines-older-adults/"
+        }
+      ],
+      "related_routines": [
+        "strong-for-life"
+      ],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "strong_for_life",
+        "build_strength"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 39
+    },
+    {
+      "slug": "sleep-and-hot-flushes",
+      "title": "Sleep, hot flushes and training",
+      "summary": "A bad night or a flush does not cancel your week. Adjust today, then carry on.",
+      "category": "your_body",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-sleep-and-hot-flushes",
+      "body_markdown": "Hot flushes and broken sleep are common around perimenopause and menopause. They can make the gym feel harder the next day.\n\n## After a poor night\n\n- Keep the session if you want to, and treat it as a lighter day.\n- Or swap to easy cardio or a stretch.\n- Or rest. One quiet day does not undo your training.\n\nIn Ascenda, a lighter session keeps your main lift, takes a set off the extras and eases suggested weights, just for today. It still counts towards your week, and it will not pull next time's weights down.\n\n## In the gym\n\nWear layers you can take off. Pause if a flush hits, breathe, sip water, then decide whether to continue. Stop if you feel faint, dizzy or unwell.\n\n## See your GP if\n\nSpeak to your GP if hot flushes, night sweats or poor sleep are affecting daily life, or if you have bleeding after menopause. Very heavy or painful periods also need a GP check.\n\nWe do not advise on HRT, sleeping tablets or supplements. Those conversations belong with your GP.",
+      "sources": [
+        {
+          "title": "NHS: Menopause symptoms",
+          "url": "https://www.nhs.uk/conditions/menopause/symptoms/"
+        },
+        {
+          "title": "NHS: Insomnia",
+          "url": "https://www.nhs.uk/conditions/insomnia/"
+        }
+      ],
+      "related_routines": [],
+      "related_exercises": [],
+      "recommended_for_goals": [
+        "more_energy",
+        "stress_relief",
+        "strong_for_life"
+      ],
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "sort_order": 40
     }
   ]
 }

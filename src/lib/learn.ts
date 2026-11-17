@@ -23,6 +23,7 @@ export const LEARN_CATEGORIES = [
   'fuelling',
   'mindset',
   'myths',
+  'your_body',
 ] as const;
 
 export type LearnCategory = (typeof LEARN_CATEGORIES)[number];
@@ -36,6 +37,7 @@ export const LEARN_CATEGORY_LABELS: Record<LearnCategory, string> = {
   fuelling: 'Fuelling your training',
   mindset: 'Mindset and motivation',
   myths: 'Myths busted',
+  your_body: 'Your body and training',
 };
 
 export const LEARN_CATEGORY_COVERS: Record<LearnCategory, string> = {
@@ -47,6 +49,7 @@ export const LEARN_CATEGORY_COVERS: Record<LearnCategory, string> = {
   fuelling: 'learn-category-fuelling',
   mindset: 'learn-category-mindset',
   myths: 'learn-category-myths',
+  your_body: 'learn-category-your_body',
 };
 
 export type LearnSource = {
@@ -235,17 +238,19 @@ function goalWeight(goals: Goal[], goal: Goal): number {
 export function recommendArticles(
   articles: LearnArticle[],
   answers: QuizAnswers | null,
-  options?: { excludeIds?: string[]; limit?: number }
+  options?: { excludeIds?: string[]; limit?: number; preferYourBody?: boolean }
 ): LearnArticle[] {
   const exclude = new Set(options?.excludeIds ?? []);
   const goals = answers ? userGoalsFromAnswers(answers) : [];
+  const preferYourBody = options?.preferYourBody === true;
   const scored = articles
     .filter((item) => !exclude.has(item.id) && !exclude.has(item.slug))
     .map((item) => {
       const tagged = LEARN_ARTICLE_GOALS[item.id] ?? LEARN_ARTICLE_GOALS[item.slug] ?? [];
       const fromGoals = tagged.reduce((sum, goal) => sum + goalWeight(goals, goal), 0);
       const gettingStarted = item.category === 'getting_started' ? 1 : 0;
-      return { item, score: fromGoals + gettingStarted };
+      const yourBody = preferYourBody && item.category === 'your_body' ? 8 : 0;
+      return { item, score: fromGoals + gettingStarted + yourBody };
     })
     .sort((a, b) => b.score - a.score || a.item.sort_order - b.item.sort_order);
   const limit = options?.limit ?? 4;
