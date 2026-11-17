@@ -1,6 +1,6 @@
 import { track } from '@/lib/analytics';
 import { hydrateImages } from '@/lib/images';
-import { userGoalsFromAnswers, type Goal, type QuizAnswers } from '@/lib/profile';
+import { userGoalsFromAnswers, type Goal, type LifeStage, type QuizAnswers } from '@/lib/profile';
 import {
   SLOT_EXERCISE_COLUMNS,
   toSlotExercise,
@@ -826,12 +826,23 @@ function replaceFeaturedSlot(picked: RoutineSummary[], candidate: RoutineSummary
   picked[picked.length - 1] = candidate;
 }
 
+/** Gentle Featured boost only. Never send life_stage off-device. */
+function lifeStageFeaturedBoost(routine: RoutineSummary, lifeStage?: LifeStage | null): number {
+  if (!lifeStage) return 0;
+  const overlay = contentRoutine(routine.slug) ?? contentRoutine(routine.id);
+  const plan = overlay?.weekly_plan;
+  if (!plan) return 0;
+  const days = plan.strength_days.length;
+  if (days < 2 || days > 3) return 0;
+  return plan.anytime_extras.length > 0 ? 2 : 1;
+}
+
 /** 3–5 featured cards, tailored to her quiz. */
 export function pickFeaturedRoutines(
   routines: RoutineSummary[],
   answers: QuizAnswers,
   count = 4,
-  options?: { excludeIds?: string[] }
+  options?: { excludeIds?: string[]; lifeStage?: LifeStage | null }
 ): RoutineSummary[] {
   const excluded = new Set(options?.excludeIds ?? []);
   const strength = routines.filter(
@@ -844,7 +855,10 @@ export function pickFeaturedRoutines(
   const eligible = strength.filter((routine) => routine.is_featured_eligible);
   const rankedSource = eligible.length > 0 ? eligible : strength;
   const ranked = [...rankedSource].sort((a, b) => {
-    const gap = scoreRoutine(b, answers) - scoreRoutine(a, answers);
+    const gap =
+      scoreRoutine(b, answers) +
+      lifeStageFeaturedBoost(b, options?.lifeStage) -
+      (scoreRoutine(a, answers) + lifeStageFeaturedBoost(a, options?.lifeStage));
     return gap !== 0 ? gap : a.sort_order - b.sort_order;
   });
   const size = Math.min(5, Math.max(3, Math.min(count, ranked.length)));

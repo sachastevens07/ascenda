@@ -390,6 +390,8 @@ export default function HomeScreen() {
           const featured = answers
             ? pickFeaturedRoutines(routines, answers, 4, {
                 excludeIds: enrolment ? [enrolment.routine_id] : undefined,
+                // Consented profiles.life_stage only. Never send this off-device.
+                lifeStage: profile?.life_stage,
               })
             : routines
                 .filter((routine) => !isGymBackupRoutine(routine) && routine.id !== enrolment?.routine_id)
@@ -504,6 +506,7 @@ export default function HomeScreen() {
       answers?.confidence,
       attempt,
       profile?.display_name,
+      profile?.life_stage,
       profile?.onboarding_answers?.machines_used,
       subscription.isPro,
       subscription.isLoading,

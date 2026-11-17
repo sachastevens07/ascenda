@@ -24,22 +24,27 @@ import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow } from 
 import { useTheme } from '@/constants/theme';
 import { routineCoverSlug } from '@/lib/images';
 import { queueOnboardingPaywall, startOnboardingRoutine } from '@/lib/onboarding';
+import { fetchActiveLifeStageConsent, persistLifeStageChoice } from '@/lib/healthConsent';
 import {
   defaultDaysFor,
   emptyOnboardingDraft,
   extrasFromDraft,
   draftFromSaved,
   experienceFromGymExperience,
+  parseLifeStageChoice,
   statementKeyFromStores,
   storedAgeBand,
+  type LifeStageChoice,
   type OnboardingDraft,
 } from '@/lib/onboardingAnswers';
 import {
+  LIFE_STAGE_SCREEN,
   ONBOARDING_SCREENS,
   QUESTION_SCREEN_IDS,
   draftPlaceholders,
   evalCondition,
   fillTemplate,
+  lifeStageConsentTarget,
   ruleContextFromDraft,
   type OnboardingScreen,
 } from '@/lib/onboardingContent';
@@ -119,14 +124,16 @@ function stonesToKg(stones: string, pounds: string): number | null | undefined {
 
 export default function OnboardingScreen() {
   const { colours, radius, shadow } = useTheme();
-  const { profile, saveQuizAnswers, confirmAge, acceptDisclaimer } = useProfile();
+  const { profile, saveQuizAnswers, confirmAge, acceptDisclaimer, setLifeStage } = useProfile();
   const subscription = useSubscription();
-  const params = useLocalSearchParams<{ rebuild?: string | string[] }>();
+  const params = useLocalSearchParams<{ rebuild?: string | string[]; screen?: string | string[] }>();
   const rebuildParam = Array.isArray(params.rebuild) ? params.rebuild[0] : params.rebuild;
+  const screenParam = Array.isArray(params.screen) ? params.screen[0] : params.screen;
   const isRebuild = rebuildParam === '1';
   const screens = isRebuild ? REBUILD_FLOW : FLOW;
   const savedAnswers = getQuizAnswers(profile);
   const isEditing = savedAnswers !== null && !isRebuild;
+  const isLifeStageEdit = isEditing && screenParam === 'life_stage';
 
   const [draft, setDraft] = useState<OnboardingDraft>(() =>
     savedAnswers
@@ -136,14 +143,32 @@ export default function OnboardingScreen() {
           age_band: profile?.age_band,
           cardio_preference: profile?.cardio_preference,
           bodyweight_kg: profile?.bodyweight_kg,
+          // Consented column only. Never read life_stage from onboarding_answers.
+          life_stage: profile?.life_stage,
         })
-      : emptyOnboardingDraft()
+      : (() => {
+          const next = emptyOnboardingDraft();
+          next.life_stage_choice =
+            parseLifeStageChoice(LIFE_STAGE_SCREEN?.defaultValue) ?? next.life_stage_choice;
+          return next;
+        })()
   );
-  const [index, setIndex] = useState(isEditing ? -1 : 0);
+  const [index, setIndex] = useState(() => {
+    if (isLifeStageEdit) {
+      const start = FLOW.findIndex((item) => item.id === 'life_stage');
+      return start >= 0 ? start : -1;
+    }
+    return isEditing ? -1 : 0;
+  });
   const [direction, setDirection] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [safetyChecked, setSafetyChecked] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [lifeStageConsentDeclined, setLifeStageConsentDeclined] = useState(false);
+  const [hasActiveLifeStageConsent, setHasActiveLifeStageConsent] = useState(
+    () => profile?.life_stage != null
+  );
   const [plan, setPlan] = useState<RecommendedPlan | null>(null);
   const [chosenSlug, setChosenSlug] = useState<string | null>(null);
   const [buildDone, setBuildDone] = useState(0);
@@ -212,19 +237,85 @@ export default function OnboardingScreen() {
     return () => clearInterval(timer);
   }, [contentScreen?.id]);
 
+  useEffect(() => {
+    let isCurrent = true;
+    void fetchActiveLifeStageConsent()
+      .then((row) => {
+        if (isCurrent) setHasActiveLifeStageConsent(Boolean(row) || profile?.life_stage != null);
+      })
+      .catch(() => {});
+    return () => {
+      isCurrent = false;
+    };
+  }, [profile?.life_stage]);
+
+  function shouldShowLifeStageConsent(choice: LifeStageChoice): boolean {
+    return (
+      Boolean(lifeStageConsentTarget(choice)) &&
+      !hasActiveLifeStageConsent &&
+      !lifeStageConsentDeclined
+    );
+  }
+
+  function skipConsentIndex(from: number, delta: number): number {
+    let next = from + delta;
+    while (next >= 0 && next < screens.length && screens[next]?.id === 'life_stage_consent') {
+      if (shouldShowLifeStageConsent(draft.life_stage_choice)) break;
+      next += delta;
+    }
+    return next;
+  }
+
+  async function saveDraftLifeStage(consented: boolean): Promise<void> {
+    await persistLifeStageChoice({
+      choice: draft.life_stage_choice,
+      consented,
+      saveLifeStage: setLifeStage,
+    });
+  }
+
+  function leaveLifeStageFlow(): void {
+    if (isLifeStageEdit) {
+      if (router.canGoBack()) router.back();
+      else router.replace('/profile' as Href);
+      return;
+    }
+    setIndex(-1);
+  }
+
   function move(delta: number) {
     setError(null);
     setDirection(delta);
     if (isEditing && index >= 0 && delta > 0) {
+      if (screens[index]?.id === 'life_stage' && shouldShowLifeStageConsent(draft.life_stage_choice)) {
+        const consentIndex = screens.findIndex((item) => item.id === 'life_stage_consent');
+        if (consentIndex >= 0) {
+          setConsentChecked(false);
+          setIndex(consentIndex);
+          return;
+        }
+      }
+      if (isLifeStageEdit) {
+        leaveLifeStageFlow();
+        return;
+      }
       setIndex(-1);
       return;
     }
-    let next = index + delta;
+    let next = skipConsentIndex(index, delta);
     if (delta < 0 && screens[index]?.id === 'plan_reveal') {
-      const backId = isRebuild ? 'session_length' : 'bodyweight';
+      const backId = isRebuild ? 'session_length' : 'life_stage';
       const bodyIndex = screens.findIndex((item) => item.id === backId);
       if (bodyIndex >= 0) next = bodyIndex;
     }
+    if (delta > 0 && screens[index]?.id === 'life_stage' && shouldShowLifeStageConsent(draft.life_stage_choice)) {
+      const consentIndex = screens.findIndex((item) => item.id === 'life_stage_consent');
+      if (consentIndex >= 0) {
+        setConsentChecked(false);
+        next = consentIndex;
+      }
+    }
+    if (screens[next]?.id === 'life_stage_consent') setConsentChecked(false);
     if (next < 0) {
       if (isRebuild) {
         if (router.canGoBack()) router.back();
@@ -255,6 +346,7 @@ export default function OnboardingScreen() {
     if (contentScreen.id === 'cardio') return draft.cardio_preference != null;
     if (contentScreen.type === 'day_pills') return draft.preferred_days.length === draft.days_per_week;
     if (contentScreen.type === 'disclaimer') return safetyChecked;
+    if (contentScreen.type === 'consent') return consentChecked;
     if (contentScreen.type === 'building') return false;
     return true;
   }
@@ -288,6 +380,47 @@ export default function OnboardingScreen() {
         setError(`Names can be up to ${max} characters.`);
         return;
       }
+    }
+    if (contentScreen.id === 'life_stage') {
+      const choice = draft.life_stage_choice;
+      if (shouldShowLifeStageConsent(choice)) {
+        move(1);
+        return;
+      }
+      const consented = Boolean(lifeStageConsentTarget(choice)) && hasActiveLifeStageConsent;
+      setDraft((current) => ({ ...current, life_stage_consented: consented }));
+      if (isLifeStageEdit) {
+        setIsSaving(true);
+        try {
+          await saveDraftLifeStage(consented);
+          leaveLifeStageFlow();
+        } catch {
+          setIsSaving(false);
+          setError("Sorry, that didn't save. Check your connection and try again.");
+        }
+        return;
+      }
+      move(1);
+      return;
+    }
+    if (contentScreen.type === 'consent') {
+      if (!consentChecked) return;
+      setIsSaving(true);
+      try {
+        setDraft((current) => ({ ...current, life_stage_consented: true }));
+        await saveDraftLifeStage(true);
+        setHasActiveLifeStageConsent(true);
+        setIsSaving(false);
+        if (isEditing) {
+          leaveLifeStageFlow();
+          return;
+        }
+        move(1);
+      } catch {
+        setIsSaving(false);
+        setError("Sorry, that didn't save. Check your connection and try again.");
+      }
+      return;
     }
     if (contentScreen.id === 'bodyweight') {
       const parsed = weightUnit === 'kg' ? parseKg(kgText) : stonesToKg(stonesText, poundsText);
@@ -338,6 +471,13 @@ export default function OnboardingScreen() {
         onboarding_answers: extrasFromDraft(draft),
         age_band: storedAgeBand(draft),
         cardio_preference: draft.cardio_preference,
+      });
+      await persistLifeStageChoice({
+        choice: draft.life_stage_choice,
+        consented:
+          draft.life_stage_consented ||
+          (Boolean(lifeStageConsentTarget(draft.life_stage_choice)) && hasActiveLifeStageConsent),
+        saveLifeStage: setLifeStage,
       });
       if (!isRebuild) {
         if (draft.reminders_skipped) {
@@ -399,6 +539,7 @@ export default function OnboardingScreen() {
     if (!contentScreen) return 'Continue';
     if (contentScreen.type === 'welcome') return contentScreen.primary_button || "Let's build your plan";
     if (contentScreen.type === 'building') return '';
+    if (contentScreen.type === 'consent') return contentScreen.accept_button;
     if (contentScreen.type === 'plan_reveal') return contentScreen.button || 'Continue';
     return contentScreen.button || contentScreen.primary_button || 'Continue';
   })();
@@ -437,11 +578,28 @@ export default function OnboardingScreen() {
       primaryDisabled={!canContinue() || isSaving}
       primaryLoading={isSaving}
       onPrimary={() => void handlePrimary()}
-      secondaryLabel={contentScreen?.type === 'welcome' ? contentScreen.secondary_link : undefined}
+      secondaryLabel={
+        contentScreen?.type === 'welcome'
+          ? contentScreen.secondary_link
+          : contentScreen?.type === 'consent'
+            ? contentScreen.decline_button
+            : undefined
+      }
       onSecondary={
         contentScreen?.type === 'welcome'
           ? () => void supabase.auth.signOut()
-          : undefined
+          : contentScreen?.type === 'consent'
+            ? () => {
+                setLifeStageConsentDeclined(true);
+                setConsentChecked(false);
+                setDraft((current) => ({ ...current, life_stage_consented: false }));
+                if (isEditing) {
+                  leaveLifeStageFlow();
+                  return;
+                }
+                move(1);
+              }
+            : undefined
       }
       skipLabel={
         contentScreen?.type === 'time_picker' || contentScreen?.type === 'number_optional'
@@ -481,6 +639,14 @@ export default function OnboardingScreen() {
             title="Days per week"
             subtitle={String(draft.days_per_week)}
             onPress={() => jumpTo('days_per_week')}
+          />
+          <ListRow
+            title={LIFE_STAGE_SCREEN?.profile_row_title || LIFE_STAGE_SCREEN?.title || ''}
+            subtitle={
+              LIFE_STAGE_SCREEN?.options.find((option) => option.value === draft.life_stage_choice)?.label ??
+              LIFE_STAGE_SCREEN?.options.find((option) => option.value === 'prefer_not')?.label
+            }
+            onPress={() => jumpTo('life_stage')}
           />
           {error ? (
             <AppText variant="bodySm" style={{ color: colours.danger, marginTop: 12 }}>
@@ -721,7 +887,26 @@ export default function OnboardingScreen() {
         </>
       ) : null}
 
-      {contentScreen?.type === 'cards' ? (
+      {contentScreen?.id === 'life_stage' ? (
+        <>
+          <ScreenHeading title={title} helper={helper} />
+          <CardChoiceList
+            options={contentScreen.options}
+            value={draft.life_stage_choice}
+            onChange={(value) => {
+              const choice = parseLifeStageChoice(value) ?? 'prefer_not';
+              setDraft((current) => ({
+                ...current,
+                life_stage_choice: choice,
+                life_stage_consented: false,
+              }));
+              setLifeStageConsentDeclined(false);
+            }}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.id === 'streak_goal' ? (
         <>
           <ScreenHeading title={title} helper={helper} />
           <CardChoiceList
@@ -733,6 +918,22 @@ export default function OnboardingScreen() {
                 streak_goal_weeks: Number(value) as OnboardingDraft['streak_goal_weeks'],
               }))
             }
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'consent' ? (
+        <>
+          <ScreenHeading title={title} />
+          {contentScreen.body_lines.map((line) => (
+            <AppText key={line} variant="body" style={{ color: colours.ink, marginBottom: 12 }}>
+              {line}
+            </AppText>
+          ))}
+          <DisclaimerCheckbox
+            label={contentScreen.checkbox}
+            checked={consentChecked}
+            onToggle={() => setConsentChecked((value) => !value)}
           />
         </>
       ) : null}

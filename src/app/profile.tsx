@@ -69,6 +69,8 @@ import {
 } from '@/lib/restTimer';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { CHECKIN } from '@/lib/checkin';
+import { fetchActiveLifeStageConsent, withdrawLifeStageConsent } from '@/lib/healthConsent';
+import { LIFE_STAGE_CONSENT_SCREEN, LIFE_STAGE_SCREEN } from '@/lib/onboardingContent';
 import {
   WEIGHT_UNITS,
   fetchWeightUnit,
@@ -156,7 +158,8 @@ function savedWorkoutsLabel(count: number): string {
 export default function ProfileScreen() {
   const { colours, radius, preference, setPreference } = useTheme();
   const { session } = useAuth();
-  const { profile, reload, deleteAccount, saveMainGoals, restartOnboarding, setHideCheckin } = useProfile();
+  const { profile, reload, deleteAccount, saveMainGoals, restartOnboarding, setHideCheckin, setLifeStage } =
+    useProfile();
   const subscription = useSubscription();
   const { showDevTools, bypassAiLimits, setShowDevTools, setBypassAiLimits } = useDevTools();
   const answers = getQuizAnswers(profile);
@@ -177,6 +180,8 @@ export default function ProfileScreen() {
   const [welcomeBackPreview, setWelcomeBackPreview] = useState(false);
   const [handOffPreview, setHandOffPreview] = useState(false);
   const [recapPreview, setRecapPreview] = useState(false);
+  const [lifeStageConsentActive, setLifeStageConsentActive] = useState(false);
+  const [isWithdrawingLifeStage, setIsWithdrawingLifeStage] = useState(false);
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
   const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
   const [timeMenu, setTimeMenu] = useState(false);
@@ -262,6 +267,13 @@ export default function ProfileScreen() {
         })
         .catch(() => {
           if (isCurrent) setSavedWorkoutCount(0);
+        });
+      fetchActiveLifeStageConsent()
+        .then((row) => {
+          if (isCurrent) setLifeStageConsentActive(Boolean(row));
+        })
+        .catch(() => {
+          if (isCurrent) setLifeStageConsentActive(false);
         });
       return () => {
         isCurrent = false;
@@ -538,6 +550,23 @@ export default function ProfileScreen() {
     }
   }
 
+  async function handleWithdrawLifeStage() {
+    if (isWithdrawingLifeStage) return;
+    setIsWithdrawingLifeStage(true);
+    try {
+      await withdrawLifeStageConsent();
+      await setLifeStage(null);
+      setLifeStageConsentActive(false);
+    } catch (error) {
+      showDialog(
+        LIFE_STAGE_CONSENT_SCREEN?.title || lifeStageRowTitle,
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    } finally {
+      setIsWithdrawingLifeStage(false);
+    }
+  }
+
   async function handleContact() {
     const opened = await openContactEmail().catch(() => false);
     if (!opened) {
@@ -565,6 +594,13 @@ export default function ProfileScreen() {
         },
       ]
     : [];
+
+  const lifeStageRowTitle = LIFE_STAGE_SCREEN?.profile_row_title || LIFE_STAGE_SCREEN?.title || '';
+  // profiles.life_stage only, after consent. Never from onboarding_answers.
+  const lifeStageRowValue =
+    LIFE_STAGE_SCREEN?.options.find((option) => option.value === (profile?.life_stage ?? 'prefer_not'))?.label ??
+    LIFE_STAGE_SCREEN?.options.find((option) => option.value === 'prefer_not')?.label;
+  const showLifeStagePrivacy = Boolean(profile?.life_stage) || lifeStageConsentActive;
 
   return (
     <View style={[styles.scroll, { backgroundColor: colours.bg }]}>
@@ -833,6 +869,13 @@ export default function ProfileScreen() {
             });
           }}
         />
+        {showLifeStagePrivacy ? (
+          <SettingsRow
+            title={lifeStageRowTitle}
+            subtitle={LIFE_STAGE_CONSENT_SCREEN?.withdraw_button}
+            onPress={() => void handleWithdrawLifeStage()}
+          />
+        ) : null}
         <SettingsRow
           title={COACH_UI.delete_all}
           subtitle="Removes Coach chats kept for 30 days. Delete one chat from Coach, Your chats."
@@ -926,6 +969,15 @@ export default function ProfileScreen() {
                 <SettingsRow key={row.name} title={row.name} subtitle={row.value} showChevron={false} />
               ))
             : null}
+          {showAnswers ? (
+            <SettingsRow
+              title={lifeStageRowTitle}
+              subtitle={lifeStageRowValue}
+              onPress={() =>
+                router.push({ pathname: '/onboarding', params: { screen: 'life_stage' } } as Href)
+              }
+            />
+          ) : null}
           {showAnswers ? (
             <SettingsRow
               title="Change answers"

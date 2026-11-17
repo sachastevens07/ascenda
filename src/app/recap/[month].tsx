@@ -116,6 +116,7 @@ function MonthBarChart({
 }
 
 function ShareCards({ recap }: { recap: MonthlyRecap }) {
+  // Recap totals and PBs only. Never include life_stage.
   const { colours, radius, spacing, shadow } = useTheme();
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(320, width - 64);

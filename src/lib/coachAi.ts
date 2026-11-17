@@ -61,6 +61,7 @@ export async function requestCoachAnswer(input: {
   } = await supabase.auth.getSession();
   const { data, error, response } = await supabase.functions.invoke('coach', {
     body: {
+      // Never include life_stage. Special-category health data stays on-device/DB only.
       message: input.message,
       context: input.context,
       conversation_id: input.conversationId,

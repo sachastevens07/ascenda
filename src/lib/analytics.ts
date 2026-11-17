@@ -67,7 +67,7 @@ const ALLOWED_KEYS = new Set([
 ]);
 
 const BLOCKED_KEY =
-  /weight|photo|email|name|body|quote|rep|kg|goal|text|note|message|copy|title|cue|comment|avatar|prompt|answer|story|image|scan|fridge|ingredient/i;
+  /weight|photo|email|name|body|quote|rep|kg|goal|text|note|message|copy|title|cue|comment|avatar|prompt|answer|story|image|scan|fridge|ingredient|life.?stage|perimenopause|menopause/i;
 
 const HAD_TRIAL_PREFIX = 'analytics_had_trial:';
 
@@ -167,6 +167,7 @@ export function identifyUser(userId: string, plan: AnalyticsPlan): void {
   try {
     const instance = getClient();
     if (!instance || !userId) return;
+    // Never attach life_stage. It is special-category health data.
     instance.identify(userId, { env: analyticsEnv(), plan });
   } catch {
     /* Ignore identify failures. */

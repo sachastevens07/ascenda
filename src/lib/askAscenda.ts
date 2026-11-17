@@ -144,6 +144,7 @@ const NEVER_SEND = [
   'onboarding_answers',
   'health',
   'age_band',
+  'life_stage',
 ];
 
 function asRecord(value: unknown): Record<string, unknown> {

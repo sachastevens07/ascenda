@@ -161,6 +161,30 @@ function whyLinesFor(draft: OnboardingDraft, overlay: ContentRoutineOverlay): st
   return lines;
 }
 
+function applyLifeStageRoutineAdjustment(
+  draft: OnboardingDraft,
+  recommended: ContentRoutineOverlay,
+  matched: ContentRoutineOverlay[]
+): ContentRoutineOverlay {
+  // life_stage is special-category health data. Use the in-memory consented
+  // flag only, never onboarding_answers, and never send this off-device.
+  if (
+    !draft.life_stage_consented ||
+    (draft.life_stage_choice !== 'perimenopause' && draft.life_stage_choice !== 'menopause')
+  ) {
+    return recommended;
+  }
+  const main = draft.main_goals[0];
+  if (scheduleStrengthDays(recommended) <= 3) return recommended;
+  if (main === 'build_muscle' || main === 'glutes_and_legs') return recommended;
+  const lighter = matched.find((overlay) => {
+    if (overlay.slug === recommended.slug) return false;
+    const days = scheduleStrengthDays(overlay);
+    return days >= 2 && days <= 3 && daysFit(overlay, draft.days_per_week);
+  });
+  return lighter ?? recommended;
+}
+
 function pickFromRule(
   slug: string,
   draft: OnboardingDraft
@@ -203,6 +227,8 @@ export function recommendPlan(draft: OnboardingDraft, chosenSlug?: string): Reco
       overlayFor(defaultRoutineSlug(draft));
   }
   if (!recommended) return null;
+
+  recommended = applyLifeStageRoutineAdjustment(draft, recommended, matched);
 
   const altSlugs: string[] = [];
   for (const overlay of matched) {

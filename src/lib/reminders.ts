@@ -341,6 +341,7 @@ export async function syncPlannerReminders(): Promise<void> {
         await Notifications.scheduleNotificationAsync({
           identifier: `${SESSION_PREFIX}${day.iso}`,
           content: {
+            // Session name and time only. Never attach life_stage.
             title: copy.title,
             body: copy.body,
             data: { type: 'session-reminder' },

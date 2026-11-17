@@ -1,6 +1,6 @@
 /**
  * Ascenda Coach. Context, chips, new-chat rules and card helpers.
- * Never sends name, email, bodyweight, photos, onboarding statements or health info.
+ * Never sends name, email, bodyweight, photos, onboarding statements, life_stage or health info.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, type Href } from 'expo-router';

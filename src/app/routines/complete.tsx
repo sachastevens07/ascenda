@@ -75,6 +75,7 @@ export default function RoutineCompleteScreen() {
 
   async function shareCard() {
     if (!review) return;
+    // Completion numbers and the routine name only. Never include life_stage.
     const lifts = review.lifts.map(formatLiftCompare).join('\n');
     const message = [
       fillCopy(routineActionsCopy.complete_title, { routine_name: review.enrolment.routine.name }),

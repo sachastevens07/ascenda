@@ -126,6 +126,7 @@ function configureOnce(): boolean {
   if (configureResult === null) {
     try {
       if (API_KEY) Purchases.configure({ apiKey: API_KEY });
+      // Never Purchases.setAttributes with life_stage. Health data stays off RevenueCat.
       configureResult = !!API_KEY;
     } catch {
       configureResult = false;

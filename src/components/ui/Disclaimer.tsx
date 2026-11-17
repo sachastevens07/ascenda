@@ -55,17 +55,20 @@ export function DisclaimerBody({ hideTitle = false }: { hideTitle?: boolean }) {
 export function DisclaimerCheckbox({
   checked,
   onToggle,
+  label,
 }: {
   checked: boolean;
   onToggle: () => void;
+  label?: string;
 }) {
   const { colours, radius } = useTheme();
+  const checkboxLabel = label || safetyCopy.onboarding_checkbox;
   return (
     <Pressable
       onPress={onToggle}
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
-      accessibilityLabel={safetyCopy.onboarding_checkbox}
+      accessibilityLabel={checkboxLabel}
       style={({ pressed }) => [styles.checkRow, pressed && styles.pressed]}>
       <View
         style={[
@@ -79,7 +82,7 @@ export function DisclaimerCheckbox({
         {checked ? <Ionicons name="checkmark" size={16} color={colours.onBrand} /> : null}
       </View>
       <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>
-        {safetyCopy.onboarding_checkbox}
+        {checkboxLabel}
       </AppText>
     </Pressable>
   );

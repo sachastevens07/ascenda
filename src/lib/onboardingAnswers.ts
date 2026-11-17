@@ -46,6 +46,15 @@ export type OnboardingAnswersJson = {
   reminders_opted_out?: boolean;
 };
 
+export const LIFE_STAGE_CHOICES = ['perimenopause', 'menopause', 'none', 'prefer_not'] as const;
+export type LifeStageChoice = (typeof LIFE_STAGE_CHOICES)[number];
+
+export function parseLifeStageChoice(value: unknown): LifeStageChoice | null {
+  return (LIFE_STAGE_CHOICES as readonly string[]).includes(String(value))
+    ? (value as LifeStageChoice)
+    : null;
+}
+
 const STATEMENT_KEYS = [
   'not_sure_what_to_do',
   'feel_watched',
@@ -107,6 +116,8 @@ export function parseCardioPreference(value: unknown): CardioPreference | null {
 export function parseOnboardingAnswers(value: unknown): OnboardingAnswersJson {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
   const row = value as Record<string, unknown>;
+  // Never copy life_stage from this jsonb. It is special-category health data
+  // and only lives on profiles.life_stage after explicit consent.
   const answers: OnboardingAnswersJson = {};
   for (const key of STATEMENT_KEYS) {
     const score = Number(row[key]);
@@ -148,6 +159,10 @@ export type OnboardingDraft = {
   reminder_time: string | null;
   reminders_skipped: boolean;
   bodyweight_kg: number | null;
+  /** In-memory only. Never written to onboarding_answers. */
+  life_stage_choice: LifeStageChoice;
+  /** True after she accepts consent this session, or she already has a saved stage. */
+  life_stage_consented: boolean;
 };
 
 export function emptyOnboardingDraft(): OnboardingDraft {
@@ -167,6 +182,8 @@ export function emptyOnboardingDraft(): OnboardingDraft {
     reminder_time: '18:00',
     reminders_skipped: false,
     bodyweight_kg: null,
+    life_stage_choice: 'prefer_not',
+    life_stage_consented: false,
   };
 }
 
@@ -177,6 +194,8 @@ export function draftFromSaved(input: {
   cardio_preference?: CardioPreference | null;
   bodyweight_kg?: number | null;
   reminder_time?: string | null;
+  /** Consented value from profiles.life_stage only. Never from onboarding_answers. */
+  life_stage?: 'perimenopause' | 'menopause' | null;
 }): OnboardingDraft {
   const extras = input.extras ?? {};
   const days = (input.answers.days_per_week >= 2 && input.answers.days_per_week <= 5
@@ -207,6 +226,8 @@ export function draftFromSaved(input: {
     reminder_time: extras.reminders_opted_out ? null : (input.reminder_time ?? '18:00'),
     reminders_skipped: extras.reminders_opted_out === true,
     bodyweight_kg: input.bodyweight_kg ?? null,
+    life_stage_choice: parseLifeStageChoice(input.life_stage) ?? 'prefer_not',
+    life_stage_consented: parseLifeStageChoice(input.life_stage) != null,
   };
 }
 
@@ -226,6 +247,8 @@ export function formatPreferredDays(days: Weekday[]): string {
 }
 
 export function extrasFromDraft(draft: OnboardingDraft): OnboardingAnswersJson {
+  // life_stage_choice stays on the draft only. Do not add it here: it is
+  // special-category health data and must never land in onboarding_answers.
   const extras: OnboardingAnswersJson = {
     machines_used: draft.machines_used.filter((item) => item !== 'none'),
     preferred_days: draft.preferred_days,

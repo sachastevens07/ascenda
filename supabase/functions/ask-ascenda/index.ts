@@ -79,6 +79,7 @@ const NEVER_SEND = [
   'onboarding_answers',
   'health',
   'age_band',
+  'life_stage',
 ];
 
 const cors = {

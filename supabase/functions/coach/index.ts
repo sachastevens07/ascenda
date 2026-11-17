@@ -29,6 +29,7 @@ import indexesFile from './indexes.json' with { type: 'json' };
 /**
  * Ascenda Coach. One chat with tools. Claude key: ANTHROPIC_API_KEY.
  * The model chooses tools; this file and tools.ts produce the result.
+ * Never read or send profiles.life_stage. It is special-category health data.
  */
 
 const FEATURE = 'coach';
@@ -642,6 +643,7 @@ async function runTool(name: string, input: Json, state: TurnState): Promise<Jso
         .limit(20);
       return { checkpoints: data ?? [] };
     }
+    // Sessions only. Do not join profiles.life_stage into Coach context.
     const { data: sessions } = await state.admin
       .from('sessions')
       .select('id, started_at, completed_at, duration_seconds')

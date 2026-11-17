@@ -47,7 +47,11 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   },
   {
     heading: 'What we store',
-    body: 'Your email, onboarding answers, workout sessions and sets, optional bodyweight, optional progress photos, subscription status, reminder preferences, and a few display choices such as theme and units.',
+    body: 'Your email, onboarding answers, workout sessions and sets, optional bodyweight, optional life stage (only with explicit consent), optional progress photos, subscription status, reminder preferences, and a few display choices such as theme and units.',
+  },
+  {
+    heading: 'Life stage',
+    body: 'If you choose to save perimenopause or menopause, that is health information. We only store it after you tick the consent screen. It is used to suggest routines, cardio and articles that may suit you. It never changes your weights. It is never sent to Ascenda Coach, analytics, advertisers, notifications, share cards or monthly recaps. You can delete it and withdraw consent in Profile, Privacy.',
   },
   {
     heading: 'What we do not store',

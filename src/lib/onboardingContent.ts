@@ -55,6 +55,7 @@ export type OnboardingScreen = {
   type: string;
   title: string;
   body: string;
+  body_lines: string[];
   helper: string;
   eyebrow: string;
   why_we_ask: string;
@@ -63,6 +64,13 @@ export type OnboardingScreen = {
   primary_button: string;
   secondary_link: string;
   skip_label: string;
+  accept_button: string;
+  decline_button: string;
+  checkbox: string;
+  consent_purpose: string;
+  consent_version: number;
+  profile_row_title: string;
+  withdraw_button: string;
   image_slug: string | null;
   stores_to: string;
   options: OnboardingOption[];
@@ -79,6 +87,7 @@ export type OnboardingScreen = {
   alt_title: string;
   alt_body: string;
   extra_if: Record<string, string>;
+  next_if: Record<string, string>;
   privacy_note: string;
   unit_options: string[];
   exact_count_from: string | null;
@@ -143,10 +152,18 @@ function parseScreen(raw: unknown): OnboardingScreen {
   const extraRaw = asRecord(item.extra_if);
   const extra_if: Record<string, string> = {};
   for (const [key, value] of Object.entries(extraRaw)) extra_if[key] = text(value);
+  const nextIfRaw = asRecord(item.next_if);
+  const next_if: Record<string, string> = {};
+  for (const [key, value] of Object.entries(nextIfRaw)) next_if[key] = text(value);
   const bodyByGoal: Record<string, string> = {};
   for (const [key, value] of Object.entries(asRecord(item.body_by_main_goal))) {
     bodyByGoal[key] = text(value);
   }
+  const body_lines = Array.isArray(item.body)
+    ? asArray(item.body).map(text).filter(Boolean)
+    : text(item.body)
+      ? [text(item.body)]
+      : [];
   const milestone = asRecord(item.milestone_preview);
   const suggest: Record<string, Weekday[]> = {};
   for (const [key, value] of Object.entries(asRecord(item.suggest_defaults))) {
@@ -157,7 +174,8 @@ function parseScreen(raw: unknown): OnboardingScreen {
     id: text(item.id),
     type: text(item.type),
     title: text(item.title),
-    body: text(item.body),
+    body: body_lines.join('\n\n'),
+    body_lines,
     helper: text(item.helper),
     eyebrow: text(item.eyebrow),
     why_we_ask: text(item.why_we_ask),
@@ -166,6 +184,13 @@ function parseScreen(raw: unknown): OnboardingScreen {
     primary_button: text(item.primary_button),
     secondary_link: text(item.secondary_link),
     skip_label: text(item.skip_label),
+    accept_button: text(item.accept_button),
+    decline_button: text(item.decline_button),
+    checkbox: text(item.checkbox),
+    consent_purpose: text(item.consent_purpose),
+    consent_version: num(item.consent_version) ?? 1,
+    profile_row_title: text(item.profile_row_title),
+    withdraw_button: text(item.withdraw_button),
     image_slug: text(item.image_slug) || null,
     stores_to: text(item.stores_to),
     options: asArray(item.options).map(parseOption).filter((row): row is OnboardingOption => Boolean(row)),
@@ -185,6 +210,7 @@ function parseScreen(raw: unknown): OnboardingScreen {
     alt_title: text(item.alt_title),
     alt_body: text(item.alt_body),
     extra_if,
+    next_if,
     privacy_note: text(item.privacy_note),
     unit_options: asArray(item.unit_options).map(String),
     exact_count_from: text(item.exact_count_from) || null,
@@ -240,8 +266,21 @@ export const QUESTION_SCREEN_IDS = ONBOARDING_SCREENS.filter(
     screen.type !== 'building' &&
     screen.type !== 'plan_reveal' &&
     screen.type !== 'disclaimer' &&
+    screen.type !== 'consent' &&
     screen.type !== 'paywall'
 ).map((screen) => screen.id);
+
+export function onboardingScreenById(id: string): OnboardingScreen | undefined {
+  return ONBOARDING_SCREENS.find((screen) => screen.id === id);
+}
+
+export const LIFE_STAGE_SCREEN = onboardingScreenById('life_stage');
+export const LIFE_STAGE_CONSENT_SCREEN = onboardingScreenById('life_stage_consent');
+
+export function lifeStageConsentTarget(choice: string | null | undefined): string | null {
+  if (!choice || !LIFE_STAGE_SCREEN) return null;
+  return LIFE_STAGE_SCREEN.next_if[choice] || null;
+}
 
 export type RuleContext = {
   main_goal: string | null;

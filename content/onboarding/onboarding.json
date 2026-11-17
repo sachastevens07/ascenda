@@ -608,6 +608,62 @@
       "button": "Continue"
     },
     {
+      "id": "life_stage",
+      "type": "cards",
+      "optional": true,
+      "title": "Are any of these true for you right now?",
+      "helper": "Optional. It helps us suggest routines, cardio and articles that suit you. You can change or delete it any time in Profile.",
+      "profile_row_title": "Life stage",
+      "options": [
+        {
+          "value": "perimenopause",
+          "label": "Perimenopause",
+          "sub": "Changes in the years before periods stop"
+        },
+        {
+          "value": "menopause",
+          "label": "Menopause or after",
+          "sub": "It's been 12 months or more since your last period"
+        },
+        {
+          "value": "none",
+          "label": "None of these"
+        },
+        {
+          "value": "prefer_not",
+          "label": "Prefer not to say"
+        }
+      ],
+      "default": "prefer_not",
+      "stores_to": "profiles.life_stage (only 'perimenopause' or 'menopause', and only after life_stage_consent is accepted; 'none' and 'prefer_not' store null)",
+      "next_if": {
+        "perimenopause": "life_stage_consent",
+        "menopause": "life_stage_consent"
+      },
+      "button": "Continue",
+      "note_for_dev": "AGENTS.md B3. Never send this answer to PostHog, Coach, RevenueCat or notifications."
+    },
+    {
+      "id": "life_stage_consent",
+      "type": "consent",
+      "shown_only_after": "life_stage",
+      "title": "Can we save this?",
+      "body": [
+        "This is health information, so we only save it if you say yes.",
+        "We use it for one thing: suggesting routines, cardio and articles that suit this stage of life. It never changes your weights or progress.",
+        "It stays private to you. It's never sent to Ascenda Coach, analytics, advertisers or anyone else.",
+        "You can change it or delete it any time in Profile, Privacy."
+      ],
+      "checkbox": "I agree to Ascenda saving my life stage for this purpose",
+      "accept_button": "Save and continue",
+      "decline_button": "Don't save it",
+      "withdraw_button": "Delete and withdraw consent",
+      "consent_purpose": "life_stage_personalisation",
+      "consent_version": 1,
+      "stores_to": "health_consents (purpose, consent_version, granted_at) and profiles.life_stage",
+      "on_decline": "Save nothing and continue. Don't ask again during onboarding."
+    },
+    {
       "id": "building_plan",
       "type": "building",
       "title": "Building your plan, {name}",
@@ -852,6 +908,14 @@
       }
     ],
     "fit_rule": "After a rule picks a routine, check it fits: routine.weekly_plan.gym_days_needed must be at most days_per_week. If it doesn't fit, use the first alternative that fits. If none fit, use the-two-day-start (gym_experience not_yet, just_started or on_and_off) or twice-a-week-strong (regularly). Apply the same check to the alternatives shown.",
+    "life_stage_adjustments": {
+      "_applies": "Only when profiles.life_stage is 'perimenopause' or 'menopause'. Applied after the rules and fit_rule. Never changes progression, never caps weights, never used for predictions.",
+      "routine": "If the recommended routine has more than 3 strength days and her main goal isn't build_muscle or glutes_and_legs, prefer the first alternative with 2 to 3 strength days that also passes fit_rule. Otherwise keep the recommendation.",
+      "featured_for_you": "Within the Featured for you row, rank routines with 2 to 3 strength days and a recovery stretch in weekly_plan slightly higher.",
+      "cardio": "Cardio suggestions may include an optional short moderate-impact option (e.g. 1-minute jogging intervals on the treadmill, or step-ups), always next to brisk walking as the lower-impact choice. Coach review required.",
+      "learn": "Recommended for you shows Your body and training articles first.",
+      "recovery": "Give recovery stretch suggestions a little more weight on Home and in the Planner."
+    },
     "gym_days_note": "routine.gym_days_needed and routine.schedule_strength_days come from weekly_plan in the routine file (gym_days_needed; strength_days length). routine.cardio_days is the length of required_cardio_days.",
     "never_auto_recommend": [
       "summit"

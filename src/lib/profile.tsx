@@ -272,7 +272,7 @@ function isMissingGroup8Health(error: { message?: string; code?: string }): bool
   return /hide_checkin|life_stage/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
-function parseLifeStage(value: unknown): LifeStage | null {
+export function parseLifeStage(value: unknown): LifeStage | null {
   return (LIFE_STAGES as readonly string[]).includes(String(value)) ? (value as LifeStage) : null;
 }
 
@@ -495,6 +495,8 @@ type ProfileState = {
   restartOnboarding: () => Promise<void>;
   /** True hides the logger check-in. The Profile row is inverted (on = hide_checkin false). */
   setHideCheckin: (hidden: boolean) => Promise<void>;
+  /** Consented life stage only. Never write this into onboarding_answers. */
+  setLifeStage: (value: LifeStage | null) => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -1027,6 +1029,26 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [userId, loaded]
   );
 
+  const setLifeStage = useCallback(
+    async (value: LifeStage | null) => {
+      if (!userId) throw new Error('You need to be signed in.');
+      const next = parseLifeStage(value);
+      const outcome = await saveOwnProfileFields(userId, { life_stage: next });
+      const previous = loaded?.userId === userId ? loaded.profile : null;
+      if (previous) {
+        setLoaded({
+          userId,
+          profile: { ...previous, life_stage: next },
+          error: null,
+        });
+      }
+      if (outcome === 'missing-column' && previous) {
+        /* SQL not pasted: keep the in-memory value on this device only. */
+      }
+    },
+    [userId, loaded]
+  );
+
   const isLoading = loaded === null || loaded.userId !== userId;
 
   return (
@@ -1045,6 +1067,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         acceptDisclaimer,
         restartOnboarding,
         setHideCheckin,
+        setLifeStage,
       }}>
       {children}
     </ProfileContext.Provider>

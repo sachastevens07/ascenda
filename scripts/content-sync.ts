@@ -570,6 +570,7 @@ function reportOnboardingGoals(): void {
   line(`  Goal options: ${options.length}. First pick is main. Max ${num(goals.max) ?? 3}.`);
   line(`  Recommendation rules: ${rules.length}. Formula: ${text(estimate.formula) || 'from file'}`);
   line('  Stored on profiles (main_goals, gym_experience, onboarding_answers jsonb, age_band, cardio_preference).');
+  line('  life_stage is not stored in onboarding_answers. It needs explicit consent (B3).');
   line('  Live sync does not write onboarding into the database.');
   line();
 }
