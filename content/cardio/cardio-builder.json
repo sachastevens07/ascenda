@@ -22,7 +22,8 @@
         "id": "log",
         "label": "Just log it"
       }
-    ]
+    ],
+    "coming_soon": "Coming soon"
   },
   "machines_order": [
     "treadmill",
@@ -68,7 +69,13 @@
     },
     "intervals_fill_rule": "After warm-up and cool-down, repeat work and recover blocks to fill the remaining time. If the last full repeat doesn't fit, end on extra easy time.",
     "start_button": "Start",
-    "save_link": "Save for next time"
+    "save_link": "Save for next time",
+    "saved": "Saved to My workouts",
+    "block_labels": {
+      "warmup": "Warm up",
+      "cooldown": "Cool down",
+      "easy": "Easy"
+    }
   },
   "build_intervals": {
     "title": "Build intervals",

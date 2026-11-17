@@ -56,6 +56,7 @@
     "images:upload": "node scripts/images-upload.ts",
     "images:report": "node scripts/images-report.ts",
     "ai:evals": "node scripts/ai-evals.ts",
+    "test:cardio-builder": "node --experimental-strip-types --test scripts/test-cardio-builder.ts",
     "content:sql": "node scripts/emit-content-routines-sql.ts",
     "workoutx:match": "node scripts/match-workoutx.mjs"
   },

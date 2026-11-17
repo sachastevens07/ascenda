@@ -2,6 +2,7 @@ import { router, type Href } from 'expo-router';
 
 import { showDialog } from '@/components/Dialog';
 import { beginCardioSession, cardioSession, describeCardioError, isSessionInProgressError } from '@/lib/cardio';
+import { beginCustomWorkoutSession } from '@/lib/customWorkouts';
 import { fetchRoutineIdBySlug } from '@/lib/completeWeek';
 import {
   confirmFirstSessionSafety,
@@ -108,6 +109,46 @@ function openActive(id: string, source?: string, replace = false): void {
 }
 
 type PublishWorkout = (active: ActiveWorkout, nextSet: NextSet | null) => void;
+
+/** Starts a saved custom workout: strength logger or cardio player. */
+export async function openCustomWorkoutFromPlan(
+  workoutId: string,
+  publish: PublishWorkout,
+  options?: { replace?: boolean }
+): Promise<void> {
+  try {
+    if (!ensureSubscribed()) throw new SessionStartCancelled();
+    const allowed = await confirmFirstSessionSafety();
+    if (!allowed) throw new SessionStartCancelled();
+    const active = await fetchActiveSession();
+    if (active) {
+      promptActiveSession(active.id, options?.replace);
+      return;
+    }
+    const started = await beginCustomWorkoutSession(workoutId);
+    if (started.kind === 'cardio') {
+      publish(
+        {
+          sessionId: started.session.id,
+          dayName: started.name,
+          startedAt: Date.parse(started.session.started_at),
+          source: 'cardio',
+        },
+        null
+      );
+      openActive(started.session.id, 'cardio', options?.replace);
+      return;
+    }
+    openLogger(started.session.id, options?.replace);
+  } catch (error) {
+    if (isSessionStartCancelled(error)) return;
+    if (isSessionInProgressError(error) && error.activeId) {
+      promptActiveSession(error.activeId, options?.replace);
+      return;
+    }
+    showDialog('Couldn’t start the session', describeRoutineError(error));
+  }
+}
 
 /** Starts a cardio session from the planner or Home and opens the player. */
 export async function openCardioFromPlan(

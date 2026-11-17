@@ -28,6 +28,8 @@ export type Session = {
   type: SessionType;
   /** True when she chose a lighter session for today. Never stores the reason. */
   lighter_session: boolean;
+  /** True when she logged cardio after the fact (W8 Just log it). */
+  logged_after: boolean;
 };
 
 /** One row of the `sets` table. */
@@ -72,12 +74,17 @@ function isMissingLighterSessionColumn(error: { message?: string; code?: string 
   return /lighter_session/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
+function isMissingLoggedAfterColumn(error: { message?: string; code?: string }): boolean {
+  return /logged_after/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
 function isRejectedCardioSource(error: { message?: string; code?: string }): boolean {
   return /sessions_source_check|source.*cardio/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
 const SESSION_COLUMNS_ROUTINES_W1 = `${SESSION_COLUMNS_ROUTINES}, type`;
 const SESSION_COLUMNS_GROUP8 = `${SESSION_COLUMNS_ROUTINES_W1}, lighter_session`;
+const SESSION_COLUMNS_W8 = `${SESSION_COLUMNS_GROUP8}, logged_after`;
 
 function toSession(row: Session | null): Session | null {
   if (!row) return null;
@@ -91,6 +98,7 @@ function toSession(row: Session | null): Session | null {
     exercise_swaps: row.exercise_swaps ?? {},
     type: parseSessionType(row.type, sessionTypeFromSource(row.source ?? 'programme')),
     lighter_session: row.lighter_session === true,
+    logged_after: row.logged_after === true,
   };
 }
 
@@ -135,6 +143,17 @@ type SessionQueryResult = {
 async function selectSession(
   run: (columns: string) => PromiseLike<SessionQueryResult>
 ): Promise<Session | null> {
+  const withW8 = await run(SESSION_COLUMNS_W8);
+  if (!withW8.error) return toSession(withW8.data as Session | null);
+  if (
+    !isMissingLoggedAfterColumn(withW8.error) &&
+    !isMissingLighterSessionColumn(withW8.error) &&
+    !isMissingSessionTypeColumn(withW8.error)
+  ) {
+    if (!isMissingRoutineSessionColumns(withW8.error) && !isMissingBlockColumn(withW8.error)) {
+      if (!isMissingCustomSessionColumns(withW8.error)) throw withW8.error;
+    }
+  }
   const withGroup8 = await run(SESSION_COLUMNS_GROUP8);
   if (!withGroup8.error) return toSession(withGroup8.data as Session | null);
   if (
@@ -320,14 +339,18 @@ export async function startRoutineSession(input: {
   throw error;
 }
 
-export async function startCardioSession(slug: string): Promise<Session> {
-  const swaps = { [CARDIO_SLUG_KEY]: slug };
+export async function startCardioSession(
+  slug: string,
+  extra?: { swaps?: Record<string, string>; customWorkoutId?: string | null }
+): Promise<Session> {
+  const swaps = { [CARDIO_SLUG_KEY]: slug, ...(extra?.swaps ?? {}) };
   const payload = {
     programme_day_id: null as string | null,
     date: localDate(),
     exercise_swaps: swaps,
     source: 'cardio' as const,
     type: 'cardio' as const,
+    ...(extra?.customWorkoutId ? { custom_workout_id: extra.customWorkoutId } : {}),
   };
   const first = await insertSessionRow(payload, SESSION_COLUMNS_ROUTINES);
   if (!first.error) {

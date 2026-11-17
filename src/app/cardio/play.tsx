@@ -31,6 +31,8 @@ import {
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import {
+  cardioDefFromPlan,
+  cardioPlanFromSession,
   cardioSession,
   cardioSlugFromSession,
   describeCardioError,
@@ -43,6 +45,7 @@ import {
   type CardioSessionDef,
   type CardioSettings,
 } from '@/lib/cardio';
+import { fetchCustomWorkout } from '@/lib/customWorkouts';
 import { cardioCopy, fillCopy, foodCopy, machineCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuide } from '@/lib/machineGuides';
@@ -122,8 +125,13 @@ export default function CardioPlayScreen() {
         if (isCurrent) setLoadState('not-found');
         return;
       }
-      const slug = cardioSlugFromSession(session);
-      const loaded = cardioSession(slug);
+      const fromPlan = cardioPlanFromSession(session);
+      let loaded = fromPlan ? cardioDefFromPlan(fromPlan) : null;
+      if (!loaded && session.custom_workout_id) {
+        const workout = await fetchCustomWorkout(session.custom_workout_id);
+        if (workout?.cardio_plan) loaded = cardioDefFromPlan(workout.cardio_plan);
+      }
+      if (!loaded) loaded = cardioSession(cardioSlugFromSession(session));
       if (!loaded) {
         if (isCurrent) setLoadState('not-found');
         return;

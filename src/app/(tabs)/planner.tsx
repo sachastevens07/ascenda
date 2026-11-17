@@ -59,12 +59,12 @@ import { SESSION_TYPE_COLOURS } from '@/lib/completeWeek';
 import { weekRingCopy } from '@/lib/copy';
 import {
   openCardioFromPlan,
+  openCustomWorkoutFromPlan,
   openRecoveryFromPlan,
   openRoutineLogger,
   openStretchDayFromPlan,
 } from '@/lib/startLogger';
 import { useWorkout } from '@/lib/workout';
-import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed } from '@/lib/paywall';
 import {
   DEFAULT_REMINDER_TIME,
@@ -79,7 +79,6 @@ import {
   syncPlannerReminders,
   type ReminderPrefs,
 } from '@/lib/reminders';
-import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | 'reminder-time' | null;
@@ -378,27 +377,7 @@ export default function PlannerScreen() {
 
     setBusy(true);
     try {
-      const allowed = await confirmFirstSessionSafety();
-      if (!allowed) return;
-      const active = await fetchActiveSession();
-      if (active) {
-        showDialog(
-          'You already have a session going',
-          'Finish or discard it first, then start this workout.',
-          [
-            {
-              text: 'Open it',
-              onPress: () => router.push({ pathname: '/session/[id]', params: { id: active.id } }),
-            },
-            { text: 'OK', style: 'cancel' },
-          ]
-        );
-        return;
-      }
-      const session = await startCustomSession(day.plan.custom_workout_id);
-      router.push({ pathname: '/session/[id]', params: { id: session.id } });
-    } catch (error) {
-      showDialog('Couldn’t start the workout', describePlannerError(error));
+      await openCustomWorkoutFromPlan(day.plan.custom_workout_id, workout.publish);
     } finally {
       setBusy(false);
     }
@@ -448,7 +427,7 @@ export default function PlannerScreen() {
 
   if (loadState !== 'ready' || !range) {
     return (
-      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
+      <View style={[styles.centre, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (

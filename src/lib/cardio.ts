@@ -2,7 +2,13 @@ import catalogueFile from '../../content/cardio/cardio-sessions.json';
 
 import { cardioCopy, fillCopy } from '@/lib/copy';
 import type { GymExperience } from '@/lib/profile';
-import { CARDIO_SLUG_KEY, isCardioSession, parseCardioStyle, type CardioStyle } from '@/lib/sessionTypes';
+import {
+  CARDIO_PLAN_KEY,
+  CARDIO_SLUG_KEY,
+  isCardioSession,
+  parseCardioStyle,
+  type CardioStyle,
+} from '@/lib/sessionTypes';
 import { describeRoutineError } from '@/lib/routines';
 import {
   fetchActiveSession,
@@ -31,10 +37,39 @@ export type CardioSettings = {
   speed_kmh?: [number, number] | number;
   incline_percent?: [number, number] | number;
   cadence_rpm?: [number, number] | number;
+  strides_per_minute?: [number, number] | number;
+  damper?: [number, number] | number;
+  strokes_per_minute?: [number, number] | number;
+  steps_per_minute?: [number, number] | number;
   resistance?: string;
   level?: [number, number] | number;
+  level_text?: string;
   note?: string;
   machine_id?: string;
+};
+
+/** JSON stored on custom_workouts.cardio_plan. Same shape as a cardio-sessions.json row. */
+export type CardioPlanInterval = {
+  label: string;
+  seconds: number;
+  effort: number;
+  cue?: string | null;
+  settings: CardioSettings;
+};
+
+export type CardioPlan = {
+  slug: string;
+  name: string;
+  summary?: string;
+  machine_id: CardioMachineId;
+  style: CardioStyle;
+  duration_minutes: number;
+  max_minutes?: number;
+  effort_target: [number, number] | number;
+  settings_guidance?: CardioSettings;
+  intervals: CardioPlanInterval[];
+  beginner_ok?: boolean;
+  counts_towards_weekly_target?: boolean;
 };
 
 export type CardioInterval = {
@@ -121,12 +156,19 @@ function parseMachine(value: unknown): CardioMachineId | null {
 
 function parseSettings(raw: unknown): CardioSettings {
   const row = asRecord(raw);
+  const numericLevel = pair(row.level);
+  const levelText = numericLevel == null ? text(row.level) || text(row.level_text) : text(row.level_text);
   return {
     speed_kmh: pair(row.speed_kmh),
     incline_percent: pair(row.incline_percent),
     cadence_rpm: pair(row.cadence_rpm),
+    strides_per_minute: pair(row.strides_per_minute),
+    damper: pair(row.damper),
+    strokes_per_minute: pair(row.strokes_per_minute),
+    steps_per_minute: pair(row.steps_per_minute),
     resistance: text(row.resistance) || undefined,
-    level: pair(row.level),
+    level: numericLevel,
+    level_text: levelText || undefined,
     note: text(row.note) || undefined,
     machine_id: text(row.machine_id) || undefined,
   };
@@ -146,6 +188,58 @@ function parseInterval(raw: unknown): CardioInterval | null {
     settings,
     machineId: parseMachine(settings.machine_id),
   };
+}
+
+export function parseCardioPlan(raw: unknown): CardioPlan | null {
+  const row = asRecord(raw);
+  const slug = text(row.slug);
+  const name = text(row.name);
+  const machine_id = parseMachine(row.machine_id);
+  const style = parseCardioStyle(row.style);
+  const duration_minutes = num(row.duration_minutes);
+  if (!slug || !name || !machine_id || !style || duration_minutes == null) return null;
+  const intervals = asArray(row.intervals)
+    .map(parseInterval)
+    .filter((item): item is CardioInterval => item != null)
+    .map(
+      (item): CardioPlanInterval => ({
+        label: item.label,
+        seconds: item.seconds,
+        effort: item.effort,
+        cue: item.cue,
+        settings: item.settings,
+      })
+    );
+  if (intervals.length === 0) return null;
+  const effortRaw = asArray(row.effort_target).map(num).filter((value): value is number => value != null);
+  const effortSingle = num(row.effort_target);
+  const maxMinutes = num(row.max_minutes);
+  const plan: CardioPlan = {
+    slug,
+    name,
+    machine_id,
+    style,
+    duration_minutes: Math.round(duration_minutes),
+    effort_target:
+      effortRaw.length >= 2
+        ? [effortRaw[0], effortRaw[1]]
+        : effortRaw.length === 1
+          ? effortRaw[0]
+          : effortSingle ?? 5,
+    intervals,
+  };
+  const summary = text(row.summary);
+  if (summary) plan.summary = summary;
+  if (maxMinutes != null) plan.max_minutes = Math.round(maxMinutes);
+  const guidance = parseSettings(row.settings_guidance);
+  if (Object.values(guidance).some((value) => value != null && value !== '')) {
+    plan.settings_guidance = guidance;
+  }
+  if (typeof row.beginner_ok === 'boolean') plan.beginner_ok = row.beginner_ok;
+  if (typeof row.counts_towards_weekly_target === 'boolean') {
+    plan.counts_towards_weekly_target = row.counts_towards_weekly_target;
+  }
+  return plan;
 }
 
 function parseSession(raw: unknown): CardioSessionDef | null {
@@ -222,6 +316,47 @@ export function cardioSlugFromSession(session: Session): string | null {
   return fromSwaps || null;
 }
 
+export function cardioPlanFromSession(session: Session): CardioPlan | null {
+  const raw = session.exercise_swaps[CARDIO_PLAN_KEY];
+  if (!raw) return null;
+  try {
+    return parseCardioPlan(JSON.parse(raw) as unknown);
+  } catch {
+    return parseCardioPlan(raw);
+  }
+}
+
+export function cardioDefFromPlan(plan: CardioPlan): CardioSessionDef {
+  const effort = Array.isArray(plan.effort_target)
+    ? ([plan.effort_target[0], plan.effort_target[1]] as [number, number])
+    : ([plan.effort_target, plan.effort_target] as [number, number]);
+  return {
+    slug: plan.slug,
+    name: plan.name,
+    summary: plan.summary ?? '',
+    machineId: plan.machine_id,
+    style: plan.style,
+    level: 'custom',
+    beginnerOk: plan.beginner_ok !== false,
+    durationMinutes: plan.duration_minutes,
+    maxMinutes: plan.max_minutes ?? plan.duration_minutes,
+    effortTarget: effort,
+    settings: plan.settings_guidance ?? {},
+    intervals: plan.intervals.map((item) => ({
+      label: item.label,
+      seconds: item.seconds,
+      effort: item.effort,
+      cue: item.cue ?? null,
+      settings: item.settings,
+      machineId: parseMachine(item.settings.machine_id) ?? plan.machine_id,
+    })),
+    progression: '',
+    coachNote: '',
+    coverImageSlug: `machine-${plan.machine_id.replace(/_/g, '-')}`,
+    countsTowardsWeeklyTarget: plan.counts_towards_weekly_target !== false,
+  };
+}
+
 export function machineLabel(id: CardioMachineId): string {
   if (id === 'treadmill') return cardioCopy.machine_treadmill;
   if (id === 'bike') return cardioCopy.machine_bike;
@@ -266,7 +401,14 @@ export function formatSettings(settings: CardioSettings): string {
     formatRange(settings.speed_kmh, ' km/h') ? `speed ${formatRange(settings.speed_kmh, ' km/h')}` : null,
     formatRange(settings.incline_percent, '%') ? `incline ${formatRange(settings.incline_percent, '%')}` : null,
     formatRange(settings.cadence_rpm, ' rpm') ? `cadence ${formatRange(settings.cadence_rpm, ' rpm')}` : null,
+    formatRange(settings.strides_per_minute, '') ? `strides ${formatRange(settings.strides_per_minute, '')}` : null,
+    formatRange(settings.damper, '') ? `damper ${formatRange(settings.damper, '')}` : null,
+    formatRange(settings.strokes_per_minute, '')
+      ? `strokes ${formatRange(settings.strokes_per_minute, '')}`
+      : null,
+    formatRange(settings.steps_per_minute, '') ? `steps ${formatRange(settings.steps_per_minute, '')}` : null,
     formatRange(settings.level, '') ? `level ${formatRange(settings.level, '')}` : null,
+    settings.level_text ? settings.level_text : null,
     settings.resistance ? `resistance ${settings.resistance}` : null,
     settings.note && settings.note.toLowerCase() !== 'see each block' ? settings.note : null,
   ].filter(Boolean);
@@ -351,20 +493,34 @@ function isMissingCardioTable(error: { message?: string; code?: string } | null)
   return /cardio_logs|schema cache/i.test(`${error?.code ?? ''} ${error?.message ?? ''}`);
 }
 
+function throwIfSessionInProgress(active: Session | null): void {
+  if (!active) return;
+  const error = new Error('You already have a session going');
+  (error as Error & { code?: string }).code = 'SESSION_IN_PROGRESS';
+  (error as Error & { activeId?: string }).activeId = active.id;
+  (error as Error & { activeSource?: string }).activeSource = isCardioSession(active)
+    ? 'cardio'
+    : active.source;
+  throw error;
+}
+
 export async function beginCardioSession(slug: string): Promise<Session> {
   const def = cardioSession(slug);
   if (!def) throw new Error(cardioCopy.not_found);
-  const active = await fetchActiveSession();
-  if (active) {
-    const error = new Error('You already have a session going');
-    (error as Error & { code?: string }).code = 'SESSION_IN_PROGRESS';
-    (error as Error & { activeId?: string }).activeId = active.id;
-    (error as Error & { activeSource?: string }).activeSource = isCardioSession(active)
-      ? 'cardio'
-      : active.source;
-    throw error;
-  }
+  throwIfSessionInProgress(await fetchActiveSession());
   return startCardioSession(slug);
+}
+
+export async function beginCustomCardioSession(
+  plan: CardioPlan,
+  customWorkoutId?: string | null
+): Promise<Session> {
+  if (!plan.intervals.length) throw new Error(cardioCopy.not_found);
+  throwIfSessionInProgress(await fetchActiveSession());
+  return startCardioSession(plan.slug, {
+    swaps: { [CARDIO_PLAN_KEY]: JSON.stringify(plan) },
+    customWorkoutId,
+  });
 }
 
 export async function finishCardioSession(

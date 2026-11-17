@@ -14,6 +14,7 @@ export default function CardioLayout() {
         headerStyle: { backgroundColor: colours.bg },
       }}>
       <Stack.Screen name="[slug]" />
+      <Stack.Screen name="quick" />
       <Stack.Screen name="play" options={{ gestureEnabled: false }} />
     </Stack>
   );

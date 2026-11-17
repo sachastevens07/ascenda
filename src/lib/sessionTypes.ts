@@ -9,6 +9,8 @@ export type CardioStyle = (typeof CARDIO_STYLES)[number];
 
 /** Stored on sessions.exercise_swaps so the player can restore without extra columns. */
 export const CARDIO_SLUG_KEY = '_cardio_slug';
+/** JSON CardioPlan for a built session (W8). */
+export const CARDIO_PLAN_KEY = '_cardio_plan';
 
 export function parseCardioStyle(value: unknown): CardioStyle | null {
   return value === 'steady' || value === 'intervals' || value === 'finisher' ? value : null;

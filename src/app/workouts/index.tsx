@@ -13,8 +13,10 @@ import {
 } from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
 import { AppText } from '@/components/ui/AppText';
+import { Chip } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import {
+  beginCustomWorkoutSession,
   deleteCustomWorkout,
   describeCustomWorkoutError,
   duplicateCustomWorkout,
@@ -23,6 +25,7 @@ import {
   startBlankCustomSession,
   type CustomWorkout,
 } from '@/lib/customWorkouts';
+import { cardioBuilderSpec } from '@/lib/cardioBuilderContent';
 import {
   addCustomWorkoutToPlanner,
   describePlannerError,
@@ -30,7 +33,7 @@ import {
 } from '@/lib/planner';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed } from '@/lib/paywall';
-import { fetchActiveSession, startCustomSession } from '@/lib/sessions';
+import { fetchActiveSession } from '@/lib/sessions';
 
 type LoadState = 'loading' | 'error' | 'ready';
 
@@ -124,8 +127,12 @@ export default function WorkoutsScreen() {
         );
         return;
       }
-      const session = await startCustomSession(workout.id);
-      router.push({ pathname: '/session/[id]', params: { id: session.id } });
+      const started = await beginCustomWorkoutSession(workout.id);
+      if (started.kind === 'cardio') {
+        router.push({ pathname: '/cardio/play', params: { sessionId: started.session.id } });
+        return;
+      }
+      router.push({ pathname: '/session/[id]', params: { id: started.session.id } });
     } catch (error) {
       showDialog('Couldn’t start the workout', describeCustomWorkoutError(error));
     } finally {
@@ -142,7 +149,9 @@ export default function WorkoutsScreen() {
         const rest = current.filter((item) => !item.is_starter && item.id !== copy.id);
         return [...starter, copy, ...rest];
       });
-      router.push({ pathname: '/workouts/[id]', params: { id: copy.id } });
+      if (copy.type !== 'cardio') {
+        router.push({ pathname: '/workouts/[id]', params: { id: copy.id } });
+      }
     } catch (error) {
       showDialog('Couldn’t copy it', describeCustomWorkoutError(error));
     } finally {
@@ -340,6 +349,7 @@ function WorkoutCard({
 }) {
   const planRef = useRef<AnchorHandle>(null);
   const count = workout.exercises.length;
+  const isCardio = workout.type === 'cardio';
   return (
     <View style={styles.card}>
       {workout.is_starter && (
@@ -347,11 +357,20 @@ function WorkoutCard({
           Starter
         </AppText>
       )}
+      {isCardio ? (
+        <View style={styles.chipWrap}>
+          <Chip label={cardioBuilderSpec.myWorkouts.cardioChip} selected />
+        </View>
+      ) : null}
       <AppText variant="title2" style={styles.cardTitle}>
         {workout.name}
       </AppText>
       <AppText variant="bodySm" style={styles.cardMeta}>
-        {count} {count === 1 ? 'exercise' : 'exercises'}
+        {isCardio
+          ? workout.cardio_plan
+            ? `${workout.cardio_plan.duration_minutes} min`
+            : cardioBuilderSpec.myWorkouts.cardioChip
+          : `${count} ${count === 1 ? 'exercise' : 'exercises'}`}
       </AppText>
       <Pressable
         style={({ pressed }) => [styles.button, (pressed || busy) && styles.pressed]}
@@ -359,11 +378,11 @@ function WorkoutCard({
         disabled={busy}
         accessibilityRole="button">
         <AppText variant="bodyStrong" style={styles.buttonText}>
-          {busy ? 'Starting…' : 'Start'}
+          {busy ? 'Starting…' : isCardio ? cardioBuilderSpec.myWorkouts.repeatLabel : 'Start'}
         </AppText>
       </Pressable>
       <View style={styles.actions}>
-        {onEdit && (
+        {onEdit && !isCardio && (
           <Pressable onPress={onEdit} style={styles.link} accessibilityRole="button">
             <AppText variant="bodyStrong" style={styles.linkText}>
               Edit
@@ -382,7 +401,7 @@ function WorkoutCard({
           style={styles.link}
           accessibilityRole="button">
           <AppText variant="bodyStrong" style={styles.linkText}>
-            Add to planner
+            {cardioBuilderSpec.myWorkouts.addToPlanner}
           </AppText>
         </Pressable>
         {onDelete && (
@@ -458,6 +477,10 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 22,
     backgroundColor: colours.surface,
+  },
+  chipWrap: {
+    marginBottom: 8,
+    alignItems: 'flex-start',
   },
   kicker: {
     color: colours.accent,

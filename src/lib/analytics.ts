@@ -41,6 +41,9 @@ export const ANALYTICS_EVENTS = [
   'ai_card_used',
   'checkin_shown',
   'lighter_session_chosen',
+  'cardio_builder_opened',
+  'custom_cardio_started',
+  'custom_cardio_saved',
   'dev_test_event',
 ] as const;
 
@@ -55,6 +58,8 @@ const ALLOWED_KEYS = new Set([
   'reason',
   'source',
   'type',
+  'style',
+  'minutes',
   'week_start',
   'plan',
   'env',
@@ -67,7 +72,7 @@ const ALLOWED_KEYS = new Set([
 ]);
 
 const BLOCKED_KEY =
-  /weight|photo|email|name|body|quote|rep|kg|goal|text|note|message|copy|title|cue|comment|avatar|prompt|answer|story|image|scan|fridge|ingredient|life.?stage|perimenopause|menopause/i;
+  /weight|photo|email|\bname\b|body|quote|rep|kg|goal|text|note|message|copy|title|cue|comment|avatar|prompt|answer|story|image|scan|fridge|ingredient|life.?stage|perimenopause|menopause/i;
 
 const HAD_TRIAL_PREFIX = 'analytics_had_trial:';
 

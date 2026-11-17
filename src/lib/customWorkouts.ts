@@ -5,6 +5,8 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
+import { beginCustomCardioSession, parseCardioPlan, type CardioPlan } from '@/lib/cardio';
+import { cardioCopy } from '@/lib/copy';
 import { startCustomSession, type Session } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
 
@@ -30,11 +32,16 @@ export type CustomWorkoutExercise = {
   exercise: SlotExercise;
 };
 
+export const CUSTOM_WORKOUT_TYPES = ['strength', 'cardio'] as const;
+export type CustomWorkoutType = (typeof CUSTOM_WORKOUT_TYPES)[number];
+
 export type CustomWorkout = {
   id: string;
   user_id: string | null;
   name: string;
   is_starter: boolean;
+  type: CustomWorkoutType;
+  cardio_plan: CardioPlan | null;
   created_at: string;
   updated_at: string;
   exercises: CustomWorkoutExercise[];
@@ -88,6 +95,8 @@ type WorkoutRow = {
   user_id: string | null;
   name: string;
   is_starter: boolean;
+  type?: string | null;
+  cardio_plan?: unknown;
   created_at: string;
   updated_at: string;
   custom_workout_exercises: {
@@ -107,6 +116,23 @@ const WORKOUT_SELECT = `
     exercise:exercises (${SLOT_EXERCISE_COLUMNS})
   )
 `;
+const WORKOUT_SELECT_W8 = `
+  id, user_id, name, is_starter, type, cardio_plan, created_at, updated_at,
+  custom_workout_exercises (
+    id, position, sets, rep_min, rep_max,
+    exercise:exercises (${SLOT_EXERCISE_COLUMNS})
+  )
+`;
+
+function parseCustomWorkoutType(value: unknown): CustomWorkoutType {
+  return value === 'cardio' ? 'cardio' : 'strength';
+}
+
+function isMissingW8CustomColumns(error: { message?: string; code?: string }): boolean {
+  return /custom_workouts\.type|cardio_plan|Could not find the 'type' column of 'custom_workouts'|Could not find the 'cardio_plan' column/i.test(
+    `${error.code ?? ''} ${error.message ?? ''}`
+  );
+}
 
 function toWorkout(row: WorkoutRow): CustomWorkout {
   return {
@@ -114,6 +140,8 @@ function toWorkout(row: WorkoutRow): CustomWorkout {
     user_id: row.user_id,
     name: row.name,
     is_starter: row.is_starter,
+    type: parseCustomWorkoutType(row.type),
+    cardio_plan: parseCardioPlan(row.cardio_plan),
     created_at: row.created_at,
     updated_at: row.updated_at,
     exercises: [...(row.custom_workout_exercises ?? [])]
@@ -167,15 +195,52 @@ export async function fetchExercisesForBuilder(): Promise<SlotExercise[]> {
   return ((data ?? []) as SlotExercise[]).map(toSlotExercise);
 }
 
+type WorkoutQueryResult = {
+  data: unknown;
+  error: { message?: string; code?: string } | null;
+};
+
+async function selectWorkoutRow(
+  run: (columns: string) => PromiseLike<WorkoutQueryResult>
+): Promise<WorkoutRow | null> {
+  const withW8 = await run(WORKOUT_SELECT_W8);
+  if (!withW8.error) return (withW8.data as WorkoutRow | null) ?? null;
+  if (!isMissingW8CustomColumns(withW8.error)) {
+    if (isMissingCustomWorkouts(withW8.error)) return null;
+    throw withW8.error;
+  }
+  const fallback = await run(WORKOUT_SELECT);
+  if (fallback.error) {
+    if (isMissingCustomWorkouts(fallback.error)) return null;
+    throw fallback.error;
+  }
+  return (fallback.data as WorkoutRow | null) ?? null;
+}
+
 export async function fetchCustomWorkouts(): Promise<CustomWorkout[]> {
   try {
-    const { data, error } = await supabase
+    const withW8 = await supabase
+      .from('custom_workouts')
+      .select(WORKOUT_SELECT_W8)
+      .order('is_starter', { ascending: false })
+      .order('updated_at', { ascending: false });
+    if (!withW8.error) {
+      return ((withW8.data ?? []) as unknown as WorkoutRow[]).map(toWorkout);
+    }
+    if (!isMissingW8CustomColumns(withW8.error)) {
+      if (isMissingCustomWorkouts(withW8.error)) return [];
+      throw withW8.error;
+    }
+    const fallback = await supabase
       .from('custom_workouts')
       .select(WORKOUT_SELECT)
       .order('is_starter', { ascending: false })
       .order('updated_at', { ascending: false });
-    if (error) throw error;
-    return ((data ?? []) as unknown as WorkoutRow[]).map(toWorkout);
+    if (fallback.error) {
+      if (isMissingCustomWorkouts(fallback.error)) return [];
+      throw fallback.error;
+    }
+    return ((fallback.data ?? []) as unknown as WorkoutRow[]).map(toWorkout);
   } catch (error) {
     if (error && typeof error === 'object' && isMissingCustomWorkouts(error)) return [];
     throw error;
@@ -183,16 +248,15 @@ export async function fetchCustomWorkouts(): Promise<CustomWorkout[]> {
 }
 
 export async function fetchCustomWorkout(id: string): Promise<CustomWorkout | null> {
-  const { data, error } = await supabase
-    .from('custom_workouts')
-    .select(WORKOUT_SELECT)
-    .eq('id', id)
-    .maybeSingle();
-  if (error) {
-    if (isMissingCustomWorkouts(error)) return null;
+  try {
+    const row = await selectWorkoutRow((columns) =>
+      supabase.from('custom_workouts').select(columns).eq('id', id).maybeSingle()
+    );
+    return row ? toWorkout(row) : null;
+  } catch (error) {
+    if (error && typeof error === 'object' && isMissingCustomWorkouts(error)) return null;
     throw error;
   }
-  return data ? toWorkout(data as unknown as WorkoutRow) : null;
 }
 
 async function currentUserId(): Promise<string> {
@@ -287,6 +351,12 @@ export async function deleteCustomWorkout(id: string): Promise<void> {
 }
 
 export async function duplicateCustomWorkout(workout: CustomWorkout): Promise<CustomWorkout> {
+  if (workout.type === 'cardio' && workout.cardio_plan) {
+    return saveCustomCardioWorkout({
+      ...workout.cardio_plan,
+      name: copyWorkoutName(workout.name),
+    });
+  }
   return saveCustomWorkout(
     null,
     copyWorkoutName(workout.name),
@@ -297,6 +367,44 @@ export async function duplicateCustomWorkout(workout: CustomWorkout): Promise<Cu
       rep_max: item.rep_max,
     }))
   );
+}
+
+export async function saveCustomCardioWorkout(plan: CardioPlan): Promise<CustomWorkout> {
+  const trimmed = trimWorkoutName(plan.name);
+  if (trimmed.length < MIN_WORKOUT_NAME) throw new Error('Give this workout a name.');
+  const userId = await currentUserId();
+  const payload = {
+    user_id: userId,
+    name: trimmed,
+    is_starter: false,
+    type: 'cardio' as const,
+    cardio_plan: { ...plan, name: trimmed },
+  };
+  const { data, error } = await supabase.from('custom_workouts').insert(payload).select('id').single();
+  if (error) {
+    if (isMissingW8CustomColumns(error)) {
+      throw new Error('Custom cardio needs supabase/cardio_w8.sql run in the Supabase SQL editor.');
+    }
+    throw error;
+  }
+  const saved = await fetchCustomWorkout(data.id as string);
+  if (!saved) throw new Error('That workout didn’t save.');
+  return saved;
+}
+
+export async function beginCustomWorkoutSession(workoutId: string): Promise<{
+  session: Session;
+  kind: 'strength' | 'cardio';
+  name: string;
+}> {
+  const workout = await fetchCustomWorkout(workoutId);
+  if (workout?.type === 'cardio') {
+    if (!workout.cardio_plan) throw new Error(cardioCopy.not_found);
+    const session = await beginCustomCardioSession(workout.cardio_plan, workout.id);
+    return { session, kind: 'cardio', name: workout.name };
+  }
+  const session = await startCustomSession(workoutId);
+  return { session, kind: 'strength', name: workout?.name ?? '' };
 }
 
 export type RoutineDayCopy = {
@@ -340,6 +448,8 @@ export async function createEmptyCustomWorkout(
     user_id: (data.user_id as string | null) ?? userId,
     name: data.name as string,
     is_starter: false,
+    type: 'strength',
+    cardio_plan: null,
     created_at: data.created_at as string,
     updated_at: data.updated_at as string,
     exercises: [],

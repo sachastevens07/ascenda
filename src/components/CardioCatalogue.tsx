@@ -3,8 +3,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { showDialog } from '@/components/Dialog';
 import { AppText } from '@/components/ui/AppText';
-import { Chip, ChipScroller, PhotoFill } from '@/components/ui';
+import { Chip, ChipScroller, PhotoFill, PrimaryButton, SecondaryButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { fetchFinishedSessionMeta } from '@/lib/activityStats';
 import {
@@ -16,6 +17,7 @@ import {
   type CardioMachineId,
   type CardioSessionDef,
 } from '@/lib/cardio';
+import { cardioBuilderSpec } from '@/lib/cardioBuilderContent';
 import { cardioCopy } from '@/lib/copy';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { CARDIO_STYLES, type CardioStyle } from '@/lib/sessionTypes';
@@ -60,6 +62,8 @@ export function CardioCatalogue({ bottomInset }: { bottomInset?: number }) {
 
   return (
     <ScrollView contentContainerStyle={[styles.content, { paddingBottom }]}>
+      <CreateYourOwnCard />
+
       {beginnerWindow ? (
         <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
           {cardioCopy.beginner_note}
@@ -106,6 +110,43 @@ export function CardioCatalogue({ bottomInset }: { bottomInset?: number }) {
   );
 }
 
+function CreateYourOwnCard() {
+  const { colours, spacing, radius, shadow } = useTheme();
+  const spec = cardioBuilderSpec;
+  return (
+    <View style={[styles.createCard, { backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
+      <AppText variant="title2" style={{ color: colours.ink }}>
+        {spec.entry.cardTitle}
+      </AppText>
+      {spec.entry.cardSub ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+          {spec.entry.cardSub}
+        </AppText>
+      ) : null}
+      <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
+        {spec.entry.actions.map((action) => {
+          if (action.id === 'quick') {
+            return (
+              <PrimaryButton
+                key={action.id}
+                label={action.label}
+                onPress={() => router.push('/cardio/quick' as Href)}
+              />
+            );
+          }
+          return (
+            <SecondaryButton
+              key={action.id}
+              label={action.label}
+              onPress={() => showDialog(action.label, spec.entry.comingSoon)}
+            />
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 function CardioRow({ session, onPress }: { session: CardioSessionDef; onPress: () => void }) {
   const { colours, radius, shadow } = useTheme();
   return (
@@ -142,6 +183,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 16,
     gap: 12,
+  },
+  createCard: {
+    padding: 16,
   },
   filters: {
     marginTop: 4,
