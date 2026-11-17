@@ -121,7 +121,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         getNextSet(
           log.day,
           buildEntries(log.day, log.logged, log.previous, true, {
-            weightScale: log.easeBack?.weightScale,
+            easeBack: log.easeBack ?? undefined,
           })
         )
       );

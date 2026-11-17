@@ -368,6 +368,14 @@ export function loadIncrementKg(equipment: SlotExercise['equipment']): number {
   return 2;
 }
 
+/** Floor for a lighter suggested load. Never below the bar or the lightest dumbbell. */
+export function lightestLoadKg(equipment: SlotExercise['equipment']): number {
+  if (equipment === 'barbell') return 20;
+  if (equipment === 'dumbbell') return 1;
+  if (equipment === 'kettlebell') return 4;
+  return 0;
+}
+
 export function warmupForRoutine(routineId: string, equipment: string): WarmupStep[] {
   if (routineId === 'home-strength-6' || equipment === 'home') return HOME_WARMUP;
   if (

@@ -54,7 +54,7 @@ import { CHECKIN, shouldShowCheckin } from '@/lib/checkin';
 import { applyBusyGymPlanToDay, remainingBusyGymItems, toBusyGymRemaining, type BusyGymPlan } from '@/lib/busyGym';
 import { fetchBusyGymSlots } from '@/lib/busyGymFix';
 import { openCoach, takeCoachPlan } from '@/lib/coach';
-import { cardioSession } from '@/lib/cardio';
+import { cardioSession, gentleCardioFinisher } from '@/lib/cardio';
 import { contentDayFor, contentRoutine } from '@/lib/contentRoutines';
 import { finisherForDay } from '@/lib/completeWeek';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
@@ -121,6 +121,7 @@ import {
   fetchSessionSets,
   finishSession,
   describeSetSaveError,
+  markSessionLighter,
   saveSessionSwaps,
   saveSet,
   updateSessionRoutineDay,
@@ -133,6 +134,7 @@ import { useNow, useWorkout } from '@/lib/workout';
 import {
   RECORD_LABELS,
   allSetNumbers,
+  applySessionPlan,
   applyWarmupCompletions,
   buildEntries,
   clearSessionPlan,
@@ -144,6 +146,7 @@ import {
   getNextSet,
   getSetRecords,
   isWarmupSetNumber,
+  lightenSessionPlan,
   loadSessionLog,
   parseReps,
   warmupSetNumbers,
@@ -308,6 +311,7 @@ export default function SessionScreen() {
   const [rampUpApplied, setRampUpApplied] = useState(false);
   const [checkinResolved, setCheckinResolved] = useState(false);
   const [lighterChosen, setLighterChosen] = useState(false);
+  const [checkinFinisherSlug, setCheckinFinisherSlug] = useState<string | null>(null);
   const [playingBlock, setPlayingBlock] = useState<ResolvedBlock | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [restPrefs, setRestPrefs] = useState<Record<string, number>>({});
@@ -339,8 +343,10 @@ export default function SessionScreen() {
     hideCheckin: profile?.hide_checkin === true,
     resolved: checkinResolved,
     hasTickedSet,
+    alreadyLighter: Boolean(easeBack) || session?.lighter_session === true,
   });
-  const showLighterBadge = lighterChosen || session?.lighter_session === true;
+  const showLighterBadge =
+    lighterChosen || session?.lighter_session === true || Boolean(easeBack);
 
   const weekDays = useMemo(
     () => (routine && weekNumber !== null ? daysInWeek(routine, weekNumber) : []),
@@ -367,12 +373,13 @@ export default function SessionScreen() {
     const overlay = contentRoutine(routine.slug) ?? contentRoutine(routine.id);
     if (!overlay) return null;
     const contentDay = contentDayFor(overlay, weekNumber, { name: day.name });
-    const slug = finisherForDay(
+    const planned = finisherForDay(
       overlay,
       weekNumber,
       contentDay?.key ?? null,
       profile?.cardio_preference ?? 'fine'
     );
+    const slug = checkinFinisherSlug ?? planned;
     if (!slug) return null;
     const def = cardioSession(slug);
     return {
@@ -380,7 +387,7 @@ export default function SessionScreen() {
       name: def?.name ?? 'Cardio finisher',
       minutes: def?.durationMinutes ?? 10,
     };
-  }, [routine, day, weekNumber, profile?.cardio_preference]);
+  }, [routine, day, weekNumber, profile?.cardio_preference, checkinFinisherSlug]);
 
   useEffect(() => {
     if (!pbGlowKey) return;
@@ -431,7 +438,7 @@ export default function SessionScreen() {
         setSession(log.session);
         const built = applyWarmupCompletions(
           buildEntries(log.day, log.logged, log.previous, true, {
-            weightScale: log.easeBack?.weightScale,
+            easeBack: log.easeBack ?? undefined,
           }),
           log.plan
         );
@@ -457,6 +464,7 @@ export default function SessionScreen() {
         const lighter = Boolean(log.plan?.lighterChosen) || log.session.lighter_session;
         setCheckinResolved(resolved);
         setLighterChosen(lighter);
+        setCheckinFinisherSlug(log.plan?.checkinFinisherSlug ?? null);
         setLoadState('ready');
         if (!log.rampUpApplied) {
           await saveSessionPlan(
@@ -469,6 +477,7 @@ export default function SessionScreen() {
               cooldownTemplateId: log.plan?.cooldownTemplateId ?? null,
               checkinResolved: resolved,
               lighterChosen: lighter,
+              checkinFinisherSlug: log.plan?.checkinFinisherSlug ?? null,
             })
           );
         }
@@ -518,6 +527,7 @@ export default function SessionScreen() {
       cooldownTemplateId?: string | null;
       checkinResolved?: boolean;
       lighterChosen?: boolean;
+      checkinFinisherSlug?: string | null;
     },
     mergedEntries: Record<string, SetEntry> = entries,
     patch?: { position: number; setNumber: number; completed: boolean }
@@ -536,6 +546,7 @@ export default function SessionScreen() {
           cooldownTemplateId: extras?.cooldownTemplateId ?? cooldownTemplateId,
           checkinResolved: extras?.checkinResolved ?? checkinResolved,
           lighterChosen: extras?.lighterChosen ?? lighterChosen,
+          checkinFinisherSlug: extras?.checkinFinisherSlug ?? checkinFinisherSlug,
         },
         mergedEntries,
         patch
@@ -549,6 +560,54 @@ export default function SessionScreen() {
     if (fromOffer) trackLighterSessionChosen(lighter);
     if (day) {
       void persistPlan(day, startedAt, { checkinResolved: true, lighterChosen: lighter });
+    }
+  }
+
+  async function acceptLighterSession(scaleWeights: boolean) {
+    trackLighterSessionChosen(true);
+    setCheckinResolved(true);
+    setLighterChosen(true);
+    const alreadyLight = Boolean(easeBack) || session?.lighter_session === true;
+    let nextDay = day;
+    let nextEase = easeBack;
+    let nextEntries = entries;
+    let nextFinisher = checkinFinisherSlug;
+    if (day && !alreadyLight) {
+      const light = lightenSessionPlan(sessionPlanFromDay(day, undefined, startedAt), {
+        mode: 'checkin',
+        scaleWeights,
+      });
+      nextDay = applySessionPlan(day, light);
+      nextEase = light.easeBack ?? null;
+      nextEntries = buildEntries(nextDay, [], previous, true, { easeBack: nextEase ?? undefined });
+      setDay(nextDay);
+      setEaseBack(nextEase);
+      setEntries(nextEntries);
+      if (finisher) {
+        nextFinisher = gentleCardioFinisher(finisher.slug)?.slug ?? finisher.slug;
+        setCheckinFinisherSlug(nextFinisher);
+      }
+    }
+    setSession((current) => (current ? { ...current, lighter_session: true } : current));
+    try {
+      await markSessionLighter(id);
+    } catch {
+      /* Column missing or offline: the on-device plan still keeps today lighter. */
+    }
+    if (nextDay) {
+      await saveSessionPlan(
+        id,
+        sessionPlanFromDay(nextDay, nextEase ?? undefined, startedAt, {
+          warmupStatus,
+          cooldownStatus,
+          rampUpApplied,
+          warmupTemplateId,
+          cooldownTemplateId,
+          checkinResolved: true,
+          lighterChosen: true,
+          checkinFinisherSlug: nextFinisher,
+        }, nextEntries)
+      );
     }
   }
 
@@ -693,7 +752,7 @@ export default function SessionScreen() {
           Object.assign(
             next,
             buildEntries({ ...nextDay, exercises: [item] }, [], { ...previous, ...extra }, true, {
-              weightScale: easeBack?.weightScale,
+              easeBack: easeBack ?? undefined,
             })
           );
           continue;
@@ -755,7 +814,7 @@ export default function SessionScreen() {
         Object.assign(
           next,
           buildEntries({ ...nextDay, exercises: [slot] }, [], { ...previous, ...extra }, true, {
-            weightScale: easeBack?.weightScale,
+            easeBack: easeBack ?? undefined,
           })
         );
       }
@@ -796,7 +855,7 @@ export default function SessionScreen() {
         Object.assign(
           next,
           buildEntries({ ...nextDay, exercises: [slot] }, [], previous, true, {
-            weightScale: easeBack?.weightScale,
+            easeBack: easeBack ?? undefined,
           })
         );
       }
@@ -856,7 +915,7 @@ export default function SessionScreen() {
           [],
           extra,
           true,
-          { weightScale: easeBack?.weightScale }
+          { easeBack: easeBack ?? undefined }
         ),
       }));
       await persistPlan(nextDay);
@@ -925,28 +984,30 @@ export default function SessionScreen() {
     void persistPlan(nextDay);
   }
 
+  function skipExerciseToday(item: ProgrammeExercise) {
+    if (!day) return;
+    const nextDay = {
+      ...day,
+      exercises: day.exercises.filter((slot) => slot.position !== item.position),
+    };
+    setDay(nextDay);
+    setSwapItem((current) => (current?.position === item.position ? null : current));
+    setEntries((current) => {
+      const next = { ...current };
+      for (const key of Object.keys(next)) {
+        if (key.startsWith(`${item.exercise.id}:`)) delete next[key];
+      }
+      return next;
+    });
+    void persistPlan(nextDay);
+  }
+
   function handleRemove(item: ProgrammeExercise) {
     showDialog(`Remove ${item.exercise.name}?`, loggerCopy.today_only_note, [
       {
         text: 'Remove',
         style: 'destructive',
-        onPress: () => {
-          if (!day) return;
-          const nextDay = {
-            ...day,
-            exercises: day.exercises.filter((slot) => slot.position !== item.position),
-          };
-          setDay(nextDay);
-          setSwapItem((current) => (current?.position === item.position ? null : current));
-          setEntries((current) => {
-            const next = { ...current };
-            for (const key of Object.keys(next)) {
-              if (key.startsWith(`${item.exercise.id}:`)) delete next[key];
-            }
-            return next;
-          });
-          void persistPlan(nextDay);
-        },
+        onPress: () => skipExerciseToday(item),
       },
       { text: 'Keep it', style: 'cancel' },
     ]);
@@ -1116,6 +1177,7 @@ export default function SessionScreen() {
             cooldownTemplateId,
             checkinResolved,
             lighterChosen,
+            checkinFinisherSlug,
           })
         );
         await saveSessionSwaps(id, {});
@@ -1135,7 +1197,7 @@ export default function SessionScreen() {
         setNotes(prefs.notes);
         setRestPrefs(prefs.rest);
         setEntries(
-          buildEntries(programmeDay, logged, prev, true, { weightScale: easeBack?.weightScale })
+          buildEntries(programmeDay, logged, prev, true, { easeBack: easeBack ?? undefined })
         );
         setSwapItem(null);
       } catch (error) {
@@ -1485,7 +1547,7 @@ export default function SessionScreen() {
           <CheckinCard
             onDismiss={() => resolveCheckin(false, false)}
             onDeclineLighter={() => resolveCheckin(false, true)}
-            onAcceptLighter={() => resolveCheckin(true, true)}
+            onAcceptLighter={({ scaleWeights }) => void acceptLighterSession(scaleWeights)}
           />
         ) : null}
 
@@ -1632,7 +1694,12 @@ export default function SessionScreen() {
                   </ExerciseNameHit>
                 </View>
                 {reordering ? null : (
-                  <SlotMenuButton name={item.exercise.name} onOpen={(anchor) => openSlotMenu(item, anchor)} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    {showLighterBadge && (item.role === 'core' || item.role === 'finisher') ? (
+                      <TextButton label={loggerCopy.block_skip} onPress={() => skipExerciseToday(item)} />
+                    ) : null}
+                    <SlotMenuButton name={item.exercise.name} onOpen={(anchor) => openSlotMenu(item, anchor)} />
+                  </View>
                 )}
               </View>
 

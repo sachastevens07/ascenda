@@ -13,7 +13,13 @@ import {
 } from '@/lib/programmes';
 import { estimateOneRepMax, type ExerciseBests } from '@/lib/progress';
 import { getDefaultRestSeconds } from '@/lib/restTimer';
-import type { ExerciseRole, ProgressionRule } from '@/lib/routineStandard';
+import {
+  lightestLoadKg,
+  loadIncrementKg,
+  roleForSlot,
+  type ExerciseRole,
+  type ProgressionRule,
+} from '@/lib/routineStandard';
 import { fetchRoutineDay, routineDayToProgrammeDay } from '@/lib/routines';
 import { isCardioSession } from '@/lib/sessionTypes';
 import { formatWeightInput as formatDisplayWeight, parseDisplayWeight } from '@/lib/units';
@@ -49,6 +55,10 @@ export const EASE_BACK_WEIGHT_SCALE = 0.9;
 
 export type SessionEaseBack = {
   weightScale: number;
+  /** checkin uses increment floors; welcome-back keeps the original 0.5 kg rounding. */
+  source?: 'welcome_back' | 'checkin';
+  /** Roles that get a lower suggested weight. Omitted means every slot (H2). */
+  scaleRoles?: ExerciseRole[];
 };
 
 export type SessionPlan = {
@@ -69,8 +79,10 @@ export type SessionPlan = {
   cooldownTemplateId?: string | null;
   /** She answered or skipped the B2 card. Never store which option she picked. */
   checkinResolved?: boolean;
-  /** She accepted a lighter session for today. Badge only until the next B2 step applies it. */
+  /** She accepted a lighter session for today. */
   lighterChosen?: boolean;
+  /** Gentle cardio finisher slug after a check-in accept. Today only. */
+  checkinFinisherSlug?: string | null;
 };
 
 function sessionPlanKey(id: string): string {
@@ -142,6 +154,7 @@ export function sessionPlanFromDay(
     | 'cooldownTemplateId'
     | 'checkinResolved'
     | 'lighterChosen'
+    | 'checkinFinisherSlug'
   >,
   entries?: Record<string, SetEntry>,
   patch?: { position: number; setNumber: number; completed: boolean }
@@ -179,26 +192,92 @@ export function sessionPlanFromDay(
     cooldownTemplateId: extras?.cooldownTemplateId,
     checkinResolved: extras?.checkinResolved,
     lighterChosen: extras?.lighterChosen,
+    checkinFinisherSlug: extras?.checkinFinisherSlug,
   };
 }
 
-/** One fewer set per exercise (minimum 1) and a 10% lower suggested load. */
+export type LightenSessionOptions = {
+  scale?: number;
+  /** welcome_back (default, H2): drop one set on every slot. checkin: B2 role rules. */
+  mode?: 'welcome_back' | 'checkin';
+  /** False for Short on time: same set changes, normal suggested weights. */
+  scaleWeights?: boolean;
+};
+
+function slotRole(slot: SessionPlanSlot, count: number): ExerciseRole {
+  return slot.role ?? roleForSlot(slot.position, count, slot.exercise);
+}
+
+function dropsSetForCheckin(role: ExerciseRole): boolean {
+  return role === 'secondary' || role === 'accessory';
+}
+
+/** One fewer set (minimum 1) and a 10% lower suggested load. H2 drops every slot; check-in follows roles. */
 export function lightenSessionPlan(
   plan: SessionPlan,
-  scale = EASE_BACK_WEIGHT_SCALE
+  scaleOrOptions: number | LightenSessionOptions = EASE_BACK_WEIGHT_SCALE
 ): SessionPlan {
+  const options: LightenSessionOptions =
+    typeof scaleOrOptions === 'number' ? { scale: scaleOrOptions } : scaleOrOptions;
+  const scale = options.scale ?? EASE_BACK_WEIGHT_SCALE;
+  const mode = options.mode ?? 'welcome_back';
+  const scaleWeights = options.scaleWeights !== false;
+  const count = plan.slots.length;
+  const slots = plan.slots.map((slot) => {
+    const role = slotRole(slot, count);
+    const drop = mode === 'welcome_back' || dropsSetForCheckin(role);
+    return {
+      ...slot,
+      role,
+      sets: drop ? Math.max(1, slot.sets - 1) : slot.sets,
+    };
+  });
+  const easeBack = scaleWeights
+    ? {
+        weightScale: scale,
+        ...(mode === 'checkin'
+          ? { source: 'checkin' as const, scaleRoles: ['main', 'secondary', 'accessory'] as ExerciseRole[] }
+          : {}),
+      }
+    : undefined;
   return {
     ...plan,
-    easeBack: { weightScale: scale },
-    slots: plan.slots.map((slot) => ({
-      ...slot,
-      sets: Math.max(1, slot.sets - 1),
-    })),
+    easeBack,
+    slots,
   };
 }
 
+/** Welcome-back: 10% lower, nearest 0.5 kg. */
 export function scaleEaseWeight(kg: number, scale: number): number {
   return Math.max(0, Math.round(kg * scale * 2) / 2);
+}
+
+/** Check-in: 10% lower, rounded down to the increment, never below the floor. */
+export function scaleLighterWeight(kg: number, scale: number, increment: number, floorKg: number): number {
+  const step = increment > 0 ? increment : 0.5;
+  const rounded = Math.floor((kg * scale) / step + 1e-9) * step;
+  return Math.max(floorKg, Number(rounded.toFixed(2)));
+}
+
+export function shouldScaleSlotWeight(
+  easeBack: SessionEaseBack | undefined,
+  role: ExerciseRole | undefined
+): boolean {
+  if (!easeBack?.weightScale || easeBack.weightScale === 1) return false;
+  if (!easeBack.scaleRoles) return true;
+  const resolved = role ?? 'accessory';
+  return easeBack.scaleRoles.includes(resolved);
+}
+
+function incrementForItem(item: ProgrammeExercise): number {
+  return item.load_increment_kg ?? item.exercise.weight_increase_kg ?? loadIncrementKg(item.exercise.equipment);
+}
+
+function scaledSuggestedKg(kg: number, item: ProgrammeExercise, easeBack: SessionEaseBack): number {
+  if (easeBack.source === 'checkin') {
+    return scaleLighterWeight(kg, easeBack.weightScale, incrementForItem(item), lightestLoadKg(item.exercise.equipment));
+  }
+  return scaleEaseWeight(kg, easeBack.weightScale);
 }
 
 export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): ProgrammeDay {
@@ -287,14 +366,18 @@ export function buildEntries(
   logged: LoggedSet[],
   previous: Record<string, LoggedSet[]>,
   withProgression: boolean,
-  options?: { weightScale?: number }
+  options?: { weightScale?: number; easeBack?: SessionEaseBack }
 ): Record<string, SetEntry> {
   const entries: Record<string, SetEntry> = {};
-  const weightScale = options?.weightScale;
+  const easeBack = options?.easeBack;
+  const weightScale = easeBack?.weightScale ?? options?.weightScale;
   for (const item of day.exercises) {
     const exerciseId = item.exercise.id;
     const previousSets = previous[exerciseId] ?? [];
     const suggestion = getWeightSuggestion(item, previousSets);
+    const scaleThis = easeBack
+      ? shouldScaleSlotWeight(easeBack, item.role)
+      : Boolean(weightScale);
     for (const setNumber of allSetNumbers(item)) {
       const saved = logged.find(
         (set) => set.exercise_id === exerciseId && set.set_number === setNumber
@@ -307,7 +390,7 @@ export function buildEntries(
         };
         continue;
       }
-      if (withProgression && !weightScale && !isWarmupSetNumber(setNumber) && suggestion.kind === 'increase') {
+      if (withProgression && !scaleThis && !isWarmupSetNumber(setNumber) && suggestion.kind === 'increase') {
         entries[setKey(exerciseId, setNumber)] = {
           weight: formatWeightInput(suggestion.kg),
           reps: String(item.rep_min),
@@ -319,7 +402,9 @@ export function buildEntries(
         previousSets.find((set) => set.set_number === setNumber) ??
         (isWarmupSetNumber(setNumber) ? undefined : previousSets[previousSets.length - 1]);
       let weightKg = last?.weight_kg ?? null;
-      if (weightKg !== null && weightScale) {
+      if (weightKg !== null && scaleThis && easeBack) {
+        weightKg = scaledSuggestedKg(weightKg, item, easeBack);
+      } else if (weightKg !== null && scaleThis && weightScale) {
         weightKg = scaleEaseWeight(weightKg, weightScale);
       }
       entries[setKey(exerciseId, setNumber)] = {

@@ -24,6 +24,8 @@ export type CheckinCopy = {
   shortTimeBody: string;
   shortTimeOptionId: string;
   loggerBadge: string;
+  settingsTitle: string;
+  settingsSub: string;
 };
 
 function asRecord(value: unknown): Json {
@@ -53,6 +55,7 @@ const options: CheckinOption[] = asArray(root.options).flatMap((item) => {
 const shortTime =
   options.find((item) => item.id === 'short_time') ??
   options.find((item) => item.offers_lighter && text(offer.short_time_body).length > 0);
+const settings = asRecord(root.settings);
 
 export const CHECKIN: CheckinCopy = {
   title: text(card.title),
@@ -66,6 +69,8 @@ export const CHECKIN: CheckinCopy = {
   shortTimeBody: text(offer.short_time_body) || text(offer.body),
   shortTimeOptionId: shortTime?.id ?? '',
   loggerBadge: text(root.logger_badge),
+  settingsTitle: text(settings.row_title),
+  settingsSub: text(settings.row_sub),
 };
 
 export function offerBodyForShortTime(shortTime: boolean): string {
@@ -77,7 +82,9 @@ export function shouldShowCheckin(input: {
   hideCheckin: boolean;
   resolved: boolean;
   hasTickedSet: boolean;
+  alreadyLighter?: boolean;
 }): boolean {
   if (!input.isStrength || input.hideCheckin || input.resolved || input.hasTickedSet) return false;
+  if (input.alreadyLighter) return false;
   return CHECKIN.title.length > 0 && CHECKIN.options.length > 0;
 }

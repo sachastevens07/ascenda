@@ -202,6 +202,21 @@ export function cardioSession(slug: string | null | undefined): CardioSessionDef
   return bySlug.get(slug) ?? null;
 }
 
+/** B2: same machine, steady effort, same or shorter time. Falls back to the original slug. */
+export function gentleCardioFinisher(slug: string | null | undefined): CardioSessionDef | null {
+  const original = cardioSession(slug);
+  if (!original) return null;
+  const matches = sessions
+    .filter(
+      (item) =>
+        item.machineId === original.machineId &&
+        item.style === 'steady' &&
+        item.durationMinutes <= original.durationMinutes
+    )
+    .sort((a, b) => b.durationMinutes - a.durationMinutes);
+  return matches[0] ?? original;
+}
+
 export function cardioSlugFromSession(session: Session): string | null {
   const fromSwaps = session.exercise_swaps[CARDIO_SLUG_KEY]?.trim();
   return fromSwaps || null;

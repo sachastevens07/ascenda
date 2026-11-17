@@ -68,6 +68,7 @@ import {
   type RestTimerDefault,
 } from '@/lib/restTimer';
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
+import { CHECKIN } from '@/lib/checkin';
 import {
   WEIGHT_UNITS,
   fetchWeightUnit,
@@ -155,7 +156,7 @@ function savedWorkoutsLabel(count: number): string {
 export default function ProfileScreen() {
   const { colours, radius, preference, setPreference } = useTheme();
   const { session } = useAuth();
-  const { profile, reload, deleteAccount, saveMainGoals, restartOnboarding } = useProfile();
+  const { profile, reload, deleteAccount, saveMainGoals, restartOnboarding, setHideCheckin } = useProfile();
   const subscription = useSubscription();
   const { showDevTools, bypassAiLimits, setShowDevTools, setBypassAiLimits } = useDevTools();
   const answers = getQuizAnswers(profile);
@@ -688,6 +689,19 @@ export default function ProfileScreen() {
             setHideAchievements(next);
             saveHideAchievements(next).catch((error) => {
               setHideAchievements(!next);
+              showDialog(
+                'Couldn’t save that',
+                error instanceof Error ? error.message : 'Check your connection and try again.'
+              );
+            });
+          }}
+        />
+        <SettingsRow
+          title={CHECKIN.settingsTitle}
+          subtitle={CHECKIN.settingsSub}
+          onPress={() => {
+            const nextHide = !(profile?.hide_checkin === true);
+            setHideCheckin(nextHide).catch((error) => {
               showDialog(
                 'Couldn’t save that',
                 error instanceof Error ? error.message : 'Check your connection and try again.'

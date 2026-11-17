@@ -532,8 +532,47 @@ export async function saveSet(set: LoggedSet): Promise<void> {
 }
 
 /**
+ * Latest completed sets per exercise, skipping lighter sessions so they never lower the next suggestion.
+ * `rows` must already be newest-first.
+ */
+export function pickLatestNormalSets(
+  rows: Array<LoggedSet & { lighter?: boolean }>
+): Record<string, LoggedSet[]> {
+  const latestSession: Record<string, string> = {};
+  const previous: Record<string, LoggedSet[]> = {};
+  for (const set of rows) {
+    if (set.lighter) continue;
+    latestSession[set.exercise_id] ??= set.session_id;
+    if (latestSession[set.exercise_id] !== set.session_id) continue;
+    (previous[set.exercise_id] ??= []).push(set);
+  }
+  for (const sets of Object.values(previous)) {
+    sets.sort((a, b) => a.set_number - b.set_number);
+  }
+  return previous;
+}
+
+async function lighterSessionIds(sessionIds: string[]): Promise<Set<string>> {
+  const unique = [...new Set(sessionIds.filter(Boolean))];
+  if (unique.length === 0) return new Set();
+  const { data, error } = await supabase.from('sessions').select('id, lighter_session').in('id', unique);
+  if (error) {
+    if (isMissingLighterSessionColumn(error)) return new Set();
+    throw error;
+  }
+  const ids = new Set<string>();
+  for (const row of data ?? []) {
+    if ((row as { lighter_session?: boolean }).lighter_session === true) {
+      ids.add((row as { id: string }).id);
+    }
+  }
+  return ids;
+}
+
+/**
  * For each exercise, the completed sets from the most recent other session she did it in,
  * ordered by set number. Exercises she's never logged are left out.
+ * Sessions with lighter_session = true are skipped so a lighter day never lowers the next suggestion.
  */
 export async function fetchPreviousSets(
   exerciseIds: string[],
@@ -550,18 +589,16 @@ export async function fetchPreviousSets(
   if (excludeSessionId) query = query.neq('session_id', excludeSessionId);
   const { data, error } = await query;
   if (error) throw error;
+  const sets = (data ?? []).map(toLoggedSet);
+  const lighter = await lighterSessionIds(sets.map((set) => set.session_id));
+  return pickLatestNormalSets(sets.map((set) => ({ ...set, lighter: lighter.has(set.session_id) })));
+}
 
-  const latestSession: Record<string, string> = {};
-  const previous: Record<string, LoggedSet[]> = {};
-  for (const set of (data ?? []).map(toLoggedSet)) {
-    latestSession[set.exercise_id] ??= set.session_id;
-    if (latestSession[set.exercise_id] !== set.session_id) continue;
-    (previous[set.exercise_id] ??= []).push(set);
-  }
-  for (const sets of Object.values(previous)) {
-    sets.sort((a, b) => a.set_number - b.set_number);
-  }
-  return previous;
+/** Marks this session as a today-only lighter day. Never stores the reason. */
+export async function markSessionLighter(id: string): Promise<void> {
+  const { error } = await supabase.from('sessions').update({ lighter_session: true }).eq('id', id);
+  if (error && isMissingLighterSessionColumn(error)) return;
+  if (error) throw error;
 }
 
 /** The heaviest weight in a list of sets, or null if none had a weight. */

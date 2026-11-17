@@ -493,6 +493,8 @@ type ProfileState = {
   acceptDisclaimer: () => Promise<void>;
   /** Dev tools: run the quiz again on this account. Does not delete sessions. */
   restartOnboarding: () => Promise<void>;
+  /** True hides the logger check-in. The Profile row is inverted (on = hide_checkin false). */
+  setHideCheckin: (hidden: boolean) => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -1006,6 +1008,25 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, [userId, loaded]);
 
+  const setHideCheckin = useCallback(
+    async (hidden: boolean) => {
+      if (!userId) throw new Error('You need to be signed in.');
+      const outcome = await saveOwnProfileFields(userId, { hide_checkin: hidden });
+      const previous = loaded?.userId === userId ? loaded.profile : null;
+      if (previous) {
+        setLoaded({
+          userId,
+          profile: { ...previous, hide_checkin: hidden },
+          error: null,
+        });
+      }
+      if (outcome === 'missing-column' && previous) {
+        /* SQL not pasted: keep the in-memory flag so this device still honours it. */
+      }
+    },
+    [userId, loaded]
+  );
+
   const isLoading = loaded === null || loaded.userId !== userId;
 
   return (
@@ -1023,6 +1044,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         setConfidenceLevel,
         acceptDisclaimer,
         restartOnboarding,
+        setHideCheckin,
       }}>
       {children}
     </ProfileContext.Provider>

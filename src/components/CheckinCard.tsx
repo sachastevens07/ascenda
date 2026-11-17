@@ -16,7 +16,8 @@ export function CheckinCard({
 }: {
   onDismiss: () => void;
   onDeclineLighter: () => void;
-  onAcceptLighter: () => void;
+  /** scaleWeights is a rule flag, never the option she picked. */
+  onAcceptLighter: (input: { scaleWeights: boolean }) => void;
 }) {
   const { colours, radius, spacing } = useTheme();
   const [offer, setOffer] = useState<{ shortTime: boolean } | null>(null);
@@ -30,8 +31,10 @@ export function CheckinCard({
   }
 
   function accept() {
+    if (!offer) return;
+    const scaleWeights = !offer.shortTime;
     setOffer(null);
-    onAcceptLighter();
+    onAcceptLighter({ scaleWeights });
   }
 
   function decline() {

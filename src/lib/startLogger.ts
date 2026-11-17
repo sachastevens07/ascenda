@@ -16,7 +16,7 @@ import {
   firstDayOfRoutine,
   routineDayToProgrammeDay,
 } from '@/lib/routines';
-import { fetchActiveSession, startRoutineSession } from '@/lib/sessions';
+import { fetchActiveSession, markSessionLighter, startRoutineSession } from '@/lib/sessions';
 import { beginStretchSession, describeStretchError } from '@/lib/stretches';
 import { markWelcomeBackSession } from '@/lib/welcomeBack';
 import { lightenSessionPlan, saveSessionPlan, sessionPlanFromDay } from '@/lib/workoutLog';
@@ -50,7 +50,10 @@ export async function startRoutineLogger(
   });
   if (day) {
     let plan = sessionPlanFromDay(routineDayToProgrammeDay(day));
-    if (input.easeBack) plan = lightenSessionPlan(plan);
+    if (input.easeBack) {
+      plan = lightenSessionPlan(plan);
+      await markSessionLighter(session.id).catch(() => {});
+    }
     await saveSessionPlan(session.id, plan);
   }
   if (input.welcomeBack || input.easeBack) await markWelcomeBackSession(session.id);
