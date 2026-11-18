@@ -15,6 +15,7 @@ export default function CardioLayout() {
       }}>
       <Stack.Screen name="[slug]" />
       <Stack.Screen name="quick" />
+      <Stack.Screen name="intervals" />
       <Stack.Screen name="play" options={{ gestureEnabled: false }} />
     </Stack>
   );

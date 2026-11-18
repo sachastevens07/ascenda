@@ -2,21 +2,27 @@ import specFile from '../../content/cardio/cardio-builder.json';
 
 import type { CardioMachineId, CardioPlan } from '@/lib/cardio';
 import {
-  buildQuickCardioPlan as buildFromSpec,
+  buildCardioPlan as buildFromSpec,
   parseCardioBuilderSpec,
+  type BuildCardioPlanInput,
   type BuildQuickCardioPlanInput,
 } from '@/lib/cardioBuilder';
 import { cardioCopy } from '@/lib/copy';
 
 export {
+  cardioPlanLength,
   effortSettingsBand,
+  formatPlanMinutes,
+  isEffortTipBeginner,
   machineImageSlug,
   nameQuickCardioPlan,
   parseCardioBuilderSpec,
   quickStartMinutesOptions,
   settingsForEffort,
+  type BuildCardioPlanInput,
   type BuildQuickCardioPlanInput,
   type CardioBuilderSpec,
+  type ExtraCardioBlock,
   type QuickStartStyle,
 } from '@/lib/cardioBuilder';
 
@@ -32,5 +38,9 @@ export function builderMachineLabel(id: CardioMachineId): string {
 }
 
 export function buildQuickCardioPlan(input: BuildQuickCardioPlanInput): CardioPlan {
+  return buildFromSpec(input, cardioBuilderSpec, builderMachineLabel(input.machineId));
+}
+
+export function buildCardioPlan(input: BuildCardioPlanInput): CardioPlan {
   return buildFromSpec(input, cardioBuilderSpec, builderMachineLabel(input.machineId));
 }

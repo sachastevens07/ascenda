@@ -60,6 +60,7 @@
       "step": 5,
       "default": 20
     },
+    "minutes_value": "{minutes} minutes",
     "warmup_cooldown": {
       "label": "Add a 3-minute warm-up and cool-down",
       "default": true,
@@ -108,9 +109,19 @@
         "seconds",
         "effort"
       ],
-      "machine_change_note": "Switching machines? Allow a minute to move and set up. We'll add it as an easy block."
+      "machine_change_note": "Switching machines? Allow a minute to move and set up. We'll add it as an easy block.",
+      "machine_change_label": "Move and set up",
+      "machine_change_seconds": 60,
+      "machine_change_effort": 4,
+      "block_label": "Block {n}",
+      "delete_block": "Remove",
+      "move_up": "Move up",
+      "move_down": "Move down"
     },
+    "settings_label": "Settings",
+    "seconds_value": "{seconds} s",
     "max_minutes": 90,
+    "cap_message": "That's 90 minutes. Keep it there so the session stays doable.",
     "save_button": "Save",
     "start_button": "Start"
   },

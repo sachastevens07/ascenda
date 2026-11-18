@@ -21,14 +21,15 @@ import {
   IconButton,
   MenuRow,
   OverflowMenu,
+  PhotoFill,
   PrimaryButton,
   ProgressRing,
   TextButton,
   measureAnchor,
-  openRecipe,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
+import { presentFuelSheet } from '@/components/ui/Food';
 import { useTheme } from '@/constants/theme';
 import {
   cardioDefFromPlan,
@@ -38,15 +39,16 @@ import {
   describeCardioError,
   effortLabel,
   finishCardioSession,
-  formatEffortTarget,
   formatSegmentSeconds,
   formatSettings,
   machineLabel,
+  type CardioMachineId,
   type CardioSessionDef,
   type CardioSettings,
 } from '@/lib/cardio';
+import { machineImageSlug } from '@/lib/cardioBuilderContent';
 import { fetchCustomWorkout } from '@/lib/customWorkouts';
-import { cardioCopy, fillCopy, foodCopy, machineCopy } from '@/lib/copy';
+import { cardioCopy, fillCopy, machineCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { machineGuide } from '@/lib/machineGuides';
 import { useSubscriptionGate } from '@/lib/paywall';
@@ -244,8 +246,11 @@ export default function CardioPlayScreen() {
   const currentSettings = formatSettings(step.settings);
   const sessionSettings = formatSettings(def.settings);
   const aim = currentSettings || sessionSettings;
-  const machineName = machineLabel(step.machineId ?? def.machineId);
-  const guide = machineGuide(step.machineId ?? (def.machineId === 'mixed' ? null : def.machineId));
+  const stepMachine = step.machineId ?? (def.machineId === 'mixed' ? null : def.machineId);
+  const machineName = machineLabel(stepMachine ?? def.machineId);
+  const machinePhoto = stepMachine && stepMachine !== 'mixed' ? machineImageSlug(stepMachine) : null;
+  const switchTo = nextSwitchMachine(def.intervals, index);
+  const guide = machineGuide(stepMachine ?? (def.machineId === 'mixed' ? null : def.machineId));
   const primaryLabel = holdDone && !isLast ? 'Next' : running ? cardioCopy.pause : cardioCopy.resume;
 
   return (
@@ -271,12 +276,21 @@ export default function CardioPlayScreen() {
         </View>
       </View>
 
-      <AppText variant="eyebrow" style={{ color: colours.accent }}>
-        {machineName}
-      </AppText>
-      <AppText variant="title1" style={{ color: colours.ink, marginTop: spacing.xs }}>
-        {def.name}
-      </AppText>
+      <View style={styles.machineRow}>
+        {machinePhoto ? (
+          <View style={[styles.machineThumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
+            <PhotoFill slug={machinePhoto} kind="equipment" label={machineName} />
+          </View>
+        ) : null}
+        <View style={{ flex: 1 }}>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            {machineName}
+          </AppText>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+            {def.name}
+          </AppText>
+        </View>
+      </View>
       {guide ? (
         <TextButton
           label={fillCopy(machineCopy.first_time, { machine: guide.name.toLowerCase() })}
@@ -286,18 +300,22 @@ export default function CardioPlayScreen() {
       ) : null}
 
       <View style={styles.ringWrap}>
+        <AppText variant="title1" style={{ color: colours.ink, textAlign: 'center' }}>
+          {step.label}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4, textAlign: 'center' }}>
+          {fillCopy(cardioCopy.interval_progress, {
+            current: index + 1,
+            total: def.intervals.length,
+          })}
+        </AppText>
+        <IntervalTrack intervals={def.intervals} current={index} />
         <ProgressRing progress={ringProgress} size={RING_SIZE} stroke={12}>
           <AppText variant="number" style={{ color: colours.ink, fontVariant: ['tabular-nums'] }}>
             {formatClock(remaining)}
           </AppText>
         </ProgressRing>
-        <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: spacing.md }}>
-          {fillCopy(cardioCopy.interval_eyebrow, {
-            label: step.label,
-            time: formatSegmentSeconds(remaining || step.seconds),
-          })}
-        </AppText>
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
           {fillCopy(cardioCopy.elapsed, { time: formatClock(elapsedSeconds) })}
         </AppText>
       </View>
@@ -339,7 +357,11 @@ export default function CardioPlayScreen() {
           disabled={isSaving}
           style={{ alignSelf: 'center' }}
         />
-        {nextStep ? (
+        {switchTo ? (
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: spacing.sm }}>
+            {fillCopy(cardioCopy.next_interval_machine, { machine: machineLabel(switchTo) })}
+          </AppText>
+        ) : nextStep ? (
           <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: spacing.sm }}>
             {fillCopy(cardioCopy.next_interval, {
               label: nextStep.label,
@@ -397,16 +419,15 @@ export default function CardioPlayScreen() {
               reminderTime: null,
             });
             const savedBody = fillCopy(cardioCopy.saved_body, { minutes: String(input.minutes) });
-            showDialog(
-              cardioCopy.saved_title,
-              fuel ? `${savedBody}\n\n${fuel.copy}\n${fuel.recipe.title}` : savedBody,
-              fuel
-                ? [
-                    { text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) },
-                    { text: 'OK', style: 'cancel' },
-                  ]
-                : undefined
-            );
+            if (fuel) {
+              presentFuelSheet({
+                title: cardioCopy.saved_title,
+                message: savedBody,
+                suggestion: fuel,
+              });
+            } else {
+              showDialog(cardioCopy.saved_title, savedBody);
+            }
             router.replace({ pathname: '/programmes', params: { section: 'cardio' } } as Href);
             void maybeAskSessionReminders();
             void syncPlannerReminders();
@@ -417,6 +438,55 @@ export default function CardioPlayScreen() {
           }
         }}
       />
+    </View>
+  );
+}
+
+function nextSwitchMachine(
+  intervals: { machineId: CardioMachineId | null; label?: string }[],
+  index: number
+): CardioMachineId | null {
+  const current = intervals[index]?.machineId;
+  const next = intervals[index + 1];
+  if (!current || current === 'mixed' || !next) return null;
+  if (next.machineId && next.machineId !== 'mixed' && next.machineId !== current) return next.machineId;
+  const after = intervals[index + 2];
+  if (after?.machineId && after.machineId !== 'mixed' && after.machineId !== current) return after.machineId;
+  return null;
+}
+
+function IntervalTrack({
+  intervals,
+  current,
+}: {
+  intervals: { label: string; effort: number }[];
+  current: number;
+}) {
+  const { colours, radius } = useTheme();
+  return (
+    <View
+      style={styles.track}
+      accessibilityRole="progressbar"
+      accessibilityLabel={fillCopy(cardioCopy.interval_progress, {
+        current: current + 1,
+        total: intervals.length,
+      })}>
+      {intervals.map((item, index) => {
+        const on = index === current;
+        const done = index < current;
+        return (
+          <View
+            key={`${item.label}-${index}`}
+            style={{
+              flex: on ? 1.6 : 1,
+              height: 8 + Math.round((item.effort / 10) * 20),
+              borderRadius: radius.full,
+              backgroundColor: on ? colours.brand : done ? colours.brandSoft : colours.surfaceMuted,
+              alignSelf: 'flex-end',
+            }}
+          />
+        );
+      })}
     </View>
   );
 }
@@ -442,24 +512,25 @@ function FinishLog({
     settingsUsed: Record<string, number | string>;
     distanceKm: number | null;
     calories: number | null;
+    notes: string | null;
   }) => Promise<void>;
 }) {
   const { colours, spacing, radius } = useTheme();
   const insets = useSafeAreaInsets();
-  const [minutes, setMinutes] = useState(elapsedMinutes);
   const [effort, setEffort] = useState(Math.round((def.effortTarget[0] + def.effortTarget[1]) / 2));
   const [settings, setSettings] = useState(() => settingsFrom(def.settings));
   const [distance, setDistance] = useState('');
   const [calories, setCalories] = useState('');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (!visible) return;
-    setMinutes(elapsedMinutes);
     setEffort(Math.round((def.effortTarget[0] + def.effortTarget[1]) / 2));
     setSettings(settingsFrom(def.settings));
     setDistance('');
     setCalories('');
-  }, [visible, elapsedMinutes, def]);
+    setNotes('');
+  }, [visible, def]);
 
   function bump(key: string, delta: number, min: number, max: number, step = 0.5) {
     setSettings((current) => {
@@ -489,12 +560,6 @@ function FinishLog({
             <AppText variant="title2" style={{ color: colours.ink }}>
               {cardioCopy.finish_title}
             </AppText>
-            <StepperRow
-              label={cardioCopy.minutes}
-              value={minutes}
-              onMinus={() => setMinutes((value) => Math.max(1, value - 1))}
-              onPlus={() => setMinutes((value) => Math.min(def.maxMinutes, value + 1))}
-            />
             <View>
               <AppText variant="bodyStrong" style={{ color: colours.ink }}>
                 {cardioCopy.effort}
@@ -535,12 +600,11 @@ function FinishLog({
                   {cardioCopy.effort_hint_8}
                 </AppText>
               </View>
-              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-                {fillCopy(cardioCopy.should_feel, {
-                  effort: formatEffortTarget([effort, effort]),
-                  label: effortLabel(effort),
-                })}
-              </AppText>
+              {effortLabel(effort) ? (
+                <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                  {effortLabel(effort)}
+                </AppText>
+              ) : null}
             </View>
 
             {settings.speed_kmh != null ||
@@ -586,17 +650,27 @@ function FinishLog({
               </View>
             ) : null}
 
+            <View style={styles.fieldRow}>
+              <Field
+                label={cardioCopy.distance}
+                value={distance}
+                onChange={setDistance}
+                keyboard="decimal-pad"
+                compact
+              />
+              <Field
+                label={cardioCopy.calories}
+                value={calories}
+                onChange={setCalories}
+                keyboard="number-pad"
+                compact
+              />
+            </View>
             <Field
-              label={cardioCopy.distance}
-              value={distance}
-              onChange={setDistance}
-              keyboard="decimal-pad"
-            />
-            <Field
-              label={cardioCopy.calories}
-              value={calories}
-              onChange={setCalories}
-              keyboard="number-pad"
+              label={cardioCopy.notes}
+              value={notes}
+              onChange={setNotes}
+              multiline
             />
 
             <PrimaryButton
@@ -606,12 +680,14 @@ function FinishLog({
               onPress={() => {
                 const distanceKm = distance.trim() ? Number(distance.replace(',', '.')) : null;
                 const cal = calories.trim() ? Number(calories) : null;
+                const trimmedNotes = notes.trim();
                 void onSave({
-                  minutes,
+                  minutes: elapsedMinutes,
                   effort,
                   settingsUsed: settings,
                   distanceKm: distanceKm != null && Number.isFinite(distanceKm) ? distanceKm : null,
                   calories: cal != null && Number.isFinite(cal) ? Math.round(cal) : null,
+                  notes: trimmedNotes || null,
                 });
               }}
             />
@@ -672,26 +748,35 @@ function Field({
   value,
   onChange,
   keyboard,
+  compact,
+  multiline,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  keyboard: 'decimal-pad' | 'number-pad';
+  keyboard?: 'decimal-pad' | 'number-pad';
+  compact?: boolean;
+  multiline?: boolean;
 }) {
   const { colours, radius } = useTheme();
   return (
-    <View>
-      <AppText variant="bodySm" style={{ color: colours.inkMuted, marginBottom: 6 }}>
+    <View style={compact ? styles.fieldHalf : undefined}>
+      <AppText variant="caption" style={{ color: colours.inkMuted, marginBottom: 6 }}>
         {label}
       </AppText>
       <TextInput
         value={value}
         onChangeText={onChange}
         keyboardType={keyboard}
+        multiline={multiline}
+        textAlignVertical={multiline ? 'top' : 'center'}
         placeholder=""
         placeholderTextColor={colours.inkSubtle}
+        accessibilityLabel={label}
         style={[
           styles.input,
+          compact && styles.inputCompact,
+          multiline && styles.inputNotes,
           { color: colours.ink, backgroundColor: colours.surface, borderRadius: radius.md },
         ]}
       />
@@ -715,11 +800,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  machineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  machineThumb: {
+    width: 48,
+    height: 48,
+    overflow: 'hidden',
+  },
   ringWrap: {
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
     flex: 1,
+  },
+  track: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 3,
+    width: '100%',
+    height: 30,
+    marginTop: 12,
+    marginBottom: 16,
   },
   settings: {
     padding: 16,
@@ -773,9 +877,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  fieldRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  fieldHalf: {
+    flex: 1,
+  },
   input: {
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
+  },
+  inputCompact: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 15,
+  },
+  inputNotes: {
+    minHeight: 104,
+    paddingTop: 10,
   },
 });

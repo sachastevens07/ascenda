@@ -4,16 +4,20 @@ export type SessionType = (typeof SESSION_TYPES)[number];
 export const BLOCK_TYPES = ['warmup', 'strength', 'cardio', 'cooldown', 'stretch'] as const;
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
-export const CARDIO_STYLES = ['steady', 'intervals', 'finisher'] as const;
+export const CARDIO_STYLES = ['steady', 'intervals', 'finisher', 'mixed'] as const;
 export type CardioStyle = (typeof CARDIO_STYLES)[number];
 
 /** Stored on sessions.exercise_swaps so the player can restore without extra columns. */
 export const CARDIO_SLUG_KEY = '_cardio_slug';
 /** JSON CardioPlan for a built session (W8). */
 export const CARDIO_PLAN_KEY = '_cardio_plan';
+/** Optional finish-log notes, stored on cardio_logs.settings_used. */
+export const CARDIO_NOTES_KEY = '_notes';
 
 export function parseCardioStyle(value: unknown): CardioStyle | null {
-  return value === 'steady' || value === 'intervals' || value === 'finisher' ? value : null;
+  return value === 'steady' || value === 'intervals' || value === 'finisher' || value === 'mixed'
+    ? value
+    : null;
 }
 
 export function sessionTypeFromSource(source: string | null | undefined): SessionType {

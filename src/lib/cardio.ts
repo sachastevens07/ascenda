@@ -3,6 +3,7 @@ import catalogueFile from '../../content/cardio/cardio-sessions.json';
 import { cardioCopy, fillCopy } from '@/lib/copy';
 import type { GymExperience } from '@/lib/profile';
 import {
+  CARDIO_NOTES_KEY,
   CARDIO_PLAN_KEY,
   CARDIO_SLUG_KEY,
   isCardioSession,
@@ -118,6 +119,7 @@ export type CardioFinishInput = {
   settingsUsed: Record<string, number | string>;
   distanceKm: number | null;
   calories: number | null;
+  notes: string | null;
 };
 
 type Json = Record<string, unknown>;
@@ -369,7 +371,14 @@ export function machineLabel(id: CardioMachineId): string {
 export function styleLabel(style: CardioStyle): string {
   if (style === 'intervals') return cardioCopy.style_intervals;
   if (style === 'finisher') return cardioCopy.style_finisher;
+  if (style === 'mixed') return cardioCopy.style_mixed;
   return cardioCopy.style_steady;
+}
+
+export function allEffortLabels(): { value: number; label: string }[] {
+  return [...effortScale.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([value, label]) => ({ value, label }));
 }
 
 export function cardioRowMeta(session: CardioSessionDef): string {
@@ -533,6 +542,9 @@ export async function finishCardioSession(
   const machines = sessionMachines(def);
   const settingsUsed = { ...input.settingsUsed };
   if (def.machineId === 'mixed') settingsUsed.machines = machines.join(',');
+  const notes = input.notes?.trim();
+  if (notes) settingsUsed[CARDIO_NOTES_KEY] = notes;
+  else delete settingsUsed[CARDIO_NOTES_KEY];
   const { error } = await supabase.from('cardio_logs').upsert(
     {
       session_id: session.id,

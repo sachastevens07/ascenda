@@ -83,7 +83,7 @@ export function CardioCatalogue({ bottomInset }: { bottomInset?: number }) {
       </ChipScroller>
       <ChipScroller>
         <Chip label={cardioCopy.filter_all} selected={style === 'all'} onPress={() => setStyle('all')} />
-        {CARDIO_STYLES.map((id) => (
+        {CARDIO_STYLES.filter((id) => id !== 'mixed').map((id) => (
           <Chip
             key={id}
             label={styleLabel(id)}
@@ -131,6 +131,15 @@ function CreateYourOwnCard() {
                 key={action.id}
                 label={action.label}
                 onPress={() => router.push('/cardio/quick' as Href)}
+              />
+            );
+          }
+          if (action.id === 'intervals') {
+            return (
+              <SecondaryButton
+                key={action.id}
+                label={action.label}
+                onPress={() => router.push('/cardio/intervals' as Href)}
               />
             );
           }

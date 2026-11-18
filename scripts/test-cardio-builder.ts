@@ -5,7 +5,9 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
+  buildCardioPlan,
   buildQuickCardioPlan,
+  cardioPlanLength,
   effortSettingsBand,
   nameQuickCardioPlan,
   parseCardioBuilderSpec,
@@ -96,4 +98,109 @@ test('auto-name comes from the naming templates', () => {
     nameQuickCardioPlan('cross_trainer', 'intervals', 15, spec, 'Cross-trainer'),
     'Cross-trainer intervals, 15 min'
   );
+  assert.equal(nameQuickCardioPlan('mixed', 'mixed', 24, spec, 'Treadmill'), 'Mixed cardio, 24 min');
+});
+
+test('build intervals uses repeats, not a fill-to-minutes rule', () => {
+  const plan = buildCardioPlan(
+    {
+      machineId: 'treadmill',
+      style: 'intervals',
+      minutes: 20,
+      includeWarmup: true,
+      workSeconds: 60,
+      workEffort: 7,
+      recoverSeconds: 120,
+      recoverEffort: 4,
+      repeats: 6,
+    },
+    spec,
+    'Treadmill'
+  );
+  const total = plan.intervals.reduce((sum, item) => sum + item.seconds, 0);
+  assert.equal(total, 6 * 180 + 360);
+  assert.equal(plan.duration_minutes, 24);
+  assert.equal(plan.style, 'intervals');
+  assert.equal(plan.intervals[0]?.label, spec.quickStart.blockLabels.warmup);
+  assert.equal(plan.intervals[1]?.label, spec.buildIntervals.workLabel);
+  assert.equal(plan.intervals[2]?.label, spec.buildIntervals.recoverLabel);
+  assert.equal(plan.intervals.at(-1)?.label, spec.quickStart.blockLabels.cooldown);
+});
+
+test('switching machines inserts a move-and-set-up block and uses mixed naming', () => {
+  const plan = buildCardioPlan(
+    {
+      machineId: 'treadmill',
+      style: 'intervals',
+      minutes: 20,
+      includeWarmup: false,
+      workSeconds: 60,
+      workEffort: 7,
+      recoverSeconds: 120,
+      recoverEffort: 4,
+      repeats: 1,
+      extraBlocks: [{ machineId: 'rower', seconds: 60, effort: 5 }],
+    },
+    spec,
+    'Treadmill'
+  );
+  assert.equal(plan.style, 'mixed');
+  assert.equal(plan.machine_id, 'mixed');
+  assert.equal(plan.name, 'Mixed cardio, 5 min');
+  const setup = plan.intervals.find((item) => item.label === spec.buildIntervals.advanced.machineChangeLabel);
+  assert.equal(setup?.seconds, 60);
+  assert.equal(setup?.effort, 4);
+  assert.equal(setup?.settings.machine_id, 'treadmill');
+  assert.equal(plan.intervals.at(-1)?.settings.machine_id, 'rower');
+});
+
+test('total time is capped at 90 minutes', () => {
+  const input = {
+    machineId: 'bike' as const,
+    style: 'intervals' as const,
+    minutes: 20,
+    includeWarmup: true,
+    workSeconds: 600,
+    workEffort: 7,
+    recoverSeconds: 600,
+    recoverEffort: 4,
+    repeats: 20,
+  };
+  const length = cardioPlanLength(input, spec);
+  assert.equal(length.capped, true);
+  assert.equal(length.seconds, 90 * 60);
+  const plan = buildCardioPlan(input, spec, 'Bike');
+  assert.equal(
+    plan.intervals.reduce((sum, item) => sum + item.seconds, 0),
+    90 * 60
+  );
+});
+
+test('extra block settings are kept', () => {
+  const plan = buildCardioPlan(
+    {
+      machineId: 'bike',
+      style: 'intervals',
+      minutes: 20,
+      includeWarmup: false,
+      workSeconds: 60,
+      workEffort: 7,
+      recoverSeconds: 120,
+      recoverEffort: 4,
+      repeats: 1,
+      extraBlocks: [
+        {
+          machineId: 'bike',
+          seconds: 45,
+          effort: 6,
+          settings: { machine_id: 'bike', cadence_rpm: 90, resistance: 'Add 1' },
+        },
+      ],
+    },
+    spec,
+    'Bike'
+  );
+  const extra = plan.intervals.at(-1);
+  assert.equal(extra?.settings.cadence_rpm, 90);
+  assert.equal(extra?.settings.resistance, 'Add 1');
 });

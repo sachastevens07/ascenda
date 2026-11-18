@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AcceptDisclaimerScreen } from '@/components/AcceptDisclaimerScreen';
 import { DialogProvider } from '@/components/Dialog';
+import { FuelSheetProvider } from '@/components/ui/Food';
 import { FirstSessionDisclaimerProvider } from '@/components/FirstSessionDisclaimer';
 import { AppText } from '@/components/ui/AppText';
 import { fontAssets } from '@/constants/fonts';
@@ -58,9 +59,11 @@ export default function RootLayout() {
                 <ThemedStatusBar />
                 <WorkoutProvider>
                   <DialogProvider>
-                    <FirstSessionDisclaimerProvider>
-                      <RootNavigator />
-                    </FirstSessionDisclaimerProvider>
+                    <FuelSheetProvider>
+                      <FirstSessionDisclaimerProvider>
+                        <RootNavigator />
+                      </FirstSessionDisclaimerProvider>
+                    </FuelSheetProvider>
                   </DialogProvider>
                 </WorkoutProvider>
               </ProfileProvider>
@@ -271,6 +274,7 @@ function RootNavigator() {
             headerTintColor: colours.brand,
             headerShadowVisible: false,
             headerStyle: { backgroundColor: colours.bg },
+            keyboardHandlingEnabled: false,
           }}
         />
         <Stack.Screen

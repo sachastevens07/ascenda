@@ -67,6 +67,7 @@ export type CardioBuilderSpec = {
     types: QuickStartType[];
     minutesTitle: string;
     minutes: { min: number; max: number; step: number; default: number };
+    minutesValue: string;
     warmup: { label: string; defaultOn: boolean; secondsEach: number; effort: number; note: string };
     startButton: string;
     saveLink: string;
@@ -78,6 +79,49 @@ export type CardioBuilderSpec = {
   naming: { steady: string; intervals: string; mixed: string };
   myWorkouts: { cardioChip: string; repeatLabel: string; addToPlanner: string };
   settingsDefaults: Json;
+  settingsNote: string;
+  effortPicker: { title: string; beginnerTip: string };
+  buildIntervals: {
+    title: string;
+    machineTitle: string;
+    workLabel: string;
+    recoverLabel: string;
+    repeatsLabel: string;
+    defaults: {
+      workSeconds: number;
+      workEffort: number;
+      recoverSeconds: number;
+      recoverEffort: number;
+      repeats: number;
+    };
+    steppers: {
+      secondsStep: number;
+      secondsMin: number;
+      secondsMax: number;
+      repeatsMin: number;
+      repeatsMax: number;
+    };
+    totalLabel: string;
+    timelineHint: string;
+    advanced: {
+      label: string;
+      sub: string;
+      machineChangeNote: string;
+      machineChangeLabel: string;
+      machineChangeSeconds: number;
+      machineChangeEffort: number;
+      blockLabel: string;
+      deleteBlock: string;
+      moveUp: string;
+      moveDown: string;
+    };
+    settingsLabel: string;
+    secondsValue: string;
+    maxMinutes: number;
+    capMessage: string;
+    saveButton: string;
+    startButton: string;
+  };
 };
 
 function parseAction(raw: unknown): CardioBuilderAction | null {
@@ -148,6 +192,7 @@ export function parseCardioBuilderSpec(raw: unknown): CardioBuilderSpec {
       typeTitle: text(quickRaw.type_title),
       types: asArray(quickRaw.types).map(parseType).filter((item): item is QuickStartType => item != null),
       minutesTitle: text(quickRaw.minutes_title),
+      minutesValue: text(quickRaw.minutes_value),
       minutes: {
         min: Math.round(num(minutesRaw.min) ?? 10),
         max: Math.round(num(minutesRaw.max) ?? 60),
@@ -183,6 +228,52 @@ export function parseCardioBuilderSpec(raw: unknown): CardioBuilderSpec {
       addToPlanner: text(myWorkouts.add_to_planner),
     },
     settingsDefaults: asRecord(file.settings_defaults),
+    settingsNote: text(file.settings_note),
+    effortPicker: {
+      title: text(asRecord(file.effort_picker).title),
+      beginnerTip: text(asRecord(file.effort_picker).beginner_tip_9_10),
+    },
+    buildIntervals: {
+      title: text(buildRaw.title),
+      machineTitle: text(buildRaw.machine_title),
+      workLabel: text(buildRaw.work_label),
+      recoverLabel: text(buildRaw.recover_label),
+      repeatsLabel: text(buildRaw.repeats_label),
+      defaults: {
+        workSeconds: Math.round(num(asRecord(buildRaw.defaults).work_seconds) ?? 60),
+        workEffort: Math.round(num(asRecord(buildRaw.defaults).work_effort) ?? 7),
+        recoverSeconds: Math.round(num(asRecord(buildRaw.defaults).recover_seconds) ?? 120),
+        recoverEffort: Math.round(num(asRecord(buildRaw.defaults).recover_effort) ?? 4),
+        repeats: Math.round(num(asRecord(buildRaw.defaults).repeats) ?? 6),
+      },
+      steppers: {
+        secondsStep: Math.round(num(asRecord(buildRaw.steppers).seconds_step) ?? 15),
+        secondsMin: Math.round(num(asRecord(buildRaw.steppers).seconds_min) ?? 15),
+        secondsMax: Math.round(num(asRecord(buildRaw.steppers).seconds_max) ?? 600),
+        repeatsMin: Math.round(num(asRecord(buildRaw.steppers).repeats_min) ?? 1),
+        repeatsMax: Math.round(num(asRecord(buildRaw.steppers).repeats_max) ?? 20),
+      },
+      totalLabel: text(buildRaw.total_label),
+      timelineHint: text(buildRaw.timeline_hint),
+      advanced: {
+        label: text(asRecord(buildRaw.advanced).label),
+        sub: text(asRecord(buildRaw.advanced).sub),
+        machineChangeNote: text(asRecord(buildRaw.advanced).machine_change_note),
+        machineChangeLabel: text(asRecord(buildRaw.advanced).machine_change_label),
+        machineChangeSeconds: Math.round(num(asRecord(buildRaw.advanced).machine_change_seconds) ?? 60),
+        machineChangeEffort: Math.round(num(asRecord(buildRaw.advanced).machine_change_effort) ?? 4),
+        blockLabel: text(asRecord(buildRaw.advanced).block_label),
+        deleteBlock: text(asRecord(buildRaw.advanced).delete_block),
+        moveUp: text(asRecord(buildRaw.advanced).move_up),
+        moveDown: text(asRecord(buildRaw.advanced).move_down),
+      },
+      settingsLabel: text(buildRaw.settings_label),
+      secondsValue: text(buildRaw.seconds_value),
+      maxMinutes: Math.round(num(buildRaw.max_minutes) ?? 90),
+      capMessage: text(buildRaw.cap_message),
+      saveButton: text(buildRaw.save_button),
+      startButton: text(buildRaw.start_button),
+    },
   };
 }
 
@@ -242,14 +333,60 @@ export function settingsForEffort(
 
 export function nameQuickCardioPlan(
   machineId: CardioMachineId,
-  style: QuickStartStyle,
+  style: QuickStartStyle | 'mixed',
   minutes: number,
   spec: CardioBuilderSpec,
   machineName: string
 ): string {
+  if (style === 'mixed' || machineId === 'mixed') {
+    return fill(spec.naming.mixed, { machine: machineName, minutes });
+  }
   const template = style === 'intervals' ? spec.naming.intervals : spec.naming.steady;
   return fill(template, { machine: machineName, minutes });
 }
+
+export function formatPlanMinutes(totalSeconds: number): number {
+  const minutes = totalSeconds / 60;
+  return Number.isInteger(minutes) ? minutes : Math.round(minutes * 10) / 10;
+}
+
+export function isEffortTipBeginner(
+  gymExperience: string | null | undefined,
+  startedOn: string | null | undefined,
+  now = Date.now()
+): boolean {
+  if (gymExperience === 'not_yet' || gymExperience === 'just_started') return true;
+  if (!startedOn) return false;
+  const start = Date.parse(startedOn);
+  if (!Number.isFinite(start)) return false;
+  return now - start < 28 * 24 * 60 * 60 * 1000;
+}
+
+export type ExtraCardioBlock = {
+  machineId: CardioMachineId;
+  seconds: number;
+  effort: number;
+  settings?: CardioSettings;
+};
+
+export type PlanBlockInput = {
+  machineId: CardioMachineId;
+  seconds: number;
+  effort: number;
+  label: string;
+  settings?: CardioSettings;
+};
+
+export type BuildCardioPlanInput = BuildQuickCardioPlanInput & {
+  workSeconds?: number;
+  workEffort?: number;
+  recoverSeconds?: number;
+  recoverEffort?: number;
+  repeats?: number;
+  extraBlocks?: ExtraCardioBlock[];
+  workSettings?: CardioSettings;
+  recoverSettings?: CardioSettings;
+};
 
 function clampMinutes(minutes: number, spec: CardioBuilderSpec): number {
   const { min, max, step } = spec.quickStart.minutes;
@@ -302,12 +439,165 @@ export type BuildQuickCardioPlanInput = {
   includeWarmup: boolean;
 };
 
-/** Pure builder for W8 Quick start. Coach can reuse this later. */
-export function buildQuickCardioPlan(
-  input: BuildQuickCardioPlanInput,
+function clampSeconds(value: number, spec: CardioBuilderSpec): number {
+  const { secondsMin, secondsMax, secondsStep } = spec.buildIntervals.steppers;
+  const rounded = Math.round(value / secondsStep) * secondsStep;
+  return Math.min(secondsMax, Math.max(secondsMin, rounded));
+}
+
+function clampRepeats(value: number, spec: CardioBuilderSpec): number {
+  const { repeatsMin, repeatsMax } = spec.buildIntervals.steppers;
+  return Math.min(repeatsMax, Math.max(repeatsMin, Math.round(value)));
+}
+
+function clampEffort(value: number): number {
+  return Math.min(10, Math.max(1, Math.round(value)));
+}
+
+function toInterval(block: PlanBlockInput, spec: CardioBuilderSpec): CardioPlanInterval {
+  const settings = {
+    ...(block.settings ?? settingsForEffort(block.machineId, block.effort, spec)),
+    machine_id: block.machineId,
+  };
+  return {
+    label: block.label,
+    seconds: block.seconds,
+    effort: block.effort,
+    settings,
+  };
+}
+
+function insertSetupBlocks(blocks: PlanBlockInput[], spec: CardioBuilderSpec): PlanBlockInput[] {
+  const out: PlanBlockInput[] = [];
+  const change = spec.buildIntervals.advanced;
+  for (const block of blocks) {
+    const prev = out.at(-1);
+    if (prev && prev.machineId !== block.machineId) {
+      out.push({
+        machineId: prev.machineId,
+        seconds: change.machineChangeSeconds,
+        effort: change.machineChangeEffort,
+        label: change.machineChangeLabel,
+      });
+    }
+    out.push(block);
+  }
+  return out;
+}
+
+function wrapWarmup(blocks: PlanBlockInput[], includeWarmup: boolean, spec: CardioBuilderSpec): PlanBlockInput[] {
+  if (!includeWarmup || blocks.length === 0) return blocks;
+  const warmup = spec.quickStart.warmup;
+  const labels = spec.quickStart.blockLabels;
+  const first = blocks[0].machineId;
+  const last = blocks[blocks.length - 1]?.machineId ?? first;
+  return [
+    { machineId: first, seconds: warmup.secondsEach, effort: warmup.effort, label: labels.warmup },
+    ...blocks,
+    { machineId: last, seconds: warmup.secondsEach, effort: warmup.effort, label: labels.cooldown },
+  ];
+}
+
+function capBlocks(blocks: PlanBlockInput[], maxSeconds: number, minSeconds: number): PlanBlockInput[] {
+  const out: PlanBlockInput[] = [];
+  let used = 0;
+  for (const block of blocks) {
+    if (used >= maxSeconds) break;
+    const room = maxSeconds - used;
+    if (block.seconds <= room) {
+      out.push(block);
+      used += block.seconds;
+      continue;
+    }
+    if (room >= minSeconds) {
+      out.push({ ...block, seconds: room });
+    }
+    break;
+  }
+  return out;
+}
+
+function finishPlan(
+  blocks: PlanBlockInput[],
+  options: {
+    fallbackMachine: CardioMachineId;
+    style: QuickStartStyle | 'mixed';
+    summary?: string;
+    beginnerOk: boolean;
+  },
   spec: CardioBuilderSpec,
   machineName: string
 ): CardioPlan {
+  const machines = [...new Set(blocks.map((item) => item.machineId))];
+  const mixed = machines.length > 1;
+  const machineId = mixed ? 'mixed' : (machines[0] ?? options.fallbackMachine);
+  const style = mixed ? 'mixed' : options.style;
+  const intervals = blocks.map((item) => toInterval(item, spec));
+  const totalSeconds = intervals.reduce((sum, item) => sum + item.seconds, 0);
+  const minutes = Math.max(1, Math.round(totalSeconds / 60));
+  const efforts = intervals.map((item) => item.effort);
+  const effortLow = efforts.length ? Math.min(...efforts) : 5;
+  const effortHigh = efforts.length ? Math.max(...efforts) : 5;
+  const middle = intervals.find((item) => item.label === spec.buildIntervals.workLabel) ?? intervals[0];
+  const name = nameQuickCardioPlan(machineId, style, minutes, spec, machineName);
+  return {
+    slug: `custom-${machineId}-${style}-${minutes}`,
+    name,
+    summary: options.summary,
+    machine_id: machineId,
+    style,
+    duration_minutes: minutes,
+    max_minutes: spec.buildIntervals.maxMinutes,
+    effort_target: effortLow === effortHigh ? effortLow : [effortLow, effortHigh],
+    settings_guidance: middle?.settings ?? settingsForEffort(options.fallbackMachine, 5, spec),
+    intervals,
+    beginner_ok: options.beginnerOk && !mixed,
+    counts_towards_weekly_target: minutes >= 10,
+  };
+}
+
+function intervalsMiddle(input: BuildCardioPlanInput, spec: CardioBuilderSpec): PlanBlockInput[] {
+  const workSeconds = clampSeconds(input.workSeconds ?? spec.buildIntervals.defaults.workSeconds, spec);
+  const recoverSeconds = clampSeconds(
+    input.recoverSeconds ?? spec.buildIntervals.defaults.recoverSeconds,
+    spec
+  );
+  const workEffort = clampEffort(input.workEffort ?? spec.buildIntervals.defaults.workEffort);
+  const recoverEffort = clampEffort(input.recoverEffort ?? spec.buildIntervals.defaults.recoverEffort);
+  const repeats = clampRepeats(input.repeats ?? spec.buildIntervals.defaults.repeats, spec);
+  const labels = spec.buildIntervals;
+  const middle: PlanBlockInput[] = [];
+  for (let i = 0; i < repeats; i += 1) {
+    middle.push({
+      machineId: input.machineId,
+      seconds: workSeconds,
+      effort: workEffort,
+      label: labels.workLabel,
+      settings: input.workSettings,
+    });
+    middle.push({
+      machineId: input.machineId,
+      seconds: recoverSeconds,
+      effort: recoverEffort,
+      label: labels.recoverLabel,
+      settings: input.recoverSettings,
+    });
+  }
+  const extras = input.extraBlocks ?? [];
+  extras.forEach((item, index) => {
+    if (item.machineId === 'mixed') return;
+    middle.push({
+      machineId: item.machineId,
+      seconds: clampSeconds(item.seconds, spec),
+      effort: clampEffort(item.effort),
+      label: fill(labels.advanced.blockLabel, { n: index + 1 }),
+      settings: item.settings,
+    });
+  });
+  return middle;
+}
+
+function quickMiddle(input: BuildQuickCardioPlanInput, spec: CardioBuilderSpec): PlanBlockInput[] {
   const style = input.style === 'intervals' ? 'intervals' : 'steady';
   const minutes = clampMinutes(input.minutes, spec);
   const type = spec.quickStart.types.find((item) => item.id === style) ?? spec.quickStart.types[0];
@@ -317,40 +607,71 @@ export function buildQuickCardioPlan(
   let warmupSeconds = input.includeWarmup ? warmupSpec.secondsEach : 0;
   if (warmupSeconds * 2 >= totalSeconds) warmupSeconds = 0;
   const middleSeconds = Math.max(0, totalSeconds - warmupSeconds * 2);
-
-  const intervals: CardioPlanInterval[] = [];
-  if (warmupSeconds > 0) {
-    intervals.push(interval(labels.warmup, warmupSeconds, warmupSpec.effort, input.machineId, spec));
-  }
   if (style === 'intervals' && type) {
-    intervals.push(...fillIntervalBlocks(middleSeconds, type, input.machineId, spec));
-  } else {
-    const effort = type?.effort ?? 5;
-    intervals.push(interval(type?.label ?? '', middleSeconds, effort, input.machineId, spec));
+    return fillIntervalBlocks(middleSeconds, type, input.machineId, spec).map((item) => ({
+      machineId: input.machineId,
+      seconds: item.seconds,
+      effort: item.effort,
+      label: item.label,
+      settings: item.settings,
+    }));
   }
-  if (warmupSeconds > 0) {
-    intervals.push(interval(labels.cooldown, warmupSeconds, warmupSpec.effort, input.machineId, spec));
-  }
+  return [
+    {
+      machineId: input.machineId,
+      seconds: middleSeconds,
+      effort: type?.effort ?? 5,
+      label: type?.label ?? labels.easy,
+    },
+  ];
+}
 
-  const efforts = intervals.map((item) => item.effort);
-  const effortLow = efforts.length ? Math.min(...efforts) : 5;
-  const effortHigh = efforts.length ? Math.max(...efforts) : 5;
-  const name = nameQuickCardioPlan(input.machineId, style, minutes, spec, machineName);
-  const slug = `custom-${input.machineId}-${style}-${minutes}`;
-  const middle = intervals.find((item) => item.label === type?.label) ?? intervals[0];
+function isIntervalsBuild(input: BuildCardioPlanInput): boolean {
+  return input.repeats != null || (input.extraBlocks?.length ?? 0) > 0;
+}
 
-  return {
-    slug,
-    name,
-    summary: type?.sub,
-    machine_id: input.machineId,
-    style,
-    duration_minutes: minutes,
-    max_minutes: minutes,
-    effort_target: effortLow === effortHigh ? effortLow : [effortLow, effortHigh],
-    settings_guidance: middle?.settings ?? settingsForEffort(input.machineId, 5, spec),
-    intervals,
-    beginner_ok: style === 'steady',
-    counts_towards_weekly_target: minutes >= 10,
-  };
+function plannedBlocks(input: BuildCardioPlanInput, spec: CardioBuilderSpec): PlanBlockInput[] {
+  const middle = isIntervalsBuild(input) ? intervalsMiddle(input, spec) : quickMiddle(input, spec);
+  return wrapWarmup(insertSetupBlocks(middle, spec), input.includeWarmup, spec);
+}
+
+export function cardioPlanLength(
+  input: BuildCardioPlanInput,
+  spec: CardioBuilderSpec
+): { seconds: number; capped: boolean } {
+  const seconds = plannedBlocks(input, spec).reduce((sum, item) => sum + item.seconds, 0);
+  const maxSeconds = spec.buildIntervals.maxMinutes * 60;
+  return { seconds: Math.min(seconds, maxSeconds), capped: seconds > maxSeconds };
+}
+
+/** Pure builder for W8 Quick start and Build intervals. Coach can reuse this later. */
+export function buildCardioPlan(
+  input: BuildCardioPlanInput,
+  spec: CardioBuilderSpec,
+  machineName: string
+): CardioPlan {
+  const type = spec.quickStart.types.find((item) => item.id === input.style) ?? spec.quickStart.types[0];
+  const wrapped = plannedBlocks(input, spec);
+  const maxSeconds = spec.buildIntervals.maxMinutes * 60;
+  const capped = capBlocks(wrapped, maxSeconds, spec.buildIntervals.steppers.secondsMin);
+  const style = isIntervalsBuild(input) ? 'intervals' : input.style === 'intervals' ? 'intervals' : 'steady';
+  return finishPlan(
+    capped,
+    {
+      fallbackMachine: input.machineId,
+      style,
+      summary: type?.sub,
+      beginnerOk: style === 'steady',
+    },
+    spec,
+    machineName
+  );
+}
+
+export function buildQuickCardioPlan(
+  input: BuildQuickCardioPlanInput,
+  spec: CardioBuilderSpec,
+  machineName: string
+): CardioPlan {
+  return buildCardioPlan(input, spec, machineName);
 }

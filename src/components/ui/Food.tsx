@@ -1,9 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
-import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/AppText';
+import { PrimaryButton } from '@/components/ui/Buttons';
 import { PhotoFill } from '@/components/ui/Cards';
 import { IconButton } from '@/components/ui/IconButton';
 import { useTheme } from '@/constants/theme';
@@ -421,6 +423,139 @@ export function FuelSuggestionCard({
   );
 }
 
+export type FuelSheetOptions = {
+  title: string;
+  message: string;
+  suggestion: FuelSuggestion;
+};
+
+let presentFuel: ((options: FuelSheetOptions) => void) | null = null;
+
+/** Recipe suggestion after a session. Lives at the root so it stays up after the player closes. */
+export function presentFuelSheet(options: FuelSheetOptions) {
+  presentFuel?.(options);
+}
+
+export function FuelSheetProvider({ children }: { children: ReactNode }) {
+  const [sheet, setSheet] = useState<FuelSheetOptions | null>(null);
+
+  useEffect(() => {
+    presentFuel = setSheet;
+    return () => {
+      presentFuel = null;
+    };
+  }, []);
+
+  return (
+    <>
+      {children}
+      <PostSessionFuelSheet
+        visible={sheet != null}
+        title={sheet?.title ?? ''}
+        message={sheet?.message ?? ''}
+        suggestion={sheet?.suggestion ?? null}
+        onClose={() => setSheet(null)}
+      />
+    </>
+  );
+}
+
+function PostSessionFuelSheet({
+  visible,
+  title,
+  message,
+  suggestion,
+  onClose,
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  suggestion: FuelSuggestion | null;
+  onClose: () => void;
+}) {
+  const { colours, spacing, radius } = useTheme();
+  const insets = useSafeAreaInsets();
+  const recipe = suggestion?.recipe;
+
+  function open() {
+    const slug = recipe?.slug;
+    onClose();
+    if (slug) openRecipe(slug);
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <View style={styles.fuelWrap}>
+        <Pressable style={styles.fuelScrim} onPress={onClose} accessibilityLabel={foodCopy.fuel_done} />
+        <View
+          style={[
+            styles.fuelSheet,
+            {
+              backgroundColor: colours.bg,
+              borderTopLeftRadius: radius.xl,
+              borderTopRightRadius: radius.xl,
+              paddingBottom: insets.bottom + 16,
+            },
+          ]}
+          accessibilityRole="alert">
+          <ScrollView bounces={false}>
+            {recipe ? (
+              <View style={styles.fuelHero}>
+                <PhotoFill slug={recipe.coverImageSlug} kind="food" label={recipe.title} />
+                <View style={styles.fuelHeroOverlay} pointerEvents="none">
+                  <View style={[styles.fuelHeroFade, { backgroundColor: colours.overlay }]}>
+                    <AppText variant="eyebrow" style={{ color: colours.onAccent, marginBottom: 6 }}>
+                      {foodCopy.fuel_eyebrow}
+                    </AppText>
+                    <AppText variant="displaySm" style={{ color: colours.onAccent }} numberOfLines={2}>
+                      {recipe.title}
+                    </AppText>
+                  </View>
+                </View>
+                <View style={styles.fuelClose}>
+                  <IconButton
+                    icon="close"
+                    variant="overlay"
+                    accessibilityLabel={foodCopy.fuel_done}
+                    onPress={onClose}
+                  />
+                </View>
+              </View>
+            ) : null}
+            <View style={styles.fuelBody}>
+              <AppText variant="title2" style={{ color: colours.ink }}>
+                {title}
+              </AppText>
+              {message ? (
+                <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.xs }}>
+                  {message}
+                </AppText>
+              ) : null}
+              {suggestion?.copy ? (
+                <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.md }}>
+                  {suggestion.copy}
+                </AppText>
+              ) : null}
+              {recipe ? (
+                <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                  {recipeMetaLine(recipe)}
+                </AppText>
+              ) : null}
+            </View>
+          </ScrollView>
+          <View
+            style={[
+              styles.fuelFooter,
+              { borderTopColor: colours.border, backgroundColor: colours.bg },
+            ]}>
+            <PrimaryButton label={foodCopy.see_recipe} onPress={open} />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export function ShoppingListRow({
   item,
   onToggle,
@@ -604,6 +739,47 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     overflow: 'hidden',
+  },
+  fuelWrap: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  fuelScrim: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(44, 24, 16, 0.4)',
+  },
+  fuelSheet: {
+    maxHeight: '92%',
+    overflow: 'hidden',
+  },
+  fuelHero: {
+    aspectRatio: 16 / 10,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  fuelHeroOverlay: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: 'flex-end',
+  },
+  fuelHeroFade: {
+    paddingHorizontal: 20,
+    paddingTop: 56,
+    paddingBottom: 18,
+  },
+  fuelClose: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+  },
+  fuelBody: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  fuelFooter: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   shopRow: {
     minHeight: 56,
