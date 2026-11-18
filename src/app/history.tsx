@@ -3,12 +3,16 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { showDialog } from '@/components/Dialog';
 import { AppText, IconButton, ListRow } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { fetchFinishedSessionMeta, type FinishedSessionMeta } from '@/lib/activityStats';
+import { cardioBuilderSpec } from '@/lib/cardioBuilderContent';
 import { lockedHomeCopy } from '@/lib/copy';
 import { formatKg } from '@/lib/programmes';
 import { fetchProgressSets, formatShortDate, getPersonalBests, parseDate, type PersonalBest } from '@/lib/progress';
+import { isCardioSession } from '@/lib/sessionTypes';
+import { discardSession } from '@/lib/sessions';
 
 function sessionLabel(session: FinishedSessionMeta): string {
   if (session.source === 'stretch') return 'Stretch';
@@ -21,6 +25,22 @@ function pbLabel(best: PersonalBest): string {
   if (best.kind === 'reps') return `${best.reps} reps`;
   if (best.weightKg == null) return `${best.reps} reps`;
   return `${formatKg(best.weightKg)} × ${best.reps}`;
+}
+
+function confirmDeleteCardio(session: FinishedSessionMeta, onDeleted: () => void) {
+  const copy = cardioBuilderSpec.justLogIt;
+  showDialog(copy.deleteTitle, copy.deleteBody, [
+    {
+      text: copy.deleteCta,
+      style: 'destructive',
+      onPress: () => {
+        void discardSession(session.id)
+          .then(onDeleted)
+          .catch(() => showDialog(copy.deleteTitle, 'Check your connection and try again.'));
+      },
+    },
+    { text: 'Keep', style: 'cancel' },
+  ]);
 }
 
 export default function HistoryScreen() {
@@ -88,6 +108,21 @@ export default function HistoryScreen() {
                 title={sessionLabel(session)}
                 subtitle={formatShortDate(parseDate(session.date))}
                 showChevron={false}
+                right={
+                  isCardioSession(session) ? (
+                    <AppText variant="bodySm" style={{ color: colours.brand, paddingRight: 4 }}>
+                      Delete
+                    </AppText>
+                  ) : undefined
+                }
+                onPress={
+                  isCardioSession(session)
+                    ? () =>
+                        confirmDeleteCardio(session, () => {
+                          setSessions((current) => current.filter((item) => item.id !== session.id));
+                        })
+                    : undefined
+                }
               />
             ))
           )}

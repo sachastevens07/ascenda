@@ -8,8 +8,9 @@ import { parseSessionType, sessionTypeFromSource, type SessionType } from '@/lib
 import type { LoggedSet, SessionSource } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
 
-/** Stretch sessions this long count toward the weekly target and streak. */
-export const STREAK_STRETCH_MIN_SECONDS = 10 * 60;
+/** Stretch and cardio this long count toward the weekly target and streak (W7 / W8). */
+export const WEEKLY_TARGET_MIN_SECONDS = 10 * 60;
+export const STREAK_STRETCH_MIN_SECONDS = WEEKLY_TARGET_MIN_SECONDS;
 
 export const STREAK_GOALS = [4, 8, 12] as const;
 export type StreakGoal = (typeof STREAK_GOALS)[number];
@@ -113,7 +114,7 @@ export type WeekTypeCounts = {
   recovery: number;
 };
 
-/** Qualifying sessions this week, split by type. Recovery still needs 10 minutes. */
+/** Qualifying sessions this week, split by type. Cardio and recovery need 10 minutes. */
 export function thisWeekTypeCounts(
   sessions: FinishedSessionMeta[],
   now = new Date()
@@ -129,10 +130,11 @@ export function thisWeekTypeCounts(
   return counts;
 }
 
-/** Strength and cardio always count. Stretch and recovery count from 10 minutes. */
+/** Strength always counts. Cardio, stretch and recovery count from 10 minutes. */
 export function sessionCountsTowardStreak(session: FinishedSessionMeta): boolean {
-  if (streakSessionKind(session) === 'recovery') {
-    return sessionDurationSeconds(session) >= STREAK_STRETCH_MIN_SECONDS;
+  const kind = streakSessionKind(session);
+  if (kind === 'cardio' || kind === 'recovery') {
+    return sessionDurationSeconds(session) >= WEEKLY_TARGET_MIN_SECONDS;
   }
   return true;
 }

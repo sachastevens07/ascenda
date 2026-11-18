@@ -12,8 +12,10 @@ import {
 } from '@/lib/sessionTypes';
 import { describeRoutineError } from '@/lib/routines';
 import {
+  discardSession,
   fetchActiveSession,
   finishSession,
+  insertLoggedCardioSession,
   startCardioSession,
   type Session,
 } from '@/lib/sessions';
@@ -31,6 +33,7 @@ export const CARDIO_MACHINES = [
   'mixed',
 ] as const;
 export type CardioMachineId = (typeof CARDIO_MACHINES)[number];
+export type LoggedCardioMachineId = CardioMachineId | 'other';
 
 export const BEGINNER_CARDIO_DAYS = 28;
 
@@ -104,13 +107,15 @@ export type CardioSessionDef = {
 export type CardioLog = {
   sessionId: string;
   slug: string;
-  machineId: CardioMachineId;
+  machineId: LoggedCardioMachineId;
   minutes: number;
   settingsUsed: Record<string, number | string>;
   effort: number | null;
   distanceKm: number | null;
   calories: number | null;
   createdAt: string;
+  /** Session local date (YYYY-MM-DD). Falls back to created_at when the join is missing. */
+  date: string;
 };
 
 export type CardioFinishInput = {
@@ -154,6 +159,12 @@ function pair(value: unknown): [number, number] | number | undefined {
 function parseMachine(value: unknown): CardioMachineId | null {
   const raw = text(value).replace(/-/g, '_').replace(/ /g, '_');
   return CARDIO_MACHINES.includes(raw as CardioMachineId) ? (raw as CardioMachineId) : null;
+}
+
+export function parseLoggedMachine(value: unknown): LoggedCardioMachineId | null {
+  const raw = text(value).replace(/-/g, '_').replace(/ /g, '_');
+  if (raw === 'other') return 'other';
+  return parseMachine(raw);
 }
 
 function parseSettings(raw: unknown): CardioSettings {
@@ -359,12 +370,13 @@ export function cardioDefFromPlan(plan: CardioPlan): CardioSessionDef {
   };
 }
 
-export function machineLabel(id: CardioMachineId): string {
+export function machineLabel(id: LoggedCardioMachineId): string {
   if (id === 'treadmill') return cardioCopy.machine_treadmill;
   if (id === 'bike') return cardioCopy.machine_bike;
   if (id === 'cross_trainer') return cardioCopy.machine_cross_trainer;
   if (id === 'rower') return cardioCopy.machine_rower;
   if (id === 'stair_climber') return cardioCopy.machine_stair_climber;
+  if (id === 'other') return cardioCopy.machine_other;
   return cardioCopy.machine_mixed;
 }
 
@@ -440,8 +452,11 @@ export function sessionMachines(session: CardioSessionDef): CardioMachineId[] {
   return [...new Set(found)];
 }
 
-/** Keys used by Gym unlocked cardio badges (H6). */
-export function badgeMachineKeys(machineId: CardioMachineId, extra: CardioMachineId[] = []): string[] {
+/** Keys used by Gym unlocked cardio badges (H6). Other cardio does not unlock a machine. */
+export function badgeMachineKeys(
+  machineId: LoggedCardioMachineId,
+  extra: LoggedCardioMachineId[] = []
+): string[] {
   const ids = machineId === 'mixed' ? extra : [machineId, ...extra];
   const keys = new Set<string>();
   for (const id of ids) {
@@ -494,6 +509,7 @@ export function describeCardioError(error: unknown): string {
       : error && typeof error === 'object' && 'message' in error
         ? String((error as { message: unknown }).message)
         : '';
+  if (/cardio_w8_other\.sql|Other cardio needs/i.test(detail)) return detail;
   if (/cardio_w2\.sql|cardio_logs|source.*cardio/i.test(detail)) return cardioCopy.missing_sql;
   return describeRoutineError(error) || detail || 'Check your connection and try again.';
 }
@@ -562,10 +578,18 @@ export async function finishCardioSession(
   await finishSession(session.id, durationSeconds);
 }
 
+function sessionDateFromRow(row: Json): string {
+  const nested = asRecord(row.sessions);
+  const fromJoin = text(nested.date);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fromJoin)) return fromJoin;
+  const created = text(row.created_at);
+  return created.slice(0, 10);
+}
+
 function toLog(row: Json): CardioLog | null {
   const sessionId = text(row.session_id);
   const slug = text(row.cardio_session_slug);
-  const machineId = parseMachine(row.machine_id);
+  const machineId = parseLoggedMachine(row.machine_id);
   const minutes = num(row.minutes);
   if (!sessionId || !slug || !machineId || minutes == null) return null;
   const settings = asRecord(row.settings_used);
@@ -573,6 +597,7 @@ function toLog(row: Json): CardioLog | null {
   for (const [key, value] of Object.entries(settings)) {
     if (typeof value === 'number' || typeof value === 'string') used[key] = value;
   }
+  const createdAt = text(row.created_at) || text(row.session_id);
   return {
     sessionId,
     slug,
@@ -582,20 +607,33 @@ function toLog(row: Json): CardioLog | null {
     effort: num(row.effort),
     distanceKm: num(row.distance_km),
     calories: num(row.calories),
-    createdAt: text(row.created_at) || text(row.session_id),
+    createdAt,
+    date: sessionDateFromRow(row) || createdAt.slice(0, 10),
   };
 }
 
 export async function fetchCardioLogs(): Promise<CardioLog[]> {
-  const { data, error } = await supabase
+  const withDate = await supabase
     .from('cardio_logs')
-    .select('session_id, cardio_session_slug, machine_id, minutes, settings_used, effort, distance_km, calories, created_at')
+    .select(
+      'session_id, cardio_session_slug, machine_id, minutes, settings_used, effort, distance_km, calories, created_at, sessions(date)'
+    )
     .order('created_at', { ascending: true });
-  if (error) {
-    if (isMissingCardioTable(error)) return [];
-    throw error;
+  if (withDate.error) {
+    if (isMissingCardioTable(withDate.error)) return [];
+    const fallback = await supabase
+      .from('cardio_logs')
+      .select(
+        'session_id, cardio_session_slug, machine_id, minutes, settings_used, effort, distance_km, calories, created_at'
+      )
+      .order('created_at', { ascending: true });
+    if (fallback.error) {
+      if (isMissingCardioTable(fallback.error)) return [];
+      throw fallback.error;
+    }
+    return (fallback.data ?? []).map((row) => toLog(asRecord(row))).filter((item): item is CardioLog => item != null);
   }
-  return (data ?? []).map((row) => toLog(asRecord(row))).filter((item): item is CardioLog => item != null);
+  return (withDate.data ?? []).map((row) => toLog(asRecord(row))).filter((item): item is CardioLog => item != null);
 }
 
 export function cardioMachinesFromLogs(logs: CardioLog[]): Set<string> {
@@ -603,8 +641,8 @@ export function cardioMachinesFromLogs(logs: CardioLog[]): Set<string> {
   for (const log of logs) {
     const extra = text(log.settingsUsed.machines)
       .split(',')
-      .map((item) => parseMachine(item.trim()))
-      .filter((item): item is CardioMachineId => item != null);
+      .map((item) => parseLoggedMachine(item.trim()))
+      .filter((item): item is LoggedCardioMachineId => item != null);
     for (const key of badgeMachineKeys(log.machineId, extra)) keys.add(key);
   }
   return keys;
@@ -612,8 +650,42 @@ export function cardioMachinesFromLogs(logs: CardioLog[]): Set<string> {
 
 export function cardioWeekMinutes(logs: CardioLog[], weekStartIso: string): number {
   return logs
-    .filter((log) => (log.createdAt.slice(0, 10) || '') >= weekStartIso)
+    .filter((log) => (log.date || log.createdAt.slice(0, 10) || '') >= weekStartIso)
     .reduce((sum, log) => sum + log.minutes, 0);
+}
+
+export async function logManualCardioSession(input: {
+  machineId: LoggedCardioMachineId;
+  minutes: number;
+  effort: number;
+  date: string;
+  distanceKm: number | null;
+}): Promise<Session> {
+  const minutes = Math.max(1, Math.min(180, Math.round(input.minutes * 10) / 10));
+  const effort = Math.min(10, Math.max(1, Math.round(input.effort)));
+  const slug = `logged-${input.machineId}`;
+  const session = await insertLoggedCardioSession({ date: input.date, minutes, slug });
+  const { error } = await supabase.from('cardio_logs').insert({
+    session_id: session.id,
+    cardio_session_slug: slug,
+    machine_id: input.machineId,
+    minutes,
+    settings_used: {},
+    effort,
+    distance_km: input.distanceKm,
+    calories: null,
+  });
+  if (error) {
+    await discardSession(session.id).catch(() => {});
+    if (/machine_id|cardio_logs_machine_check/i.test(error.message) && input.machineId === 'other') {
+      throw new Error('Other cardio needs supabase/cardio_w8_other.sql run in the Supabase SQL editor.');
+    }
+    if (isMissingCardioTable(error)) {
+      throw new Error(cardioCopy.missing_sql);
+    }
+    throw error;
+  }
+  return session;
 }
 
 export function longestCardioMinutes(logs: CardioLog[]): number {

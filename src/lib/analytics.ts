@@ -44,6 +44,7 @@ export const ANALYTICS_EVENTS = [
   'cardio_builder_opened',
   'custom_cardio_started',
   'custom_cardio_saved',
+  'cardio_logged_manually',
   'dev_test_event',
 ] as const;
 

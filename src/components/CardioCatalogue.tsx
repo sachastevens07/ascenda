@@ -143,6 +143,15 @@ function CreateYourOwnCard() {
               />
             );
           }
+          if (action.id === 'log') {
+            return (
+              <SecondaryButton
+                key={action.id}
+                label={action.label}
+                onPress={() => router.push('/cardio/log' as Href)}
+              />
+            );
+          }
           return (
             <SecondaryButton
               key={action.id}

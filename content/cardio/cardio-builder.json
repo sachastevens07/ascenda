@@ -119,6 +119,8 @@
       "move_down": "Move down"
     },
     "settings_label": "Settings",
+    "minutes_label": "Minutes",
+    "seconds_label": "Seconds",
     "seconds_value": "{seconds} s",
     "max_minutes": 90,
     "cap_message": "That's 90 minutes. Keep it there so the session stays doable.",
@@ -321,7 +323,10 @@
     ],
     "save_button": "Save",
     "saved_toast": "Saved. That counts towards your week.",
-    "short_note": "Sessions under 10 minutes are saved but don't count towards your weekly target."
+    "short_note": "Sessions under 10 minutes are saved but don't count towards your weekly target.",
+    "delete_title": "Delete this session?",
+    "delete_body": "It's removed from your week and history.",
+    "delete_cta": "Delete"
   },
   "counting": {
     "weekly_target": "A cardio session counts towards the weekly target and streak when it lasts 10 minutes or more, whether played or logged.",

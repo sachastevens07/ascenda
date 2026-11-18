@@ -10,10 +10,12 @@ import {
 import { cardioCopy } from '@/lib/copy';
 
 export {
+  cardioMinutesCountTowardWeek,
   cardioPlanLength,
   effortSettingsBand,
   formatPlanMinutes,
   isEffortTipBeginner,
+  justLogDateIsos,
   machineImageSlug,
   nameQuickCardioPlan,
   parseCardioBuilderSpec,

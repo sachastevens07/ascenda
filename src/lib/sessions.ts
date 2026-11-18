@@ -122,9 +122,17 @@ async function insertSessionRow(
 
 /** Today's date on the phone, as YYYY-MM-DD. */
 function localDate(): string {
-  const now = new Date();
+  return formatLocalDate(new Date());
+}
+
+function formatLocalDate(now: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function localNoonIso(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0).toISOString();
 }
 
 /** Postgres numerics arrive as strings; turn them back into numbers. */
@@ -366,6 +374,54 @@ export async function startCardioSession(
     throw new Error('Cardio sessions need supabase/cardio_w2.sql run in the Supabase SQL editor.');
   }
   throw fallback.error;
+}
+
+/** Finished cardio logged after the fact. Does not open the player or start a timer. */
+export async function insertLoggedCardioSession(input: {
+  date: string;
+  minutes: number;
+  slug: string;
+}): Promise<Session> {
+  const minutes = Math.max(1, Math.min(180, Math.round(input.minutes * 10) / 10));
+  const durationSeconds = Math.round(minutes * 60);
+  const startedAt = localNoonIso(input.date);
+  const completedAt = new Date(Date.parse(startedAt) + durationSeconds * 1000).toISOString();
+  const payload: Record<string, unknown> = {
+    programme_day_id: null,
+    date: input.date,
+    started_at: startedAt,
+    completed_at: completedAt,
+    duration_seconds: durationSeconds,
+    exercise_swaps: { [CARDIO_SLUG_KEY]: input.slug },
+    source: 'cardio' as const,
+    type: 'cardio' as const,
+    logged_after: true,
+  };
+
+  async function attempt(body: Record<string, unknown>, columns: string): Promise<SessionWriteResult> {
+    const cardio = await insertSessionRow(body, columns);
+    if (!cardio.error) return cardio;
+    if (isRejectedCardioSource(cardio.error)) {
+      return insertSessionRow({ ...body, source: 'custom' as const }, columns);
+    }
+    return cardio;
+  }
+
+  let result = await attempt(payload, SESSION_COLUMNS_W8);
+  if (result.error && isMissingLoggedAfterColumn(result.error)) {
+    const { logged_after: _ignored, ...withoutFlag } = payload;
+    result = await attempt(withoutFlag, SESSION_COLUMNS_GROUP8);
+  }
+  if (result.error && /duration_seconds/i.test(result.error.message ?? '')) {
+    const { duration_seconds: _ignored, ...withoutDuration } = payload;
+    result = await attempt(withoutDuration, SESSION_COLUMNS_W8);
+  }
+  if (result.error && isRejectedCardioSource(result.error)) {
+    throw new Error('Cardio sessions need supabase/cardio_w2.sql run in the Supabase SQL editor.');
+  }
+  if (result.error) throw result.error;
+  track('session_completed');
+  return toSession(result.data as Session)!;
 }
 
 export async function startStretchSession(routineDayId: string): Promise<Session> {

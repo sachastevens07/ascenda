@@ -7,8 +7,10 @@ import { fileURLToPath } from 'node:url';
 import {
   buildCardioPlan,
   buildQuickCardioPlan,
+  cardioMinutesCountTowardWeek,
   cardioPlanLength,
   effortSettingsBand,
+  justLogDateIsos,
   nameQuickCardioPlan,
   parseCardioBuilderSpec,
   settingsForEffort,
@@ -203,4 +205,26 @@ test('extra block settings are kept', () => {
   const extra = plan.intervals.at(-1);
   assert.equal(extra?.settings.cadence_rpm, 90);
   assert.equal(extra?.settings.resistance, 'Add 1');
+});
+
+test('Just log it copy and date window come from the spec', () => {
+  const log = spec.justLogIt;
+  assert.equal(log.otherId, 'other');
+  assert.equal(log.otherLabel, 'Other cardio');
+  assert.equal(log.minutes.min, 1);
+  assert.equal(log.minutes.max, 180);
+  assert.equal(log.minutes.default, 20);
+  assert.equal(log.effortDefault, 5);
+  assert.equal(log.minDaysAgo, 7);
+  assert.equal(log.countMinutes, 10);
+  assert.ok(log.savedToast.length > 0);
+  assert.ok(log.shortNote.includes('10'));
+  assert.equal(log.deleteCta, 'Delete');
+  const now = new Date(2026, 10, 18);
+  const dates = justLogDateIsos(spec, now);
+  assert.equal(dates.length, 8);
+  assert.equal(dates[0], '2026-11-18');
+  assert.equal(dates[7], '2026-11-11');
+  assert.equal(cardioMinutesCountTowardWeek(10, spec), true);
+  assert.equal(cardioMinutesCountTowardWeek(9, spec), false);
 });

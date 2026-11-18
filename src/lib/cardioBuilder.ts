@@ -81,6 +81,27 @@ export type CardioBuilderSpec = {
   settingsDefaults: Json;
   settingsNote: string;
   effortPicker: { title: string; beginnerTip: string };
+  justLogIt: {
+    title: string;
+    sub: string;
+    machineLabel: string;
+    otherId: string;
+    otherLabel: string;
+    minutesLabel: string;
+    minutes: { min: number; max: number; default: number };
+    effortLabel: string;
+    effortDefault: number;
+    dateLabel: string;
+    minDaysAgo: number;
+    distanceLabel: string;
+    saveButton: string;
+    savedToast: string;
+    shortNote: string;
+    deleteTitle: string;
+    deleteBody: string;
+    deleteCta: string;
+    countMinutes: number;
+  };
   buildIntervals: {
     title: string;
     machineTitle: string;
@@ -116,6 +137,8 @@ export type CardioBuilderSpec = {
       moveDown: string;
     };
     settingsLabel: string;
+    minutesLabel: string;
+    secondsLabel: string;
     secondsValue: string;
     maxMinutes: number;
     capMessage: string;
@@ -123,6 +146,47 @@ export type CardioBuilderSpec = {
     startButton: string;
   };
 };
+
+function parseJustLogField(fields: unknown[], id: string): Json {
+  const match = fields.find((item) => text(asRecord(item).id) === id);
+  return asRecord(match);
+}
+
+function parseJustLogIt(file: Json): CardioBuilderSpec['justLogIt'] {
+  const raw = asRecord(file.just_log_it);
+  const fields = asArray(raw.fields);
+  const machine = parseJustLogField(fields, 'machine');
+  const extra = asRecord(machine.extra_option);
+  const minutes = parseJustLogField(fields, 'minutes');
+  const effort = parseJustLogField(fields, 'effort');
+  const date = parseJustLogField(fields, 'date');
+  const distance = parseJustLogField(fields, 'distance_km');
+  return {
+    title: text(raw.title),
+    sub: text(raw.sub),
+    machineLabel: text(machine.label) || 'Machine',
+    otherId: text(extra.id) || 'other',
+    otherLabel: text(extra.label) || 'Other cardio',
+    minutesLabel: text(minutes.label) || 'Minutes',
+    minutes: {
+      min: Math.round(num(minutes.min) ?? 1),
+      max: Math.round(num(minutes.max) ?? 180),
+      default: Math.round(num(minutes.default) ?? 20),
+    },
+    effortLabel: text(effort.label) || 'How hard did it feel?',
+    effortDefault: Math.round(num(effort.default) ?? 5),
+    dateLabel: text(date.label) || 'When',
+    minDaysAgo: Math.round(num(date.min_days_ago) ?? 7),
+    distanceLabel: text(distance.label) || 'Distance (optional)',
+    saveButton: text(raw.save_button) || 'Save',
+    savedToast: text(raw.saved_toast),
+    shortNote: text(raw.short_note),
+    deleteTitle: text(raw.delete_title) || 'Delete this session?',
+    deleteBody: text(raw.delete_body) || "It's removed from your week and history.",
+    deleteCta: text(raw.delete_cta) || 'Delete',
+    countMinutes: 10,
+  };
+}
 
 function parseAction(raw: unknown): CardioBuilderAction | null {
   const row = asRecord(raw);
@@ -233,6 +297,7 @@ export function parseCardioBuilderSpec(raw: unknown): CardioBuilderSpec {
       title: text(asRecord(file.effort_picker).title),
       beginnerTip: text(asRecord(file.effort_picker).beginner_tip_9_10),
     },
+    justLogIt: parseJustLogIt(file),
     buildIntervals: {
       title: text(buildRaw.title),
       machineTitle: text(buildRaw.machine_title),
@@ -268,6 +333,8 @@ export function parseCardioBuilderSpec(raw: unknown): CardioBuilderSpec {
         moveDown: text(asRecord(buildRaw.advanced).move_down),
       },
       settingsLabel: text(buildRaw.settings_label),
+      minutesLabel: text(buildRaw.minutes_label) || 'Minutes',
+      secondsLabel: text(buildRaw.seconds_label) || 'Seconds',
       secondsValue: text(buildRaw.seconds_value),
       maxMinutes: Math.round(num(buildRaw.max_minutes) ?? 90),
       capMessage: text(buildRaw.cap_message),
@@ -275,6 +342,20 @@ export function parseCardioBuilderSpec(raw: unknown): CardioBuilderSpec {
       startButton: text(buildRaw.start_button),
     },
   };
+}
+
+export function justLogDateIsos(spec: CardioBuilderSpec, now = new Date()): string[] {
+  const dates: string[] = [];
+  const pad = (value: number) => String(value).padStart(2, '0');
+  for (let daysAgo = 0; daysAgo <= spec.justLogIt.minDaysAgo; daysAgo += 1) {
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo);
+    dates.push(`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`);
+  }
+  return dates;
+}
+
+export function cardioMinutesCountTowardWeek(minutes: number, spec: CardioBuilderSpec): boolean {
+  return minutes >= spec.justLogIt.countMinutes;
 }
 
 export function quickStartMinutesOptions(spec: CardioBuilderSpec): number[] {
