@@ -8,7 +8,10 @@
     "scheme": "womensstrength",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,14 +33,14 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Add a private progress photo from your library, or pick a machine photo to scan.",
-          "cameraPermission": "Take a photo of a gym machine, or a private progress photo."
+          "photosPermission": "Your photo library is only used if you choose to add a private progress photo.",
+          "cameraPermission": "Your camera is only used if you choose to take a private progress photo."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Take a photo of a gym machine to identify it.",
+          "cameraPermission": "Your camera is only used if you choose to take a private progress photo.",
           "recordAudioAndroid": false
         }
       ],

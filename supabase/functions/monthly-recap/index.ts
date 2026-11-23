@@ -115,6 +115,10 @@ function monthKey(value: unknown): string | null {
   const year = Number(match[1]);
   const month = Number(match[2]);
   if (year < 2020 || year > 2100 || month < 1 || month > 12) return null;
+  // Only the last 12 months. Each new month costs one AI call, so don't let any month be requested.
+  const now = new Date();
+  const monthsAgo = (now.getUTCFullYear() - year) * 12 + (now.getUTCMonth() + 1 - month);
+  if (monthsAgo < 0 || monthsAgo > 12) return null;
   return `${match[1]}-${match[2]}-01`;
 }
 

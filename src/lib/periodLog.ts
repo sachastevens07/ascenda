@@ -411,7 +411,8 @@ export async function buildPeriodInsights(logs: PeriodLog[]): Promise<string[]> 
   const notes: string[] = [];
   const countNote = noteById('sessions_on_period_days');
   if (countNote) {
-    notes.push(fillNote(countNote.text, { n: String(onPeriod.length) }));
+    // The copy says "days", so count distinct dates, not sessions.
+    notes.push(fillNote(countNote.text, { n: String(new Set(onPeriod.map((row) => row.date)).size) }));
   }
   const periodMinutes = onPeriod
     .map((row) => row.duration_seconds)

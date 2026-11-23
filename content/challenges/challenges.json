@@ -286,12 +286,12 @@
     {
       "slug": "quiet-start",
       "name": "Quiet Start",
-      "summary": "Two calm sessions a week for four weeks, all in one spot. The gentlest way to begin.",
+      "summary": "Two calm sessions a week for four weeks, using just dumbbells and a bench. The gentlest way to begin.",
       "description": "Made for your first month in the gym, or your first month back. Two sessions a week using a bench and a pair of dumbbells in a quieter corner. No machines to find, no queues, just you and your plan.",
       "cover_image_slug": "challenge-quiet-start",
       "tags": [
         "Beginner friendly",
-        "One spot"
+        "Dumbbells and a bench"
       ],
       "audience": "New to the gym or coming back after a break",
       "weekly_missions": [
