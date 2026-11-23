@@ -1,3 +1,4 @@
+import { mergedInto } from '@/lib/libraryOverrides';
 import {
   SLOT_EXERCISE_COLUMNS,
   toSlotExercise,
@@ -192,7 +193,9 @@ export async function fetchExercisesForBuilder(): Promise<SlotExercise[]> {
     .select(SLOT_EXERCISE_COLUMNS)
     .order('name');
   if (error) throw error;
-  return ((data ?? []) as SlotExercise[]).map(toSlotExercise);
+  return ((data ?? []) as SlotExercise[])
+    .filter((row) => !mergedInto(row.id))
+    .map(toSlotExercise);
 }
 
 type WorkoutQueryResult = {

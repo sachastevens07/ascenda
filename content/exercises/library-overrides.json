@@ -1,0 +1,379 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "Exercise library fixes from the 23 Nov 2026 audit (ascenda-exercise-audit.md). Applied in the app on top of the Supabase exercises table, so no SQL is needed and nothing is deleted.",
+    "merged_into: duplicates hidden from the library and pickers; any history stays on the old id. Logged sessions and sets are never changed.",
+    "stretch_ids: hidden from the library while STRETCHES_ENABLED is false.",
+    "alternatives: 'If it's taken' swaps for library exercises that are not in strength-catalogue.json (0 to 3, closest first). Catalogue exercises keep their catalogue alternatives. An empty list means no swap is needed (bodyweight, dumbbells, kettlebells or bands).",
+    "fixes: corrected muscle or equipment tags. advanced: shown with an Advanced label. wrong_demo: animations that show a different movement, so the placeholder shows instead.",
+    "Names are shown in sentence case by the app (see toSentenceCase in src/lib/exercises.ts)."
+  ],
+  "merged_into": {
+    "cable-face-pull": "face-pull",
+    "cable-pallof-press": "pallof-press",
+    "cable-triceps-pushdown": "triceps-pushdown",
+    "dumbbell-hammer-curl": "hammer-curl",
+    "overhead-triceps-extension": "overhead-dumbbell-triceps-extension",
+    "plank": "forearm-plank",
+    "kettlebell-farmers-carry": "farmer-carry",
+    "kettlebell-suitcase-carry": "suitcase-carry",
+    "standing-calf-raise": "calf-raise-machine",
+    "rear-delt-fly": "dumbbell-reverse-fly",
+    "kettlebell-goblet-squat": "goblet-squat"
+  },
+  "stretch_ids": [
+    "arm-circles",
+    "butterfly-stretch",
+    "calf-wall-stretch",
+    "cat-cow",
+    "childs-pose",
+    "chin-tuck",
+    "cross-body-shoulder-stretch",
+    "doorway-chest-stretch",
+    "figure-four-stretch",
+    "frog-stretch",
+    "happy-baby",
+    "hip-circles",
+    "kneeling-hip-flexor-stretch",
+    "kneeling-lat-stretch",
+    "knees-to-chest",
+    "legs-up-the-wall",
+    "low-lunge-reach",
+    "neck-side-stretch",
+    "ninety-ninety-hip-stretch",
+    "open-book-stretch",
+    "overhead-triceps-stretch",
+    "prone-press-up",
+    "seated-hamstring-stretch",
+    "seated-spinal-twist",
+    "shoulder-rolls",
+    "slow-breathing",
+    "sphinx",
+    "standing-forward-fold",
+    "standing-quad-stretch",
+    "standing-side-bend",
+    "supine-twist",
+    "supported-deep-squat",
+    "supported-pigeon",
+    "thread-the-needle",
+    "wall-angel",
+    "worlds-greatest-stretch",
+    "wrist-and-forearm-stretch"
+  ],
+  "alternatives": {
+    "ab-crunch-machine": [
+      "cable-crunch",
+      "reverse-crunch"
+    ],
+    "arnold-press": [],
+    "assisted-dip": [
+      "bench-dip",
+      "close-grip-push-up",
+      "triceps-pushdown"
+    ],
+    "back-extension": [
+      "barbell-romanian-deadlift",
+      "dumbbell-romanian-deadlift",
+      "superman"
+    ],
+    "band-biceps-curl": [],
+    "band-chest-press": [],
+    "band-lat-pulldown": [],
+    "band-lateral-raise": [],
+    "band-pallof-press": [],
+    "band-pull-apart": [],
+    "band-row": [],
+    "band-shoulder-press": [],
+    "band-triceps-pushdown": [],
+    "banded-clamshell": [],
+    "banded-glute-bridge": [],
+    "banded-hamstring-curl": [],
+    "banded-hip-thrust": [],
+    "banded-kickback": [],
+    "banded-lateral-walk": [],
+    "banded-squat": [],
+    "barbell-biceps-curl": [
+      "ez-bar-curl",
+      "dumbbell-biceps-curl",
+      "cable-biceps-curl"
+    ],
+    "barbell-box-squat": [
+      "barbell-back-squat",
+      "smith-machine-squat",
+      "dumbbell-box-squat"
+    ],
+    "barbell-deadlift": [
+      "trap-bar-deadlift",
+      "kettlebell-deadlift",
+      "dumbbell-romanian-deadlift"
+    ],
+    "barbell-glute-bridge": [
+      "barbell-hip-thrust",
+      "dumbbell-glute-bridge",
+      "banded-glute-bridge"
+    ],
+    "barbell-overhead-press": [
+      "dumbbell-shoulder-press",
+      "machine-shoulder-press",
+      "landmine-press"
+    ],
+    "barbell-sumo-deadlift": [
+      "kettlebell-sumo-deadlift",
+      "dumbbell-sumo-squat",
+      "trap-bar-deadlift"
+    ],
+    "bear-plank": [],
+    "bench-dip": [
+      "assisted-dip",
+      "close-grip-push-up"
+    ],
+    "bodyweight-calf-raise": [],
+    "bodyweight-split-squat": [],
+    "bodyweight-squat": [],
+    "cable-chest-fly": [
+      "pec-deck",
+      "dumbbell-fly",
+      "low-to-high-cable-fly"
+    ],
+    "cable-hammer-curl": [
+      "hammer-curl",
+      "cable-biceps-curl"
+    ],
+    "cable-hip-adduction": [
+      "hip-adduction-machine",
+      "side-lying-adduction",
+      "copenhagen-plank"
+    ],
+    "cable-overhead-triceps-extension": [
+      "overhead-dumbbell-triceps-extension",
+      "triceps-pushdown"
+    ],
+    "cable-rear-delt-fly": [
+      "reverse-pec-deck",
+      "dumbbell-reverse-fly",
+      "band-pull-apart"
+    ],
+    "cable-squat": [
+      "goblet-squat",
+      "dumbbell-sumo-squat"
+    ],
+    "cable-woodchop": [
+      "band-pallof-press",
+      "side-plank"
+    ],
+    "chest-dip": [
+      "assisted-dip",
+      "decline-push-up",
+      "dumbbell-bench-press"
+    ],
+    "chin-up": [
+      "assisted-pull-up",
+      "lat-pulldown",
+      "close-grip-lat-pulldown"
+    ],
+    "close-grip-bench-press": [
+      "close-grip-push-up",
+      "dumbbell-lying-triceps-extension",
+      "ez-bar-skull-crusher"
+    ],
+    "close-grip-lat-pulldown": [
+      "lat-pulldown",
+      "assisted-pull-up",
+      "single-arm-lat-pulldown"
+    ],
+    "close-grip-push-up": [],
+    "concentration-curl": [],
+    "copenhagen-plank": [
+      "side-lying-adduction",
+      "hip-adduction-machine"
+    ],
+    "curtsy-lunge": [],
+    "decline-push-up": [],
+    "deficit-reverse-lunge": [],
+    "donkey-kick": [],
+    "dumbbell-fly": [],
+    "dumbbell-front-raise": [],
+    "dumbbell-lateral-lunge": [],
+    "dumbbell-lying-triceps-extension": [
+      "ez-bar-skull-crusher",
+      "overhead-dumbbell-triceps-extension"
+    ],
+    "dumbbell-pullover": [
+      "straight-arm-pulldown"
+    ],
+    "dumbbell-shoulder-press": [],
+    "dumbbell-shrug": [],
+    "dumbbell-sumo-squat": [],
+    "dumbbell-walking-lunge": [],
+    "ez-bar-curl": [
+      "barbell-biceps-curl",
+      "dumbbell-biceps-curl",
+      "cable-biceps-curl"
+    ],
+    "ez-bar-skull-crusher": [
+      "dumbbell-lying-triceps-extension",
+      "cable-overhead-triceps-extension"
+    ],
+    "fire-hydrant": [],
+    "frog-pump": [],
+    "front-squat": [
+      "smith-machine-squat",
+      "hack-squat",
+      "goblet-squat"
+    ],
+    "glute-bridge": [],
+    "glute-focused-back-extension": [
+      "cable-pull-through",
+      "dumbbell-romanian-deadlift",
+      "barbell-hip-thrust"
+    ],
+    "glute-kickback-machine": [
+      "cable-glute-kickback",
+      "banded-kickback",
+      "donkey-kick"
+    ],
+    "good-morning": [
+      "barbell-romanian-deadlift",
+      "dumbbell-romanian-deadlift",
+      "back-extension"
+    ],
+    "heels-elevated-goblet-squat": [],
+    "hip-adduction-machine": [
+      "cable-hip-adduction",
+      "copenhagen-plank",
+      "side-lying-adduction"
+    ],
+    "hollow-body-hold": [],
+    "incline-barbell-bench-press": [
+      "incline-dumbbell-press",
+      "incline-machine-chest-press"
+    ],
+    "incline-dumbbell-curl": [
+      "dumbbell-biceps-curl",
+      "cable-biceps-curl"
+    ],
+    "incline-machine-chest-press": [
+      "incline-dumbbell-press",
+      "machine-chest-press"
+    ],
+    "incline-y-raise": [
+      "dumbbell-lateral-raise",
+      "cable-lateral-raise"
+    ],
+    "inverted-row": [
+      "seated-cable-row",
+      "one-arm-dumbbell-row",
+      "band-row"
+    ],
+    "jump-squat": [],
+    "kettlebell-floor-press": [],
+    "kettlebell-overhead-press": [],
+    "kettlebell-reverse-lunge": [],
+    "kettlebell-romanian-deadlift": [],
+    "kettlebell-row": [],
+    "kettlebell-sumo-deadlift": [],
+    "kettlebell-swing": [],
+    "knee-push-up": [],
+    "landmine-press": [
+      "dumbbell-shoulder-press",
+      "arnold-press"
+    ],
+    "leg-press-calf-raise": [
+      "calf-raise-machine",
+      "seated-calf-raise",
+      "dumbbell-calf-raise"
+    ],
+    "low-to-high-cable-fly": [
+      "cable-chest-fly",
+      "pec-deck",
+      "dumbbell-fly"
+    ],
+    "lying-leg-raise": [],
+    "machine-lateral-raise": [
+      "dumbbell-lateral-raise",
+      "cable-lateral-raise"
+    ],
+    "machine-row": [
+      "seated-cable-row",
+      "chest-supported-dumbbell-row",
+      "one-arm-dumbbell-row"
+    ],
+    "mountain-climber": [],
+    "nordic-curl": [
+      "sliding-leg-curl",
+      "lying-leg-curl"
+    ],
+    "pike-push-up": [],
+    "plank-shoulder-tap": [],
+    "preacher-curl-machine": [
+      "concentration-curl",
+      "dumbbell-biceps-curl",
+      "cable-biceps-curl"
+    ],
+    "pull-up": [
+      "assisted-pull-up",
+      "lat-pulldown"
+    ],
+    "renegade-row": [],
+    "seated-calf-raise": [
+      "calf-raise-machine",
+      "leg-press-calf-raise",
+      "dumbbell-calf-raise"
+    ],
+    "side-lying-adduction": [],
+    "single-arm-cable-chest-press": [
+      "machine-chest-press",
+      "dumbbell-bench-press"
+    ],
+    "single-arm-lat-pulldown": [
+      "lat-pulldown",
+      "band-lat-pulldown"
+    ],
+    "single-leg-box-squat": [],
+    "single-leg-calf-raise": [],
+    "single-leg-hip-thrust": [],
+    "single-leg-leg-press": [
+      "leg-press",
+      "bulgarian-split-squat"
+    ],
+    "sliding-leg-curl": [],
+    "standing-cable-leg-curl": [
+      "seated-leg-curl",
+      "lying-leg-curl",
+      "banded-hamstring-curl"
+    ],
+    "straight-arm-pulldown": [
+      "dumbbell-pullover"
+    ],
+    "superman": [],
+    "t-bar-row": [
+      "barbell-bent-over-row",
+      "chest-supported-dumbbell-row",
+      "seated-cable-row"
+    ],
+    "turkish-get-up": [],
+    "wall-sit": []
+  },
+  "fixes": {
+    "dumbbell-shrug": {
+      "primary_muscle": "shoulders"
+    }
+  },
+  "advanced": [
+    "chest-dip",
+    "chin-up",
+    "copenhagen-plank",
+    "good-morning",
+    "hanging-knee-raise",
+    "jump-squat",
+    "nordic-curl",
+    "pike-push-up",
+    "pull-up",
+    "renegade-row",
+    "turkish-get-up"
+  ],
+  "wrong_demo": [
+    "banded-hip-thrust",
+    "wall-sit"
+  ]
+}

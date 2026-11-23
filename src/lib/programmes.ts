@@ -1,3 +1,4 @@
+import { toSentenceCase } from '@/lib/libraryOverrides';
 import { loggerCopy } from '@/lib/copy';
 import type { Equipment, Muscle, Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
@@ -24,6 +25,7 @@ export const SLOT_EXERCISE_COLUMNS =
 export function toSlotExercise(row: SlotExercise): SlotExercise {
   return {
     ...row,
+    name: typeof row.name === 'string' ? toSentenceCase(row.name) : row.name,
     weight_increase_kg: row.weight_increase_kg === null ? null : Number(row.weight_increase_kg),
   };
 }

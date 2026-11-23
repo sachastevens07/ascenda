@@ -1,4 +1,5 @@
 import bundled from '../../content/exercises/workoutx-ids.json';
+import { hasWrongDemo } from '@/lib/libraryOverrides';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -109,6 +110,7 @@ function isMatchedSlug(slug: string): boolean {
 }
 
 export function hasExerciseMediaMatch(exerciseId: string): boolean {
+  if (hasWrongDemo(exerciseId)) return false;
   return isMatchedSlug(canonicalExerciseMediaSlug(exerciseId));
 }
 
@@ -187,6 +189,7 @@ async function fetchMedia(exerciseId: string): Promise<ExerciseMedia | null> {
 }
 
 export async function getExerciseMedia(exerciseId: string): Promise<ExerciseMedia | null> {
+  if (hasWrongDemo(exerciseId)) return null;
   const id = canonicalExerciseMediaSlug(exerciseId);
   if (!id || !isMatchedSlug(id)) return null;
   return fetchMedia(id);

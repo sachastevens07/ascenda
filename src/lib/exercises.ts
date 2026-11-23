@@ -1,3 +1,4 @@
+import { applyExerciseFixes, isAdvancedExercise, isHiddenFromLibrary } from '@/lib/libraryOverrides';
 import { supabase } from '@/lib/supabase';
 
 export const MUSCLES = [
@@ -99,7 +100,13 @@ export type Exercise = {
   media_url: string | null;
   cues: string[];
   location_hint: string;
+  /** Hard moves (e.g. Nordic curl), labelled Advanced in the library. Set in the app, not stored. */
+  advanced?: boolean;
 };
+
+function withLibraryFixes(row: Exercise): Exercise {
+  return { ...applyExerciseFixes(row), advanced: isAdvancedExercise(row.id) };
+}
 
 export function getMediaUrl(exercise: Pick<Exercise, 'media_url'>): string | null {
   const { media_url } = exercise;
@@ -117,7 +124,10 @@ export async function fetchExercises(): Promise<Exercise[]> {
     .select(EXERCISE_COLUMNS)
     .order('name');
   if (error) throw error;
-  return (data ?? []) as Exercise[];
+  return ((data ?? []) as Exercise[])
+    .filter((row) => !isHiddenFromLibrary(row.id))
+    .map(withLibraryFixes)
+    .sort((a, b) => a.name.localeCompare(b.name, 'en-GB', { sensitivity: 'base' }));
 }
 
 export async function fetchExercise(id: string): Promise<Exercise | null> {
@@ -127,5 +137,5 @@ export async function fetchExercise(id: string): Promise<Exercise | null> {
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  return data as Exercise | null;
+  return data ? withLibraryFixes(data as Exercise) : null;
 }

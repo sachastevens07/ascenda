@@ -2,6 +2,7 @@
  * First-time guides and "if it's taken" swaps from /content.
  * Bundled so the swap engine and exercise pages work before a live sync.
  */
+import { libraryAlternativeEntries } from '@/lib/libraryOverrides';
 import catalogueFile from '../../content/exercises/strength-catalogue.json';
 import coreGuides from '../../content/exercise-guides/core-and-carries.json';
 import lowerGuides from '../../content/exercise-guides/lower-body.json';
@@ -82,6 +83,11 @@ for (const item of asArray(asRecord(catalogueFile).exercises)) {
   );
   const family = text(row.family);
   if (family) CATALOGUE_FAMILY.set(slug, family);
+}
+
+// Library exercises outside the catalogue get their swaps from library-overrides.json.
+for (const [libraryId, alternatives] of libraryAlternativeEntries()) {
+  if (!CATALOGUE_ALTS.has(libraryId)) CATALOGUE_ALTS.set(libraryId, alternatives.slice(0, 3));
 }
 
 const CATALOGUE_SLUG_FOR_LIBRARY: Record<string, string> = {};

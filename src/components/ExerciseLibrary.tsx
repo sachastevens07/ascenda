@@ -230,6 +230,7 @@ export function ExerciseLibrary({
                 </AppText>
                 <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                   {MUSCLE_LABELS[item.primary_muscle]} · {EQUIPMENT_LABELS[item.equipment]}
+                  {item.advanced ? ' · Advanced' : ''}
                 </AppText>
               </View>
               <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
