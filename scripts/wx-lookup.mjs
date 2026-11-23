@@ -53,6 +53,23 @@ const LOOKUPS = {
   't-bar-row': ['t bar row', 't-bar row', 'landmine row'],
 };
 
+// Second pass (23 Nov 2026): wall sit and the common exercises the app doesn't have yet.
+// Run with:  node scripts/wx-lookup.mjs --new
+const NEW_LOOKUPS = {
+  'wall-sit': ['wall sit', 'wall squat', 'wall chair'],
+  'smith-machine-hip-thrust': ['smith hip thrust', 'smith machine hip thrust', 'smith glute bridge'],
+  'smith-machine-split-squat': ['smith split squat', 'smith lunge', 'smith machine lunge', 'smith bulgarian'],
+  'smith-machine-romanian-deadlift': ['smith romanian deadlift', 'smith deadlift', 'smith stiff leg', 'smith rdl'],
+  'crunch': ['crunch', 'floor crunch'],
+  'bicycle-crunch': ['bicycle crunch', 'bicycle'],
+  'russian-twist': ['russian twist', 'seated twist', 'oblique twist'],
+  'ab-wheel-rollout': ['ab wheel', 'ab roller', 'rollout', 'wheel rollout'],
+  'cable-upright-row': ['cable upright row', 'upright row'],
+  'dumbbell-upright-row': ['dumbbell upright row'],
+  'seated-dumbbell-shoulder-press': ['seated dumbbell shoulder press', 'seated dumbbell press', 'dumbbell seated overhead press'],
+  'standing-dumbbell-shoulder-press': ['standing dumbbell shoulder press', 'dumbbell standing overhead press', 'dumbbell standing press'],
+};
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function rowsOf(body) {
@@ -96,11 +113,12 @@ async function main() {
     process.exit(1);
   }
   const lines = [];
-  const slugs = Object.keys(LOOKUPS);
+  const table = process.argv.includes('--new') ? NEW_LOOKUPS : LOOKUPS;
+  const slugs = Object.keys(table);
   for (const [index, slug] of slugs.entries()) {
     console.log(`${index + 1}/${slugs.length} ${slug}`);
     const seen = new Map();
-    for (const term of LOOKUPS[slug]) {
+    for (const term of table[slug]) {
       for (const row of await search(key, term)) {
         const text = describe(row);
         if (!seen.has(text)) seen.set(text, term);

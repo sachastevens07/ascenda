@@ -20,3 +20,4 @@ update public.exercises set workoutx_id = 'ex_VGH3FO' where id = 'single-leg-hip
 update public.exercises set workoutx_id = 'ex_TDAE4L' where id = 'sliding-leg-curl';
 update public.exercises set workoutx_id = 'ex_CZRMYZ' where id = 'standing-cable-leg-curl';
 update public.exercises set workoutx_id = 'ex_6BRSFE' where id = 't-bar-row';
+update public.exercises set workoutx_id = 'ex_5SQEZH' where id = 'banded-hip-thrust';
