@@ -75,8 +75,9 @@ export function nextStreakGoal(goal: StreakGoal): StreakGoal | null {
 
 export function formatTrainingHours(seconds: number): string {
   const hours = Math.max(0, seconds) / 3600;
-  if (hours < 10) return `${hours.toFixed(2)} h`;
-  if (hours < 100) return `${hours.toFixed(1)} h`;
+  // Compare after rounding, so 9.999 h shows as "10.0 h", not "10.00 h".
+  if (Number(hours.toFixed(2)) < 10) return `${hours.toFixed(2)} h`;
+  if (Number(hours.toFixed(1)) < 100) return `${hours.toFixed(1)} h`;
   return `${Math.round(hours)} h`;
 }
 
@@ -134,7 +135,8 @@ export function thisWeekHomeStats(
     if (session.date < monday || session.date > sunday) continue;
     const duration = sessionDurationSeconds(session);
     seconds += duration;
-    stats.sessions += 1;
+    // Same rule as the weekly target: cardio and recovery under 10 minutes are saved but don't count.
+    if (sessionCountsTowardStreak(session)) stats.sessions += 1;
     const kind = streakSessionKind(session);
     if (kind === 'strength') stats.strength += 1;
     else if (kind === 'cardio' && duration >= WEEKLY_TARGET_MIN_SECONDS) stats.cardio += 1;

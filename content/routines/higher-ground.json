@@ -118,7 +118,7 @@
         {
           "key": "A",
           "name": "Lower A",
-          "focus": "Squat",
+          "focus": "Legs",
           "coach_note": "Back squats lead. Brace before every rep and stay tall.",
           "exercises": [
             {
@@ -167,9 +167,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-crunch",
@@ -180,9 +180,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -198,7 +198,7 @@
         {
           "key": "B",
           "name": "Upper A",
-          "focus": "Bench and pull",
+          "focus": "Chest, back and shoulders",
           "coach_note": "Barbell bench press first. Shoulder blades together, feet planted.",
           "exercises": [
             {
@@ -222,6 +222,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -246,6 +247,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -258,6 +260,7 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -270,6 +273,7 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": "Light weight, slow and controlled."
             }
@@ -288,7 +292,7 @@
         {
           "key": "C",
           "name": "Lower B",
-          "focus": "Deadlift and glutes",
+          "focus": "Hamstrings, glutes and legs",
           "coach_note": "Trap bar deadlift: hips back, chest up, push the floor away.",
           "exercises": [
             {
@@ -337,9 +341,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "side-plank",
@@ -366,7 +370,7 @@
         {
           "key": "D",
           "name": "Upper B",
-          "focus": "Incline and pull-ups",
+          "focus": "Chest and back",
           "coach_note": "Incline press, pull-ups and shoulders.",
           "exercises": [
             {
@@ -390,6 +394,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -403,6 +408,7 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -427,6 +433,7 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -469,7 +476,7 @@
         {
           "key": "A",
           "name": "Lower A",
-          "focus": "Squat",
+          "focus": "Legs",
           "coach_note": "Heavier squats with fewer reps. Rest 3 minutes between sets.",
           "exercises": [
             {
@@ -493,9 +500,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-reverse-lunge",
@@ -519,9 +526,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hanging-knee-raise",
@@ -532,8 +539,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -549,7 +556,7 @@
         {
           "key": "B",
           "name": "Upper A",
-          "focus": "Bench and row",
+          "focus": "Chest, back and shoulders",
           "coach_note": "Bench press, then the barbell row. Keep your back flat on the row.",
           "exercises": [
             {
@@ -598,9 +605,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "overhead-dumbbell-triceps-extension",
@@ -629,7 +636,7 @@
         {
           "key": "C",
           "name": "Lower B",
-          "focus": "Deadlift and glutes",
+          "focus": "Hamstrings, glutes and legs",
           "coach_note": "Heavier trap bar deadlifts. Stop the set if your back starts to round.",
           "exercises": [
             {
@@ -678,9 +685,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -692,9 +699,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -710,7 +717,7 @@
         {
           "key": "D",
           "name": "Upper B",
-          "focus": "Incline and back",
+          "focus": "Chest and back",
           "coach_note": "Incline press and plenty of back work.",
           "exercises": [
             {
@@ -734,6 +741,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -758,6 +766,7 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -770,6 +779,7 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -811,7 +821,7 @@
         {
           "key": "A",
           "name": "Lower A",
-          "focus": "Squat",
+          "focus": "Legs",
           "coach_note": "Heavier squats with fewer reps. Rest 3 minutes between sets.",
           "exercises": [
             {
@@ -835,9 +845,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-reverse-lunge",
@@ -861,9 +871,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hanging-knee-raise",
@@ -874,8 +884,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -891,7 +901,7 @@
         {
           "key": "B",
           "name": "Upper A",
-          "focus": "Bench and row",
+          "focus": "Chest, back and shoulders",
           "coach_note": "Bench press, then the barbell row. Keep your back flat on the row.",
           "exercises": [
             {
@@ -940,9 +950,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "overhead-dumbbell-triceps-extension",
@@ -971,7 +981,7 @@
         {
           "key": "C",
           "name": "Lower B",
-          "focus": "Deadlift and glutes",
+          "focus": "Hamstrings, glutes and legs",
           "coach_note": "Heavier trap bar deadlifts. Stop the set if your back starts to round.",
           "exercises": [
             {
@@ -1020,9 +1030,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -1034,9 +1044,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -1052,7 +1062,7 @@
         {
           "key": "D",
           "name": "Upper B",
-          "focus": "Incline and back",
+          "focus": "Chest and back",
           "coach_note": "Incline press and plenty of back work.",
           "exercises": [
             {
@@ -1076,6 +1086,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -1100,6 +1111,7 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -1112,6 +1124,7 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },

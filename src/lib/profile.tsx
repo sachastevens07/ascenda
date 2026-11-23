@@ -22,6 +22,7 @@ import {
   type StoredAgeBand,
 } from '@/lib/onboardingAnswers';
 import { recordLevelChange } from '@/lib/levelUp';
+import { deleteAllProgressPhotoFiles } from '@/lib/progressPhotos';
 import { supabase } from '@/lib/supabase';
 
 export {
@@ -884,6 +885,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [userId, loaded]);
 
   const deleteAccount = useCallback(async () => {
+    // Storage files don't cascade with the auth user, so remove photos first. Best effort.
+    await deleteAllProgressPhotoFiles().catch(() => {});
     const { error } = await supabase.rpc('delete_own_account');
     if (error) throw error;
     resetAnalytics();

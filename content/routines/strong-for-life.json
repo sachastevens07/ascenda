@@ -142,9 +142,9 @@
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-cable-row",
@@ -155,9 +155,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-step-up",
@@ -182,8 +182,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -199,7 +199,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge, pull and carry",
+          "focus": "Hamstrings, back and shoulders",
           "coach_note": "Kettlebell deadlifts teach you to lift from the floor safely.",
           "exercises": [
             {
@@ -223,9 +223,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -313,9 +313,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-cable-row",
@@ -326,9 +326,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -368,7 +368,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge, pull and carry",
+          "focus": "Hamstrings, back and shoulders",
           "coach_note": "Romanian deadlifts replace the kettlebell deadlift. Same hip hinge.",
           "exercises": [
             {
@@ -392,9 +392,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "shoulder-press-machine",
@@ -405,9 +405,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-calf-raise",
@@ -482,9 +482,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-cable-row",
@@ -495,9 +495,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -537,7 +537,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge, pull and carry",
+          "focus": "Hamstrings, back and shoulders",
           "coach_note": "Romanian deadlifts replace the kettlebell deadlift. Same hip hinge.",
           "exercises": [
             {
@@ -561,9 +561,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "shoulder-press-machine",
@@ -574,9 +574,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-calf-raise",

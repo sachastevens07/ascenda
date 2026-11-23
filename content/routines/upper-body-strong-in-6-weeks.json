@@ -116,7 +116,7 @@
         {
           "key": "A",
           "name": "Upper A",
-          "focus": "Chest and back",
+          "focus": "Chest, back and shoulders",
           "coach_note": "Dumbbell bench press first, then pulldowns and shoulders.",
           "exercises": [
             {
@@ -140,6 +140,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -164,6 +165,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -188,6 +190,7 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             }
@@ -206,7 +209,7 @@
         {
           "key": "B",
           "name": "Lower body",
-          "focus": "Legs and core",
+          "focus": "Legs and hamstrings",
           "coach_note": "One lower-body day so your whole body gets stronger.",
           "exercises": [
             {
@@ -268,8 +271,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -285,7 +288,7 @@
         {
           "key": "C",
           "name": "Upper B",
-          "focus": "Shoulders, back and arms",
+          "focus": "Chest, back and shoulders",
           "coach_note": "Incline press and rows, then arms.",
           "exercises": [
             {
@@ -322,6 +325,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -334,6 +338,7 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -358,6 +363,7 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": "Light weight, slow and controlled."
             },
@@ -399,7 +405,7 @@
         {
           "key": "A",
           "name": "Upper A",
-          "focus": "Chest and back",
+          "focus": "Chest, back and shoulders",
           "coach_note": "Four sets on the bench press now.",
           "exercises": [
             {
@@ -423,9 +429,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -461,9 +467,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "overhead-dumbbell-triceps-extension",
@@ -492,7 +498,7 @@
         {
           "key": "B",
           "name": "Lower body",
-          "focus": "Legs and core",
+          "focus": "Legs and glutes",
           "coach_note": "The Smith squat and barbell hip thrust join your lower-body day.",
           "exercises": [
             {
@@ -504,9 +510,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "barbell-hip-thrust",
@@ -542,9 +548,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -556,9 +562,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -574,7 +580,7 @@
         {
           "key": "C",
           "name": "Upper B",
-          "focus": "Pull-ups, shoulders and arms",
+          "focus": "Back and chest",
           "coach_note": "Assisted pull-ups lead. Use enough assistance for clean reps.",
           "exercises": [
             {
@@ -586,6 +592,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 180,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -598,6 +605,7 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -611,6 +619,7 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -623,6 +632,7 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -659,6 +669,7 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             }

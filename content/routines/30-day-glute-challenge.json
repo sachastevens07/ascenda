@@ -114,7 +114,7 @@
         {
           "key": "A",
           "name": "Glutes A",
-          "focus": "Hip thrust focus",
+          "focus": "Glutes and legs",
           "coach_note": "Hip thrusts first, while you're fresh. Chin tucked, ribs down, squeeze at the top.",
           "exercises": [
             {
@@ -150,9 +150,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-glute-kickback",
@@ -164,9 +164,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hip-abduction-machine",
@@ -177,9 +177,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -195,7 +195,7 @@
         {
           "key": "B",
           "name": "Upper body",
-          "focus": "Back, shoulders and core",
+          "focus": "Back and shoulders",
           "coach_note": "A lighter upper-body day so your glutes can recover.",
           "exercises": [
             {
@@ -207,9 +207,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -232,9 +232,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-lateral-raise",
@@ -258,8 +258,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-upper-body",
@@ -276,7 +276,7 @@
         {
           "key": "C",
           "name": "Glutes B",
-          "focus": "Hinge and single leg",
+          "focus": "Hamstrings and legs",
           "coach_note": "Romanian deadlifts and split squats. Feel the stretch in the backs of your legs.",
           "exercises": [
             {
@@ -314,9 +314,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-hip-abduction",
@@ -328,9 +328,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "forearm-plank",
@@ -368,7 +368,7 @@
         {
           "key": "A",
           "name": "Glutes A",
-          "focus": "Hip thrust focus",
+          "focus": "Glutes and legs",
           "coach_note": "Four sets of hip thrusts now. Add weight when you hit 10 reps on every set.",
           "exercises": [
             {
@@ -392,9 +392,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "lying-leg-curl",
@@ -405,9 +405,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-glute-kickback",
@@ -419,9 +419,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hip-abduction-machine",
@@ -432,9 +432,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -450,7 +450,7 @@
         {
           "key": "B",
           "name": "Upper body",
-          "focus": "Back, shoulders and core",
+          "focus": "Back and chest",
           "coach_note": "Same idea as before with new exercises.",
           "exercises": [
             {
@@ -462,9 +462,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "incline-dumbbell-press",
@@ -488,9 +488,9 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-lateral-raise",
@@ -502,9 +502,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -516,9 +516,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-upper-body",
@@ -535,7 +535,7 @@
         {
           "key": "C",
           "name": "Glutes B",
-          "focus": "Hinge and single leg",
+          "focus": "Hamstrings and legs",
           "coach_note": "Heavier Romanian deadlifts, then walking lunges. Take your time between sets.",
           "exercises": [
             {
@@ -572,9 +572,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-step-up",
@@ -598,8 +598,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-lower-body",

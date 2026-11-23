@@ -116,7 +116,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Hinge and push",
+          "focus": "Hamstrings, chest and back",
           "coach_note": "Trap bar deadlift first. Brace and stand up tall.",
           "exercises": [
             {
@@ -152,9 +152,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "bulgarian-split-squat",
@@ -178,9 +178,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -192,9 +192,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -210,7 +210,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Squat and glutes",
+          "focus": "Legs, glutes and shoulders",
           "coach_note": "Smith squats, then hip thrusts and shoulders.",
           "exercises": [
             {
@@ -222,9 +222,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 180,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "barbell-hip-thrust",
@@ -260,9 +260,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -313,7 +313,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Hinge and push",
+          "focus": "Hamstrings, chest and back",
           "coach_note": "Four sets of deadlifts now, in small jumps.",
           "exercises": [
             {
@@ -349,9 +349,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-reverse-lunge",
@@ -376,9 +376,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-crunch",
@@ -389,9 +389,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -407,7 +407,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Squat and glutes",
+          "focus": "Legs, glutes and shoulders",
           "coach_note": "Heavier Smith squats. Same depth on every rep.",
           "exercises": [
             {
@@ -419,9 +419,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 180,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hip-thrust-machine",
@@ -432,9 +432,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "standing-dumbbell-shoulder-press",
@@ -469,9 +469,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "suitcase-carry",

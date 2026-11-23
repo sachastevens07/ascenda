@@ -115,7 +115,7 @@
         {
           "key": "A",
           "name": "Quick A",
-          "focus": "Squat, push and pull",
+          "focus": "Legs, chest and back",
           "coach_note": "Do each pair back to back, then rest. Set up both stations before you start.",
           "exercises": [
             {
@@ -154,9 +154,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -186,7 +186,7 @@
         {
           "key": "B",
           "name": "Quick B",
-          "focus": "Hinge and shoulders",
+          "focus": "Hamstrings, shoulders and legs",
           "coach_note": "Keep rests short, but never rush a rep.",
           "exercises": [
             {
@@ -239,9 +239,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dead-bug",
@@ -253,8 +253,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -270,7 +270,7 @@
         {
           "key": "C",
           "name": "Quick C",
-          "focus": "Legs and back",
+          "focus": "Legs, back and chest",
           "coach_note": "A legs-and-back pair, then glutes and chest.",
           "exercises": [
             {
@@ -323,9 +323,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -354,7 +354,7 @@
         {
           "key": "A",
           "name": "Quick A",
-          "focus": "Squat, push and pull",
+          "focus": "Legs, chest and back",
           "coach_note": "Smith machine squats join the session. Set the safety stops first.",
           "exercises": [
             {
@@ -367,9 +367,9 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "superset_group": "A",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
@@ -394,9 +394,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hip-thrust-machine",
@@ -408,9 +408,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -427,7 +427,7 @@
         {
           "key": "B",
           "name": "Quick B",
-          "focus": "Hinge and shoulders",
+          "focus": "Hamstrings, shoulders and legs",
           "coach_note": "Heavier Romanian deadlifts. Same tempo.",
           "exercises": [
             {
@@ -453,9 +453,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "A",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -482,9 +482,9 @@
               "rest_seconds": 90,
               "per_side": true,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-crunch",
@@ -495,9 +495,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",
@@ -513,7 +513,7 @@
         {
           "key": "C",
           "name": "Quick C",
-          "focus": "Legs and back",
+          "focus": "Legs, back and chest",
           "coach_note": "Leg press and rows, then chest and hamstrings.",
           "exercises": [
             {
@@ -552,9 +552,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-leg-curl",
@@ -566,9 +566,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "superset_group": "B",
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -580,9 +580,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-quick",

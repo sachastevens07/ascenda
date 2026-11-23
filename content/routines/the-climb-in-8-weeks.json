@@ -118,7 +118,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Smith machine squats lead today. Feet slightly forward of the bar, sit down between your heels.",
           "exercises": [
             {
@@ -130,9 +130,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
@@ -155,9 +155,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -181,9 +181,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -200,7 +200,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, back and shoulders",
           "coach_note": "Barbell Romanian deadlift: push your hips back and slide the bar down your thighs.",
           "exercises": [
             {
@@ -225,9 +225,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "shoulder-press-machine",
@@ -238,9 +238,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "bulgarian-split-squat",
@@ -279,7 +279,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Legs and glutes",
+          "focus": "Legs, glutes and back",
           "coach_note": "A legs-and-glutes heavy day with an upper-body pull to balance it.",
           "exercises": [
             {
@@ -341,9 +341,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -372,7 +372,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Your first barbell back squat. Set the safety arms and start with the empty bar.",
           "exercises": [
             {
@@ -409,9 +409,9 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-step-up",
@@ -435,8 +435,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -453,7 +453,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, back and shoulders",
           "coach_note": "Four sets on the Romanian deadlift now. Same tempo, a little heavier.",
           "exercises": [
             {
@@ -477,9 +477,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -531,7 +531,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Legs and glutes",
+          "focus": "Legs, glutes and back",
           "coach_note": "Heavier hip thrusts today. Pause for a second at the top of every rep.",
           "exercises": [
             {
@@ -580,9 +580,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dead-bug",
@@ -594,8 +594,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -623,7 +623,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Your first barbell back squat. Set the safety arms and start with the empty bar.",
           "exercises": [
             {
@@ -660,9 +660,9 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-step-up",
@@ -686,8 +686,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -704,7 +704,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, back and shoulders",
           "coach_note": "Four sets on the Romanian deadlift now. Same tempo, a little heavier.",
           "exercises": [
             {
@@ -728,9 +728,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -782,7 +782,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Legs and glutes",
+          "focus": "Legs, glutes and back",
           "coach_note": "Heavier hip thrusts today. Pause for a second at the top of every rep.",
           "exercises": [
             {
@@ -831,9 +831,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dead-bug",
@@ -845,8 +845,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",

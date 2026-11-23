@@ -151,9 +151,9 @@
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-glute-bridge",
@@ -177,8 +177,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -195,7 +195,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and shoulders",
+          "focus": "Hamstrings, shoulders and back",
           "coach_note": "Romanian deadlifts at a comfortable weight. Smooth and steady.",
           "exercises": [
             {
@@ -231,9 +231,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-reverse-lunge",
@@ -272,7 +272,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Squat and pull",
+          "focus": "Legs, chest and back",
           "coach_note": "Goblet squats and rows to round off the week.",
           "exercises": [
             {
@@ -296,9 +296,9 @@
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "one-arm-dumbbell-row",
@@ -322,9 +322,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "side-plank",
@@ -399,9 +399,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -425,9 +425,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -444,7 +444,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and shoulders",
+          "focus": "Hamstrings, shoulders and back",
           "coach_note": "Romanian deadlifts and new cable rows.",
           "exercises": [
             {
@@ -468,9 +468,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "single-arm-cable-row",
@@ -482,9 +482,9 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -509,8 +509,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -526,7 +526,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Squat and pull",
+          "focus": "Legs, chest and back",
           "coach_note": "Goblet squats again, a little heavier than in weeks 1 and 2.",
           "exercises": [
             {
@@ -574,9 +574,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-crunch",
@@ -587,9 +587,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",

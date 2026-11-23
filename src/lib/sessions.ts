@@ -722,21 +722,29 @@ export async function fetchPreviousSets(
   excludeSessionId: string | null = null
 ): Promise<Record<string, LoggedSet[]>> {
   if (exerciseIds.length === 0) return {};
-  const run = (columns: string) => {
+  // One small query per exercise (23 Nov 2026). A single query capped at 500 sets lost the
+  // history of lifts she hadn't done for a couple of months, so they came back as
+  // "find a starting weight". 60 recent sets per exercise covers several sessions,
+  // enough to step past lighter sessions and warm-up-only sessions.
+  const run = (columns: string, exerciseId: string) => {
     let query = supabase
       .from('sets')
       .select(columns)
-      .in('exercise_id', exerciseIds)
+      .eq('exercise_id', exerciseId)
       .eq('completed', true)
       .order('completed_at', { ascending: false })
-      .limit(500);
+      .limit(60);
     if (excludeSessionId) query = query.neq('session_id', excludeSessionId);
     return query;
   };
-  let result = await run(SET_COLUMNS_L5);
-  if (result.error && isMissingSetTypeColumn(result.error)) result = await run(SET_COLUMNS);
-  if (result.error) throw result.error;
-  const sets = ((result.data ?? []) as unknown as Record<string, unknown>[]).map(toLoggedSet);
+  const fetchOne = async (exerciseId: string) => {
+    let result = await run(SET_COLUMNS_L5, exerciseId);
+    if (result.error && isMissingSetTypeColumn(result.error)) result = await run(SET_COLUMNS, exerciseId);
+    if (result.error) throw result.error;
+    return (result.data ?? []) as unknown as Record<string, unknown>[];
+  };
+  const perExercise = await Promise.all([...new Set(exerciseIds)].map(fetchOne));
+  const sets = perExercise.flat().map(toLoggedSet);
   const lighter = await lighterSessionIds(sets.map((set) => set.session_id));
   return pickLatestNormalSets(sets.map((set) => ({ ...set, lighter: lighter.has(set.session_id) })));
 }

@@ -118,15 +118,29 @@
     },
     "lighter": {
       "marks_lighter": true,
-      "drop_set_roles": ["secondary", "accessory"],
+      "drop_set_roles": [
+        "secondary",
+        "accessory"
+      ],
       "scale_weights": true,
       "cardio": "gentle"
     },
     "comfort": {
       "marks_lighter": true,
-      "avoid_families": ["core_flexion", "core_bracing"],
-      "heavy_brace_families": ["squat", "hinge_deadlift", "hip_thrust"],
-      "heavy_brace_equipment": ["barbell"]
+      "avoid_families": [
+        "core_flexion"
+      ],
+      "heavy_brace_families": [
+        "squat",
+        "hinge_deadlift",
+        "hip_thrust"
+      ],
+      "heavy_brace_equipment": [
+        "barbell"
+      ],
+      "avoid_exercises": [
+        "forearm-plank"
+      ]
     },
     "steady": {
       "marks_lighter": true,
@@ -139,13 +153,23 @@
     },
     "joint-friendly": {
       "marks_lighter": true,
-      "prefer_equipment": ["machine", "cable"],
+      "prefer_equipment": [
+        "machine",
+        "cable"
+      ],
       "extra_warmup": true,
-      "cardio": "low_impact"
+      "cardio": "low_impact",
+      "swap_families": [
+        "squat",
+        "lunge_split"
+      ]
     },
     "short": {
       "marks_lighter": true,
-      "keep_roles": ["main", "secondary"]
+      "keep_roles": [
+        "main",
+        "secondary"
+      ]
     }
   },
   "session_feel": {
@@ -153,9 +177,18 @@
     "helper": "Optional. Helps us suggest weights next time.",
     "skip": "Skip",
     "options": [
-      { "id": "easier", "label": "Easy" },
-      { "id": "as_expected", "label": "About right" },
-      { "id": "harder", "label": "Hard" }
+      {
+        "id": "easier",
+        "label": "Easy"
+      },
+      {
+        "id": "as_expected",
+        "label": "About right"
+      },
+      {
+        "id": "harder",
+        "label": "Hard"
+      }
     ],
     "two_harder_rule": "Two Harder in a row on the same routine day means no weight increase is suggested on those lifts next time."
   },

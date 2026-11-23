@@ -116,7 +116,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Grab your dumbbells for the first two exercises before you start.",
           "exercises": [
             {
@@ -178,8 +178,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -196,7 +196,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, shoulders and back",
           "coach_note": "Romanian deadlifts and split squats. Hold the bench for balance if you need it.",
           "exercises": [
             {
@@ -273,7 +273,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Glutes and upper body",
+          "focus": "Glutes, chest and back",
           "coach_note": "Hip thrusts lead today, then incline press and rows.",
           "exercises": [
             {
@@ -374,7 +374,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Single leg and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Bulgarian split squats lead now. Heavier dumbbells, same control.",
           "exercises": [
             {
@@ -437,8 +437,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -455,7 +455,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, shoulders and back",
           "coach_note": "Four sets of Romanian deadlifts, then standing presses.",
           "exercises": [
             {
@@ -543,7 +543,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Glutes and upper body",
+          "focus": "Glutes, chest and back",
           "coach_note": "Heavier hip thrusts. Pause and squeeze at the top.",
           "exercises": [
             {

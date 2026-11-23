@@ -117,7 +117,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat, push and pull",
+          "focus": "Legs, chest and back",
           "coach_note": "Start with the leg press: it's the easiest way to learn to push through your legs. Start light on everything new.",
           "exercises": [
             {
@@ -153,9 +153,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -179,8 +179,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -196,7 +196,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge, legs and shoulders",
+          "focus": "Hamstrings, legs and shoulders",
           "coach_note": "Romanian deadlifts first. Push your hips back like you're closing a door behind you.",
           "exercises": [
             {
@@ -246,9 +246,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "side-plank",
@@ -288,7 +288,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat, push and pull",
+          "focus": "Legs, chest and back",
           "coach_note": "Your first Smith machine squat. Set the safety stops and start with just the bar.",
           "exercises": [
             {
@@ -300,9 +300,9 @@
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
@@ -325,9 +325,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -352,9 +352,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -370,7 +370,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge, glutes and shoulders",
+          "focus": "Hamstrings, glutes and shoulders",
           "coach_note": "Barbell hip thrusts join today. Use a pad on the bar and start light.",
           "exercises": [
             {
@@ -406,9 +406,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "one-arm-dumbbell-row",

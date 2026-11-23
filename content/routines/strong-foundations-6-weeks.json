@@ -122,7 +122,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Pick up your dumbbells for the first two exercises before you start. Slow and steady on the way down.",
           "exercises": [
             {
@@ -185,8 +185,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -203,7 +203,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, shoulders and back",
           "coach_note": "The Romanian deadlift leads today. Push your hips back and keep the dumbbells close to your legs.",
           "exercises": [
             {
@@ -280,7 +280,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Glutes and legs",
+          "focus": "Glutes, legs and chest",
           "coach_note": "Hip thrusts lead today, then single-leg work. Hold the bench for balance whenever you need it.",
           "exercises": [
             {
@@ -369,7 +369,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Your first Smith machine squat. Set the safety stops, start with just the bar and add weight only if your form feels solid. Then meet the lat pulldown.",
           "exercises": [
             {
@@ -381,6 +381,7 @@
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": "Feet slightly forward of the bar."
             },
@@ -405,9 +406,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -431,9 +432,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -450,7 +451,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, shoulders and back",
           "coach_note": "Heavier Romanian deadlifts than in weeks 1 and 2. Then meet the leg press: open its guide first and start light.",
           "exercises": [
             {
@@ -474,9 +475,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-cable-row",
@@ -487,9 +488,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "leg-press",
@@ -513,8 +514,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -530,7 +531,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Legs and glutes",
+          "focus": "Legs, glutes and back",
           "coach_note": "Goblet squats are back and should feel much stronger. Then your first barbell hip thrust: use a pad on the bar and start light.",
           "exercises": [
             {
@@ -592,9 +593,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "side-plank",
@@ -633,7 +634,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Smith machine squats lead again, a little heavier than in weeks 3 and 4. Same safety stops, same depth.",
           "exercises": [
             {
@@ -645,9 +646,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-bench-press",
@@ -670,9 +671,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "walking-lunge",
@@ -696,9 +697,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -715,7 +716,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and pull",
+          "focus": "Hamstrings, shoulders and back",
           "coach_note": "Your heaviest Romanian deadlifts yet. Same form, just a little more weight.",
           "exercises": [
             {
@@ -751,9 +752,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "seated-leg-curl",
@@ -764,9 +765,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "forearm-plank",
@@ -792,7 +793,7 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Glutes and legs",
+          "focus": "Glutes, legs and back",
           "coach_note": "Barbell hip thrusts lead now. Add a little weight if last time felt solid.",
           "exercises": [
             {
@@ -854,9 +855,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "pallof-press",
@@ -868,9 +869,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",

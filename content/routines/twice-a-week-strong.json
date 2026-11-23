@@ -116,7 +116,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Back squats first. Brace before every rep.",
           "exercises": [
             {
@@ -152,9 +152,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "dumbbell-reverse-lunge",
@@ -179,9 +179,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "cable-crunch",
@@ -192,9 +192,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -210,7 +210,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and glutes",
+          "focus": "Hamstrings, glutes and shoulders",
           "coach_note": "Romanian deadlifts and hip thrusts, then shoulders and back.",
           "exercises": [
             {
@@ -259,9 +259,9 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "per_side": true,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "leg-extension",
@@ -272,9 +272,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "side-plank",
@@ -314,7 +314,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Heavier squats with fewer reps.",
           "exercises": [
             {
@@ -350,9 +350,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "bulgarian-split-squat",
@@ -376,9 +376,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hanging-knee-raise",
@@ -389,8 +389,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -406,7 +406,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and glutes",
+          "focus": "Hamstrings, glutes and shoulders",
           "coach_note": "Heavier Romanian deadlifts, then the hip thrust machine.",
           "exercises": [
             {
@@ -430,9 +430,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "standing-dumbbell-shoulder-press",
@@ -467,9 +467,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "suitcase-carry",
@@ -508,7 +508,7 @@
         {
           "key": "A",
           "name": "Full body A",
-          "focus": "Squat and push",
+          "focus": "Legs, chest and back",
           "coach_note": "Heavier squats with fewer reps.",
           "exercises": [
             {
@@ -544,9 +544,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "bulgarian-split-squat",
@@ -570,9 +570,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "hanging-knee-raise",
@@ -583,8 +583,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "notes": "",
-              "load_increment_kg": null
+              "load_increment_kg": null,
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -600,7 +600,7 @@
         {
           "key": "B",
           "name": "Full body B",
-          "focus": "Hinge and glutes",
+          "focus": "Hamstrings, glutes and shoulders",
           "coach_note": "Heavier Romanian deadlifts, then the hip thrust machine.",
           "exercises": [
             {
@@ -624,9 +624,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "standing-dumbbell-shoulder-press",
@@ -661,9 +661,9 @@
               "target_rir": 1,
               "progression_rule": "reps",
               "rest_seconds": 75,
+              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": "",
-              "load_increment_kg": null
+              "notes": ""
             },
             {
               "slug": "suitcase-carry",

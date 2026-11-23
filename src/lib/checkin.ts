@@ -45,12 +45,16 @@ export type CheckinFeelOption = {
 
 export type ComfortAdjustment = {
   avoidFamilies: string[];
+  /** Single exercises to swap even when the rest of their family is fine (e.g. forearm plank). */
+  avoidExercises: string[];
   heavyBraceFamilies: string[];
   heavyBraceEquipment: string[];
 };
 
 export type JointFriendlyAdjustment = {
   preferEquipment: string[];
+  /** Only these movement families are swapped (free-weight squats and lunges). */
+  swapFamilies: string[];
 };
 
 export type CheckinCopy = {
@@ -159,12 +163,14 @@ export const CHECKIN: CheckinCopy = {
 
 export const COMFORT_RULES: ComfortAdjustment = {
   avoidFamilies: asArray(comfort.avoid_families).map(text).filter(Boolean),
+  avoidExercises: asArray(comfort.avoid_exercises).map(text).filter(Boolean),
   heavyBraceFamilies: asArray(comfort.heavy_brace_families).map(text).filter(Boolean),
   heavyBraceEquipment: asArray(comfort.heavy_brace_equipment).map(text).filter(Boolean),
 };
 
 export const JOINT_FRIENDLY_RULES: JointFriendlyAdjustment = {
   preferEquipment: asArray(joints.prefer_equipment).map(text).filter(Boolean),
+  swapFamilies: asArray(joints.swap_families).map(text).filter(Boolean),
 };
 
 export function adjustmentMarksLighter(adjustment: CheckinAdjustmentId): boolean {

@@ -473,6 +473,18 @@ In-app privacy policy: `content/legal/privacy.json` (Period log section). Consen
 
 ---
 
+### Launch test pass by Claude (23 November 2026)
+Checked from the code (not on a phone). Fixed on `claude/launch-polish`:
+- Progression lost history for some lifts: `fetchPreviousSets` now reads the last 60 sets per exercise instead of 500 across all of them.
+- Activity time format: 9.996 h showed as "10.00 h"; now rounds first, then picks the format.
+- Home "This week" sessions count now uses the same 10-minute rule as the streak (minutes still include everything).
+- Check-in "Achy joints": only swaps squats and lunges to a machine or cable swap; other lifts stay as planned instead of becoming optional.
+- Check-in "Period symptoms": crunches and forearm plank avoided; dead bug, bird dog and other gentle core work stay in.
+- Routine day focus labels now come from the real lifts (Routine standard 3), and every main lift has `load_increment_kg`.
+- Account deletion now removes progress photo files from the private bucket (rows already cascaded, files did not).
+Passed: tsc; progression rule (15 tests); streak rules (10 tests); every routine exercise has a demo and a guide; no em dashes, US spellings, Pro badges or weight-loss copy in content; stretch copy all behind `STRETCHES_ENABLED`; RLS on all 56 tables; health data never in PostHog, Coach, RevenueCat, notifications, recap or share cards; consent withdrawal wipes period logs and life stage; paywall close button, no urgency, billing copy, locked home with read-only history and export.
+Still to do: 23 machine and equipment photos (WorkoutX) show placeholders; unused `ProBadge`, `FreeBadge` and `LockedOverlay` components could be deleted.
+
 ### Known bugs or issues
 
 - **Open / manual for gym days (13 Nov 2026):** paste `supabase/weekly_plan.sql` if you want the jsonb column (the Planner already uses bundled JSON). Then paste `content_routines_1.sql`, `content_routines_2.sql`, `content_routines_3.sql` so logger days match the rebuilt exercises. Until then, enrolments stay on the same slug but the logger still shows the old database exercise lists. Phone-test onboarding at 2, 3 and 5 gym days, a routine page (`schedule_label` + default week), and Planner (strength on chosen days, optional Anytime this week, no extra gym days).

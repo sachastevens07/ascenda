@@ -71,12 +71,11 @@ function swapOrOptional(
 
 function comfortItem(item: ProgrammeExercise, byId: Map<string, SlotExercise>): ProgrammeExercise {
   const family = catalogueFamily(item.exercise.id) ?? '';
-  if (COMFORT_RULES.avoidFamilies.includes(family)) {
-    const alt = pickAlt(
-      item,
-      byId,
-      (row) => !COMFORT_RULES.avoidFamilies.includes(catalogueFamily(row.id) ?? '')
-    );
+  const avoided = (id: string) =>
+    COMFORT_RULES.avoidFamilies.includes(catalogueFamily(id) ?? '') || COMFORT_RULES.avoidExercises.includes(id);
+  if (avoided(item.exercise.id)) {
+    // e.g. forearm plank -> dead bug; crunches have no gentler same-family swap, so they become optional.
+    const alt = pickAlt(item, byId, (row) => !avoided(row.id));
     return swapOrOptional(item, alt);
   }
   const heavy =
@@ -91,15 +90,22 @@ function comfortItem(item: ProgrammeExercise, byId: Map<string, SlotExercise>): 
   return swapOrOptional(item, alt);
 }
 
+/**
+ * Joint-friendly: free-weight squats and lunges move to their machine swap in the same family
+ * where one exists. Everything else stays as planned, and nothing is marked optional
+ * (23 Nov 2026: it used to swap or drop every free-weight and bodyweight exercise, core included).
+ */
 function jointItem(item: ProgrammeExercise, byId: Map<string, SlotExercise>): ProgrammeExercise {
   if (MACHINE_LIKE.has(item.exercise.equipment)) return item;
+  const families = JOINT_FRIENDLY_RULES.swapFamilies.length > 0 ? JOINT_FRIENDLY_RULES.swapFamilies : ['squat', 'lunge_split'];
+  if (!families.includes(catalogueFamily(item.exercise.id) ?? '')) return item;
   const prefer = new Set(
     JOINT_FRIENDLY_RULES.preferEquipment.length > 0
       ? JOINT_FRIENDLY_RULES.preferEquipment
       : ['machine', 'cable']
   );
   const alt = pickAlt(item, byId, (row) => prefer.has(row.equipment));
-  return swapOrOptional(item, alt);
+  return alt ? swapOrOptional(item, alt) : item;
 }
 
 export function lowImpactCardioFinisher(slug: string | null | undefined): CardioSessionDef | null {

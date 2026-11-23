@@ -132,6 +132,18 @@ export async function deleteAllProgressPhotos(photos: ProgressPhoto[]): Promise<
     .catch(() => {});
 }
 
+/**
+ * Account deletion: remove her photo files from the private bucket before the auth user goes.
+ * The progress_photos rows cascade with the user, but storage files do not.
+ */
+export async function deleteAllProgressPhotoFiles(): Promise<void> {
+  const { data, error } = await supabase.from('progress_photos').select('storage_path');
+  if (error || !data || data.length === 0) return;
+  const paths = (data as { storage_path: string }[]).map((row) => row.storage_path).filter(Boolean);
+  if (paths.length === 0) return;
+  await supabase.storage.from(PROGRESS_PHOTOS_BUCKET).remove(paths);
+}
+
 const ENABLED_KEY = 'photos_enabled';
 const CONSENT_KEY = 'photos_consent_accepted';
 
