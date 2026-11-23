@@ -421,6 +421,69 @@
     "walking-lunge": {
       "workoutx_id": "ex_TFOAGW",
       "workoutx_name": "Lunges Alternate Leg With Pause Bodyweight"
+    },
+    "ab-crunch-machine": {
+      "workoutx_id": "ex_KK3MUA"
+    },
+    "banded-clamshell": {
+      "workoutx_id": "ex_2ZCH66"
+    },
+    "banded-glute-bridge": {
+      "workoutx_id": "ex_6XBDDM"
+    },
+    "banded-hamstring-curl": {
+      "workoutx_id": "ex_JJN3QL"
+    },
+    "banded-lateral-walk": {
+      "workoutx_id": "ex_XBMKL6"
+    },
+    "cable-squat": {
+      "workoutx_id": "ex_FU2YPW"
+    },
+    "close-grip-bench-press": {
+      "workoutx_id": "ex_KT263D"
+    },
+    "close-grip-lat-pulldown": {
+      "workoutx_id": "ex_VH3ZJM"
+    },
+    "close-grip-push-up": {
+      "workoutx_id": "ex_X4NXMS"
+    },
+    "decline-push-up": {
+      "workoutx_id": "ex_QABDMH"
+    },
+    "deficit-reverse-lunge": {
+      "workoutx_id": "ex_TBXHY3"
+    },
+    "donkey-kick": {
+      "workoutx_id": "ex_AXQ7WG"
+    },
+    "dumbbell-shrug": {
+      "workoutx_id": "ex_TFIMXT"
+    },
+    "dumbbell-sumo-squat": {
+      "workoutx_id": "ex_55EGD4"
+    },
+    "pike-push-up": {
+      "workoutx_id": "ex_QV7N32"
+    },
+    "single-leg-box-squat": {
+      "workoutx_id": "ex_65YZT7"
+    },
+    "single-leg-calf-raise": {
+      "workoutx_id": "ex_CWPUEI"
+    },
+    "single-leg-hip-thrust": {
+      "workoutx_id": "ex_VGH3FO"
+    },
+    "sliding-leg-curl": {
+      "workoutx_id": "ex_TDAE4L"
+    },
+    "standing-cable-leg-curl": {
+      "workoutx_id": "ex_CZRMYZ"
+    },
+    "t-bar-row": {
+      "workoutx_id": "ex_6BRSFE"
     }
   },
   "reject": {
@@ -567,7 +630,6 @@
   },
   "no_demo": [
     "arm-circles",
-    "banded-hamstring-curl",
     "cat-cow",
     "childs-pose",
     "chin-tuck",
@@ -578,7 +640,6 @@
     "seated-spinal-twist",
     "shoulder-rolls",
     "slow-breathing",
-    "standing-cable-leg-curl",
     "supported-pigeon",
     "thread-the-needle",
     "wall-angel"

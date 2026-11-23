@@ -5,24 +5,12 @@
   ],
   "no_demo": [
     "arm-circles",
-    "banded-clamshell",
-    "banded-glute-bridge",
-    "banded-hamstring-curl",
     "bear-plank",
-    "cable-squat",
     "cable-triceps-pushdown",
     "cable-woodchop",
     "cat-cow",
     "childs-pose",
     "chin-tuck",
-    "close-grip-bench-press",
-    "close-grip-lat-pulldown",
-    "close-grip-push-up",
-    "decline-push-up",
-    "deficit-reverse-lunge",
-    "donkey-kick",
-    "dumbbell-shrug",
-    "dumbbell-sumo-squat",
     "hip-circles",
     "kettlebell-farmers-carry",
     "kettlebell-floor-press",
@@ -31,7 +19,6 @@
     "ninety-ninety-hip-stretch",
     "open-book",
     "open-book-stretch",
-    "pike-push-up",
     "plank",
     "prone-press-up",
     "rear-delt-fly",
@@ -39,19 +26,19 @@
     "shoulder-rolls",
     "side-lying-adduction",
     "single-arm-cable-chest-press",
-    "single-leg-box-squat",
-    "single-leg-calf-raise",
-    "single-leg-hip-thrust",
-    "sliding-leg-curl",
     "slow-breathing",
-    "standing-cable-leg-curl",
     "standing-calf-raise",
     "supported-pigeon",
-    "t-bar-row",
     "thread-the-needle",
     "wall-angel"
   ],
   "matches": [
+    {
+      "slug": "ab-crunch-machine",
+      "workoutx_id": "ex_KK3MUA",
+      "workoutx_name": "Abdominal Crunches Machine",
+      "confidence": "high"
+    },
     {
       "slug": "arnold-press",
       "workoutx_id": "ex_BORKNT",
@@ -119,6 +106,24 @@
       "confidence": "high"
     },
     {
+      "slug": "banded-clamshell",
+      "workoutx_id": "ex_2ZCH66",
+      "workoutx_name": "Resistance Band Clam",
+      "confidence": "high"
+    },
+    {
+      "slug": "banded-glute-bridge",
+      "workoutx_id": "ex_6XBDDM",
+      "workoutx_name": "Resistance Band Glute Bridge",
+      "confidence": "high"
+    },
+    {
+      "slug": "banded-hamstring-curl",
+      "workoutx_id": "ex_JJN3QL",
+      "workoutx_name": "Resistance Band Leg Curl",
+      "confidence": "high"
+    },
+    {
       "slug": "banded-hip-thrust",
       "workoutx_id": "ex_3J7DID",
       "workoutx_name": "Resistance Band Hip Thrusts on Knees",
@@ -129,6 +134,12 @@
       "workoutx_id": "ex_TQVMA7",
       "workoutx_name": "Band Bent-Over Hip Extension",
       "confidence": "close"
+    },
+    {
+      "slug": "banded-lateral-walk",
+      "workoutx_id": "ex_XBMKL6",
+      "workoutx_name": "Lateral Band Walks",
+      "confidence": "high"
     },
     {
       "slug": "banded-squat",
@@ -335,6 +346,12 @@
       "confidence": "high"
     },
     {
+      "slug": "cable-squat",
+      "workoutx_id": "ex_FU2YPW",
+      "workoutx_name": "Cable Goblet Squat",
+      "confidence": "high"
+    },
+    {
       "slug": "calf-raise-machine",
       "workoutx_id": "ex_H3VK5N",
       "workoutx_name": "Bodyweight Standing Calf Raise",
@@ -371,6 +388,24 @@
       "confidence": "high"
     },
     {
+      "slug": "close-grip-bench-press",
+      "workoutx_id": "ex_KT263D",
+      "workoutx_name": "Barbell Close Grip Bench Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "close-grip-lat-pulldown",
+      "workoutx_id": "ex_VH3ZJM",
+      "workoutx_name": "Cable Close Grip Front Lat Pulldown",
+      "confidence": "high"
+    },
+    {
+      "slug": "close-grip-push-up",
+      "workoutx_id": "ex_X4NXMS",
+      "workoutx_name": "Close Grip Push Up",
+      "confidence": "high"
+    },
+    {
       "slug": "concentration-curl",
       "workoutx_id": "ex_JB4EYI",
       "workoutx_name": "Concentration Curls Dumbbell",
@@ -398,6 +433,24 @@
       "slug": "dead-bug",
       "workoutx_id": "ex_Y2SKAV",
       "workoutx_name": "Dead Bug",
+      "confidence": "high"
+    },
+    {
+      "slug": "decline-push-up",
+      "workoutx_id": "ex_QABDMH",
+      "workoutx_name": "Decline Push Up",
+      "confidence": "high"
+    },
+    {
+      "slug": "deficit-reverse-lunge",
+      "workoutx_id": "ex_TBXHY3",
+      "workoutx_name": "Plate Deficit Lunge",
+      "confidence": "high"
+    },
+    {
+      "slug": "donkey-kick",
+      "workoutx_id": "ex_AXQ7WG",
+      "workoutx_name": "Donkey Kicks Bodyweight",
       "confidence": "high"
     },
     {
@@ -509,6 +562,12 @@
       "confidence": "high"
     },
     {
+      "slug": "dumbbell-shrug",
+      "workoutx_id": "ex_TFIMXT",
+      "workoutx_name": "Dumbbell Shrugs",
+      "confidence": "high"
+    },
+    {
       "slug": "dumbbell-split-squat",
       "workoutx_id": "ex_UPPE6L",
       "workoutx_name": "Dumbbell Split Squat",
@@ -518,6 +577,12 @@
       "slug": "dumbbell-step-up",
       "workoutx_id": "ex_E7OFPW",
       "workoutx_name": "Dumbbell Step-Up With Knee Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-sumo-squat",
+      "workoutx_id": "ex_55EGD4",
+      "workoutx_name": "Dumbbell Bar Grip Sumo Squat",
       "confidence": "high"
     },
     {
@@ -881,6 +946,12 @@
       "confidence": "high"
     },
     {
+      "slug": "pike-push-up",
+      "workoutx_id": "ex_QV7N32",
+      "workoutx_name": "Pike Push Up",
+      "confidence": "high"
+    },
+    {
       "slug": "plank-shoulder-tap",
       "workoutx_id": "ex_FSKLWZ",
       "workoutx_name": "Shoulder Tap",
@@ -977,9 +1048,27 @@
       "confidence": "high"
     },
     {
+      "slug": "single-leg-box-squat",
+      "workoutx_id": "ex_65YZT7",
+      "workoutx_name": "Pistol Squat to Box",
+      "confidence": "high"
+    },
+    {
+      "slug": "single-leg-calf-raise",
+      "workoutx_id": "ex_CWPUEI",
+      "workoutx_name": "Kettlebell Single Leg Calf Raise",
+      "confidence": "high"
+    },
+    {
       "slug": "single-leg-glute-bridge",
       "workoutx_id": "ex_6OLOT4",
       "workoutx_name": "Chair Elevated Single Leg Glute Bridge",
+      "confidence": "high"
+    },
+    {
+      "slug": "single-leg-hip-thrust",
+      "workoutx_id": "ex_VGH3FO",
+      "workoutx_name": "Dumbbell Single Leg Hip Thrust",
       "confidence": "high"
     },
     {
@@ -995,9 +1084,21 @@
       "confidence": "high"
     },
     {
+      "slug": "sliding-leg-curl",
+      "workoutx_id": "ex_TDAE4L",
+      "workoutx_name": "Exercise Ball Leg Curl",
+      "confidence": "high"
+    },
+    {
       "slug": "smith-machine-squat",
       "workoutx_id": "ex_DHN2XU",
       "workoutx_name": "Normal Squat Smith Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "standing-cable-leg-curl",
+      "workoutx_id": "ex_CZRMYZ",
+      "workoutx_name": "Band Standing Leg Curl",
       "confidence": "high"
     },
     {
@@ -1034,6 +1135,12 @@
       "slug": "supine-twist",
       "workoutx_id": "ex_ZAFSLJ",
       "workoutx_name": "Bent Knee Lying Twist",
+      "confidence": "high"
+    },
+    {
+      "slug": "t-bar-row",
+      "workoutx_id": "ex_6BRSFE",
+      "workoutx_name": "Barbell Long Landmine Row",
       "confidence": "high"
     },
     {

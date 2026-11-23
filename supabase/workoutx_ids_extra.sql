@@ -1,0 +1,22 @@
+-- 23 Nov 2026: 21 extra WorkoutX demos found by scripts/wx-lookup.mjs. Only sets workoutx_id; changes nothing else.
+update public.exercises set workoutx_id = 'ex_KK3MUA' where id = 'ab-crunch-machine';
+update public.exercises set workoutx_id = 'ex_2ZCH66' where id = 'banded-clamshell';
+update public.exercises set workoutx_id = 'ex_6XBDDM' where id = 'banded-glute-bridge';
+update public.exercises set workoutx_id = 'ex_JJN3QL' where id = 'banded-hamstring-curl';
+update public.exercises set workoutx_id = 'ex_XBMKL6' where id = 'banded-lateral-walk';
+update public.exercises set workoutx_id = 'ex_FU2YPW' where id = 'cable-squat';
+update public.exercises set workoutx_id = 'ex_KT263D' where id = 'close-grip-bench-press';
+update public.exercises set workoutx_id = 'ex_VH3ZJM' where id = 'close-grip-lat-pulldown';
+update public.exercises set workoutx_id = 'ex_X4NXMS' where id = 'close-grip-push-up';
+update public.exercises set workoutx_id = 'ex_QABDMH' where id = 'decline-push-up';
+update public.exercises set workoutx_id = 'ex_TBXHY3' where id = 'deficit-reverse-lunge';
+update public.exercises set workoutx_id = 'ex_AXQ7WG' where id = 'donkey-kick';
+update public.exercises set workoutx_id = 'ex_TFIMXT' where id = 'dumbbell-shrug';
+update public.exercises set workoutx_id = 'ex_55EGD4' where id = 'dumbbell-sumo-squat';
+update public.exercises set workoutx_id = 'ex_QV7N32' where id = 'pike-push-up';
+update public.exercises set workoutx_id = 'ex_65YZT7' where id = 'single-leg-box-squat';
+update public.exercises set workoutx_id = 'ex_CWPUEI' where id = 'single-leg-calf-raise';
+update public.exercises set workoutx_id = 'ex_VGH3FO' where id = 'single-leg-hip-thrust';
+update public.exercises set workoutx_id = 'ex_TDAE4L' where id = 'sliding-leg-curl';
+update public.exercises set workoutx_id = 'ex_CZRMYZ' where id = 'standing-cable-leg-curl';
+update public.exercises set workoutx_id = 'ex_6BRSFE' where id = 't-bar-row';
