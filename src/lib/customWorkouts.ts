@@ -1,4 +1,4 @@
-import { mergedInto } from '@/lib/libraryOverrides';
+import { isHiddenFromBuilder } from '@/lib/libraryOverrides';
 import {
   SLOT_EXERCISE_COLUMNS,
   toSlotExercise,
@@ -194,7 +194,7 @@ export async function fetchExercisesForBuilder(): Promise<SlotExercise[]> {
     .order('name');
   if (error) throw error;
   return ((data ?? []) as SlotExercise[])
-    .filter((row) => !mergedInto(row.id))
+    .filter((row) => !isHiddenFromBuilder(row.id))
     .map(toSlotExercise);
 }
 

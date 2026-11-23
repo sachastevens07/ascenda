@@ -6,7 +6,8 @@
     "stretch_ids: hidden from the library while STRETCHES_ENABLED is false.",
     "alternatives: 'If it's taken' swaps for library exercises that are not in strength-catalogue.json (0 to 3, closest first). Catalogue exercises keep their catalogue alternatives. An empty list means no swap is needed (bodyweight, dumbbells, kettlebells or bands).",
     "fixes: corrected muscle or equipment tags. advanced: shown with an Advanced label. wrong_demo: animations that show a different movement, so the placeholder shows instead.",
-    "Names are shown in sentence case by the app (see toSentenceCase in src/lib/exercises.ts)."
+    "Names are shown in sentence case by the app (see toSentenceCase in src/lib/exercises.ts).",
+    "no_demo_hidden: no WorkoutX demo yet (checked with scripts/wx-lookup.mjs, 23 Nov 2026). Hidden from the library and the workout builder, and removed from swap lists, so she's never sent to an exercise she can't see. Remove an id from this list when its demo is added."
   ],
   "merged_into": {
     "cable-face-pull": "face-pull",
@@ -66,11 +67,6 @@
       "reverse-crunch"
     ],
     "arnold-press": [],
-    "assisted-dip": [
-      "bench-dip",
-      "close-grip-push-up",
-      "triceps-pushdown"
-    ],
     "back-extension": [
       "barbell-romanian-deadlift",
       "dumbbell-romanian-deadlift",
@@ -82,7 +78,6 @@
     "band-lateral-raise": [],
     "band-pallof-press": [],
     "band-pull-apart": [],
-    "band-row": [],
     "band-shoulder-press": [],
     "band-triceps-pushdown": [],
     "banded-clamshell": [],
@@ -122,9 +117,7 @@
       "dumbbell-sumo-squat",
       "trap-bar-deadlift"
     ],
-    "bear-plank": [],
     "bench-dip": [
-      "assisted-dip",
       "close-grip-push-up"
     ],
     "bodyweight-calf-raise": [],
@@ -135,18 +128,9 @@
       "dumbbell-fly",
       "low-to-high-cable-fly"
     ],
-    "cable-hammer-curl": [
-      "hammer-curl",
-      "cable-biceps-curl"
-    ],
     "cable-hip-adduction": [
       "hip-adduction-machine",
-      "side-lying-adduction",
       "copenhagen-plank"
-    ],
-    "cable-overhead-triceps-extension": [
-      "overhead-dumbbell-triceps-extension",
-      "triceps-pushdown"
     ],
     "cable-rear-delt-fly": [
       "reverse-pec-deck",
@@ -157,12 +141,7 @@
       "goblet-squat",
       "dumbbell-sumo-squat"
     ],
-    "cable-woodchop": [
-      "band-pallof-press",
-      "side-plank"
-    ],
     "chest-dip": [
-      "assisted-dip",
       "decline-push-up",
       "dumbbell-bench-press"
     ],
@@ -184,7 +163,6 @@
     "close-grip-push-up": [],
     "concentration-curl": [],
     "copenhagen-plank": [
-      "side-lying-adduction",
       "hip-adduction-machine"
     ],
     "curtsy-lunge": [],
@@ -211,11 +189,9 @@
       "cable-biceps-curl"
     ],
     "ez-bar-skull-crusher": [
-      "dumbbell-lying-triceps-extension",
-      "cable-overhead-triceps-extension"
+      "dumbbell-lying-triceps-extension"
     ],
     "fire-hydrant": [],
-    "frog-pump": [],
     "front-squat": [
       "smith-machine-squat",
       "hack-squat",
@@ -227,11 +203,6 @@
       "dumbbell-romanian-deadlift",
       "barbell-hip-thrust"
     ],
-    "glute-kickback-machine": [
-      "cable-glute-kickback",
-      "banded-kickback",
-      "donkey-kick"
-    ],
     "good-morning": [
       "barbell-romanian-deadlift",
       "dumbbell-romanian-deadlift",
@@ -240,21 +211,15 @@
     "heels-elevated-goblet-squat": [],
     "hip-adduction-machine": [
       "cable-hip-adduction",
-      "copenhagen-plank",
-      "side-lying-adduction"
+      "copenhagen-plank"
     ],
     "hollow-body-hold": [],
     "incline-barbell-bench-press": [
-      "incline-dumbbell-press",
-      "incline-machine-chest-press"
+      "incline-dumbbell-press"
     ],
     "incline-dumbbell-curl": [
       "dumbbell-biceps-curl",
       "cable-biceps-curl"
-    ],
-    "incline-machine-chest-press": [
-      "incline-dumbbell-press",
-      "machine-chest-press"
     ],
     "incline-y-raise": [
       "dumbbell-lateral-raise",
@@ -262,14 +227,10 @@
     ],
     "inverted-row": [
       "seated-cable-row",
-      "one-arm-dumbbell-row",
-      "band-row"
+      "one-arm-dumbbell-row"
     ],
     "jump-squat": [],
-    "kettlebell-floor-press": [],
-    "kettlebell-overhead-press": [],
     "kettlebell-reverse-lunge": [],
-    "kettlebell-romanian-deadlift": [],
     "kettlebell-row": [],
     "kettlebell-sumo-deadlift": [],
     "kettlebell-swing": [],
@@ -319,11 +280,6 @@
       "calf-raise-machine",
       "leg-press-calf-raise",
       "dumbbell-calf-raise"
-    ],
-    "side-lying-adduction": [],
-    "single-arm-cable-chest-press": [
-      "machine-chest-press",
-      "dumbbell-bench-press"
     ],
     "single-arm-lat-pulldown": [
       "lat-pulldown",
@@ -375,5 +331,21 @@
   "wrong_demo": [
     "banded-hip-thrust",
     "wall-sit"
+  ],
+  "no_demo_hidden": [
+    "assisted-dip",
+    "band-row",
+    "bear-plank",
+    "cable-hammer-curl",
+    "cable-overhead-triceps-extension",
+    "cable-woodchop",
+    "frog-pump",
+    "glute-kickback-machine",
+    "incline-machine-chest-press",
+    "kettlebell-floor-press",
+    "kettlebell-overhead-press",
+    "kettlebell-romanian-deadlift",
+    "side-lying-adduction",
+    "single-arm-cable-chest-press"
   ]
 }

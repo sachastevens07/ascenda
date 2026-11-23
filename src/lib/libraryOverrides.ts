@@ -14,6 +14,7 @@ type Overrides = {
   fixes?: Record<string, { primary_muscle?: string; equipment?: string }>;
   advanced?: string[];
   wrong_demo?: string[];
+  no_demo_hidden?: string[];
 };
 
 const data = overridesFile as Overrides;
@@ -23,6 +24,7 @@ const ADVANCED = new Set(data.advanced ?? []);
 const WRONG_DEMO = new Set(data.wrong_demo ?? []);
 const ALTERNATIVES = data.alternatives ?? {};
 const FIXES = data.fixes ?? {};
+const NO_DEMO_HIDDEN = new Set(data.no_demo_hidden ?? []);
 
 /** Words that keep their capitals inside a sentence-case name. */
 const KEEP_CASE = new Map(
@@ -54,14 +56,19 @@ export function mergedInto(exerciseId: string): string | null {
   return MERGED[exerciseId] ?? null;
 }
 
-/** Hidden from the exercise library list (duplicates, and stretches while they're switched off). */
+/** Hidden from the exercise library list (duplicates, no demo yet, and stretches while they're switched off). */
 export function isHiddenFromLibrary(exerciseId: string): boolean {
-  if (MERGED[exerciseId]) return true;
+  if (MERGED[exerciseId] || NO_DEMO_HIDDEN.has(exerciseId)) return true;
   return !STRETCHES_ENABLED && STRETCH_IDS.has(exerciseId);
 }
 
 export function isAdvancedExercise(exerciseId: string): boolean {
   return ADVANCED.has(exerciseId);
+}
+
+/** Hidden from the library and the workout builder (duplicates, and exercises with no demo yet). */
+export function isHiddenFromBuilder(exerciseId: string): boolean {
+  return Boolean(MERGED[exerciseId]) || NO_DEMO_HIDDEN.has(exerciseId);
 }
 
 /** Animations that show a different movement; the placeholder shows instead. */
