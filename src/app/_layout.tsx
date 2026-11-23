@@ -25,6 +25,7 @@ import { registerReminderAnalytics } from '@/lib/reminders';
 import { isReferralPath, isUnlockedWithoutSubscription } from '@/lib/paywall';
 import { claimPendingReferral } from '@/lib/referrals';
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription';
+import { hydrateImages } from '@/lib/images';
 import { hydrateDefaultRestSeconds } from '@/lib/restTimer';
 import { supabase } from '@/lib/supabase';
 import { hydrateWeightUnit } from '@/lib/units';
@@ -123,6 +124,7 @@ function PrefsHydrate() {
   useEffect(() => {
     void hydrateWeightUnit();
     void hydrateDefaultRestSeconds();
+    void hydrateImages();
     if (session) void claimPendingReferral();
   }, [session?.user.id]);
 
@@ -178,7 +180,14 @@ function RootNavigator() {
           animation: 'slide_from_bottom',
         }}
       />
-      <Stack.Screen name="refer" />
+      <Stack.Screen
+        name="refer"
+        options={{
+          presentation: 'fullScreenModal',
+          gestureEnabled: true,
+          animation: 'slide_from_bottom',
+        }}
+      />
       <Stack.Screen name="r/[code]" />
       <Stack.Protected guard={!!session && isOnboarded && !needsDisclaimerGate}>
         <Stack.Screen name="(tabs)" />
@@ -293,6 +302,17 @@ function RootNavigator() {
         <Stack.Screen name="history" options={{ headerShown: false }} />
         <Stack.Screen
           name="photos-consent"
+          options={{
+            headerShown: true,
+            title: '',
+            headerBackTitle: 'Back',
+            headerTintColor: colours.brand,
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colours.bg },
+          }}
+        />
+        <Stack.Screen
+          name="period-log-consent"
           options={{
             headerShown: true,
             title: '',

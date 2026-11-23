@@ -137,7 +137,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 5,
               "notes": "Feet a little higher on the platform."
             },
@@ -150,9 +150,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-glute-kickback",
@@ -164,9 +164,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "hip-abduction-machine",
@@ -177,14 +177,14 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 40,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -207,9 +207,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -219,7 +219,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -231,10 +231,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-lateral-raise",
@@ -258,8 +258,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-upper-body",
@@ -300,7 +300,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -314,9 +314,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-hip-abduction",
@@ -328,9 +328,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "forearm-plank",
@@ -379,7 +379,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 120,
+              "rest_seconds": 180,
               "load_increment_kg": 2.5,
               "notes": ""
             },
@@ -391,10 +391,10 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "lying-leg-curl",
@@ -405,9 +405,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-glute-kickback",
@@ -419,9 +419,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "hip-abduction-machine",
@@ -432,9 +432,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
@@ -462,9 +462,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "incline-dumbbell-press",
@@ -474,7 +474,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -486,11 +486,11 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-lateral-raise",
@@ -502,9 +502,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "pallof-press",
@@ -516,9 +516,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-upper-body",
@@ -558,7 +558,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -572,9 +572,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-step-up",
@@ -598,8 +598,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",

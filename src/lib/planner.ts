@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/config/features';
 import { cardioSession } from '@/lib/cardio';
 import {
   anytimeSlotsForWeek,
@@ -17,6 +18,7 @@ import {
   daysInWeek,
   fetchActiveEnrolment,
   fetchRoutine,
+  sessionMinutesForDay,
   type Routine,
   type RoutineDay,
   type RoutineEnrolment,
@@ -208,6 +210,9 @@ export function describePlannerError(error: unknown): string {
         : '';
   if (/session_kind|cardio_slug|stretch_slug|planned_sessions_source_check/i.test(detail)) {
     return missingCompleteWeekMessage();
+  }
+  if (/period_logs/i.test(detail)) {
+    return 'The period log table is not set up yet. Paste supabase/period_log_l9.sql in the SQL editor.';
   }
   if (/42P01|PGRST205|planned_sessions/i.test(detail)) {
     return missingPlannerMessage();
@@ -623,6 +628,7 @@ function weekSlots(
     weekNumber: currentEnrolmentWeek(enrolment, monday),
     preferredDays: prefs.preferredDays,
     cardioPreference: prefs.cardioPreference,
+    lifeStage: prefs.lifeStage,
   });
 }
 
@@ -731,6 +737,7 @@ function supportInsert(userId: string, iso: string, slot: PlacedSlot): WeekInser
     };
   }
   if (slot.type === 'recovery' && slot.stretch_slug) {
+    if (!isFeatureEnabled('stretches')) return null;
     return {
       user_id: userId,
       date: iso,
@@ -771,6 +778,7 @@ function buildWeekInserts(
         weekNumber,
         preferredDays: prefs.preferredDays,
         cardioPreference: prefs.cardioPreference,
+        lifeStage: prefs.lifeStage,
       })
     : [];
   const inserts: WeekInsert[] = [];
@@ -900,6 +908,7 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
   const live = livePlanForDate(lookups.plans, iso);
   const done = donePlanForDate(lookups.plans, iso);
   const plan = live ?? done;
+  let visiblePlan = plan;
   const finishedToday = lookups.finished.has(iso);
   const completed = Boolean(done) || (plan?.status !== 'rest' && finishedToday) || (!plan && finishedToday);
   const workoutNames = new Map(lookups.workouts.map((workout) => [workout.id, workout.name]));
@@ -919,7 +928,7 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
   const exercises: string[] = [];
   let sessionMinutes: number | null = null;
   let isStretch = false;
-  const isOptional = plan?.is_optional === true;
+  let isOptional = plan?.is_optional === true;
   const enrolmentWeek = lookups.enrolment ? currentEnrolmentWeek(lookups.enrolment, date) : null;
   const weekLabel = (routineDayId: string | null) => {
     const weekNumber = (routineDayId ? routineWeekByDay.get(routineDayId) : null) ?? enrolmentWeek;
@@ -945,9 +954,18 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     title = day?.name ?? 'Routine session';
     subtitle = weekLabel(plan.routine_day_id) ?? 'Routine';
     exercises.push(...(day?.exercises.map((item) => item.exercise.name) ?? []));
-    sessionMinutes = lookups.enrolment?.routine.session_minutes ?? null;
+    sessionMinutes = sessionMinutesForDay(day, lookups.enrolment?.routine.session_minutes);
     isStretch = lookups.routine?.type === 'stretch' || day?.sessionType === 'recovery';
-    if (isStretch) kind = 'recovery';
+    if (isStretch && isFeatureEnabled('stretches')) kind = 'recovery';
+    else if (isStretch) {
+      kind = 'empty';
+      isStretch = false;
+      title = null;
+      subtitle = null;
+      exercises.length = 0;
+      visiblePlan = null;
+      isOptional = false;
+    }
   } else if (plan?.cardio_slug || plan?.session_kind === 'cardio') {
     kind = 'cardio';
     const def = cardioSession(plan.cardio_slug);
@@ -955,12 +973,18 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     subtitle = weekLabel(null) ?? 'Cardio';
     sessionMinutes = def?.durationMinutes ?? 20;
   } else if (plan?.stretch_slug || plan?.session_kind === 'recovery') {
-    kind = 'recovery';
-    const stretch = stretchMeta(plan.stretch_slug);
-    title = stretch?.name ?? 'Recovery';
-    subtitle = weekLabel(null) ?? 'Recovery';
-    sessionMinutes = stretch?.minutes ?? 12;
-    isStretch = true;
+    if (!isFeatureEnabled('stretches')) {
+      kind = 'empty';
+      visiblePlan = null;
+      isOptional = false;
+    } else {
+      kind = 'recovery';
+      const stretch = stretchMeta(plan.stretch_slug);
+      title = stretch?.name ?? 'Recovery';
+      subtitle = weekLabel(null) ?? 'Recovery';
+      sessionMinutes = stretch?.minutes ?? 12;
+      isStretch = true;
+    }
   }
 
   return {
@@ -970,7 +994,7 @@ function toDayView(date: Date, lookups: DayLookups): PlannerDayView {
     month: MONTHS[date.getMonth()],
     isToday: iso === lookups.todayIso,
     isPast: iso < lookups.todayIso,
-    plan,
+    plan: visiblePlan,
     title,
     subtitle,
     exercises,
@@ -1024,6 +1048,7 @@ function overlayDayFromSlot(
     };
   }
   if (slot.type === 'recovery' && slot.stretch_slug) {
+    if (!isFeatureEnabled('stretches')) return day;
     const stretch = stretchMeta(slot.stretch_slug);
     return {
       ...day,
@@ -1058,6 +1083,7 @@ function anytimeViews(
   to: Date,
   plans: PlannedSession[]
 ): PlannerDayView[] {
+  if (!isFeatureEnabled('stretches')) return [];
   const overlay = overlayForRoutine(enrolment.routine.slug, enrolment.routine.id);
   if (!overlay?.weekly_plan) return [];
   const skipped = new Set(plans.filter((row) => row.status === 'skipped').map((row) => row.id));
@@ -1138,6 +1164,7 @@ function applySupportOverlay(
         weekNumber,
         preferredDays: prefs.preferredDays,
         cardioPreference: prefs.cardioPreference,
+        lifeStage: prefs.lifeStage,
       });
       byWeek.set(weekNumber, slots);
     }

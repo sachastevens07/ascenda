@@ -2,6 +2,7 @@
  * Explicit health consents (B3). life_stage is special-category data:
  * save it only after she ticks the consent screen, and never send it to
  * Coach, PostHog, RevenueCat, notifications, share cards or recaps.
+ * Period dates use the same table with purpose period_log (see periodLog.ts).
  */
 import { LIFE_STAGE_CONSENT_SCREEN } from '@/lib/onboardingContent';
 import {

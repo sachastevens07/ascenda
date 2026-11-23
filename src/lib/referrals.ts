@@ -43,6 +43,15 @@ export const APPLE_OFFER_CODE = text(offers.apple_offer_code, 'FRIEND14').toUppe
 export const EXTEND_DAYS = num(offers.extend_days, 30);
 export const INVITE_PATH = text(offers.invite_path, 'r');
 
+export function referralOfferVars(): Record<string, string | number> {
+  return {
+    friend_trial_days: FRIEND_TRIAL_DAYS,
+    extend_days: EXTEND_DAYS,
+    max_rewards: MAX_REWARDS_PER_YEAR,
+    apple_offer_code: APPLE_OFFER_CODE,
+  };
+}
+
 export type ReferralStatus = 'invited' | 'trial' | 'subscribed' | 'rewarded';
 
 export type ReferralInvite = {
@@ -246,6 +255,16 @@ export async function shareInvite(code: string): Promise<void> {
     friend_trial_days: FRIEND_TRIAL_DAYS,
   });
   await Share.share({ message, title: referCopy.screen_title });
+}
+
+/** Home banner: native share sheet with her link. Offer-code rewards stay a store-side TODO. */
+export async function shareMyInvite(): Promise<void> {
+  const code = await ensureMyReferralCode();
+  if (!code) {
+    openRefer();
+    return;
+  }
+  await shareInvite(code);
 }
 
 /** No clipboard library: the share sheet is how she copies the code. */

@@ -1,3 +1,4 @@
+import { roundUpMinutes, stretchSessionMinutes } from '@/lib/contentStretches';
 import { fetchExercise, type Exercise } from '@/lib/exercises';
 import {
   describeRoutineError,
@@ -46,6 +47,8 @@ export function stretchSteps(routine: Routine): RoutineDayExercise[] {
 export function totalHoldSeconds(steps: Pick<RoutineDayExercise, 'duration_seconds'>[]): number {
   return steps.reduce((sum, step) => sum + (step.duration_seconds ?? 0), 0);
 }
+
+export { roundUpMinutes, stretchSessionMinutes };
 
 export function formatHold(seconds: number): string {
   if (seconds < 60) return `${seconds} seconds`;

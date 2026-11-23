@@ -3,56 +3,66 @@ import { View } from 'react-native';
 
 import { AppText, Chip, PrimaryButton, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
-import { CHECKIN, offerBodyForShortTime, type CheckinOption } from '@/lib/checkin';
+import {
+  CHECKIN,
+  visibleCheckinOptions,
+  type CheckinAdjustmentId,
+  type CheckinOption,
+} from '@/lib/checkin';
+import type { LifeStage } from '@/lib/profile';
 
 /**
  * Logger check-in. The picked option never leaves this component.
  * Parent callbacks never receive an option id or label.
  */
 export function CheckinCard({
+  lifeStage,
+  onPeriodDay = false,
   onDismiss,
-  onDeclineLighter,
-  onAcceptLighter,
+  onDecline,
+  onAccept,
 }: {
+  lifeStage: LifeStage | null | undefined;
+  onPeriodDay?: boolean;
   onDismiss: () => void;
-  onDeclineLighter: () => void;
-  /** scaleWeights is a rule flag, never the option she picked. */
-  onAcceptLighter: (input: { scaleWeights: boolean }) => void;
+  onDecline: () => void;
+  onAccept: (input: { adjustment: CheckinAdjustmentId }) => void;
 }) {
   const { colours, radius, spacing } = useTheme();
-  const [offer, setOffer] = useState<{ shortTime: boolean } | null>(null);
+  const [offer, setOffer] = useState<CheckinOption | null>(null);
+  const options = visibleCheckinOptions(lifeStage, onPeriodDay);
 
   function pick(option: CheckinOption) {
-    if (!option.offers_lighter) {
+    if (option.adjustment === 'none' || !option.offer) {
       onDismiss();
       return;
     }
-    setOffer({ shortTime: option.id === CHECKIN.shortTimeOptionId });
+    setOffer(option);
   }
 
   function accept() {
     if (!offer) return;
-    const scaleWeights = !offer.shortTime;
+    const adjustment = offer.adjustment;
     setOffer(null);
-    onAcceptLighter({ scaleWeights });
+    onAccept({ adjustment });
   }
 
   function decline() {
     setOffer(null);
-    onDeclineLighter();
+    onDecline();
   }
 
-  if (offer) {
+  if (offer?.offer) {
     return (
       <View style={{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.sm }}>
         <AppText variant="title3" style={{ color: colours.ink }}>
-          {CHECKIN.offerTitle}
+          {offer.offer.title}
         </AppText>
         <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-          {offerBodyForShortTime(offer.shortTime)}
+          {offer.offer.body}
         </AppText>
-        <PrimaryButton label={CHECKIN.offerAccept} onPress={accept} style={{ marginTop: spacing.sm }} />
-        <TextButton label={CHECKIN.offerDecline} onPress={decline} style={{ alignSelf: 'flex-start' }} />
+        <PrimaryButton label={offer.offer.accept} onPress={accept} style={{ marginTop: spacing.sm }} />
+        <TextButton label={offer.offer.decline} onPress={decline} style={{ alignSelf: 'flex-start' }} />
       </View>
     );
   }
@@ -66,7 +76,7 @@ export function CheckinCard({
         {CHECKIN.helper}
       </AppText>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
-        {CHECKIN.options.map((option) => (
+        {options.map((option) => (
           <Chip key={option.id} label={option.label} size="lg" onPress={() => pick(option)} />
         ))}
       </View>

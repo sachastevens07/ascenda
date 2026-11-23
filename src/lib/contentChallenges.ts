@@ -121,6 +121,24 @@ const CATALOGUE = asArray((file as { challenges?: unknown }).challenges)
   .map(parseChallenge)
   .filter((item): item is ContentChallenge => item != null && item.is_active);
 
+export function isStretchBuiltChallenge(challenge: {
+  slug: string;
+  missions: ChallengeMission[];
+}): boolean {
+  if (challenge.slug === '28-days-of-stretch') return true;
+  return (
+    challenge.missions.length > 0 &&
+    challenge.missions.every((mission) => mission.requirement.type === 'stretch_sessions')
+  );
+}
+
+export function isStretchBuiltChallengeSlug(slug: string | null | undefined): boolean {
+  if (!slug) return false;
+  if (slug === '28-days-of-stretch') return true;
+  const item = contentChallenge(slug);
+  return item ? isStretchBuiltChallenge(item) : false;
+}
+
 export function contentChallenges(): ContentChallenge[] {
   return CATALOGUE;
 }

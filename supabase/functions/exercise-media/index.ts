@@ -14,7 +14,7 @@ const USER_WINDOW_MS = 5 * 60 * 1000;
 const USER_MAX = 40;
 const CACHE_SKEW_MS = 60 * 60 * 1000;
 
-type BundledFile = { matches?: { slug?: string; workoutx_id?: string }[] };
+type BundledFile = { matches?: { slug?: string; workoutx_id?: string }[]; no_demo?: string[] };
 type View = { label: 'default' | 'front' | 'side'; url: string };
 type MediaOk = {
   ok: true;
@@ -71,7 +71,12 @@ function wxIdOk(value: string): boolean {
   return /^ex_[A-Za-z0-9]+$/.test(value);
 }
 
+function bundledBlocked(slug: string): boolean {
+  return ((bundled as BundledFile).no_demo ?? []).includes(slug);
+}
+
 function bundledId(slug: string): string | null {
+  if (bundledBlocked(slug)) return null;
   const matches = (bundled as BundledFile).matches ?? [];
   for (const row of matches) {
     if (row.slug === slug && typeof row.workoutx_id === 'string' && wxIdOk(row.workoutx_id)) {
@@ -219,14 +224,18 @@ Deno.serve(async (req) => {
     return fail('rate_limited', 429);
   }
 
-  let wxId = bundledId(exerciseId);
+  if (bundledBlocked(exerciseId)) {
+    return json({ ok: false, reason: 'unmatched' });
+  }
+
+  const fromBundle = bundledId(exerciseId);
   const { data: row } = await supabase
     .from('exercises')
     .select('id, workoutx_id')
     .eq('id', exerciseId)
     .maybeSingle();
   const fromDb = typeof row?.workoutx_id === 'string' ? row.workoutx_id.trim() : '';
-  if (wxIdOk(fromDb)) wxId = fromDb;
+  let wxId = fromBundle ?? (wxIdOk(fromDb) ? fromDb : null);
   if (!wxId) {
     return json({ ok: false, reason: 'unmatched' });
   }

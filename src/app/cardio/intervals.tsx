@@ -41,6 +41,7 @@ import { cardioCopy, fillCopy } from '@/lib/copy';
 import { saveCustomCardioWorkout } from '@/lib/customWorkouts';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed, useSubscriptionGate } from '@/lib/paywall';
+import { routeForActiveSession } from '@/lib/startLogger';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { useWorkout } from '@/lib/workout';
 
@@ -144,15 +145,7 @@ export default function BuildIntervalsScreen() {
   }
 
   function openActive(id: string, source?: string) {
-    if (source === 'stretch') {
-      router.push({ pathname: '/stretches/play', params: { sessionId: id } } as Href);
-      return;
-    }
-    if (source === 'cardio') {
-      router.push({ pathname: '/cardio/play', params: { sessionId: id } } as Href);
-      return;
-    }
-    router.push({ pathname: '/session/[id]', params: { id } } as Href);
+    router.push(routeForActiveSession(id, source));
   }
 
   async function handleStart() {
@@ -174,7 +167,7 @@ export default function BuildIntervalsScreen() {
         },
         null
       );
-      router.push({ pathname: '/cardio/play', params: { sessionId: started.id } } as Href);
+      router.replace({ pathname: '/cardio/play', params: { sessionId: started.id } } as Href);
     } catch (error) {
       if (isSessionInProgressError(error) && error.activeId) {
         showDialog(cardioCopy.in_progress_title, cardioCopy.in_progress_body, [
@@ -209,8 +202,16 @@ export default function BuildIntervalsScreen() {
     }
   }
 
+  function clampBlockSeconds(value: number): number {
+    return Math.min(steppers.secondsMax, Math.max(steppers.secondsMin, value));
+  }
+
   function bumpSeconds(value: number, delta: number): number {
-    return Math.min(steppers.secondsMax, Math.max(steppers.secondsMin, value + delta * steppers.secondsStep));
+    return clampBlockSeconds(value + delta * steppers.secondsStep);
+  }
+
+  function bumpMinutes(value: number, delta: number): number {
+    return clampBlockSeconds(value + delta * 60);
   }
 
   function addBlock() {
@@ -226,10 +227,6 @@ export default function BuildIntervalsScreen() {
     <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top + 8 }]}>
       <View style={styles.top}>
         <IconButton icon="chevron-back" accessibilityLabel="Back" onPress={goBack} />
-        <AppText variant="eyebrow" style={{ color: colours.accent }}>
-          {spec.buildIntervals.title}
-        </AppText>
-        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
@@ -291,9 +288,6 @@ export default function BuildIntervalsScreen() {
         {step === 'build' && machineId && plan ? (
           <View style={{ gap: spacing.md }}>
             <SessionTimeline intervals={plan.intervals} />
-            <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-              {spec.buildIntervals.timelineHint}
-            </AppText>
             <AppText variant="title3" style={{ color: colours.ink }}>
               {fillCopy(spec.buildIntervals.totalLabel, { minutes: formatPlanMinutes(length.seconds) })}
             </AppText>
@@ -308,6 +302,8 @@ export default function BuildIntervalsScreen() {
                 title={spec.buildIntervals.workLabel}
                 seconds={workSeconds}
                 effort={workEffort}
+                onMinusMinutes={() => setWorkSeconds((value) => bumpMinutes(value, -1))}
+                onPlusMinutes={() => setWorkSeconds((value) => bumpMinutes(value, 1))}
                 onMinusSeconds={() => setWorkSeconds((value) => bumpSeconds(value, -1))}
                 onPlusSeconds={() => setWorkSeconds((value) => bumpSeconds(value, 1))}
                 onEffort={() => setEffortTarget({ kind: 'work' })}
@@ -324,6 +320,8 @@ export default function BuildIntervalsScreen() {
                 title={spec.buildIntervals.recoverLabel}
                 seconds={recoverSeconds}
                 effort={recoverEffort}
+                onMinusMinutes={() => setRecoverSeconds((value) => bumpMinutes(value, -1))}
+                onPlusMinutes={() => setRecoverSeconds((value) => bumpMinutes(value, 1))}
                 onMinusSeconds={() => setRecoverSeconds((value) => bumpSeconds(value, -1))}
                 onPlusSeconds={() => setRecoverSeconds((value) => bumpSeconds(value, 1))}
                 onEffort={() => setEffortTarget({ kind: 'recover' })}
@@ -394,6 +392,7 @@ export default function BuildIntervalsScreen() {
                     }
                     onEffort={() => setEffortTarget({ kind: 'extra', index })}
                     bumpSeconds={bumpSeconds}
+                    bumpMinutes={bumpMinutes}
                   />
                 ))}
               </View>
@@ -497,6 +496,8 @@ function BlockSteppers({
   title,
   seconds,
   effort,
+  onMinusMinutes,
+  onPlusMinutes,
   onMinusSeconds,
   onPlusSeconds,
   onEffort,
@@ -505,6 +506,8 @@ function BlockSteppers({
   title: string;
   seconds: number;
   effort: number;
+  onMinusMinutes: () => void;
+  onPlusMinutes: () => void;
   onMinusSeconds: () => void;
   onPlusSeconds: () => void;
   onEffort: () => void;
@@ -517,8 +520,15 @@ function BlockSteppers({
         {title}
       </AppText>
       <StepperRow
-        label={fillCopy(spec.buildIntervals.secondsValue, { seconds })}
-        value=""
+        label={spec.buildIntervals.minutesLabel}
+        value={String(Math.floor(seconds / 60))}
+        onMinus={onMinusMinutes}
+        onPlus={onPlusMinutes}
+        plusDisabled={plusDisabled}
+      />
+      <StepperRow
+        label={spec.buildIntervals.secondsLabel}
+        value={String(seconds % 60)}
         onMinus={onMinusSeconds}
         onPlus={onPlusSeconds}
         plusDisabled={plusDisabled}
@@ -546,6 +556,7 @@ function ExtraBlockCard({
   onMove,
   onEffort,
   bumpSeconds,
+  bumpMinutes,
 }: {
   index: number;
   block: ExtraCardioBlock;
@@ -555,6 +566,7 @@ function ExtraBlockCard({
   onMove: (dir: -1 | 1) => void;
   onEffort: () => void;
   bumpSeconds: (value: number, delta: number) => number;
+  bumpMinutes: (value: number, delta: number) => number;
 }) {
   const { colours, spacing, radius } = useTheme();
   return (
@@ -588,6 +600,8 @@ function ExtraBlockCard({
         title={builderMachineLabel(block.machineId)}
         seconds={block.seconds}
         effort={block.effort}
+        onMinusMinutes={() => onChange({ ...block, seconds: bumpMinutes(block.seconds, -1) })}
+        onPlusMinutes={() => onChange({ ...block, seconds: bumpMinutes(block.seconds, 1) })}
         onMinusSeconds={() => onChange({ ...block, seconds: bumpSeconds(block.seconds, -1) })}
         onPlusSeconds={() => onChange({ ...block, seconds: bumpSeconds(block.seconds, 1) })}
         onEffort={onEffort}
@@ -622,6 +636,7 @@ function SettingsExpander({
   const { colours } = useTheme();
   const [open, setOpen] = useState(false);
   const settings = value ?? settingsForEffort(machineId, effort, spec);
+  const speedRange = asPair(settings.speed_kmh);
   const fields = numericSettingFields(settings);
   const note = formatSettings(settings);
   return (
@@ -637,6 +652,22 @@ function SettingsExpander({
             <AppText variant="caption" style={{ color: colours.inkMuted }}>
               {spec.settingsNote}
             </AppText>
+          ) : null}
+          {speedRange ? (
+            <>
+              <StepperRow
+                label={cardioCopy.speed_min}
+                value={String(speedRange[0])}
+                onMinus={() => onChange({ ...settings, speed_kmh: bumpPair(speedRange, 'min', -0.5, 1, 20) })}
+                onPlus={() => onChange({ ...settings, speed_kmh: bumpPair(speedRange, 'min', 0.5, 1, 20) })}
+              />
+              <StepperRow
+                label={cardioCopy.speed_max}
+                value={String(speedRange[1])}
+                onMinus={() => onChange({ ...settings, speed_kmh: bumpPair(speedRange, 'max', -0.5, 1, 20) })}
+                onPlus={() => onChange({ ...settings, speed_kmh: bumpPair(speedRange, 'max', 0.5, 1, 20) })}
+              />
+            </>
           ) : null}
           {fields.map((field) => (
             <StepperRow
@@ -667,7 +698,7 @@ function SettingsExpander({
               {cardioCopy.level}: {settings.level_text}
             </AppText>
           ) : null}
-          {note && fields.length === 0 ? (
+          {note && fields.length === 0 && !speedRange ? (
             <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
               {note}
             </AppText>
@@ -694,7 +725,6 @@ function numericSettingFields(settings: CardioSettings): {
     min: number;
     max: number;
   }[] = [
-    { key: 'speed_kmh', label: cardioCopy.speed, pair: settings.speed_kmh, step: 0.5, min: 1, max: 20 },
     { key: 'incline_percent', label: cardioCopy.incline, pair: settings.incline_percent, step: 1, min: 0, max: 20 },
     { key: 'cadence_rpm', label: cardioCopy.cadence, pair: settings.cadence_rpm, step: 5, min: 40, max: 120 },
     { key: 'strides_per_minute', label: cardioCopy.strides, pair: settings.strides_per_minute, step: 5, min: 60, max: 180 },
@@ -713,6 +743,34 @@ function midpoint(value: [number, number] | number | undefined): number | null {
   if (value == null) return null;
   if (typeof value === 'number') return value;
   return Math.round(((value[0] + value[1]) / 2) * 10) / 10;
+}
+
+function asPair(value: [number, number] | number | undefined): [number, number] | null {
+  if (value == null) return null;
+  if (typeof value === 'number') return [value, value];
+  const low = Math.min(value[0], value[1]);
+  const high = Math.max(value[0], value[1]);
+  return [Math.round(low * 10) / 10, Math.round(high * 10) / 10];
+}
+
+function bumpPair(
+  pair: [number, number],
+  end: 'min' | 'max',
+  delta: number,
+  min: number,
+  max: number
+): [number, number] {
+  let low = pair[0];
+  let high = pair[1];
+  const next = Math.min(max, Math.max(min, Math.round(( (end === 'min' ? low : high) + delta) * 10) / 10));
+  if (end === 'min') {
+    low = next;
+    if (low > high) high = low;
+  } else {
+    high = next;
+    if (high < low) low = high;
+  }
+  return [low, high];
 }
 
 function StepperRow({
@@ -853,7 +911,6 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     marginBottom: 8,
   },

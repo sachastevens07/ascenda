@@ -23,7 +23,9 @@ Git: `main`, ahead of origin. User is Sacha.
 - **R10** Replaced by **P1** (hard paywall). The paywall screen restyle is **C3**.
 - **R11** Pexels covers and 14 exercise photos. Stretch covers were gym shots until **D2**.
 
-**M1 exercise media (WorkoutX): plumbing built 6 Nov 2026, WorkoutX account deferred.** `getExerciseMedia()` and the Edge Function are in the repo. Play buttons stay hidden until there are matches. Sign-up, API key, matching, SQL and deploy wait for Sacha. MuscleWiki columns stay.
+**M1 exercise media (WorkoutX animations, 21 Nov 2026).** Tried MuscleWiki live video; style was too mixed, so demos are WorkoutX looping animations again. `getExerciseMedia()` + `exercise-media` use bundled WorkoutX ids. MuscleWiki match files and `MUSCLEWIKI_API_KEY` stay but are unused. Key never in `.env` or the app.
+
+**Stretches hidden at launch (21 Nov 2026).** Most stretch moves have no working demo, so they are switched off behind `STRETCHES_ENABLED = false` in `src/config/features.ts` (read with `useFeature('stretches')` / `isFeatureEnabled('stretches')`). Nothing is deleted: stretch JSON, screens, player, DB rows and logged sessions stay. With the flag off the app hides the Train Stretches tab, stretch routines/player/mini bar, stretch singles, Home "Stretch today", recovery stretch extras and recovery days in the Planner, cool-down blocks, the "28 days of stretch" challenge, locked stretch-only badges, stretch reminders, Learn links to stretch routines, and copy that promises stretching. Warm-ups keep only steps with a demo (easy bike / easy cross-trainer, or a WorkoutX match) plus the first-lift ramp-up sets; if nothing is left, the logger shows the `warmup_fallback` line from microcopy. Learn articles stay. Already-logged stretch sessions still count for past weeks (W7 / H1). **To switch stretches back on:** set `STRETCHES_ENABLED` to `true` and rebuild. Also restore the stretch lines in `content/app-store/listing.md` (see the note at the bottom of that file) and redeploy `coach` so the Edge Function index includes stretches again.
 
 **v2.1**
 - **S1** Duplicate loophole closed, then removed in **P1** (no custom workout limit).
@@ -68,23 +70,189 @@ Git: `main`, ahead of origin. User is Sacha.
 - **N2** (6 Nov 2026) Routine standard from `/content`. 15 launch routines, the strength catalogue and exercise-guides are bundled. Detail shows purpose, who it's for, by the end, why this split, how the weeks work, weekly structure, phases with goals. Logger shows role, plain-English RIR, tempo and the day's coach note. Swap engine uses guide `if_its_taken` lists first. Overlay fills empty database fields; a pasted `n2_routines.sql` value wins. Old 14 ids keep their enrolments and history. Stretches and custom workouts are unchanged. SQL: `supabase/n2_routines.sql` (not run).
 - **N6** (completed 6 Nov 2026, roadmap 28). Learn hub from `content/learn/articles.json`: 34 articles, 8 categories. Featured hero, category tiles, recommended-for-you from `recommended_for_goals`, continue reading, mark as read, sources, safety line. Related cards on routine and exercise pages from content links. Home “Picked for you” / See all opens the hub (F1 moved it off the tab bar). Profile is a pushed screen from the header avatar. SQL: `supabase/learn_n6.sql` (not confirmed run). Bodies stay in the app until a database body is set.
 - **N7** (completed 6 Nov 2026, roadmap 28). Daily quote on Home from `content/quotes/quotes.json` (100 original Ascenda quotes). Same one worldwide: UTC days since 1 Jan 2026 modulo the list. Hide from the card ⋯ or Profile → Appearance. SQL: `supabase/quotes_n7.sql` (not confirmed run; an older 90-row seed is ignored until a live sync).
-- **X6** (7 Nov 2026). Refer a friend. Personal codes, deep link, Apple Offer Code `FRIEND14`, referrer reward via the RevenueCat webhook. SQL: `supabase/referrals_x6.sql` (not run). App Store Connect offer code and iPhone redeem testing deferred until Sacha has an iPhone.
+- **X6** (7 Nov 2026; Home banner L3 21 Nov 2026). Refer a friend. Personal codes, deep link, Apple Offer Code `FRIEND14`, referrer reward via the RevenueCat webhook. SQL: `supabase/referrals_x6.sql` (not run). Home banner opens the share sheet. App Store Connect offer code, iPhone redeem testing, and reward logic are still deferred.
 - **Typography** (4 Nov 2026) Fraunces (display) and Manrope (UI) app-wide. Tokens in `src/constants/theme.ts`, family names in `src/constants/fonts.ts`, applied through `AppText`. `FontGate` in the root layout keeps the splash up until fonts load. No SQL.
 - **Content update** (18 Nov 2026). Zip + Downloads `AGENTS.md` merged into `/content` without dropping app keys. Routines, singles, cardio sessions, catalogue, exercise guides and Learn from the zip; Your body articles kept. Microcopy, image-manifest and ai-config merged (Coach `card_applied_*` kept; `logger.rest_sheet_hint` added). `cardio-builder.json` left alone. Bundled overlay now applies day `estimated_minutes`, `rest_seconds` and the content exercise list to remaining weeks. Mid-session logger plans stay. `content:sync --dry-run`: 17 routines, 16 cardio (6 beginner-blocked including Bike sprints), 41 Learn articles (`machines-or-free-weights` in myths). Live writes still wait for confirm. No new SQL.
+- **Photo lag** (19 Nov 2026). Covers use `expo-image` (disk plus memory cache, downscaled to the card size) instead of React Native `Image`. Food, recipe lists, Learn categories and Cardio only mount cards near the screen. `hydrateImages` reuses an in-flight fetch and skips a network round-trip for 90 seconds. Logger, progression and swaps were not changed. Follow-up: `removeClippedSubviews` was blanking photos on iOS, so it is off; Food carousels show every recipe again; `PhotoFill` fills the card with `absoluteFill` and no longer hides a photo after a load error.
+- **Photo import** (20 Nov 2026). Food, Learn, Strong and fit and Bike sprints covers are in. Remaining `needs_sourcing` is 23: WorkoutX machine and equipment shots only. Follow-up: the app was ignoring ready photos in the bundled manifest until a Supabase fetch; it now seeds from that file, hydrates after sign-in, and PhotoFill re-renders when rows land.
+- **WorkoutX fills** (22 Nov 2026). Remaining catalogue demos are in: Strong Foundations and the other routines now have a clip for bird-dog, box squat to a chair, glute bridge, floor press, hip thrust, hip-thrust machine, leg press, reverse pec-deck, shoulder-press machine, side-lying hip abduction, Smith squat, suitcase carry and walking lunge. Male clips are used where WorkoutX has no female version. 170 matches. Paste **`supabase/workoutx_ids.sql`** and redeploy `exercise-media`.
+- **Cover slugs** (22 Nov 2026). Old Pexels ids (`cover-gym-confidence-6` and friends) never moved onto the current slugs (`strong-foundations-cover`, `four-day-foundation-cover`, `twice-a-week-strong-cover`, …). `images_manifest.sql` regenerated to 236 slugs. Small remap: **`supabase/cover_slugs.sql`** (show then paste; does not rebuild weeks or days). App prefers each routine's `cover_image_slug` and aliases leftover cover ids. Twelve forgotten covers imported onto the new slugs. `IMAGE_CACHE_VERSION` is `5`. Follow-up: routine cards were skipping their own cover if that photo had already been used as Recommended or a training-style tile. Every routine card, Home featured card and single-session card now always shows its cover. Day rows on the routine page use the lead lift's WorkoutX still.
 
 ---
 
 ### In progress
 
-**SQL pastes (blocked on Sacha).** **`group8_health.sql` pasted (17 Nov 2026)** (`sessions.lighter_session`, `profiles.hide_checkin`, `profiles.life_stage`, `health_consents`, account deletion). Remaining weeks already show the rebuilt `/content` days via the bundled overlay (minutes, rest, exercises). To persist those lists in the database (and for a live `content:sync`), paste **`weekly_plan.sql`** (optional jsonb column; the app already reads `weekly_plan` from bundled JSON), then **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (one file at a time; deletes then inserts `routine_tags` so old tags are replaced; rebuilds weeks/days/slots for the 17 slugs; does not touch sessions, sets or enrolments). Still waiting on `d2_covers.sql`, `photos_h7.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, **`images_manifest.sql`** (this replaces `images_x1.sql` and `heroes_batch1.sql`), **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, **`exercise_notes_x4.sql`**, **`workoutx_m1.sql`** (M1; do not paste until you confirm), **`subscriptions_p1.sql`**, **`onboarding_x5.sql`**, **`achievements_h6.sql`**, **`referrals_x6.sql`**, **`ai1.sql`**, **`ai2.sql`**, **`ai3.sql`**, **`ai4.sql`**, **`ai5.sql`** (optional for the shipped Hevy-style report UI; only needed if you later turn the AI story path back on), and **`food_f2.sql`** (recipes tables + `profiles.hide_macros`; recipes still load from `/content` without it). **`cardio_w2.sql`** was pasted (9 Nov 2026). **`cardio_w8.sql`** was pasted (17 Nov 2026) (`custom_workouts.type`, `custom_workouts.cardio_plan`, `sessions.logged_after`). **`cardio_w8_other.sql`** is waiting (adds `other` to `cardio_logs.machine_id` for Just log it Other cardio). After you review the match CSV, paste **`workoutx_ids.sql`**. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote, cover placeholders, the gym-experience question and the Refer screen (local code) work on-device without SQL. Notes and per-exercise rest in the logger also work on-device; they only sync across phones after `exercise_notes_x4.sql`. The gym-experience answer only persists after `gym_experience_g1.sql`. Referral tracking and rewards need `referrals_x6.sql` plus the webhook secret. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7. Content sync will not mark old routines inactive until `routines_is_active.sql` is pasted, and a live sync is not run until you confirm. `session_blocks_w1.sql` adds day/session types and blocks without changing the logger list. Recipe pages, hearts and hide-macros work on-device; hearts and the hide-macros cloud save only sync after `food_f2.sql`.
+**SQL pastes (blocked on Sacha).** **`cover_slugs.sql`** (22 Nov 2026; remap `routines.cover_image_id` from old `cover-*` ids to current slugs; also points leftover original 14 ids at the new photos). **`session_feel_b2.sql`** (B2 v2, show then paste: `sessions.session_feel`). **`group8_health.sql` pasted (17 Nov 2026)** (`sessions.lighter_session`, `profiles.hide_checkin`, `profiles.life_stage`, `health_consents`, account deletion). Remaining weeks already show the rebuilt `/content` days via the bundled overlay (minutes, rest, exercises). To persist those lists in the database (and for a live `content:sync`), paste **`weekly_plan.sql`** (optional jsonb column; the app already reads `weekly_plan` from bundled JSON), then **`content_routines_1.sql`**, then **`content_routines_2.sql`**, then **`content_routines_3.sql`** (one file at a time; deletes then inserts `routine_tags` so old tags are replaced; rebuilds weeks/days/slots for the 17 slugs; does not touch sessions, sets or enrolments). Still waiting on `d2_covers.sql`, `photos_h7.sql`, `challenges_h8.sql`, `quotes_d3.sql`, `profile_d8.sql`, `n2_routines.sql`, `learn_n6.sql`, **`quotes_n7.sql`**, `theme_preference.sql`, **`images_manifest.sql`** (this replaces `images_x1.sql` and `heroes_batch1.sql`), **`gym_experience_g1.sql`**, **`routines_is_active.sql`**, **`session_blocks_w1.sql`**, **`exercise_notes_x4.sql`**, **`workoutx_m1.sql`** (M1; do not paste until you confirm), **`subscriptions_p1.sql`**, **`onboarding_x5.sql`**, **`achievements_h6.sql`**, **`referrals_x6.sql`**, **`ai1.sql`**, **`ai2.sql`**, **`ai3.sql`**, **`ai4.sql`**, **`ai5.sql`** (optional for the shipped Hevy-style report UI; only needed if you later turn the AI story path back on), and **`food_f2.sql`** (recipes tables + `profiles.hide_macros`; recipes still load from `/content` without it). **`cardio_w2.sql`** was pasted (9 Nov 2026). **`cardio_w8.sql`** was pasted (17 Nov 2026) (`custom_workouts.type`, `custom_workouts.cardio_plan`, `sessions.logged_after`). **`cardio_w8_other.sql`** is waiting (adds `other` to `cardio_logs.machine_id` for Just log it Other cardio). **`workoutx_ids.sql`** (updated 22 Nov 2026: 170 ids, including the 13 catalogue fills). Paste it and redeploy `exercise-media` so the new clips play. Units, rest timer, hide-quote, N2 coaching copy, Learn articles, the daily quote, cover placeholders, the gym-experience question and the Refer screen (local code) work on-device without SQL. Notes and per-exercise rest in the logger also work on-device; they only sync across phones after `exercise_notes_x4.sql`. The gym-experience answer only persists after `gym_experience_g1.sql`. Referral tracking and rewards need `referrals_x6.sql` plus the webhook secret. `quotes_n7.sql` also adds `hide_quote`, so `quotes_d3.sql` is optional if you paste N7. Content sync will not mark old routines inactive until `routines_is_active.sql` is pasted, and a live sync is not run until you confirm. `session_blocks_w1.sql` adds day/session types and blocks without changing the logger list. Recipe pages, hearts and hide-macros work on-device; hearts and the hide-macros cloud save only sync after `food_f2.sql`.
+
+**L1 (21 Nov 2026).** Content refresh wired in. Day `focus` is read from the routine JSON (then the database), never rewritten from the day name. "If it's taken" uses only `alternatives` from `content/exercises/strength-catalogue.json` (closest first, 0 to 3, never padded, no "Try something new"). Empty copy is `logger.swap_none`. Coach preferences still hide swaps she has ruled out. Logger set ticking, the progression rule and the rest timer were not changed. Phone check: lat pulldown (1: assisted pull-up), leg extension (none), barbell hip thrust (3: hip-thrust machine, dumbbell hip thrust, dumbbell glute bridge).
+
+**L1 waiting on OK: exercises in the app that are not in `strength-catalogue.json`.** Every slug used in routines, single sessions and exercise guides is already in the catalogue (75). The extras below are exercise-library rows from `workoutx-ids.json`. Families and swaps follow `tools/routine-generator/families.py` (neighbours, max 3). **Do not add them to the catalogue until Sacha says yes.**
+
+Near-duplicates of catalogue slugs (alias may be enough):
+| Slug | Family | Swaps | Note |
+|---|---|---|---|
+| cable-face-pull | rear_delt | face-pull, reverse-pec-deck, dumbbell-reverse-fly | same move as `face-pull` |
+| cable-pallof-press | core_anti_rotation | pallof-press, side-plank | same move as `pallof-press` |
+| dumbbell-fly | chest_fly | dumbbell-chest-fly, pec-deck | same move as `dumbbell-chest-fly` |
+| dumbbell-hammer-curl | biceps_curl | hammer-curl, dumbbell-biceps-curl, cable-biceps-curl | same move as `hammer-curl` |
+| overhead-triceps-extension | triceps_extension | overhead-dumbbell-triceps-extension, triceps-pushdown, dumbbell-triceps-kickback | same move as `overhead-dumbbell-triceps-extension` |
+
+Strength extras (proposed family and swaps):
+| Slug | Family | Swaps |
+|---|---|---|
+| arnold-press | overhead_press | seated-dumbbell-shoulder-press, standing-dumbbell-shoulder-press, shoulder-press-machine |
+| back-extension | hinge_deadlift | cable-pull-through, kettlebell-deadlift, dumbbell-romanian-deadlift |
+| band-biceps-curl | biceps_curl | cable-biceps-curl, dumbbell-biceps-curl, hammer-curl |
+| band-chest-press | horizontal_press | push-up, incline-push-up, dumbbell-floor-press |
+| band-lat-pulldown | vertical_pull | lat-pulldown, assisted-pull-up |
+| band-lateral-raise | lateral_raise | dumbbell-lateral-raise, cable-lateral-raise |
+| band-pallof-press | core_anti_rotation | pallof-press, side-plank |
+| band-pull-apart | rear_delt | dumbbell-reverse-fly, face-pull, reverse-pec-deck |
+| band-shoulder-press | overhead_press | seated-dumbbell-shoulder-press, standing-dumbbell-shoulder-press, shoulder-press-machine |
+| band-triceps-pushdown | triceps_extension | triceps-pushdown, overhead-dumbbell-triceps-extension, dumbbell-triceps-kickback |
+| banded-hip-thrust | hip_thrust | dumbbell-glute-bridge, bodyweight-glute-bridge, single-leg-glute-bridge |
+| banded-kickback | glute_kickback | cable-glute-kickback |
+| banded-squat | squat | goblet-squat, dumbbell-box-squat, bodyweight-box-squat |
+| barbell-biceps-curl | biceps_curl | cable-biceps-curl, dumbbell-biceps-curl, hammer-curl |
+| barbell-box-squat | squat | barbell-back-squat, smith-machine-squat, hack-squat |
+| barbell-deadlift | hinge_deadlift | barbell-romanian-deadlift, trap-bar-deadlift, dumbbell-romanian-deadlift |
+| barbell-glute-bridge | hip_thrust | barbell-hip-thrust, hip-thrust-machine, dumbbell-hip-thrust |
+| barbell-overhead-press | overhead_press | standing-dumbbell-shoulder-press, seated-dumbbell-shoulder-press, shoulder-press-machine |
+| barbell-sumo-deadlift | hinge_deadlift | barbell-romanian-deadlift, trap-bar-deadlift, dumbbell-romanian-deadlift |
+| bench-dip | triceps_extension | dumbbell-triceps-kickback, overhead-dumbbell-triceps-extension, triceps-pushdown |
+| bodyweight-calf-raise | calf_raise | dumbbell-calf-raise, calf-raise-machine |
+| cable-chest-fly | chest_fly | pec-deck, dumbbell-chest-fly |
+| cable-rear-delt-fly | rear_delt | reverse-pec-deck, face-pull, dumbbell-reverse-fly |
+| chest-dip | horizontal_press | push-up, incline-push-up, dumbbell-floor-press |
+| chin-up | vertical_pull | assisted-pull-up, lat-pulldown |
+| concentration-curl | biceps_curl | dumbbell-biceps-curl, hammer-curl, cable-biceps-curl |
+| copenhagen-plank | core_anti_rotation | side-plank, pallof-press |
+| curtsy-lunge | lunge_split | walking-lunge, bodyweight-reverse-lunge, dumbbell-reverse-lunge |
+| dumbbell-front-raise | lateral_raise | dumbbell-lateral-raise, cable-lateral-raise |
+| dumbbell-lateral-lunge | lunge_split | walking-lunge, dumbbell-reverse-lunge, dumbbell-step-up |
+| dumbbell-lying-triceps-extension | triceps_extension | overhead-dumbbell-triceps-extension, dumbbell-triceps-kickback, triceps-pushdown |
+| dumbbell-pullover | vertical_pull | lat-pulldown, assisted-pull-up |
+| ez-bar-curl | biceps_curl | cable-biceps-curl, dumbbell-biceps-curl, hammer-curl |
+| ez-bar-skull-crusher | triceps_extension | overhead-dumbbell-triceps-extension, dumbbell-triceps-kickback, triceps-pushdown |
+| front-squat | squat | barbell-back-squat, smith-machine-squat, hack-squat |
+| glute-focused-back-extension | hip_thrust | hip-thrust-machine, barbell-hip-thrust, dumbbell-hip-thrust |
+| good-morning | hinge_deadlift | barbell-romanian-deadlift, trap-bar-deadlift, dumbbell-romanian-deadlift |
+| heels-elevated-goblet-squat | squat | goblet-squat, dumbbell-box-squat, bodyweight-box-squat |
+| hollow-body-hold | core_bracing | forearm-plank, dead-bug, bird-dog |
+| incline-barbell-bench-press | horizontal_press | barbell-bench-press, dumbbell-bench-press, chest-press-machine |
+| incline-dumbbell-curl | biceps_curl | dumbbell-biceps-curl, hammer-curl, cable-biceps-curl |
+| incline-y-raise | rear_delt | dumbbell-reverse-fly, face-pull, reverse-pec-deck |
+| inverted-row | row | bent-over-dumbbell-row, barbell-bent-over-row, one-arm-dumbbell-row |
+| jump-squat | squat | bodyweight-box-squat, goblet-squat, dumbbell-box-squat |
+| kettlebell-goblet-squat | squat | goblet-squat, dumbbell-box-squat, bodyweight-box-squat |
+| kettlebell-reverse-lunge | lunge_split | dumbbell-reverse-lunge, walking-lunge, bodyweight-reverse-lunge |
+| kettlebell-row | row | one-arm-dumbbell-row, bent-over-dumbbell-row, chest-supported-dumbbell-row |
+| kettlebell-sumo-deadlift | hinge_deadlift | kettlebell-deadlift, dumbbell-romanian-deadlift, trap-bar-deadlift |
+| kettlebell-swing | hinge_deadlift | kettlebell-deadlift, cable-pull-through, dumbbell-romanian-deadlift |
+| knee-push-up | horizontal_press | incline-push-up, push-up, dumbbell-floor-press |
+| landmine-press | overhead_press | standing-dumbbell-shoulder-press, seated-dumbbell-shoulder-press, shoulder-press-machine |
+| leg-press-calf-raise | calf_raise | calf-raise-machine, dumbbell-calf-raise |
+| low-to-high-cable-fly | chest_fly | pec-deck, dumbbell-chest-fly |
+| lying-leg-raise | core_flexion | reverse-crunch, hanging-knee-raise, cable-crunch |
+| machine-lateral-raise | lateral_raise | cable-lateral-raise, dumbbell-lateral-raise |
+| machine-row | row | seated-cable-row, single-arm-cable-row, chest-supported-dumbbell-row |
+| mountain-climber | core_flexion | reverse-crunch, cable-crunch, hanging-knee-raise |
+| nordic-curl | leg_curl | lying-leg-curl, seated-leg-curl |
+| plank-shoulder-tap | core_anti_rotation | side-plank, pallof-press |
+| preacher-curl-machine | biceps_curl | cable-biceps-curl, dumbbell-biceps-curl, hammer-curl |
+| pull-up | vertical_pull | assisted-pull-up, lat-pulldown |
+| renegade-row | row | one-arm-dumbbell-row, bent-over-dumbbell-row, chest-supported-dumbbell-row |
+| seated-calf-raise | calf_raise | calf-raise-machine, dumbbell-calf-raise |
+| single-arm-lat-pulldown | vertical_pull | lat-pulldown, assisted-pull-up |
+| single-leg-leg-press | squat | leg-press, hack-squat, smith-machine-squat |
+| straight-arm-pulldown | vertical_pull | lat-pulldown, assisted-pull-up |
+| superman | core_bracing | bird-dog, dead-bug, forearm-plank |
+| wall-sit | squat | bodyweight-box-squat, goblet-squat, dumbbell-box-squat |
+
+No matching family in `families.py` (no close swap under the current rules):
+| Slug | Note |
+|---|---|
+| cable-hip-adduction | Would need a new `hip_adduction` family with `hip-adduction-machine` |
+| hip-adduction-machine | Same |
+| turkish-get-up | Unique; no close swap |
+
+Stretch and mobility library rows (no strength family, no swaps): butterfly-stretch, calf-stretch-wall, chest-stretch-wall, cross-body-shoulder-stretch, half-kneeling-hip-flexor-stretch, happy-baby, kneeling-hip-flexor-stretch, lying-hamstring-stretch, neck-side-stretch, overhead-triceps-stretch, seated-hamstring-stretch, standing-forward-fold, standing-side-bend, supine-twist, wrist-and-forearm-stretch.
+
+**L2 (21 Nov 2026).** Cropped photos go through `PhotoFill`: `focal_point` from the manifest becomes expo-image `contentPosition` (`left: x%`, `top: y%`) with `contentFit: cover`. The bundled entries do not yet include `focal_point`, so people photos default to `{ x: 0.5, y: 0.32 }` (faces) and equipment/food to `{ x: 0.5, y: 0.5 }` until that field is filled. A missing or failed file stays on the brand-tinted placeholder, never a blank box. Logger, progression and rest timer were not changed.
+
+### Missing images
+
+Every slug used in `/content` and `src` is in the manifest. Ready people, routine, Learn, Food, cardio-session and challenge photos have a `file`. The 30 slugs below have no file yet (`status: needed`, WorkoutX equipment). They already show the placeholder.
+
+**Machine guides** (also Cardio machine pickers, the cardio player, and Learn → Gym confidence):
+- machine-treadmill
+- machine-bike
+- machine-cross-trainer
+- machine-rower
+- machine-stair-climber
+- machine-leg-press
+- machine-leg-extension
+- machine-leg-curl
+- machine-hack-squat
+- machine-hip-abduction
+- machine-hip-thrust
+- machine-lat-pulldown
+- machine-seated-row
+- machine-cable
+- machine-chest-press
+- machine-shoulder-press
+- machine-pec-deck
+- machine-calf-raise
+- machine-assisted-pull-up
+- machine-smith
+- machine-squat-rack
+
+**Onboarding** (machines you've used before). Most reuse the machine-guide file via `same_as`:
+- equip-dumbbells (own file)
+- equip-barbell (own file)
+- equip-leg-press → machine-leg-press
+- equip-lat-pulldown → machine-lat-pulldown
+- equip-chest-press → machine-chest-press
+- equip-cables → machine-cable
+- equip-smith → machine-smith
+- equip-rack → machine-squat-rack
+- equip-treadmill → machine-treadmill
+
+**L3 (21 Nov 2026).** Home has one “This week” island, in the lower slot (after Featured / challenge, before Awards). Four equal StatTiles for Monday to Sunday: Sessions (all logged sessions this week), Strength (strength sessions), Cardio (cardio sessions of 10+ minutes, W3), Minutes (sum of `duration_seconds`, rounded). The upper TypeRing duplicate was removed from Home (Activity still uses it). Refer a friend always sits at the bottom of Home (after Picked for you). The banner is title plus Invite a friend only. Tap opens the full Refer screen (modal): offer headline, empty/invites list, photo, share and copy rows, how it works, sticky Share my link. Native share sheet only (no extra share apps). Terms still cap rewards at 2 a year until Apple offer setup is confirmed. Reward granting (Apple extend / RevenueCat) stays a TODO. Profile → Refer a friend still opens `/refer`. No new SQL: X6 already lives in `supabase/referrals_x6.sql` (not run). Logger, progression and swaps were not changed.
+
+**X6 reward TODO (still deferred).** Apple Offer Code `FRIEND14`, RevenueCat webhook rewards, and `REVENUECAT_SECRET_API_KEY` are not set up. The banner only shares the link. Do not wire reward logic until those store pieces exist.
+
+**L4 (21 Nov 2026).** Exercise screen order is: looping WorkoutX demo at about 40% of the window height (rounded, tap for full screen), name and tags, Ask AI (Coach sparkles, opens Coach with this exercise as context), If it's taken, where / setup / form cues, Related Learn. Example AI question chips are gone on this screen only. Demos auto-loop; unmatched slugs keep the static placeholder. Same-exercise aliases now play the clip we already have (`chest-press-machine` → `machine-chest-press`, `plank` → `forearm-plank`, and the other `MEDIA_SLUG_ALIASES` in `getExerciseMedia.ts`). Stretches stay behind `STRETCHES_ENABLED = false`. Logger, progression and the rest timer were not changed. No new SQL.
+
+**L5 (21 Nov 2026).** Logger bottom “Ask Coach” and “Something's taken” are gone; swaps stay in each exercise ⋯ menu; header Coach uses the same `CoachButton` as Home (sparkles, 40×40, plum on brandSoft). Tap a set number for Warm-up / Drop / Normal / Remove. Labels: W, D, then 1, 2, 3 for working sets. Empty remove is silent; a filled set shows “Set removed” with Undo for 4 seconds (no confirm). Warm-up ticks skip the rest timer; drop and normal still start it. Volume and minutes include every ticked set; progression, PBs and the day's set target use `set_type = 'normal'` only. SQL to paste: `supabase/sets_l5.sql` (adds `sets.set_type`, backfills existing rows to `'normal'`, lets ramp-up use set_number 0 / -1 / -2). Do not run it from here. Until that SQL is pasted, drop/warm-up types stay on the phone only.
+
+**L6 (21 Nov 2026).** Train → Cardio: the large Create your own island is a one-line row (plus, title, chevron, ListRow height). Tap opens a bottom sheet with the W8 actions: Quick start, Build intervals, Just log it. Those still open `/cardio/quick`, `/cardio/intervals` and `/cardio/log`. No challenge cards on this tab (none of the live challenges are cardio-specific). Logger, progression and swaps were not changed. No new SQL.
+
+**L7 (21 Nov 2026).** Planner week arrows and a left/right swipe on the week strip slide the next week in from the right and the previous week from the left (250 ms, ease-out, `react-native-reanimated` already in the project). A swipe on the strip takes priority over sliding between tabs; swiping the agenda still changes tabs. The agenda still jumps to that week after the change. Logger, progression and swaps were not changed. No new SQL. No new libraries.
+
+**L8 (21 Nov 2026).** Activity Progress: "Effort over time" is gone. In its place, after two weeks with a 10+ minute cardio session: a "Cardio minutes per week" bar chart (last 8 weeks, same bars as Sessions per week) and a "Same session, compared" line for the cardio session she has repeated most (rounds for intervals and finishers, distance if she logged it both times, otherwise minutes). Personal bests collapse to the latest 3; tap the heading to expand the full list (250 ms height + chevron 180°). Logger, progression and swaps were not changed. No new SQL. No new libraries.
+
+**B2 v2 + B3 v2 (21 Nov 2026).** Logger check-in uses `content/checkin/checkin.json` format version 2. Each option has its own offer card and today-only rules (lighter, comfort, steady, cool, joint-friendly, short, push). Hot flushes and Achy joints show only when `profiles.life_stage` is perimenopause or menopause; period options hide for menopause. `life_stage` stays on-device. Comfort and joint-friendly swaps use only the exercise's own catalogue alternatives; if none fit, the lift stays and is marked optional. Save still only `sessions.lighter_session` (true for every accepted adjustment except push); the option is never stored. After Finish: optional How did that feel? → `sessions.session_feel`. Two Harder in a row on the same routine day holds the next weight increase. Life-stage: Strong bones note on routine pages; optional 2 to 3 min impact finisher after lower-body days with incline walking as the lower-impact choice; single-leg stand in lower-body warm-ups; Planner rest day between hard lower-body sessions. Progression re-tested (`scripts/test-progression.ts`): hit top → increase; holdIncrease / two Harder → same weight; warmup/drop ignored; lighter sessions still skipped by `fetchPreviousSets`. SQL to paste: `supabase/session_feel_b2.sql`.
+
+**L9 (21 Nov 2026).** Optional period log, off by default. Profile → Privacy opens the consent screen from `content/checkin/checkin.json` (`period_log`). Accepting writes `health_consents` purpose `period_log`. Declining saves nothing. Planner day menu: Period started / Period ended, shown as a small private plum dot (week strip, agenda header, month). Check-in lists Period symptoms first on logged period days (still hidden when life stage is menopause). Private notes after 3 completed periods and 6 sessions on those days, compared only with her own logs: session count, minutes, lighter-day share. No cycle length, next-period date, fertile window or pregnancy. Turning the toggle off withdraws consent and deletes every `period_logs` row. Never sent to Coach, PostHog, RevenueCat, notifications, share cards or recaps. Privacy policy and DPIA notes updated. SQL to paste: **`supabase/period_log_l9.sql`**. Logger, progression and swaps were not changed. Did not start gym buddy.
+
+### Exercises without a video
+
+**22 Nov 2026.** Catalogue gaps filled. 170 WorkoutX matches now play. Male clips are allowed when WorkoutX has no female version. Close stand-ins: box squat to a chair uses Dumbbell Bench Squat; floor press uses the one-arm version; hip-thrust machine uses Hip-Thrust in Smith Machine; walking lunge uses forward lunges (no dumbbell walking clip). Paste **`supabase/workoutx_ids.sql`** and redeploy `exercise-media`. Stretches stay hidden.
+
+**Still no demo (warm-ups, stretches, retired library rows, or no honest clip):**
+- Warm-ups / holds: arm-circles, chin-tuck, hip-circles, legs-up-the-wall, shoulder-rolls, slow-breathing, wall-angel
+- Stretches (hidden): cat-cow, childs-pose, open-book, open-book-stretch, seated-spinal-twist, supported-pigeon, thread-the-needle, ninety-ninety-hip-stretch, prone-press-up
+- Retired or unused library: banded-clamshell, banded-glute-bridge, banded-hamstring-curl, bear-plank, cable-squat, cable-woodchop, close-grip-bench-press, close-grip-lat-pulldown, close-grip-push-up, decline-push-up, deficit-reverse-lunge, donkey-kick, dumbbell-shrug, dumbbell-sumo-squat, kettlebell-floor-press, kettlebell-suitcase-carry, pike-push-up, side-lying-adduction, single-arm-cable-chest-press, single-leg-box-squat, single-leg-calf-raise, single-leg-hip-thrust, sliding-leg-curl, standing-cable-leg-curl, t-bar-row
+- Merged (play via alias): cable-triceps-pushdown, kettlebell-farmers-carry, plank, rear-delt-fly, standing-calf-raise
 
 ---
 
 ### Next step
 
-**Step C items 1 to 52 are in.** **W8 is in** (Quick start, Build intervals, Just log it). Next is **TestFlight (item 30)** when Sacha is ready. Do not start gym buddy or the optional period log.
+**Cover slugs and L9 period log.** Paste **`supabase/cover_slugs.sql`** so routine cards use the current cover names (not `cover-gym-confidence-6`). Then paste **`supabase/period_log_l9.sql`** so period dates can save. Phone-test covers: reload the app and check Strong Foundations, The Two-Day Start, Dumbbells and a Bench, Quick Ascent, Upper Body, Twice a Week Strong, Four-Day Foundation, Strong for Life, Higher Ground, the home backup session, and Four Weeks Strong. Period log: Profile → Privacy → Period log (decline saves nothing; accept then Planner Period started / ended and a private dot). Do not start gym buddy.
 
-Current: **W8 Just log it in** (18 Nov 2026). Spec is `content/cardio/cardio-builder.json`. Paste **`supabase/cardio_w8_other.sql`** before logging Other cardio. Do not start the optional period log or gym buddy.
+Current: **cover remaps + L9 period log**. SQL to paste: **`supabase/cover_slugs.sql`**, then **`supabase/period_log_l9.sql`**. Also still waiting on **`supabase/session_feel_b2.sql`**, **`supabase/sets_l5.sql`**, and **`supabase/cardio_w8_other.sql`**. Waiting on OK before adding L1 catalogue extras.
 
 **Handover (18 Nov 2026).** Workspace `AGENTS.md` is the Downloads file (18 Nov evidence check, rest-by-role, variety, upper-body accessories, Bike sprints, Group 8). Content zip is merged. Remaining weeks overlay from bundled JSON; mid-session plans are kept. Live `content:sync` still refuses without a service role.
 
@@ -107,7 +275,7 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 - [x] **6. W1** Session types and blocks (5 Nov 2026). `routine_days.type` and `sessions.type` are `strength` | `cardio` | `recovery`. Each day has ordered `routine_day_blocks` (warmup, strength, cardio, cooldown, stretch). Existing strength days backfill warmup + strength + cooldown; stretch days backfill one stretch block. Exercises stay on `routine_day_exercises` (with optional `block_id`), so the logger, progression and swaps are unchanged. `support_days` and `weekly_schedule` are jsonb on `routines` for the Planner later; extra cardio/recovery days are not added yet. content:sync plans 104 weeks, 300 days and 935 blocks from `/content`. Live writes still need a service role key and your confirm. SQL: `supabase/session_blocks_w1.sql` (not run).
 - [x] **7. N3 + X4** Logger (6 Nov 2026). Start session opens the logger. Header: minimise, live timer (starts on first ticked set or Start timer), Finish. Stats: duration, volume, sets. Set table: Set, Previous, kg, Reps, tick; W for warm-up sets (long-press + Add set). Per exercise: thumbnail, name opens the guide, ⋯ (swap, remove, add/remove set, change rep target), Rest and Note chips remembered next time. Reorder is long-press then arrows (no drag library). Minimised bar on every tab. Suggested-weight chip, role, RIR, rest bar and PB glow kept. Changes apply to today only. End session with no ticked set discards with no prompt. Swap engine and double-progression unchanged. Microcopy from `content/microcopy` (bundled). SQL: `supabase/exercise_notes_x4.sql` (not run). Did not add `react-native-draggable-flatlist` or `expo-haptics`.
 - [x] **8. G2** Warm-up and cool-down blocks (6 Nov 2026). Every strength session in the logger has a collapsible warm-up at the top and cool-down at the bottom from `content/warmups-cooldowns` (8 templates, bundled). Start opens a timed player (stretch-style ring, Pause, Skip, reps as Done). Skip is one tap and never counts as a session, so the streak is unchanged. First main lift gets two W ramp-up sets: 8 reps at about 50% then 5 at about 75%, skipped for bodyweight and assisted machines, and ignored for volume, PBs and awards. Swap engine and double-progression unchanged. `npm run content:sync -- --dry-run` reports the templates; live writes still need a service role and your confirm. No new SQL (W1 blocks table is enough; the app does not wait on it).
-- [x] **9. M1 (revised)** WorkoutX plumbing (6 Nov 2026). Account, key, matching, SQL and deploy **deferred**. App code is in: `getExerciseMedia()`, Edge Function `exercise-media`, match script, `expo-video`. Play buttons are hidden until `content/exercises/workoutx-ids.json` has matches. SQL not run: `supabase/workoutx_m1.sql` then `supabase/workoutx_ids.sql`. MuscleWiki columns kept. Did not use WorkoutX's generator.
+- [x] **9. M1 (revised)** WorkoutX plumbing (6 Nov 2026; SQL and deploy 20 Nov 2026; full 228-exercise match 21 Nov 2026; catalogue fills 22 Nov 2026). App code is in: `getExerciseMedia()`, Edge Function `exercise-media`, match script, `expo-video`. 170 matches. Female clip where one exists, otherwise male. Paste `workoutx_ids.sql` and redeploy `exercise-media`. MuscleWiki columns kept. Did not use WorkoutX's generator.
 - [x] **10. N2** Routine standard (6 Nov 2026). 15 `/content` routines, the strength catalogue and exercise-guides are bundled and reported by content:sync. Detail and logger show the Routine standard fields. Swap engine uses guide swap lists. Old enrolments stay on the old 14 ids. SQL: `supabase/n2_routines.sql` (not run).
 
 ### Stage 3: Onboarding and money
@@ -135,11 +303,11 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
   6. **AI (empty until v2.5).** Trends of `ai_feature_used` broken down by `feature`. Funnel: `ai_feature_used` → `ai_result_accepted`. Trends of `ai_limit_reached` and `ai_fallback_used`. Never chart prompt or answer text (the app does not send it).
 
 ### Stage 5: Depth and discovery
-- [x] **25. X2** Home with all sections (6 Nov 2026). Order: header (avatar, search, planner), welcome hero (~45% height, morning, evening, rest, done or welcome-back slug, state-based CTA), H4 What’s next if it has a recommendation, week strip with today’s session or empty, daily quote, Featured for you, challenge (joined or Quiet Start featured window), refer banner (copy-only; dismiss ×), Your week so far (sessions, PBs, minutes, awards + native text Share), Awards preview, Stretch today, Picked for you (Learn with an Article chip). Each section hides if empty. Welcome-back is a hero state (H2), not a second card. Meals segment omitted until Food. Share is numbers only (no photos, no view-shot library). Full X6 (codes, Apple offers) stays for item 29. Copy from `content/microcopy` `strings.home` (bundled). No new SQL. Logger, progression and swaps were not changed. Did not add a library.
+- [x] **25. X2** Home with all sections (6 Nov 2026). Order: header (avatar, search, planner), welcome hero (~45% height, morning, evening, rest, done or welcome-back slug, state-based CTA), H4 What’s next if it has a recommendation, week strip with today’s session or empty, daily quote, Featured for you, challenge (joined or Quiet Start featured window), This week (L3: sessions, strength, cardio 10+ min, minutes + native text Share), Awards preview, Stretch today, Picked for you (Learn with an Article chip), Refer a friend at the bottom (L3; share sheet). Each section hides if empty. Welcome-back is a hero state (H2), not a second card. Meals segment omitted until Food. Share is numbers only (no photos, no view-shot library). Full X6 (codes, Apple offers) stays for item 29. Copy from `content/microcopy` `strings.home` (bundled). No new SQL. Logger, progression and swaps were not changed. Did not add a library.
 - [x] **26. X3** Programmes browse and single sessions (6 Nov 2026). Routines tab is a browse page: current plan, Recommended for you (from onboarding `recommendPlan` rules), Build my plan (re-runs plan questions at `/onboarding?rebuild=1`, saves answers, opens the recommended routine without enrolling), training style tiles, Start here, Single sessions. No Popular (no real data), no New flag, no Coach reviewed until `reviewed_by` is set, no Pro carousel. Stretch tile opens the Stretches tab. Cardio tile only if a `cardio_balanced` routine or cardio single exists. Home-only singles stay in "Days you can't get to the gym". 12 singles bundled from `content/single-sessions` (10 gym, 2 home). Play/start opens the existing logger via a custom session with an on-device plan (no `single_sessions` table). Stretches stay `routines` with `type = stretch` from `content/stretches`. Copy from `content/microcopy` `strings.programmes`. No new SQL. Logger, progression and swaps were not changed for routine sessions. Did not add a library.
 - [x] **27. D2 to D9** Design fixes are in. D9 thumbnails are photos or equipment icons, not WorkoutX.
 - [x] **28. N6 + N7** Learn and daily quote from `/content` (6 Nov 2026). **N6:** 34 articles in 8 categories from `content/learn/articles.json`, bundled. Featured hero, category tiles, Recommended for you from `recommended_for_goals` (weighted to her main goal), Continue reading, Mark as read (on-device plus `article_reads` when SQL is pasted). Related articles on routine and exercise pages from `related_routines` / `related_exercises`. Safety line on articles. No Pro copy. **N7:** 100 quotes from `content/quotes/quotes.json`. Same quote worldwide: days since 1 Jan 2026 UTC, modulo the active list. Hide from the card ⋯ or Profile → Appearance. If an older `quotes` seed has fewer than 100 rows, the app uses the bundled list. SQL already on disk: `supabase/learn_n6.sql`, `supabase/quotes_n7.sql` (not confirmed run; no new migration). Logger, progression and swaps were not changed. Did not add a library.
-- [x] **29. X6** Refer a friend (7 Nov 2026). Personal invite code and `womensstrength://r/{code}` link. Friend: Apple Offer Code `FRIEND14` (14 days free on annual, new subscribers, does not stack with the 7-day intro). Referrer: 30-day Apple renewal extension if she has a paid sub, otherwise a 1-month RevenueCat promotional entitlement; cap 2 a year; queued while she is still in her own trial. Screen from DESIGN 8.7. Home banner, locked home, Profile, post-session dialog and completion card all open `/refer`. Copy from `content/microcopy` `strings.refer` and `content/referrals/offers.json`. SQL: `supabase/referrals_x6.sql` (not run). **Apple Store Connect offer code, iOS redeem-sheet testing, and `REVENUECAT_SECRET_API_KEY` are deferred** until Sacha has an iPhone (7 Nov 2026). The Refer screen, codes and share still work. No clipboard library. Logger progression and swaps were not changed. Did not add a library.
+- [x] **29. X6** Refer a friend (7 Nov 2026; Home banner L3 21 Nov 2026). Personal invite code and `womensstrength://r/{code}` link. Friend: Apple Offer Code `FRIEND14` (14 days free on annual, new subscribers, does not stack with the 7-day intro). Referrer: 30-day Apple renewal extension if she has a paid sub, otherwise a 1-month RevenueCat promotional entitlement; cap 2 a year; queued while she is still in her own trial. Screen from DESIGN 8.7. Home banner sits at the bottom of Home and opens the native share sheet (L3). Locked home, Profile, post-session dialog and completion card still open `/refer`. Copy from `content/microcopy` `strings.refer` and `content/referrals/offers.json`. SQL: `supabase/referrals_x6.sql` (not run). **Apple Store Connect offer code, iOS redeem-sheet testing, and `REVENUECAT_SECRET_API_KEY` are deferred** until Sacha has an iPhone (7 Nov 2026). Reward logic stays a TODO until those store pieces exist. The Refer screen, codes and share still work. No clipboard library. Logger progression and swaps were not changed. Did not add a library.
 
 ### Launch checkpoint
 - [ ] **30. TestFlight** with EAS. Not started.
@@ -170,17 +338,17 @@ Checked against the code and this file on 5 Nov 2026. Ticked items are in the ap
 
 ### Group 8: your body and training (finished, 17 Nov 2026)
 
-Train with how she feels. Never plan around cycle phases. Never track or predict periods. Cycle notes stay gone (R1). Life stage is special category health data: explicit consent, off by default, deletable on its own, never sent to Coach, PostHog, RevenueCat or notifications. Optional period log is Later phases only.
+Train with how she feels. Never plan around cycle phases. Never predict periods. Cycle notes stay gone (R1). Life stage and the optional period log are special category health data: explicit consent, off by default, deletable on their own, never sent to Coach, PostHog, RevenueCat or notifications. Period log is L9 (built).
 
 - [x] **49. B1** Your body and training: content (17 Nov 2026). Learn category `your_body` (tile, hub, labels, covers) and six articles from `content/learn/articles.json` (`training-on-your-period`, `period-pain-and-low-energy`, `heavy-periods-and-iron`, `perimenopause-and-strength-training`, `menopause-and-bones`, `sleep-and-hot-flushes`). Each has NHS sources, a cover slug and a "See your GP if" section. Food collections `iron-rich` (8 recipes) and `calcium-and-bones` (9 recipes) from existing recipes; Food tab already shows collections as carousels. Recommended for you puts Your body first when `profiles.life_stage` is perimenopause or menopause (on-device only). Coach indexes regenerated (40 articles). `content:sync --dry-run`: 40 Learn articles, 9 categories including `your_body`, 20 collections; live writes still wait for confirm; Learn table is not in the remote yet so the app uses bundled JSON. Manifest slugs for the category tile, six article covers and two collection covers (placeholders until photos). Optional SQL `supabase/learn_your_body_b1.sql` only if the old `learn_n6.sql` constraint was already pasted; the updated `learn_n6.sql` already includes `your_body`. Dietitian / coach / women's health reviewer before launch (`reviewed_by` is null). No HRT, supplement or cycle-phase advice.
 - [x] **Coach rule 9** (17 Nov 2026, with B2/B3). Periods and menopause: offer a lighter session via `adjust_today` (`energy: low`). The app applies the same `lightenSessionPlan` check-in rules as B2 (not a copied 2/3 cut) and sets `sessions.lighter_session = true`. `save_preference` refuses period, menopause, symptom and other health reasons on the Edge Function and in the app. `life_stage` is stripped from `<her_training>` and is never in the client payload. Prompt from `content/ai/prompts/coach.md` via `node scripts/emit-coach-indexes.ts`. `content:sync` reports AI as bundled (27 evals). Deployed `coach`. `npm run ai:evals`: 26/27, including the three new cases.
-- [x] **50. B2** "How are you feeling today?" check-in (17 Nov 2026). Strength logger only, before the first ticked set, unless `profiles.hide_checkin`. Copy from `content/checkin/checkin.json`. Accepting **Make it lighter** applies today's session only via `lightenSessionPlan` (H2 helper, check-in role rules): main keeps sets; secondary/accessory drop one set (min 1); core/finisher unchanged with a one-tap Skip; cardio finisher swaps to a same-machine steady session of the same or shorter time. Suggested weights about 10% lower, rounded down to the increment, never below the bar or lightest dumbbell, except **Short on time** which keeps normal suggestions. Saves only `sessions.lighter_session = true`. Progression (`fetchPreviousSets`) skips lighter sessions so they never lower the next suggestion. Counts fully towards the weekly target, gold weeks and the streak. Profile → Training: Daily check-in toggle (on = `hide_checkin` false). PostHog: `checkin_shown` and `lighter_session_chosen` (`chosen` boolean) only, never the option. SQL: `supabase/group8_health.sql` (pasted). Welcome-back (H2) sessions are also marked `lighter_session` so they are skipped for next time too.
-- [x] **51. B3** Optional life stage (17 Nov 2026). Copy from `content/onboarding/onboarding.json` (`life_stage` after bodyweight, `life_stage_consent` only if she picks Perimenopause or Menopause or after). Prefer not to say is pre-selected. Consent checkbox required before Save and continue. Accept writes `profiles.life_stage` and a `health_consents` row (`purpose` `life_stage_personalisation`, version 1). Don't save it / None of these / Prefer not to say write nothing. Profile → Your answers can change it (consent again if there is no active row). Profile → Privacy Delete and withdraw consent clears `life_stage` and sets `withdrawn_at`. Recommendation tweaks from `life_stage_adjustments` (routine pick + Featured ranking). Learn Recommended for you shows Your body and training first (B1). Never in `onboarding_answers`, PostHog, RevenueCat, Coach, notifications, share cards or recaps. SQL: `supabase/group8_health.sql` (already pasted). Solicitor to check consent wording before launch.
+- [x] **50. B2** "How are you feeling today?" check-in (17 Nov 2026; **v2 21 Nov 2026**). Strength logger only, before the first ticked set, unless `profiles.hide_checkin`. Copy and rules from `content/checkin/checkin.json` format version 2. Each option has its own card and today-only adjustment: Ready to go; Feeling strong (push, one earned increment on the main lift); Low on energy (lighter); Period symptoms (comfort, same-family swaps or optional); Slept badly (steady, no increase); Short on time (key lifts only); plus Hot flushes (extra rest, steady cardio) and Achy joints (extra warm-up, machine family swaps, low-impact cardio) when `life_stage` is perimenopause or menopause. Period options hide for menopause. `life_stage` is read on the device only. Save only `sessions.lighter_session = true` for any accepted adjustment except push. Never save or send the option. After the session: optional How did that feel? (Easier / About right / Harder) → `sessions.session_feel`. Two Harder in a row on the same routine day holds the next weight increase. Progression still skips `lighter_session` so a lighter day never lowers the next suggestion. Profile → Training: Daily check-in toggle. PostHog: `checkin_shown` and `lighter_session_chosen` (`chosen` boolean) only. SQL: `supabase/group8_health.sql` (pasted); **`supabase/session_feel_b2.sql`** (show then paste).
+- [x] **51. B3** Optional life stage (17 Nov 2026; **v2 21 Nov 2026**). Consent, storage and privacy unchanged. `life_stage_adjustments` v2: favour 2 to 3 strength-day routines that still build toward heavier mains; **Strong bones** note on routine pages; optional 2 to 3 minute impact finisher after lower-body days with incline walking always offered as the lower-impact choice; one balance step (single-leg stand) in lower-body warm-ups; Planner leaves a rest day between hard lower-body sessions when the week has room. Learn still shows Your body first. Never changes progression, never caps weights, never shortens routines, never used for predictions. Never in Coach, PostHog, RevenueCat, notifications, share cards or recaps. SQL: `supabase/group8_health.sql` (already pasted). Solicitor to check consent wording before launch.
 - [x] **Group 8 wrap** Privacy policy and DPIA notes (17 Nov 2026). In-app policy lives in `content/legal/privacy.json` (Profile → About → Privacy policy). Life stage: collected only with explicit consent, used only to personalise recommendations, never shared, deletable in Profile → Privacy. Coach: anything she types is sent to Anthropic and kept in her chat history for 30 days. DPIA notes for the solicitor are in the section below. Logger, progression, swaps, onboarding and account-deletion SQL re-tested in this wrap. User-facing copy searched for cycle-syncing, fertility, ovulation and symptom-treatment claims (none found; honest NHS-style mentions listed in the wrap notes).
 - [x] **Stretches filters** (17 Nov 2026). Stretch tags (including the old 6 / 11 minute chips) are gone. Train → Stretches has three filters: time (under 5 min, 5 to 10 min, 10 to 20 min), muscle group, and time of day (morning, pre-workout, post-workout, evening). Session length is the hold time rounded up to the nearest minute, shown once on the detail screen. No SQL. Logger, progression and swaps were not changed.
 - [x] **52. W8** Build your own cardio and Just log it (Quick start 17 Nov 2026, Build intervals 18 Nov 2026, Just log it 18 Nov 2026). Spec: `content/cardio/cardio-builder.json`. Train → Cardio Create your own: Quick start, Build intervals and Just log it. Just log it (`/cardio/log`): machine (or Other cardio), minutes stepper, effort picker, date (today or up to 7 days ago), optional distance, Save. Writes a finished cardio session (`logged_after`, chosen `date`, duration from minutes) plus a `cardio_logs` row. Does not open the player. 10+ minutes count towards that date's week, gold week and streak (played cardio uses the same rule). Under 10 minutes is saved and shows `short_note`. Gym unlocked counts the named machine, not Other cardio. Never estimates calories or distance; never counts towards PBs. History can delete it. PostHog: `cardio_logged_manually` (minutes only). SQL: `supabase/cardio_w8.sql` (pasted); **`supabase/cardio_w8_other.sql`** (show then paste; needed for Other cardio). Coach `build_session` creating custom cardio is later (v2.5). Logger, progression and swaps were not changed.
 
-After launch, not in this build: price experiments, Gym buddy, optional period log.
+After launch, not in this build: price experiments, Gym buddy.
 
 ### MuscleWiki to retire (do not drop columns yet)
 
@@ -195,7 +363,8 @@ M1 added `exercises.workoutx_id` and `media_usage` in `supabase/workoutx_m1.sql`
 ### Decisions for this phase
 
 - Hard paywall, one entitlement `ascenda_pro`. S1, S3 and C2 are skipped from here (S1 and S3 already exist and come out in P1).
-- Weekly target Y = onboarding days per week. Strength, cardio, and a stretch or recovery session of 10+ minutes all count. One session counts the week. Hitting Y is a gold week.
+- Weekly target Y = onboarding days per week. Strength, cardio, and a stretch or recovery session of 10+ minutes all count. One session counts the week. Hitting Y is a gold week. Stretch and recovery *planning* is hidden at launch (`STRETCHES_ENABLED`); the counting rules stay so they work again when the flag is on.
+- **Stretches at launch:** off. Flip `STRETCHES_ENABLED` in `src/config/features.ts` to bring them back. Do not delete stretch content.
 - Rest weeks stay (H1): one per 4 counted weeks, bank up to 2.
 - Exercise media is WorkoutX, only through `getExerciseMedia()`.
 - Ask before adding any library.
@@ -214,7 +383,7 @@ Only two things, and only after she ticks the consent screen:
 1. `profiles.life_stage`: `perimenopause` or `menopause`. Null for everyone else, including Prefer not to say and None of these.
 2. `health_consents`: one row per user for purpose `life_stage_personalisation` (version 1), with `granted_at` and optional `withdrawn_at`.
 
-We do not store cycle dates, period logs, fertility or ovulation data, check-in reasons, symptoms, HRT use, or why a session was lighter. `sessions.lighter_session` is a yes/no flag with no reason column.
+We do not store fertility or ovulation data, check-in reasons, symptoms, HRT use, or why a session was lighter. `sessions.lighter_session` is a yes/no flag with no reason column. Period start and end dates are stored only with a separate L9 consent (see DPIA notes for L9 below).
 
 **Why**
 
@@ -241,7 +410,7 @@ Postgres on Supabase in the UK or EU. Row Level Security: she can only read and 
 
 | Risk | What we do |
 |---|---|
-| Collecting more health data than needed | Only two allowed values. No dates, no symptoms, no period log. Check-in options are not saved. |
+| Collecting more health data than needed | Life stage: only two allowed values. Check-in options are not saved. Period dates are a separate opt-in (L9). |
 | Using it for something else later | Code paths for Coach, PostHog, RevenueCat, notifications, recaps and share cards omit it. Weights use the progression rule only. |
 | Sending it to the AI provider | `life_stage` is stripped from the Coach payload. Residual risk: she may type health information into the chat; that text is sent to Anthropic and kept 30 days, and she can delete chats. |
 | Other people reading it | RLS on `health_consents`. Authenticated only. Anon and public have no grants. |
@@ -250,6 +419,55 @@ Postgres on Supabase in the UK or EU. Row Level Security: she can only read and 
 | Leftover data in backups | Supabase backups may hold rows until they expire. Flag for the solicitor. |
 
 In-app privacy policy: `content/legal/privacy.json`. Consent screen: `life_stage_consent` in `content/onboarding/onboarding.json`. SQL: `supabase/group8_health.sql` (pasted 17 Nov 2026).
+
+---
+
+### DPIA notes (L9 period log)
+
+For the solicitor. Short data-protection impact note for the optional period log. Not legal advice. Draft 21 November 2026.
+
+**What health data is stored**
+
+Only after she ticks the consent screen in Profile → Privacy:
+
+1. `period_logs`: `start_date` and `end_date` (nullable while a period is open). No symptoms, flow, mood or notes.
+2. `health_consents`: one row per user for purpose `period_log` (version 1), with `granted_at` and optional `withdrawn_at`.
+
+We never store or compute cycle length, next-period dates, fertile windows, ovulation, pregnancy, or a symptom diary. Private insights (after 3 completed periods and 6 sessions on those days) compare only her own session counts, minutes and `lighter_session` flags. They are shown on the Planner and in Privacy, never elsewhere.
+
+**Why**
+
+UK GDPR Article 9 special category data. Lawful basis: explicit consent, Article 9(2)(a). Purpose is narrow: a private mark on the Planner, listing Period symptoms first on the check-in for a logged day, and later a private note from her own logs. Never used for predictions, weights, streaks, Coach, analytics, billing, notifications, share cards or monthly recaps.
+
+**Where**
+
+Postgres on Supabase in the UK or EU. Row Level Security: she can only read, write and delete her own `period_logs` rows. The table is never sent to Ascenda Coach, PostHog, RevenueCat or Apple.
+
+**Who can access it**
+
+- She can, signed in, her own rows only.
+- The app operator (Supabase dashboard / service role) can see the table, as with other profile data.
+- Anthropic (Coach) does not receive period dates. If she types them into Coach, that free text is sent to Anthropic and stored in her chat for 30 days. That is separate from this table.
+- Analytics, advertisers and RevenueCat do not receive it.
+
+**How it is deleted**
+
+- Profile → Privacy, turn Period log off: deletes every `period_logs` row for her and sets `withdrawn_at` on the consent row. The consent row is kept as a record that consent was given and later withdrawn, until she deletes her account.
+- Profile → Privacy, Delete account: `delete_own_account` deletes `period_logs` and `health_consents`, clears `life_stage`, then deletes the auth user.
+
+**Risks and how we reduce them**
+
+| Risk | What we do |
+|---|---|
+| Collecting more health data than needed | Start and end dates only. No symptoms, flow or diary. Insights wait for 3 periods and 6 sessions and never predict. |
+| Using it for something else later | Coach, PostHog, RevenueCat, notifications, recaps and share cards omit it. Check-in still does not save the option she picked. |
+| Sending it to the AI provider | Period fields are stripped from the Coach payload. Residual risk: she may type dates into the chat; that text is sent to Anthropic and kept 30 days, and she can delete chats. |
+| Other people reading it | RLS on `period_logs`. Authenticated only. Anon and public have no grants. Planner dots have no on-screen period label. |
+| Hard to get it deleted | Turning the toggle off deletes the dates without deleting the account. Account deletion removes the rows. |
+| Consent not really freely given | Off by default. Decline on the consent screen saves nothing. Copy is in `content/checkin/checkin.json` `period_log` for legal review. |
+| Leftover data in backups | Supabase backups may hold rows until they expire. Flag for the solicitor. |
+
+In-app privacy policy: `content/legal/privacy.json` (Period log section). Consent screen: `period_log.consent` in `content/checkin/checkin.json`. SQL: `supabase/period_log_l9.sql` (show then paste).
 
 ---
 
@@ -268,7 +486,7 @@ In-app privacy policy: `content/legal/privacy.json`. Consent screen: `life_stage
 - Old programme ids `one-spot-6` and `one-spot-2` still exist as fallback briefs for leftover enrolments; the live catalogue uses `busy-gym-no-problem` (named Dumbbells and a Bench) and equipment tags.
 - Old programme tables still exist; Profile UI hidden; `/programme` redirects to Programmes.
 - Dark theme does not restyle sign-in, paywall, workouts, paths, challenges or exercise detail. Stretch detail and player now follow the theme.
-- M1 WorkoutX account deferred. Play buttons hidden. Photos and equipment icons until Sacha signs up, runs the match script, pastes SQL and deploys `exercise-media`.
+- M1 WorkoutX demos auto-loop on the exercise screen (L4). Catalogue exercises now have a clip (male allowed when that is the only demo). Remaining no-demo list is under **Exercises without a video**. Paste `workoutx_ids.sql` and redeploy `exercise-media`.
 - Swap dropdown spacing still reported uneven (not retested).
 - Confirm email off in the Supabase dashboard. Paywall real-store purchases need a development build (Expo Go uses the Test Store key).
 - No ESLint config (`npx expo lint` cannot run).
@@ -296,7 +514,7 @@ In-app privacy policy: `content/legal/privacy.json`. Consent screen: `life_stage
 - P1: `useSubscription().isPro` means she has the `ascenda_pro` entitlement (trial, paid or billing grace). Status is `none` | `trial` | `active` | `grace` | `expired`. Starting or resuming a session without that entitlement opens the paywall. Onboarding always presents the paywall unless she already has access. Until the webhook writes a `subscriptions` row, RLS treats her as not entitled (week 1 overview still readable; `/content` overlay may still fill later weeks on device). Tester insert is commented at the bottom of `supabase/subscriptions_p1.sql`. Dev override storage key is `dev-access-override` so an old "Subscribed" flag is ignored. Did not add a library.
 - C3: Close on the paywall always goes to locked home (tabs stay; overlay on every tab). Refer-a-friend on locked home opens `/refer` (X6). History is a read-only stack screen. Hero photo uses slug `hero-paywall`. It stays a placeholder until that slug is ready. SQL: `supabase/images_manifest.sql` (not run).
 - H8: personal window on join (next Monday and next 1st only). Catalogue has no start_date. Weekly missions from `/content`. Catch-up repeats a missed week up to twice, then ends quietly. One at a time. No participant counts. Joins save on-device if SQL is missing.
-- X2: Home sections hide when empty. Welcome-back is the hero state. Refer banner opens `/refer` (X6). Week share is native text (numbers only); no view-shot library. Week card has Workouts | Meals; Meals shows today's fuel suggestion (F4). Home hero slug is `hero-home-morning`, `hero-home-evening`, `hero-home-rest-day`, `hero-home-done` or `hero-welcome-back`. No bundled photo.
+- X2: Home sections hide when empty. Welcome-back is the hero state. Refer banner sits at the bottom of Home and opens the share sheet (L3 / X6). Week share is native text (numbers only); no view-shot library. This week tiles are Sessions, Strength, Cardio (10+ min), Minutes. Week card has Workouts | Meals; Meals shows today's fuel suggestion (F4). Home hero slug is `hero-home-morning`, `hero-home-evening`, `hero-home-rest-day`, `hero-home-done` or `hero-welcome-back`. No bundled photo.
 - X6: Friend 14-day trial is Apple Offer Code `FRIEND14` on `ascenda_annual` (Free, 2 weeks, new subscribers, do not stack with the 7-day intro). Personal Ascenda codes are 6 characters and live on `profiles.referral_code`. Referrer reward is Apple Extend Renewal Date by 30 days (`extend_reason_code` 1) when she has a paid Apple sub and `original_transaction_id`; otherwise a 1-month RevenueCat promotional entitlement. Cap 2 rewards a year. Queue while her own status is trial. Share uses the native share sheet (no clipboard library). Invite link is `womensstrength://r/{code}`. Did not add a library. **Deferred until Sacha has an iPhone (7 Nov 2026):** App Store Connect Offer Code `FRIEND14`, testing Apple redeem, setting `REVENUECAT_SECRET_API_KEY`, and redeploying the webhook for paid-renewal extensions. Do not block other work on this. The in-app Refer screen does not need an iPhone.
 - X3: singles are bundled, not a table. Start as `sessions.source = custom` with no `custom_workout_id`; the logger reads the on-device plan. Build my plan is `/onboarding?rebuild=1` using `recommendPlan` / `RECOMMEND_RULES`. No Popular carousel. Coach reviewed only when `reviewed_by` is set. Home singles only under "Days you can't get to the gym". No new SQL.
 - Primary buttons are plum. Coral is highlights only. Unrestyled screens stay cream until their design pass.
@@ -320,7 +538,8 @@ In-app privacy policy: `content/legal/privacy.json`. Consent screen: `life_stage
 - F1 (10 Nov 2026): tabs are Home, Train, Food, Planner, Activity. The `/programmes` route stays so existing links work; the label is Train. Learn hub is `/learn` (not a tab). Food is bundled from `content/food` with no SQL. High-protein collections stay hidden until verified claims exist. No calorie filters. Logger, progression and swaps unchanged. Did not add a library.
 - F2 + F3 + X7 (10 Nov 2026): recipe bodies stay in `/content` (62 recipes). Nutrition is calculated by `scripts/nutrition-calc.mjs` from CoFID 2021 plus `content/food/nutrition-extras.json` (9 foods CoFID does not list: USDA, Norwegian table, or supermarket labels Sacha supplied). Household measures are in `content/food/ingredient-weights.json`. High protein / High fibre tags use `verified_claims` only. Favourites and hide-macros save on-device if SQL is missing. Disclaimer copy is used as written from `recipes.json` (includes "GP"). Meal-tile carousel peeks the next tile; Smoothies stays on one line. No new library. Logger, progression and swaps unchanged.
 - F4 to F6 (10 Nov 2026): suggestions use `training_suggestions` copy only ("Fuel for later", never earn/reward). Shopping list is on-device until `food_f5.sql` is pasted. Fuelling articles were already in `content/learn`; Food now shows that category. `routine_day_recipe_suggestions` is not needed at launch (the JSON rules cover it). No new library. Logger progression and swaps unchanged.
-- **Group 8 (17 Nov 2026, finished):** periods and menopause as "train with how you feel". B1 Learn/Food, B2 check-in, B3 life stage, Coach rule 9, in-app privacy (`content/legal/privacy.json`) and DPIA notes are in. Optional period log only if testers ask (Later phases). Never cycle-sync, never predict periods, never claim to ease symptoms. Safe lines: "Lighter day? Ascenda adjusts your session", "Strength training for every stage of life". `sessions.lighter_session` is a boolean with no reason column. `life_stage` is null unless she consents and is never sent to Coach. Workspace `AGENTS.md` includes Group 8 (copied 18 Nov 2026).
+- **Group 8 (17 Nov 2026, finished):** periods and menopause as "train with how you feel". B1 Learn/Food, B2 check-in, B3 life stage, Coach rule 9, in-app privacy (`content/legal/privacy.json`) and DPIA notes are in. Never cycle-sync, never predict periods, never claim to ease symptoms. Safe lines: "Lighter day? Ascenda adjusts your session", "Strength training for every stage of life". `sessions.lighter_session` is a boolean with no reason column. `life_stage` is null unless she consents and is never sent to Coach. Workspace `AGENTS.md` includes Group 8 (copied 18 Nov 2026).
+- **L9 (21 Nov 2026):** optional period log. Off by default, explicit consent (`period_log`), Planner start/end plus a private dot, check-in order on logged days, private insights after 3 periods and 6 period-day sessions. SQL `supabase/period_log_l9.sql` (show then paste). Never sent to Coach, PostHog, RevenueCat, notifications, share cards or recaps. DPIA notes for L9 above.
 - **Content update (18 Nov 2026):** zip merged, not wholesale-replaced. Overlay fills `estimated_minutes`, `rest_seconds` and remaining-week exercise lists from `/content`. In-progress sessions keep the saved plan. Suggested weights still come from `getWeightSuggestion` / `fetchPreviousSets`. First-time copy is "Find a weight you could lift 3 more times". Bike sprints stay hidden in the beginner cardio window (`beginner_ok: false`). No new SQL. Live sync not run.
 
 ---

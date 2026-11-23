@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImageSourcePropType } from 'react-native';
 
 import manifestFile from '../../content/images/image-manifest.json';
+import { contentRoutine } from '@/lib/contentRoutines';
 import type { CoverImage } from '@/lib/routines';
 import { supabase } from '@/lib/supabase';
 
@@ -14,9 +15,17 @@ import { supabase } from '@/lib/supabase';
 
 export const ROUTINE_COVERS_BUCKET = 'routine-covers';
 
-const CACHE_KEY = 'ascenda.images.v2';
+/** Bump this when a photo is replaced at the same storage path, so the phone does not keep the old file. */
+const IMAGE_CACHE_VERSION = '5';
+const CACHE_KEY = `ascenda.images.v${IMAGE_CACHE_VERSION}`;
 
 export type ImageKind = 'people' | 'equipment' | 'food';
+
+/** Fractions of the photo, 0,0 = top left. Used as expo-image contentPosition. */
+export type FocalPoint = { x: number; y: number };
+
+export const DEFAULT_FOCAL_PEOPLE: FocalPoint = { x: 0.5, y: 0.32 };
+export const DEFAULT_FOCAL_CENTER: FocalPoint = { x: 0.5, y: 0.5 };
 
 export type ContentImage = {
   slug: string;
@@ -30,6 +39,15 @@ type ManifestEntry = {
   kind?: string;
   brief?: string;
   same_as?: string | null;
+  status?: string;
+  file?: string | null;
+  photographer?: string | null;
+  photographer_url?: string | null;
+  source_url?: string | null;
+  licence_source?: string | null;
+  model_release?: string | null;
+  alt_text?: string | null;
+  focal_point?: { x?: unknown; y?: unknown } | null;
 };
 
 type ImageRecord = {
@@ -46,6 +64,7 @@ type ImageRecord = {
   photographerUrl: string | null;
   sourceUrl: string | null;
   modelRelease: string | null;
+  focalPoint: FocalPoint;
 };
 
 type RemoteRow = {
@@ -76,23 +95,52 @@ function isKind(value: string | null | undefined): value is ImageKind {
   return value === 'people' || value === 'equipment' || value === 'food';
 }
 
+function clamp01(value: number): number {
+  if (Number.isNaN(value)) return 0.5;
+  return Math.min(1, Math.max(0, value));
+}
+
+function parseFocalPoint(
+  raw: { x?: unknown; y?: unknown } | null | undefined,
+  kind: ImageKind | null
+): FocalPoint {
+  const x = typeof raw?.x === 'number' ? raw.x : Number(raw?.x);
+  const y = typeof raw?.y === 'number' ? raw.y : Number(raw?.y);
+  if (Number.isFinite(x) && Number.isFinite(y)) {
+    return { x: clamp01(x), y: clamp01(y) };
+  }
+  return kind === 'people' ? DEFAULT_FOCAL_PEOPLE : DEFAULT_FOCAL_CENTER;
+}
+
+/** expo-image contentPosition from a manifest focal_point. */
+export function contentPositionForFocal(
+  point: FocalPoint | null | undefined
+): 'center' | { left: string; top: string } {
+  const { x, y } = point ?? DEFAULT_FOCAL_CENTER;
+  if (Math.abs(x - 0.5) < 0.03 && Math.abs(y - 0.5) < 0.03) return 'center';
+  return { left: `${x * 100}%`, top: `${y * 100}%` };
+}
+
 function seedManifest(): void {
   for (const item of manifestImages) {
     if (!item.slug) continue;
+    const ready = item.status === 'ready';
+    const file = item.file?.trim() || (ready ? `${item.slug}.jpg` : null);
     bySlug.set(item.slug, {
       slug: item.slug,
       kind: isKind(item.kind) ? item.kind : null,
       usedIn: Array.isArray(item.used_in) ? item.used_in : [],
       sameAs: item.same_as || null,
-      status: 'needed',
+      status: ready ? 'ready' : 'needed',
       url: null,
-      storagePath: null,
-      altText: item.brief?.trim() || item.slug,
-      licenceSource: null,
-      photographer: null,
-      photographerUrl: null,
-      sourceUrl: null,
-      modelRelease: null,
+      storagePath: file,
+      altText: item.alt_text?.trim() || item.brief?.trim() || item.slug,
+      licenceSource: item.licence_source ?? null,
+      photographer: item.photographer ?? null,
+      photographerUrl: item.photographer_url ?? null,
+      sourceUrl: item.source_url ?? null,
+      modelRelease: item.model_release ?? null,
+      focalPoint: parseFocalPoint(item.focal_point, isKind(item.kind) ? item.kind : null),
     });
   }
 }
@@ -103,6 +151,9 @@ function applyRemote(row: RemoteRow): void {
   const slug = (row.slug || row.id || '').trim();
   if (!slug) return;
   const current = bySlug.get(slug);
+  if (current?.status === 'ready' && current.storagePath && row.status !== 'ready') {
+    return;
+  }
   bySlug.set(slug, {
     slug,
     kind: isKind(row.kind) ? row.kind : current?.kind ?? null,
@@ -117,6 +168,7 @@ function applyRemote(row: RemoteRow): void {
     photographerUrl: row.photographer_url ?? current?.photographerUrl ?? null,
     sourceUrl: row.source_url ?? null,
     modelRelease: row.model_release ?? null,
+    focalPoint: current?.focalPoint ?? parseFocalPoint(null, isKind(row.kind) ? row.kind : current?.kind ?? null),
   });
 }
 
@@ -129,6 +181,28 @@ export const CONTENT_IMAGES: ContentImage[] = manifestImages
   }));
 
 let cacheApplied = false;
+let inflight: Promise<void> | null = null;
+let lastFetchAt = 0;
+let catalogGeneration = 0;
+const FRESH_MS = 90_000;
+const catalogListeners = new Set<() => void>();
+
+function notifyCatalog(): void {
+  catalogGeneration += 1;
+  for (const listener of catalogListeners) listener();
+}
+
+/** Subscribe so PhotoFill re-renders when ready photos land. */
+export function subscribeImageCatalog(listener: () => void): () => void {
+  catalogListeners.add(listener);
+  return () => {
+    catalogListeners.delete(listener);
+  };
+}
+
+export function imageCatalogGeneration(): number {
+  return catalogGeneration;
+}
 
 /** Load ready rows from the device, then refresh from Supabase. Never throws. */
 export async function hydrateImages(): Promise<void> {
@@ -140,6 +214,7 @@ export async function hydrateImages(): Promise<void> {
         const rows = JSON.parse(cached) as RemoteRow[];
         if (Array.isArray(rows)) {
           for (const row of rows) applyRemote(row);
+          notifyCatalog();
         }
       }
     } catch {
@@ -147,16 +222,77 @@ export async function hydrateImages(): Promise<void> {
     }
   }
 
-  let result = await supabase.from('images').select(REMOTE_COLUMNS);
-  if (result.error) result = await supabase.from('images').select(REMOTE_COLUMNS_BASE);
-  const { data, error } = result;
-  if (error || !Array.isArray(data)) return;
-  for (const row of data) applyRemote(row as RemoteRow);
-  await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data)).catch(() => {});
+  if (lastFetchAt && Date.now() - lastFetchAt < FRESH_MS) return;
+  if (inflight) return inflight;
+
+  inflight = (async () => {
+    try {
+      let result = await supabase.from('images').select(REMOTE_COLUMNS);
+      if (result.error) result = await supabase.from('images').select(REMOTE_COLUMNS_BASE);
+      const { data, error } = result;
+      if (error || !Array.isArray(data)) return;
+      for (const row of data) applyRemote(row as RemoteRow);
+      lastFetchAt = Date.now();
+      notifyCatalog();
+      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data)).catch(() => {});
+    } finally {
+      inflight = null;
+    }
+  })();
+  return inflight;
 }
+
+/** Old Pexels cover ids and generation filenames → current manifest slugs. */
+const LEGACY_COVER_SLUG: Record<string, string> = {
+  'cover-gym-confidence-6': 'strong-foundations-cover',
+  'gym-confidence-cover': 'strong-foundations-cover',
+  'gym-confidence-6': 'strong-foundations-cover',
+  'cover-full-body-3': 'quick-ascent-cover',
+  'full-body-routine-cover': 'quick-ascent-cover',
+  'full-body-3': 'quick-ascent-cover',
+  'cover-one-spot-6': 'busy-gym-cover',
+  'cover-busy-gym-6': 'busy-gym-cover',
+  'busy-gym-6-weeks-cover': 'busy-gym-cover',
+  'one-spot-6': 'busy-gym-cover',
+  'busy-gym-6': 'busy-gym-cover',
+  'cover-one-spot-2': 'two-day-start-cover',
+  'one-spot-2-days-cover': 'two-day-start-cover',
+  'one-spot-2': 'two-day-start-cover',
+  'cover-upper-lower-4': 'four-day-foundation-cover',
+  'upper-lower-cover': 'four-day-foundation-cover',
+  'upper-lower-4': 'four-day-foundation-cover',
+  'cover-full-body-2': 'twice-a-week-strong-cover',
+  'full-body-2-days-cover': 'twice-a-week-strong-cover',
+  'full-body-2': 'twice-a-week-strong-cover',
+  'cover-home-strength-6': 'home-dumbbell-cover',
+  'days-away-cover': 'home-dumbbell-cover',
+  'home-strength-6': 'home-dumbbell-cover',
+  'cover-upper-body-6': 'upper-body-cover',
+  'upper-body-routine-cover': 'upper-body-cover',
+  'upper-body-6': 'upper-body-cover',
+  'cover-joint-friendly-6': 'strong-for-life-cover',
+  'joint-friendly-cover': 'strong-for-life-cover',
+  'joint-friendly-6': 'strong-for-life-cover',
+  'cover-barbell-strength-8': 'higher-ground-cover',
+  'barbell-strength-cover': 'higher-ground-cover',
+  'barbell-strength-8': 'higher-ground-cover',
+  'cover-short-cycle-4': 'challenge-four-weeks-strong',
+  'four-weeks-strong-cover': 'challenge-four-weeks-strong',
+  'cover-glute-builder-6': 'glutes-legs-cover',
+  'cover-lower-body-3': 'glutes-legs-cover',
+  'cover-stretch-morning': 'morning-mobility-cover',
+  'cover-stretch-desk': 'desk-reset-cover',
+  'cover-stretch-post-leg': 'after-leg-day-cover',
+  'cover-stretch-lower-back': 'back-unwind-cover',
+  'cover-stretch-full-body': 'recovery-flow-cover',
+  'cover-stretch-upper': 'shoulders-cover',
+  'cover-stretch-hips': 'happy-hips-cover',
+};
 
 function canonical(slug: string | null | undefined, depth = 0): ImageRecord | null {
   if (!slug || depth > 4) return null;
+  const aliased = LEGACY_COVER_SLUG[slug];
+  if (aliased && aliased !== slug) return canonical(aliased, depth + 1);
   const row = bySlug.get(slug);
   if (!row) return null;
   if (row.sameAs && row.sameAs !== row.slug) {
@@ -198,9 +334,11 @@ export function photoCredits(): PhotoCredit[] {
 }
 
 function fileUrl(row: ImageRecord): string | null {
-  if (row.url && /^https?:\/\//.test(row.url)) return row.url;
-  if (row.storagePath) return publicCoverUrl(row.storagePath);
-  return null;
+  const raw =
+    row.url && /^https?:\/\//.test(row.url) ? row.url : row.storagePath ? publicCoverUrl(row.storagePath) : null;
+  if (!raw) return null;
+  const base = raw.split('?')[0];
+  return `${base}?v=${IMAGE_CACHE_VERSION}`;
 }
 
 function isReady(row: ImageRecord): boolean {
@@ -272,20 +410,35 @@ function slugFromUsedIn(name: string, scope: 'routine' | 'stretch' | 'challenge'
 }
 
 function pickRoutineSlug(routine: {
+  id?: string;
   slug?: string;
   name?: string;
   type?: 'strength' | 'stretch';
   cover?: CoverImage | null;
 }): string | null {
+  const overlay =
+    (routine.slug ? contentRoutine(routine.slug) : null) ??
+    (routine.id ? contentRoutine(routine.id) : null);
+  if (overlay?.cover_image_slug && bySlug.has(overlay.cover_image_slug)) {
+    return overlay.cover_image_slug;
+  }
+  const legacy =
+    LEGACY_COVER_SLUG[routine.id ?? ''] ??
+    LEGACY_COVER_SLUG[routine.slug ?? ''] ??
+    LEGACY_COVER_SLUG[routine.cover?.id ?? ''];
+  if (legacy && bySlug.has(legacy)) return legacy;
   const scope = routine.type === 'stretch' ? 'stretch' : 'routine';
   if (routine.slug && bySlug.has(`${routine.slug}-cover`)) return `${routine.slug}-cover`;
   if (routine.slug && bySlug.has(routine.slug)) return routine.slug;
-  if (routine.cover?.id && bySlug.has(routine.cover.id)) return routine.cover.id;
+  if (routine.cover?.id && bySlug.has(routine.cover.id) && !routine.cover.id.startsWith('cover-')) {
+    return routine.cover.id;
+  }
   if (routine.name) return slugFromUsedIn(routine.name, scope) ?? contentSlugForTitle(routine.name, scope);
   return null;
 }
 
 export function routineCoverSlug(routine: {
+  id?: string;
   slug?: string;
   name?: string;
   type?: 'strength' | 'stretch';
@@ -300,7 +453,7 @@ export function resolveCover(cover: CoverImage | null, slugOrRoutineId?: string)
   const ready = isReady(row);
   const url = ready ? fileUrl(row) : null;
   return {
-    id: requested && bySlug.has(requested) ? requested : row.slug,
+    id: row.slug,
     url,
     storage_path: ready ? row.storagePath : null,
     alt_text: row.altText || cover?.alt_text || '',
@@ -347,11 +500,18 @@ export function imageSourceForSlug(slug: string | null | undefined): ImageSource
 export function presentationForSlug(slug: string | null | undefined): {
   source: ImageSourcePropType | null;
   kind: ImageKind | null;
+  focalPoint: FocalPoint;
 } {
+  const row = canonical(slug);
   return {
     source: imageSourceForSlug(slug),
     kind: imageKindForSlug(slug),
+    focalPoint: row?.focalPoint ?? (imageKindForSlug(slug) === 'people' ? DEFAULT_FOCAL_PEOPLE : DEFAULT_FOCAL_CENTER),
   };
+}
+
+export function focalPointForSlug(slug: string | null | undefined): FocalPoint {
+  return presentationForSlug(slug).focalPoint;
 }
 
 /** Home hero changes with the day. All five slugs are in the manifest. */

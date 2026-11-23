@@ -1,7 +1,1076 @@
 {
   "_format_version": 1,
   "_loader_notes": [
-    "WorkoutX v2 female-model ids from scripts/match-workoutx.mjs. Confident matches only. Doubtful and unmatched stay in scripts/workoutx-matches.csv for review. Never put the API key here. Store ids, never media URLs."
+    "WorkoutX v2 ids from content/exercises/workoutx-matches.json, looked up by name. Female clip where one exists, otherwise male. Never put the API key here. Store ids, never media URLs. no_demo slugs must not fall back to a database id."
   ],
-  "matches": []
+  "no_demo": [
+    "arm-circles",
+    "banded-clamshell",
+    "banded-glute-bridge",
+    "banded-hamstring-curl",
+    "bear-plank",
+    "cable-squat",
+    "cable-triceps-pushdown",
+    "cable-woodchop",
+    "cat-cow",
+    "childs-pose",
+    "chin-tuck",
+    "close-grip-bench-press",
+    "close-grip-lat-pulldown",
+    "close-grip-push-up",
+    "decline-push-up",
+    "deficit-reverse-lunge",
+    "donkey-kick",
+    "dumbbell-shrug",
+    "dumbbell-sumo-squat",
+    "hip-circles",
+    "kettlebell-farmers-carry",
+    "kettlebell-floor-press",
+    "kettlebell-suitcase-carry",
+    "legs-up-the-wall",
+    "ninety-ninety-hip-stretch",
+    "open-book",
+    "open-book-stretch",
+    "pike-push-up",
+    "plank",
+    "prone-press-up",
+    "rear-delt-fly",
+    "seated-spinal-twist",
+    "shoulder-rolls",
+    "side-lying-adduction",
+    "single-arm-cable-chest-press",
+    "single-leg-box-squat",
+    "single-leg-calf-raise",
+    "single-leg-hip-thrust",
+    "sliding-leg-curl",
+    "slow-breathing",
+    "standing-cable-leg-curl",
+    "standing-calf-raise",
+    "supported-pigeon",
+    "t-bar-row",
+    "thread-the-needle",
+    "wall-angel"
+  ],
+  "matches": [
+    {
+      "slug": "arnold-press",
+      "workoutx_id": "ex_BORKNT",
+      "workoutx_name": "Dumbbell Alternating Arnold Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "assisted-pull-up",
+      "workoutx_id": "ex_SKYE3U",
+      "workoutx_name": "Assisted Pull Up",
+      "confidence": "high"
+    },
+    {
+      "slug": "back-extension",
+      "workoutx_id": "ex_VQ43DS",
+      "workoutx_name": "Roman Chair Back Extension",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-biceps-curl",
+      "workoutx_id": "ex_JGFBC4",
+      "workoutx_name": "Band Close-Grip Biceps Curl",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-chest-press",
+      "workoutx_id": "ex_DYOD2W",
+      "workoutx_name": "Band Low Chest Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-lat-pulldown",
+      "workoutx_id": "ex_ICLB3S",
+      "workoutx_name": "Band Kneeling Lat Pulldown",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-lateral-raise",
+      "workoutx_id": "ex_KXKQF2",
+      "workoutx_name": "Band Seated Lateral Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-pallof-press",
+      "workoutx_id": "ex_XOCI2A",
+      "workoutx_name": "Band Pallof Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-pull-apart",
+      "workoutx_id": "ex_5YMYN7",
+      "workoutx_name": "Resistance Band Pull Apart",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-shoulder-press",
+      "workoutx_id": "ex_SFSMAG",
+      "workoutx_name": "Band Seated Shoulder Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "band-triceps-pushdown",
+      "workoutx_id": "ex_2LG3JS",
+      "workoutx_name": "Band Triceps Pushdown Single Arm",
+      "confidence": "high"
+    },
+    {
+      "slug": "banded-hip-thrust",
+      "workoutx_id": "ex_3J7DID",
+      "workoutx_name": "Resistance Band Hip Thrusts on Knees",
+      "confidence": "close"
+    },
+    {
+      "slug": "banded-kickback",
+      "workoutx_id": "ex_TQVMA7",
+      "workoutx_name": "Band Bent-Over Hip Extension",
+      "confidence": "close"
+    },
+    {
+      "slug": "banded-squat",
+      "workoutx_id": "ex_MQUJV4",
+      "workoutx_name": "Band Squat Row",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-back-squat",
+      "workoutx_id": "ex_3ZOLIY",
+      "workoutx_name": "Barbell Full Squat",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-bench-press",
+      "workoutx_id": "ex_HYOSAB",
+      "workoutx_name": "Barbell Bench Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-bent-over-row",
+      "workoutx_id": "ex_RHGK5G",
+      "workoutx_name": "Barbell Bent Over Row",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-biceps-curl",
+      "workoutx_id": "ex_7ZO3LZ",
+      "workoutx_name": "Barbell Biceps Curl Close Grip",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-box-squat",
+      "workoutx_id": "ex_R35D4D",
+      "workoutx_name": "Barbell Box Squat",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-deadlift",
+      "workoutx_id": "ex_XXOOG7",
+      "workoutx_name": "Barbell Deadlift",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-glute-bridge",
+      "workoutx_id": "ex_F2GVIK",
+      "workoutx_name": "Barbell Glute Bridge",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-hip-thrust",
+      "workoutx_id": "ex_XQV2D2",
+      "workoutx_name": "Barbell Hip Thrust",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-overhead-press",
+      "workoutx_id": "ex_WNMB5B",
+      "workoutx_name": "Barbell Standing Close Grip Military Press",
+      "confidence": "close"
+    },
+    {
+      "slug": "barbell-romanian-deadlift",
+      "workoutx_id": "ex_YH6XGY",
+      "workoutx_name": "Barbell Romanian Deadlift",
+      "confidence": "high"
+    },
+    {
+      "slug": "barbell-sumo-deadlift",
+      "workoutx_id": "ex_CQPJ72",
+      "workoutx_name": "Barbell Sumo Deadlift",
+      "confidence": "high"
+    },
+    {
+      "slug": "bench-dip",
+      "workoutx_id": "ex_QBHLZ6",
+      "workoutx_name": "Bench Dip (Knees Bent)",
+      "confidence": "high"
+    },
+    {
+      "slug": "bent-over-dumbbell-row",
+      "workoutx_id": "ex_LNM7O6",
+      "workoutx_name": "Dumbbell Bent Over Row (Pronated Grip)",
+      "confidence": "high"
+    },
+    {
+      "slug": "bird-dog",
+      "workoutx_id": "ex_5DV46E",
+      "workoutx_name": "Bird Dog",
+      "confidence": "high"
+    },
+    {
+      "slug": "bodyweight-box-squat",
+      "workoutx_id": "ex_OCBV4W",
+      "workoutx_name": "Dumbbell Bench Squat",
+      "confidence": "close"
+    },
+    {
+      "slug": "bodyweight-calf-raise",
+      "workoutx_id": "ex_H3VK5N",
+      "workoutx_name": "Bodyweight Standing Calf Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "bodyweight-glute-bridge",
+      "workoutx_id": "ex_YC75DT",
+      "workoutx_name": "Glute Bridge Bodyweight",
+      "confidence": "high"
+    },
+    {
+      "slug": "bodyweight-reverse-lunge",
+      "workoutx_id": "ex_DG2PCE",
+      "workoutx_name": "Dumbbell Rear Lunge",
+      "confidence": "close"
+    },
+    {
+      "slug": "bodyweight-split-squat",
+      "workoutx_id": "ex_UPPE6L",
+      "workoutx_name": "Dumbbell Split Squat",
+      "confidence": "close"
+    },
+    {
+      "slug": "bodyweight-squat",
+      "workoutx_id": "ex_REUQG3",
+      "workoutx_name": "Bodyweight Squats",
+      "confidence": "high"
+    },
+    {
+      "slug": "bulgarian-split-squat",
+      "workoutx_id": "ex_HRBR5V",
+      "workoutx_name": "Dumbbell Single Leg Split Squat",
+      "confidence": "high"
+    },
+    {
+      "slug": "butterfly-stretch",
+      "workoutx_id": "ex_RJLPIL",
+      "workoutx_name": "Butterfly Yoga Pose",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-biceps-curl",
+      "workoutx_id": "ex_52FAVB",
+      "workoutx_name": "EZ Bar Cable Curl Wide Grip",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-chest-fly",
+      "workoutx_id": "ex_KAJACV",
+      "workoutx_name": "Cable Fly Machine Mid",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-crunch",
+      "workoutx_id": "ex_X3EA24",
+      "workoutx_name": "High Cable Kneeling Crunch",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-face-pull",
+      "workoutx_id": "ex_2O5T2A",
+      "workoutx_name": "Cable Face Pull With Rope",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-glute-kickback",
+      "workoutx_id": "ex_E5KGY3",
+      "workoutx_name": "Cable Individual Glute Kickbacks",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-hip-abduction",
+      "workoutx_id": "ex_F4B2LH",
+      "workoutx_name": "Multi Hip Abduction",
+      "confidence": "close"
+    },
+    {
+      "slug": "cable-hip-adduction",
+      "workoutx_id": "ex_VKI5DH",
+      "workoutx_name": "Multi Hip Adduction",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-lateral-raise",
+      "workoutx_id": "ex_CVVYVO",
+      "workoutx_name": "Cable Lateral Raises",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-pallof-press",
+      "workoutx_id": "ex_BHXKKA",
+      "workoutx_name": "Cable Core Palloff Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-pull-through",
+      "workoutx_id": "ex_AO5SNX",
+      "workoutx_name": "Cable Pull Through",
+      "confidence": "high"
+    },
+    {
+      "slug": "cable-rear-delt-fly",
+      "workoutx_id": "ex_5FMGTN",
+      "workoutx_name": "Cable Rear Delt Fly",
+      "confidence": "high"
+    },
+    {
+      "slug": "calf-raise-machine",
+      "workoutx_id": "ex_H3VK5N",
+      "workoutx_name": "Bodyweight Standing Calf Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "calf-stretch-wall",
+      "workoutx_id": "ex_G64VUQ",
+      "workoutx_name": "Calf Stretch With Hands Against Wall",
+      "confidence": "high"
+    },
+    {
+      "slug": "chest-dip",
+      "workoutx_id": "ex_KYXN22",
+      "workoutx_name": "Chest Dip Bodyweight",
+      "confidence": "high"
+    },
+    {
+      "slug": "chest-stretch-wall",
+      "workoutx_id": "ex_OWYUOK",
+      "workoutx_name": "Across Chest Shoulder Stretch (Front View)",
+      "confidence": "close"
+    },
+    {
+      "slug": "chest-supported-dumbbell-row",
+      "workoutx_id": "ex_EPZI6D",
+      "workoutx_name": "Dumbbell Incline Row",
+      "confidence": "high"
+    },
+    {
+      "slug": "chin-up",
+      "workoutx_id": "ex_FN3LRR",
+      "workoutx_name": "Suspension Trainer With Grips Chin-Up",
+      "confidence": "high"
+    },
+    {
+      "slug": "concentration-curl",
+      "workoutx_id": "ex_JB4EYI",
+      "workoutx_name": "Concentration Curls Dumbbell",
+      "confidence": "high"
+    },
+    {
+      "slug": "copenhagen-plank",
+      "workoutx_id": "ex_HZM5OM",
+      "workoutx_name": "Copenhagen Plank",
+      "confidence": "high"
+    },
+    {
+      "slug": "cross-body-shoulder-stretch",
+      "workoutx_id": "ex_GUHHB2",
+      "workoutx_name": "Cross Body Shoulder Stretch",
+      "confidence": "high"
+    },
+    {
+      "slug": "curtsy-lunge",
+      "workoutx_id": "ex_S542F2",
+      "workoutx_name": "Dumbbell Curtsy Lunge",
+      "confidence": "high"
+    },
+    {
+      "slug": "dead-bug",
+      "workoutx_id": "ex_Y2SKAV",
+      "workoutx_name": "Dead Bug",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-bench-press",
+      "workoutx_id": "ex_2OSXDM",
+      "workoutx_name": "Dumbbell Bench Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-biceps-curl",
+      "workoutx_id": "ex_4N5WXG",
+      "workoutx_name": "Dumbbell Curls",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-box-squat",
+      "workoutx_id": "ex_OCBV4W",
+      "workoutx_name": "Dumbbell Bench Squat",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-calf-raise",
+      "workoutx_id": "ex_FEI4YO",
+      "workoutx_name": "Dumbbell Standing Calf Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-floor-press",
+      "workoutx_id": "ex_MTK26X",
+      "workoutx_name": "Dumbbell One Arm Floor Press",
+      "confidence": "close"
+    },
+    {
+      "slug": "dumbbell-fly",
+      "workoutx_id": "ex_VUZKJW",
+      "workoutx_name": "Dumbbell Fly Flat Bench",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-front-raise",
+      "workoutx_id": "ex_7ZSLEH",
+      "workoutx_name": "Dumbbell Front Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-glute-bridge",
+      "workoutx_id": "ex_WCBO3J",
+      "workoutx_name": "Barbell Glute Bridge",
+      "confidence": "close"
+    },
+    {
+      "slug": "dumbbell-hammer-curl",
+      "workoutx_id": "ex_5NDQ64",
+      "workoutx_name": "Dumbbell Hammer Curl",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-hip-thrust",
+      "workoutx_id": "ex_JSAJGA",
+      "workoutx_name": "Dumbbell Hip Thrust",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-lateral-lunge",
+      "workoutx_id": "ex_U3LVBQ",
+      "workoutx_name": "Kettlebell Lateral Lunge",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-lateral-raise",
+      "workoutx_id": "ex_UDDGLG",
+      "workoutx_name": "Leaning Dumbbell Lateral Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-lying-triceps-extension",
+      "workoutx_id": "ex_DUHLKF",
+      "workoutx_name": "Dumbbell Lying Triceps Extension",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-pullover",
+      "workoutx_id": "ex_XTURBN",
+      "workoutx_name": "Dumbbell Pullover",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-reverse-fly",
+      "workoutx_id": "ex_WCTNRV",
+      "workoutx_name": "Dumbbell Reverse Fly",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-reverse-lunge",
+      "workoutx_id": "ex_ICW4BA",
+      "workoutx_name": "Dumbbell Reverse Lunge on the Spot",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-romanian-deadlift",
+      "workoutx_id": "ex_UA3FUQ",
+      "workoutx_name": "Dumbbell Romanian Deadlift",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-shoulder-press",
+      "workoutx_id": "ex_4EQJV2",
+      "workoutx_name": "Dumbbell Seated Shoulder Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-split-squat",
+      "workoutx_id": "ex_UPPE6L",
+      "workoutx_name": "Dumbbell Split Squat",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-step-up",
+      "workoutx_id": "ex_E7OFPW",
+      "workoutx_name": "Dumbbell Step-Up With Knee Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-triceps-kickback",
+      "workoutx_id": "ex_QYTMLO",
+      "workoutx_name": "Dumbbell Kickback",
+      "confidence": "high"
+    },
+    {
+      "slug": "dumbbell-walking-lunge",
+      "workoutx_id": "ex_TFOAGW",
+      "workoutx_name": "Lunges Alternate Leg With Pause Bodyweight",
+      "confidence": "close"
+    },
+    {
+      "slug": "ez-bar-curl",
+      "workoutx_id": "ex_VSELYQ",
+      "workoutx_name": "EZ Barbell Curl",
+      "confidence": "high"
+    },
+    {
+      "slug": "ez-bar-skull-crusher",
+      "workoutx_id": "ex_WUHPGJ",
+      "workoutx_name": "Barbell Lying Triceps Skull Crusher",
+      "confidence": "high"
+    },
+    {
+      "slug": "face-pull",
+      "workoutx_id": "ex_2O5T2A",
+      "workoutx_name": "Cable Face Pull With Rope",
+      "confidence": "high"
+    },
+    {
+      "slug": "farmer-carry",
+      "workoutx_id": "ex_VGZEAC",
+      "workoutx_name": "Dumbbell Farmer Walks",
+      "confidence": "high"
+    },
+    {
+      "slug": "fire-hydrant",
+      "workoutx_id": "ex_HRVTXY",
+      "workoutx_name": "Fire Hydrant Bodyweight",
+      "confidence": "high"
+    },
+    {
+      "slug": "forearm-plank",
+      "workoutx_id": "ex_EIQ5QV",
+      "workoutx_name": "Unilateral Front Plank",
+      "confidence": "close"
+    },
+    {
+      "slug": "front-squat",
+      "workoutx_id": "ex_GW4TSM",
+      "workoutx_name": "Barbell Front Squat",
+      "confidence": "high"
+    },
+    {
+      "slug": "glute-bridge",
+      "workoutx_id": "ex_YC75DT",
+      "workoutx_name": "Glute Bridge Bodyweight",
+      "confidence": "high"
+    },
+    {
+      "slug": "glute-focused-back-extension",
+      "workoutx_id": "ex_VQ43DS",
+      "workoutx_name": "Roman Chair Back Extension",
+      "confidence": "high"
+    },
+    {
+      "slug": "goblet-squat",
+      "workoutx_id": "ex_42XRWI",
+      "workoutx_name": "Narrow Stance Heels Elevated Dumbbell Goblet Squats",
+      "confidence": "high"
+    },
+    {
+      "slug": "good-morning",
+      "workoutx_id": "ex_Z326ZJ",
+      "workoutx_name": "Barbell Good Morning",
+      "confidence": "high"
+    },
+    {
+      "slug": "hack-squat",
+      "workoutx_id": "ex_IU2JKY",
+      "workoutx_name": "Hack Squat Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "half-kneeling-hip-flexor-stretch",
+      "workoutx_id": "ex_OVWIYB",
+      "workoutx_name": "Intermediate Hip Flexor and Quad Stretch",
+      "confidence": "close"
+    },
+    {
+      "slug": "hammer-curl",
+      "workoutx_id": "ex_4AEUHW",
+      "workoutx_name": "Alternate Hammer Curl Seated Dumbbells",
+      "confidence": "high"
+    },
+    {
+      "slug": "hanging-knee-raise",
+      "workoutx_id": "ex_MIK6BT",
+      "workoutx_name": "Hanging Knee Raises",
+      "confidence": "high"
+    },
+    {
+      "slug": "happy-baby",
+      "workoutx_id": "ex_MEWXLB",
+      "workoutx_name": "Happy Baby",
+      "confidence": "high"
+    },
+    {
+      "slug": "heels-elevated-goblet-squat",
+      "workoutx_id": "ex_42XRWI",
+      "workoutx_name": "Narrow Stance Heels Elevated Dumbbell Goblet Squats",
+      "confidence": "high"
+    },
+    {
+      "slug": "hip-abduction-machine",
+      "workoutx_id": "ex_F4B2LH",
+      "workoutx_name": "Multi Hip Abduction",
+      "confidence": "high"
+    },
+    {
+      "slug": "hip-adduction-machine",
+      "workoutx_id": "ex_VKI5DH",
+      "workoutx_name": "Multi Hip Adduction",
+      "confidence": "high"
+    },
+    {
+      "slug": "hip-thrust-machine",
+      "workoutx_id": "ex_YC5MXO",
+      "workoutx_name": "Hip-Thrust in Smith Machine",
+      "confidence": "close"
+    },
+    {
+      "slug": "hollow-body-hold",
+      "workoutx_id": "ex_PU7NAK",
+      "workoutx_name": "Hollow Hold",
+      "confidence": "high"
+    },
+    {
+      "slug": "incline-barbell-bench-press",
+      "workoutx_id": "ex_ED2K6M",
+      "workoutx_name": "Barbell Pause Incline Bench Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "incline-dumbbell-curl",
+      "workoutx_id": "ex_KCSL26",
+      "workoutx_name": "Incline Dumbbell Curl",
+      "confidence": "high"
+    },
+    {
+      "slug": "incline-dumbbell-press",
+      "workoutx_id": "ex_X7I4K2",
+      "workoutx_name": "Dumbbell Incline Bench Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "incline-push-up",
+      "workoutx_id": "ex_WHSBPD",
+      "workoutx_name": "Incline Push Ups on Chair",
+      "confidence": "high"
+    },
+    {
+      "slug": "incline-y-raise",
+      "workoutx_id": "ex_YHMCMN",
+      "workoutx_name": "Dumbbell Chest Supported Y Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "inverted-row",
+      "workoutx_id": "ex_BDUOHB",
+      "workoutx_name": "Inverted Rows on Smith Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "jump-squat",
+      "workoutx_id": "ex_XUVB7Y",
+      "workoutx_name": "Jump Squats Bodyweight",
+      "confidence": "high"
+    },
+    {
+      "slug": "kettlebell-deadlift",
+      "workoutx_id": "ex_U56VFS",
+      "workoutx_name": "Single Kettlebell Deadlift",
+      "confidence": "high"
+    },
+    {
+      "slug": "kettlebell-goblet-squat",
+      "workoutx_id": "ex_3BK5ZX",
+      "workoutx_name": "Dumbbell Goblet Squat",
+      "confidence": "high"
+    },
+    {
+      "slug": "kettlebell-reverse-lunge",
+      "workoutx_id": "ex_3DDDLD",
+      "workoutx_name": "Kettlebell Reverse Lunge",
+      "confidence": "high"
+    },
+    {
+      "slug": "kettlebell-row",
+      "workoutx_id": "ex_O764MC",
+      "workoutx_name": "Kettlebell Row",
+      "confidence": "high"
+    },
+    {
+      "slug": "kettlebell-sumo-deadlift",
+      "workoutx_id": "ex_CQPJ72",
+      "workoutx_name": "Barbell Sumo Deadlift",
+      "confidence": "close"
+    },
+    {
+      "slug": "kettlebell-swing",
+      "workoutx_id": "ex_D6WO2Q",
+      "workoutx_name": "Kettlebell Swing",
+      "confidence": "high"
+    },
+    {
+      "slug": "knee-push-up",
+      "workoutx_id": "ex_AIDFR5",
+      "workoutx_name": "Kneeling Push-Up",
+      "confidence": "high"
+    },
+    {
+      "slug": "kneeling-hip-flexor-stretch",
+      "workoutx_id": "ex_6CQAL6",
+      "workoutx_name": "Kneeling Hip Flexor Stretch",
+      "confidence": "high"
+    },
+    {
+      "slug": "landmine-press",
+      "workoutx_id": "ex_KDXOYZ",
+      "workoutx_name": "Landmine Chest Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "lat-pulldown",
+      "workoutx_id": "ex_NSWXUS",
+      "workoutx_name": "Lat Pull Down Close Grip",
+      "confidence": "high"
+    },
+    {
+      "slug": "leg-extension",
+      "workoutx_id": "ex_6JHTQZ",
+      "workoutx_name": "Lever Leg Extension",
+      "confidence": "high"
+    },
+    {
+      "slug": "leg-press",
+      "workoutx_id": "ex_WOTCCC",
+      "workoutx_name": "Leg Press Machine Normal Stance",
+      "confidence": "high"
+    },
+    {
+      "slug": "leg-press-calf-raise",
+      "workoutx_id": "ex_ICLBXV",
+      "workoutx_name": "Horizontal Leg Press Calf Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "low-to-high-cable-fly",
+      "workoutx_id": "ex_DZK6MR",
+      "workoutx_name": "Cable Low Fly",
+      "confidence": "high"
+    },
+    {
+      "slug": "lying-hamstring-stretch",
+      "workoutx_id": "ex_55W5VR",
+      "workoutx_name": "Seated Single Leg Toe Touch Hamstring Stretch",
+      "confidence": "close"
+    },
+    {
+      "slug": "lying-leg-curl",
+      "workoutx_id": "ex_JZUL5J",
+      "workoutx_name": "Lying Leg Curl Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "lying-leg-raise",
+      "workoutx_id": "ex_MDXEXU",
+      "workoutx_name": "Lying Leg Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "machine-chest-press",
+      "workoutx_id": "ex_NFGVTJ",
+      "workoutx_name": "Chest Press Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "machine-lateral-raise",
+      "workoutx_id": "ex_NSVTUV",
+      "workoutx_name": "Machine Lateral Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "machine-row",
+      "workoutx_id": "ex_N6UVX4",
+      "workoutx_name": "Seated Row Machine Rows",
+      "confidence": "high"
+    },
+    {
+      "slug": "machine-shoulder-press",
+      "workoutx_id": "ex_L5RIYY",
+      "workoutx_name": "Iso Lateral Shoulder Press Both Arms",
+      "confidence": "high"
+    },
+    {
+      "slug": "mountain-climber",
+      "workoutx_id": "ex_7O4ZTL",
+      "workoutx_name": "Mountain Climber",
+      "confidence": "high"
+    },
+    {
+      "slug": "neck-side-stretch",
+      "workoutx_id": "ex_H374PM",
+      "workoutx_name": "Seated Side Stretch",
+      "confidence": "high"
+    },
+    {
+      "slug": "nordic-curl",
+      "workoutx_id": "ex_RBJZZ3",
+      "workoutx_name": "Nordic Hamstring Curl With Partner",
+      "confidence": "high"
+    },
+    {
+      "slug": "one-arm-dumbbell-row",
+      "workoutx_id": "ex_BLGRVH",
+      "workoutx_name": "Dumbbell One Arm Row (Rack Support)",
+      "confidence": "high"
+    },
+    {
+      "slug": "overhead-dumbbell-triceps-extension",
+      "workoutx_id": "ex_JUXILH",
+      "workoutx_name": "Dumbbell Standing Triceps Extension",
+      "confidence": "high"
+    },
+    {
+      "slug": "overhead-triceps-extension",
+      "workoutx_id": "ex_HLV7TD",
+      "workoutx_name": "Dumbbell Overhead Extension Seated",
+      "confidence": "high"
+    },
+    {
+      "slug": "overhead-triceps-stretch",
+      "workoutx_id": "ex_XABQ2C",
+      "workoutx_name": "Overhead Triceps Stretch (45 Degree View)",
+      "confidence": "high"
+    },
+    {
+      "slug": "pallof-press",
+      "workoutx_id": "ex_BHXKKA",
+      "workoutx_name": "Cable Core Palloff Press",
+      "confidence": "high"
+    },
+    {
+      "slug": "pec-deck",
+      "workoutx_id": "ex_R4YXYV",
+      "workoutx_name": "Pec Deck Fly Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "plank-shoulder-tap",
+      "workoutx_id": "ex_FSKLWZ",
+      "workoutx_name": "Shoulder Tap",
+      "confidence": "high"
+    },
+    {
+      "slug": "preacher-curl-machine",
+      "workoutx_id": "ex_YO7QYP",
+      "workoutx_name": "Barbell Preacher Curl",
+      "confidence": "high"
+    },
+    {
+      "slug": "pull-up",
+      "workoutx_id": "ex_XZBNVS",
+      "workoutx_name": "Suspension Trainer With Grips Pull-Up",
+      "confidence": "high"
+    },
+    {
+      "slug": "push-up",
+      "workoutx_id": "ex_AIDFR5",
+      "workoutx_name": "Kneeling Push-Up",
+      "confidence": "high"
+    },
+    {
+      "slug": "renegade-row",
+      "workoutx_id": "ex_2BL3WL",
+      "workoutx_name": "Pushup to Renegade Row",
+      "confidence": "high"
+    },
+    {
+      "slug": "reverse-crunch",
+      "workoutx_id": "ex_T3DC5Q",
+      "workoutx_name": "Reverse Crunch",
+      "confidence": "high"
+    },
+    {
+      "slug": "reverse-pec-deck",
+      "workoutx_id": "ex_HPQDH6",
+      "workoutx_name": "Reverse Machine Fly",
+      "confidence": "high"
+    },
+    {
+      "slug": "seated-cable-row",
+      "workoutx_id": "ex_4TJLQ3",
+      "workoutx_name": "Seated Cable Row v Bar Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "seated-calf-raise",
+      "workoutx_id": "ex_CERI66",
+      "workoutx_name": "Kettlebell Seated Calf Raise",
+      "confidence": "high"
+    },
+    {
+      "slug": "seated-hamstring-stretch",
+      "workoutx_id": "ex_JFGPYC",
+      "workoutx_name": "Seated Single Leg Hamstring Stretch",
+      "confidence": "high"
+    },
+    {
+      "slug": "seated-leg-curl",
+      "workoutx_id": "ex_7UAJQR",
+      "workoutx_name": "Seated Leg Curl Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "shoulder-press-machine",
+      "workoutx_id": "ex_L5RIYY",
+      "workoutx_name": "Iso Lateral Shoulder Press Both Arms",
+      "confidence": "high"
+    },
+    {
+      "slug": "side-lying-hip-abduction",
+      "workoutx_id": "ex_UUGJ3S",
+      "workoutx_name": "Side Lying Leg Lift Left",
+      "confidence": "high"
+    },
+    {
+      "slug": "side-plank",
+      "workoutx_id": "ex_JDVEAS",
+      "workoutx_name": "Side Plank",
+      "confidence": "high"
+    },
+    {
+      "slug": "single-arm-cable-row",
+      "workoutx_id": "ex_NOECF7",
+      "workoutx_name": "Single Arm Cable Row Left",
+      "confidence": "high"
+    },
+    {
+      "slug": "single-arm-lat-pulldown",
+      "workoutx_id": "ex_NTGZ5F",
+      "workoutx_name": "Cable One Arm Lat Pulldown",
+      "confidence": "high"
+    },
+    {
+      "slug": "single-leg-glute-bridge",
+      "workoutx_id": "ex_6OLOT4",
+      "workoutx_name": "Chair Elevated Single Leg Glute Bridge",
+      "confidence": "high"
+    },
+    {
+      "slug": "single-leg-leg-press",
+      "workoutx_id": "ex_6NQ752",
+      "workoutx_name": "Horizontal Leg Press Single Leg",
+      "confidence": "high"
+    },
+    {
+      "slug": "single-leg-romanian-deadlift",
+      "workoutx_id": "ex_PPQLO7",
+      "workoutx_name": "Single Leg Romanian Deadlift Dumbbell",
+      "confidence": "high"
+    },
+    {
+      "slug": "smith-machine-squat",
+      "workoutx_id": "ex_DHN2XU",
+      "workoutx_name": "Normal Squat Smith Machine",
+      "confidence": "high"
+    },
+    {
+      "slug": "standing-forward-fold",
+      "workoutx_id": "ex_O6AIAV",
+      "workoutx_name": "Basic Toe Touch",
+      "confidence": "close"
+    },
+    {
+      "slug": "standing-side-bend",
+      "workoutx_id": "ex_2GKGNS",
+      "workoutx_name": "Side Bend Standing Lats Stretch",
+      "confidence": "high"
+    },
+    {
+      "slug": "straight-arm-pulldown",
+      "workoutx_id": "ex_X4NAWK",
+      "workoutx_name": "Cable Straight Arm Pulldown",
+      "confidence": "high"
+    },
+    {
+      "slug": "suitcase-carry",
+      "workoutx_id": "ex_X4S2XW",
+      "workoutx_name": "Dumbbell Suitcase Carry",
+      "confidence": "high"
+    },
+    {
+      "slug": "superman",
+      "workoutx_id": "ex_ZLYB4S",
+      "workoutx_name": "Superman",
+      "confidence": "high"
+    },
+    {
+      "slug": "supine-twist",
+      "workoutx_id": "ex_ZAFSLJ",
+      "workoutx_name": "Bent Knee Lying Twist",
+      "confidence": "high"
+    },
+    {
+      "slug": "trap-bar-deadlift",
+      "workoutx_id": "ex_OTCQ2F",
+      "workoutx_name": "Trap Bar Deadlift",
+      "confidence": "high"
+    },
+    {
+      "slug": "triceps-pushdown",
+      "workoutx_id": "ex_LLJJAG",
+      "workoutx_name": "Cable Pushdown",
+      "confidence": "high"
+    },
+    {
+      "slug": "turkish-get-up",
+      "workoutx_id": "ex_EPBKIC",
+      "workoutx_name": "Kettlebell Turkish Get Up",
+      "confidence": "high"
+    },
+    {
+      "slug": "walking-lunge",
+      "workoutx_id": "ex_TFOAGW",
+      "workoutx_name": "Lunges Alternate Leg With Pause Bodyweight",
+      "confidence": "close"
+    },
+    {
+      "slug": "wall-sit",
+      "workoutx_id": "ex_SS42OF",
+      "workoutx_name": "Wall Sit Bodyweight",
+      "confidence": "high"
+    },
+    {
+      "slug": "wrist-and-forearm-stretch",
+      "workoutx_id": "ex_NZGRGY",
+      "workoutx_name": "Side Wrist Pull Stretch",
+      "confidence": "close"
+    }
+  ]
 }

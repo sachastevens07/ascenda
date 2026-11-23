@@ -1,4 +1,5 @@
 import { track } from '@/lib/analytics';
+import { parseSessionFeel, type SessionFeel } from '@/lib/checkin';
 import {
   CARDIO_SLUG_KEY,
   parseSessionType,
@@ -28,9 +29,27 @@ export type Session = {
   type: SessionType;
   /** True when she chose a lighter session for today. Never stores the reason. */
   lighter_session: boolean;
+  /** Optional post-session feel. Never the check-in option. */
+  session_feel: SessionFeel | null;
   /** True when she logged cardio after the fact (W8 Just log it). */
   logged_after: boolean;
 };
+
+export const SET_TYPES = ['normal', 'warmup', 'drop'] as const;
+export type SetType = (typeof SET_TYPES)[number];
+
+export function parseSetType(value: unknown): SetType {
+  return value === 'warmup' || value === 'drop' ? value : 'normal';
+}
+
+/** Warm-up and drop sets never drive suggested weights or personal bests. */
+export function setTypeCountsForProgression(type: SetType): boolean {
+  return type === 'normal';
+}
+
+export function workingSetsForProgression(sets: LoggedSet[] | undefined): LoggedSet[] {
+  return (sets ?? []).filter((set) => setTypeCountsForProgression(parseSetType(set.set_type)));
+}
 
 /** One row of the `sets` table. */
 export type LoggedSet = {
@@ -41,6 +60,7 @@ export type LoggedSet = {
   weight_kg: number | null;
   reps: number | null;
   completed: boolean;
+  set_type: SetType;
 };
 
 const SESSION_COLUMNS_ROUTINES =
@@ -51,6 +71,11 @@ const SESSION_COLUMNS_CUSTOM =
   'id, date, programme_day_id, started_at, completed_at, exercise_swaps, source, custom_workout_id';
 const SESSION_COLUMNS_LEGACY = 'id, date, programme_day_id, started_at, completed_at, exercise_swaps';
 const SET_COLUMNS = 'session_id, exercise_id, set_number, weight_kg, reps, completed';
+const SET_COLUMNS_L5 = `${SET_COLUMNS}, set_type`;
+
+function isMissingSetTypeColumn(error: { message?: string; code?: string }): boolean {
+  return /set_type/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
 
 function isMissingRoutineSessionColumns(error: { message?: string; code?: string }): boolean {
   return /routine_enrolment_id|routine_day_id/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
@@ -72,6 +97,10 @@ function isMissingSessionTypeColumn(error: { message?: string; code?: string }):
 
 function isMissingLighterSessionColumn(error: { message?: string; code?: string }): boolean {
   return /lighter_session/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+function isMissingSessionFeelColumn(error: { message?: string; code?: string }): boolean {
+  return /session_feel/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
 }
 
 function isMissingLoggedAfterColumn(error: { message?: string; code?: string }): boolean {
@@ -98,6 +127,7 @@ function toSession(row: Session | null): Session | null {
     exercise_swaps: row.exercise_swaps ?? {},
     type: parseSessionType(row.type, sessionTypeFromSource(row.source ?? 'programme')),
     lighter_session: row.lighter_session === true,
+    session_feel: parseSessionFeel(row.session_feel),
     logged_after: row.logged_after === true,
   };
 }
@@ -138,8 +168,13 @@ function localNoonIso(isoDate: string): string {
 /** Postgres numerics arrive as strings; turn them back into numbers. */
 function toLoggedSet(row: Record<string, unknown>): LoggedSet {
   return {
-    ...(row as LoggedSet),
-    weight_kg: row.weight_kg === null ? null : Number(row.weight_kg),
+    session_id: String(row.session_id ?? ''),
+    exercise_id: String(row.exercise_id ?? ''),
+    set_number: Number(row.set_number),
+    weight_kg: row.weight_kg === null || row.weight_kg === undefined ? null : Number(row.weight_kg),
+    reps: row.reps === null || row.reps === undefined ? null : Number(row.reps),
+    completed: row.completed === true,
+    set_type: parseSetType(row.set_type),
   };
 }
 
@@ -576,10 +611,10 @@ export async function discardSession(id: string): Promise<void> {
 }
 
 export async function fetchSessionSets(sessionId: string): Promise<LoggedSet[]> {
-  const { data, error } = await supabase
-    .from('sets')
-    .select(SET_COLUMNS)
-    .eq('session_id', sessionId);
+  const withType = await supabase.from('sets').select(SET_COLUMNS_L5).eq('session_id', sessionId);
+  if (!withType.error) return (withType.data ?? []).map(toLoggedSet);
+  if (!isMissingSetTypeColumn(withType.error)) throw withType.error;
+  const { data, error } = await supabase.from('sets').select(SET_COLUMNS).eq('session_id', sessionId);
   if (error) throw error;
   return (data ?? []).map(toLoggedSet);
 }
@@ -599,15 +634,43 @@ export function describeSetSaveError(error: unknown): string {
   return 'Check your connection and try again.';
 }
 
-/** Saves one working set, replacing anything already logged for that set in this session. */
+/** Saves one set, replacing anything already logged for that set in this session. */
 export async function saveSet(set: LoggedSet): Promise<void> {
+  const row = {
+    session_id: set.session_id,
+    exercise_id: set.exercise_id,
+    set_number: set.set_number,
+    weight_kg: set.weight_kg,
+    reps: set.reps,
+    completed: set.completed,
+    set_type: parseSetType(set.set_type),
+    completed_at: set.completed ? new Date().toISOString() : null,
+  };
+  const first = await supabase.from('sets').upsert(row, { onConflict: 'session_id,exercise_id,set_number' });
+  if (!first.error) {
+    if (set.completed) track('set_ticked');
+    return;
+  }
+  if (isMissingSetTypeColumn(first.error)) {
+    if (set.set_number < 1) return;
+    const { set_type: _ignored, ...legacy } = row;
+    const retry = await supabase.from('sets').upsert(legacy, { onConflict: 'session_id,exercise_id,set_number' });
+    if (retry.error) throw retry.error;
+    if (set.completed) track('set_ticked');
+    return;
+  }
   if (set.set_number < 1) return;
-  const { error } = await supabase.from('sets').upsert(
-    { ...set, completed_at: set.completed ? new Date().toISOString() : null },
-    { onConflict: 'session_id,exercise_id,set_number' }
-  );
+  throw first.error;
+}
+
+export async function deleteSet(sessionId: string, exerciseId: string, setNumber: number): Promise<void> {
+  const { error } = await supabase
+    .from('sets')
+    .delete()
+    .eq('session_id', sessionId)
+    .eq('exercise_id', exerciseId)
+    .eq('set_number', setNumber);
   if (error) throw error;
-  if (set.completed) track('set_ticked');
 }
 
 /**
@@ -621,6 +684,7 @@ export function pickLatestNormalSets(
   const previous: Record<string, LoggedSet[]> = {};
   for (const set of rows) {
     if (set.lighter) continue;
+    if (!setTypeCountsForProgression(parseSetType(set.set_type))) continue;
     latestSession[set.exercise_id] ??= set.session_id;
     if (latestSession[set.exercise_id] !== set.session_id) continue;
     (previous[set.exercise_id] ??= []).push(set);
@@ -658,17 +722,21 @@ export async function fetchPreviousSets(
   excludeSessionId: string | null = null
 ): Promise<Record<string, LoggedSet[]>> {
   if (exerciseIds.length === 0) return {};
-  let query = supabase
-    .from('sets')
-    .select(SET_COLUMNS)
-    .in('exercise_id', exerciseIds)
-    .eq('completed', true)
-    .order('completed_at', { ascending: false })
-    .limit(500);
-  if (excludeSessionId) query = query.neq('session_id', excludeSessionId);
-  const { data, error } = await query;
-  if (error) throw error;
-  const sets = (data ?? []).map(toLoggedSet);
+  const run = (columns: string) => {
+    let query = supabase
+      .from('sets')
+      .select(columns)
+      .in('exercise_id', exerciseIds)
+      .eq('completed', true)
+      .order('completed_at', { ascending: false })
+      .limit(500);
+    if (excludeSessionId) query = query.neq('session_id', excludeSessionId);
+    return query;
+  };
+  let result = await run(SET_COLUMNS_L5);
+  if (result.error && isMissingSetTypeColumn(result.error)) result = await run(SET_COLUMNS);
+  if (result.error) throw result.error;
+  const sets = ((result.data ?? []) as unknown as Record<string, unknown>[]).map(toLoggedSet);
   const lighter = await lighterSessionIds(sets.map((set) => set.session_id));
   return pickLatestNormalSets(sets.map((set) => ({ ...set, lighter: lighter.has(set.session_id) })));
 }
@@ -678,6 +746,40 @@ export async function markSessionLighter(id: string): Promise<void> {
   const { error } = await supabase.from('sessions').update({ lighter_session: true }).eq('id', id);
   if (error && isMissingLighterSessionColumn(error)) return;
   if (error) throw error;
+}
+
+/** Optional post-session feel. Never stores the check-in option. */
+export async function saveSessionFeel(id: string, feel: SessionFeel): Promise<void> {
+  const { error } = await supabase.from('sessions').update({ session_feel: feel }).eq('id', id);
+  if (error && isMissingSessionFeelColumn(error)) return;
+  if (error) throw error;
+}
+
+/**
+ * Two completed sessions in a row for this routine day both marked Harder.
+ * Used to hold the next weight increase on those lifts.
+ */
+export async function consecutiveHarderOnRoutineDay(
+  routineDayId: string | null | undefined,
+  excludeSessionId: string | null
+): Promise<boolean> {
+  if (!routineDayId) return false;
+  let query = supabase
+    .from('sessions')
+    .select('id, session_feel, completed_at')
+    .eq('routine_day_id', routineDayId)
+    .not('completed_at', 'is', null)
+    .order('completed_at', { ascending: false })
+    .limit(2);
+  if (excludeSessionId) query = query.neq('id', excludeSessionId);
+  const { data, error } = await query;
+  if (error) {
+    if (isMissingSessionFeelColumn(error)) return false;
+    throw error;
+  }
+  const rows = data ?? [];
+  if (rows.length < 2) return false;
+  return rows.every((row) => parseSessionFeel((row as { session_feel?: unknown }).session_feel) === 'harder');
 }
 
 /** The heaviest weight in a list of sets, or null if none had a weight. */

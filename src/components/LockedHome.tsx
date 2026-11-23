@@ -1,6 +1,7 @@
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { useTabBarHeight } from '@/components/PillTabBar';
@@ -23,7 +24,7 @@ import {
 } from '@/lib/activityStats';
 import { fillCopy, lockedHomeCopy, referCopy } from '@/lib/copy';
 import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
-import { FRIEND_TRIAL_DAYS, openRefer } from '@/lib/referrals';
+import { openRefer, referralOfferVars } from '@/lib/referrals';
 import { canOpenExportedFile, exportWorkoutHistory, openExportedFile } from '@/lib/export';
 import { coverForRoutine, imageSourceForSlug, takeCoverSource } from '@/lib/images';
 import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
@@ -75,6 +76,7 @@ async function runExport(): Promise<void> {
 
 export function LockedHome() {
   const tabBarHeight = useTabBarHeight();
+  const insets = useSafeAreaInsets();
   const { colours, radius, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
@@ -177,7 +179,7 @@ export function LockedHome() {
 
   if (loadState !== 'ready' || !plan) {
     return (
-      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
+      <View style={[styles.centre, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
         <ActivityIndicator color={colours.brand} />
       </View>
     );
@@ -188,7 +190,7 @@ export function LockedHome() {
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: (tabBarHeight || 24) + 16, paddingHorizontal: spacing.lg },
+          { paddingTop: insets.top + 8, paddingBottom: (tabBarHeight || 24) + 16, paddingHorizontal: spacing.lg },
         ]}>
         <View style={styles.header}>
           <TabAvatar />
@@ -253,14 +255,11 @@ export function LockedHome() {
             { backgroundColor: colours.surface, borderRadius: radius.xl, padding: spacing.md },
             shadow,
           ]}>
-          <AppText variant="eyebrow" style={{ color: colours.accent }}>
-            {referCopy.screen_title}
+          <AppText variant="title3" style={{ color: colours.ink }}>
+            {fillCopy(referCopy.banner_title, referralOfferVars())}
           </AppText>
-          <AppText variant="title3" style={{ color: colours.ink, marginTop: 6 }}>
-            {referCopy.banner_title}
-          </AppText>
-          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-            {fillCopy(referCopy.banner_body, { friend_trial_days: FRIEND_TRIAL_DAYS })}
+          <AppText variant="bodyStrong" style={{ color: colours.brand, marginTop: 8 }}>
+            {referCopy.banner_cta}
           </AppText>
         </Pressable>
 

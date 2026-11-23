@@ -1,6 +1,7 @@
 /**
- * Propose MuscleWiki matches for every exercise in supabase/exercises.sql.
- * One GET /search call per exercise. Stops before 500 API calls.
+ * Propose MuscleWiki matches for every exercise in the library
+ * (supabase/exercises.sql, stretches.sql, content_routines_1.sql).
+ * One GET /search call per unmatched exercise. Skips ids already approved.
  *
  * The API key is read from the environment only. Never put it in the app,
  * .env, or this file.
@@ -38,8 +39,15 @@ function enableSystemCa() {
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const API = 'https://api.musclewiki.com';
-const MAX_CALLS = 400;
+const MAX_CALLS = 250;
 const OUT = join(ROOT, 'scripts', 'musclewiki-matches.csv');
+const APPROVED_SQL = join(ROOT, 'supabase', 'musclewiki_ids.sql');
+const EXERCISE_SQL = [
+  join(ROOT, 'supabase', 'exercises.sql'),
+  join(ROOT, 'supabase', 'stretches.sql'),
+  join(ROOT, 'supabase', 'content_routines_1.sql'),
+];
+const MUSCLE_NAMES = 'glutes|quads|hamstrings|adductors|calves|chest|back|shoulders|biceps|triceps|core';
 
 function csvCell(value) {
   const text = value == null ? '' : String(value);
@@ -47,14 +55,86 @@ function csvCell(value) {
   return text;
 }
 
-function parseExerciseNames(sql) {
-  const names = new Map();
-  const pattern = /^\('([a-z0-9-]+)', '((?:[^']|'')*)',/gm;
-  let match;
-  while ((match = pattern.exec(sql))) {
-    names.set(match[1], match[2].replace(/''/g, "'"));
+function parseSqlExerciseInserts(sql) {
+  const rows = [];
+  const lower = sql.toLowerCase();
+  const needle = 'insert into public.exercises';
+  const rowRe = new RegExp(
+    `\\('([a-z0-9-]+)', '((?:[^']|'')*)', '(${MUSCLE_NAMES})'`,
+    'g'
+  );
+  let idx = 0;
+  while ((idx = lower.indexOf(needle, idx)) !== -1) {
+    const after = sql.indexOf('values', idx);
+    const nextInsert = lower.indexOf('insert into public.', after + 6);
+    const end = nextInsert === -1 ? sql.length : nextInsert;
+    const chunk = sql.slice(after, end);
+    rowRe.lastIndex = 0;
+    let match;
+    while ((match = rowRe.exec(chunk))) {
+      rows.push({ slug: match[1], name: match[2].replace(/''/g, "'") });
+    }
+    idx += needle.length;
   }
-  return names;
+  return rows;
+}
+
+function loadCatalogue() {
+  const bySlug = new Map();
+  for (const file of EXERCISE_SQL) {
+    try {
+      for (const row of parseSqlExerciseInserts(readFileSync(file, 'utf8'))) {
+        if (row.slug && row.name && !bySlug.has(row.slug)) bySlug.set(row.slug, row.name);
+      }
+    } catch {
+      /* Missing SQL file is fine. */
+    }
+  }
+  return bySlug;
+}
+
+function loadApprovedIds() {
+  const approved = new Map();
+  try {
+    const sql = readFileSync(APPROVED_SQL, 'utf8');
+    const re = /musclewiki_id = (\d+) where id = '([a-z0-9-]+)'/g;
+    let match;
+    while ((match = re.exec(sql))) {
+      approved.set(match[2], match[1]);
+    }
+  } catch {
+    /* Missing file is fine. */
+  }
+  try {
+    const csv = readFileSync(OUT, 'utf8');
+    for (const line of csv.split(/\r?\n/).slice(1)) {
+      if (!line.trim()) continue;
+      const cells = [];
+      let cell = '';
+      let quoted = false;
+      for (let i = 0; i < line.length; i += 1) {
+        const char = line[i];
+        if (quoted) {
+          if (char === '"' && line[i + 1] === '"') {
+            cell += '"';
+            i += 1;
+          } else if (char === '"') quoted = false;
+          else cell += char;
+        } else if (char === '"') quoted = true;
+        else if (char === ',') {
+          cells.push(cell);
+          cell = '';
+        } else cell += char;
+      }
+      cells.push(cell);
+      const slug = cells[0];
+      const approvedId = (cells[8] ?? '').trim();
+      if (slug && approvedId) approved.set(slug, approvedId);
+    }
+  } catch {
+    /* Missing CSV is fine. */
+  }
+  return approved;
 }
 
 function pickResults(body) {
@@ -108,20 +188,24 @@ async function main() {
     process.exit(1);
   }
 
-  const names = parseExerciseNames(readFileSync(join(ROOT, 'supabase', 'exercises.sql'), 'utf8'));
+  const names = loadCatalogue();
+  const approved = loadApprovedIds();
   const ids = [...names.keys()].sort();
-  if (ids.length > MAX_CALLS) {
-    console.error(`Would make ${ids.length} calls; cap is ${MAX_CALLS}.`);
+  const toSearch = ids.filter((id) => !approved.has(id));
+  if (toSearch.length > MAX_CALLS) {
+    console.error(`Would make ${toSearch.length} calls; cap is ${MAX_CALLS}.`);
     process.exit(1);
   }
 
   if (dryRun) {
-    console.log(`${ids.length} exercises in the library:`);
-    for (const id of ids) console.log(`  ${id}\t${names.get(id)}`);
+    console.log(`${ids.length} exercises in the library, ${toSearch.length} without an approved id:`);
+    for (const id of toSearch) console.log(`  ${id}\t${names.get(id)}`);
     return;
   }
 
-  console.log(`Searching MuscleWiki for ${ids.length} library exercises…`);
+  console.log(
+    `Library: ${ids.length}. Already approved: ${approved.size}. Searching ${toSearch.length}.`
+  );
   const rows = [
     [
       'our_id',
@@ -139,6 +223,11 @@ async function main() {
   let calls = 0;
   for (const id of ids) {
     const name = names.get(id);
+    const kept = approved.get(id);
+    if (kept) {
+      rows.push([id, name, '', '', '', '', '', '', kept].map(csvCell).join(','));
+      continue;
+    }
     const hits = await search(key, name);
     calls += 1;
     rows.push(
@@ -156,7 +245,7 @@ async function main() {
         .map(csvCell)
         .join(',')
     );
-    process.stdout.write(`  ${calls}/${ids.length} ${name}\n`);
+    process.stdout.write(`  ${calls}/${toSearch.length} ${name}\n`);
     await new Promise((resolve) => setTimeout(resolve, 120));
   }
 

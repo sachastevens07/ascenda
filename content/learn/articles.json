@@ -47,11 +47,6 @@
       "id": "myths",
       "name": "Myths busted",
       "sort_order": 8
-    },
-    {
-      "id": "your_body",
-      "name": "Your body and training",
-      "sort_order": 9
     }
   ],
   "articles": [
@@ -62,7 +57,7 @@
       "category": "getting_started",
       "read_minutes": 2,
       "cover_image_slug": "learn-your-first-gym-session",
-      "body_markdown": "Walking into a gym for the first time can feel like a lot. The good news: you don't need to know the whole gym. You need one session and a plan for getting through it. Here's that plan.\n\n## Before you go\n\n- **Open today's session in Ascenda** before you leave home, so you're not working it out on the gym floor.\n- **Pack a water bottle, a small towel and headphones** if music helps you focus.\n- **Wear comfortable clothes and trainers** you can squat and bend in. Nothing needs to be new or matching.\n- **Check the gym's quieter times** if you can. Mid-morning, early afternoon and later evenings are usually calmer than straight after work.\n\n## When you arrive\n\nLots of gyms offer a free induction. If yours does, say yes. Someone will show you around, and you'll know where the changing rooms, water fountain and main areas are before you even start.\n\nThen find your spot. For your first sessions, that's a bench near the dumbbell rack, or a mat in a quieter corner. Grab two or three pairs of dumbbells before you begin, so you can stay put.\n\n## During your session\n\n1. **Do the warm-up.** Five minutes, and nothing in it should feel hard.\n2. **Work through the list in order.** Open the guide for any exercise you haven't done before.\n3. **Log each set as you go.** It takes a second and it's how Ascenda learns what to suggest next time.\n4. **Use the swap button** if something is taken or doesn't feel right. You're still doing the session.\n5. **Finish with the cool-down.**\n\n> You belong in the room as soon as you start your first set.\n\n## Afterwards\n\nThat's a full session. You might feel a little sore for a day or two, which is normal when you start something new. If anything ever feels sharp or wrong, stop, and read our safety guidance.\n\nThe second session is always easier than the first. Book it into your planner before you leave.",
+      "body_markdown": "Walking into a gym for the first time can feel like a lot. The good news: you don't need to know the whole gym. You need one session and a plan for getting through it. Here's that plan.\n\n## Before you go\n\n- **Open today's session in Ascenda** before you leave home, so you're not working it out on the gym floor.\n- **Pack a water bottle, a small towel and headphones** if music helps you focus.\n- **Wear comfortable clothes and trainers** you can squat and bend in. Nothing needs to be new or matching.\n- **Check the gym's quieter times** if you can. Mid-morning, early afternoon and later evenings are usually calmer than straight after work.\n\n## When you arrive\n\nLots of gyms offer a free induction. If yours does, say yes. Someone will show you around, and you'll know where the changing rooms, water fountain and main areas are before you even start.\n\nThen find your spot. For your first sessions, that's a bench near the dumbbell rack, or a mat in a quieter corner. Grab two or three pairs of dumbbells before you begin, so you can stay put.\n\n## During your session\n\n1. **Do the warm-up.** Five minutes, and nothing in it should feel hard.\n2. **Work through the list in order.** Open the guide for any exercise you haven't done before.\n3. **Log each set as you go.** It takes a second and it's how Ascenda learns what to suggest next time.\n4. **Use the swap button** if something is taken or doesn't feel right. You're still doing the session.\n5. **Finish with the cool-down.**\n\nNot sure your form looks right? Prop your phone against your water bottle, film one set and compare it with the demo in the exercise guide. It's a quick, private way to check, and nobody will think twice about it. You can also ask a member of staff: helping people with exercises is part of their job.\n\n> You belong in the room as soon as you start your first set.\n\n## Afterwards\n\nThat's a full session. You might feel a little sore for a day or two, which is normal when you start something new. If anything ever feels sharp or wrong, stop, and read our safety guidance.\n\nThe second session is always easier than the first. Book it into your planner before you leave.",
       "sources": [
         {
           "title": "NHS: Physical activity guidelines for adults aged 19 to 64",
@@ -80,8 +75,6 @@
         "gym_confidence",
         "back_to_training"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 1
     },
     {
@@ -100,8 +93,6 @@
       "recommended_for_goals": [
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 2
     },
     {
@@ -122,8 +113,6 @@
         "build_strength",
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 3
     },
     {
@@ -146,8 +135,6 @@
         "build_strength",
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 4
     },
     {
@@ -172,8 +159,6 @@
         "mobility",
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 5
     },
     {
@@ -192,8 +177,6 @@
       "recommended_for_goals": [
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 6
     },
     {
@@ -203,7 +186,7 @@
       "category": "gym_confidence",
       "read_minutes": 2,
       "cover_image_slug": "learn-when-the-machine-is-taken",
-      "body_markdown": "It happens to everyone: you walk over to the leg press and someone's on it. Here's what to do.\n\n## Option 1: Do something else first\n\nThe easiest fix. Skip ahead to the next exercise in your session and come back. Most exercises don't need to be done in a strict order, apart from your main lift.\n\n## Option 2: Use a swap\n\nTap the swap button on the exercise. Ascenda only suggests genuinely similar exercises that train the same muscles, so you're not missing out. For some exercises there isn't a good swap, and Ascenda will tell you so.\n\n## Option 3: Ask how long they'll be\n\nA friendly \"How many sets have you got left?\" is completely normal. Most people will tell you, and some will offer to let you alternate sets with them. We've got a whole article on this: *How to share equipment*.\n\n## Plan around it\n\n- **Train at quieter times** if your schedule allows.\n- **Try Busy Gym? No Problem**, a full plan you can do from one bench and a set of dumbbells.\n- **Check the gym's busiest machines** after a few visits. You'll quickly learn which ones are usually free.\n\nA busy machine isn't a failed session. Adapting is part of training, and there's even an award for it.",
+      "body_markdown": "It happens to everyone: you walk over to the leg press and someone's on it. Here's what to do.\n\n## Option 1: Do something else first\n\nThe easiest fix. Skip ahead to the next exercise in your session and come back. Most exercises don't need to be done in a strict order, apart from your main lift.\n\n## Option 2: Use a swap\n\nTap the swap button on the exercise. Ascenda only suggests genuinely similar exercises that train the same muscles, so you're not missing out. For some exercises there isn't a good swap, and Ascenda will tell you so.\n\n## Option 3: Ask how long they'll be\n\nA friendly \"How many sets have you got left?\" is completely normal. Most people will tell you, and some will offer to let you alternate sets with them. We've got a whole article on this: *How to share equipment*.\n\n## Plan around it\n\n- **Train at quieter times** if your schedule allows.\n- **Try Dumbbells and a Bench**, a full plan you can do with just a bench and a set of dumbbells.\n- **Check the gym's busiest machines** after a few visits. You'll quickly learn which ones are usually free.\n\nA busy machine isn't a failed session. Adapting is part of training, and there's even an award for it.",
       "sources": [],
       "related_routines": [
         "busy-gym-no-problem"
@@ -215,8 +198,6 @@
       "recommended_for_goals": [
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 7
     },
     {
@@ -235,8 +216,6 @@
       "recommended_for_goals": [
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 8
     },
     {
@@ -246,7 +225,7 @@
       "category": "gym_confidence",
       "read_minutes": 2,
       "cover_image_slug": "learn-feeling-watched",
-      "body_markdown": "If you've ever felt like everyone in the gym is watching you, you're far from alone. In a 2025 Gymshark survey of 1,000 UK women, almost 9 in 10 said they'd experienced some form of anxiety in the gym.\n\n## The spotlight effect\n\nPsychologists have a name for that feeling: the **spotlight effect**. We tend to overestimate how much other people notice us.\n\nIn a well-known study, students were asked to walk into a room wearing a slightly embarrassing T-shirt. They guessed that about half the people in the room would notice it. In reality, only around a quarter did.\n\nThe gym is the same. Most people are thinking about their own set, their own music and their own form. They're far less focused on you than it feels.\n\n## When people do look\n\nSometimes people glance over. Usually it's because they're waiting for the equipment you're using, checking the time on the clock behind you, or they've just zoned out. A glance isn't a judgement.\n\n## Things that help\n\n- **Have a plan.** Knowing exactly what you're doing next is the single biggest confidence boost. That's what your Ascenda session is for.\n- **Start in one spot.** A bench and dumbbells in a quieter corner is a great home base.\n- **Headphones in.** They help you stay in your own bubble.\n- **Go at quieter times** for your first few sessions, if you can.\n- **Remember everyone started somewhere.** The most confident person in your gym had a first session too.\n\n> The more you go, the more the gym becomes just a place where you train.",
+      "body_markdown": "If you've ever felt like everyone in the gym is watching you, you're far from alone. In a 2025 Gymshark survey of 1,000 UK women, almost 9 in 10 said they'd experienced some form of anxiety in the gym.\n\n## The spotlight effect\n\nPsychologists have a name for that feeling: the **spotlight effect**. We tend to overestimate how much other people notice us.\n\nIn a well-known study, students were asked to walk into a room wearing a slightly embarrassing T-shirt. They guessed that about half the people in the room would notice it. In reality, only around a quarter did.\n\nThe gym is the same. Most people are thinking about their own set, their own music and their own form. They're far less focused on you than it feels.\n\n## When people do look\n\nSometimes people glance over. Usually it's because they're waiting for the equipment you're using, checking the time on the clock behind you, or they've just zoned out. A glance isn't a judgement.\n\n## Things that help\n\n- **Have a plan.** Knowing exactly what you're doing next is the single biggest confidence boost. That's what your Ascenda session is for.\n- **Start with dumbbells and a bench.** A bench in a quieter corner is a great home base.\n- **Headphones in.** They help you stay in your own bubble.\n- **Go at quieter times** for your first few sessions, if you can.\n- **Remember everyone started somewhere.** The most confident person in your gym had a first session too.\n\n> The more you go, the more the gym becomes just a place where you train.",
       "sources": [
         {
           "title": "Women's Fitness: Gymshark survey of 1,000 UK women on gym anxiety (2025)",
@@ -265,8 +244,6 @@
       "recommended_for_goals": [
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 9
     },
     {
@@ -276,7 +253,7 @@
       "category": "gym_confidence",
       "read_minutes": 2,
       "cover_image_slug": "learn-first-time-in-the-free-weights-area",
-      "body_markdown": "The free-weights area is where the dumbbells, barbells, benches and racks live. It can feel like the busiest, loudest part of the gym. It's also where some of the most useful equipment is, and it's for everyone.\n\n## How it's laid out\n\n- **The dumbbell rack**, usually along a mirrored wall, with pairs arranged from lightest to heaviest.\n- **Benches** you can move and adjust. Flat, incline and upright positions are set with a pin or lever.\n- **Barbells and plates**, often near the squat racks or platforms. Many gyms also have fixed barbells with the weight already on.\n- **Squat racks**, the tall metal frames with safety bars.\n\n## Making yourself at home\n\n1. **Pick a bench near the rack**, ideally at the quieter end.\n2. **Grab the dumbbells you'll need** for your first two or three exercises before you start.\n3. **Keep your space tidy**, with your bottle and bag next to your bench.\n4. **Return dumbbells to the right spot** when you're done.\n\n## Picking up and putting down dumbbells\n\nSquat down to pick dumbbells up and put them down, rather than bending over with straight legs. When you finish a set lying on a bench, bring the dumbbells to your chest and sit up with them resting on your thighs. Never drop them from a height.\n\n## You don't need to go heavy\n\nThere's no rule that you need the big dumbbells. The right weight is whatever lets you do your set with good form. Everyone in that area started with light weights.\n\nStrong Foundations in 6 Weeks spends its first two weeks entirely in this one spot, so it's a gentle way to get comfortable here.",
+      "body_markdown": "The free-weights area is where the dumbbells, barbells, benches and racks live. It can feel like the busiest, loudest part of the gym. It's also where some of the most useful equipment is, and it's for everyone.\n\n## How it's laid out\n\n- **The dumbbell rack**, usually along a mirrored wall, with pairs arranged from lightest to heaviest.\n- **Benches** you can move and adjust. Flat, incline and upright positions are set with a pin or lever.\n- **Barbells and plates**, often near the squat racks or platforms. Many gyms also have fixed barbells with the weight already on.\n- **Squat racks**, the tall metal frames with safety bars.\n\n## Making yourself at home\n\n1. **Pick a bench near the rack**, ideally at the quieter end.\n2. **Grab the dumbbells you'll need** for your first two or three exercises before you start.\n3. **Keep your space tidy**, with your bottle and bag next to your bench.\n4. **Return dumbbells to the right spot** when you're done.\n\n## Picking up and putting down dumbbells\n\nSquat down to pick dumbbells up and put them down, rather than bending over with straight legs. When you finish a set lying on a bench, bring the dumbbells to your chest and sit up with them resting on your thighs. Never drop them from a height.\n\n## You don't need to go heavy\n\nThere's no rule that you need the big dumbbells. The right weight is whatever lets you do your set with good form. Everyone in that area started with light weights.\n\nStrong Foundations in 6 Weeks spends its first two weeks with just dumbbells and a bench, so it's a gentle way to get comfortable here.",
       "sources": [],
       "related_routines": [
         "strong-foundations-6-weeks",
@@ -290,8 +267,6 @@
         "gym_confidence",
         "upper_body_strength"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 10
     },
     {
@@ -316,8 +291,6 @@
         "build_strength",
         "better_posture"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 11
     },
     {
@@ -342,8 +315,6 @@
         "glutes_and_legs",
         "build_strength"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 12
     },
     {
@@ -369,8 +340,6 @@
         "build_strength",
         "glutes_and_legs"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 13
     },
     {
@@ -395,8 +364,6 @@
       "recommended_for_goals": [
         "build_strength"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 14
     },
     {
@@ -424,8 +391,6 @@
         "upper_body_strength",
         "lose_body_fat"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 15
     },
     {
@@ -450,8 +415,6 @@
         "build_strength",
         "build_muscle"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 16
     },
     {
@@ -478,8 +441,6 @@
         "build_strength",
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 17
     },
     {
@@ -489,11 +450,15 @@
       "category": "how_programmes_work",
       "read_minutes": 2,
       "cover_image_slug": "learn-sets-reps-and-rest",
-      "body_markdown": "You might notice that your first exercise of the day has fewer reps and longer rest than the ones that come after. That's on purpose. Each exercise in your plan has a **role**.\n\n## Main lifts\n\nThese are the big movements, like squats, Romanian deadlifts, hip thrusts and presses. They work lots of muscles at once and are where you'll see the clearest strength progress.\n\n- Usually **6 to 10 reps**\n- **2 to 3 minutes' rest**, so you can give each set a good effort\n- Done first, while you're freshest\n\n## Secondary and accessory lifts\n\nThese support the main lifts and target specific muscles, like lunges, rows, lateral raises or leg curls.\n\n- Usually **10 to 15 reps**\n- **60 to 90 seconds' rest**\n- They progress by adding reps first, then weight\n\n## Core and finishers\n\nPlanks, dead bugs, carries and short finishers come last.\n\n- Often timed holds or higher reps\n- Short rests, around 45 seconds\n- They progress by adding time\n\n## Why rest matters\n\nResting too little on main lifts means you'll have less in the tank for the next set. Resting too long on accessories just makes the session longer. The rest timer in the logger is set for each role, and you can change it for any exercise. Ascenda remembers your choice for next time.\n\n## Can I change things?\n\nYes, for today. Inside the logger you can add or remove a set, change the rep target or swap an exercise. Your routine stays the same for next time.",
+      "body_markdown": "You might notice that your first exercise of the day has fewer reps and longer rest than the ones that come after. That's on purpose. Each exercise in your plan has a **role**.\n\n## Main lifts\n\nThese are the big movements, like squats, Romanian deadlifts, hip thrusts and presses. They work lots of muscles at once and are where you'll see the clearest strength progress.\n\n- Usually **6 to 12 reps**, or **3 to 6** in heavier strength phases\n- **2 minutes' rest**, or **3 minutes** for heavy sets of 6 reps or fewer\n- Done first, while you're freshest\n\n## Secondary lifts\n\nOther multi-joint lifts that back up the main lift, like lunges, rows, presses and pulldowns.\n\n- Usually **8 to 12 reps**\n- **About 2 minutes' rest**\n- They progress by adding weight once you hit the top of the rep range\n\n## Accessory lifts\n\nSmaller exercises for one muscle at a time, like lateral raises, leg curls, curls and kickbacks.\n\n- Usually **10 to 15 reps**\n- **60 to 90 seconds' rest**\n- They progress by adding reps first, then weight\n\n## Core and finishers\n\nPlanks, dead bugs, carries and short finishers come last.\n\n- Often timed holds or higher reps\n- Short rests, around 45 seconds\n- They progress by adding time\n\n## Why rest matters\n\nResting too little means you'll have less in the tank for the next set, and research suggests that resting more than a minute between sets helps you build more muscle than very short rests. Rushing your sets doesn't make a session more effective, just more tiring.\n\nThe rest timer in the logger is a guide, not a rule. If your breathing has settled and you feel ready to give the next set a good effort, go. If you need a little longer on a heavy lift, take it. You can change the timer for any exercise, and Ascenda remembers your choice for next time.\n\n## Can I change things?\n\nYes, for today. Inside the logger you can add or remove a set, change the rep target or swap an exercise. Your routine stays the same for next time.",
       "sources": [
         {
           "title": "American College of Sports Medicine (2009), Progression models in resistance training for healthy adults",
           "url": "https://pubmed.ncbi.nlm.nih.gov/19204579/"
+        },
+        {
+          "title": "Singer et al. (2024), Give it a rest: a systematic review with Bayesian meta-analysis on the effect of inter-set rest interval duration on muscle hypertrophy",
+          "url": "https://www.frontiersin.org/articles/10.3389/fspor.2024.1429789/full"
         }
       ],
       "related_routines": [
@@ -505,8 +470,6 @@
         "build_strength",
         "build_muscle"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 18
     },
     {
@@ -532,8 +495,6 @@
         "stress_relief",
         "build_strength"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 19
     },
     {
@@ -560,8 +521,6 @@
         "build_strength",
         "back_to_training"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 20
     },
     {
@@ -571,7 +530,7 @@
       "category": "recovery_and_sleep",
       "read_minutes": 2,
       "cover_image_slug": "learn-rest-days-and-recovery",
-      "body_markdown": "It can feel like rest days are \"doing nothing\". In reality, they're when your body repairs and adapts to the training you've done.\n\n## Why you need them\n\nStrength training creates small amounts of stress in your muscles. Given time, your body recovers and comes back a little stronger. Without enough recovery, you'll feel tired, your progress may stall and training can start to feel like a chore.\n\n## What a recovery day can look like\n\n- **Complete rest.** Totally fine.\n- **A walk** or some easy movement.\n- **A stretch session**, like *Happy hips* or *Back unwind*. Sessions of 10 minutes or more count towards your weekly target in Ascenda.\n- **Easy cardio** where you could still chat.\n\n## How many do you need?\n\nFor most people training 2 to 4 days a week, the other days are plenty for recovery. Try not to do hard sessions for the same muscles on back-to-back days. Your Ascenda plan is laid out with this in mind.\n\n## A quieter week\n\nLife happens: holidays, exams, illness, busy weeks. That is fine. Come back when you can. Weeks trained never resets, and a welcome-back session is there if you have been away.\n\n## Listen to your body\n\nIf you're feeling run down, unwell or unusually tired, an extra rest day is a good decision, not a failure.",
+      "body_markdown": "It can feel like rest days are \"doing nothing\". In reality, they're when your body repairs and adapts to the training you've done.\n\n## Why you need them\n\nStrength training creates small amounts of stress in your muscles. Given time, your body recovers and comes back a little stronger. Without enough recovery, you'll feel tired, your progress may stall and training can start to feel like a chore.\n\n## What a recovery day can look like\n\n- **Complete rest.** Totally fine.\n- **A walk** or some easy movement.\n- **A stretch session**, like *Happy hips* or *Back unwind*. Sessions of 10 minutes or more count towards your weekly target in Ascenda.\n- **Easy cardio** where you could still chat.\n\n## How many do you need?\n\nFor most people training 2 to 4 days a week, the other days are plenty for recovery. Try not to do hard sessions for the same muscles on back-to-back days. Your Ascenda plan is laid out with this in mind.\n\n## Rest weeks\n\nLife happens: holidays, exams, illness, busy weeks. In Ascenda, you earn a rest week for every four weeks you train, and you can bank up to two. Using one keeps your streak going, so you can take a break without losing your progress.\n\n## Listen to your body\n\nIf you're feeling run down, unwell or unusually tired, an extra rest day is a good decision, not a failure.",
       "sources": [],
       "related_routines": [
         "full-body-recovery-flow",
@@ -584,8 +543,6 @@
         "stress_relief",
         "strong_for_life"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 21
     },
     {
@@ -610,8 +567,6 @@
         "more_energy",
         "lose_body_fat"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 22
     },
     {
@@ -639,8 +594,6 @@
         "build_strength",
         "glutes_and_legs"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 23
     },
     {
@@ -663,8 +616,6 @@
         "more_energy",
         "fitness_stamina"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 24
     },
     {
@@ -692,8 +643,6 @@
         "more_energy",
         "lose_body_fat"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 25
     },
     {
@@ -718,8 +667,6 @@
         "back_to_training",
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 26
     },
     {
@@ -745,8 +692,6 @@
         "better_posture",
         "lose_body_fat"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 27
     },
     {
@@ -779,8 +724,6 @@
         "upper_body_strength",
         "better_posture"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 28
     },
     {
@@ -807,8 +750,6 @@
         "build_muscle",
         "build_strength"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 29
     },
     {
@@ -840,9 +781,36 @@
         "build_strength",
         "lose_body_fat"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 30
+    },
+    {
+      "slug": "machines-or-free-weights",
+      "title": "Myth: machines are worse than free weights",
+      "summary": "You might have heard that machines are made for men, or that only free weights count. Here's what the research says.",
+      "category": "myths",
+      "read_minutes": 2,
+      "cover_image_slug": "learn-machines-or-free-weights",
+      "body_markdown": "You might see videos saying machines were designed for men, or that \"real\" training only happens with dumbbells and barbells. If your plan starts you on the leg press and chest press, that can make you wonder if you're doing it wrong. You're not.\n\n## Both build muscle and strength\n\nA 2023 review that pooled the studies comparing the two found **no difference in muscle growth** between free-weight and machine training. Both made people stronger. The main difference was that people got best at the type of lifting they practised: free-weight trainers improved most on free-weight tests, and machine trainers on machine tests. The authors' conclusion was simple: the choice comes down to your preferences and goals.\n\n## What each one is good at\n\n**Machines** guide the movement, so you can focus on the muscle you're working, push close to your limit safely and see your progress clearly. They're a great way to learn the gym.\n\n**Free weights** ask you to balance and control the weight yourself, which trains the smaller muscles that steady you, and they're easy to adjust to your body.\n\nThat's why Ascenda routines use both. Many start you on machines and dumbbells, then add barbell lifts as you get comfortable.\n\n## \"But machines are built for men\"\n\nSome machines were designed around taller frames, and that can feel awkward. The fix is adjusting the machine, not avoiding it. Most have a seat height, a back pad or a starting position you can change. The first-time guide for each machine shows you how. If one still doesn't fit you, use the swap button for an exercise that works the same muscles.\n\n## The bottom line\n\nThe best exercise is one that fits your body, that you can do with good form, and that you'll keep doing long enough to get stronger at.",
+      "sources": [
+        {
+          "title": "Haugen et al. (2023), Effect of free-weight vs. machine-based strength training on maximal strength, hypertrophy and jump performance: a systematic review and meta-analysis",
+          "url": "https://doaj.org/article/a7282dba5e674176bde2a8239832d2f7"
+        }
+      ],
+      "related_routines": [
+        "machines-made-easy",
+        "strong-foundations-6-weeks"
+      ],
+      "related_exercises": [
+        "leg-press",
+        "chest-press-machine"
+      ],
+      "recommended_for_goals": [
+        "gym_confidence",
+        "build_muscle",
+        "build_strength"
+      ],
+      "sort_order": 31
     },
     {
       "slug": "what-to-eat-before-and-after-training",
@@ -869,9 +837,7 @@
         "build_muscle",
         "more_energy"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
-      "sort_order": 31
+      "sort_order": 32
     },
     {
       "slug": "caffeine-and-training",
@@ -897,9 +863,7 @@
         "more_energy",
         "build_strength"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
-      "sort_order": 32
+      "sort_order": 33
     },
     {
       "slug": "supplements-basics",
@@ -929,9 +893,7 @@
         "build_strength",
         "build_muscle"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
-      "sort_order": 33
+      "sort_order": 34
     },
     {
       "slug": "when-your-appetite-is-low",
@@ -953,9 +915,7 @@
         "more_energy",
         "stress_relief"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
-      "sort_order": 34
+      "sort_order": 35
     },
     {
       "slug": "training-on-your-period",
@@ -982,8 +942,6 @@
         "more_energy",
         "strong_for_life"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 35
     },
     {
@@ -1011,8 +969,6 @@
         "stress_relief",
         "gym_confidence"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 36
     },
     {
@@ -1043,8 +999,6 @@
         "more_energy",
         "strong_for_life"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 37
     },
     {
@@ -1075,8 +1029,6 @@
         "more_energy",
         "stress_relief"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 38
     },
     {
@@ -1109,8 +1061,6 @@
         "strong_for_life",
         "build_strength"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 39
     },
     {
@@ -1138,8 +1088,6 @@
         "stress_relief",
         "strong_for_life"
       ],
-      "reviewed_by": null,
-      "reviewed_at": null,
       "sort_order": 40
     }
   ]

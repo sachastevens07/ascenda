@@ -6,6 +6,7 @@ import { showDialog } from '@/components/Dialog';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { preferredSwapIds } from '@/lib/contentGuides';
+import { loggerCopy } from '@/lib/copy';
 import { EQUIPMENT_LABELS, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import type { ProgrammeExercise, SlotExercise } from '@/lib/programmes';
@@ -31,12 +32,15 @@ type SwapSheetProps = {
 type LoadState = 'loading' | 'error' | 'ready';
 
 const OPTION_HEIGHT = 56;
+const EMPTY_STATUS_HEIGHT = 88;
 const OPTION_GAP = 8;
 const ANIM_MS = 220;
 
-function menuHeight(pills: number): number {
-  if (pills <= 0) return OPTION_HEIGHT;
-  return pills * OPTION_HEIGHT + (pills - 1) * OPTION_GAP;
+function menuHeight(pills: number, emptyStatus: boolean): number {
+  if (pills <= 0) return emptyStatus ? EMPTY_STATUS_HEIGHT : OPTION_HEIGHT;
+  if (!emptyStatus) return pills * OPTION_HEIGHT + (pills - 1) * OPTION_GAP;
+  const extra = EMPTY_STATUS_HEIGHT - OPTION_HEIGHT;
+  return pills * OPTION_HEIGHT + (pills - 1) * OPTION_GAP + extra;
 }
 
 /** In-place swap menu: alternatives drop down as pills under the exercise. */
@@ -54,7 +58,6 @@ export function SwapSheet({
 }: SwapSheetProps) {
   const { colours } = useTheme();
   const [alternatives, setAlternatives] = useState<SlotExercise[]>([]);
-  const [trySomethingNew, setTrySomethingNew] = useState<SlotExercise | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [chosen, setChosen] = useState<SlotExercise | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -64,15 +67,13 @@ export function SwapSheet({
   const excludeKey = excludeIds.join(',');
   const canRestore = Boolean(item.original && exerciseFits(item.original, equipment, maxZone));
 
+  const showEmpty = loadState === 'ready' && !chosen && alternatives.length === 0;
   const pillCount = chosen
     ? allowAlways ? 3 : 2
     : loadState === 'ready'
-      ? (canRestore ? 1 : 0) +
-        alternatives.length +
-        (trySomethingNew ? 1 : 0) +
-        (alternatives.length === 0 && !trySomethingNew && !canRestore ? 1 : 0)
+      ? (canRestore ? 1 : 0) + alternatives.length + (showEmpty ? 1 : 0)
       : 1;
-  const targetHeight = open ? menuHeight(pillCount) : 0;
+  const targetHeight = open ? menuHeight(pillCount, showEmpty) : 0;
 
   useEffect(() => {
     Animated.parallel([
@@ -93,21 +94,19 @@ export function SwapSheet({
 
   useEffect(() => {
     setChosen(null);
-    setTrySomethingNew(null);
     if (!open) return;
     let isCurrent = true;
     setLoadState('loading');
     fetchAlternatives(
       item.exercise,
       equipment,
-      excludeKey.split(','),
+      excludeKey.split(',').filter(Boolean),
       maxZone,
-      preferredSwapIds(item.exercise.id, item.alternative_exercise_ids ?? [])
+      preferredSwapIds(item.exercise.id)
     )
       .then((result) => {
         if (!isCurrent) return;
         setAlternatives(result.alternatives);
-        setTrySomethingNew(result.trySomethingNew);
         setLoadState('ready');
       })
       .catch(() => {
@@ -192,18 +191,10 @@ export function SwapSheet({
               onPress={() => setChosen(exercise)}
             />
           ))}
-          {trySomethingNew && (
-            <Pill
-              title={trySomethingNew.name}
-              detail={`Try something new · ${EQUIPMENT_LABELS[trySomethingNew.equipment]}`}
-              icon="sparkles-outline"
-              onPress={() => setChosen(trySomethingNew)}
-            />
-          )}
-          {alternatives.length === 0 && !trySomethingNew && !canRestore && (
+          {showEmpty && (
             <Status>
               <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center' }}>
-                Nothing else for this muscle with your equipment.
+                {loggerCopy.swap_none}
               </AppText>
             </Status>
           )}
@@ -310,12 +301,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusPill: {
-    height: OPTION_HEIGHT,
-    borderRadius: 999,
+    minHeight: EMPTY_STATUS_HEIGHT,
+    borderRadius: 24,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   pressed: {
     opacity: 0.7,

@@ -139,8 +139,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -152,7 +151,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -164,15 +163,14 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
             {
               "slug": "dumbbell-lateral-raise",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 12,
               "rep_max": 15,
               "target_rir": 2,
@@ -180,11 +178,23 @@
               "rest_seconds": 75,
               "load_increment_kg": 2,
               "notes": ""
+            },
+            {
+              "slug": "triceps-pushdown",
+              "role": "accessory",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_note": "One plate on the stack",
+              "notes": ""
             }
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 50,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -219,7 +229,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -231,7 +241,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -258,13 +268,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -298,7 +308,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -311,8 +321,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -325,14 +334,13 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
             {
               "slug": "dumbbell-biceps-curl",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
@@ -340,6 +348,18 @@
               "rest_seconds": 75,
               "load_increment_kg": 2,
               "notes": ""
+            },
+            {
+              "slug": "cable-lateral-raise",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 12,
+              "rep_max": 15,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Light weight, slow and controlled."
             },
             {
               "slug": "side-plank",
@@ -355,7 +375,7 @@
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 50,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -390,7 +410,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 120,
+              "rest_seconds": 180,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -402,10 +422,10 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -415,7 +435,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -427,28 +447,28 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
             {
               "slug": "cable-lateral-raise",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 12,
               "rep_max": 15,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "overhead-dumbbell-triceps-extension",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
@@ -460,7 +480,7 @@
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 55,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -484,9 +504,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "barbell-hip-thrust",
@@ -496,7 +516,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2.5,
               "notes": ""
             },
@@ -508,7 +528,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -522,9 +542,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "pallof-press",
@@ -536,14 +556,14 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -565,8 +585,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 120,
-              "load_increment_kg": null,
+              "rest_seconds": 180,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -578,8 +597,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -591,9 +609,8 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -606,14 +623,13 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
             {
               "slug": "hammer-curl",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
@@ -621,6 +637,18 @@
               "rest_seconds": 75,
               "load_increment_kg": 2,
               "notes": ""
+            },
+            {
+              "slug": "dumbbell-lateral-raise",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 12,
+              "rep_max": 15,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_kg": 2,
+              "notes": "Light weight, slow and controlled."
             },
             {
               "slug": "cable-crunch",
@@ -631,14 +659,13 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             }
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 50,
           "type": "strength",
           "blocks": [
             "warmup",

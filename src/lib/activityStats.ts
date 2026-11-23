@@ -114,6 +114,35 @@ export type WeekTypeCounts = {
   recovery: number;
 };
 
+export type WeekHomeStats = {
+  sessions: number;
+  strength: number;
+  cardio: number;
+  minutes: number;
+};
+
+/** Monday to Sunday Home island. Cardio only counts from 10 minutes (W3). Minutes are rounded. */
+export function thisWeekHomeStats(
+  sessions: FinishedSessionMeta[],
+  now = new Date()
+): WeekHomeStats {
+  const monday = toIso(startOfWeekMonday(now));
+  const sunday = toIso(addDays(startOfWeekMonday(now), 6));
+  const stats: WeekHomeStats = { sessions: 0, strength: 0, cardio: 0, minutes: 0 };
+  let seconds = 0;
+  for (const session of sessions) {
+    if (session.date < monday || session.date > sunday) continue;
+    const duration = sessionDurationSeconds(session);
+    seconds += duration;
+    stats.sessions += 1;
+    const kind = streakSessionKind(session);
+    if (kind === 'strength') stats.strength += 1;
+    else if (kind === 'cardio' && duration >= WEEKLY_TARGET_MIN_SECONDS) stats.cardio += 1;
+  }
+  stats.minutes = Math.max(0, Math.round(seconds / 60));
+  return stats;
+}
+
 /** Qualifying sessions this week, split by type. Cardio and recovery need 10 minutes. */
 export function thisWeekTypeCounts(
   sessions: FinishedSessionMeta[],

@@ -2,7 +2,7 @@
   "_format_version": 1,
   "_loader_notes": [
     "Stretch routines: single sessions of timed holds (and a few counted moves), stored like routines with type 'stretch' (AGENTS.md S8).",
-    "duration_minutes includes about 8 seconds of transition per step. counts_towards_weekly_target is true for sessions of 10 minutes or more (AGENTS.md H1, S5).",
+    "Shown duration is the hold time rounded up to the nearest minute. counts_towards_weekly_target is true for sessions of 10 minutes or more (AGENTS.md H1, S5).",
     "Steps use the moves list below, which includes every move from content/warmups-cooldowns plus new ones. Merge them into one moves table by slug.",
     "per_side means both sides; duration is per side.",
     "Recovery days in routines (v2.3, W5) should link to full-body-recovery-flow, happy-hips, back-unwind or after-leg-day.",
@@ -354,22 +354,18 @@
       "type": "stretch",
       "area": "full_body",
       "occasion": "morning",
-      "duration_minutes": 11,
+      "occasions": [
+        "morning"
+      ],
+      "duration_minutes": 7,
       "counts_towards_weekly_target": true,
-      "tags": [
-        "Full body",
-        "11 minutes",
-        "Beginner friendly"
-      ],
-      "display_tags": [
-        "Full body",
-        "11 minutes"
-      ],
-      "short_description": "A gentle 11-minute flow to loosen everything up first thing. No equipment, just a mat.",
+      "tags": [],
+      "display_tags": [],
+      "short_description": "A gentle full-body flow to loosen you up first thing. No equipment, just a mat.",
       "who_its_for": [
         "You feel stiff in the mornings",
         "You want an easy way to start the day moving",
-        "You'd like a stretch habit that takes 10 minutes"
+        "You'd like a short stretch habit in the morning"
       ],
       "coach_note": "Move slowly and breathe through every stretch. You should feel looser at the end, not tired.",
       "cover_image_slug": "morning-mobility-cover",
@@ -437,22 +433,18 @@
       "type": "stretch",
       "area": "lower_body",
       "occasion": "post_workout",
-      "duration_minutes": 11,
+      "occasions": [
+        "post_workout"
+      ],
+      "duration_minutes": 6,
       "counts_towards_weekly_target": true,
-      "tags": [
-        "Lower body",
-        "Recovery",
-        "11 minutes"
-      ],
-      "display_tags": [
-        "Lower body",
-        "Recovery"
-      ],
-      "short_description": "The perfect way to finish a lower-body session, or to loosen up the day after.",
+      "tags": [],
+      "display_tags": [],
+      "short_description": "Calm stretches for your legs and glutes after a lower-body session.",
       "who_its_for": [
         "You've just trained legs or glutes",
-        "Your legs feel tight the day after training",
-        "You want a calm 10 minutes to finish your session"
+        "Your legs feel tight after training",
+        "You want a calm few minutes to finish your session"
       ],
       "coach_note": "Hold each stretch somewhere between a gentle pull and comfortable. Never force it.",
       "cover_image_slug": "after-leg-day-cover",
@@ -505,22 +497,18 @@
     {
       "slug": "desk-reset",
       "name": "Desk Reset",
-      "subtitle": "Six minutes for neck, shoulders and hips",
+      "subtitle": "A few minutes for neck, shoulders and chest",
       "type": "stretch",
       "area": "upper_body",
-      "occasion": "anytime",
-      "duration_minutes": 6,
+      "occasion": "evening",
+      "occasions": [
+        "evening"
+      ],
+      "duration_minutes": 4,
       "counts_towards_weekly_target": false,
-      "tags": [
-        "Neck and shoulders",
-        "6 minutes",
-        "No mat needed"
-      ],
-      "display_tags": [
-        "Neck and shoulders",
-        "6 minutes"
-      ],
-      "short_description": "Undo a long day of sitting. Most of it can be done standing, so it works anywhere.",
+      "tags": [],
+      "display_tags": [],
+      "short_description": "A short reset for your neck, shoulders and chest after sitting. Most of it can be done standing.",
       "who_its_for": [
         "You sit at a desk or study for long periods",
         "Your neck and shoulders feel tight",
@@ -569,19 +557,15 @@
       "subtitle": "A slow session for your hips",
       "type": "stretch",
       "area": "hips",
-      "occasion": "anytime",
-      "duration_minutes": 11,
+      "occasion": "pre_workout",
+      "occasions": [
+        "pre_workout"
+      ],
+      "duration_minutes": 7,
       "counts_towards_weekly_target": true,
-      "tags": [
-        "Hips",
-        "Mobility",
-        "11 minutes"
-      ],
-      "display_tags": [
-        "Hips",
-        "Mobility"
-      ],
-      "short_description": "A slower session all about your hips. Great before a squat day or on a rest day.",
+      "tags": [],
+      "display_tags": [],
+      "short_description": "A slower session all about your hips. Useful before squats or any lower-body day.",
       "who_its_for": [
         "Your hips feel tight or stuck",
         "You'd like more comfortable depth in squats",
@@ -642,22 +626,18 @@
     {
       "slug": "back-unwind",
       "name": "Back Unwind",
-      "subtitle": "10 minutes to loosen your back and spine",
+      "subtitle": "Loosen your back and spine",
       "type": "stretch",
       "area": "back",
-      "occasion": "anytime",
-      "duration_minutes": 10,
+      "occasion": "evening",
+      "occasions": [
+        "evening"
+      ],
+      "duration_minutes": 7,
       "counts_towards_weekly_target": true,
-      "tags": [
-        "Back",
-        "Gentle",
-        "10 minutes"
-      ],
-      "display_tags": [
-        "Back",
-        "Gentle"
-      ],
-      "short_description": "Gentle movements to help your back feel looser after sitting, standing or training.",
+      "tags": [],
+      "display_tags": [],
+      "short_description": "Gentle movements for your back and spine after sitting or a long day on your feet.",
       "who_its_for": [
         "Your back feels stiff after a long day",
         "You'd like a gentle, slow session",
@@ -719,17 +699,13 @@
       "type": "stretch",
       "area": "upper_body",
       "occasion": "post_workout",
-      "duration_minutes": 10,
+      "occasions": [
+        "post_workout"
+      ],
+      "duration_minutes": 6,
       "counts_towards_weekly_target": true,
-      "tags": [
-        "Upper body",
-        "Posture",
-        "10 minutes"
-      ],
-      "display_tags": [
-        "Upper body",
-        "Posture"
-      ],
+      "tags": [],
+      "display_tags": [],
       "short_description": "Release your chest, shoulders and upper back. A natural partner to any upper-body day.",
       "who_its_for": [
         "You've just trained upper body",
@@ -789,26 +765,22 @@
     {
       "slug": "full-body-recovery-flow",
       "name": "Full-Body Recovery Flow",
-      "subtitle": "20 minutes for rest and recovery days",
+      "subtitle": "A longer session for rest and recovery days",
       "type": "stretch",
       "area": "full_body",
-      "occasion": "recovery_day",
-      "duration_minutes": 20,
+      "occasion": "evening",
+      "occasions": [
+        "evening"
+      ],
+      "duration_minutes": 11,
       "counts_towards_weekly_target": true,
-      "tags": [
-        "Full body",
-        "Recovery day",
-        "20 minutes"
-      ],
-      "display_tags": [
-        "Full body",
-        "Recovery day"
-      ],
-      "short_description": "A longer, slower session for recovery days. Every major area, with time to breathe.",
+      "tags": [],
+      "display_tags": [],
+      "short_description": "A slower full-body stretch for recovery days, with time to breathe.",
       "who_its_for": [
         "You're on a recovery day in your routine",
         "You want something gentle that still counts",
-        "You'd like a calm 20 minutes"
+        "You'd like a longer, calmer stretch"
       ],
       "coach_note": "There's no rush today. Take extra breaths in any stretch that feels good.",
       "cover_image_slug": "recovery-flow-cover",
@@ -901,17 +873,13 @@
       "type": "stretch",
       "area": "full_body",
       "occasion": "evening",
-      "duration_minutes": 11,
+      "occasions": [
+        "evening"
+      ],
+      "duration_minutes": 8,
       "counts_towards_weekly_target": true,
-      "tags": [
-        "Evening",
-        "Relaxing",
-        "11 minutes"
-      ],
-      "display_tags": [
-        "Evening",
-        "Relaxing"
-      ],
+      "tags": [],
+      "display_tags": [],
       "short_description": "Slow, floor-based stretches and breathing. A calm way to finish your day.",
       "who_its_for": [
         "You like to switch off in the evening",

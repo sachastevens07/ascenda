@@ -20,6 +20,7 @@ import twiceAWeekStrong from '../../content/routines/twice-a-week-strong.json';
 import upperBodyStrong from '../../content/routines/upper-body-strong-in-6-weeks.json';
 import welcomeBack from '../../content/routines/welcome-back-4-week-restart.json';
 
+import { withoutStretchPromises } from '@/lib/copy';
 import { preferredSwapIds, resolveExerciseSlug } from '@/lib/contentGuides';
 import {
   CARDIO_PREFERENCES,
@@ -31,6 +32,10 @@ import {
 export type ContentSlot = {
   slug: string;
   role: 'main' | 'secondary' | 'accessory' | 'core' | 'finisher' | null;
+  sets: number | null;
+  rep_min: number | null;
+  rep_max: number | null;
+  rest_seconds: number | null;
   target_rir: number | null;
   tempo: string | null;
   progression_rule: 'load' | 'reps' | 'time' | null;
@@ -44,6 +49,7 @@ export type ContentDay = {
   name: string;
   focus: string;
   coach_note: string;
+  estimated_minutes: number | null;
   exercises: ContentSlot[];
 };
 
@@ -109,6 +115,7 @@ export type ContentWeeklyPlan = {
 export type ContentRoutineOverlay = {
   slug: string;
   name: string;
+  cover_image_slug: string | null;
   subtitle: string;
   short_description: string;
   goal: string;
@@ -172,16 +179,19 @@ function parseSlot(raw: unknown): ContentSlot | null {
   const item = asRecord(raw);
   const slug = resolveExerciseSlug(text(item.slug));
   if (!slug) return null;
-  const listed = asArray(item.alternatives).map((value) => resolveExerciseSlug(String(value)));
   return {
     slug,
     role: roleOf(item.role),
+    sets: num(item.sets),
+    rep_min: num(item.rep_min),
+    rep_max: num(item.rep_max),
+    rest_seconds: num(item.rest_seconds),
     target_rir: num(item.target_rir),
     tempo: text(item.tempo) || null,
     progression_rule: ruleOf(item.progression_rule),
     load_increment_kg: num(item.load_increment_kg),
     notes: text(item.notes) || null,
-    alternatives: preferredSwapIds(slug, listed),
+    alternatives: preferredSwapIds(slug),
   };
 }
 
@@ -312,6 +322,7 @@ function parseDay(raw: unknown): ContentDay | null {
     name,
     focus: text(day.focus),
     coach_note: text(day.coach_note),
+    estimated_minutes: num(day.estimated_minutes),
     exercises: asArray(day.exercises).map(parseSlot).filter((item): item is ContentSlot => Boolean(item)),
   };
 }
@@ -361,6 +372,7 @@ function parseOverlay(file: unknown): ContentRoutineOverlay | null {
   return {
     slug,
     name: text(routine.name),
+    cover_image_slug: text(routine.cover_image_slug) || null,
     subtitle: text(routine.subtitle),
     short_description: text(routine.short_description),
     goal: text(routine.goal),
@@ -497,7 +509,8 @@ export function contentWeeklyStructure(
     return overlay.weekly_structure;
   }
   const key = preference && overlay.weekly_structure_by_preference[preference] ? preference : null;
-  return (key ? overlay.weekly_structure_by_preference[key] : null) ?? overlay.weekly_structure;
+  const line = (key ? overlay.weekly_structure_by_preference[key] : null) ?? overlay.weekly_structure;
+  return line ? withoutStretchPromises(line) : null;
 }
 
 export function contentSlotFor(day: ContentDay, exerciseId: string, position: number): ContentSlot | null {

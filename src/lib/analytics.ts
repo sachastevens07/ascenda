@@ -4,8 +4,8 @@ import PostHog from 'posthog-react-native';
 /**
  * Retention analytics (H5).
  *
- * Sends only the named events below. Never attach health data, body photos,
- * names, emails, weights, reps, quotes, prompts, answers or free-text copy.
+ * Sends only the named events below. Never attach health data, period dates,
+ * body photos, names, emails, weights, reps, quotes, prompts, answers or free-text copy.
  * Properties are allowlisted; anything else is dropped.
  *
  * No API key: every call is a no-op so the app still opens.
@@ -73,7 +73,7 @@ const ALLOWED_KEYS = new Set([
 ]);
 
 const BLOCKED_KEY =
-  /weight|photo|email|\bname\b|body|quote|rep|kg|goal|text|note|message|copy|title|cue|comment|avatar|prompt|answer|story|image|scan|fridge|ingredient|life.?stage|perimenopause|menopause/i;
+  /weight|photo|email|\bname\b|body|quote|rep|kg|goal|text|note|message|copy|title|cue|comment|avatar|prompt|answer|story|image|scan|fridge|ingredient|life.?stage|perimenopause|menopause|period.?log|period_logs|cycle.?date/i;
 
 const HAD_TRIAL_PREFIX = 'analytics_had_trial:';
 
@@ -173,7 +173,7 @@ export function identifyUser(userId: string, plan: AnalyticsPlan): void {
   try {
     const instance = getClient();
     if (!instance || !userId) return;
-    // Never attach life_stage. It is special-category health data.
+    // Never attach life_stage or period dates. Special-category health data.
     instance.identify(userId, { env: analyticsEnv(), plan });
   } catch {
     /* Ignore identify failures. */

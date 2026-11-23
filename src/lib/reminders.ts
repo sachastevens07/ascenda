@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform } from 'react-native';
 
 import { showDialog } from '@/components/Dialog';
+import { isFeatureEnabled } from '@/config/features';
 import { track } from '@/lib/analytics';
 import { fillCopy, reminderCopy } from '@/lib/copy';
 import {
@@ -277,6 +278,7 @@ export function sessionReminderCopy(day: PlannerDayView): { title: string; body:
 function shouldRemindOnDay(day: PlannerDayView): boolean {
   if (!day.plan || day.plan.status !== 'planned') return false;
   if (day.kind === 'rest') return false;
+  if (!isFeatureEnabled('stretches') && (day.isStretch || day.kind === 'recovery')) return false;
   if (day.kind !== 'routine' && day.kind !== 'custom' && day.kind !== 'cardio' && day.kind !== 'recovery') {
     return false;
   }
@@ -341,7 +343,7 @@ export async function syncPlannerReminders(): Promise<void> {
         await Notifications.scheduleNotificationAsync({
           identifier: `${SESSION_PREFIX}${day.iso}`,
           content: {
-            // Session name and time only. Never attach life_stage.
+            // Session name and time only. Never attach life_stage or period dates.
             title: copy.title,
             body: copy.body,
             data: { type: 'session-reminder' },

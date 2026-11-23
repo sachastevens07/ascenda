@@ -6,7 +6,7 @@ const NOTE_KEY = 'exercise-note';
 const REST_KEY = 'exercise-rest';
 const MAX_NOTE_LENGTH = 280;
 
-export const EXERCISE_REST_OPTIONS = [60, 90, 120, 150, 180] as const;
+export const EXERCISE_REST_OPTIONS = [45, 60, 75, 90, 120, 150, 180] as const;
 
 export type ExercisePrefs = {
   notes: Record<string, string>;

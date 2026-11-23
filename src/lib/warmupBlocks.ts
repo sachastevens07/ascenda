@@ -1,6 +1,9 @@
 import catalogue from '../../content/warmups-cooldowns/warmups-cooldowns.json';
+import microcopy from '../../content/microcopy/en-GB.json';
 
+import { isFeatureEnabled } from '@/config/features';
 import { EQUIPMENT, type Equipment } from '@/lib/exercises';
+import { hasExerciseMediaMatch } from '@/lib/getExerciseMedia';
 import { usesWeight, type ProgrammeDay, type ProgrammeExercise } from '@/lib/programmes';
 import {
   formatWeightInput,
@@ -109,6 +112,32 @@ function resolveStep(step: CatalogueStep): ResolvedBlockStep | null {
   };
 }
 
+const WARMUP_KEEP_WITHOUT_MEDIA = new Set(['easy-bike', 'easy-cross-trainer', 'single-leg-stand']);
+
+function keepWarmupStepWhenStretchesHidden(step: ResolvedBlockStep): boolean {
+  return WARMUP_KEEP_WITHOUT_MEDIA.has(step.slug) || hasExerciseMediaMatch(step.slug);
+}
+
+function applyLaunchWarmupFilter(block: ResolvedBlock): ResolvedBlock | null {
+  if (isFeatureEnabled('stretches')) return block;
+  if (block.kind === 'cooldown') return null;
+  const steps = block.steps.filter(keepWarmupStepWhenStretchesHidden);
+  if (steps.length === 0) {
+    return {
+      ...block,
+      estimatedMinutes: 5,
+      intro: microcopy.strings.logger.warmup_fallback,
+      steps: [],
+    };
+  }
+  const seconds = steps.reduce((sum, step) => sum + (step.durationSeconds ?? 0), 0);
+  return {
+    ...block,
+    steps,
+    estimatedMinutes: seconds > 0 ? Math.max(1, Math.round(seconds / 60)) : block.estimatedMinutes,
+  };
+}
+
 export function getWarmupTemplate(id: string): ResolvedBlock | null {
   const template = TEMPLATE_BY_ID.get(id);
   if (!template) return null;
@@ -117,14 +146,14 @@ export function getWarmupTemplate(id: string): ResolvedBlock | null {
     return resolved ? [resolved] : [];
   });
   if (steps.length === 0) return null;
-  return {
+  return applyLaunchWarmupFilter({
     id: template.id,
     name: template.name,
     kind: template.kind,
     estimatedMinutes: template.estimated_minutes,
     intro: template.intro,
     steps,
-  };
+  });
 }
 
 function pickTemplateId(
@@ -152,6 +181,63 @@ export function blockForSession(
   sessionMinutes?: number | null
 ): ResolvedBlock | null {
   return getWarmupTemplate(pickTemplateId(kind, day.focus, day.name, sessionMinutes));
+}
+
+export function withExtraWarmup(block: ResolvedBlock | null, extra: boolean): ResolvedBlock | null {
+  if (!block || !extra || block.kind !== 'warmup') return block;
+  const first = block.steps[0];
+  if (first && (first.slug === 'easy-bike' || first.slug === 'easy-cross-trainer') && first.durationSeconds) {
+    const steps = [{ ...first, durationSeconds: first.durationSeconds + 60 }, ...block.steps.slice(1)];
+    return { ...block, steps, estimatedMinutes: block.estimatedMinutes + 1 };
+  }
+  const extraStep: ResolvedBlockStep = {
+    slug: 'easy-bike',
+    name: 'Easy bike',
+    cue: 'Easy pace, you could chat comfortably.',
+    note: 'A little extra warm-up today.',
+    durationSeconds: 60,
+    reps: null,
+    perSide: false,
+    alternativeName: 'March on the spot',
+    equipment: 'machine',
+  };
+  return {
+    ...block,
+    steps: [extraStep, ...block.steps],
+    estimatedMinutes: block.estimatedMinutes + 1,
+  };
+}
+
+export function withBalanceWarmupStep(
+  block: ResolvedBlock | null,
+  step: {
+    slug: string;
+    name: string;
+    durationSeconds: number;
+    perSide: boolean;
+    cue: string;
+    note: string | null;
+  } | null
+): ResolvedBlock | null {
+  if (!block || !step || block.kind !== 'warmup') return block;
+  if (block.steps.some((item) => item.slug === step.slug)) return block;
+  const added: ResolvedBlockStep = {
+    slug: step.slug,
+    name: step.name,
+    cue: step.cue,
+    note: step.note,
+    durationSeconds: step.durationSeconds,
+    reps: null,
+    perSide: step.perSide,
+    alternativeName: null,
+    equipment: 'bodyweight',
+  };
+  const extraSeconds = step.durationSeconds * (step.perSide ? 2 : 1);
+  return {
+    ...block,
+    steps: [...block.steps, added],
+    estimatedMinutes: Math.max(block.estimatedMinutes, Math.round((block.estimatedMinutes * 60 + extraSeconds) / 60)),
+  };
 }
 
 export function formatBlockStepLine(step: ResolvedBlockStep): string {
@@ -267,6 +353,7 @@ export function applyRampUp(
       weight: current?.weight || rampWeight(working, ramp.fraction, step),
       reps: current?.reps || String(ramp.reps),
       completed: false,
+      setType: 'warmup',
     };
   });
   return { day: nextDay, entries: nextEntries };

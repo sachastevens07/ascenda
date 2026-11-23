@@ -1,9 +1,53 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+  FlatList,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type ListRenderItem,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
+import { imageCatalogGeneration, subscribeImageCatalog } from '@/lib/images';
+
+/** Horizontal list that only mounts cards near the screen. Use for photo carousels. */
+export function CarouselList<T>({
+  data,
+  keyExtractor,
+  renderItem,
+  contentContainerStyle,
+  style,
+}: {
+  data: T[];
+  keyExtractor: (item: T, index: number) => string;
+  renderItem: ListRenderItem<T>;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const [catalog, setCatalog] = useState(imageCatalogGeneration);
+  useEffect(() => subscribeImageCatalog(() => setCatalog(imageCatalogGeneration())), []);
+
+  return (
+    <FlatList
+      data={data}
+      extraData={catalog}
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      initialNumToRender={3}
+      maxToRenderPerBatch={3}
+      windowSize={5}
+      contentContainerStyle={contentContainerStyle}
+      style={style}
+    />
+  );
+}
 
 export function ChipScroller({
   children,
@@ -117,11 +161,13 @@ export function ListRow({
 export function StickyDayHeader({
   title,
   today = false,
+  privateDot = false,
   onAdd,
   style,
 }: {
   title: string;
   today?: boolean;
+  privateDot?: boolean;
   onAdd?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -137,6 +183,17 @@ export function StickyDayHeader({
       <AppText variant="eyebrow" style={{ color: ink, flex: 1 }} numberOfLines={1}>
         {title}
       </AppText>
+      {privateDot ? (
+        <View
+          accessibilityLabel="Private mark"
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: today ? colours.onBrand : colours.brand,
+          }}
+        />
+      ) : null}
       {onAdd ? <Ionicons name="add" size={18} color={ink} /> : null}
     </View>
   );

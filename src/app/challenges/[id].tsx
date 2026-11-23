@@ -1,5 +1,5 @@
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +8,8 @@ import { showDialog } from '@/components/Dialog';
 import { AppText, PrimaryButton, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { fetchFinishedSessionMeta } from '@/lib/activityStats';
+import { isFeatureEnabled } from '@/config/features';
+import { isStretchBuiltChallengeSlug } from '@/lib/contentChallenges';
 import {
   activeJoinedChallenge,
   challengeProgress,
@@ -31,6 +33,11 @@ type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
 export default function ChallengeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  useEffect(() => {
+    if (!isFeatureEnabled('stretches') && isStretchBuiltChallengeSlug(id)) {
+      router.replace('/(tabs)' as Href);
+    }
+  }, [id]);
   const insets = useSafeAreaInsets();
   const { colours, radius, spacing, shadow } = useTheme();
   const { profile } = useProfile();

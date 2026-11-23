@@ -1086,6 +1086,147 @@
       "is_active": true
     },
     {
+      "slug": "bike-sprints-30",
+      "name": "Bike sprints: 30 seconds hard",
+      "summary": "Four short, very hard sprints with long, easy recoveries.",
+      "machine_id": "bike",
+      "style": "intervals",
+      "level": "intermediate",
+      "beginner_ok": false,
+      "duration_minutes": 20,
+      "max_minutes": 23,
+      "effort_target": [
+        5,
+        9
+      ],
+      "settings_guidance": {
+        "easy": {
+          "cadence_rpm": [
+            60,
+            75
+          ],
+          "resistance": "Low"
+        },
+        "sprint": {
+          "cadence_rpm": [
+            90,
+            110
+          ],
+          "resistance": "Add 3 to 5 levels so you're pushing, not spinning"
+        }
+      },
+      "intervals": [
+        {
+          "label": "Warm up",
+          "seconds": 300,
+          "effort": 3
+        },
+        {
+          "label": "Build up",
+          "seconds": 60,
+          "effort": 5
+        },
+        {
+          "label": "Sprint 1 of 4",
+          "seconds": 30,
+          "effort": 9,
+          "settings": {
+            "cadence_rpm": [
+              90,
+              110
+            ]
+          }
+        },
+        {
+          "label": "Easy 1 of 4",
+          "seconds": 120,
+          "effort": 2,
+          "settings": {
+            "cadence_rpm": [
+              60,
+              75
+            ]
+          }
+        },
+        {
+          "label": "Sprint 2 of 4",
+          "seconds": 30,
+          "effort": 9,
+          "settings": {
+            "cadence_rpm": [
+              90,
+              110
+            ]
+          }
+        },
+        {
+          "label": "Easy 2 of 4",
+          "seconds": 120,
+          "effort": 2,
+          "settings": {
+            "cadence_rpm": [
+              60,
+              75
+            ]
+          }
+        },
+        {
+          "label": "Sprint 3 of 4",
+          "seconds": 30,
+          "effort": 9,
+          "settings": {
+            "cadence_rpm": [
+              90,
+              110
+            ]
+          }
+        },
+        {
+          "label": "Easy 3 of 4",
+          "seconds": 120,
+          "effort": 2,
+          "settings": {
+            "cadence_rpm": [
+              60,
+              75
+            ]
+          }
+        },
+        {
+          "label": "Sprint 4 of 4",
+          "seconds": 30,
+          "effort": 9,
+          "settings": {
+            "cadence_rpm": [
+              90,
+              110
+            ]
+          }
+        },
+        {
+          "label": "Easy 4 of 4",
+          "seconds": 120,
+          "effort": 2,
+          "settings": {
+            "cadence_rpm": [
+              60,
+              75
+            ]
+          }
+        },
+        {
+          "label": "Cool down",
+          "seconds": 240,
+          "effort": 3
+        }
+      ],
+      "progression": "Start with 4 sprints. Add a fifth once all 4 feel strong. Never more than 5, and no more than twice a week, ideally not the day before heavy legs.",
+      "coach_note": "Stay seated. Each sprint is 30 seconds as hard as you can while staying in control. Then really ease off for the full 2 minutes, so you can go just as hard next time.",
+      "cover_image_slug": "cardio-bike-sprints-30",
+      "counts_towards_weekly_target": true,
+      "is_active": true
+    },
+    {
       "slug": "cross-trainer-intervals",
       "name": "Cross-trainer intervals: 2 and 1",
       "summary": "Two steady minutes, one stronger minute, repeated.",

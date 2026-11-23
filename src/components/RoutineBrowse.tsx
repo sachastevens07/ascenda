@@ -80,7 +80,7 @@ export function RoutineBrowse({
   onOpenCardio,
 }: {
   bottomInset?: number;
-  onOpenStretches: () => void;
+  onOpenStretches?: () => void;
   onOpenCardio?: () => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -181,7 +181,7 @@ export function RoutineBrowse({
     }
   }
 
-  const usedPhotos = new Set<string>();
+  const usedStylePhotos = new Set<string>();
   const recommended = recommendedBrowseRoutine(routines, profile);
   const startHere = startHereRoutines(routines).filter(
     (routine) => routine.id !== recommended?.id && routine.slug !== recommended?.slug
@@ -196,9 +196,9 @@ export function RoutineBrowse({
         ? currentWeek / enrolment.routine.length_weeks
         : 0;
 
-  const recommendedSlug = recommended ? takeSlug(coverForRoutine(recommended)?.id, usedPhotos) : null;
+  const recommendedSlug = recommended ? coverForRoutine(recommended)?.id ?? null : null;
   const styleSlugs = Object.fromEntries(
-    trainingStyles.map((style) => [style.id, takeSlug(style.coverSlug, usedPhotos)])
+    trainingStyles.map((style) => [style.id, takeSlug(style.coverSlug, usedStylePhotos)])
   ) as Partial<Record<TrainingStyleId, string | null>>;
 
   function headerForView(): { title: string; onBack: () => void } | null {
@@ -352,7 +352,6 @@ export function RoutineBrowse({
                 key={summary.id}
                 summary={summary}
                 stretch={false}
-                usedPhotos={usedPhotos}
                 onPress={() => openRoutine(summary)}
               />
             ))}
@@ -367,7 +366,7 @@ export function RoutineBrowse({
                       key={session.slug}
                       title={session.name}
                       minutes={session.estimated_minutes}
-                      imageSlug={takeSlug(session.cover_image_slug, usedPhotos)}
+                      imageSlug={session.cover_image_slug}
                       onPress={() => openSingle(session)}
                       onPlay={() => {
                         if (startingSlug) return;
@@ -457,7 +456,7 @@ export function RoutineBrowse({
                       imageSlug={styleSlugs[style.id]}
                       onPress={() => {
                         if (style.id === 'stretch') {
-                          onOpenStretches();
+                          onOpenStretches?.();
                           return;
                         }
                         if (style.id === 'cardio' && onOpenCardio) {
@@ -490,7 +489,7 @@ export function RoutineBrowse({
                       title={routine.name}
                       subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days a week`}
                       tags={routine.tags.slice(0, 2).map(formatTagLabel)}
-                      imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
+                      imageSlug={coverForRoutine(routine)?.id ?? null}
                       letter={routine.name.slice(0, 1)}
                       imageAspectRatio={16 / 10}
                       onPress={() => openRoutine(routine)}
@@ -518,7 +517,7 @@ export function RoutineBrowse({
                       key={session.slug}
                       title={session.name}
                       minutes={session.estimated_minutes}
-                      imageSlug={takeSlug(session.cover_image_slug, usedPhotos)}
+                      imageSlug={session.cover_image_slug}
                       onPress={() => openSingle(session)}
                       onPlay={() => {
                         if (startingSlug) return;

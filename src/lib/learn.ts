@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ImageSourcePropType } from 'react-native';
 
+import { isFeatureEnabled } from '@/config/features';
+import { isStretchSlug } from '@/lib/contentStretches';
 import { contentImage, contentSlugForTitle, hydrateImages, imageSourceForSlug } from '@/lib/images';
 import {
   LEARN_ARTICLE_ALIASES,
@@ -209,15 +211,18 @@ export async function fetchLearnArticle(id: string): Promise<LearnArticle | null
 export async function fetchLearnLinks(): Promise<LearnLink[]> {
   const bundled = LEARN_LINKS;
   const { data, error } = await supabase.from('learn_links').select('article_id, routine_id, exercise_id');
-  if (error || !data) return bundled;
   const keyOf = (link: LearnLink) =>
     `${link.article_id}|${link.routine_id ?? ''}|${link.exercise_id ?? ''}`;
   const byKey = new Map(bundled.map((link) => [keyOf(link), link]));
-  for (const row of data as LearnLink[]) {
-    if (!row.article_id || (!row.routine_id && !row.exercise_id)) continue;
-    byKey.set(keyOf(row), row);
+  if (!error && data) {
+    for (const row of data as LearnLink[]) {
+      if (!row.article_id || (!row.routine_id && !row.exercise_id)) continue;
+      byKey.set(keyOf(row), row);
+    }
   }
-  return [...byKey.values()];
+  const links = [...byKey.values()];
+  if (isFeatureEnabled('stretches')) return links;
+  return links.filter((link) => !isStretchSlug(link.routine_id));
 }
 
 export function articlesInCategory(articles: LearnArticle[], category: LearnCategory): LearnArticle[] {

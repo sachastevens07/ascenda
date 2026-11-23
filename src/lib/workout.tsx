@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { Vibration } from 'react-native';
 
+import { isFeatureEnabled } from '@/config/features';
 import { useAuth } from '@/lib/auth';
 import { cardioSession } from '@/lib/cardio';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -86,6 +87,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
       const current = await fetchActiveSession();
       if (!current) return;
       if (current.source === 'stretch') {
+        if (!isFeatureEnabled('stretches')) return;
         const day = current.routine_day_id ? await fetchRoutineDay(current.routine_day_id) : null;
         if (!isCurrent || hasPublished.current) return;
         setActive({

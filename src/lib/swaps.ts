@@ -1,5 +1,5 @@
 import { preferenceAvoidIds, preferenceBlockedEquipment, fetchCoachPreferences } from '@/lib/coachPreferences';
-import { preferredSwapIds } from '@/lib/contentGuides';
+import { preferredSwapIds, resolveExerciseSlug } from '@/lib/contentGuides';
 import { EQUIPMENT, type Equipment, type Muscle, type Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
 import {
@@ -21,8 +21,6 @@ export type DaySwaps = Record<number, SlotExercise>;
 export type UserSwaps = Record<string, DaySwaps>;
 
 const MAX_ALTERNATIVES = 3;
-/** Keeps a mix of kit in the list, in case what she's on is busy. */
-const MAX_ALTERNATIVES_PER_EQUIPMENT = 2;
 
 export const EQUIPMENT_FOR_ACCESS: Record<EquipmentAccess, readonly Equipment[]> = {
   full_gym: EQUIPMENT,
@@ -99,7 +97,7 @@ export function nextZoneUp(maxZone: Zone): Zone | null {
 
 /**
  * Drops swaps that use kit she doesn't have, or that are more than one zone above her cap.
- * One zone up is allowed so "Try something new" (and an Every time swap from it) still shows.
+ * One zone up is still allowed so an Every time swap from an older session still shows.
  */
 export function eligibleSwaps(
   swaps: DaySwaps,
@@ -192,98 +190,78 @@ export async function fetchSessionSwaps(session: Session): Promise<DaySwaps> {
 }
 
 export type SwapOptions = {
-  /** Up to 3 alternatives at or below her zone cap. */
+  /** Catalogue `alternatives` only, closest first, never padded. */
   alternatives: SlotExercise[];
-  /** One same-muscle exercise from the next zone up, if there is one. */
+  /** Always null. Kept so existing callers do not break. */
   trySomethingNew: SlotExercise | null;
 };
 
+function avoidedIds(prefs: Awaited<ReturnType<typeof fetchCoachPreferences>>): Set<string> {
+  const out = new Set<string>();
+  for (const id of preferenceAvoidIds(prefs)) {
+    out.add(id);
+    out.add(resolveExerciseSlug(id));
+  }
+  return out;
+}
+
+function isAvoided(id: string, avoid: Set<string>): boolean {
+  return avoid.has(id) || avoid.has(resolveExerciseSlug(id));
+}
+
 /**
- * Alternatives for a swap. Guide "if it's taken" lists come first, then slot alternatives,
- * then same-muscle ranking. `excludeIds` are already in the day.
- * Default list is `zone` ≤ `maxZone`. `trySomethingNew` is exactly one from the next zone.
+ * "If it's taken" swaps from the strength catalogue only. Coach preferences hide
+ * exercises she has ruled out. Kit she does not have is skipped. Nothing is padded
+ * from other movement patterns or a "Try something new" filler.
  */
 export async function fetchAlternatives(
   current: SlotExercise,
   access: EquipmentAccess,
   excludeIds: string[],
-  maxZone?: Zone,
+  _maxZone?: Zone,
   preferredIds: string[] = []
 ): Promise<SwapOptions> {
-  const guideIds = preferredIds.length > 0 ? preferredIds : preferredSwapIds(current.id);
+  const catalogueIds = (preferredIds.length > 0 ? preferredIds : preferredSwapIds(current.id)).slice(
+    0,
+    MAX_ALTERNATIVES
+  );
+  if (catalogueIds.length === 0) {
+    return { alternatives: [], trySomethingNew: null };
+  }
+
   const prefs = await fetchCoachPreferences().catch(() => []);
-  const avoid = new Set(preferenceAvoidIds(prefs));
+  const avoid = avoidedIds(prefs);
   const blockedEq = new Set(preferenceBlockedEquipment(prefs));
+  const excluded = new Set(
+    [current.id, resolveExerciseSlug(current.id), ...excludeIds].map((id) => resolveExerciseSlug(id))
+  );
+
   const { data, error } = await supabase
     .from('exercises')
     .select(`${SLOT_EXERCISE_COLUMNS}, secondary_muscles`)
-    .eq('primary_muscle', current.primary_muscle);
+    .in('id', catalogueIds);
   if (error) throw error;
 
-  let preferredRows: RankedExercise[] = [];
-  if (guideIds.length > 0) {
-    const preferred = await supabase
-      .from('exercises')
-      .select(`${SLOT_EXERCISE_COLUMNS}, secondary_muscles`)
-      .in('id', guideIds);
-    if (preferred.error) throw preferred.error;
-    preferredRows = (preferred.data ?? []) as unknown as RankedExercise[];
-  }
-
   const byId = new Map<string, RankedExercise>();
-  for (const row of [...((data ?? []) as unknown as RankedExercise[]), ...preferredRows]) {
+  for (const row of (data ?? []) as unknown as RankedExercise[]) {
     byId.set(row.id, row);
+    byId.set(resolveExerciseSlug(row.id), row);
   }
-  const rows = [...byId.values()];
-  const currentSecondary = byId.get(current.id)?.secondary_muscles ?? [];
-  const score = (row: RankedExercise) =>
-    row.secondary_muscles.filter((muscle) => currentSecondary.includes(muscle)).length * 2 +
-    (row.equipment === current.equipment ? 1 : 0);
-  const rank = (list: RankedExercise[]) =>
-    [...list].sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
-  const allowed = (row: RankedExercise) =>
-    row.id !== current.id &&
-    !excludeIds.includes(row.id) &&
-    !avoid.has(row.id) &&
-    !blockedEq.has(row.equipment) &&
-    EQUIPMENT_FOR_ACCESS[access].includes(row.equipment) &&
-    (maxZone === undefined || row.zone <= maxZone);
 
   const alternatives: SlotExercise[] = [];
   const seen = new Set<string>();
-  for (const id of guideIds) {
-    if (alternatives.length === MAX_ALTERNATIVES) break;
-    const row = byId.get(id);
-    if (!row || !allowed(row) || seen.has(row.id)) continue;
-    const sameKit = alternatives.filter((item) => item.equipment === row.equipment).length;
-    if (sameKit >= MAX_ALTERNATIVES_PER_EQUIPMENT) continue;
+  for (const id of catalogueIds) {
+    const row = byId.get(id) ?? byId.get(resolveExerciseSlug(id));
+    if (!row) continue;
+    const resolved = resolveExerciseSlug(row.id);
+    if (excluded.has(row.id) || excluded.has(resolved)) continue;
+    if (isAvoided(row.id, avoid)) continue;
+    if (blockedEq.has(row.equipment)) continue;
+    if (!EQUIPMENT_FOR_ACCESS[access].includes(row.equipment)) continue;
+    if (seen.has(row.id) || seen.has(resolved)) continue;
     seen.add(row.id);
+    seen.add(resolved);
     alternatives.push(toSlotExercise(row));
   }
-  for (const row of rank(rows.filter(allowed))) {
-    if (alternatives.length === MAX_ALTERNATIVES) break;
-    if (seen.has(row.id)) continue;
-    const sameKit = alternatives.filter((item) => item.equipment === row.equipment).length;
-    if (sameKit >= MAX_ALTERNATIVES_PER_EQUIPMENT) continue;
-    seen.add(row.id);
-    alternatives.push(toSlotExercise(row));
-  }
-
-  const tryZone = maxZone === undefined ? null : nextZoneUp(maxZone);
-  const taken = new Set([current.id, ...excludeIds, ...alternatives.map((item) => item.id)]);
-  const trySomethingNew =
-    tryZone === null
-      ? null
-      : (rank(
-          rows.filter(
-            (row) =>
-              !taken.has(row.id) &&
-              row.zone === tryZone &&
-              EQUIPMENT_FOR_ACCESS[access].includes(row.equipment)
-          )
-        )[0] ?? null);
-  return {
-    alternatives,
-    trySomethingNew: trySomethingNew ? toSlotExercise(trySomethingNew) : null,
-  };
+  return { alternatives, trySomethingNew: null };
 }

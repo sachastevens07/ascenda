@@ -13,7 +13,7 @@ Alternatives: `Ascenda: Women's Gym Training` (29/30), `Ascenda: Gym Plans for W
 Alternatives: `Feel at home in the gym` (23/30), `Gym plans, guides & tracking` (28/30)
 
 ## Keywords (99/100)
-`weightlifting,lifting,glutes,beginner,fitness,routine,tracker,planner,dumbbell,female,stretch,coach`
+`weightlifting,lifting,glutes,beginner,fitness,routine,tracker,planner,dumbbell,female,coach,logger`
 
 - Don't repeat words already in the name or subtitle (Apple indexes those already), so 'women', 'gym', 'workout', 'strength', 'plans' and 'guides' are left out.
 - Never use other apps' names as keywords; Apple rejects it.
@@ -49,7 +49,7 @@ Track every exercise and piece of equipment you've tried, with badges for your f
 BUILT FOR REAL LIFE
 • A weekly streak where one session keeps your week going
 • Rest weeks you earn, so a holiday or a busy week doesn't undo your progress
-• Warm-ups, cool-downs and stretch sessions built in
+• Warm-ups and a rest timer built into every session
 • A planner that shows exactly what's coming up
 • Single sessions for days you just want one workout
 • Sessions for days you can't get to the gym
@@ -61,7 +61,7 @@ CALM AND ENCOURAGING
 No shaming, no weight-loss pressure and no countdowns. Just a clear plan and a little encouragement on the days you need it.
 
 SUBSCRIPTION
-Ascenda is a subscription app. You can download it and get your personalised plan for free. A subscription unlocks every routine, guide, stretch and feature.
+Ascenda is a subscription app. You can download it and get your personalised plan for free. A subscription unlocks every routine, guide and feature.
 • Annual plan with a 7-day free trial, or a monthly plan
 • Payment is charged to your Apple Account when you confirm your purchase, or at the end of the free trial
 • Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period
@@ -75,7 +75,7 @@ Privacy Policy: [PRIVACY_URL]
 ```
 
 ## What's New (214/4000)
-> Welcome to Ascenda. This is our first release: personalised strength routines, first-time guides for every exercise, a fast workout logger, stretches, a planner and Learn articles. We'd love to hear what you think.
+> Welcome to Ascenda. This is our first release: personalised strength routines, first-time guides for every exercise, a fast workout logger, a planner and Learn articles. We'd love to hear what you think.
 
 ## Screenshots
 Up to 10 for the 6.9" iPhone size (Apple scales them for smaller phones). Short caption at the top, the real screen below, light theme, plum and warm palette. Use real app screens with realistic but invented example data (no real user data). No photos of anyone without a licence that allows advertising use.
@@ -157,3 +157,6 @@ Promotional text: `New: scan any machine and we'll show you how to use it. The a
 - "Coach reviewed" only once a qualified coach has actually reviewed the content.
 - No before and after images, body shots or weight-loss claims.
 - Prices in screenshots or text must match App Store Connect for that country; it's safest to leave exact prices out of the description, as above.
+
+## Launch flag: stretches hidden
+Until `STRETCHES_ENABLED` is true in `src/config/features.ts`, this listing omits stretch sessions. To restore: put `stretch` back in keywords (drop `logger` if you need the characters), use the bullet "Warm-ups, cool-downs and stretch sessions built in", say "every routine, guide, stretch and feature" in the subscription paragraph, and mention stretches in What's New.

@@ -2,6 +2,7 @@ import { ZONES, type Equipment, type Zone } from '@/lib/exercises';
 import type { ConfidenceHistory } from '@/lib/levelUp';
 import type { Level } from '@/lib/profile';
 import { usesWeight } from '@/lib/programmes';
+import { parseSetType, setTypeCountsForProgression } from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
 
 /** Supabase returns at most 1000 rows per request. */
@@ -26,6 +27,7 @@ export type ProgressSet = {
   /** Null for bodyweight and band. */
   weightKg: number | null;
   reps: number;
+  setType: 'normal' | 'warmup' | 'drop';
 };
 
 export type PersonalBest = {
@@ -57,6 +59,7 @@ type SetRow = {
   exercise_id: string;
   weight_kg: number | string | null;
   reps: number | null;
+  set_type?: string | null;
   exercise: {
     name: string;
     equipment: Equipment;
@@ -66,20 +69,32 @@ type SetRow = {
   session: { date: string };
 };
 
+function isMissingSetTypeColumn(error: { message?: string; code?: string }): boolean {
+  return /set_type/i.test(`${error.code ?? ''} ${error.message ?? ''}`);
+}
+
+const PROGRESS_SET_SELECT =
+  'id, session_id, exercise_id, set_number, weight_kg, reps, set_type, exercise:exercises(name, equipment, zone, weight_increase_kg), session:sessions!inner(date, completed_at)';
+const PROGRESS_SET_SELECT_LEGACY =
+  'id, session_id, exercise_id, set_number, weight_kg, reps, exercise:exercises(name, equipment, zone, weight_increase_kg), session:sessions!inner(date, completed_at)';
+
 /** Every ticked set from her finished sessions. */
 export async function fetchProgressSets(): Promise<ProgressSet[]> {
   const rows: SetRow[] = [];
+  let columns = PROGRESS_SET_SELECT;
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await supabase
       .from('sets')
-      .select(
-        'id, session_id, exercise_id, set_number, weight_kg, reps, exercise:exercises(name, equipment, zone, weight_increase_kg), session:sessions!inner(date, completed_at)'
-      )
+      .select(columns)
       .eq('completed', true)
-      .gt('set_number', 0)
       .not('session.completed_at', 'is', null)
       .order('id')
       .range(from, from + PAGE_SIZE - 1);
+    if (error && isMissingSetTypeColumn(error) && columns === PROGRESS_SET_SELECT) {
+      columns = PROGRESS_SET_SELECT_LEGACY;
+      from -= PAGE_SIZE;
+      continue;
+    }
     if (error) throw error;
     rows.push(...((data ?? []) as unknown as SetRow[]));
     if (!data || data.length < PAGE_SIZE) break;
@@ -98,6 +113,7 @@ export async function fetchProgressSets(): Promise<ProgressSet[]> {
         row.exercise.weight_increase_kg === null ? null : Number(row.exercise.weight_increase_kg),
       weightKg: row.weight_kg === null ? null : Number(row.weight_kg),
       reps: row.reps ?? 0,
+      setType: parseSetType(row.set_type),
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -137,19 +153,33 @@ export async function fetchExerciseBests(
   const bests: Record<string, ExerciseBests> = {};
   if (exerciseIds.length === 0) return bests;
   for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
+    const withType = await supabase
       .from('sets')
-      .select('id, exercise_id, set_number, weight_kg, reps, session:sessions!inner(completed_at)')
+      .select('id, exercise_id, set_number, weight_kg, reps, set_type, session:sessions!inner(completed_at)')
       .in('exercise_id', exerciseIds)
       .eq('completed', true)
-      .gt('set_number', 0)
       .neq('session_id', excludeSessionId)
       .not('weight_kg', 'is', null)
       .not('session.completed_at', 'is', null)
       .order('id')
       .range(from, from + PAGE_SIZE - 1);
-    if (error) throw error;
-    for (const row of data ?? []) {
+    const result =
+      withType.error && isMissingSetTypeColumn(withType.error)
+        ? await supabase
+            .from('sets')
+            .select('id, exercise_id, set_number, weight_kg, reps, session:sessions!inner(completed_at)')
+            .in('exercise_id', exerciseIds)
+            .eq('completed', true)
+            .gt('set_number', 0)
+            .neq('session_id', excludeSessionId)
+            .not('weight_kg', 'is', null)
+            .not('session.completed_at', 'is', null)
+            .order('id')
+            .range(from, from + PAGE_SIZE - 1)
+        : withType;
+    if (result.error) throw result.error;
+    for (const row of result.data ?? []) {
+      if (!setTypeCountsForProgression(parseSetType((row as { set_type?: string }).set_type))) continue;
       const weightKg = Number(row.weight_kg);
       const reps = (row.reps as number | null) ?? 0;
       if (weightKg <= 0 || reps < 1) continue;
@@ -162,7 +192,7 @@ export async function fetchExerciseBests(
       current.estimatedMaxKg = Math.max(current.estimatedMaxKg, estimateOneRepMax(weightKg, reps) ?? 0);
       current.volumeKg = Math.max(current.volumeKg, weightKg * reps);
     }
-    if (!data || data.length < PAGE_SIZE) break;
+    if (!result.data || result.data.length < PAGE_SIZE) break;
   }
   return bests;
 }
@@ -195,7 +225,8 @@ function groupByExercise(sets: ProgressSet[]): Map<string, ProgressSet[]> {
 /** One personal best per exercise, most recent first. `sets` must be oldest first. */
 export function getPersonalBests(sets: ProgressSet[]): PersonalBest[] {
   const bests: PersonalBest[] = [];
-  for (const [exerciseId, group] of groupByExercise(sets)) {
+  const working = sets.filter((set) => setTypeCountsForProgression(set.setType));
+  for (const [exerciseId, group] of groupByExercise(working)) {
     const weighted = group.filter(hasWeight);
     const kind: PersonalBest['kind'] =
       weighted.length === 0 ? 'reps' : isAssisted(group[0]) ? 'assisted' : 'weight';
@@ -234,7 +265,9 @@ export function getPersonalBests(sets: ProgressSet[]): PersonalBest[] {
 /** Lifts with a weight she can chart, most-trained first. */
 export function getLiftOptions(sets: ProgressSet[]): LiftOption[] {
   const options: LiftOption[] = [];
-  for (const [exerciseId, group] of groupByExercise(sets)) {
+  for (const [exerciseId, group] of groupByExercise(
+    sets.filter((set) => setTypeCountsForProgression(set.setType))
+  )) {
     const weighted = group.filter(hasWeight);
     if (weighted.length === 0) continue;
     options.push({
@@ -253,7 +286,7 @@ export function getLiftOptions(sets: ProgressSet[]): LiftOption[] {
 export function getLiftHistory(sets: ProgressSet[], exerciseId: string): LiftPoint[] {
   const byDate = new Map<string, number>();
   for (const set of sets) {
-    if (set.exerciseId !== exerciseId || !hasWeight(set)) continue;
+    if (set.exerciseId !== exerciseId || !hasWeight(set) || !setTypeCountsForProgression(set.setType)) continue;
     const current = byDate.get(set.date);
     const pick = isAssisted(set) ? Math.min : Math.max;
     byDate.set(set.date, current === undefined ? set.weightKg : pick(current, set.weightKg));

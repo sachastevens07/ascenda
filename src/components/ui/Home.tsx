@@ -1,41 +1,27 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps, ReactNode, Ref } from 'react';
 import { Pressable, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AnchorHandle } from '@/components/AnchoredMenu';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { challengesCopy, fillCopy, homeCopy, recapCopy, referCopy } from '@/lib/copy';
 import type { AchievementBadge, AchievementFamily } from '@/lib/achievements';
-import { FRIEND_TRIAL_DAYS } from '@/lib/referrals';
+import { referralOfferVars } from '@/lib/referrals';
 
 import { PrimaryButton, TextButton } from './Buttons';
 import { PhotoFill, StatTile } from './Cards';
+import { CoachButton } from './CoachButton';
 import { IconButton } from './IconButton';
 import { SectionHeader } from './List';
 
-export function HomeHeader({
-  leading,
-  onSearch,
-  onPlanner,
-  onAsk,
-}: {
-  leading: ReactNode;
-  onSearch: () => void;
-  onPlanner: () => void;
-  onAsk?: () => void;
-}) {
+export function HomeHeader({ leading }: { leading: ReactNode }) {
   return (
     <View style={styles.header}>
       {leading}
       <View style={styles.headerSpacer} />
-      <View style={styles.headerActions}>
-        {onAsk ? (
-          <IconButton icon="sparkles-outline" accessibilityLabel="Ascenda Coach" onPress={onAsk} />
-        ) : null}
-        <IconButton icon="search" accessibilityLabel="Search programmes" onPress={onSearch} />
-        <IconButton icon="calendar-outline" accessibilityLabel="Open Planner" onPress={onPlanner} />
-      </View>
+      <CoachButton />
     </View>
   );
 }
@@ -56,6 +42,7 @@ export function WelcomeHero({
   secondaryRef,
   menuRef,
   onMenu,
+  leading,
   children,
   style,
 }: {
@@ -75,25 +62,51 @@ export function WelcomeHero({
   secondaryRef?: Ref<AnchorHandle>;
   menuRef?: Ref<AnchorHandle>;
   onMenu?: () => void;
+  leading?: ReactNode;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius, spacing } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <View style={[{ borderRadius: radius.xl, overflow: 'hidden', backgroundColor: colours.surfaceMuted }, style]}>
       <View style={{ height, backgroundColor: colours.surfaceMuted }}>
         <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
-        <View style={[styles.heroFade, { backgroundColor: colours.overlay }]} />
-        <View style={[styles.heroCopy, { padding: spacing.lg, gap: spacing.sm }]}>
+        <View style={[styles.heroTopFade, { height: insets.top + 56 }]} pointerEvents="none">
+          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.28)' }]} />
+          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.08)' }]} />
+        </View>
+        <View style={styles.heroFade} pointerEvents="none">
+          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.06)' }]} />
+          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.22)' }]} />
+          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.5)' }]} />
+          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.72)' }]} />
+        </View>
+        {leading ? (
+          <View
+            style={[styles.heroChrome, { paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.sm }]}
+            pointerEvents="box-none">
+            <HomeHeader leading={leading} />
+          </View>
+        ) : null}
+        <View
+          style={[styles.heroCopy, { padding: spacing.md, paddingBottom: spacing.lg, gap: spacing.sm }]}
+          pointerEvents="box-none">
           <View style={styles.heroHeading}>
             <View style={styles.flex}>
-              <AppText variant="eyebrow" style={{ color: colours.onAccent }}>
+              <AppText variant="eyebrow" style={[styles.heroText, { color: colours.onAccent }]}>
                 {eyebrow}
               </AppText>
-              <AppText variant="display" style={{ color: colours.onAccent, marginTop: 6 }} numberOfLines={3}>
+              <AppText
+                variant="display"
+                style={[styles.heroText, { color: colours.onAccent, marginTop: 6 }]}
+                numberOfLines={3}>
                 {title}
               </AppText>
-              <AppText variant="body" style={{ color: colours.onAccent, marginTop: 4 }} numberOfLines={3}>
+              <AppText
+                variant="body"
+                style={[styles.heroText, { color: colours.onAccent, marginTop: 4 }]}
+                numberOfLines={3}>
                 {subtitle}
               </AppText>
             </View>
@@ -120,7 +133,7 @@ export function WelcomeHero({
                 onPress={onSecondary}
                 accessibilityRole="button"
                 style={{ alignSelf: 'flex-start' }}>
-                <AppText variant="bodyStrong" style={{ color: colours.onAccent }}>
+                <AppText variant="bodyStrong" style={[styles.heroText, { color: colours.onAccent }]}>
                   {secondaryLabel}
                 </AppText>
               </Pressable>
@@ -141,13 +154,55 @@ export type WeekStripDay = {
   completed: boolean;
 };
 
+export function WeekTabSwitch({
+  value,
+  onChange,
+}: {
+  value: 'workouts' | 'meals';
+  onChange: (value: 'workouts' | 'meals') => void;
+}) {
+  const { colours, radius } = useTheme();
+  const tabs = [
+    { id: 'workouts' as const, label: homeCopy.week_tab_workouts },
+    { id: 'meals' as const, label: homeCopy.week_tab_meals },
+  ];
+  return (
+    <View
+      style={[styles.tabSwitch, { backgroundColor: colours.surfaceMuted, borderRadius: radius.full }]}
+      accessibilityRole="tablist">
+      {tabs.map((tab) => {
+        const selected = value === tab.id;
+        return (
+          <Pressable
+            key={tab.id}
+            onPress={() => onChange(tab.id)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
+            style={[
+              styles.tabSwitchItem,
+              selected && { backgroundColor: colours.surface, borderRadius: radius.full },
+            ]}>
+            <AppText
+              variant={selected ? 'bodyStrong' : 'bodySm'}
+              style={{ color: selected ? colours.brand : colours.inkMuted, textAlign: 'center' }}>
+              {tab.label}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function WeekStripCard({
   days,
+  selectedIso,
   onPressDay,
   todayCard,
   style,
 }: {
   days: WeekStripDay[];
+  selectedIso?: string | null;
   onPressDay: (iso: string) => void;
   todayCard?: ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -158,20 +213,23 @@ export function WeekStripCard({
     <View style={[{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: spacing.md }, shadow, style]}>
       <View style={styles.stripRow}>
         {days.map((day) => {
-          const fill = day.isToday ? colours.brand : 'transparent';
-          const ink = day.isToday ? colours.onBrand : colours.ink;
+          const selected = selectedIso ? day.iso === selectedIso : day.isToday;
+          const fill = selected ? colours.brand : 'transparent';
+          const ink = selected ? colours.onBrand : colours.ink;
+          const outline = !selected && day.isToday ? colours.brand : colours.border;
           return (
             <Pressable
               key={day.iso}
               onPress={() => onPressDay(day.iso)}
               accessibilityRole="button"
+              accessibilityState={{ selected }}
               accessibilityLabel={day.label}
               style={styles.stripDay}>
               <View
                 style={[
                   styles.stripCircle,
                   { backgroundColor: fill, borderRadius: radius.full },
-                  !day.isToday && [styles.stripCircleIdle, { borderColor: colours.border }],
+                  !selected && [styles.stripCircleIdle, { borderColor: outline }],
                 ]}>
                 <AppText variant="caption" style={{ color: ink }}>
                   {day.label}
@@ -228,14 +286,29 @@ export function WeekTodaySession({
   );
 }
 
-export function WeekTodayEmpty({ onExplore }: { onExplore: () => void }) {
+export function WeekTodayEmpty({
+  onExplore,
+  title,
+  message,
+  cta,
+}: {
+  onExplore: () => void;
+  title?: string;
+  message?: string;
+  cta?: string;
+}) {
   const { colours, spacing } = useTheme();
   return (
-    <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
-      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-        {homeCopy.week_strip_empty}
+    <View style={{ marginTop: spacing.md, gap: spacing.sm, alignItems: 'center' }}>
+      {title ? (
+        <AppText variant="title3" style={{ color: colours.ink, textAlign: 'center' }}>
+          {title}
+        </AppText>
+      ) : null}
+      <AppText variant="bodySm" style={{ color: colours.inkMuted, textAlign: 'center' }}>
+        {message ?? homeCopy.week_strip_empty}
       </AppText>
-      <TextButton label={homeCopy.hero_nothing_planned.cta} onPress={onExplore} style={{ alignSelf: 'flex-start' }} />
+      <TextButton label={cta ?? homeCopy.hero_nothing_planned.cta} onPress={onExplore} />
     </View>
   );
 }
@@ -291,50 +364,45 @@ export function ChallengeHomeCard({
 }
 
 export function ReferralBanner({
-  onInvite,
-  onDismiss,
+  onPress,
   image,
   imageSlug,
   style,
 }: {
-  onInvite: () => void;
-  onDismiss: () => void;
+  onPress: () => void;
   image?: ImageSourcePropType | null;
   imageSlug?: string | null;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, spacing } = useTheme();
+  const { colours, radius } = useTheme();
+  const title = fillCopy(referCopy.banner_title, referralOfferVars());
   return (
-    <View style={[styles.refer, { backgroundColor: colours.accentSoft, borderRadius: radius.xl }, style]}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${referCopy.banner_cta}`}
+      style={({ pressed }) => [
+        styles.refer,
+        { backgroundColor: colours.accentSoft, borderRadius: radius.xl },
+        pressed && styles.pressed,
+        style,
+      ]}>
       <View style={styles.flex}>
         <AppText variant="displaySm" style={{ color: colours.ink }}>
-          {referCopy.banner_title}
+          {title}
         </AppText>
-        <AppText variant="bodySm" style={{ color: colours.ink, marginTop: spacing.sm }}>
-          {fillCopy(referCopy.banner_body, { friend_trial_days: FRIEND_TRIAL_DAYS })}
-        </AppText>
-        <Pressable
-          onPress={onInvite}
-          accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.referPill,
-            { backgroundColor: colours.surface, borderRadius: radius.full },
-            pressed && styles.pressed,
-          ]}>
+        <View style={[styles.referPill, { backgroundColor: colours.surface, borderRadius: radius.full }]}>
           <AppText variant="bodyStrong" style={{ color: colours.brand }}>
             {referCopy.banner_cta}
           </AppText>
-        </Pressable>
+        </View>
       </View>
       {image || imageSlug ? (
         <View style={[styles.referPhoto, { borderRadius: radius.lg, overflow: 'hidden' }]}>
-          <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" />
+          <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" align="center" />
         </View>
       ) : null}
-      <View style={styles.referClose}>
-        <IconButton icon="close" accessibilityLabel="Dismiss" onPress={onDismiss} />
-      </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -393,16 +461,16 @@ export function RecapHomeCard({
 
 export function ShareStatsCard({
   sessions,
-  personalBests,
+  strength,
+  cardio,
   minutes,
-  awards,
   onShare,
   style,
 }: {
   sessions: number;
-  personalBests: number;
-  minutes: string;
-  awards: number;
+  strength: number;
+  cardio: number;
+  minutes: number;
   onShare: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
@@ -411,10 +479,10 @@ export function ShareStatsCard({
     <View style={style}>
       <SectionHeader title={homeCopy.section_week_so_far} actionLabel={homeCopy.share_week} onAction={onShare} />
       <View style={[styles.statsGrid, { gap: spacing.sm }]}>
-        <StatTile value={String(sessions)} label="Sessions" icon="barbell-outline" style={styles.stat} />
-        <StatTile value={String(personalBests)} label="Personal bests" icon="trophy-outline" style={styles.stat} />
-        <StatTile value={minutes} label="Minutes" icon="time-outline" style={styles.stat} />
-        <StatTile value={String(awards)} label="Awards" icon="ribbon-outline" style={styles.stat} />
+        <StatTile value={String(sessions)} label={homeCopy.stat_sessions} icon="checkmark-circle-outline" style={styles.stat} />
+        <StatTile value={String(strength)} label={homeCopy.stat_strength} icon="barbell-outline" style={styles.stat} />
+        <StatTile value={String(cardio)} label={homeCopy.stat_cardio} icon="bicycle-outline" style={styles.stat} />
+        <StatTile value={String(minutes)} label={homeCopy.stat_minutes} icon="time-outline" style={styles.stat} />
       </View>
     </View>
   );
@@ -511,23 +579,43 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 36,
+    minHeight: 40,
   },
   headerSpacer: {
     flex: 1,
   },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  heroChrome: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  heroTopFade: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 72,
   },
   fill: {
     width: '100%',
     height: '100%',
   },
   heroFade: {
-    ...StyleSheet.absoluteFill,
-    opacity: 0.45,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '48%',
+  },
+  heroText: {
+    textShadowColor: 'rgba(0, 0, 0, 0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  heroFadeBand: {
+    flex: 1,
   },
   heroCopy: {
     ...StyleSheet.absoluteFill,
@@ -568,6 +656,18 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
   },
+  tabSwitch: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    padding: 4,
+  },
+  tabSwitchItem: {
+    minWidth: 108,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   todayRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -604,11 +704,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   referPhoto: {
-    width: 72,
+    width: 88,
     height: 88,
-  },
-  referClose: {
-    alignSelf: 'flex-start',
   },
   recapCard: {
     gap: 0,

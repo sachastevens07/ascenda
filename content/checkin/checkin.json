@@ -1,9 +1,14 @@
 {
-  "_format_version": 1,
+  "_format_version": 2,
   "_loader_notes": [
-    "AGENTS.md B2: the 'How are you feeling today?' check-in at the top of the logger.",
-    "Only sessions.lighter_session (true/false) is saved. Never save, log or send which option she picked.",
-    "PostHog: checkin_shown and lighter_session_chosen (true/false) only."
+    "AGENTS.md B2 v2 (21 November 2026): the 'How are you feeling today?' check-in at the top of the logger.",
+    "Each option has its own offer card and its own today-only adjustment.",
+    "Only sessions.lighter_session (true/false) is saved from the check-in. Never save, log or send which option she picked.",
+    "lighter_session is true for any accepted adjustment except push.",
+    "Comfort and joint-friendly swaps use only the exercise's own alternatives (same movement family). If none fits, keep the exercise and mark it optional.",
+    "Post-session feel is optional and saved to sessions.session_feel. Two Harder in a row on the same routine day means no weight increase on those lifts next time.",
+    "PostHog: checkin_shown and lighter_session_chosen (true/false) only.",
+    "L9 period log: optional, off by default, explicit consent (health_consents purpose period_log). Start and end dates only. Never symptoms, flow, predictions, Coach, PostHog, RevenueCat, notifications, share cards or recaps. Turning it off deletes every period_logs row."
   ],
   "card": {
     "title": "How are you feeling today?",
@@ -15,50 +20,241 @@
     {
       "id": "ready",
       "label": "Ready to go",
-      "offers_lighter": false
+      "show_when": "always",
+      "adjustment": "none"
+    },
+    {
+      "id": "feeling_strong",
+      "label": "Feeling strong",
+      "show_when": "always",
+      "adjustment": "push",
+      "offer": {
+        "title": "Go up if you've earned it",
+        "body": "If you hit the top of the range last time on your main lift, we'll suggest the next increment today. Everything else stays as planned.",
+        "accept": "Use the extra increment",
+        "decline": "No thanks, keep it as planned"
+      }
     },
     {
       "id": "low_energy",
-      "label": "A bit low on energy",
-      "offers_lighter": true
+      "label": "Low on energy",
+      "show_when": "always",
+      "adjustment": "lighter",
+      "offer": {
+        "title": "Lighter day? That still counts.",
+        "body": "We'll keep your main lift, take a set off the others and suggest slightly lighter weights. It's just for today.",
+        "accept": "Make it lighter",
+        "decline": "No thanks, keep it as planned"
+      }
     },
     {
       "id": "period",
       "label": "Period symptoms",
-      "offers_lighter": true
+      "show_when": "not_menopause",
+      "adjustment": "comfort",
+      "offer": {
+        "title": "A more comfortable session",
+        "body": "We'll swap away from tummy pressure and heavy bracing where there's a close swap, or mark those moves optional. It's just for today.",
+        "accept": "Make it more comfortable",
+        "decline": "No thanks, keep it as planned"
+      }
     },
     {
-      "id": "sleep_flushes",
-      "label": "Poor sleep or hot flushes",
-      "offers_lighter": true
+      "id": "slept_badly",
+      "label": "Slept badly",
+      "show_when": "always",
+      "adjustment": "steady",
+      "offer": {
+        "title": "Keep it steady today",
+        "body": "We'll hold the weights where they are and skip any increase, so nothing needs to be all-out. It's just for today.",
+        "accept": "Keep it steady",
+        "decline": "No thanks, keep it as planned"
+      }
     },
     {
       "id": "short_time",
       "label": "Short on time",
-      "offers_lighter": true
+      "show_when": "always",
+      "adjustment": "short",
+      "offer": {
+        "title": "Key lifts only",
+        "body": "We'll keep your main and secondary lifts and drop the rest so you finish sooner. Weights stay as planned. It's just for today.",
+        "accept": "Keep the key lifts",
+        "decline": "No thanks, keep it as planned"
+      }
+    },
+    {
+      "id": "hot_flushes",
+      "label": "Hot flushes",
+      "show_when": "life_stage",
+      "adjustment": "cool",
+      "offer": {
+        "title": "A cooler session",
+        "body": "We'll add a little extra rest between sets and keep any cardio at a steady effort. It's just for today.",
+        "accept": "Add extra rest",
+        "decline": "No thanks, keep it as planned"
+      }
+    },
+    {
+      "id": "achy_joints",
+      "label": "Achy joints",
+      "show_when": "life_stage",
+      "adjustment": "joint-friendly",
+      "offer": {
+        "title": "A gentler session for your joints",
+        "body": "We'll add a little extra warm-up, prefer machine swaps from the same movement, and keep cardio low-impact. If there's no close swap, that lift stays and is optional. It's just for today.",
+        "accept": "Make it joint-friendly",
+        "decline": "No thanks, keep it as planned"
+      }
     }
   ],
-  "lighter_offer": {
-    "title": "Lighter day? That still counts.",
-    "body": "We'll keep your main lift, take a set off the others and suggest slightly lighter weights. It's just for today.",
-    "accept": "Make it lighter",
-    "decline": "No thanks, keep it as planned",
-    "short_time_body": "We'll keep your main lift and the key exercises, and take a set off the rest so you finish sooner. It's just for today."
+  "adjustments": {
+    "none": {
+      "marks_lighter": false
+    },
+    "push": {
+      "marks_lighter": false,
+      "main_increment_if_earned": true
+    },
+    "lighter": {
+      "marks_lighter": true,
+      "drop_set_roles": ["secondary", "accessory"],
+      "scale_weights": true,
+      "cardio": "gentle"
+    },
+    "comfort": {
+      "marks_lighter": true,
+      "avoid_families": ["core_flexion", "core_bracing"],
+      "heavy_brace_families": ["squat", "hinge_deadlift", "hip_thrust"],
+      "heavy_brace_equipment": ["barbell"]
+    },
+    "steady": {
+      "marks_lighter": true,
+      "hold_increase": true
+    },
+    "cool": {
+      "marks_lighter": true,
+      "extra_rest_seconds": 30,
+      "cardio": "steady"
+    },
+    "joint-friendly": {
+      "marks_lighter": true,
+      "prefer_equipment": ["machine", "cable"],
+      "extra_warmup": true,
+      "cardio": "low_impact"
+    },
+    "short": {
+      "marks_lighter": true,
+      "keep_roles": ["main", "secondary"]
+    }
   },
-  "lighter_rules": {
-    "main_lift": "Keep all sets. Suggested weight about 10% lower, rounded down to the nearest available increment, never below the bar or the lightest dumbbell.",
-    "secondary_and_accessory": "Remove one set (minimum 1 set). Suggested weight about 10% lower, rounded as above.",
-    "core_and_finisher": "Keep as planned, or let her skip with one tap.",
-    "cardio_finisher": "Offer a gentle swap: steady effort, same machine, same or shorter time.",
-    "short_time": "Same set changes, but keep suggested weights as normal.",
-    "scope": "Today only. Never changes the routine.",
-    "progression": "The progression rule ignores sessions where lighter_session is true and uses her last normal session for each exercise.",
-    "streak": "A lighter session counts fully towards the weekly target and streak."
+  "session_feel": {
+    "title": "How did that feel?",
+    "helper": "Optional. Helps us suggest weights next time.",
+    "skip": "Skip",
+    "options": [
+      { "id": "easier", "label": "Easy" },
+      { "id": "as_expected", "label": "About right" },
+      { "id": "harder", "label": "Hard" }
+    ],
+    "two_harder_rule": "Two Harder in a row on the same routine day means no weight increase is suggested on those lifts next time."
   },
-  "logger_badge": "Lighter session",
+  "optional_label": "Optional today",
+  "logger_badge": "Adjusted for today",
   "settings": {
     "row_title": "Daily check-in",
     "row_sub": "Ask how I'm feeling before a session",
     "stores_to": "profiles.hide_checkin (inverted: switched on = hide_checkin false)"
+  },
+  "period_log": {
+    "enabled_by_default": false,
+    "consent_purpose": "period_log",
+    "consent_version": 1,
+    "privacy_row_title": "Period log",
+    "privacy_row_off": "Off. Switch on to mark period days in the Planner. Dates stay private to you.",
+    "privacy_row_on": "On. A private dot on those days in the Planner. Turning this off deletes every date you've logged.",
+    "consent": {
+      "title": "Can we save period dates?",
+      "body": [
+        "This is health information, so we only save it if you say yes.",
+        "If you switch this on, you can tap Period started and Period ended on a day in the Planner. We store those start and end dates, and nothing else: no symptoms, no flow, no mood.",
+        "We use the dates for three things: a small private dot on those days, listing Period symptoms first on the check-in if that day is logged, and later a short private note from your own training logs once you have enough of them.",
+        "We never predict your next period, fertile days, pregnancy or anything else. The dates stay on your account. They are never sent to Ascenda Coach, analytics, billing, notifications, share cards or monthly recaps.",
+        "Off by default. You can turn it off any time in Profile, Privacy. That deletes every period date we hold."
+      ],
+      "checkbox": "I agree to Ascenda saving period start and end dates for this purpose",
+      "accept_button": "Save and switch on",
+      "decline_button": "Don't save it"
+    },
+    "turn_off": {
+      "title": "Turn off the period log?",
+      "body": "This deletes every period date you've logged. It cannot be undone.",
+      "confirm": "Turn off and delete",
+      "cancel": "Keep it on"
+    },
+    "planner": {
+      "started": "Period started",
+      "ended": "Period ended",
+      "dot_accessibility": "Private mark"
+    },
+    "insights": {
+      "opt_in": "Same consent. No extra toggle.",
+      "title": "A note from your logs",
+      "helper": "Private to you. Compared only with your own sessions. This is not a prediction.",
+      "privacy_row_title": "Notes from your logs",
+      "min_completed_periods": 3,
+      "min_sessions_on_period_days": 6,
+      "minutes_gap_percent": 15,
+      "lighter_gap_points": 20,
+      "forbidden": [
+        "cycle_length",
+        "next_period_date",
+        "fertile_window",
+        "ovulation",
+        "pregnancy",
+        "symptom_prediction",
+        "performance_forecast"
+      ],
+      "notes": [
+        {
+          "id": "sessions_on_period_days",
+          "when": "thresholds_met",
+          "text": "You've trained on {n} of your logged period days. Those sessions counted towards your week, the same as any other day."
+        },
+        {
+          "id": "minutes_similar",
+          "when": "avg_minutes_on_period_days within minutes_gap_percent of other days",
+          "text": "Your sessions on period days have lasted about as long as your other sessions."
+        },
+        {
+          "id": "minutes_shorter",
+          "when": "avg_minutes_on_period_days at least minutes_gap_percent shorter than other days",
+          "text": "On period days, your sessions have tended to be a bit shorter than your other days. That's just a note from your own logs, not a rule."
+        },
+        {
+          "id": "minutes_longer",
+          "when": "avg_minutes_on_period_days at least minutes_gap_percent longer than other days",
+          "text": "On period days, your sessions have lasted a little longer than your other days. That's just a note from your own logs, not a rule."
+        },
+        {
+          "id": "lighter_more_often",
+          "when": "lighter_session share on period days at least lighter_gap_points higher than other days",
+          "text": "You've chosen a lighter session more often on period days than on other days. Lighter days still count."
+        }
+      ]
+    },
+    "never": [
+      "predictions",
+      "fertile_windows",
+      "pregnancy_features",
+      "symptom_diary",
+      "apple_health_sync",
+      "coach",
+      "posthog",
+      "revenuecat",
+      "notifications",
+      "share_cards",
+      "recaps"
+    ]
   }
 }

@@ -3,6 +3,7 @@ import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -59,7 +60,7 @@ import { useNow, useWorkout } from '@/lib/workout';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 
-const RING_SIZE = 200;
+const RING_SIZE = 176;
 
 function midpoint(value: [number, number] | number | undefined): number | null {
   if (value == null) return null;
@@ -67,17 +68,44 @@ function midpoint(value: [number, number] | number | undefined): number | null {
   return Math.round(((value[0] + value[1]) / 2) * 10) / 10;
 }
 
-function settingsFrom(source: CardioSettings): Record<string, number | string> {
+function addSpeedValues(target: number[], value: [number, number] | number | undefined) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    target.push(value);
+    return;
+  }
+  if (!Array.isArray(value)) return;
+  for (const item of value) {
+    if (typeof item === 'number' && Number.isFinite(item)) target.push(item);
+  }
+}
+
+function speedBounds(def: CardioSessionDef): [number, number] | null {
+  const values: number[] = [];
+  addSpeedValues(values, def.settings.speed_kmh);
+  for (const interval of def.intervals) addSpeedValues(values, interval.settings.speed_kmh);
+  if (!values.length) return null;
+  return [Math.round(Math.min(...values) * 10) / 10, Math.round(Math.max(...values) * 10) / 10];
+}
+
+function settingsFrom(def: CardioSessionDef): Record<string, number | string> {
   const used: Record<string, number | string> = {};
-  const speed = midpoint(source.speed_kmh);
+  const source = def.settings;
+  const speed = speedBounds(def);
   const incline = midpoint(source.incline_percent);
   const cadence = midpoint(source.cadence_rpm);
   const level = midpoint(source.level);
-  if (speed != null) used.speed_kmh = speed;
+  if (speed) {
+    used.speed_kmh_min = speed[0];
+    used.speed_kmh_max = speed[1];
+  }
   if (incline != null) used.incline_percent = incline;
   if (cadence != null) used.cadence_rpm = cadence;
   if (level != null) used.level = level;
   return used;
+}
+
+function goHome() {
+  router.dismissTo('/' as Href);
 }
 
 export default function CardioPlayScreen() {
@@ -99,6 +127,14 @@ export default function CardioPlayScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const now = useNow(running && loadState === 'ready' && !logOpen, 200);
   useKeepAwake();
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      goHome();
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
   const step = def?.intervals[index] ?? null;
   const remaining = step ? Math.max(0, Math.ceil((endsAt - now) / 1000)) : 0;
@@ -264,7 +300,7 @@ export default function CardioPlayScreen() {
           icon="chevron-down"
           variant="muted"
           accessibilityLabel="Minimise"
-          onPress={() => router.back()}
+          onPress={goHome}
         />
         <View ref={menuRef} collapsable={false}>
           <IconButton
@@ -310,15 +346,17 @@ export default function CardioPlayScreen() {
           })}
         </AppText>
         <IntervalTrack intervals={def.intervals} current={index} />
-        <ProgressRing progress={ringProgress} size={RING_SIZE} stroke={12}>
-          <AppText variant="number" style={{ color: colours.ink, fontVariant: ['tabular-nums'] }}>
-            {formatClock(remaining)}
-          </AppText>
-        </ProgressRing>
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
-          {fillCopy(cardioCopy.elapsed, { time: formatClock(elapsedSeconds) })}
-        </AppText>
+        <View style={styles.ringSlot}>
+          <ProgressRing progress={ringProgress} size={RING_SIZE} stroke={12}>
+            <AppText variant="number" style={{ color: colours.ink, fontVariant: ['tabular-nums'] }}>
+              {formatClock(remaining)}
+            </AppText>
+          </ProgressRing>
+        </View>
       </View>
+      <AppText variant="bodySm" style={[styles.elapsed, { color: colours.inkMuted }]}>
+        {fillCopy(cardioCopy.elapsed, { time: formatClock(elapsedSeconds) })}
+      </AppText>
 
       <View style={[styles.settings, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
         {aim ? (
@@ -518,7 +556,7 @@ function FinishLog({
   const { colours, spacing, radius } = useTheme();
   const insets = useSafeAreaInsets();
   const [effort, setEffort] = useState(Math.round((def.effortTarget[0] + def.effortTarget[1]) / 2));
-  const [settings, setSettings] = useState(() => settingsFrom(def.settings));
+  const [settings, setSettings] = useState(() => settingsFrom(def));
   const [distance, setDistance] = useState('');
   const [calories, setCalories] = useState('');
   const [notes, setNotes] = useState('');
@@ -526,7 +564,7 @@ function FinishLog({
   useEffect(() => {
     if (!visible) return;
     setEffort(Math.round((def.effortTarget[0] + def.effortTarget[1]) / 2));
-    setSettings(settingsFrom(def.settings));
+    setSettings(settingsFrom(def));
     setDistance('');
     setCalories('');
     setNotes('');
@@ -537,6 +575,22 @@ function FinishLog({
       const raw = Number(current[key] ?? min);
       const next = Math.min(max, Math.max(min, Math.round((raw + delta) * 10) / 10));
       return { ...current, [key]: step === 1 ? Math.round(next) : next };
+    });
+  }
+
+  function bumpSpeed(end: 'min' | 'max', delta: number) {
+    setSettings((current) => {
+      let low = Number(current.speed_kmh_min ?? 4);
+      let high = Number(current.speed_kmh_max ?? low);
+      const next = Math.min(20, Math.max(1, Math.round(((end === 'min' ? low : high) + delta) * 10) / 10));
+      if (end === 'min') {
+        low = next;
+        if (low > high) high = low;
+      } else {
+        high = next;
+        if (high < low) low = high;
+      }
+      return { ...current, speed_kmh_min: low, speed_kmh_max: high };
     });
   }
 
@@ -607,7 +661,7 @@ function FinishLog({
               ) : null}
             </View>
 
-            {settings.speed_kmh != null ||
+            {settings.speed_kmh_min != null ||
             settings.incline_percent != null ||
             settings.cadence_rpm != null ||
             settings.level != null ? (
@@ -615,13 +669,21 @@ function FinishLog({
                 <AppText variant="bodyStrong" style={{ color: colours.ink }}>
                   {cardioCopy.settings_optional}
                 </AppText>
-                {settings.speed_kmh != null ? (
-                  <StepperRow
-                    label={cardioCopy.speed}
-                    value={Number(settings.speed_kmh)}
-                    onMinus={() => bump('speed_kmh', -0.5, 1, 20)}
-                    onPlus={() => bump('speed_kmh', 0.5, 1, 20)}
-                  />
+                {settings.speed_kmh_min != null ? (
+                  <>
+                    <StepperRow
+                      label={cardioCopy.speed_min}
+                      value={Number(settings.speed_kmh_min)}
+                      onMinus={() => bumpSpeed('min', -0.5)}
+                      onPlus={() => bumpSpeed('min', 0.5)}
+                    />
+                    <StepperRow
+                      label={cardioCopy.speed_max}
+                      value={Number(settings.speed_kmh_max ?? settings.speed_kmh_min)}
+                      onMinus={() => bumpSpeed('max', -0.5)}
+                      onPlus={() => bumpSpeed('max', 0.5)}
+                    />
+                  </>
                 ) : null}
                 {settings.incline_percent != null ? (
                   <StepperRow
@@ -814,7 +876,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+  },
+  ringSlot: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  elapsed: {
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+    flexShrink: 0,
   },
   track: {
     flexDirection: 'row',

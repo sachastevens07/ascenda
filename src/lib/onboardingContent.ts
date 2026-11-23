@@ -4,6 +4,7 @@
  */
 import onboarding from '../../content/onboarding/onboarding.json';
 
+import { isFeatureEnabled } from '@/config/features';
 import { GOAL_LABELS, type Goal } from '@/lib/goals';
 import type { OnboardingDraft, Weekday } from '@/lib/onboardingAnswers';
 import { formatPreferredDays } from '@/lib/onboardingAnswers';
@@ -221,7 +222,9 @@ function parseScreen(raw: unknown): OnboardingScreen {
     week_title: text(item.week_title),
     week_template: text(item.week_template),
     week_extra: text(item.week_extra),
-    week_extras_line: text(item.week_extras_line),
+    week_extras_line: isFeatureEnabled('stretches')
+      ? text(item.week_extras_line)
+      : text(item.week_extras_line_no_stretch) || text(item.week_extras_line),
     week_extras_line_balanced: text(item.week_extras_line_balanced),
     timeline_title: text(item.timeline_title),
     estimate_label: text(item.estimate_label),

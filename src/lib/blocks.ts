@@ -8,7 +8,13 @@ import {
   type Programme,
   type SlotExercise,
 } from '@/lib/programmes';
-import { fetchPreviousSets, heaviestWeight, type LoggedSet } from '@/lib/sessions';
+import {
+  fetchPreviousSets,
+  heaviestWeight,
+  parseSetType,
+  workingSetsForProgression,
+  type LoggedSet,
+} from '@/lib/sessions';
 import { supabase } from '@/lib/supabase';
 
 export const BLOCK_LENGTH_WEEKS = 8;
@@ -248,9 +254,11 @@ export function projectTarget(options: {
 }
 
 function startFromSets(sets: LoggedSet[], fallbackReps: number): { kg: number; reps: number } | null {
-  const kg = sets.find((set) => set.set_number === 1)?.weight_kg ?? heaviestWeight(sets);
+  const working = workingSetsForProgression(sets);
+  const first = working.find((set) => set.set_number === 1) ?? working[0];
+  const kg = first?.weight_kg ?? heaviestWeight(working);
   if (kg === null) return null;
-  const reps = sets.find((set) => set.set_number === 1)?.reps ?? fallbackReps;
+  const reps = first?.reps ?? fallbackReps;
   return { kg, reps };
 }
 
@@ -518,22 +526,39 @@ export async function fillBlockTargetsFromSession(sessionId: string): Promise<vo
     const blockId = session?.block_id as string | null;
     if (!blockId || !session?.completed_at) return;
 
-    const { data: sets, error: setError } = await supabase
+    const withType = await supabase
       .from('sets')
-      .select('exercise_id, weight_kg, reps, set_number')
+      .select('exercise_id, weight_kg, reps, set_number, set_type')
       .eq('session_id', sessionId)
       .eq('completed', true);
-    if (setError) throw setError;
+    const legacy =
+      withType.error && /set_type/i.test(withType.error.message)
+        ? await supabase
+            .from('sets')
+            .select('exercise_id, weight_kg, reps, set_number')
+            .eq('session_id', sessionId)
+            .eq('completed', true)
+        : null;
+    if (legacy?.error) throw legacy.error;
+    if (withType.error && !legacy) throw withType.error;
+    const rows = (legacy?.data ?? withType.data ?? []) as Array<{
+      exercise_id: string;
+      weight_kg: number | string | null;
+      reps: number | string | null;
+      set_number: number;
+      set_type?: string;
+    }>;
 
     const byExercise: Record<string, LoggedSet[]> = {};
-    for (const row of sets ?? []) {
+    for (const row of rows) {
       const set: LoggedSet = {
         session_id: sessionId,
-        exercise_id: row.exercise_id as string,
+        exercise_id: row.exercise_id,
         set_number: Number(row.set_number),
-        weight_kg: toNumber(row.weight_kg as number | string | null),
-        reps: toNumber(row.reps as number | string | null),
+        weight_kg: toNumber(row.weight_kg),
+        reps: toNumber(row.reps),
         completed: true,
+        set_type: parseSetType(row.set_type),
       };
       (byExercise[set.exercise_id] ??= []).push(set);
     }

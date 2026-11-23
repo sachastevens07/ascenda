@@ -1,5 +1,7 @@
 import stretchFile from '../../content/stretches/stretch-routines.json';
 
+import { isFeatureEnabled } from '@/config/features';
+import { scheduleLabelFallback, withoutStretchPromises } from '@/lib/copy';
 import {
   contentPhaseForWeek,
   contentRoutine,
@@ -17,6 +19,8 @@ import {
   type CardioPreference,
   type Weekday,
 } from '@/lib/onboardingAnswers';
+import { isLifeStageActive, separateHardLowerDays } from '@/lib/lifeStage';
+import type { LifeStage } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 
 export const SESSION_TYPE_COLOURS = {
@@ -42,6 +46,8 @@ export type PlacedSlot = {
 export type WeekPlanPrefs = {
   preferredDays: Weekday[];
   cardioPreference: CardioPreference;
+  /** Consented profiles.life_stage only. Planner rest-gap stays on-device. */
+  lifeStage?: LifeStage | null;
 };
 
 type StretchMeta = { name: string; minutes: number };
@@ -230,7 +236,29 @@ function slotsFromWeeklyPlan(input: {
       anytime: true,
     });
   }
-  return { days, anytime };
+  return {
+    days: hideRecoverySlots(days),
+    anytime: isFeatureEnabled('stretches') ? anytime : [],
+  };
+}
+
+function hideRecoverySlots(slots: PlacedSlot[]): PlacedSlot[] {
+  if (isFeatureEnabled('stretches')) return slots;
+  return slots.map((slot) =>
+    slot.type === 'recovery' || slot.stretch_slug
+      ? {
+          ...slot,
+          type: 'rest' as const,
+          stretch_slug: null,
+          cardio_slug: null,
+          optional: false,
+          name: null,
+          minutes: null,
+          finisher_slug: null,
+          anytime: false,
+        }
+      : slot
+  );
 }
 
 function supportForWeek(
@@ -342,15 +370,22 @@ export function slotsForWeek(input: {
   weekNumber: number;
   preferredDays: Weekday[];
   cardioPreference: CardioPreference;
+  lifeStage?: LifeStage | null;
 }): PlacedSlot[] {
+  const applyLifeStage = (days: PlacedSlot[]) =>
+    isLifeStageActive(input.lifeStage)
+      ? separateHardLowerDays(days, input.overlay, input.weekNumber)
+      : days;
   if (input.overlay.weekly_plan) {
-    return slotsFromWeeklyPlan({
-      overlay: input.overlay,
-      plan: input.overlay.weekly_plan,
-      weekNumber: input.weekNumber,
-      preferredDays: input.preferredDays,
-      cardioPreference: input.cardioPreference,
-    }).days;
+    return applyLifeStage(
+      slotsFromWeeklyPlan({
+        overlay: input.overlay,
+        plan: input.overlay.weekly_plan,
+        weekNumber: input.weekNumber,
+        preferredDays: input.preferredDays,
+        cardioPreference: input.cardioPreference,
+      }).days
+    );
   }
   const template = pickScheduleTemplate(input.overlay, input.cardioPreference);
   if (template.length === 0) return [];
@@ -362,7 +397,7 @@ export function slotsForWeek(input: {
   }
 
   const laidOut = remapTemplate(template, input.preferredDays, focusByKey);
-  return WEEKDAYS.map((weekday) => {
+  return applyLifeStage(hideRecoverySlots(WEEKDAYS.map((weekday) => {
     const slot = laidOut.find((item) => item.weekday === weekday) ?? {
       weekday,
       type: 'rest' as const,
@@ -407,7 +442,7 @@ export function slotsForWeek(input: {
       };
     }
     return emptySlot(weekday);
-  });
+  })));
 }
 
 export function anytimeSlotsForWeek(input: {
@@ -417,14 +452,13 @@ export function anytimeSlotsForWeek(input: {
   cardioPreference: CardioPreference;
 }): PlacedSlot[] {
   if (!input.overlay.weekly_plan) return [];
+  if (!isFeatureEnabled('stretches')) return [];
   return slotsFromWeeklyPlan({ ...input, plan: input.overlay.weekly_plan }).anytime;
 }
 
 export function describeScheduledWeek(overlay: ContentRoutineOverlay): string {
-  return (
-    overlay.schedule_label ||
-    `${overlay.days_per_week} strength days a week, plus optional cardio and stretching`
-  );
+  const label = overlay.schedule_label || scheduleLabelFallback(overlay.days_per_week);
+  return withoutStretchPromises(label);
 }
 
 export function overlayForRoutine(
@@ -439,9 +473,9 @@ export function overlayForRoutine(
 export async function fetchWeekPlanPrefs(): Promise<WeekPlanPrefs> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('cardio_preference, onboarding_answers, days_per_week')
+    .select('cardio_preference, onboarding_answers, days_per_week, life_stage')
     .maybeSingle();
-  if (error && /cardio_preference|onboarding_answers|days_per_week/i.test(error.message)) {
+  if (error && /cardio_preference|onboarding_answers|days_per_week|life_stage/i.test(error.message)) {
     const fallback = await supabase.from('profiles').select('onboarding_answers').maybeSingle();
     const extras = parseOnboardingAnswers(fallback.data?.onboarding_answers);
     const preferred = (extras.preferred_days ?? []).filter((day): day is Weekday =>
@@ -450,6 +484,7 @@ export async function fetchWeekPlanPrefs(): Promise<WeekPlanPrefs> {
     return {
       preferredDays: preferred.length > 0 ? preferred : defaultDaysFor(3),
       cardioPreference: 'fine',
+      lifeStage: null,
     };
   }
   const extras = parseOnboardingAnswers(data?.onboarding_answers);
@@ -458,9 +493,14 @@ export async function fetchWeekPlanPrefs(): Promise<WeekPlanPrefs> {
   const preferred = (extras.preferred_days ?? []).filter((day): day is Weekday =>
     (WEEKDAYS as readonly string[]).includes(day)
   );
+  const lifeStage =
+    data?.life_stage === 'perimenopause' || data?.life_stage === 'menopause'
+      ? data.life_stage
+      : null;
   return {
     preferredDays: preferred.length === count ? preferred : defaultDaysFor(count),
     cardioPreference: parseCardioPreference(data?.cardio_preference) ?? 'fine',
+    lifeStage,
   };
 }
 

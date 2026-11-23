@@ -154,9 +154,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -174,7 +174,7 @@
           ],
           "warmup_id": "warmup-quick",
           "cooldown_id": "cooldown-quick",
-          "estimated_minutes": 30,
+          "estimated_minutes": 25,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -239,9 +239,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dead-bug",
@@ -253,8 +253,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-quick",
@@ -323,9 +323,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-quick",
@@ -367,9 +367,9 @@
               "progression_rule": "load",
               "rest_seconds": 120,
               "superset_group": "A",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-bench-press",
@@ -394,9 +394,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "hip-thrust-machine",
@@ -408,14 +408,14 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-quick",
           "cooldown_id": "cooldown-quick",
-          "estimated_minutes": 30,
+          "estimated_minutes": 25,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -453,9 +453,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "A",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "walking-lunge",
@@ -482,9 +482,9 @@
               "rest_seconds": 90,
               "per_side": true,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-crunch",
@@ -495,9 +495,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-quick",
@@ -552,9 +552,9 @@
               "progression_rule": "load",
               "rest_seconds": 90,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-leg-curl",
@@ -566,9 +566,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "superset_group": "B",
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "pallof-press",
@@ -580,9 +580,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-quick",

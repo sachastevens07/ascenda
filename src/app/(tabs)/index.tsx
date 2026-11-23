@@ -3,7 +3,6 @@ import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -11,6 +10,7 @@ import {
   useWindowDimensions,
   type ImageSourcePropType,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   MenuHeader,
@@ -26,9 +26,7 @@ import {
   ArticleCard,
   AwardsPreview,
   ChallengeHomeCard,
-  Chip,
   FuelSuggestionCard,
-  HomeHeader,
   IconButton,
   ImageCard,
   OverflowMenu,
@@ -39,8 +37,8 @@ import {
   ShareStatsCard,
   TabAvatar,
   TextButton,
-  TypeRing,
   WeekStripCard,
+  WeekTabSwitch,
   WeekTodayEmpty,
   WeekTodaySession,
   WelcomeHero,
@@ -55,9 +53,8 @@ import {
   fetchStreakGoal,
   getWeeklyStreak,
   normalizeWeeklyTarget,
-  sessionDurationSeconds,
-  thisWeekTypeCounts,
-  type WeekTypeCounts,
+  thisWeekHomeStats,
+  type WeekHomeStats,
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import {
@@ -83,10 +80,11 @@ import {
 import { countOwnedCustomWorkouts } from '@/lib/customWorkouts';
 import { pickTodaysFuelSuggestion } from '@/lib/foodSuggestions';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
-import { aiCopy, billingReminderCopy, fillCopy, foodCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
+import { isFeatureEnabled } from '@/config/features';
+import { billingReminderCopy, fillCopy, homeCopy, nextSessionMenuCopy, routineActionsCopy, subscriptionBanners, welcomeBackCopy } from '@/lib/copy';
 import { openRefer } from '@/lib/referrals';
 import { routineCardDays } from '@/lib/contentRoutines';
-import { coverForChallenge, coverForRoutine, homeHeroSlug, takeCoverSource, takeSlug } from '@/lib/images';
+import { coverForChallenge, coverForRoutine, homeHeroSlug, imageSourceForSlug, takeSlug } from '@/lib/images';
 import {
   addDays,
   isPlannedSessionKind,
@@ -97,9 +95,8 @@ import {
   type PlannerWeek,
 } from '@/lib/planner';
 import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
-import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
+import { fetchProgressSets } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
-import { openCoach, openCoachFromHeader } from '@/lib/coach';
 import { ensureSubscribed } from '@/lib/paywall';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
@@ -142,12 +139,16 @@ import {
   saveWelcomeBackPreview,
   type WelcomeBackOffer,
 } from '@/lib/welcomeBack';
-import { openCardioFromPlan, openLogger, openRecoveryFromPlan, openRoutineLogger } from '@/lib/startLogger';
+import {
+  openCardioFromPlan,
+  openCustomWorkoutFromPlan,
+  openRecoveryFromPlan,
+  openRoutineLogger,
+} from '@/lib/startLogger';
 import { useWorkout } from '@/lib/workout';
 import {
   fetchActiveSession,
   fetchLastFinishedRoutineSession,
-  startCustomSession,
   type Session,
 } from '@/lib/sessions';
 import { isCardioSession } from '@/lib/sessionTypes';
@@ -174,20 +175,16 @@ type HomeData = {
   streak: WeeklyStreak;
   hideStreak: boolean;
   hideAchievements: boolean;
-  hideRefer: boolean;
   welcomeBack: WelcomeBackOffer | null;
   handOff: NextRoutineOffer | null;
   challenge: Challenge | null;
   progress: Record<string, { done: number; target: number }>;
   learn: LearnArticle[];
   planner: PlannerWeek | null;
-  weekStats: { sessions: number; personalBests: number; minutes: string; awards: number };
-  weekTypes: WeekTypeCounts;
+  weekStats: WeekHomeStats;
   awardPreview: AchievementBadge[];
-  lifetimeSessions: number;
 };
 
-const REFER_HIDE_KEY = 'home-refer-banner-hidden';
 const WEEKDAY_SHORT = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const;
 
 function fallbackStripDays(): { iso: string; isToday: boolean }[] {
@@ -269,18 +266,31 @@ function heroCopyFor(input: {
 
 function sessionThumbnail(
   day: RoutineDay,
-  routine: RoutineSummary,
-  used: Set<string>
+  routine: RoutineSummary
 ): ImageSourcePropType | null {
   for (const slot of day.exercises) {
     const photo = getExerciseImageSource(slot.exercise);
     if (photo) return photo;
   }
-  return takeCoverSource(coverForRoutine(routine), used);
+  return imageSourceForSlug(coverForRoutine(routine)?.id ?? null);
+}
+
+function plannerDayThumbnail(
+  day: PlannerDayView | null,
+  routine: Routine | null,
+  enrolmentRoutine: RoutineSummary | null
+): ImageSourcePropType | null {
+  if (!day || !enrolmentRoutine) return null;
+  const dayId = day.plan?.routine_day_id;
+  const routineDay =
+    dayId && routine ? routine.weeks.flatMap((week) => week.days).find((item) => item.id === dayId) : null;
+  if (routineDay) return sessionThumbnail(routineDay, enrolmentRoutine);
+  return imageSourceForSlug(coverForRoutine(enrolmentRoutine)?.id ?? null);
 }
 
 export default function HomeScreen() {
   const tabBarHeight = useTabBarHeight();
+  const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { colours, spacing, radius, shadow } = useTheme();
   const { profile } = useProfile();
@@ -300,12 +310,12 @@ export default function HomeScreen() {
   const [welcomeBackMenuOpen, setWelcomeBackMenuOpen] = useState(false);
   const [welcomeBackMenuAnchor, setWelcomeBackMenuAnchor] = useState<AnchorRect | null>(null);
   const [isStarting, setIsStarting] = useState(false);
-  const [referHidden, setReferHidden] = useState(false);
   const [recap, setRecap] = useState<MonthlyRecap | null>(null);
   const [weekTab, setWeekTab] = useState<'workouts' | 'meals'>('workouts');
+  const [pickedIso, setPickedIso] = useState<string | null>(null);
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
-  const heroHeight = Math.round(Math.min(Math.max(height * 0.45, 260), 380));
+  const heroHeight = Math.round(Math.min(Math.max(height * 0.45, 260), 380)) + insets.top;
 
   useEffect(() => {
     const ends = subscription.trialEndsAt;
@@ -358,7 +368,6 @@ export default function HomeScreen() {
             hideAchievements,
             extras,
             completedRoutines,
-            hideReferStored,
           ] = await Promise.all([
             fetchRoutines(),
             fetchActiveEnrolment(),
@@ -382,9 +391,6 @@ export default function HomeScreen() {
               knownEquipment: equipmentFromMachinesUsed(profile?.onboarding_answers?.machines_used),
             })),
             fetchCompletedEnrolmentCount().catch(() => 0),
-            AsyncStorage.getItem(REFER_HIDE_KEY)
-              .then((value) => value === '1')
-              .catch(() => false),
           ]);
           const missingSql = routines.length === 0;
           const featured = answers
@@ -444,14 +450,6 @@ export default function HomeScreen() {
             completedRoutines,
             extras,
           });
-          const weekStart = plannerWeek?.weekStart ?? toIso(startOfWeekMonday(new Date()));
-          const weekEnd = plannerWeek?.weekEnd ?? toIso(addDays(startOfWeekMonday(new Date()), 6));
-          const weekSessions = sessions.filter((session) => session.date >= weekStart && session.date <= weekEnd);
-          const weekSeconds = weekSessions.reduce((sum, session) => sum + sessionDurationSeconds(session), 0);
-          const weekPbs = getPersonalBests(sets).filter((item) => item.date >= weekStart && item.date <= weekEnd).length;
-          const weekAwards = badges.filter(
-            (item) => item.unlocked && item.unlockedOn && item.unlockedOn >= weekStart && item.unlockedOn <= weekEnd
-          ).length;
           if (!isCurrent) return;
           setData({
             featured,
@@ -465,24 +463,15 @@ export default function HomeScreen() {
             streak,
             hideStreak,
             hideAchievements,
-            hideRefer: hideReferStored,
             welcomeBack,
             handOff,
             challenge: pickHomeChallenge(challenges),
             progress,
             learn,
             planner: plannerWeek,
-            weekStats: {
-              sessions: weekSessions.length,
-              personalBests: weekPbs,
-              minutes: String(Math.max(0, Math.round(weekSeconds / 60))),
-              awards: weekAwards,
-            },
-            weekTypes: thisWeekTypeCounts(sessions),
+            weekStats: thisWeekHomeStats(sessions),
             awardPreview: pickAwardsPreview(badges),
-            lifetimeSessions: sessions.length,
           });
-          setReferHidden(hideReferStored);
           setLoadState('ready');
           void loadMonthlyRecap({ sessions, sets })
             .then((next) => {
@@ -672,6 +661,10 @@ export default function HomeScreen() {
     if (!ensureSubscribed()) return;
     if (!data?.activeSession) return;
     if (data.activeSession.source === 'stretch') {
+      if (!isFeatureEnabled('stretches')) {
+        router.push('/(tabs)' as Href);
+        return;
+      }
       router.push({ pathname: '/stretches/play', params: { sessionId: data.activeSession.id } });
       return;
     }
@@ -707,16 +700,11 @@ export default function HomeScreen() {
     }
   }
 
-  function dismissRefer() {
-    setReferHidden(true);
-    AsyncStorage.setItem(REFER_HIDE_KEY, '1').catch(() => setReferHidden(false));
-  }
-
   function shareWeekStats() {
     const stats = data?.weekStats;
     if (!stats) return;
     void Share.share({
-      message: `${homeCopy.section_week_so_far}: ${stats.sessions} sessions, ${stats.personalBests} personal bests, ${stats.minutes} minutes, ${stats.awards} awards.`,
+      message: `${homeCopy.section_week_so_far}: ${fillCopy(homeCopy.share_week_body, stats)}`,
     }).catch(() => {});
   }
 
@@ -725,10 +713,7 @@ export default function HomeScreen() {
     if (today.kind === 'custom' && today.plan?.custom_workout_id) {
       setIsStarting(true);
       try {
-        const session = await startCustomSession(today.plan.custom_workout_id);
-        openLogger(session.id);
-      } catch (error) {
-        showDialog('Couldn’t start that session', describeRoutineError(error));
+        await openCustomWorkoutFromPlan(today.plan.custom_workout_id, workout.publish);
       } finally {
         setIsStarting(false);
       }
@@ -749,7 +734,7 @@ export default function HomeScreen() {
       }
       return;
     }
-    if (today.kind === 'recovery' && today.plan?.stretch_slug) {
+    if (isFeatureEnabled('stretches') && today.kind === 'recovery' && today.plan?.stretch_slug) {
       setIsStarting(true);
       try {
         await openRecoveryFromPlan(today.plan.stretch_slug, workout.publish);
@@ -780,7 +765,7 @@ export default function HomeScreen() {
 
   if (loadState !== 'ready' || !data) {
     return (
-      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
+      <View style={[styles.centre, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
@@ -814,9 +799,7 @@ export default function HomeScreen() {
     learn,
     planner,
     weekStats,
-    weekTypes,
     awardPreview,
-    lifetimeSessions,
     hideAchievements,
     streak,
   } = data;
@@ -825,6 +808,11 @@ export default function HomeScreen() {
   const usedPhotos = new Set<string>();
   const plannerDays = planner?.days ?? [];
   const todayPlan = plannerDays.find((day) => day.isToday) ?? null;
+  const selectedIso =
+    pickedIso && plannerDays.some((day) => day.iso === pickedIso)
+      ? pickedIso
+      : (todayPlan?.iso ?? plannerDays[0]?.iso ?? null);
+  const selectedPlan = plannerDays.find((day) => day.iso === selectedIso) ?? todayPlan;
   const heroSlug = takeSlug(
     homeHeroSlug({
       welcomeBack: Boolean(welcomeBack) && !inProgress,
@@ -834,8 +822,11 @@ export default function HomeScreen() {
     }),
     usedPhotos
   );
-  const nextThumb =
-    enrolment && next ? sessionThumbnail(next.day, enrolment.routine, usedPhotos) : null;
+  const selectedThumb = plannerDayThumbnail(
+    selectedPlan,
+    routine,
+    enrolment?.routine ?? null
+  );
   const handOffSlug = handOff ? takeSlug(coverForRoutine(handOff.routine)?.id, usedPhotos) : null;
   const handOffCard = handOff ? handOffCardCopy(handOff) : null;
   const challengeSlug = challenge ? takeSlug(coverForChallenge(challenge)?.id, usedPhotos) : null;
@@ -873,42 +864,31 @@ export default function HomeScreen() {
     nextDay: upcoming?.title ?? next?.day.name ?? 'your next session',
     name: firstName,
   });
-  const showTodaySession =
-    !inProgress &&
-    !welcomeBack &&
-    todayPlan &&
-    isPlannedSessionKind(todayPlan.kind) &&
-    !todayPlan.completed;
-  const showTodayEmpty =
-    !inProgress &&
-    !welcomeBack &&
-    !showTodaySession &&
-    todayPlan?.kind !== 'rest' &&
-    !todayPlan?.completed;
+  const selectedHasSession = Boolean(selectedPlan && isPlannedSessionKind(selectedPlan.kind));
   const showFeatured = missingSql || featured.length > 0;
-  const showWeekStats = lifetimeSessions > 0;
   const showAwards = !hideAchievements && awardPreview.length > 0;
-  const showRefer = !referHidden;
   const showLearn = learn.length > 0;
-  const showStretch = stretches.length > 0;
+  const showStretch = isFeatureEnabled('stretches') && stretches.length > 0;
   const showChallenge = Boolean(challenge);
-  const fuel = pickTodaysFuelSuggestion(todayPlan);
+  const fuel = pickTodaysFuelSuggestion(selectedPlan);
   const showHeroFuel = Boolean(fuel) && Boolean(todayPlan?.completed) && !inProgress && !welcomeBack;
+  const showGraceBanner = subscription.status === 'grace';
+  const showTrialBanner =
+    !showGraceBanner && Boolean(subscription.trialEndsAt) && isTrialEndingSoon(subscription) && !trialBannerHidden;
+  const showRenewalBanner =
+    !showGraceBanner &&
+    !showTrialBanner &&
+    isRenewalSoon(subscription) &&
+    Boolean(subscription.expiresAt) &&
+    !renewalBannerHidden;
+  const showStatusBanner = showGraceBanner || showTrialBanner || showRenewalBanner;
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
-        <HomeHeader
-          leading={<TabAvatar />}
-          onSearch={() => router.push('/programmes' as Href)}
-          onPlanner={() => router.push('/planner' as Href)}
-          onAsk={() => {
-            if (!ensureSubscribed()) return;
-            void openCoachFromHeader();
-          }}
-        />
-
-        {subscription.status === 'grace' ? (
+      <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 40 }]}>
+        {showStatusBanner ? (
+        <View style={{ paddingTop: insets.top + 8, gap: 16 }}>
+        {showGraceBanner ? (
           <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
             <AppText variant="bodySm" style={{ color: colours.ink, flex: 1 }}>
               {subscriptionBanners.grace}
@@ -921,15 +901,12 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {subscription.status !== 'grace' &&
-        subscription.trialEndsAt &&
-        isTrialEndingSoon(subscription) &&
-        !trialBannerHidden ? (
+        {showTrialBanner ? (
           <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
             <View style={{ flex: 1, gap: 4 }}>
               <AppText variant="bodySm" style={{ color: colours.ink }}>
                 {fillCopy(subscriptionBanners.trial_ending, {
-                  day: subscription.trialEndsAt.toLocaleDateString('en-GB', { weekday: 'short' }),
+                  day: subscription.trialEndsAt?.toLocaleDateString('en-GB', { weekday: 'short' }) ?? '',
                 })}
               </AppText>
               <TextButton
@@ -952,11 +929,7 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {subscription.status !== 'grace' &&
-        !isTrialEndingSoon(subscription) &&
-        isRenewalSoon(subscription) &&
-        subscription.expiresAt &&
-        !renewalBannerHidden ? (
+        {showRenewalBanner ? (
           <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
             <View style={{ flex: 1, gap: 4 }}>
               <AppText variant="bodySm" style={{ color: colours.ink }}>
@@ -965,7 +938,7 @@ export default function HomeScreen() {
                     ? billingReminderCopy.renewal.body
                     : billingReminderCopy.renewal.body.replace(' at {price}', ''),
                   {
-                    date: formatShortDate(subscription.expiresAt),
+                    date: subscription.expiresAt ? formatShortDate(subscription.expiresAt) : '',
                     price: subscription.priceString ?? '',
                   }
                 )}
@@ -989,8 +962,11 @@ export default function HomeScreen() {
             />
           </View>
         ) : null}
+        </View>
+        ) : null}
 
         <WelcomeHero
+          leading={<TabAvatar />}
           imageSlug={heroSlug}
           height={heroHeight}
           eyebrow={hero.eyebrow}
@@ -1015,7 +991,9 @@ export default function HomeScreen() {
               return;
             }
             if (todayPlan?.kind === 'rest') {
-              router.push({ pathname: '/programmes', params: { section: 'stretches' } } as Href);
+              router.push(isFeatureEnabled('stretches')
+                ? ({ pathname: '/programmes', params: { section: 'stretches' } } as Href)
+                : ('/planner' as Href));
               return;
             }
             if (todayPlan && isPlannedSessionKind(todayPlan.kind)) {
@@ -1062,24 +1040,12 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        <TypeRing done={streak.doneThisWeek} target={streak.targetThisWeek} counts={weekTypes} />
-
         <View style={{ gap: spacing.sm }}>
-          <View style={styles.weekTabs}>
-            <Chip
-              label={homeCopy.week_tab_workouts}
-              selected={weekTab === 'workouts'}
-              onPress={() => setWeekTab('workouts')}
-            />
-            <Chip
-              label={homeCopy.week_tab_meals}
-              selected={weekTab === 'meals'}
-              onPress={() => setWeekTab('meals')}
-            />
-          </View>
+          <WeekTabSwitch value={weekTab} onChange={setWeekTab} />
           <WeekStripCard
             days={stripDays}
-            onPressDay={() => router.push('/planner' as Href)}
+            selectedIso={selectedIso}
+            onPressDay={setPickedIso}
             todayCard={
               weekTab === 'meals' ? (
                 fuel ? (
@@ -1089,23 +1055,38 @@ export default function HomeScreen() {
                     style={{ marginTop: spacing.md, shadowOpacity: 0, elevation: 0 }}
                   />
                 ) : (
-                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
+                  <AppText
+                    variant="bodySm"
+                    style={{ color: colours.inkMuted, marginTop: spacing.md, textAlign: 'center' }}>
                     {homeCopy.meals_empty}
                   </AppText>
                 )
-              ) : showTodaySession && todayPlan ? (
+              ) : selectedHasSession && selectedPlan ? (
                 <WeekTodaySession
-                  title={todayPlan.title ?? next?.day.name ?? 'Today’s session'}
+                  title={selectedPlan.title ?? next?.day.name ?? 'Session'}
                   subtitle={
-                    todayPlan.subtitle ??
-                    `${enrolment?.routine.session_minutes ?? todayPlan.sessionMinutes ?? 45} min`
+                    selectedPlan.subtitle ??
+                    `${selectedPlan.sessionMinutes ?? enrolment?.routine.session_minutes ?? 45} min`
                   }
-                  image={nextThumb}
-                  onPress={() => void startTodayFromPlanner(todayPlan)}
+                  image={selectedThumb}
+                  onPress={() => void startTodayFromPlanner(selectedPlan)}
                 />
-              ) : showTodayEmpty ? (
+              ) : selectedPlan?.kind === 'rest' ? (
+                <WeekTodayEmpty
+                  title={homeCopy.hero_rest_day.title}
+                  message={homeCopy.hero_rest_day.subtitle}
+                  cta={homeCopy.hero_rest_day.cta}
+                  onExplore={() =>
+                    router.push(
+                      isFeatureEnabled('stretches')
+                        ? ({ pathname: '/programmes', params: { section: 'stretches' } } as Href)
+                        : ('/planner' as Href)
+                    )
+                  }
+                />
+              ) : (
                 <WeekTodayEmpty onExplore={() => router.push('/planner' as Href)} />
-              ) : null
+              )
             }
           />
         </View>
@@ -1122,26 +1103,6 @@ export default function HomeScreen() {
             }}
           />
         ) : null}
-
-        <Pressable
-          onPress={() => {
-            if (!ensureSubscribed()) return;
-            openCoach({ question: 'Build me a 30-minute session', entry: 'home' });
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={aiCopy.build_title}
-          style={({ pressed }) => [
-            styles.card,
-            { backgroundColor: colours.surface, borderRadius: radius.lg, opacity: pressed ? 0.92 : 1 },
-            shadow,
-          ]}>
-          <AppText variant="eyebrow" style={{ color: colours.accent }}>
-            {aiCopy.build_title}
-          </AppText>
-          <AppText variant="body" style={{ color: colours.ink, marginTop: 6 }}>
-            {aiCopy.build_card_body}
-          </AppText>
-        </Pressable>
 
         {showFeatured ? (
           <View>
@@ -1166,7 +1127,7 @@ export default function HomeScreen() {
                     title={routine.name}
                     subtitle={`${routine.length_weeks} weeks · ${routineCardDays(routine)} days a week`}
                     tags={routine.tags}
-                    imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
+                    imageSlug={coverForRoutine(routine)?.id ?? null}
                     letter={routine.name.slice(0, 1)}
                     imageAspectRatio={16 / 10}
                     progress={
@@ -1191,19 +1152,13 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        {showRefer ? (
-          <ReferralBanner imageSlug="hero-refer" onInvite={inviteFriend} onDismiss={dismissRefer} />
-        ) : null}
-
-        {showWeekStats ? (
-          <ShareStatsCard
-            sessions={weekStats.sessions}
-            personalBests={weekStats.personalBests}
-            minutes={weekStats.minutes}
-            awards={weekStats.awards}
-            onShare={shareWeekStats}
-          />
-        ) : null}
+        <ShareStatsCard
+          sessions={weekStats.sessions}
+          strength={weekStats.strength}
+          cardio={weekStats.cardio}
+          minutes={weekStats.minutes}
+          onShare={shareWeekStats}
+        />
 
         {showAwards ? (
           <AwardsPreview
@@ -1230,7 +1185,7 @@ export default function HomeScreen() {
                   key={routine.id}
                   title={routine.name}
                   subtitle={`${routine.session_minutes} min`}
-                  imageSlug={takeSlug(coverForRoutine(routine)?.id, usedPhotos)}
+                  imageSlug={coverForRoutine(routine)?.id ?? null}
                   letter={routine.name.slice(0, 1)}
                   imageAspectRatio={16 / 10}
                   onPress={() => openStretch(routine)}
@@ -1267,6 +1222,11 @@ export default function HomeScreen() {
             </AppText>
           </View>
         ) : null}
+
+        <ReferralBanner
+          image={require('../../../assets/covers/hero-refer-thumb.jpg')}
+          onPress={inviteFriend}
+        />
       </ScrollView>
 
       <OverflowMenu
@@ -1363,15 +1323,11 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingTop: 12,
+    paddingTop: 0,
     gap: 16,
   },
   heroBleed: {
     marginHorizontal: -24,
-  },
-  weekTabs: {
-    flexDirection: 'row',
-    gap: 8,
   },
   centre: {
     flex: 1,

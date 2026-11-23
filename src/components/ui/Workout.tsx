@@ -12,6 +12,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import { measureAnchor, type AnchorHandle, type AnchorRect } from '@/components/AnchoredMenu';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, loggerCopy } from '@/lib/copy';
@@ -48,6 +49,7 @@ export function SetRow({
   completed = false,
   weighted = true,
   warmup = false,
+  setLabel: setLabelProp,
   previousLabel,
   weightLabel,
   kgPlaceholder,
@@ -63,6 +65,7 @@ export function SetRow({
   onEndReps,
   onSuggest,
   onRecord,
+  onPressSetNumber,
   onDelete,
   style,
 }: {
@@ -72,6 +75,7 @@ export function SetRow({
   completed?: boolean;
   weighted?: boolean;
   warmup?: boolean;
+  setLabel?: string;
   previousLabel?: string;
   weightLabel?: string;
   kgPlaceholder?: string;
@@ -87,11 +91,13 @@ export function SetRow({
   onEndReps?: () => void;
   onSuggest?: () => void;
   onRecord?: () => void;
+  onPressSetNumber?: (anchor: AnchorRect) => void;
   onDelete?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius, type } = useTheme();
-  const setLabel = warmup ? loggerCopy.warmup_set_label : String(setNumber);
+  const setLabel = setLabelProp ?? (warmup ? loggerCopy.warmup_set_label : String(setNumber));
+  const setRef = useRef<AnchorHandle>(null);
   const commitAt = 52;
   const flyOff = 420;
   const translate = useRef(new Animated.Value(0)).current;
@@ -146,25 +152,32 @@ export function SetRow({
 
   const row = (
     <>
-      {recordLabel && onRecord ? (
+      <View ref={setRef} collapsable={false} style={styles.setCol}>
         <Pressable
-          onPress={onRecord}
-          style={styles.setCol}
+          onPress={() => {
+            if (onPressSetNumber) {
+              measureAnchor(setRef.current, onPressSetNumber);
+              return;
+            }
+            onRecord?.();
+          }}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`Set ${setLabel}: new personal best. ${recordLabel}`}>
-          <AppText variant="bodyStrong" style={{ color: colours.inkMuted }}>
+          accessibilityLabel={
+            recordLabel
+              ? `Set ${setLabel}: new personal best. ${recordLabel}`
+              : `Set ${setLabel}`
+          }>
+          <AppText variant="bodyStrong" style={{ color: colours.inkMuted, textAlign: 'center' }}>
             {setLabel}
           </AppText>
-          <Ionicons name="trophy" size={14} color={colours.pro} />
         </Pressable>
-      ) : (
-        <AppText
-          variant="bodyStrong"
-          style={{ color: colours.inkMuted, width: 28, textAlign: 'center' }}>
-          {setLabel}
-        </AppText>
-      )}
+        {recordLabel && onRecord ? (
+          <Pressable onPress={onRecord} hitSlop={8} accessibilityRole="button" accessibilityLabel={recordLabel}>
+            <Ionicons name="trophy" size={14} color={colours.pro} />
+          </Pressable>
+        ) : null}
+      </View>
       <AppText
         variant="caption"
         numberOfLines={1}

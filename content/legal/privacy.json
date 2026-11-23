@@ -11,19 +11,23 @@
     },
     {
       "heading": "What we store",
-      "body": "Your email, onboarding answers, workout sessions and sets, optional bodyweight, optional life stage (only with explicit consent), optional progress photos, subscription status, reminder preferences, and a few display choices such as theme and units. If you use Ascenda Coach, we also keep your chat messages for 30 days."
+      "body": "Your email, onboarding answers, workout sessions and sets, optional bodyweight, optional life stage (only with explicit consent), optional period start and end dates (only with explicit consent), optional progress photos, subscription status, reminder preferences, and a few display choices such as theme and units. If you use Ascenda Coach, we also keep your chat messages for 30 days."
     },
     {
       "heading": "Life stage",
       "body": "If you choose Perimenopause or Menopause, that is health information. We only collect it after you tick the consent screen. We use it only to personalise recommendations: which routines, featured plans and Learn articles we show you. It never changes your weights. We never share it with anyone else, including Ascenda Coach, analytics, advertisers, Apple, RevenueCat, notifications, share cards or monthly recaps. You can delete it and withdraw consent in Profile, Privacy, without deleting your account."
     },
     {
+      "heading": "Period log",
+      "body": "Off by default. If you switch it on in Profile, Privacy and tick the consent screen, you can mark Period started and Period ended on a day in the Planner. We store those start and end dates only: no symptoms, no flow, no mood. We use them for a private dot on those days, to list Period symptoms first on the check-in if that day is logged, and later a short private note from your own training logs once you have three completed periods and six sessions on those days. We never predict your next period, fertile days or pregnancy. Dates are never sent to Ascenda Coach, analytics, advertisers, Apple, RevenueCat, notifications, share cards or monthly recaps. Turning the toggle off deletes every period date we hold and withdraws consent. You can also delete them by deleting your account."
+    },
+    {
       "heading": "What we do not store",
-      "body": "We do not collect cycle dates, fertility or ovulation data, calorie or macro targets, BMI or body-fat estimates. We do not store which daily check-in option you pick, only whether today's session was a lighter day. Progress photos are off unless you switch them on; if you do, they are never sent to an AI service."
+      "body": "We do not collect fertility or ovulation data, calorie or macro targets, BMI or body-fat estimates. Period dates are stored only if you switch the period log on and consent. We do not store which daily check-in option you pick, only whether today's session was a lighter day. Progress photos are off unless you switch them on; if you do, they are never sent to an AI service."
     },
     {
       "heading": "Ascenda Coach",
-      "body": "Anything you type in Ascenda Coach is sent to our AI provider, Anthropic (Claude), so it can answer, and is kept in your chat history for 30 days. We also send the current exercise or session context, retrieved guides, and a short training summary. We never send your name, email, bodyweight, progress photos, onboarding statement answers, life stage or other health information we hold about you. You can delete your chats in Profile, Privacy. The monthly recap sends session counts, minutes, exercise and machine names, and award names, never weights, photos, health data, your name or email. Answers are labelled AI-generated, not medical advice."
+      "body": "Anything you type in Ascenda Coach is sent to our AI provider, Anthropic (Claude), so it can answer, and is kept in your chat history for 30 days. We also send the current exercise or session context, retrieved guides, and a short training summary. We never send your name, email, bodyweight, progress photos, onboarding statement answers, life stage, period dates or other health information we hold about you. You can delete your chats in Profile, Privacy. The monthly recap sends session counts, minutes, exercise and machine names, and award names, never weights, photos, health data, your name or email. Answers are labelled AI-generated, not medical advice."
     },
     {
       "heading": "Analytics",
@@ -39,7 +43,7 @@
     },
     {
       "heading": "Delete your data",
-      "body": "Profile, Privacy, Delete account removes your account and the data stored with it, including life stage, health consents and Coach chats. You can also write to hello@ascenda.app."
+      "body": "Profile, Privacy, Delete account removes your account and the data stored with it, including life stage, period dates, health consents and Coach chats. You can also write to hello@ascenda.app."
     }
   ]
 }

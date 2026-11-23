@@ -1,12 +1,13 @@
 /**
  * Ascenda Coach. Context, chips, new-chat rules and card helpers.
- * Never sends name, email, bodyweight, photos, onboarding statements, life_stage or health info.
+ * Never sends name, email, bodyweight, photos, onboarding statements, life_stage, period dates or health info.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, type Href } from 'expo-router';
 
 import aiConfig from '../../content/ai/ai-config.json';
 
+import { isFeatureEnabled } from '@/config/features';
 import { startBuiltStrengthSession, type BuiltSession } from '@/lib/buildSession';
 import type { BusyGymPlan } from '@/lib/busyGym';
 import { isHealthPreferenceText, saveCoachPreference } from '@/lib/coachPreferences';
@@ -187,6 +188,10 @@ export function openCoachLink(link: CoachLink): void {
     return;
   }
   if (link.type === 'stretch') {
+    if (!isFeatureEnabled('stretches')) {
+      router.push('/(tabs)' as Href);
+      return;
+    }
     router.push({ pathname: '/stretches/[id]', params: { id: link.id } } as Href);
   }
 }
@@ -344,8 +349,9 @@ export async function applyCoachCard(
       fallback: false,
       lighter: card.lighter === true || text(card.energy) === 'low',
     };
-    if (sessionId) await stashCoachPlan(sessionId, plan);
-    return COACH_UI.card_applied;
+    if (!sessionId) return COACH_UI.card_needs_session;
+    await stashCoachPlan(sessionId, plan);
+    return plan.lighter ? COACH_UI.card_applied_lighter : COACH_UI.card_applied_look;
   }
   if (card.type === 'session' && button === 'Start') {
     await startBuiltStrengthSession({

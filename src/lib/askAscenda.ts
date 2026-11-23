@@ -145,6 +145,8 @@ const NEVER_SEND = [
   'health',
   'age_band',
   'life_stage',
+  'period_logs',
+  'period_log',
 ];
 
 function asRecord(value: unknown): Record<string, unknown> {

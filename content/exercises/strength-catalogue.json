@@ -10,9 +10,11 @@
       "equipment": "dumbbell",
       "pattern": "squat",
       "zone": 1,
+      "family": "squat",
       "alternatives": [
+        "leg-press",
         "dumbbell-box-squat",
-        "leg-press"
+        "hack-squat"
       ]
     },
     {
@@ -21,8 +23,10 @@
       "equipment": "dumbbell",
       "pattern": "squat",
       "zone": 1,
+      "family": "squat",
       "alternatives": [
         "goblet-squat",
+        "bodyweight-box-squat",
         "leg-press"
       ]
     },
@@ -32,9 +36,11 @@
       "equipment": "bodyweight",
       "pattern": "squat",
       "zone": 1,
+      "family": "squat",
       "alternatives": [
+        "dumbbell-box-squat",
         "goblet-squat",
-        "dumbbell-box-squat"
+        "leg-press"
       ]
     },
     {
@@ -43,9 +49,11 @@
       "equipment": "machine",
       "pattern": "squat",
       "zone": 3,
+      "family": "squat",
       "alternatives": [
+        "hack-squat",
         "goblet-squat",
-        "dumbbell-box-squat"
+        "smith-machine-squat"
       ]
     },
     {
@@ -54,9 +62,11 @@
       "equipment": "barbell",
       "pattern": "squat",
       "zone": 4,
+      "family": "squat",
       "alternatives": [
         "smith-machine-squat",
-        "goblet-squat"
+        "hack-squat",
+        "leg-press"
       ]
     },
     {
@@ -65,8 +75,10 @@
       "equipment": "machine",
       "pattern": "squat",
       "zone": 3,
+      "family": "squat",
       "alternatives": [
-        "goblet-squat",
+        "barbell-back-squat",
+        "hack-squat",
         "leg-press"
       ]
     },
@@ -76,9 +88,11 @@
       "equipment": "machine",
       "pattern": "squat",
       "zone": 3,
+      "family": "squat",
       "alternatives": [
+        "smith-machine-squat",
         "leg-press",
-        "goblet-squat"
+        "barbell-back-squat"
       ]
     },
     {
@@ -87,10 +101,8 @@
       "equipment": "machine",
       "pattern": "squat",
       "zone": 3,
-      "alternatives": [
-        "leg-press",
-        "goblet-squat"
-      ]
+      "family": "knee_extension",
+      "alternatives": []
     },
     {
       "slug": "dumbbell-romanian-deadlift",
@@ -98,9 +110,11 @@
       "equipment": "dumbbell",
       "pattern": "hinge",
       "zone": 1,
+      "family": "hinge_deadlift",
       "alternatives": [
+        "trap-bar-deadlift",
         "kettlebell-deadlift",
-        "cable-pull-through"
+        "barbell-romanian-deadlift"
       ]
     },
     {
@@ -109,7 +123,9 @@
       "equipment": "barbell",
       "pattern": "hinge",
       "zone": 4,
+      "family": "hinge_deadlift",
       "alternatives": [
+        "trap-bar-deadlift",
         "dumbbell-romanian-deadlift",
         "kettlebell-deadlift"
       ]
@@ -120,9 +136,11 @@
       "equipment": "barbell",
       "pattern": "hinge",
       "zone": 4,
+      "family": "hinge_deadlift",
       "alternatives": [
-        "kettlebell-deadlift",
-        "dumbbell-romanian-deadlift"
+        "barbell-romanian-deadlift",
+        "dumbbell-romanian-deadlift",
+        "kettlebell-deadlift"
       ]
     },
     {
@@ -131,9 +149,11 @@
       "equipment": "kettlebell",
       "pattern": "hinge",
       "zone": 1,
+      "family": "hinge_deadlift",
       "alternatives": [
         "dumbbell-romanian-deadlift",
-        "cable-pull-through"
+        "cable-pull-through",
+        "trap-bar-deadlift"
       ]
     },
     {
@@ -142,10 +162,8 @@
       "equipment": "dumbbell",
       "pattern": "hinge",
       "zone": 1,
-      "alternatives": [
-        "dumbbell-romanian-deadlift",
-        "dumbbell-reverse-lunge"
-      ]
+      "family": "hinge_single_leg",
+      "alternatives": []
     },
     {
       "slug": "cable-pull-through",
@@ -153,9 +171,11 @@
       "equipment": "cable",
       "pattern": "hinge",
       "zone": 2,
+      "family": "hinge_deadlift",
       "alternatives": [
+        "kettlebell-deadlift",
         "dumbbell-romanian-deadlift",
-        "dumbbell-glute-bridge"
+        "trap-bar-deadlift"
       ]
     },
     {
@@ -164,9 +184,11 @@
       "equipment": "dumbbell",
       "pattern": "hinge",
       "zone": 1,
+      "family": "hip_thrust",
       "alternatives": [
         "dumbbell-hip-thrust",
-        "bodyweight-glute-bridge"
+        "bodyweight-glute-bridge",
+        "hip-thrust-machine"
       ]
     },
     {
@@ -175,9 +197,11 @@
       "equipment": "bodyweight",
       "pattern": "hinge",
       "zone": 1,
+      "family": "hip_thrust",
       "alternatives": [
         "dumbbell-glute-bridge",
-        "single-leg-glute-bridge"
+        "single-leg-glute-bridge",
+        "dumbbell-hip-thrust"
       ]
     },
     {
@@ -186,9 +210,11 @@
       "equipment": "bodyweight",
       "pattern": "hinge",
       "zone": 1,
+      "family": "hip_thrust",
       "alternatives": [
         "bodyweight-glute-bridge",
-        "dumbbell-glute-bridge"
+        "dumbbell-glute-bridge",
+        "dumbbell-hip-thrust"
       ]
     },
     {
@@ -197,7 +223,9 @@
       "equipment": "dumbbell",
       "pattern": "hinge",
       "zone": 1,
+      "family": "hip_thrust",
       "alternatives": [
+        "hip-thrust-machine",
         "dumbbell-glute-bridge",
         "barbell-hip-thrust"
       ]
@@ -208,9 +236,11 @@
       "equipment": "barbell",
       "pattern": "hinge",
       "zone": 4,
+      "family": "hip_thrust",
       "alternatives": [
+        "hip-thrust-machine",
         "dumbbell-hip-thrust",
-        "hip-thrust-machine"
+        "dumbbell-glute-bridge"
       ]
     },
     {
@@ -219,9 +249,11 @@
       "equipment": "machine",
       "pattern": "hinge",
       "zone": 3,
+      "family": "hip_thrust",
       "alternatives": [
         "barbell-hip-thrust",
-        "dumbbell-hip-thrust"
+        "dumbbell-hip-thrust",
+        "dumbbell-glute-bridge"
       ]
     },
     {
@@ -230,9 +262,9 @@
       "equipment": "machine",
       "pattern": "hinge",
       "zone": 3,
+      "family": "leg_curl",
       "alternatives": [
-        "lying-leg-curl",
-        "dumbbell-romanian-deadlift"
+        "lying-leg-curl"
       ]
     },
     {
@@ -241,9 +273,9 @@
       "equipment": "machine",
       "pattern": "hinge",
       "zone": 3,
+      "family": "leg_curl",
       "alternatives": [
-        "seated-leg-curl",
-        "dumbbell-romanian-deadlift"
+        "seated-leg-curl"
       ]
     },
     {
@@ -252,10 +284,8 @@
       "equipment": "cable",
       "pattern": "glutes",
       "zone": 2,
-      "alternatives": [
-        "single-leg-glute-bridge",
-        "dumbbell-glute-bridge"
-      ]
+      "family": "glute_kickback",
+      "alternatives": []
     },
     {
       "slug": "hip-abduction-machine",
@@ -263,6 +293,7 @@
       "equipment": "machine",
       "pattern": "glutes",
       "zone": 3,
+      "family": "hip_abduction",
       "alternatives": [
         "cable-hip-abduction",
         "side-lying-hip-abduction"
@@ -274,6 +305,7 @@
       "equipment": "cable",
       "pattern": "glutes",
       "zone": 2,
+      "family": "hip_abduction",
       "alternatives": [
         "hip-abduction-machine",
         "side-lying-hip-abduction"
@@ -285,9 +317,10 @@
       "equipment": "bodyweight",
       "pattern": "glutes",
       "zone": 1,
+      "family": "hip_abduction",
       "alternatives": [
-        "hip-abduction-machine",
-        "cable-hip-abduction"
+        "cable-hip-abduction",
+        "hip-abduction-machine"
       ]
     },
     {
@@ -296,9 +329,11 @@
       "equipment": "dumbbell",
       "pattern": "single_leg",
       "zone": 1,
+      "family": "lunge_split",
       "alternatives": [
+        "bulgarian-split-squat",
         "dumbbell-reverse-lunge",
-        "dumbbell-step-up"
+        "walking-lunge"
       ]
     },
     {
@@ -307,9 +342,11 @@
       "equipment": "dumbbell",
       "pattern": "single_leg",
       "zone": 1,
+      "family": "lunge_split",
       "alternatives": [
         "dumbbell-split-squat",
-        "dumbbell-reverse-lunge"
+        "dumbbell-reverse-lunge",
+        "walking-lunge"
       ]
     },
     {
@@ -318,9 +355,11 @@
       "equipment": "dumbbell",
       "pattern": "single_leg",
       "zone": 1,
+      "family": "lunge_split",
       "alternatives": [
         "dumbbell-split-squat",
-        "dumbbell-step-up"
+        "walking-lunge",
+        "bulgarian-split-squat"
       ]
     },
     {
@@ -329,9 +368,11 @@
       "equipment": "bodyweight",
       "pattern": "single_leg",
       "zone": 1,
+      "family": "lunge_split",
       "alternatives": [
-        "dumbbell-reverse-lunge",
-        "dumbbell-split-squat"
+        "walking-lunge",
+        "dumbbell-step-up",
+        "dumbbell-reverse-lunge"
       ]
     },
     {
@@ -340,9 +381,11 @@
       "equipment": "dumbbell",
       "pattern": "single_leg",
       "zone": 1,
+      "family": "lunge_split",
       "alternatives": [
         "dumbbell-reverse-lunge",
-        "dumbbell-step-up"
+        "bodyweight-reverse-lunge",
+        "dumbbell-split-squat"
       ]
     },
     {
@@ -351,8 +394,10 @@
       "equipment": "dumbbell",
       "pattern": "single_leg",
       "zone": 1,
+      "family": "lunge_split",
       "alternatives": [
-        "dumbbell-split-squat",
+        "bodyweight-reverse-lunge",
+        "walking-lunge",
         "dumbbell-reverse-lunge"
       ]
     },
@@ -362,9 +407,9 @@
       "equipment": "machine",
       "pattern": "calves",
       "zone": 3,
+      "family": "calf_raise",
       "alternatives": [
-        "dumbbell-calf-raise",
-        "leg-press"
+        "dumbbell-calf-raise"
       ]
     },
     {
@@ -373,9 +418,9 @@
       "equipment": "dumbbell",
       "pattern": "calves",
       "zone": 1,
+      "family": "calf_raise",
       "alternatives": [
-        "calf-raise-machine",
-        "bodyweight-glute-bridge"
+        "calf-raise-machine"
       ]
     },
     {
@@ -384,9 +429,11 @@
       "equipment": "dumbbell",
       "pattern": "push",
       "zone": 1,
+      "family": "horizontal_press",
       "alternatives": [
-        "dumbbell-floor-press",
-        "chest-press-machine"
+        "barbell-bench-press",
+        "chest-press-machine",
+        "dumbbell-floor-press"
       ]
     },
     {
@@ -395,9 +442,11 @@
       "equipment": "dumbbell",
       "pattern": "push",
       "zone": 1,
+      "family": "horizontal_press",
       "alternatives": [
-        "dumbbell-bench-press",
-        "incline-push-up"
+        "chest-press-machine",
+        "incline-dumbbell-press",
+        "dumbbell-bench-press"
       ]
     },
     {
@@ -406,8 +455,10 @@
       "equipment": "dumbbell",
       "pattern": "push",
       "zone": 1,
+      "family": "horizontal_press",
       "alternatives": [
-        "dumbbell-bench-press",
+        "dumbbell-floor-press",
+        "push-up",
         "chest-press-machine"
       ]
     },
@@ -417,9 +468,11 @@
       "equipment": "barbell",
       "pattern": "push",
       "zone": 4,
+      "family": "horizontal_press",
       "alternatives": [
         "dumbbell-bench-press",
-        "chest-press-machine"
+        "chest-press-machine",
+        "dumbbell-floor-press"
       ]
     },
     {
@@ -428,9 +481,11 @@
       "equipment": "machine",
       "pattern": "push",
       "zone": 3,
+      "family": "horizontal_press",
       "alternatives": [
         "dumbbell-bench-press",
-        "incline-push-up"
+        "dumbbell-floor-press",
+        "barbell-bench-press"
       ]
     },
     {
@@ -439,9 +494,9 @@
       "equipment": "machine",
       "pattern": "push",
       "zone": 3,
+      "family": "chest_fly",
       "alternatives": [
-        "dumbbell-chest-fly",
-        "chest-press-machine"
+        "dumbbell-chest-fly"
       ]
     },
     {
@@ -450,9 +505,9 @@
       "equipment": "dumbbell",
       "pattern": "push",
       "zone": 1,
+      "family": "chest_fly",
       "alternatives": [
-        "pec-deck",
-        "dumbbell-bench-press"
+        "pec-deck"
       ]
     },
     {
@@ -461,9 +516,11 @@
       "equipment": "bodyweight",
       "pattern": "push",
       "zone": 1,
+      "family": "horizontal_press",
       "alternatives": [
-        "dumbbell-floor-press",
-        "chest-press-machine"
+        "push-up",
+        "incline-dumbbell-press",
+        "dumbbell-floor-press"
       ]
     },
     {
@@ -472,7 +529,9 @@
       "equipment": "bodyweight",
       "pattern": "push",
       "zone": 1,
+      "family": "horizontal_press",
       "alternatives": [
+        "incline-dumbbell-press",
         "incline-push-up",
         "dumbbell-floor-press"
       ]
@@ -483,9 +542,10 @@
       "equipment": "dumbbell",
       "pattern": "push",
       "zone": 1,
+      "family": "overhead_press",
       "alternatives": [
-        "standing-dumbbell-shoulder-press",
-        "shoulder-press-machine"
+        "shoulder-press-machine",
+        "standing-dumbbell-shoulder-press"
       ]
     },
     {
@@ -494,6 +554,7 @@
       "equipment": "dumbbell",
       "pattern": "push",
       "zone": 1,
+      "family": "overhead_press",
       "alternatives": [
         "seated-dumbbell-shoulder-press",
         "shoulder-press-machine"
@@ -505,6 +566,7 @@
       "equipment": "machine",
       "pattern": "push",
       "zone": 3,
+      "family": "overhead_press",
       "alternatives": [
         "seated-dumbbell-shoulder-press",
         "standing-dumbbell-shoulder-press"
@@ -516,9 +578,9 @@
       "equipment": "dumbbell",
       "pattern": "shoulders",
       "zone": 1,
+      "family": "lateral_raise",
       "alternatives": [
-        "cable-lateral-raise",
-        "shoulder-press-machine"
+        "cable-lateral-raise"
       ]
     },
     {
@@ -527,9 +589,9 @@
       "equipment": "cable",
       "pattern": "shoulders",
       "zone": 2,
+      "family": "lateral_raise",
       "alternatives": [
-        "dumbbell-lateral-raise",
-        "shoulder-press-machine"
+        "dumbbell-lateral-raise"
       ]
     },
     {
@@ -538,9 +600,11 @@
       "equipment": "dumbbell",
       "pattern": "pull",
       "zone": 1,
+      "family": "row",
       "alternatives": [
         "chest-supported-dumbbell-row",
-        "seated-cable-row"
+        "bent-over-dumbbell-row",
+        "single-arm-cable-row"
       ]
     },
     {
@@ -549,7 +613,9 @@
       "equipment": "dumbbell",
       "pattern": "pull",
       "zone": 1,
+      "family": "row",
       "alternatives": [
+        "single-arm-cable-row",
         "one-arm-dumbbell-row",
         "seated-cable-row"
       ]
@@ -560,9 +626,11 @@
       "equipment": "dumbbell",
       "pattern": "pull",
       "zone": 1,
+      "family": "row",
       "alternatives": [
-        "chest-supported-dumbbell-row",
-        "seated-cable-row"
+        "one-arm-dumbbell-row",
+        "barbell-bent-over-row",
+        "chest-supported-dumbbell-row"
       ]
     },
     {
@@ -571,9 +639,11 @@
       "equipment": "barbell",
       "pattern": "pull",
       "zone": 4,
+      "family": "row",
       "alternatives": [
         "bent-over-dumbbell-row",
-        "seated-cable-row"
+        "one-arm-dumbbell-row",
+        "chest-supported-dumbbell-row"
       ]
     },
     {
@@ -582,9 +652,9 @@
       "equipment": "machine",
       "pattern": "pull",
       "zone": 3,
+      "family": "vertical_pull",
       "alternatives": [
-        "one-arm-dumbbell-row",
-        "seated-cable-row"
+        "assisted-pull-up"
       ]
     },
     {
@@ -593,9 +663,9 @@
       "equipment": "machine",
       "pattern": "pull",
       "zone": 3,
+      "family": "vertical_pull",
       "alternatives": [
-        "lat-pulldown",
-        "one-arm-dumbbell-row"
+        "lat-pulldown"
       ]
     },
     {
@@ -604,7 +674,9 @@
       "equipment": "cable",
       "pattern": "pull",
       "zone": 2,
+      "family": "row",
       "alternatives": [
+        "single-arm-cable-row",
         "chest-supported-dumbbell-row",
         "one-arm-dumbbell-row"
       ]
@@ -615,8 +687,10 @@
       "equipment": "cable",
       "pattern": "pull",
       "zone": 2,
+      "family": "row",
       "alternatives": [
         "seated-cable-row",
+        "chest-supported-dumbbell-row",
         "one-arm-dumbbell-row"
       ]
     },
@@ -626,9 +700,10 @@
       "equipment": "cable",
       "pattern": "pull",
       "zone": 2,
+      "family": "rear_delt",
       "alternatives": [
-        "dumbbell-reverse-fly",
-        "reverse-pec-deck"
+        "reverse-pec-deck",
+        "dumbbell-reverse-fly"
       ]
     },
     {
@@ -637,6 +712,7 @@
       "equipment": "dumbbell",
       "pattern": "pull",
       "zone": 1,
+      "family": "rear_delt",
       "alternatives": [
         "face-pull",
         "reverse-pec-deck"
@@ -648,6 +724,7 @@
       "equipment": "machine",
       "pattern": "pull",
       "zone": 3,
+      "family": "rear_delt",
       "alternatives": [
         "face-pull",
         "dumbbell-reverse-fly"
@@ -659,9 +736,10 @@
       "equipment": "dumbbell",
       "pattern": "arms",
       "zone": 1,
+      "family": "biceps_curl",
       "alternatives": [
-        "hammer-curl",
-        "cable-biceps-curl"
+        "cable-biceps-curl",
+        "hammer-curl"
       ]
     },
     {
@@ -670,6 +748,7 @@
       "equipment": "dumbbell",
       "pattern": "arms",
       "zone": 1,
+      "family": "biceps_curl",
       "alternatives": [
         "dumbbell-biceps-curl",
         "cable-biceps-curl"
@@ -681,6 +760,7 @@
       "equipment": "cable",
       "pattern": "arms",
       "zone": 2,
+      "family": "biceps_curl",
       "alternatives": [
         "dumbbell-biceps-curl",
         "hammer-curl"
@@ -692,6 +772,7 @@
       "equipment": "cable",
       "pattern": "arms",
       "zone": 2,
+      "family": "triceps_extension",
       "alternatives": [
         "overhead-dumbbell-triceps-extension",
         "dumbbell-triceps-kickback"
@@ -703,6 +784,7 @@
       "equipment": "dumbbell",
       "pattern": "arms",
       "zone": 1,
+      "family": "triceps_extension",
       "alternatives": [
         "triceps-pushdown",
         "dumbbell-triceps-kickback"
@@ -714,9 +796,10 @@
       "equipment": "dumbbell",
       "pattern": "arms",
       "zone": 1,
+      "family": "triceps_extension",
       "alternatives": [
-        "triceps-pushdown",
-        "overhead-dumbbell-triceps-extension"
+        "overhead-dumbbell-triceps-extension",
+        "triceps-pushdown"
       ]
     },
     {
@@ -725,9 +808,10 @@
       "equipment": "bodyweight",
       "pattern": "core",
       "zone": 1,
+      "family": "core_bracing",
       "alternatives": [
-        "bird-dog",
-        "forearm-plank"
+        "forearm-plank",
+        "bird-dog"
       ]
     },
     {
@@ -736,6 +820,7 @@
       "equipment": "bodyweight",
       "pattern": "core",
       "zone": 1,
+      "family": "core_bracing",
       "alternatives": [
         "dead-bug",
         "forearm-plank"
@@ -747,9 +832,9 @@
       "equipment": "bodyweight",
       "pattern": "core",
       "zone": 1,
+      "family": "core_anti_rotation",
       "alternatives": [
-        "forearm-plank",
-        "dead-bug"
+        "pallof-press"
       ]
     },
     {
@@ -758,9 +843,10 @@
       "equipment": "bodyweight",
       "pattern": "core",
       "zone": 1,
+      "family": "core_bracing",
       "alternatives": [
         "dead-bug",
-        "side-plank"
+        "bird-dog"
       ]
     },
     {
@@ -769,8 +855,8 @@
       "equipment": "cable",
       "pattern": "core",
       "zone": 2,
+      "family": "core_anti_rotation",
       "alternatives": [
-        "dead-bug",
         "side-plank"
       ]
     },
@@ -780,9 +866,10 @@
       "equipment": "cable",
       "pattern": "core",
       "zone": 2,
+      "family": "core_flexion",
       "alternatives": [
         "reverse-crunch",
-        "dead-bug"
+        "hanging-knee-raise"
       ]
     },
     {
@@ -791,9 +878,10 @@
       "equipment": "bodyweight",
       "pattern": "core",
       "zone": 1,
+      "family": "core_flexion",
       "alternatives": [
-        "dead-bug",
-        "cable-crunch"
+        "cable-crunch",
+        "hanging-knee-raise"
       ]
     },
     {
@@ -802,9 +890,10 @@
       "equipment": "bodyweight",
       "pattern": "core",
       "zone": 3,
+      "family": "core_flexion",
       "alternatives": [
         "reverse-crunch",
-        "dead-bug"
+        "cable-crunch"
       ]
     },
     {
@@ -813,9 +902,9 @@
       "equipment": "dumbbell",
       "pattern": "carry",
       "zone": 1,
+      "family": "carry",
       "alternatives": [
-        "suitcase-carry",
-        "forearm-plank"
+        "suitcase-carry"
       ]
     },
     {
@@ -824,9 +913,9 @@
       "equipment": "dumbbell",
       "pattern": "carry",
       "zone": 1,
+      "family": "carry",
       "alternatives": [
-        "farmer-carry",
-        "side-plank"
+        "farmer-carry"
       ]
     }
   ]

@@ -1,27 +1,26 @@
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import {
   AppText,
-  Chip,
   DetailLayout,
   PrimaryButton,
   StatStrip,
   TextButton,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { isFeatureEnabled } from '@/config/features';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed } from '@/lib/paywall';
 import { coverForRoutine } from '@/lib/images';
+import { contentStretch } from '@/lib/contentStretches';
+import { stretchMuscleLabel } from '@/lib/copy';
 import {
   DIFFICULTY_LABELS,
-  ROUTINE_EQUIPMENT_LABELS,
-  ROUTINE_GOAL_LABELS,
-  formatTagLabel,
   type Routine,
   type RoutineDayExercise,
 } from '@/lib/routines';
@@ -30,11 +29,10 @@ import {
   describeStretchError,
   fetchStretchRoutine,
   formatHold,
-  formatHoldShort,
   isSessionInProgressError,
   missingStretchesMessage,
+  stretchSessionMinutes,
   stretchSteps,
-  totalHoldSeconds,
 } from '@/lib/stretches';
 import { useWorkout } from '@/lib/workout';
 
@@ -57,6 +55,9 @@ function HoldThumb({ step }: { step: RoutineDayExercise }) {
 export default function StretchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  useEffect(() => {
+    if (!isFeatureEnabled('stretches')) router.replace('/(tabs)' as Href);
+  }, []);
   const { colours, spacing } = useTheme();
   const workout = useWorkout();
   const [routine, setRoutine] = useState<Routine | null>(null);
@@ -168,14 +169,11 @@ export default function StretchDetailScreen() {
 
   const steps = stretchSteps(routine);
   const visibleSteps = steps;
-  const holdSeconds = totalHoldSeconds(steps);
+  const minutes = stretchSessionMinutes(routine.slug, routine.session_minutes);
+  const stretchMeta = contentStretch(routine.slug);
+  const muscle = stretchMuscleLabel(stretchMeta?.area);
   const coverRecord = coverForRoutine(routine);
   const showMore = routine.description.trim().length > 90;
-  const chips = [
-    ROUTINE_EQUIPMENT_LABELS[routine.equipment],
-    ROUTINE_GOAL_LABELS[routine.goal],
-    ...routine.tags.map((tag) => formatTagLabel(tag)),
-  ];
   const stickyLabel = 'Start stretch';
 
   return (
@@ -184,7 +182,7 @@ export default function StretchDetailScreen() {
       coverSlug={coverRecord?.id ?? null}
       letter={routine.name}
       title={routine.name}
-      eyebrow={`${DIFFICULTY_LABELS[routine.difficulty]} · Stretch`}
+      eyebrow={muscle}
       onBack={goBack}
       sticky={
         <PrimaryButton
@@ -205,20 +203,11 @@ export default function StretchDetailScreen() {
         />
       ) : null}
 
-      {chips.length > 0 ? (
-        <View style={styles.tagRow}>
-          {chips.map((chip, index) => (
-            <Chip key={`${chip}-${index}`} label={chip} />
-          ))}
-        </View>
-      ) : null}
-
       <StatStrip
         style={{ marginTop: spacing.lg }}
         items={[
-          { icon: 'time-outline', value: String(routine.session_minutes), label: 'Minutes' },
+          { icon: 'time-outline', value: String(minutes), label: 'Minutes' },
           { icon: 'body-outline', value: String(steps.length), label: 'Holds' },
-          { icon: 'timer-outline', value: formatHoldShort(holdSeconds), label: 'Time' },
           { icon: 'bar-chart-outline', value: DIFFICULTY_LABELS[routine.difficulty], label: 'Level' },
         ]}
       />

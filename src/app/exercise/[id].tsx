@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CoachChips } from '@/components/CoachChips';
 import { ExerciseMediaPlayer } from '@/components/ExerciseMediaPlayer';
 import { equipmentIconName, RelatedLearn } from '@/components/ui';
 import { AppText } from '@/components/ui/AppText';
@@ -27,11 +26,14 @@ import {
   type Exercise,
 } from '@/lib/exercises';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
+import { exerciseDemoHeightForScreen } from '@/lib/getExerciseMedia';
 import { recordGuideOpened } from '@/lib/achievements';
+import { openCoach } from '@/lib/coach';
 import { guideForExercise, preferredSwapIds } from '@/lib/contentGuides';
-import { fillCopy, machineCopy } from '@/lib/copy';
+import { aiCopy, fillCopy, loggerCopy, machineCopy } from '@/lib/copy';
 import { machineGuideForExercise } from '@/lib/machineGuides';
 import { setupStepsFor } from '@/lib/gymUnlocked';
+import { ensureSubscribed } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import type { SlotExercise } from '@/lib/programmes';
 import { fetchAlternatives } from '@/lib/swaps';
@@ -41,9 +43,9 @@ type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 export default function ExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const mediaWidth = windowWidth - 40;
-  const mediaHeight = Math.min(280, Math.round((mediaWidth * 3) / 4));
+  const mediaHeight = exerciseDemoHeightForScreen(windowHeight);
   const { profile } = useProfile();
   const { showDevTools } = useDevTools();
   const answers = getQuizAnswers(profile);
@@ -161,28 +163,8 @@ export default function ExerciseScreen() {
           width={mediaWidth}
           height={mediaHeight}
           fallback={mediaFallback}
+          expandable
         />
-      </View>
-
-      <CoachChips type="exercise" id={exercise.id} label={exercise.name} />
-
-      <View style={styles.firstTime}>
-        <AppText variant="eyebrow" style={styles.firstTimeLabel}>
-          First time
-        </AppText>
-        <AppText variant="bodySm" style={styles.firstTimeCopy}>
-          Where to find it, how to set it up, what to do, and a swap if it’s taken.
-        </AppText>
-        {machine ? (
-          <Pressable
-            onPress={() => router.push({ pathname: '/machines/[id]', params: { id: machine.id } } as Href)}
-            style={styles.machineLink}
-            accessibilityRole="link">
-            <AppText variant="bodyStrong" style={styles.machineLinkText}>
-              {fillCopy(machineCopy.first_time, { machine: machine.name.toLowerCase() })}
-            </AppText>
-          </Pressable>
-        ) : null}
       </View>
 
       <AppText variant="title1" style={styles.title}>
@@ -203,6 +185,61 @@ export default function ExerciseScreen() {
         </AppText>
       </View>
 
+      <Pressable
+        onPress={() => {
+          if (!ensureSubscribed()) return;
+          openCoach({
+            context: { type: 'exercise', id: exercise.id, label: exercise.name },
+            entry: 'exercise',
+          });
+        }}
+        style={({ pressed }) => [styles.askAi, pressed && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityLabel={aiCopy.ask_ai}>
+        <Ionicons name="sparkles" size={18} color={colours.accent} />
+        <AppText variant="bodyStrong" style={styles.askAiLabel}>
+          {aiCopy.ask_ai}
+        </AppText>
+      </Pressable>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeading}>
+          <Ionicons name="swap-horizontal-outline" size={20} color={colours.accent} />
+          <AppText variant="title3" style={styles.cardTitle}>
+            If it’s taken
+          </AppText>
+        </View>
+        {swaps.length === 0 ? (
+          <AppText variant="body" style={styles.body}>
+            {loggerCopy.swap_none}
+          </AppText>
+        ) : (
+          <>
+            <AppText variant="body" style={styles.body}>
+              {takenTip ||
+                'Pick one of these: same movement, no need to wait. You can also swap from the logger.'}
+            </AppText>
+            {swaps.map((option) => (
+              <Pressable
+                key={option.id}
+                onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: option.id } } as Href)}
+                style={({ pressed }) => [styles.swapRow, pressed && styles.pressed]}
+                accessibilityRole="button">
+                <View style={styles.flex}>
+                  <AppText variant="bodyStrong" style={styles.swapName}>
+                    {option.name}
+                  </AppText>
+                  <AppText variant="bodySm" style={styles.muted}>
+                    {EQUIPMENT_LABELS[option.equipment]}
+                  </AppText>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colours.textMuted} />
+              </Pressable>
+            ))}
+          </>
+        )}
+      </View>
+
       <View style={styles.card}>
         <View style={styles.cardHeading}>
           <Ionicons name="location-outline" size={20} color={colours.accent} />
@@ -213,6 +250,16 @@ export default function ExerciseScreen() {
         <AppText variant="body" style={styles.body}>
           {whereToFind}
         </AppText>
+        {machine ? (
+          <Pressable
+            onPress={() => router.push({ pathname: '/machines/[id]', params: { id: machine.id } } as Href)}
+            style={styles.machineLink}
+            accessibilityRole="link">
+            <AppText variant="bodyStrong" style={styles.machineLinkText}>
+              {fillCopy(machineCopy.first_time, { machine: machine.name.toLowerCase() })}
+            </AppText>
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={styles.card}>
@@ -251,43 +298,6 @@ export default function ExerciseScreen() {
             </AppText>
           </View>
         ))}
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.cardHeading}>
-          <Ionicons name="swap-horizontal-outline" size={20} color={colours.accent} />
-          <AppText variant="title3" style={styles.cardTitle}>
-            If it’s taken
-          </AppText>
-        </View>
-        <AppText variant="body" style={styles.body}>
-          {takenTip || 'Pick one of these: same muscles, no need to wait. You can also swap from the logger.'}
-        </AppText>
-        {swaps.length === 0 ? (
-          <AppText variant="bodySm" style={styles.muted}>
-            {takenTip
-              ? 'No close swap is listed for this one. Skip it today or come back to it later in the session.'
-              : "We'll suggest a swap here once the library has finished loading."}
-          </AppText>
-        ) : (
-          swaps.map((option) => (
-            <Pressable
-              key={option.id}
-              onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: option.id } } as Href)}
-              style={({ pressed }) => [styles.swapRow, pressed && styles.pressed]}
-              accessibilityRole="button">
-              <View style={styles.flex}>
-                <AppText variant="bodyStrong" style={styles.swapName}>
-                  {option.name}
-                </AppText>
-                <AppText variant="bodySm" style={styles.muted}>
-                  {EQUIPMENT_LABELS[option.equipment]}
-                </AppText>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colours.textMuted} />
-            </Pressable>
-          ))
-        )}
       </View>
 
       <RelatedLearn exerciseId={exercise.id} exerciseSlug={id} />
@@ -332,24 +342,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 16,
   },
-  firstTime: {
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: colours.accentSoft,
-    gap: 4,
-  },
-  firstTimeLabel: {
-    color: colours.accent,
-  },
-  firstTimeCopy: {
-    color: colours.text,
-  },
-  machineLink: {
-    marginTop: 6,
-  },
-  machineLinkText: {
-    color: colours.accent,
-  },
   title: {
     color: colours.text,
   },
@@ -373,6 +365,24 @@ const styles = StyleSheet.create({
   tagEquipment: {
     color: colours.accent,
     backgroundColor: colours.accentSoft,
+  },
+  askAi: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 999,
+    backgroundColor: colours.accentSoft,
+  },
+  askAiLabel: {
+    color: colours.accent,
+  },
+  machineLink: {
+    marginTop: 2,
+  },
+  machineLinkText: {
+    color: colours.accent,
   },
   card: {
     padding: 18,

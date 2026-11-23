@@ -29,7 +29,7 @@ import indexesFile from './indexes.json' with { type: 'json' };
 /**
  * Ascenda Coach. One chat with tools. Claude key: ANTHROPIC_API_KEY.
  * The model chooses tools; this file and tools.ts produce the result.
- * Never read or send profiles.life_stage. It is special-category health data.
+ * Never read or send profiles.life_stage or period dates. Special-category health data.
  */
 
 const FEATURE = 'coach';
@@ -67,7 +67,9 @@ const cors = {
 
 const promptTemplate = await Deno.readTextFile(new URL('./prompt.md', import.meta.url));
 const indexes = indexesFile as Indexes;
-const cachedSystem = `${promptTemplate}\n\n<app_help>\n${JSON.stringify(indexes.app_help ?? [])}\n</app_help>\n${compactIndex(indexes)}`;
+const indexesNoStretch: Indexes = { ...indexes, stretches: [] };
+const cachedSystemFull = `${promptTemplate}\n\n<app_help>\n${JSON.stringify(indexes.app_help ?? [])}\n</app_help>\n${compactIndex(indexes)}`;
+const cachedSystemNoStretch = `${promptTemplate}\n\n<app_help>\n${JSON.stringify(indexes.app_help ?? [])}\n</app_help>\n${compactIndex(indexesNoStretch)}`;
 
 const TOOLS = [
   {
@@ -464,7 +466,8 @@ async function callClaude(
   apiKey: string,
   messages: ClaudeMessage[],
   signal: AbortSignal,
-  toolChoice: 'auto' | 'answer'
+  toolChoice: 'auto' | 'answer',
+  systemText: string
 ): Promise<{ status: number; body: unknown; timedOut: boolean }> {
   try {
     const response = await fetch(ANTHROPIC, {
@@ -480,7 +483,7 @@ async function callClaude(
       body: JSON.stringify({
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: [{ type: 'text', text: cachedSystem, cache_control: { type: 'ephemeral' } }],
+        system: [{ type: 'text', text: systemText, cache_control: { type: 'ephemeral' } }],
         tools: TOOLS,
         thinking: { type: 'disabled' },
         tool_choice: toolChoice === 'answer' ? { type: 'tool', name: 'report_coach_answer' } : { type: 'auto' },
@@ -549,6 +552,7 @@ type TurnState = {
   admin: SupabaseClient | null;
   isEval: boolean;
   question: string;
+  indexes: Indexes;
 };
 
 /** Period, menopause, symptoms or other health reasons must never become a saved preference. */
@@ -559,11 +563,11 @@ function isHealthPreferenceText(value: string): boolean {
   );
 }
 
-/** Strip special-category fields. life_stage must never go to the model. */
+/** Strip special-category fields. life_stage and period dates must never go to the model. */
 function omitHealthFromPayload(value: Json): Json {
   const out: Json = {};
   for (const [key, item] of Object.entries(value)) {
-    if (/life_stage|bodyweight|health|menopause|perimenopause/.test(key)) continue;
+    if (/life_stage|bodyweight|health|menopause|perimenopause|period_log|period_logs|cycle/.test(key)) continue;
     out[key] = item;
   }
   return out;
@@ -571,23 +575,23 @@ function omitHealthFromPayload(value: Json): Json {
 
 async function runTool(name: string, input: Json, state: TurnState): Promise<Json> {
   if (name === 'lookup') {
-    const result = lookupTool(indexes, input);
+    const result = lookupTool(state.indexes, input);
     return result.ok ? { items: result.items } : { error: result.error };
   }
   if (name === 'adjust_today') {
-    const result = adjustTodayTool(indexes, input, state.remaining, state.prefs);
+    const result = adjustTodayTool(state.indexes, input, state.remaining, state.prefs);
     return result.ok ? result.card : { error: result.error };
   }
   if (name === 'build_session') {
-    const result = buildSessionTool(indexes, input, state.prefs, state.recentIds);
+    const result = buildSessionTool(state.indexes, input, state.prefs, state.recentIds);
     return result.ok ? result.card : { error: result.error };
   }
   if (name === 'recommend_routine') {
-    const result = recommendRoutineTool(indexes, input);
+    const result = recommendRoutineTool(state.indexes, input);
     return result.ok ? result.card : { error: result.error };
   }
   if (name === 'find_recipes') {
-    const result = findRecipesTool(indexes, input);
+    const result = findRecipesTool(state.indexes, input);
     return result.ok ? result.card : { error: result.error };
   }
   if (name === 'save_preference') {
@@ -604,7 +608,9 @@ async function runTool(name: string, input: Json, state: TurnState): Promise<Jso
     const kind = text(input.kind);
     let exerciseId = text(input.exercise_id);
     if (kind === 'avoid_exercise' && /lunge/i.test(exerciseId)) {
-      exerciseId = lungeExerciseIds(indexes).includes(exerciseId) ? exerciseId : lungeExerciseIds(indexes)[0] ?? exerciseId;
+      exerciseId = lungeExerciseIds(state.indexes).includes(exerciseId)
+        ? exerciseId
+        : lungeExerciseIds(state.indexes)[0] ?? exerciseId;
     }
     if (kind === 'avoid_exercise' && !exerciseId) {
       return { error: 'exercise_id is required' };
@@ -614,7 +620,7 @@ async function runTool(name: string, input: Json, state: TurnState): Promise<Jso
     }
     const label =
       kind === 'avoid_exercise'
-        ? `Never give ${indexes.exercises.find((item) => item.id === exerciseId)?.name ?? exerciseId}`
+        ? `Never give ${state.indexes.exercises.find((item) => item.id === exerciseId)?.name ?? exerciseId}`
         : `No ${text(input.equipment)} at my gym`;
     return {
       id: `pref-${exerciseId || text(input.equipment)}`,
@@ -671,7 +677,7 @@ async function runTool(name: string, input: Json, state: TurnState): Promise<Jso
         .limit(20);
       return { checkpoints: data ?? [] };
     }
-    // Sessions only. Do not join profiles.life_stage into Coach context.
+    // Sessions only. Do not join profiles.life_stage or period_logs into Coach context.
     const { data: sessions } = await state.admin
       .from('sessions')
       .select('id, started_at, completed_at, duration_seconds')
@@ -794,16 +800,19 @@ Deno.serve(async (req) => {
     next_monday: nextWeekdayIso(1),
   });
 
-  const retrieved = retrieve(indexes, question, context);
+  const stretchesEnabled = parsedBody.stretches_enabled === true;
+  const liveIndexes = stretchesEnabled ? indexes : indexesNoStretch;
+  const systemText = stretchesEnabled ? cachedSystemFull : cachedSystemNoStretch;
+  const retrieved = retrieve(liveIndexes, question, context);
   const retrievedIds = retrieved.map((item) => ({ type: item.type, id: item.id }));
   const allowed = new Set<string>([
-    ...indexes.exercises.map((item) => `exercise:${item.id}`),
-    ...indexes.machines.map((item) => `machine:${item.id}`),
-    ...indexes.articles.map((item) => `article:${item.id}`),
-    ...indexes.routines.map((item) => `routine:${item.slug}`),
-    ...indexes.recipes.map((item) => `recipe:${item.slug}`),
-    ...indexes.stretches.map((item) => `stretch:${item.id}`),
-    ...indexes.cardio.map((item) => `cardio:${item.id}`),
+    ...liveIndexes.exercises.map((item) => `exercise:${item.id}`),
+    ...liveIndexes.machines.map((item) => `machine:${item.id}`),
+    ...liveIndexes.articles.map((item) => `article:${item.id}`),
+    ...liveIndexes.routines.map((item) => `routine:${item.slug}`),
+    ...liveIndexes.recipes.map((item) => `recipe:${item.slug}`),
+    ...liveIndexes.stretches.map((item) => `stretch:${item.id}`),
+    ...liveIndexes.cardio.map((item) => `cardio:${item.id}`),
   ]);
 
   if (!isEval && userId && admin && !bypassAiLimit(parsedBody)) {
@@ -830,7 +839,7 @@ Deno.serve(async (req) => {
   const summary = text(parsedBody.summary) || text(asRecord(parsedBody.eval_fixtures).summary);
   const userTurn = [
     summary ? `<summary>\n${summary}\n</summary>` : '',
-    `<context>\n${JSON.stringify(contextRecord(indexes, context, remaining))}\n</context>`,
+    `<context>\n${JSON.stringify(contextRecord(liveIndexes, context, remaining))}\n</context>`,
     `<her_training>\n${JSON.stringify(herTraining)}\n</her_training>`,
     `<retrieved>\n${JSON.stringify(retrieved.map((item) => item.record))}\n</retrieved>`,
     `<user_input>\n${question}\n</user_input>`,
@@ -865,13 +874,14 @@ Deno.serve(async (req) => {
     admin,
     isEval,
     question,
+    indexes: liveIndexes,
   };
 
   try {
     let toolCount = 0;
     for (let step = 0; step < MAX_TOOL_CALLS + 2 && !result; step += 1) {
       const choice = toolCount >= MAX_TOOL_CALLS || step === MAX_TOOL_CALLS + 1 ? 'answer' : 'auto';
-      const call = await callClaude(apiKey, messages, controller.signal, choice);
+      const call = await callClaude(apiKey, messages, controller.signal, choice, systemText);
       lastClaudeStatus = call.status;
       lastClaudeError = text(asRecord(asRecord(call.body).error).message) || text(asRecord(asRecord(call.body).error).type);
       lastStop = text(asRecord(call.body).stop_reason);
@@ -952,7 +962,7 @@ Deno.serve(async (req) => {
     result ??
     fallbackAnswer(
       question,
-      retrievedIds.length > 0 ? retrievedIds : fallbackLinks(indexes, question, context)
+      retrievedIds.length > 0 ? retrievedIds : fallbackLinks(liveIndexes, question, context)
     );
   if (timedOut && !result) {
     answer.reply = stripEmDashes('That took too long. Please try again.');

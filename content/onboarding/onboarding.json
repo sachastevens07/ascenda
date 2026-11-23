@@ -687,6 +687,7 @@
       "week_title": "Your week",
       "week_template": "{routine.schedule_strength_days} strength days a week: {preferred_days_text}",
       "week_extras_line": "Plus optional cardio and stretching to suit you",
+      "week_extras_line_no_stretch": "Plus optional cardio to suit you",
       "week_extras_line_balanced": "Including {routine.cardio_days} cardio days",
       "timeline_title": "What to look forward to",
       "timeline_source": "routine.plan_reveal_milestones plus strength_estimate",
@@ -909,12 +910,47 @@
     ],
     "fit_rule": "After a rule picks a routine, check it fits: routine.weekly_plan.gym_days_needed must be at most days_per_week. If it doesn't fit, use the first alternative that fits. If none fit, use the-two-day-start (gym_experience not_yet, just_started or on_and_off) or twice-a-week-strong (regularly). Apply the same check to the alternatives shown.",
     "life_stage_adjustments": {
-      "_applies": "Only when profiles.life_stage is 'perimenopause' or 'menopause'. Applied after the rules and fit_rule. Never changes progression, never caps weights, never used for predictions.",
-      "routine": "If the recommended routine has more than 3 strength days and her main goal isn't build_muscle or glutes_and_legs, prefer the first alternative with 2 to 3 strength days that also passes fit_rule. Otherwise keep the recommendation.",
+      "_applies": "Only when profiles.life_stage is 'perimenopause' or 'menopause'. Applied after the rules and fit_rule. Read life_stage on the device only. Never changes progression, never caps weights, never shortens routines, never used for predictions.",
+      "_version": 2,
+      "routine": "If the recommended routine has more than 3 strength days and her main goal isn't build_muscle or glutes_and_legs, prefer the first alternative with 2 to 3 strength days that also passes fit_rule. Otherwise keep the recommendation. Favour 2 to 3 strength-day routines that still build toward heavier main lifts.",
       "featured_for_you": "Within the Featured for you row, rank routines with 2 to 3 strength days and a recovery stretch in weekly_plan slightly higher.",
-      "cardio": "Cardio suggestions may include an optional short moderate-impact option (e.g. 1-minute jogging intervals on the treadmill, or step-ups), always next to brisk walking as the lower-impact choice. Coach review required.",
+      "strong_bones_note": {
+        "title": "Strong bones",
+        "body": "This plan keeps building towards heavier main lifts, which is one of the best things you can do for bone strength. Impact work stays optional."
+      },
+      "impact_finisher": {
+        "after": "lower_body_days",
+        "optional": true,
+        "minutes": 3,
+        "title": "Optional finisher",
+        "body": "A short 2 to 3 minutes after your lower-body work. Skip with one tap.",
+        "impact": {
+          "id": "impact",
+          "label": "Short jog intervals",
+          "body": "About 3 minutes: 1 minute jogging, 1 minute easy.",
+          "cardio_slug": "treadmill-intervals-1-2"
+        },
+        "lower_impact": {
+          "id": "lower_impact",
+          "label": "Incline walk",
+          "body": "Brisk incline walking, same 2 to 3 minutes. Always offered as the lower-impact choice.",
+          "cardio_slug": "incline-walk-finisher-10"
+        },
+        "skip": "Skip"
+      },
+      "lower_body_warmup_balance_step": {
+        "slug": "single-leg-stand",
+        "name": "Single-leg stand",
+        "duration_seconds": 20,
+        "per_side": true,
+        "cue": "Stand on one leg. Hold something nearby if you want, then switch sides.",
+        "note": "Optional extra for balance."
+      },
+      "planner": "Leave a rest day between hard lower-body sessions when her week has room.",
+      "checkin": "Show Hot flushes and Achy joints. Hide period options when life_stage is menopause.",
       "learn": "Recommended for you shows Your body and training articles first.",
-      "recovery": "Give recovery stretch suggestions a little more weight on Home and in the Planner."
+      "recovery": "Give recovery stretch suggestions a little more weight on Home and in the Planner.",
+      "never": "Never changes progression, never caps weights, never shortens routines, never used for predictions."
     },
     "gym_days_note": "routine.gym_days_needed and routine.schedule_strength_days come from weekly_plan in the routine file (gym_days_needed; strength_days length). routine.cardio_days is the length of required_cardio_days.",
     "never_auto_recommend": [

@@ -3,13 +3,15 @@ import { Stack, router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
+  Dimensions,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
+  type KeyboardEvent,
   type ScrollViewInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -49,6 +51,39 @@ function safetyCard(flag: CoachSafetyFlag | null): { title: string; body: string
   if (flag === 'off_topic') return { title: 'Training only', body: aiCopy.ask_card_off_topic, emergency: false };
   if (flag === 'wellbeing') return { title: 'You are not alone', body: aiCopy.ask_card_wellbeing, emergency: false };
   return null;
+}
+
+function keyboardOverlap(event: KeyboardEvent) {
+  const windowHeight = Dimensions.get('window').height;
+  const height = event.endCoordinates.height;
+  const byFrame = windowHeight - event.endCoordinates.screenY;
+  const pick =
+    height > 80 && height < windowHeight * 0.7
+      ? height
+      : byFrame > 80 && byFrame < windowHeight * 0.7
+        ? byFrame
+        : Math.max(0, height);
+  return Number.isFinite(pick) ? pick : 0;
+}
+
+function useKeyboardInset() {
+  const [inset, setInset] = useState(0);
+  useEffect(() => {
+    const show = (event: KeyboardEvent) => setInset(keyboardOverlap(event));
+    const hide = () => setInset(0);
+    const subs = [
+      Keyboard.addListener('keyboardDidShow', show),
+      Keyboard.addListener('keyboardDidHide', hide),
+    ];
+    if (Platform.OS === 'ios') {
+      subs.push(Keyboard.addListener('keyboardWillChangeFrame', show));
+      subs.push(Keyboard.addListener('keyboardWillHide', hide));
+    }
+    return () => {
+      for (const sub of subs) sub.remove();
+    };
+  }, []);
+  return inset;
 }
 
 function parseSessionParam(raw: string | undefined): SessionTodayExercise[] {
@@ -100,11 +135,15 @@ export default function CoachScreen() {
   );
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [cardState, setCardState] = useState<Record<string, 'applied' | 'dismissed'>>({});
   const [historyOpen, setHistoryOpen] = useState(false);
   const [threads, setThreads] = useState<{ id: string; title: string }[]>([]);
   const sentPreset = useRef(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const chipLabel = contextChipLabel(context);
+  const keyboardInset = useKeyboardInset();
+  const keyboardOpen = keyboardInset > 0;
+  const bottomGap = keyboardOpen ? keyboardInset : Math.max(insets.bottom, 12);
 
   useEffect(() => {
     if (startNew || !conversationId) return;
@@ -122,6 +161,7 @@ export default function CoachScreen() {
   async function send(text: string) {
     const question = text.trim();
     if (!question || busy || !ensureSubscribed()) return;
+    Keyboard.dismiss();
     setBusy(true);
     setNotice(null);
     setDraft('');
@@ -177,9 +217,26 @@ export default function CoachScreen() {
     }
   }
 
+  useEffect(() => {
+    if (keyboardInset <= 0) return;
+    requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+  }, [keyboardInset]);
+
   async function onCard(card: CoachCard, button: string) {
     try {
+      if (button === 'Not now' || button === 'Cancel') {
+        setCardState((current) => ({ ...current, [card.id]: 'dismissed' }));
+        return;
+      }
       const result = await applyCoachCard(card, button, sessionId);
+      if (card.type === 'session_change' && button === 'Use this') {
+        Keyboard.dismiss();
+        setCardState((current) => ({ ...current, [card.id]: 'applied' }));
+        if (sessionId && router.canGoBack()) {
+          router.back();
+          return;
+        }
+      }
       if (result) setNotice(result);
     } catch (error) {
       showDialog(COACH_UI.title, error instanceof Error ? error.message : COACH_UI.error);
@@ -199,12 +256,11 @@ export default function CoachScreen() {
   const chips = chipsForContext(context.type);
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.screen, { backgroundColor: colours.bg }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <Stack.Screen
         options={{
           title: COACH_UI.title,
+          keyboardHandlingEnabled: false,
           headerRight: () => (
             <View style={styles.headerActions}>
               <Pressable
@@ -239,7 +295,8 @@ export default function CoachScreen() {
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={[styles.content, { paddingBottom: 16 }]}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive">
         {chipLabel ? (
           <Chip label={chipLabel} size="lg" />
         ) : null}
@@ -343,6 +400,13 @@ export default function CoachScreen() {
                     <AppText variant="bodyStrong" style={{ color: colours.ink }}>
                       {cardSummary(toolCard)}
                     </AppText>
+                    {cardState[toolCard.id] === 'applied' ? (
+                      <AppText variant="bodySm" style={{ color: colours.brand }}>
+                        {toolCard.lighter === true || toolCard.energy === 'low'
+                          ? COACH_UI.card_applied_lighter
+                          : COACH_UI.card_applied_look}
+                      </AppText>
+                    ) : cardState[toolCard.id] === 'dismissed' ? null : (
                     <View style={styles.cardButtons}>
                       {(toolCard.buttons ?? []).map((button) =>
                         button === 'Not now' || button === 'Cancel' ? (
@@ -363,6 +427,7 @@ export default function CoachScreen() {
                         )
                       )}
                     </View>
+                    )}
                   </View>
                 ))}
                 {item.role === 'assistant' ? (
@@ -394,24 +459,27 @@ export default function CoachScreen() {
           );
         })}
         {busy ? <ActivityIndicator color={colours.brand} style={{ marginTop: 8 }} /> : null}
-        {notice ? (
-          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 8 }}>
-            {notice}
-          </AppText>
-        ) : null}
         <Pressable onPress={() => router.push('/safety' as Href)} accessibilityRole="link">
           <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 12 }}>
             {COACH_UI.label} {COACH_UI.safety_link}
           </AppText>
         </Pressable>
       </ScrollView>
-      <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 12), borderTopColor: colours.border }]}>
+      {notice ? (
+        <View style={[styles.notice, { backgroundColor: colours.accentSoft }]}>
+          <AppText variant="bodySm" style={{ color: colours.ink }}>
+            {notice}
+          </AppText>
+        </View>
+      ) : null}
+      <View style={[styles.composer, { borderTopColor: colours.border }]}>
         <TextInput
           value={draft}
           onChangeText={setDraft}
           placeholder={COACH_UI.input_placeholder}
           placeholderTextColor={colours.inkSubtle}
           multiline
+          onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }))}
           style={[
             styles.input,
             {
@@ -429,7 +497,8 @@ export default function CoachScreen() {
           style={styles.send}
         />
       </View>
-    </KeyboardAvoidingView>
+      <View style={{ height: bottomGap, backgroundColor: colours.bg }} />
+    </View>
   );
 }
 
@@ -449,12 +518,15 @@ const styles = StyleSheet.create({
   cardButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   links: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   feedback: { flexDirection: 'row', gap: 16, marginTop: 4 },
+  notice: { paddingHorizontal: 16, paddingVertical: 10 },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+    flexShrink: 0,
     gap: 8,
     paddingHorizontal: 16,
     paddingTop: 10,
+    paddingBottom: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   input: { flex: 1, minHeight: 44, maxHeight: 120, paddingHorizontal: 12, paddingVertical: 10 },

@@ -26,7 +26,17 @@ import {
   type Challenge,
 } from '@/lib/challenges';
 import { routineCardDays } from '@/lib/contentRoutines';
-import { fillCopy, routineActionsCopy } from '@/lib/copy';
+import {
+  STRETCH_AREAS,
+  STRETCH_OCCASIONS,
+  STRETCH_TIME_RANGES,
+  contentStretch,
+  stretchMatchesFilters,
+  type StretchArea,
+  type StretchOccasion,
+  type StretchTimeRange,
+} from '@/lib/contentStretches';
+import { fillCopy, programmesCopy, routineActionsCopy, stretchMuscleLabel } from '@/lib/copy';
 import { coverForChallenge, coverForRoutine, takeSlug } from '@/lib/images';
 import { fetchPaths, type RoutinePath } from '@/lib/paths';
 import {
@@ -49,10 +59,9 @@ import {
 type LoadState = 'loading' | 'error' | 'ready';
 
 function uniqueCover(
-  routine: Pick<RoutineSummary, 'id' | 'slug' | 'name' | 'type' | 'cover'>,
-  used: Set<string>
+  routine: Pick<RoutineSummary, 'id' | 'slug' | 'name' | 'type' | 'cover'>
 ): string | null {
-  return takeSlug(coverForRoutine(routine)?.id, used);
+  return coverForRoutine(routine)?.id ?? null;
 }
 
 export function RoutineCatalogue({
@@ -74,6 +83,9 @@ export function RoutineCatalogue({
   const [attempt, setAttempt] = useState(0);
   const [isLeaving, setIsLeaving] = useState(false);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [stretchTime, setStretchTime] = useState<StretchTimeRange | null>(null);
+  const [stretchArea, setStretchArea] = useState<StretchArea | null>(null);
+  const [stretchOccasion, setStretchOccasion] = useState<StretchOccasion | null>(null);
   const [path, setPath] = useState<RoutinePath | null>(null);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [progress, setProgress] = useState<Record<string, RoutineProgress>>({});
@@ -153,7 +165,17 @@ export function RoutineCatalogue({
     });
   }
 
-  const tags = collectRoutineTags(routines);
+  const tags = routineType === 'strength' ? collectRoutineTags(routines) : [];
+  const stretchList =
+    routineType === 'stretch'
+      ? routines.filter((summary) =>
+          stretchMatchesFilters(summary.slug, {
+            time: stretchTime,
+            area: stretchArea,
+            occasion: stretchOccasion,
+          })
+        )
+      : routines.filter((summary) => !tagFilter || summary.tags.includes(tagFilter));
   const currentProgress = enrolment ? progress[enrolment.routine_id] : undefined;
   const currentWeek = enrolment ? currentEnrolmentWeek(enrolment) : 0;
   const currentBar =
@@ -239,7 +261,7 @@ export function RoutineCatalogue({
                 onPress={() => openDetails(enrolment.routine)}
                 style={styles.pinMain}
                 accessibilityRole="button">
-                <Thumb imageSlug={uniqueCover(enrolment.routine, new Set())} letter={enrolment.routine.name} />
+                <Thumb imageSlug={uniqueCover(enrolment.routine)} letter={enrolment.routine.name} />
                 <View style={styles.pinCopy}>
                   <AppText variant="eyebrow" style={{ color: colours.accent }}>
                     Current routine
@@ -300,7 +322,18 @@ export function RoutineCatalogue({
           </View>
         ) : null}
 
-        {routines.length > 0 ? (
+        {routineType === 'stretch' && routines.length > 0 ? (
+          <StretchFilterBar
+            time={stretchTime}
+            area={stretchArea}
+            occasion={stretchOccasion}
+            onTime={setStretchTime}
+            onArea={setStretchArea}
+            onOccasion={setStretchOccasion}
+          />
+        ) : null}
+
+        {routineType === 'strength' && routines.length > 0 ? (
           <ChipScroller style={styles.filters}>
             <Chip label="All" selected={tagFilter === null} onPress={() => setTagFilter(null)} />
             {tags.map((tag) => (
@@ -314,17 +347,23 @@ export function RoutineCatalogue({
           </ChipScroller>
         ) : null}
 
-        {routines
-          .filter((summary) => !tagFilter || summary.tags.includes(tagFilter))
-          .map((summary) => (
-            <CatalogueCard
-              key={summary.id}
-              summary={summary}
-              stretch={routineType === 'stretch'}
-              usedPhotos={usedPhotos}
-              onPress={() => openDetails(summary)}
-            />
-          ))}
+        {loadState === 'ready' &&
+        routineType === 'stretch' &&
+        routines.length > 0 &&
+        stretchList.length === 0 ? (
+          <AppText variant="body" style={{ color: colours.inkMuted }}>
+            {programmesCopy.stretch_empty_filters}
+          </AppText>
+        ) : null}
+
+        {stretchList.map((summary) => (
+          <CatalogueCard
+            key={summary.id}
+            summary={summary}
+            stretch={routineType === 'stretch'}
+            onPress={() => openDetails(summary)}
+          />
+        ))}
       </ScrollView>
 
       <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={() => setMenuOpen(false)}>
@@ -349,26 +388,149 @@ export function RoutineCatalogue({
   );
 }
 
+function StretchFilterBar({
+  time,
+  area,
+  occasion,
+  onTime,
+  onArea,
+  onOccasion,
+}: {
+  time: StretchTimeRange | null;
+  area: StretchArea | null;
+  occasion: StretchOccasion | null;
+  onTime: (value: StretchTimeRange | null) => void;
+  onArea: (value: StretchArea | null) => void;
+  onOccasion: (value: StretchOccasion | null) => void;
+}) {
+  const timeLabels: Record<StretchTimeRange, string> = {
+    under_5: programmesCopy.stretch_filter_under_5,
+    '5_10': programmesCopy.stretch_filter_5_10,
+    '10_20': programmesCopy.stretch_filter_10_20,
+  };
+  const areaLabels: Record<StretchArea, string> = {
+    full_body: programmesCopy.stretch_muscle_full_body,
+    lower_body: programmesCopy.stretch_muscle_legs,
+    upper_body: programmesCopy.stretch_muscle_upper_body,
+    hips: programmesCopy.stretch_muscle_hips,
+    back: programmesCopy.stretch_muscle_back,
+  };
+  const occasionLabels: Record<StretchOccasion, string> = {
+    morning: programmesCopy.stretch_when_morning,
+    pre_workout: programmesCopy.stretch_when_pre_workout,
+    post_workout: programmesCopy.stretch_when_post_workout,
+    evening: programmesCopy.stretch_when_evening,
+  };
+
+  return (
+    <View style={styles.filterGroups}>
+      <FilterChipRow
+        group={programmesCopy.stretch_filter_time}
+        options={STRETCH_TIME_RANGES.map((id) => ({ id, label: timeLabels[id] }))}
+        selected={time}
+        onSelect={onTime}
+      />
+      <FilterChipRow
+        group={programmesCopy.stretch_filter_muscle}
+        options={STRETCH_AREAS.map((id) => ({ id, label: areaLabels[id] }))}
+        selected={area}
+        onSelect={onArea}
+      />
+      <FilterChipRow
+        group={programmesCopy.stretch_filter_when}
+        options={STRETCH_OCCASIONS.map((id) => ({ id, label: occasionLabels[id] }))}
+        selected={occasion}
+        onSelect={onOccasion}
+      />
+    </View>
+  );
+}
+
+function FilterChipRow<T extends string>({
+  group,
+  options,
+  selected,
+  onSelect,
+}: {
+  group: string;
+  options: { id: T; label: string }[];
+  selected: T | null;
+  onSelect: (value: T | null) => void;
+}) {
+  const { colours } = useTheme();
+  return (
+    <View style={styles.filterGroup} accessibilityRole="tablist" accessibilityLabel={group}>
+      <AppText variant="eyebrow" style={{ color: colours.inkMuted }}>
+        {group}
+      </AppText>
+      <View style={styles.filterWrap}>
+        {options.map((option) => (
+          <CompactFilterChip
+            key={option.id}
+            label={option.label}
+            selected={selected === option.id}
+            accessibilityLabel={`${group}: ${option.label}`}
+            onPress={() => onSelect(selected === option.id ? null : option.id)}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function CompactFilterChip({
+  label,
+  selected,
+  accessibilityLabel,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  accessibilityLabel: string;
+  onPress: () => void;
+}) {
+  const { colours, radius } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected }}
+      accessibilityLabel={accessibilityLabel}
+      style={[
+        styles.filterChip,
+        {
+          borderRadius: radius.full,
+          backgroundColor: selected ? colours.brandSoft : colours.surfaceMuted,
+          borderWidth: selected ? 1.5 : 0,
+          borderColor: colours.brand,
+        },
+      ]}>
+      <AppText numberOfLines={1} variant="caption" style={{ color: selected ? colours.brand : colours.ink }}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
 export function CatalogueCard({
   summary,
   stretch,
-  usedPhotos,
   onPress,
 }: {
   summary: RoutineSummary;
   stretch: boolean;
-  usedPhotos: Set<string>;
   onPress: () => void;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const imageSlug = uniqueCover(summary, usedPhotos);
+  const imageSlug = uniqueCover(summary);
+  const stretchMeta = stretch ? contentStretch(summary.slug) : null;
   const eyebrow = stretch
-    ? formatTagLabel(summary.tags[0] ?? 'Stretch')
+    ? stretchMuscleLabel(stretchMeta?.area)
     : `${DIFFICULTY_LABELS[summary.difficulty]} · ${ROUTINE_GOAL_EYEBROWS[summary.goal]}`;
   const meta = stretch
     ? `${summary.session_minutes} min`
     : `${summary.length_weeks} weeks · ${routineCardDays(summary)} days a week`;
-  const chips = summary.tags.filter((tag) => !stretch || tag !== summary.tags[0]).slice(0, 2);
+  const chips = stretch ? [] : summary.tags.slice(0, 2);
 
   return (
     <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => pressed && styles.pressed}>
@@ -484,6 +646,24 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 8,
     overflow: 'hidden',
+  },
+  filterGroups: {
+    gap: 8,
+  },
+  filterGroup: {
+    gap: 4,
+  },
+  filterWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  filterChip: {
+    minHeight: 28,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filters: {
     marginHorizontal: -24,

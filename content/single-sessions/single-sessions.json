@@ -24,13 +24,13 @@
       "tags": [
         "Start here",
         "Beginner friendly",
-        "One spot"
+        "Dumbbells and a bench"
       ],
       "display_tags": [
         "Start here",
         "Beginner friendly"
       ],
-      "short_description": "Five simple moves in one spot with a bench and a pair of dumbbells. The perfect first visit.",
+      "short_description": "Five simple moves with just a bench and a pair of dumbbells. The perfect first visit.",
       "coach_note": "There's no pressure today. Pick light dumbbells, find a bench in a quiet corner and take your time. Finishing is the win.",
       "warmup_id": "warmup-full-body",
       "cooldown_id": "cooldown-quick",
@@ -82,8 +82,8 @@
           "target_rir": 3,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
-          "notes": "Pause at the top."
+          "notes": "Pause at the top.",
+          "load_increment_kg": null
         },
         {
           "slug": "dead-bug",
@@ -95,8 +95,8 @@
           "progression_rule": "reps",
           "rest_seconds": 45,
           "per_side": true,
-          "load_increment_kg": null,
-          "notes": "Slow and steady."
+          "notes": "Slow and steady.",
+          "load_increment_kg": null
         }
       ]
     },
@@ -227,9 +227,9 @@
           "progression_rule": "load",
           "rest_seconds": 120,
           "tempo": "3-1-1",
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Feet slightly forward."
+          "notes": "Feet slightly forward.",
+          "load_increment_kg": null
         },
         {
           "slug": "barbell-romanian-deadlift",
@@ -265,9 +265,9 @@
           "target_rir": 1,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Slow return."
+          "notes": "Slow return.",
+          "load_increment_kg": null
         },
         {
           "slug": "calf-raise-machine",
@@ -278,9 +278,9 @@
           "target_rir": 1,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Pause at the bottom."
+          "notes": "Pause at the bottom.",
+          "load_increment_kg": null
         }
       ]
     },
@@ -357,9 +357,9 @@
           "progression_rule": "reps",
           "rest_seconds": 75,
           "per_side": true,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Kick back and slightly out."
+          "notes": "Kick back and slightly out.",
+          "load_increment_kg": null
         },
         {
           "slug": "hip-abduction-machine",
@@ -370,9 +370,9 @@
           "target_rir": 1,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Lean slightly forward."
+          "notes": "Lean slightly forward.",
+          "load_increment_kg": null
         }
       ]
     },
@@ -424,9 +424,9 @@
           "progression_rule": "load",
           "rest_seconds": 75,
           "superset_group": "1",
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Then rest."
+          "notes": "Then rest.",
+          "load_increment_kg": null
         },
         {
           "slug": "seated-dumbbell-shoulder-press",
@@ -451,9 +451,9 @@
           "progression_rule": "load",
           "rest_seconds": 75,
           "superset_group": "2",
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Then rest."
+          "notes": "Then rest.",
+          "load_increment_kg": null
         },
         {
           "slug": "dumbbell-lateral-raise",
@@ -504,9 +504,9 @@
           "target_rir": 2,
           "progression_rule": "load",
           "rest_seconds": 120,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Chest up."
+          "notes": "Chest up.",
+          "load_increment_kg": null
         },
         {
           "slug": "chest-supported-dumbbell-row",
@@ -541,9 +541,9 @@
           "target_rir": 2,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Pull towards your eyes."
+          "notes": "Pull towards your eyes.",
+          "load_increment_kg": null
         },
         {
           "slug": "dumbbell-reverse-fly",
@@ -618,9 +618,9 @@
           "progression_rule": "reps",
           "rest_seconds": 60,
           "superset_group": "1",
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Then rest."
+          "notes": "Then rest.",
+          "load_increment_kg": null
         },
         {
           "slug": "hammer-curl",
@@ -671,9 +671,9 @@
           "progression_rule": "reps",
           "rest_seconds": 60,
           "superset_group": "3",
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Then rest."
+          "notes": "Then rest.",
+          "load_increment_kg": null
         }
       ]
     },
@@ -724,9 +724,9 @@
           "target_rir": 2,
           "progression_rule": "load",
           "rest_seconds": 90,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Handles at mid-chest."
+          "notes": "Handles at mid-chest.",
+          "load_increment_kg": null
         },
         {
           "slug": "lat-pulldown",
@@ -737,9 +737,9 @@
           "target_rir": 2,
           "progression_rule": "load",
           "rest_seconds": 90,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Thighs under the pads."
+          "notes": "Thighs under the pads.",
+          "load_increment_kg": null
         },
         {
           "slug": "seated-leg-curl",
@@ -750,9 +750,9 @@
           "target_rir": 2,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Knee lined up with the pivot."
+          "notes": "Knee lined up with the pivot.",
+          "load_increment_kg": null
         },
         {
           "slug": "shoulder-press-machine",
@@ -763,9 +763,9 @@
           "target_rir": 2,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Handles at shoulder height."
+          "notes": "Handles at shoulder height.",
+          "load_increment_kg": null
         },
         {
           "slug": "hip-abduction-machine",
@@ -776,16 +776,16 @@
           "target_rir": 2,
           "progression_rule": "reps",
           "rest_seconds": 75,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Smooth and controlled."
+          "notes": "Smooth and controlled.",
+          "load_increment_kg": null
         }
       ]
     },
     {
       "slug": "one-spot-full-body",
-      "name": "One Spot Full Body",
-      "subtitle": "40 minutes from one bench",
+      "name": "Dumbbells and a Bench: Full Body",
+      "subtitle": "40 minutes with just dumbbells and a bench",
       "type": "strength",
       "session_type": "strength",
       "category": "busy_gym",
@@ -794,13 +794,12 @@
       "level": "beginner_to_intermediate",
       "focus": "full_body",
       "tags": [
-        "Busy gym friendly",
-        "One spot",
-        "Dumbbells only"
+        "Dumbbells and a bench",
+        "Full body"
       ],
       "display_tags": [
-        "Busy gym friendly",
-        "One spot"
+        "Dumbbells and a bench",
+        "Full body"
       ],
       "short_description": "Claim a bench, grab your dumbbells and never move. Perfect when the gym is packed.",
       "coach_note": "Pick up two or three pairs of dumbbells before you start so you can stay put.",
@@ -880,8 +879,8 @@
           "progression_rule": "reps",
           "rest_seconds": 45,
           "per_side": true,
-          "load_increment_kg": null,
-          "notes": "Slow."
+          "notes": "Slow.",
+          "load_increment_kg": null
         }
       ]
     },
@@ -920,8 +919,8 @@
           "progression_rule": "reps",
           "rest_seconds": 45,
           "per_side": true,
-          "load_increment_kg": null,
-          "notes": "Lower back pressed into the mat."
+          "notes": "Lower back pressed into the mat.",
+          "load_increment_kg": null
         },
         {
           "slug": "pallof-press",
@@ -933,9 +932,9 @@
           "progression_rule": "reps",
           "rest_seconds": 45,
           "per_side": true,
-          "load_increment_kg": null,
           "load_increment_note": "One plate on the stack",
-          "notes": "Resist the twist."
+          "notes": "Resist the twist.",
+          "load_increment_kg": null
         },
         {
           "slug": "side-plank",
@@ -957,8 +956,8 @@
           "target_rir": 2,
           "progression_rule": "reps",
           "rest_seconds": 45,
-          "load_increment_kg": null,
-          "notes": "Curl your hips up slowly."
+          "notes": "Curl your hips up slowly.",
+          "load_increment_kg": null
         },
         {
           "slug": "suitcase-carry",
@@ -1071,8 +1070,8 @@
           "progression_rule": "reps",
           "rest_seconds": 45,
           "per_side": true,
-          "load_increment_kg": null,
-          "notes": "Slow."
+          "notes": "Slow.",
+          "load_increment_kg": null
         }
       ]
     },
@@ -1112,8 +1111,8 @@
           "progression_rule": "reps",
           "rest_seconds": 120,
           "tempo": "3-1-1",
-          "load_increment_kg": null,
-          "notes": "Sit lightly on a chair and stand back up."
+          "notes": "Sit lightly on a chair and stand back up.",
+          "load_increment_kg": null
         },
         {
           "slug": "incline-push-up",
@@ -1124,8 +1123,8 @@
           "target_rir": 2,
           "progression_rule": "reps",
           "rest_seconds": 90,
-          "load_increment_kg": null,
-          "notes": "Hands on a table or sofa arm."
+          "notes": "Hands on a table or sofa arm.",
+          "load_increment_kg": null
         },
         {
           "slug": "single-leg-glute-bridge",
@@ -1137,8 +1136,8 @@
           "progression_rule": "reps",
           "rest_seconds": 90,
           "per_side": true,
-          "load_increment_kg": null,
-          "notes": "Pause at the top."
+          "notes": "Pause at the top.",
+          "load_increment_kg": null
         },
         {
           "slug": "bodyweight-reverse-lunge",
@@ -1150,8 +1149,8 @@
           "progression_rule": "reps",
           "rest_seconds": 75,
           "per_side": true,
-          "load_increment_kg": null,
-          "notes": "Hold a wall for balance if you like."
+          "notes": "Hold a wall for balance if you like.",
+          "load_increment_kg": null
         },
         {
           "slug": "bird-dog",
@@ -1163,8 +1162,8 @@
           "progression_rule": "reps",
           "rest_seconds": 45,
           "per_side": true,
-          "load_increment_kg": null,
-          "notes": "Slow."
+          "notes": "Slow.",
+          "load_increment_kg": null
         },
         {
           "slug": "forearm-plank",

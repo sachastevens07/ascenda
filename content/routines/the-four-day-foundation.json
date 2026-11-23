@@ -96,7 +96,7 @@
     "how_it_works": [
       "Weeks 1 to 2: learn the main lower- and upper-body lifts with dumbbells and machines.",
       "Weeks 3 to 4: new machines and variations, a little heavier.",
-      "Weeks 5 to 6: smith squats lead, the barbell hip thrust and Romanian deadlift join, then a checkpoint.",
+      "Weeks 5 to 6: Smith squats and barbell hip thrusts lead, the barbell Romanian deadlift joins, then a checkpoint.",
       "In weeks 3 and 6 you'll re-test your key lifts to see how far you've come."
     ],
     "type": "strength",
@@ -143,7 +143,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -155,7 +155,7 @@
               "rep_max": 10,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -169,9 +169,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dead-bug",
@@ -183,13 +183,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -223,8 +223,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -236,14 +235,14 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
             {
               "slug": "dumbbell-biceps-curl",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
@@ -255,15 +254,26 @@
             {
               "slug": "triceps-pushdown",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
+            },
+            {
+              "slug": "cable-lateral-raise",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 12,
+              "rep_max": 15,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Light weight, slow and controlled."
             }
           ],
           "warmup_id": "warmup-upper-body",
@@ -303,7 +313,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -316,9 +326,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-step-up",
@@ -346,7 +356,7 @@
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -369,9 +379,9 @@
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "incline-dumbbell-press",
@@ -381,7 +391,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -394,14 +404,14 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-lateral-raise",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 12,
               "rep_max": 15,
               "target_rir": 2,
@@ -424,7 +434,7 @@
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -470,7 +480,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -482,23 +492,21 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
             },
             {
-              "slug": "cable-glute-kickback",
+              "slug": "dumbbell-hip-thrust",
               "role": "accessory",
               "sets": 2,
-              "rep_min": 12,
-              "rep_max": 15,
+              "rep_min": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "per_side": true,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
+              "load_increment_kg": 2,
               "notes": ""
             },
             {
@@ -511,14 +519,14 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -552,8 +560,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -565,15 +572,14 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
             {
               "slug": "hammer-curl",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
@@ -585,7 +591,7 @@
             {
               "slug": "overhead-dumbbell-triceps-extension",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
@@ -593,6 +599,18 @@
               "rest_seconds": 75,
               "load_increment_kg": 2,
               "notes": ""
+            },
+            {
+              "slug": "dumbbell-lateral-raise",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 12,
+              "rep_max": 15,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_kg": 2,
+              "notes": "Light weight, slow and controlled."
             }
           ],
           "warmup_id": "warmup-upper-body",
@@ -610,20 +628,19 @@
           "key": "C",
           "name": "Lower B",
           "focus": "Glutes and squat",
-          "coach_note": "The hip thrust machine and your first Smith machine squats.",
+          "coach_note": "Your first barbell hip thrust and Smith machine squats. Start light on both.",
           "exercises": [
             {
-              "slug": "hip-thrust-machine",
+              "slug": "barbell-hip-thrust",
               "role": "main",
               "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
-              "target_rir": 2,
+              "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "load_increment_kg": 2.5,
+              "notes": "Use a pad on the bar and start with just the bar or a light weight."
             },
             {
               "slug": "smith-machine-squat",
@@ -633,10 +650,10 @@
               "rep_max": 10,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "lying-leg-curl",
@@ -647,9 +664,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "hip-abduction-machine",
@@ -660,9 +677,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dead-bug",
@@ -674,13 +691,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -692,21 +709,20 @@
           "key": "D",
           "name": "Upper B",
           "focus": "Back and shoulders",
-          "coach_note": "Single-arm rows and the chest press machine.",
+          "coach_note": "Heavier rows, plus the chest press machine and assisted pull-up.",
           "exercises": [
             {
-              "slug": "single-arm-cable-row",
+              "slug": "seated-cable-row",
               "role": "main",
               "sets": 3,
-              "rep_min": 10,
+              "rep_min": 8,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "chest-press-machine",
@@ -716,10 +732,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "assisted-pull-up",
@@ -729,24 +745,24 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-lateral-raise",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 12,
               "rep_max": 15,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-crunch",
@@ -757,14 +773,14 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -782,7 +798,7 @@
         5,
         6
       ],
-      "goal": "Smith squats lead, the barbell hip thrust and Romanian deadlift join, then a checkpoint.",
+      "goal": "Smith squats and barbell hip thrusts lead, the barbell Romanian deadlift joins, then a checkpoint.",
       "days": [
         {
           "key": "A",
@@ -799,9 +815,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "leg-press",
@@ -811,7 +827,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 5,
               "notes": ""
             },
@@ -823,7 +839,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -837,9 +853,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "reverse-crunch",
@@ -850,13 +866,13 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -878,7 +894,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 120,
+              "rest_seconds": 180,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -890,8 +906,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
@@ -903,40 +918,50 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
             {
               "slug": "cable-biceps-curl",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
             },
             {
               "slug": "triceps-pushdown",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 10,
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
               "notes": ""
+            },
+            {
+              "slug": "cable-lateral-raise",
+              "role": "accessory",
+              "sets": 2,
+              "rep_min": 12,
+              "rep_max": 15,
+              "target_rir": 2,
+              "progression_rule": "reps",
+              "rest_seconds": 75,
+              "load_increment_note": "One plate on the stack",
+              "notes": "Light weight, slow and controlled."
             }
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 50,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -949,7 +974,7 @@
           "key": "C",
           "name": "Lower B",
           "focus": "Glutes and hinge",
-          "coach_note": "Barbell hip thrust and barbell Romanian deadlift. Start light on both.",
+          "coach_note": "Heavier barbell hip thrusts, then your first barbell Romanian deadlift. Start light on it.",
           "exercises": [
             {
               "slug": "barbell-hip-thrust",
@@ -957,7 +982,7 @@
               "sets": 3,
               "rep_min": 8,
               "rep_max": 12,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
               "load_increment_kg": 2.5,
@@ -971,7 +996,7 @@
               "rep_max": 10,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2.5,
               "notes": ""
             },
@@ -998,9 +1023,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "forearm-plank",
@@ -1015,7 +1040,7 @@
           ],
           "warmup_id": "warmup-lower-body",
           "cooldown_id": "cooldown-lower-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -1038,9 +1063,9 @@
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "incline-dumbbell-press",
@@ -1050,7 +1075,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -1063,14 +1088,14 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-lateral-raise",
               "role": "accessory",
-              "sets": 2,
+              "sets": 3,
               "rep_min": 12,
               "rep_max": 15,
               "target_rir": 2,
@@ -1093,7 +1118,7 @@
           ],
           "warmup_id": "warmup-upper-body",
           "cooldown_id": "cooldown-upper-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 35,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -1125,7 +1150,7 @@
       "phase": 2,
       "is_checkpoint": true,
       "is_lighter_week": false,
-      "week_note": "Checkpoint week, plus a few new machines. Start light on anything new."
+      "week_note": "Checkpoint week, plus new machines and your first barbell hip thrust. Start light on anything new."
     },
     {
       "week": 4,
@@ -1139,7 +1164,7 @@
       "phase": 3,
       "is_checkpoint": false,
       "is_lighter_week": false,
-      "week_note": "First barbell lifts. Empty bar first, then add weight only if your form feels solid."
+      "week_note": "Your first barbell Romanian deadlift. Start light, then add weight only if your form feels solid."
     },
     {
       "week": 6,

@@ -13,13 +13,13 @@ import {
   ProgressRing,
   TextButton,
   measureAnchor,
-  openRecipe,
+  presentFuelSheet,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { isFeatureEnabled } from '@/config/features';
 import { STREAK_STRETCH_MIN_SECONDS } from '@/lib/activityStats';
-import { foodCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
 import { useSubscriptionGate } from '@/lib/paywall';
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
@@ -39,6 +39,9 @@ type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
 const RING_SIZE = 180;
 
 export default function StretchPlayScreen() {
+  useEffect(() => {
+    if (!isFeatureEnabled('stretches')) router.replace('/(tabs)' as Href);
+  }, []);
   const allowed = useSubscriptionGate();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const insets = useSafeAreaInsets();
@@ -168,16 +171,15 @@ export default function StretchPlayScreen() {
       const savedBody = counts
         ? `That’s ${formatClock(elapsed)}. Ten minutes or more counts toward your week.`
         : `That’s ${formatClock(elapsed)}. From 10 minutes, a stretch counts toward your week.`;
-      showDialog(
-        'Stretch saved',
-        fuel ? `${savedBody}\n\n${fuel.copy}\n${fuel.recipe.title}` : savedBody,
-        fuel
-          ? [
-              { text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) },
-              { text: 'OK', style: 'cancel' },
-            ]
-          : undefined
-      );
+      if (fuel) {
+        presentFuelSheet({
+          title: 'Stretch saved',
+          message: savedBody,
+          suggestion: fuel,
+        });
+      } else {
+        showDialog('Stretch saved', savedBody);
+      }
       router.replace('/programmes' as Href);
       void maybeAskSessionReminders();
       void syncPlannerReminders();

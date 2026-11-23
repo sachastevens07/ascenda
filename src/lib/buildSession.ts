@@ -2,6 +2,7 @@
  * AI3 Build me a session. Eligible lists, time check and single-session fallback.
  * Never invents exercises. Suggested weights still come from the progression rule.
  */
+import { isFeatureEnabled } from '@/config/features';
 import catalogueFile from '../../content/exercises/strength-catalogue.json';
 import cardioFile from '../../content/cardio/cardio-sessions.json';
 import stretchFile from '../../content/stretches/stretch-routines.json';
@@ -243,6 +244,7 @@ export function isBarbellExercise(id: string): boolean {
 }
 
 export function stretchCatalog(): CatalogStretch[] {
+  if (!isFeatureEnabled('stretches')) return [];
   return STRETCHES;
 }
 

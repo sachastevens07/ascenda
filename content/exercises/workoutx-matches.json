@@ -1,0 +1,1197 @@
+{
+ "_source": "Matched against the 1,324-exercise Gym Visual library (github.com/hasaneyldrm/exercises-dataset), which WorkoutX appears to use. Confirm each name in WorkoutX before saving.",
+ "exercises": [
+  {
+   "app_name": "Ab crunch machine",
+   "action": "use",
+   "workoutx_id": "1452",
+   "workoutx_name": "lever seated crunch",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Arm circles",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Simple warm-up move: show the text cue only, no demo needed."
+  },
+  {
+   "app_name": "Assisted dip",
+   "action": "use",
+   "workoutx_id": "0019",
+   "workoutx_name": "assisted triceps dip (kneeling)",
+   "match": "exact",
+   "note": "The kneeling-pad assisted dip machine."
+  },
+  {
+   "app_name": "Band row",
+   "action": "use (close match)",
+   "workoutx_id": "3144",
+   "workoutx_name": "resistance band seated straight back row",
+   "match": "close",
+   "note": "Seated band row. Close to a standing band row."
+  },
+  {
+   "app_name": "Banded hamstring curl",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "No band leg curl in the library. Remove, or keep with text only."
+  },
+  {
+   "app_name": "Banded hip thrust",
+   "action": "use (close match)",
+   "workoutx_id": "3236",
+   "workoutx_name": "resistance band hip thrusts on knees (female)",
+   "match": "close",
+   "note": "Kneeling version, not lying. The only hip thrust in the library, and one of the few female demos."
+  },
+  {
+   "app_name": "Banded kickback",
+   "action": "use (close match)",
+   "workoutx_id": "0980",
+   "workoutx_name": "band bent-over hip extension",
+   "match": "close",
+   "note": "Band bent-over hip extension: same glute movement."
+  },
+  {
+   "app_name": "Banded lateral walk",
+   "action": "use",
+   "workoutx_id": "0628",
+   "workoutx_name": "monster walk",
+   "match": "exact",
+   "note": "Listed as monster walk."
+  },
+  {
+   "app_name": "Banded squat",
+   "action": "use",
+   "workoutx_id": "1004",
+   "workoutx_name": "band squat",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Barbell back squat",
+   "action": "use",
+   "workoutx_id": "0043",
+   "workoutx_name": "barbell full squat",
+   "match": "exact",
+   "note": "Listed as barbell full squat."
+  },
+  {
+   "app_name": "Barbell overhead press",
+   "action": "use (close match)",
+   "workoutx_id": "1456",
+   "workoutx_name": "barbell standing close grip military press",
+   "match": "close",
+   "note": "Standing military press. The plain standing version isn't in the library."
+  },
+  {
+   "app_name": "Bench dip",
+   "action": "use",
+   "workoutx_id": "0129",
+   "workoutx_name": "bench dip (knees bent)",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Bent over rear delt fly",
+   "action": "merge",
+   "workoutx_id": "0378",
+   "workoutx_name": "dumbbell rear fly",
+   "match": "merge",
+   "note": "Duplicate of Dumbbell reverse fly. Keep one exercise and point it at this demo."
+  },
+  {
+   "app_name": "Bird dog",
+   "action": "use",
+   "workoutx_id": "ex_5DV46E",
+   "workoutx_name": "Bird Dog",
+   "match": "exact",
+   "note": "Male clip is allowed if that is the only demo."
+  },
+  {
+   "app_name": "Bodyweight calf raises",
+   "action": "use",
+   "workoutx_id": "1373",
+   "workoutx_name": "bodyweight standing calf raise",
+   "match": "exact",
+   "note": "Possible duplicate of Standing calf raise."
+  },
+  {
+   "app_name": "Bodyweight reverse lunge",
+   "action": "use (close match)",
+   "workoutx_id": "0381",
+   "workoutx_name": "dumbbell rear lunge",
+   "match": "close",
+   "note": "Only the dumbbell version exists (dumbbell rear lunge)."
+  },
+  {
+   "app_name": "Bodyweight split squat",
+   "action": "use",
+   "workoutx_id": "2368",
+   "workoutx_name": "split squats",
+   "match": "exact",
+   "note": "Listed as split squats."
+  },
+  {
+   "app_name": "Bodyweight squat",
+   "action": "use",
+   "workoutx_id": "ex_REUQG3",
+   "workoutx_name": "Bodyweight Squats",
+   "match": "exact",
+   "note": "Male clip is allowed if that is the only demo."
+  },
+  {
+   "app_name": "Bulgarian split squat",
+   "action": "use",
+   "workoutx_id": "0410",
+   "workoutx_name": "dumbbell single leg split squat",
+   "match": "exact",
+   "note": "Listed as dumbbell single leg split squat (back foot on a bench)."
+  },
+  {
+   "app_name": "Cable biceps curl",
+   "action": "use",
+   "workoutx_id": "0868",
+   "workoutx_name": "cable curl",
+   "match": "exact",
+   "note": "Listed as cable curl."
+  },
+  {
+   "app_name": "Cable crunch",
+   "action": "use",
+   "workoutx_id": "0175",
+   "workoutx_name": "cable kneeling crunch",
+   "match": "exact",
+   "note": "Listed as cable kneeling crunch."
+  },
+  {
+   "app_name": "Cable lateral raise",
+   "action": "use",
+   "workoutx_id": "0178",
+   "workoutx_name": "cable lateral raise",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Cable overhead triceps extension",
+   "action": "use",
+   "workoutx_id": "0194",
+   "workoutx_name": "cable overhead triceps extension (rope attachment)",
+   "match": "exact",
+   "note": "Rope attachment."
+  },
+  {
+   "app_name": "Cable rear delt fly",
+   "action": "use",
+   "workoutx_id": "0225",
+   "workoutx_name": "cable standing cross-over high reverse fly",
+   "match": "exact",
+   "note": "Listed as cable standing cross-over high reverse fly."
+  },
+  {
+   "app_name": "Cable rope hammer curl",
+   "action": "use",
+   "workoutx_id": "0165",
+   "workoutx_name": "cable hammer curl (with rope)",
+   "match": "exact",
+   "note": "Listed as cable hammer curl (with rope)."
+  },
+  {
+   "app_name": "Cable triceps pushdown",
+   "action": "merge",
+   "workoutx_id": "0200",
+   "workoutx_name": "cable pushdown (with rope attachment)",
+   "match": "merge",
+   "note": "Duplicate of Triceps pushdown. Keep one and use this rope demo."
+  },
+  {
+   "app_name": "Calf raise machine",
+   "action": "use",
+   "workoutx_id": "0605",
+   "workoutx_name": "lever standing calf raise",
+   "match": "exact",
+   "note": "Listed as lever standing calf raise."
+  },
+  {
+   "app_name": "Calf wall stretch",
+   "action": "use",
+   "workoutx_id": "1377",
+   "workoutx_name": "calf stretch with hands against wall",
+   "match": "exact",
+   "note": "Listed as calf stretch with hands against wall."
+  },
+  {
+   "app_name": "Cat-cow",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Not in the library. Text only."
+  },
+  {
+   "app_name": "Chest-supported dumbbell row",
+   "action": "use",
+   "workoutx_id": "0327",
+   "workoutx_name": "dumbbell incline row",
+   "match": "exact",
+   "note": "Listed as dumbbell incline row."
+  },
+  {
+   "app_name": "Child's pose",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Not in the library. Text only."
+  },
+  {
+   "app_name": "Chin-up",
+   "action": "use",
+   "workoutx_id": "1326",
+   "workoutx_name": "chin-up",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Doorway chest stretch",
+   "action": "use (close match)",
+   "workoutx_id": "1271",
+   "workoutx_name": "chest and front of shoulder stretch",
+   "match": "close",
+   "note": "Listed as chest and front of shoulder stretch."
+  },
+  {
+   "app_name": "Dumbbell bench press",
+   "action": "use",
+   "workoutx_id": "0289",
+   "workoutx_name": "dumbbell bench press",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell box squat",
+   "action": "use",
+   "workoutx_id": "0291",
+   "workoutx_name": "dumbbell bench squat",
+   "match": "exact",
+   "note": "Listed as dumbbell bench squat."
+  },
+  {
+   "app_name": "Dumbbell calf raise",
+   "action": "use",
+   "workoutx_id": "0417",
+   "workoutx_name": "dumbbell standing calf raise",
+   "match": "exact",
+   "note": "Listed as dumbbell standing calf raise."
+  },
+  {
+   "app_name": "Dumbbell front raise",
+   "action": "use",
+   "workoutx_id": "0310",
+   "workoutx_name": "dumbbell front raise",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell glute bridge",
+   "action": "use (close match)",
+   "workoutx_id": "1409",
+   "workoutx_name": "barbell glute bridge",
+   "match": "close",
+   "note": "Only the barbell glute bridge exists. Same movement."
+  },
+  {
+   "app_name": "Dumbbell hammer curl",
+   "action": "use",
+   "workoutx_id": "0313",
+   "workoutx_name": "dumbbell hammer curl",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell hip thrust",
+   "action": "use",
+   "workoutx_id": "ex_JSAJGA",
+   "workoutx_name": "Dumbbell Hip Thrust",
+   "match": "exact",
+   "note": "Male clip is allowed if that is the only demo."
+  },
+  {
+   "app_name": "Dumbbell lat raise",
+   "action": "use",
+   "workoutx_id": "0334",
+   "workoutx_name": "dumbbell lateral raise",
+   "match": "exact",
+   "note": "Listed as dumbbell lateral raise."
+  },
+  {
+   "app_name": "Dumbbell lying triceps extension",
+   "action": "use",
+   "workoutx_id": "0351",
+   "workoutx_name": "dumbbell lying triceps extension",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell pullover",
+   "action": "use",
+   "workoutx_id": "0375",
+   "workoutx_name": "dumbbell pullover",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell reverse fly",
+   "action": "use",
+   "workoutx_id": "0378",
+   "workoutx_name": "dumbbell rear fly",
+   "match": "exact",
+   "note": "Listed as dumbbell rear fly. Keep this one; Bent over rear delt fly is its duplicate."
+  },
+  {
+   "app_name": "Dumbbell romanian deadlift",
+   "action": "use",
+   "workoutx_id": "1459",
+   "workoutx_name": "dumbbell romanian deadlift",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell shoulder press",
+   "action": "use",
+   "workoutx_id": "0405",
+   "workoutx_name": "dumbbell seated shoulder press",
+   "match": "exact",
+   "note": "Listed as dumbbell seated shoulder press."
+  },
+  {
+   "app_name": "Dumbbell split squat",
+   "action": "use (close match)",
+   "workoutx_id": "2368",
+   "workoutx_name": "split squats",
+   "match": "close",
+   "note": "No dumbbell version with both feet on the floor. Use the bodyweight split squat demo."
+  },
+  {
+   "app_name": "Dumbbell step-up",
+   "action": "use",
+   "workoutx_id": "0431",
+   "workoutx_name": "dumbbell step-up",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell triceps kickback",
+   "action": "use",
+   "workoutx_id": "0333",
+   "workoutx_name": "dumbbell kickback",
+   "match": "exact",
+   "note": "Listed as dumbbell kickback."
+  },
+  {
+   "app_name": "Dumbbell walking lunge",
+   "action": "use (close match)",
+   "workoutx_id": "ex_TFOAGW",
+   "workoutx_name": "Lunges Alternate Leg With Pause Bodyweight",
+   "match": "close",
+   "note": "Forward lunges. No dumbbell walking version in WorkoutX."
+  },
+  {
+   "app_name": "EZ-bar curl",
+   "action": "use",
+   "workoutx_id": "0447",
+   "workoutx_name": "ez barbell curl",
+   "match": "exact",
+   "note": "Listed as ez barbell curl."
+  },
+  {
+   "app_name": "Farmer carry",
+   "action": "use",
+   "workoutx_id": "2133",
+   "workoutx_name": "farmers walk",
+   "match": "exact",
+   "note": "Listed as farmers walk. Keep this one; Kettlebell farmer's carry is its duplicate."
+  },
+  {
+   "app_name": "Figure-four stretch",
+   "action": "use (close match)",
+   "workoutx_id": "2567",
+   "workoutx_name": "seated piriformis stretch",
+   "match": "close",
+   "note": "Listed as seated piriformis stretch (seated figure four)."
+  },
+  {
+   "app_name": "Fire hydrant",
+   "action": "use",
+   "workoutx_id": "ex_HRVTXY",
+   "workoutx_name": "Fire Hydrant Bodyweight",
+   "match": "exact",
+   "note": "Male clip is allowed if that is the only demo."
+  },
+  {
+   "app_name": "Forearm plank",
+   "action": "use (close match)",
+   "workoutx_id": "2135",
+   "workoutx_name": "weighted front plank",
+   "match": "close",
+   "note": "Only a weighted front plank exists. Keep this one; Plank is its duplicate."
+  },
+  {
+   "app_name": "Frog pump",
+   "action": "use (close match)",
+   "workoutx_id": "3013",
+   "workoutx_name": "low glute bridge on floor",
+   "match": "close",
+   "note": "Low glute bridge on floor. Similar, but feet aren't together."
+  },
+  {
+   "app_name": "Frog stretch",
+   "action": "use",
+   "workoutx_id": "2571",
+   "workoutx_name": "rocking frog stretch",
+   "match": "exact",
+   "note": "Listed as rocking frog stretch."
+  },
+  {
+   "app_name": "Glute bridge",
+   "action": "use",
+   "workoutx_id": "3013",
+   "workoutx_name": "low glute bridge on floor",
+   "match": "exact",
+   "note": "Listed as low glute bridge on floor."
+  },
+  {
+   "app_name": "Glute kickback machine",
+   "action": "use (close match)",
+   "workoutx_id": "2286",
+   "workoutx_name": "lever hip extension v. 2",
+   "match": "close",
+   "note": "Listed as lever hip extension v. 2. Check it shows the kickback machine."
+  },
+  {
+   "app_name": "Goblet squat",
+   "action": "use",
+   "workoutx_id": "1760",
+   "workoutx_name": "dumbbell goblet squat",
+   "match": "exact",
+   "note": "Dumbbell goblet squat. Near-duplicate of Kettlebell goblet squat."
+  },
+  {
+   "app_name": "Hanging knee raise",
+   "action": "use",
+   "workoutx_id": "0011",
+   "workoutx_name": "assisted hanging knee raise",
+   "match": "exact",
+   "note": "Listed as assisted hanging knee raise (captain's chair)."
+  },
+  {
+   "app_name": "Hip abduction machine",
+   "action": "use",
+   "workoutx_id": "0597",
+   "workoutx_name": "lever seated hip abduction",
+   "match": "exact",
+   "note": "Listed as lever seated hip abduction."
+  },
+  {
+   "app_name": "Hip adduction machine",
+   "action": "use",
+   "workoutx_id": "0598",
+   "workoutx_name": "lever seated hip adduction",
+   "match": "exact",
+   "note": "Listed as lever seated hip adduction."
+  },
+  {
+   "app_name": "Hip thrust machine",
+   "action": "use (close match)",
+   "workoutx_id": "ex_YC5MXO",
+   "workoutx_name": "Hip-Thrust in Smith Machine",
+   "match": "close",
+   "note": "No dedicated glute-drive machine. Smith hip thrust is the closest machine version."
+  },
+  {
+   "app_name": "Incline dumbbell press",
+   "action": "use",
+   "workoutx_id": "0314",
+   "workoutx_name": "dumbbell incline bench press",
+   "match": "exact",
+   "note": "Listed as dumbbell incline bench press."
+  },
+  {
+   "app_name": "Incline machine chest press",
+   "action": "use",
+   "workoutx_id": "1299",
+   "workoutx_name": "lever incline chest press",
+   "match": "exact",
+   "note": "Listed as lever incline chest press."
+  },
+  {
+   "app_name": "Kettlebell deadlift",
+   "action": "use (close match)",
+   "workoutx_id": "0300",
+   "workoutx_name": "dumbbell deadlift",
+   "match": "close",
+   "note": "Dumbbell deadlift. No kettlebell version."
+  },
+  {
+   "app_name": "Kettlebell farmer's carry",
+   "action": "merge",
+   "workoutx_id": "2133",
+   "workoutx_name": "farmers walk",
+   "match": "merge",
+   "note": "Duplicate of Farmer carry."
+  },
+  {
+   "app_name": "Kettlebell goblet squat",
+   "action": "use",
+   "workoutx_id": "0534",
+   "workoutx_name": "kettlebell goblet squat",
+   "match": "exact",
+   "note": "Near-duplicate of Goblet squat. Keep both only if routines use both."
+  },
+  {
+   "app_name": "Kettlebell overhead press",
+   "action": "use",
+   "workoutx_id": "0553",
+   "workoutx_name": "kettlebell two arm military press",
+   "match": "exact",
+   "note": "Listed as kettlebell two arm military press."
+  },
+  {
+   "app_name": "Kettlebell sumo deadlift",
+   "action": "use (close match)",
+   "workoutx_id": "0117",
+   "workoutx_name": "barbell sumo deadlift",
+   "match": "close",
+   "note": "Barbell sumo deadlift. No kettlebell version."
+  },
+  {
+   "app_name": "Kettlebell swing",
+   "action": "use",
+   "workoutx_id": "0549",
+   "workoutx_name": "kettlebell swing",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Knee push-up",
+   "action": "use",
+   "workoutx_id": "3211",
+   "workoutx_name": "kneeling push-up (male)",
+   "match": "exact",
+   "note": "Listed as kneeling push-up (male)."
+  },
+  {
+   "app_name": "Kneeling hip flexor stretch",
+   "action": "use (close match)",
+   "workoutx_id": "1564",
+   "workoutx_name": "intermediate hip flexor and quad stretch",
+   "match": "close",
+   "note": "Listed as intermediate hip flexor and quad stretch."
+  },
+  {
+   "app_name": "Kneeling lat stretch",
+   "action": "use",
+   "workoutx_id": "1346",
+   "workoutx_name": "kneeling lat stretch",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Knees to chest",
+   "action": "use",
+   "workoutx_id": "1418",
+   "workoutx_name": "hug keens to chest",
+   "match": "exact",
+   "note": "Listed as 'hug keens to chest' (typo in the library)."
+  },
+  {
+   "app_name": "Leg press",
+   "action": "use",
+   "workoutx_id": "0739",
+   "workoutx_name": "sled 45в° leg press",
+   "match": "exact",
+   "note": "Listed as sled 45° leg press."
+  },
+  {
+   "app_name": "Low lunge with reach",
+   "action": "use (close match)",
+   "workoutx_id": "1688",
+   "workoutx_name": "lunge with twist",
+   "match": "close",
+   "note": "Listed as lunge with twist."
+  },
+  {
+   "app_name": "Low-to-high cable fly",
+   "action": "use",
+   "workoutx_id": "0179",
+   "workoutx_name": "cable low fly",
+   "match": "exact",
+   "note": "Listed as cable low fly."
+  },
+  {
+   "app_name": "Lying leg curl",
+   "action": "use",
+   "workoutx_id": "0586",
+   "workoutx_name": "lever lying leg curl",
+   "match": "exact",
+   "note": "Listed as lever lying leg curl."
+  },
+  {
+   "app_name": "Lying twist",
+   "action": "use",
+   "workoutx_id": "3639",
+   "workoutx_name": "bent knee lying twist (male)",
+   "match": "exact",
+   "note": "Listed as bent knee lying twist (male)."
+  },
+  {
+   "app_name": "Machine shoulder press",
+   "action": "use",
+   "workoutx_id": "0603",
+   "workoutx_name": "lever shoulder press",
+   "match": "exact",
+   "note": "Listed as lever shoulder press."
+  },
+  {
+   "app_name": "Neck side stretch",
+   "action": "use",
+   "workoutx_id": "1403",
+   "workoutx_name": "neck side stretch",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "One-arm dumbbell row",
+   "action": "use",
+   "workoutx_id": "0292",
+   "workoutx_name": "dumbbell one arm bent-over row",
+   "match": "exact",
+   "note": "Listed as dumbbell one arm bent-over row."
+  },
+  {
+   "app_name": "Open-book stretch",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Not in the library. Text only."
+  },
+  {
+   "app_name": "Overhead dumbbell triceps extension",
+   "action": "use",
+   "workoutx_id": "0430",
+   "workoutx_name": "dumbbell standing triceps extension",
+   "match": "exact",
+   "note": "Listed as dumbbell standing triceps extension."
+  },
+  {
+   "app_name": "Overhead triceps stretch",
+   "action": "use",
+   "workoutx_id": "0643",
+   "workoutx_name": "overhead triceps stretch",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Pec deck",
+   "action": "use",
+   "workoutx_id": "0596",
+   "workoutx_name": "lever seated fly",
+   "match": "exact",
+   "note": "Listed as lever seated fly."
+  },
+  {
+   "app_name": "Pigeon stretch",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Not in the library. Text only, or reuse the figure-four demo (2567)."
+  },
+  {
+   "app_name": "Plank",
+   "action": "merge",
+   "workoutx_id": "2135",
+   "workoutx_name": "weighted front plank",
+   "match": "merge",
+   "note": "Duplicate of Forearm plank."
+  },
+  {
+   "app_name": "Preacher curl machine",
+   "action": "use",
+   "workoutx_id": "0592",
+   "workoutx_name": "lever preacher curl",
+   "match": "exact",
+   "note": "Listed as lever preacher curl."
+  },
+  {
+   "app_name": "Pull-up",
+   "action": "use",
+   "workoutx_id": "0652",
+   "workoutx_name": "pull-up",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Push-up",
+   "action": "use",
+   "workoutx_id": "0662",
+   "workoutx_name": "push-up",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Reverse pec-deck",
+   "action": "use",
+   "workoutx_id": "0602",
+   "workoutx_name": "lever seated reverse fly",
+   "match": "exact",
+   "note": "Listed as lever seated reverse fly."
+  },
+  {
+   "app_name": "Seated calf raise",
+   "action": "use",
+   "workoutx_id": "0594",
+   "workoutx_name": "lever seated calf raise",
+   "match": "exact",
+   "note": "Listed as lever seated calf raise."
+  },
+  {
+   "app_name": "Seated hamstring stretch",
+   "action": "use (close match)",
+   "workoutx_id": "1511",
+   "workoutx_name": "hamstring stretch",
+   "match": "close",
+   "note": "Listed as hamstring stretch."
+  },
+  {
+   "app_name": "Seated leg curl",
+   "action": "use",
+   "workoutx_id": "0599",
+   "workoutx_name": "lever seated leg curl",
+   "match": "exact",
+   "note": "Listed as lever seated leg curl."
+  },
+  {
+   "app_name": "Shoulder rolls",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Simple warm-up move: text only."
+  },
+  {
+   "app_name": "Single-arm lat pulldown",
+   "action": "use",
+   "workoutx_id": "3563",
+   "workoutx_name": "cable one arm pulldown",
+   "match": "exact",
+   "note": "Listed as cable one arm pulldown."
+  },
+  {
+   "app_name": "Slow breathing",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "No demo needed: use a simple breathing animation or text."
+  },
+  {
+   "app_name": "Smith machine squat",
+   "action": "use",
+   "workoutx_id": "0770",
+   "workoutx_name": "smith squat",
+   "match": "exact",
+   "note": "Listed as smith squat."
+  },
+  {
+   "app_name": "Sphinx",
+   "action": "use",
+   "workoutx_id": "1362",
+   "workoutx_name": "sphinx",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Standing cable hip abduction",
+   "action": "use (close match)",
+   "workoutx_id": "0710",
+   "workoutx_name": "side hip abduction",
+   "match": "close",
+   "note": "Bodyweight standing side hip abduction. No cable version."
+  },
+  {
+   "app_name": "Standing cable hip adduction",
+   "action": "use",
+   "workoutx_id": "0168",
+   "workoutx_name": "cable hip adduction",
+   "match": "exact",
+   "note": "Listed as cable hip adduction."
+  },
+  {
+   "app_name": "Standing cable leg curl",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Not in the library. Swap it for Lying or Seated leg curl, or use text only."
+  },
+  {
+   "app_name": "Standing calf raise",
+   "action": "merge",
+   "workoutx_id": "1373",
+   "workoutx_name": "bodyweight standing calf raise",
+   "match": "merge",
+   "note": "Same as Bodyweight calf raises (or Calf raise machine, if it uses the machine). Keep one."
+  },
+  {
+   "app_name": "Standing forward fold",
+   "action": "use (close match)",
+   "workoutx_id": "3212",
+   "workoutx_name": "basic toe touch (male)",
+   "match": "close",
+   "note": "Listed as basic toe touch (male)."
+  },
+  {
+   "app_name": "Standing hip circles",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Not in the library. Text only."
+  },
+  {
+   "app_name": "Standing quad stretch",
+   "action": "use (close match)",
+   "workoutx_id": "0613",
+   "workoutx_name": "lying (side) quads stretch",
+   "match": "close",
+   "note": "Only a lying quad stretch exists: lying (side) quads stretch."
+  },
+  {
+   "app_name": "Straight arm pulldown",
+   "action": "use",
+   "workoutx_id": "0238",
+   "workoutx_name": "cable straight arm pulldown",
+   "match": "exact",
+   "note": "Listed as cable straight arm pulldown."
+  },
+  {
+   "app_name": "Thread the needle",
+   "action": "no demo",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "none",
+   "note": "Not in the library. Text only."
+  },
+  {
+   "app_name": "Triceps pushdown",
+   "action": "use",
+   "workoutx_id": "0200",
+   "workoutx_name": "cable pushdown (with rope attachment)",
+   "match": "exact",
+   "note": "Rope pushdown. Keep this one; Cable triceps pushdown is its duplicate."
+  },
+  {
+   "app_name": "Wall sit",
+   "action": "use (close match)",
+   "workoutx_id": "0624",
+   "workoutx_name": "march sit (wall)",
+   "match": "close",
+   "note": "Listed as march sit (wall): a wall sit with marching."
+  },
+  {
+   "app_name": "World's greatest stretch",
+   "action": "use",
+   "workoutx_id": "1604",
+   "workoutx_name": "world greatest stretch",
+   "match": "exact",
+   "note": ""
+  },
+  {
+   "app_name": "Wrist and forearm stretch",
+   "action": "use (close match)",
+   "workoutx_id": "0721",
+   "workoutx_name": "side wrist pull stretch",
+   "match": "close",
+   "note": "Listed as side wrist pull stretch (wrist circles 1428 also exists)."
+  },
+  {
+   "app_name": "90/90 hip stretch",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Banded clamshell",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Banded glute bridge",
+   "action": "remove",
+   "workoutx_id": "1408",
+   "workoutx_name": "band hip lift",
+   "match": "remove (match exists)",
+   "note": "Band hip lift exists: keep if you want it."
+  },
+  {
+   "app_name": "Bear plank",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": "Only bear crawl exists."
+  },
+  {
+   "app_name": "Butterfly stretch",
+   "action": "remove",
+   "workoutx_id": "1494",
+   "workoutx_name": "butterfly yoga pose",
+   "match": "remove (match exists)",
+   "note": "Exact match (butterfly yoga pose): worth keeping."
+  },
+  {
+   "app_name": "Cable squat",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Cable woodchop",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Chin tuck",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Close-grip bench press",
+   "action": "remove",
+   "workoutx_id": "0030",
+   "workoutx_name": "barbell close-grip bench press",
+   "match": "remove (match exists)",
+   "note": "Exact match: keep if a routine uses it."
+  },
+  {
+   "app_name": "Close-grip lat pulldown",
+   "action": "remove",
+   "workoutx_id": "0818",
+   "workoutx_name": "twin handle parallel grip lat pulldown",
+   "match": "remove (match exists)",
+   "note": "Close match (twin handle parallel grip lat pulldown)."
+  },
+  {
+   "app_name": "Close-grip push-up",
+   "action": "remove",
+   "workoutx_id": "0259",
+   "workoutx_name": "close-grip push-up",
+   "match": "remove (match exists)",
+   "note": "Exact match."
+  },
+  {
+   "app_name": "Decline push-up",
+   "action": "remove",
+   "workoutx_id": "0279",
+   "workoutx_name": "decline push-up",
+   "match": "remove (match exists)",
+   "note": "Exact match."
+  },
+  {
+   "app_name": "Deficit reverse lunge",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": "Only the flat rear lunge."
+  },
+  {
+   "app_name": "Donkey kick",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Dumbbell floor press",
+   "action": "use (close match)",
+   "workoutx_id": "ex_MTK26X",
+   "workoutx_name": "Dumbbell One Arm Floor Press",
+   "match": "close",
+   "note": "One-arm floor press. No two-arm dumbbell floor press in WorkoutX."
+  },
+  {
+   "app_name": "Dumbbell shrug",
+   "action": "remove",
+   "workoutx_id": "0406",
+   "workoutx_name": "dumbbell shrug",
+   "match": "remove (match exists)",
+   "note": "Exact match."
+  },
+  {
+   "app_name": "Dumbbell sumo squat",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Kettlebell floor press",
+   "action": "remove",
+   "workoutx_id": "1298",
+   "workoutx_name": "kettlebell one arm floor press",
+   "match": "remove (match exists)",
+   "note": "One-arm version only."
+  },
+  {
+   "app_name": "Kettlebell suitcase carry",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Legs up the wall",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Pike push-up",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Prone press-up",
+   "action": "remove",
+   "workoutx_id": "1366",
+   "workoutx_name": "upward facing dog",
+   "match": "remove (match exists)",
+   "note": "Upward facing dog is close."
+  },
+  {
+   "app_name": "Seated spinal twist",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Side-lying inner thigh raise",
+   "action": "remove",
+   "workoutx_id": "3667",
+   "workoutx_name": "side lying hip adduction (male)",
+   "match": "remove (match exists)",
+   "note": "Exact match, but labelled male."
+  },
+  {
+   "app_name": "Single-arm cable chest press",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Single-leg box squat",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Single-leg calf raise",
+   "action": "remove",
+   "workoutx_id": "0409",
+   "workoutx_name": "dumbbell single leg calf raise",
+   "match": "remove (match exists)",
+   "note": "Exact match (dumbbell single leg calf raise)."
+  },
+  {
+   "app_name": "Single-leg hip thrust",
+   "action": "remove",
+   "workoutx_id": "3645",
+   "workoutx_name": "single leg bridge with outstretched leg",
+   "match": "remove (match exists)",
+   "note": "Single leg bridge is close."
+  },
+  {
+   "app_name": "Single leg RDL",
+   "action": "remove",
+   "workoutx_id": "1757",
+   "workoutx_name": "dumbbell single leg deadlift",
+   "match": "remove (match exists)",
+   "note": "Exact match (dumbbell single leg deadlift)."
+  },
+  {
+   "app_name": "Sliding leg curl",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  },
+  {
+   "app_name": "Suitcase carry",
+   "action": "use",
+   "workoutx_id": "ex_X4S2XW",
+   "workoutx_name": "Dumbbell Suitcase Carry",
+   "match": "exact",
+   "note": "Male clip is allowed if that is the only demo."
+  },
+  {
+   "app_name": "Supported deep squat",
+   "action": "remove",
+   "workoutx_id": "2803",
+   "workoutx_name": "dumbbell supported squat",
+   "match": "remove (match exists)",
+   "note": "Dumbbell supported squat is close."
+  },
+  {
+   "app_name": "T-bar row",
+   "action": "remove",
+   "workoutx_id": "1349",
+   "workoutx_name": "lever reverse t-bar row",
+   "match": "remove (match exists)",
+   "note": "Reverse-grip version only."
+  },
+  {
+   "app_name": "Wall angel",
+   "action": "remove",
+   "workoutx_id": null,
+   "workoutx_name": null,
+   "match": "remove",
+   "note": ""
+  }
+ ]
+}

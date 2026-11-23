@@ -734,7 +734,17 @@ ${dayRows.join(',\n')};
     { name: 'content_routines_1.sql', body: setup, note: 'schema, routines, weeks and days' },
     {
       name: 'content_routines_2.sql',
-      body: `-- Part 2 of 3. Run after content_routines_1.sql.\n${slotFiles[0]}`,
+      body: `-- Part 2 of 3. Run after content_routines_1.sql.
+-- Clears slots first so a retry of this file does not hit routine_day_exercises_day_position_idx.
+delete from public.routine_day_exercises
+where routine_day_id in (
+  select rd.id
+  from public.routine_days rd
+  join public.routine_weeks rw on rw.id = rd.routine_week_id
+  where rw.routine_id in (${idList})
+);
+
+${slotFiles[0]}`,
       note: `exercise slots 1 to ${splitAt}`,
     },
     {

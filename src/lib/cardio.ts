@@ -2,6 +2,7 @@ import catalogueFile from '../../content/cardio/cardio-sessions.json';
 
 import { cardioCopy, fillCopy } from '@/lib/copy';
 import type { GymExperience } from '@/lib/profile';
+import { parseDate, type WeekCount } from '@/lib/progress';
 import {
   CARDIO_NOTES_KEY,
   CARDIO_PLAN_KEY,
@@ -36,6 +37,10 @@ export type CardioMachineId = (typeof CARDIO_MACHINES)[number];
 export type LoggedCardioMachineId = CardioMachineId | 'other';
 
 export const BEGINNER_CARDIO_DAYS = 28;
+/** W3 / W8 / L8: this long or more counts towards weekly cardio stats. */
+export const CARDIO_COUNTS_MINUTES = 10;
+/** L8: bar chart window. */
+export const CARDIO_CHART_WEEKS = 8;
 
 export type CardioSettings = {
   speed_kmh?: [number, number] | number;
@@ -690,4 +695,179 @@ export async function logManualCardioSession(input: {
 
 export function longestCardioMinutes(logs: CardioLog[]): number {
   return logs.reduce((max, log) => Math.max(max, log.minutes), 0);
+}
+
+function mondayOf(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - ((date.getDay() + 6) % 7));
+}
+
+function addDaysLocal(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+}
+
+function isoDay(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function logMondayIso(log: CardioLog): string {
+  const iso = log.date || log.createdAt.slice(0, 10);
+  return isoDay(mondayOf(parseDate(iso)));
+}
+
+function countsForWeek(log: CardioLog): boolean {
+  return log.minutes >= CARDIO_COUNTS_MINUTES;
+}
+
+/** Minutes of 10+ minute cardio sessions in each of the last 8 weeks, oldest first. */
+export function cardioMinutesLastEightWeeks(logs: CardioLog[], today = new Date()): WeekCount[] {
+  const totals = new Map<string, number>();
+  for (const log of logs) {
+    if (!countsForWeek(log)) continue;
+    const monday = logMondayIso(log);
+    totals.set(monday, (totals.get(monday) ?? 0) + log.minutes);
+  }
+  const thisMonday = mondayOf(today);
+  const weeks: WeekCount[] = [];
+  for (let i = CARDIO_CHART_WEEKS - 1; i >= 0; i -= 1) {
+    const week = addDaysLocal(thisMonday, -i * 7);
+    weeks.push({ weekStart: week, count: Math.round(totals.get(isoDay(week)) ?? 0) });
+  }
+  return weeks;
+}
+
+/** How many of the last 8 weeks have a 10+ minute cardio session. */
+export function cardioWeeksLogged(logs: CardioLog[], today = new Date()): number {
+  return cardioMinutesLastEightWeeks(logs, today).filter((week) => week.count > 0).length;
+}
+
+export type CardioSessionCompare = {
+  name: string;
+  firstLabel: string;
+  latestLabel: string;
+};
+
+function isEasyOrRecover(label: string): boolean {
+  return /easy|recover/.test(label.toLowerCase());
+}
+
+function isWarmOrCool(label: string): boolean {
+  return /warm ?up|cool ?down/.test(label.toLowerCase());
+}
+
+function isWorkInterval(item: CardioInterval): boolean {
+  if (isWarmOrCool(item.label) || isEasyOrRecover(item.label)) return false;
+  if (item.effort >= 7) return true;
+  return /sprint|strong|faster|hard|work/.test(item.label.toLowerCase());
+}
+
+function workRestCycleSeconds(def: CardioSessionDef): number {
+  const work = def.intervals.find(isWorkInterval);
+  const rest = def.intervals.find((item) => isEasyOrRecover(item.label));
+  if (!work) return 0;
+  return work.seconds + (rest?.seconds ?? 0);
+}
+
+function roundsCompleted(def: CardioSessionDef, minutes: number): number | null {
+  if (def.style !== 'intervals' && def.style !== 'finisher') return null;
+  if (!def.intervals.some(isWorkInterval)) return null;
+  const seconds = Math.max(0, minutes) * 60;
+  let elapsed = 0;
+  let rounds = 0;
+  for (const item of def.intervals) {
+    if (elapsed >= seconds) break;
+    if (isWorkInterval(item)) rounds += 1;
+    elapsed += item.seconds;
+  }
+  const prescribed = def.intervals.reduce((sum, item) => sum + item.seconds, 0);
+  if (seconds > prescribed + 15) {
+    const cycle = workRestCycleSeconds(def);
+    if (cycle > 0) rounds += Math.round((seconds - prescribed) / cycle);
+  }
+  return Math.max(0, rounds);
+}
+
+function shortCardioName(slug: string, machineId: LoggedCardioMachineId): string {
+  const def = cardioSession(slug);
+  if (def) {
+    const cut = def.name.indexOf(':');
+    return (cut > 0 ? def.name.slice(0, cut) : def.name).trim();
+  }
+  return machineLabel(machineId);
+}
+
+function formatMinutesLabel(minutes: number): string {
+  const rounded = Math.round(minutes * 10) / 10;
+  return `${rounded} min`;
+}
+
+function formatKmLabel(km: number): string {
+  const rounded = Math.round(km * 100) / 100;
+  return `${rounded} km`;
+}
+
+function formatRoundsLabel(rounds: number): string {
+  return rounds === 1 ? '1 round' : `${rounds} rounds`;
+}
+
+function compareLabels(first: CardioLog, latest: CardioLog): { firstLabel: string; latestLabel: string } {
+  const def = cardioSession(first.slug);
+  if (def) {
+    const firstRounds = roundsCompleted(def, first.minutes);
+    const latestRounds = roundsCompleted(def, latest.minutes);
+    if (firstRounds != null && latestRounds != null) {
+      return {
+        firstLabel: formatRoundsLabel(firstRounds),
+        latestLabel: formatRoundsLabel(latestRounds),
+      };
+    }
+  }
+  if (
+    first.distanceKm != null &&
+    latest.distanceKm != null &&
+    first.distanceKm > 0 &&
+    latest.distanceKm > 0
+  ) {
+    return {
+      firstLabel: formatKmLabel(first.distanceKm),
+      latestLabel: formatKmLabel(latest.distanceKm),
+    };
+  }
+  return {
+    firstLabel: formatMinutesLabel(first.minutes),
+    latestLabel: formatMinutesLabel(latest.minutes),
+  };
+}
+
+function latestKey(log: CardioLog): string {
+  return `${log.date} ${log.createdAt}`;
+}
+
+/** The cardio session she has repeated most, first vs latest. Null if nothing is repeated. */
+export function mostRepeatedCardioCompare(logs: CardioLog[]): CardioSessionCompare | null {
+  const groups = new Map<string, CardioLog[]>();
+  for (const log of logs) {
+    const list = groups.get(log.slug) ?? [];
+    list.push(log);
+    groups.set(log.slug, list);
+  }
+  let winner: CardioLog[] | null = null;
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    if (
+      !winner ||
+      group.length > winner.length ||
+      (group.length === winner.length && latestKey(group[group.length - 1]) > latestKey(winner[winner.length - 1]))
+    ) {
+      winner = group;
+    }
+  }
+  if (!winner) return null;
+  const first = winner[0];
+  const latest = winner[winner.length - 1];
+  return {
+    name: shortCardioName(first.slug, first.machineId),
+    ...compareLabels(first, latest),
+  };
 }

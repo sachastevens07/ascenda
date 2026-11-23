@@ -1,5 +1,5 @@
 import { router, type Href } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -36,14 +36,15 @@ import {
   quickStartMinutesOptions,
   type QuickStartStyle,
 } from '@/lib/cardioBuilderContent';
-import { cardioCopy } from '@/lib/copy';
+import { cardioCopy, fillCopy } from '@/lib/copy';
 import { saveCustomCardioWorkout } from '@/lib/customWorkouts';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed, useSubscriptionGate } from '@/lib/paywall';
+import { routeForActiveSession } from '@/lib/startLogger';
 import { useWorkout } from '@/lib/workout';
 
 const spec = cardioBuilderSpec;
-const MINUTE_ITEM = 52;
+const MINUTE_ITEM = 58;
 type Step = 'machine' | 'type' | 'minutes';
 
 export default function QuickStartScreen() {
@@ -89,15 +90,7 @@ export default function QuickStartScreen() {
         : spec.quickStart.minutesTitle;
 
   function openActive(id: string, source?: string) {
-    if (source === 'stretch') {
-      router.push({ pathname: '/stretches/play', params: { sessionId: id } } as Href);
-      return;
-    }
-    if (source === 'cardio') {
-      router.push({ pathname: '/cardio/play', params: { sessionId: id } } as Href);
-      return;
-    }
-    router.push({ pathname: '/session/[id]', params: { id } } as Href);
+    router.push(routeForActiveSession(id, source));
   }
 
   function currentPlan() {
@@ -130,7 +123,7 @@ export default function QuickStartScreen() {
         },
         null
       );
-      router.push({ pathname: '/cardio/play', params: { sessionId: started.id } } as Href);
+      router.replace({ pathname: '/cardio/play', params: { sessionId: started.id } } as Href);
     } catch (error) {
       if (isSessionInProgressError(error) && error.activeId) {
         showDialog(cardioCopy.in_progress_title, cardioCopy.in_progress_body, [
@@ -189,35 +182,43 @@ export default function QuickStartScreen() {
 
         {step === 'machine' ? (
           <View style={styles.machineGrid}>
-            {spec.machinesOrder.map((id) => {
+            {spec.machinesOrder.map((id, index, list) => {
               const selected = machineId === id;
               const label = builderMachineLabel(id);
+              const lastOdd = index === list.length - 1 && list.length % 2 === 1;
               return (
-                <Pressable
-                  key={id}
-                  onPress={() => {
-                    setMachineId(id);
-                    setStep('type');
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={label}
-                  style={[
-                    styles.machineCell,
-                    {
-                      backgroundColor: colours.surfaceMuted,
-                      borderRadius: radius.lg,
-                      borderWidth: selected ? 2 : 0,
-                      borderColor: colours.brand,
-                    },
-                  ]}>
-                  <View style={styles.machinePhoto}>
-                    <PhotoFill slug={machineImageSlug(id)} kind="equipment" label={label} />
-                  </View>
-                  <AppText variant="bodyStrong" style={{ color: colours.ink, padding: 10 }} numberOfLines={1}>
-                    {label}
-                  </AppText>
-                </Pressable>
+                <Fragment key={id}>
+                  {lastOdd ? <View style={styles.machineSpacer} /> : null}
+                  <Pressable
+                    onPress={() => {
+                      setMachineId(id);
+                      setStep('type');
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={label}
+                    style={styles.machineCell}>
+                    <View
+                      style={[
+                        styles.machineInner,
+                        {
+                          backgroundColor: colours.surfaceMuted,
+                          borderRadius: radius.lg,
+                          borderColor: selected ? colours.brand : 'transparent',
+                        },
+                      ]}>
+                      <View style={styles.machinePhoto}>
+                        <PhotoFill slug={machineImageSlug(id)} kind="equipment" label={label} />
+                      </View>
+                      <AppText
+                        variant="bodyStrong"
+                        style={{ color: colours.ink, paddingVertical: 10, textAlign: 'center' }}
+                        numberOfLines={1}>
+                        {label}
+                      </AppText>
+                    </View>
+                  </Pressable>
+                </Fragment>
               );
             })}
           </View>
@@ -362,11 +363,12 @@ function MinutesWheel({ value, onChange }: { value: number; onChange: (value: nu
               style={styles.wheelItem}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              accessibilityLabel={`${item}`}>
+              accessibilityLabel={fillCopy(spec.quickStart.minutesValue, { minutes: item })}>
               <AppText
                 variant={selected ? 'title1' : 'title3'}
-                style={{ color: selected ? colours.ink : colours.inkMuted, textAlign: 'center' }}>
-                {item}
+                style={{ color: selected ? colours.ink : colours.inkMuted, textAlign: 'center' }}
+                numberOfLines={1}>
+                {fillCopy(spec.quickStart.minutesValue, { minutes: item })}
               </AppText>
             </Pressable>
           );
@@ -390,15 +392,23 @@ const styles = StyleSheet.create({
   machineGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    marginHorizontal: -5,
   },
   machineCell: {
-    width: '47%',
+    width: '50%',
+    paddingHorizontal: 5,
+    marginBottom: 10,
+  },
+  machineSpacer: {
+    width: '25%',
+  },
+  machineInner: {
     overflow: 'hidden',
+    borderWidth: 2,
   },
   machinePhoto: {
     width: '100%',
-    height: 96,
+    aspectRatio: 4 / 3,
     overflow: 'hidden',
   },
   typeCard: {

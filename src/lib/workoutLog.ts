@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { loggerCopy } from '@/lib/copy';
 import { customWorkoutToDay, fetchCustomWorkout } from '@/lib/customWorkouts';
 import type { EquipmentAccess } from '@/lib/profile';
 import {
@@ -27,8 +28,11 @@ import {
   fetchPreviousSets,
   fetchSession,
   fetchSessionSets,
+  parseSetType,
+  workingSetsForProgression,
   type LoggedSet,
   type Session,
+  type SetType,
 } from '@/lib/sessions';
 import { applySwaps, fetchSessionSwaps } from '@/lib/swaps';
 
@@ -41,7 +45,7 @@ export type SessionPlanSlot = {
   exercise: SlotExercise;
   /** Extra warm-up sets logged as set_number 0, -1, -2. Today only. */
   warmup_sets?: number;
-  /** Ticked warm-up set numbers. Kept on-device because `sets.set_number` must be 1 or more. */
+  /** Ticked warm-up set numbers. Also stored on `sets` once set_type is in place. */
   warmup_completed?: number[];
   role?: ExerciseRole;
   target_rir?: number;
@@ -49,6 +53,7 @@ export type SessionPlanSlot = {
   progression_rule?: ProgressionRule;
   load_increment_kg?: number;
   notes?: string;
+  optional?: boolean;
 };
 
 export const EASE_BACK_WEIGHT_SCALE = 0.9;
@@ -83,6 +88,10 @@ export type SessionPlan = {
   lighterChosen?: boolean;
   /** Gentle cardio finisher slug after a check-in accept. Today only. */
   checkinFinisherSlug?: string | null;
+  /** Steady check-in or two Harder in a row: do not suggest a weight increase today. */
+  holdIncrease?: boolean;
+  /** Joint-friendly check-in: extra warm-up minutes for today only. */
+  extraWarmup?: boolean;
 };
 
 function sessionPlanKey(id: string): string {
@@ -108,7 +117,20 @@ export async function clearSessionPlan(sessionId: string): Promise<void> {
 }
 
 /** What's in the boxes for one set. Kept as text so she can type freely. */
-export type SetEntry = { weight: string; reps: string; completed: boolean };
+export type SetEntry = { weight: string; reps: string; completed: boolean; setType?: SetType };
+
+export function defaultSetType(setNumber: number): SetType {
+  return setNumber <= 0 ? 'warmup' : 'normal';
+}
+
+export function entrySetType(entry: SetEntry | undefined, setNumber: number): SetType {
+  return entry?.setType ? parseSetType(entry.setType) : defaultSetType(setNumber);
+}
+
+export function isSetEntryBlank(entry: SetEntry | undefined): boolean {
+  if (!entry) return true;
+  return !entry.weight.trim() && !entry.reps.trim() && !entry.completed;
+}
 
 export const FALLBACK_REST_SECONDS = 90;
 
@@ -155,6 +177,8 @@ export function sessionPlanFromDay(
     | 'checkinResolved'
     | 'lighterChosen'
     | 'checkinFinisherSlug'
+    | 'holdIncrease'
+    | 'extraWarmup'
   >,
   entries?: Record<string, SetEntry>,
   patch?: { position: number; setNumber: number; completed: boolean }
@@ -182,6 +206,7 @@ export function sessionPlanFromDay(
       progression_rule: item.progression_rule,
       load_increment_kg: item.load_increment_kg,
       notes: item.notes,
+      optional: item.optional,
     })),
     easeBack,
     timerStartedAt: timerStartedAt ?? null,
@@ -193,6 +218,8 @@ export function sessionPlanFromDay(
     checkinResolved: extras?.checkinResolved,
     lighterChosen: extras?.lighterChosen,
     checkinFinisherSlug: extras?.checkinFinisherSlug,
+    holdIncrease: extras?.holdIncrease,
+    extraWarmup: extras?.extraWarmup,
   };
 }
 
@@ -312,6 +339,7 @@ export function applySessionPlan(day: ProgrammeDay, plan: SessionPlan): Programm
         load_increment_kg: existing?.load_increment_kg ?? slot.load_increment_kg,
         notes: existing?.notes ?? slot.notes,
         alternative_exercise_ids: existing?.alternative_exercise_ids,
+        optional: slot.optional ?? existing?.optional,
       };
     }),
   };
@@ -353,6 +381,27 @@ export function isWarmupSetNumber(setNumber: number): boolean {
   return setNumber <= 0;
 }
 
+export function normalSetNumbers(
+  item: ProgrammeExercise,
+  entries: Record<string, SetEntry>
+): number[] {
+  return allSetNumbers(item).filter(
+    (setNumber) => entrySetType(entries[setKey(item.exercise.id, setNumber)], setNumber) === 'normal'
+  );
+}
+
+export function displaySetLabel(
+  item: ProgrammeExercise,
+  setNumber: number,
+  entries: Record<string, SetEntry>
+): string {
+  const type = entrySetType(entries[setKey(item.exercise.id, setNumber)], setNumber);
+  if (type === 'warmup') return loggerCopy.warmup_set_label;
+  if (type === 'drop') return loggerCopy.drop_set_label;
+  const index = normalSetNumbers(item, entries).indexOf(setNumber);
+  return index >= 0 ? String(index + 1) : String(setNumber);
+}
+
 export function parseWeight(text: string): number | null {
   return parseDisplayWeight(text);
 }
@@ -375,7 +424,7 @@ export function buildEntries(
   logged: LoggedSet[],
   previous: Record<string, LoggedSet[]>,
   withProgression: boolean,
-  options?: { weightScale?: number; easeBack?: SessionEaseBack }
+  options?: { weightScale?: number; easeBack?: SessionEaseBack; holdIncrease?: boolean }
 ): Record<string, SetEntry> {
   const entries: Record<string, SetEntry> = {};
   const easeBack = options?.easeBack;
@@ -383,7 +432,7 @@ export function buildEntries(
   for (const item of day.exercises) {
     const exerciseId = item.exercise.id;
     const previousSets = previous[exerciseId] ?? [];
-    const suggestion = getWeightSuggestion(item, previousSets);
+    const suggestion = getWeightSuggestion(item, previousSets, { holdIncrease: options?.holdIncrease });
     const scaleThis = easeBack
       ? shouldScaleSlotWeight(easeBack, item.role)
       : Boolean(weightScale);
@@ -396,20 +445,31 @@ export function buildEntries(
           weight: formatWeightInput(saved.weight_kg),
           reps: saved.reps === null ? '' : String(saved.reps),
           completed: saved.completed,
+          setType: parseSetType(saved.set_type) || defaultSetType(setNumber),
         };
         continue;
       }
-      if (withProgression && !scaleThis && !isWarmupSetNumber(setNumber) && suggestion.kind === 'increase') {
+      if (
+        withProgression &&
+        !scaleThis &&
+        defaultSetType(setNumber) === 'normal' &&
+        suggestion.kind === 'increase'
+      ) {
         entries[setKey(exerciseId, setNumber)] = {
           weight: formatWeightInput(suggestion.kg),
           reps: String(item.rep_min),
           completed: false,
+          setType: 'normal',
         };
         continue;
       }
+      const previousWorking = workingSetsForProgression(previousSets);
       const last =
-        previousSets.find((set) => set.set_number === setNumber) ??
-        (isWarmupSetNumber(setNumber) ? undefined : previousSets[previousSets.length - 1]);
+        defaultSetType(setNumber) !== 'normal'
+          ? undefined
+          : previousWorking.find((set) => set.set_number === setNumber) ??
+            previousWorking[setNumber - 1] ??
+            previousWorking[previousWorking.length - 1];
       let weightKg = last?.weight_kg ?? null;
       if (weightKg !== null && scaleThis && easeBack) {
         weightKg = scaledSuggestedKg(weightKg, item, easeBack);
@@ -420,6 +480,7 @@ export function buildEntries(
         weight: usesWeight(item.exercise.equipment) ? formatWeightInput(weightKg) : '',
         reps: String(last?.reps ?? item.rep_min),
         completed: false,
+        setType: defaultSetType(setNumber),
       };
     }
   }
@@ -458,7 +519,7 @@ export async function loadSessionLog(
   } else if (session.programme_day_id) {
     planned = await fetchProgrammeDay(session.programme_day_id, equipment);
   }
-  const plan = await loadSessionPlan(session.id);
+  const [plan, logged] = await Promise.all([loadSessionPlan(session.id), fetchSessionSets(id)]);
   if (!planned && plan?.slots.length) {
     planned = {
       id: session.id,
@@ -480,17 +541,19 @@ export async function loadSessionLog(
         progression_rule: slot.progression_rule,
         load_increment_kg: slot.load_increment_kg,
         notes: slot.notes,
+        optional: slot.optional,
       })),
     };
   }
   if (!planned) return null;
   const swapped = applySwaps(planned, swaps);
-  const day = plan && plan.slots.length > 0 ? applySessionPlan(swapped, plan) : swapped;
+  const midSession =
+    logged.some((set) => set.completed) || typeof plan?.timerStartedAt === 'number';
+  const keepSavedPlan =
+    Boolean(plan?.slots.length) && (Boolean(session.custom_workout_id) || midSession);
+  const day = keepSavedPlan && plan ? applySessionPlan(swapped, plan) : swapped;
   const exerciseIds = day.exercises.map((item) => item.exercise.id);
-  const [logged, previous] = await Promise.all([
-    fetchSessionSets(id),
-    fetchPreviousSets(exerciseIds, id),
-  ]);
+  const previous = await fetchPreviousSets(exerciseIds, id);
   const hasTicked = logged.some((set) => set.completed);
   const timerStartedAt =
     typeof plan?.timerStartedAt === 'number'
@@ -545,7 +608,7 @@ export function getSetRecords(
     if (!history || (item.exercise.weight_increase_kg ?? 0) < 0) continue;
     const running = { ...history };
     for (const setNumber of allSetNumbers(item)) {
-      if (isWarmupSetNumber(setNumber)) continue;
+      if (entrySetType(entries[setKey(item.exercise.id, setNumber)], setNumber) !== 'normal') continue;
       const key = setKey(item.exercise.id, setNumber);
       const entry = entries[key];
       const weightKg = entry?.completed ? parseWeight(entry.weight) : null;
@@ -596,7 +659,6 @@ export function sessionVolumeKg(
   for (const item of day.exercises) {
     if (!usesWeight(item.exercise.equipment)) continue;
     for (const setNumber of allSetNumbers(item)) {
-      if (isWarmupSetNumber(setNumber)) continue;
       const entry = entries[setKey(item.exercise.id, setNumber)];
       if (!entry?.completed) continue;
       const kg = parseWeight(entry.weight);
@@ -607,8 +669,11 @@ export function sessionVolumeKg(
   return total;
 }
 
-export function workingSetCount(day: ProgrammeDay): number {
-  return day.exercises.reduce((sum, item) => sum + setNumbers(item).length, 0);
+export function workingSetCount(
+  day: ProgrammeDay,
+  entries: Record<string, SetEntry> = {}
+): number {
+  return day.exercises.reduce((sum, item) => sum + normalSetNumbers(item, entries).length, 0);
 }
 
 export function completedWorkingSetCount(
@@ -617,8 +682,10 @@ export function completedWorkingSetCount(
 ): number {
   let done = 0;
   for (const item of day.exercises) {
-    for (const setNumber of setNumbers(item)) {
-      if (entries[setKey(item.exercise.id, setNumber)]?.completed) done += 1;
+    for (const setNumber of allSetNumbers(item)) {
+      const entry = entries[setKey(item.exercise.id, setNumber)];
+      if (entrySetType(entry, setNumber) !== 'normal') continue;
+      if (entry?.completed) done += 1;
     }
   }
   return done;

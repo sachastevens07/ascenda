@@ -103,14 +103,14 @@
         "title": "Four Weeks Strong: complete",
         "body": "Four weeks, {sessions} sessions. That's a habit."
       },
-      "featured_window": null,
       "length_weeks": 4,
       "start_options": [
         "next_monday",
         "first_of_month"
       ],
       "is_active": true,
-      "show_participant_count": false
+      "show_participant_count": false,
+      "featured_window": null
     },
     {
       "slug": "the-gym-explorer",
@@ -123,7 +123,6 @@
         "Beginner friendly"
       ],
       "audience": "Anyone who wants to feel at home in more of the gym",
-      "weekly_target_rule": null,
       "weekly_missions": [
         {
           "week": 1,
@@ -188,14 +187,15 @@
         "title": "The Gym Explorer: complete",
         "body": "{new_exercises} new exercises and {new_equipment} new pieces of kit. The gym's getting smaller."
       },
-      "featured_window": null,
       "length_weeks": 4,
       "start_options": [
         "next_monday",
         "first_of_month"
       ],
       "is_active": true,
-      "show_participant_count": false
+      "show_participant_count": false,
+      "weekly_target_rule": null,
+      "featured_window": null
     },
     {
       "slug": "28-days-of-stretch",
@@ -208,7 +208,6 @@
         "Recovery"
       ],
       "audience": "Everyone, especially if you feel stiff or stressed",
-      "weekly_target_rule": null,
       "weekly_missions": [
         {
           "week": 1,
@@ -274,14 +273,15 @@
         "title": "28 Days of Stretch: complete",
         "body": "{stretch_sessions} stretch sessions and {stretch_minutes} minutes of looking after yourself."
       },
-      "featured_window": null,
       "length_weeks": 4,
       "start_options": [
         "next_monday",
         "first_of_month"
       ],
       "is_active": true,
-      "show_participant_count": false
+      "show_participant_count": false,
+      "weekly_target_rule": null,
+      "featured_window": null
     },
     {
       "slug": "quiet-start",
@@ -294,7 +294,6 @@
         "One spot"
       ],
       "audience": "New to the gym or coming back after a break",
-      "weekly_target_rule": null,
       "weekly_missions": [
         {
           "week": 1,
@@ -371,7 +370,8 @@
         "first_of_month"
       ],
       "is_active": true,
-      "show_participant_count": false
+      "show_participant_count": false,
+      "weekly_target_rule": null
     }
   ]
 }

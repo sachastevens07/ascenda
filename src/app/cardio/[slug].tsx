@@ -23,6 +23,7 @@ import { cardioCopy, fillCopy, machineCopy } from '@/lib/copy';
 import { machineGuide } from '@/lib/machineGuides';
 import { confirmFirstSessionSafety } from '@/lib/firstSession';
 import { ensureSubscribed } from '@/lib/paywall';
+import { routeForActiveSession } from '@/lib/startLogger';
 import { useWorkout } from '@/lib/workout';
 
 export default function CardioDetailScreen() {
@@ -39,15 +40,7 @@ export default function CardioDetailScreen() {
   }
 
   function openActive(id: string, source?: string) {
-    if (source === 'stretch') {
-      router.push({ pathname: '/stretches/play', params: { sessionId: id } } as Href);
-      return;
-    }
-    if (source === 'cardio') {
-      router.push({ pathname: '/cardio/play', params: { sessionId: id } } as Href);
-      return;
-    }
-    router.push({ pathname: '/session/[id]', params: { id } } as Href);
+    router.push(routeForActiveSession(id, source));
   }
 
   async function handleStart() {

@@ -86,10 +86,10 @@
       "celebration": "You did it. The hardest session is always the first one.",
       "rule": "sessions_completed >= 1",
       "icon": "footprint",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -100,10 +100,10 @@
       "celebration": "You hit your weekly target. That's a perfect week.",
       "rule": "gold_weeks >= 1",
       "icon": "calendar_check",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -114,10 +114,10 @@
       "celebration": "Your first personal best. Many more to come.",
       "rule": "personal_bests >= 1",
       "icon": "arrow_up",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -128,10 +128,10 @@
       "celebration": "Look how far you've come since day one.",
       "rule": "checkpoints_completed >= 1",
       "icon": "flag",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -142,10 +142,10 @@
       "celebration": "Machine taken? No problem. You adapted and kept going.",
       "rule": "swaps_used >= 1",
       "icon": "shuffle",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -156,10 +156,10 @@
       "celebration": "Knowing what to do before you walk over is half the battle.",
       "rule": "guides_opened >= 1",
       "icon": "book",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -170,10 +170,10 @@
       "celebration": "Welcome back. Coming back is what counts.",
       "rule": "welcome_back_sessions_completed >= 1",
       "icon": "refresh",
-      "tier": null,
-      "threshold": null,
       "repeatable": true,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -184,10 +184,10 @@
       "celebration": "You hit your goal. Ready to set the next one?",
       "rule": "current_run_weeks >= streak_goal_weeks",
       "icon": "target",
-      "tier": null,
-      "threshold": null,
       "repeatable": true,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -450,10 +450,10 @@
       "celebration": "Challenge complete. You set out to do it, and you did.",
       "rule": "challenges_completed >= 1",
       "icon": "medal",
-      "tier": null,
-      "threshold": null,
       "repeatable": true,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -464,10 +464,10 @@
       "celebration": "Dumbbell debut. Another part of the gym is yours.",
       "rule": "distinct_equipment_types_logged contains 'dumbbell'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -478,10 +478,10 @@
       "celebration": "Machine minded. Another part of the gym is yours.",
       "rule": "distinct_equipment_types_logged contains 'machine'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -492,10 +492,10 @@
       "celebration": "Cable ready. Another part of the gym is yours.",
       "rule": "distinct_equipment_types_logged contains 'cable'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -506,10 +506,10 @@
       "celebration": "Kettlebell curious. Another part of the gym is yours.",
       "rule": "distinct_equipment_types_logged contains 'kettlebell'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -520,10 +520,10 @@
       "celebration": "Bar raised. Another part of the gym is yours.",
       "rule": "distinct_equipment_types_logged contains 'barbell'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -534,10 +534,10 @@
       "celebration": "You stepped into the squat rack. That's a big moment.",
       "rule": "exercises_logged contains 'barbell-back-squat'",
       "icon": "rack",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {
@@ -604,12 +604,12 @@
       "celebration": "Treadmill ticked. One more machine you know how to use.",
       "rule": "cardio_machines_logged contains 'treadmill'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
-      "progress_unit": null,
-      "available_from": "v2.3"
+      "available_from": "v2.3",
+      "tier": null,
+      "threshold": null,
+      "progress_unit": null
     },
     {
       "id": "first-bike",
@@ -619,12 +619,12 @@
       "celebration": "Pedal power. One more machine you know how to use.",
       "rule": "cardio_machines_logged contains 'bike'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
-      "progress_unit": null,
-      "available_from": "v2.3"
+      "available_from": "v2.3",
+      "tier": null,
+      "threshold": null,
+      "progress_unit": null
     },
     {
       "id": "first-cross-trainer",
@@ -634,12 +634,12 @@
       "celebration": "Cross-trainer conquered. One more machine you know how to use.",
       "rule": "cardio_machines_logged contains 'cross-trainer'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
-      "progress_unit": null,
-      "available_from": "v2.3"
+      "available_from": "v2.3",
+      "tier": null,
+      "threshold": null,
+      "progress_unit": null
     },
     {
       "id": "first-rower",
@@ -649,12 +649,12 @@
       "celebration": "Row, row, row. One more machine you know how to use.",
       "rule": "cardio_machines_logged contains 'rower'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
-      "progress_unit": null,
-      "available_from": "v2.3"
+      "available_from": "v2.3",
+      "tier": null,
+      "threshold": null,
+      "progress_unit": null
     },
     {
       "id": "first-stair-climber",
@@ -664,12 +664,12 @@
       "celebration": "Stepping up. One more machine you know how to use.",
       "rule": "cardio_machines_logged contains 'stair climber'",
       "icon": "unlock",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
-      "progress_unit": null,
-      "available_from": "v2.3"
+      "available_from": "v2.3",
+      "tier": null,
+      "threshold": null,
+      "progress_unit": null
     },
     {
       "id": "first-stretch",
@@ -679,10 +679,10 @@
       "celebration": "Looking after your body is training too.",
       "rule": "stretch_sessions_completed >= 1",
       "icon": "leaf",
-      "tier": null,
-      "threshold": null,
       "repeatable": false,
       "show_progress": false,
+      "tier": null,
+      "threshold": null,
       "progress_unit": null
     },
     {

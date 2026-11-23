@@ -1,11 +1,12 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { AppText } from '@/components/ui/AppText';
-import { Chip, ChipScroller, PhotoFill, PrimaryButton, SecondaryButton } from '@/components/ui';
+import { Chip, ChipScroller, PhotoFill } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { fetchFinishedSessionMeta } from '@/lib/activityStats';
 import {
@@ -22,15 +23,23 @@ import { cardioCopy } from '@/lib/copy';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { CARDIO_STYLES, type CardioStyle } from '@/lib/sessionTypes';
 
+function routeForBuilderAction(id: string): Href | null {
+  if (id === 'quick') return '/cardio/quick';
+  if (id === 'intervals') return '/cardio/intervals';
+  if (id === 'log') return '/cardio/log';
+  return null;
+}
+
 export function CardioCatalogue({ bottomInset }: { bottomInset?: number }) {
   const insets = useSafeAreaInsets();
   const paddingBottom = (bottomInset ?? insets.bottom) + 32;
-  const { colours, spacing, radius, shadow } = useTheme();
+  const { colours, spacing } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
   const [startedOn, setStartedOn] = useState<string | null>(profile?.onboarding_completed_at ?? null);
   const [machine, setMachine] = useState<CardioMachineId | 'all'>('all');
   const [style, setStyle] = useState<CardioStyle | 'all'>('all');
+  const [createOpen, setCreateOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -61,107 +70,158 @@ export function CardioCatalogue({ bottomInset }: { bottomInset?: number }) {
   );
 
   return (
-    <ScrollView contentContainerStyle={[styles.content, { paddingBottom }]}>
-      <CreateYourOwnCard />
-
-      {beginnerWindow ? (
-        <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-          {cardioCopy.beginner_note}
-        </AppText>
-      ) : null}
-
-      <ChipScroller style={styles.filters}>
-        <Chip label={cardioCopy.filter_all} selected={machine === 'all'} onPress={() => setMachine('all')} />
-        {CARDIO_MACHINES.filter((id) => id !== 'mixed').map((id) => (
-          <Chip
-            key={id}
-            label={machineLabel(id)}
-            selected={machine === id}
-            onPress={() => setMachine(machine === id ? 'all' : id)}
-          />
-        ))}
-      </ChipScroller>
-      <ChipScroller>
-        <Chip label={cardioCopy.filter_all} selected={style === 'all'} onPress={() => setStyle('all')} />
-        {CARDIO_STYLES.filter((id) => id !== 'mixed').map((id) => (
-          <Chip
-            key={id}
-            label={styleLabel(id)}
-            selected={style === id}
-            onPress={() => setStyle(style === id ? 'all' : id)}
-          />
-        ))}
-      </ChipScroller>
-
-      {sessions.length === 0 ? (
-        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
-          {beginnerWindow && style === 'intervals' ? cardioCopy.beginner_empty : cardioCopy.empty}
-        </AppText>
-      ) : (
-        sessions.map((session) => (
+    <>
+      <FlatList
+        data={sessions}
+        keyExtractor={(session) => session.slug}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={7}
+        contentContainerStyle={[styles.content, { paddingBottom }]}
+        ListHeaderComponent={
+          <View style={{ gap: 12 }}>
+            <CreateYourOwnRow onPress={() => setCreateOpen(true)} />
+            {beginnerWindow ? (
+              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+                {cardioCopy.beginner_note}
+              </AppText>
+            ) : null}
+            <ChipScroller style={styles.filters}>
+              <Chip label={cardioCopy.filter_all} selected={machine === 'all'} onPress={() => setMachine('all')} />
+              {CARDIO_MACHINES.filter((id) => id !== 'mixed').map((id) => (
+                <Chip
+                  key={id}
+                  label={machineLabel(id)}
+                  selected={machine === id}
+                  onPress={() => setMachine(machine === id ? 'all' : id)}
+                />
+              ))}
+            </ChipScroller>
+            <ChipScroller>
+              <Chip label={cardioCopy.filter_all} selected={style === 'all'} onPress={() => setStyle('all')} />
+              {CARDIO_STYLES.filter((id) => id !== 'mixed').map((id) => (
+                <Chip
+                  key={id}
+                  label={styleLabel(id)}
+                  selected={style === id}
+                  onPress={() => setStyle(style === id ? 'all' : id)}
+                />
+              ))}
+            </ChipScroller>
+            {sessions.length === 0 ? (
+              <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
+                {beginnerWindow && style === 'intervals' ? cardioCopy.beginner_empty : cardioCopy.empty}
+              </AppText>
+            ) : null}
+          </View>
+        }
+        renderItem={({ item: session }) => (
           <CardioRow
-            key={session.slug}
             session={session}
             onPress={() => router.push({ pathname: '/cardio/[slug]', params: { slug: session.slug } } as Href)}
           />
-        ))
-      )}
-    </ScrollView>
+        )}
+      />
+      <CreateYourOwnSheet
+        visible={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onChoose={(id) => {
+          setCreateOpen(false);
+          const href = routeForBuilderAction(id);
+          if (href) {
+            router.push(href);
+            return;
+          }
+          const action = cardioBuilderSpec.entry.actions.find((item) => item.id === id);
+          showDialog(action?.label ?? cardioBuilderSpec.entry.cardTitle, cardioBuilderSpec.entry.comingSoon);
+        }}
+      />
+    </>
   );
 }
 
-function CreateYourOwnCard() {
-  const { colours, spacing, radius, shadow } = useTheme();
+function CreateYourOwnRow({ onPress }: { onPress: () => void }) {
+  const { colours, radius, shadow } = useTheme();
+  const title = cardioBuilderSpec.entry.cardTitle;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={({ pressed }) => [
+        styles.createRow,
+        { backgroundColor: colours.surface, borderRadius: radius.lg },
+        shadow,
+        pressed && styles.pressed,
+      ]}>
+      <View style={[styles.createIcon, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
+        <Ionicons name="add" size={20} color={colours.brand} />
+      </View>
+      <AppText variant="title3" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
+        {title}
+      </AppText>
+      <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
+    </Pressable>
+  );
+}
+
+function CreateYourOwnSheet({
+  visible,
+  onClose,
+  onChoose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onChoose: (id: string) => void;
+}) {
+  const { colours, spacing, radius } = useTheme();
+  const insets = useSafeAreaInsets();
   const spec = cardioBuilderSpec;
   return (
-    <View style={[styles.createCard, { backgroundColor: colours.surface, borderRadius: radius.lg }, shadow]}>
-      <AppText variant="title2" style={{ color: colours.ink }}>
-        {spec.entry.cardTitle}
-      </AppText>
-      {spec.entry.cardSub ? (
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-          {spec.entry.cardSub}
-        </AppText>
-      ) : null}
-      <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
-        {spec.entry.actions.map((action) => {
-          if (action.id === 'quick') {
-            return (
-              <PrimaryButton
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      onRequestClose={onClose}>
+      <View style={styles.modalWrap}>
+        <Pressable style={styles.modalScrim} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colours.bg,
+              borderTopLeftRadius: radius.xl,
+              borderTopRightRadius: radius.xl,
+              paddingBottom: insets.bottom,
+            },
+          ]}>
+          <AppText variant="title2" style={{ color: colours.ink, paddingHorizontal: 24, paddingTop: 20 }}>
+            {spec.entry.cardTitle}
+          </AppText>
+          <View style={{ paddingHorizontal: 24, paddingTop: 16, gap: spacing.sm }}>
+            {spec.entry.actions.map((action) => (
+              <Pressable
                 key={action.id}
-                label={action.label}
-                onPress={() => router.push('/cardio/quick' as Href)}
-              />
-            );
-          }
-          if (action.id === 'intervals') {
-            return (
-              <SecondaryButton
-                key={action.id}
-                label={action.label}
-                onPress={() => router.push('/cardio/intervals' as Href)}
-              />
-            );
-          }
-          if (action.id === 'log') {
-            return (
-              <SecondaryButton
-                key={action.id}
-                label={action.label}
-                onPress={() => router.push('/cardio/log' as Href)}
-              />
-            );
-          }
-          return (
-            <SecondaryButton
-              key={action.id}
-              label={action.label}
-              onPress={() => showDialog(action.label, spec.entry.comingSoon)}
-            />
-          );
-        })}
+                onPress={() => onChoose(action.id)}
+                accessibilityRole="button"
+                accessibilityLabel={action.label}
+                style={({ pressed }) => [
+                  styles.sheetRow,
+                  { backgroundColor: colours.surface, borderRadius: radius.lg },
+                  pressed && styles.pressed,
+                ]}>
+                <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>
+                  {action.label}
+                </AppText>
+                <Ionicons name="chevron-forward" size={20} color={colours.inkMuted} />
+              </Pressable>
+            ))}
+          </View>
+        </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 
@@ -202,8 +262,18 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     gap: 12,
   },
-  createCard: {
-    padding: 16,
+  createRow: {
+    minHeight: 64,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  createIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filters: {
     marginTop: 4,
@@ -224,5 +294,24 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+  },
+  modalWrap: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalScrim: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  sheet: {
+    width: '100%',
+    maxHeight: '80%',
+  },
+  sheetRow: {
+    minHeight: 56,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
 });

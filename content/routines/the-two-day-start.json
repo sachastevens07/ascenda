@@ -140,7 +140,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -152,10 +152,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -179,13 +179,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -220,7 +220,7 @@
               "rep_max": 10,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -233,7 +233,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -245,10 +245,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "side-plank",
@@ -300,9 +300,9 @@
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-bench-press",
@@ -312,7 +312,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -324,10 +324,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "walking-lunge",
@@ -352,14 +352,14 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -393,7 +393,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2.5,
               "notes": ""
             },
@@ -405,10 +405,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "one-arm-dumbbell-row",
@@ -418,7 +418,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { isFeatureEnabled } from '@/config/features';
 import {
   achievementFamilies,
   canonicalAchievementId,
@@ -544,6 +545,7 @@ export function getAchievementGroups(input: {
   const byFamily = new Map<AchievementFamily, AchievementBadge[]>();
   for (const def of visibleAchievementDefs()) {
     const badge = toBadge(def, metrics, input.sets, trained, stretches, extras, input.streak);
+    if (!isFeatureEnabled('stretches') && def.family === 'stretch' && !badge.unlocked) continue;
     const list = byFamily.get(def.family) ?? [];
     list.push(badge);
     byFamily.set(def.family, list);

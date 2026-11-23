@@ -39,25 +39,6 @@ const CORE_IDS = new Set([
   'frog-pump',
 ]);
 
-const ALTERNATIVES: Record<string, string[]> = {
-  'goblet-squat': ['leg-press', 'bodyweight-squat'],
-  'leg-press': ['goblet-squat', 'bodyweight-squat'],
-  'dumbbell-bench-press': ['machine-chest-press', 'knee-push-up'],
-  'machine-chest-press': ['dumbbell-bench-press', 'incline-push-up'],
-  'one-arm-dumbbell-row': ['seated-cable-row', 'band-row'],
-  'lat-pulldown': ['one-arm-dumbbell-row', 'band-lat-pulldown'],
-  'dumbbell-romanian-deadlift': ['lying-leg-curl', 'banded-hamstring-curl'],
-  'dumbbell-hip-thrust': ['hip-thrust-machine', 'glute-bridge'],
-  'hip-thrust-machine': ['dumbbell-hip-thrust', 'glute-bridge'],
-  'dumbbell-shoulder-press': ['machine-shoulder-press', 'band-shoulder-press'],
-  'machine-shoulder-press': ['dumbbell-shoulder-press', 'band-shoulder-press'],
-  'dumbbell-reverse-lunge': ['bodyweight-reverse-lunge', 'leg-press'],
-  'incline-dumbbell-press': ['machine-chest-press', 'knee-push-up'],
-  'barbell-deadlift': ['dumbbell-romanian-deadlift', 'kettlebell-deadlift'],
-  'push-up': ['knee-push-up', 'incline-push-up'],
-  'pull-up': ['assisted-pull-up', 'lat-pulldown'],
-};
-
 export const ROUTINE_BRIEFS: Record<string, RoutineBrief> = {
   'gym-confidence-6': {
     audience: [
@@ -548,9 +529,6 @@ export function withExerciseCoaching<T extends CoachableExercise>(
     empty(item.load_increment_kg) && rule === 'load' ? loadIncrementKg(item.exercise.equipment) : item.load_increment_kg;
   const tempo =
     empty(item.tempo) && difficulty === 'beginner' && role === 'main' ? '3-second lowering' : item.tempo ?? null;
-  const alternatives = empty(item.alternative_exercise_ids)
-    ? preferredSwapIds(item.exercise.id, ALTERNATIVES[item.exercise.id] ?? [])
-    : item.alternative_exercise_ids;
   return {
     ...item,
     role,
@@ -558,6 +536,6 @@ export function withExerciseCoaching<T extends CoachableExercise>(
     tempo,
     progression_rule: rule,
     load_increment_kg: increment,
-    alternative_exercise_ids: alternatives,
+    alternative_exercise_ids: preferredSwapIds(item.exercise.id),
   };
 }

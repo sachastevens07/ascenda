@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/config/features';
 import { track } from '@/lib/analytics';
 import { hydrateImages } from '@/lib/images';
 import { userGoalsFromAnswers, type Goal, type LifeStage, type QuizAnswers } from '@/lib/profile';
@@ -8,11 +9,22 @@ import {
   type ProgrammeExercise,
   type SlotExercise,
 } from '@/lib/programmes';
-import { contentDayFor, contentRoutine, contentSlotFor, overlayCardTags, routineCardDays } from '@/lib/contentRoutines';
+import { catalogueExercise } from '@/lib/busyGym';
+import { preferredSwapIds, resolveExerciseSlug } from '@/lib/contentGuides';
+import {
+  contentDayFor,
+  contentRoutine,
+  contentSlotFor,
+  overlayCardTags,
+  routineCardDays,
+  type ContentSlot,
+} from '@/lib/contentRoutines';
+import { type Equipment, type Muscle, type Zone } from '@/lib/exercises';
+import { contentStretch, stretchSessionMinutes } from '@/lib/contentStretches';
 import {
   briefForRoutine,
   coachNoteForDay,
-  focusFromDayName,
+  loadIncrementKg,
   phaseForWeek,
   warmupForRoutine,
   withExerciseCoaching,
@@ -117,6 +129,8 @@ export type RoutineDay = {
   finisher: string | null;
   sessionType: SessionType;
   day_key: string | null;
+  /** From the content day. Null when the day has no estimate; use the routine's session_minutes. */
+  estimated_minutes: number | null;
   exercises: RoutineDayExercise[];
 };
 
@@ -338,12 +352,16 @@ export function toSummary(row: SummaryRow): RoutineSummary {
     id: row.id,
     name: overlay?.name || displayRoutineName(row.id, row.name, row.equipment),
     slug: row.slug,
-    description: overlay?.short_description || row.description,
+    description:
+      type === 'stretch'
+        ? contentStretch(row.slug)?.description || row.description
+        : overlay?.short_description || row.description,
     cover: oneCover(row.cover),
     goal: row.goal,
     length_weeks: row.length_weeks,
     days_per_week: row.days_per_week,
-    session_minutes: row.session_minutes,
+    session_minutes:
+      type === 'stretch' ? stretchSessionMinutes(row.slug, row.session_minutes) : row.session_minutes,
     difficulty: row.difficulty,
     equipment: row.equipment,
     is_pro: row.is_pro,
@@ -351,10 +369,13 @@ export function toSummary(row: SummaryRow): RoutineSummary {
     sort_order: row.sort_order,
     source_programme_id: row.source_programme_id,
     type,
-    tags: (() => {
-      const fromContent = overlayCardTags(overlay);
-      return fromContent.length > 0 ? fromContent : (row.routine_tags ?? []).map((item) => item.tag);
-    })(),
+    tags:
+      type === 'stretch'
+        ? []
+        : (() => {
+            const fromContent = overlayCardTags(overlay);
+            return fromContent.length > 0 ? fromContent : (row.routine_tags ?? []).map((item) => item.tag);
+          })(),
     audience: audience.length > 0 ? audience : (overlay?.who_its_for ?? brief?.audience ?? []),
     byTheEnd: byTheEnd.length > 0 ? byTheEnd : (overlay?.by_the_end ?? brief?.byTheEnd ?? []),
     splitNote: row.split_note?.trim() || overlay?.why_this_split || brief?.splitNote || null,
@@ -376,6 +397,57 @@ function parseWarmup(value: unknown): WarmupStep[] {
   });
 }
 
+const PATTERN_MUSCLE: Record<string, Muscle> = {
+  squat: 'quads',
+  hinge: 'hamstrings',
+  glutes: 'glutes',
+  single_leg: 'quads',
+  calves: 'calves',
+  push: 'chest',
+  shoulders: 'shoulders',
+  pull: 'back',
+  arms: 'biceps',
+  core: 'core',
+  carry: 'core',
+};
+
+function restSecondsForSlot(slot: ContentSlot, fallback?: number): number {
+  if (slot.rest_seconds && slot.rest_seconds > 0) return slot.rest_seconds;
+  if (fallback && fallback > 0) return fallback;
+  if (slot.role === 'main') return 180;
+  if (slot.role === 'secondary') return 120;
+  if (slot.role === 'accessory') return 75;
+  if (slot.role === 'core' || slot.role === 'finisher') return 45;
+  return 90;
+}
+
+function slotExerciseFromContent(slug: string, existing?: SlotExercise): SlotExercise {
+  if (existing && (existing.id === slug || resolveExerciseSlug(existing.id) === slug)) {
+    return existing;
+  }
+  const cat = catalogueExercise(slug);
+  const equipment: Equipment = cat?.equipment ?? existing?.equipment ?? 'dumbbell';
+  const weighted = equipment !== 'bodyweight' && equipment !== 'band';
+  const zone: Zone = cat?.zone ?? existing?.zone ?? 1;
+  const name =
+    cat?.name ??
+    existing?.name ??
+    slug
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  return {
+    id: slug,
+    name,
+    primary_muscle: existing?.primary_muscle ?? PATTERN_MUSCLE[cat?.pattern ?? ''] ?? 'glutes',
+    equipment,
+    zone,
+    weight_increase_kg: weighted
+      ? (existing?.weight_increase_kg ?? loadIncrementKg(equipment))
+      : null,
+  };
+}
+
 function overlayExercises(
   exercises: RoutineDayExercise[],
   routine: Pick<RoutineSummary, 'id' | 'slug' | 'type'> | undefined,
@@ -387,19 +459,43 @@ function overlayExercises(
   if (!overlay) return exercises;
   const contentDay = contentDayFor(overlay, weekNumber, day);
   if (!contentDay) return exercises;
-  return exercises.map((item) => {
-    const slot = contentSlotFor(contentDay, item.exercise.id, item.position);
-    if (!slot) return item;
+  if (contentDay.exercises.length === 0) {
+    return exercises.map((item) => {
+      const slot = contentSlotFor(contentDay, item.exercise.id, item.position);
+      if (!slot) return item;
+      return {
+        ...item,
+        role: item.role ?? slot.role,
+        target_rir: item.target_rir ?? slot.target_rir,
+        tempo: item.tempo ?? slot.tempo,
+        progression_rule: item.progression_rule ?? slot.progression_rule,
+        load_increment_kg: item.load_increment_kg ?? slot.load_increment_kg,
+        notes: item.notes ?? slot.notes,
+        alternative_exercise_ids: preferredSwapIds(item.exercise.id),
+      };
+    });
+  }
+  return contentDay.exercises.map((slot, index) => {
+    const existing =
+      exercises.find(
+        (item) => item.exercise.id === slot.slug || resolveExerciseSlug(item.exercise.id) === slot.slug
+      ) ?? exercises[index];
     return {
-      ...item,
-      role: item.role ?? slot.role,
-      target_rir: item.target_rir ?? slot.target_rir,
-      tempo: item.tempo ?? slot.tempo,
-      progression_rule: item.progression_rule ?? slot.progression_rule,
-      load_increment_kg: item.load_increment_kg ?? slot.load_increment_kg,
-      notes: item.notes ?? slot.notes,
-      alternative_exercise_ids:
-        item.alternative_exercise_ids.length > 0 ? item.alternative_exercise_ids : slot.alternatives,
+      position: index + 1,
+      sets: slot.sets ?? existing?.sets ?? 3,
+      rep_min: slot.rep_min ?? existing?.rep_min ?? 8,
+      rep_max: slot.rep_max ?? existing?.rep_max ?? 12,
+      rest_seconds: restSecondsForSlot(slot, existing?.rest_seconds),
+      duration_seconds: null,
+      exercise: slotExerciseFromContent(slot.slug, existing?.exercise),
+      role: slot.role ?? existing?.role ?? null,
+      target_rir: slot.target_rir ?? existing?.target_rir ?? null,
+      tempo: slot.tempo ?? existing?.tempo ?? null,
+      progression_rule: slot.progression_rule ?? existing?.progression_rule ?? null,
+      load_increment_kg: slot.load_increment_kg ?? existing?.load_increment_kg ?? null,
+      notes: slot.notes ?? existing?.notes ?? null,
+      alternative_exercise_ids: preferredSwapIds(slot.slug),
+      superset_group: existing?.superset_group ?? null,
     };
   });
 }
@@ -429,7 +525,7 @@ function toDay(
     day_number: row.day_number,
     name: row.name,
     source_programme_day_id: row.source_programme_day_id,
-    focus: row.focus?.trim() || contentDay?.focus || (strength ? focusFromDayName(row.name) : null),
+    focus: contentDay?.focus?.trim() || row.focus?.trim() || null,
     warmup:
       warmup.length > 0 ? warmup : strength ? warmupForRoutine(routine?.id ?? '', routine?.equipment ?? 'full_gym') : [],
     coach_note:
@@ -437,8 +533,16 @@ function toDay(
     finisher: row.finisher?.trim() || null,
     sessionType: parseSessionType(row.type, strength ? 'strength' : 'recovery'),
     day_key: row.day_key?.trim() || null,
+    estimated_minutes: contentDay?.estimated_minutes ?? null,
     exercises: coached,
   };
+}
+
+export function sessionMinutesForDay(
+  day: Pick<RoutineDay, 'estimated_minutes'> | null | undefined,
+  fallback: number | null | undefined
+): number | null {
+  return day?.estimated_minutes ?? fallback ?? null;
 }
 
 function toRoutine(row: DetailRow): Routine {
@@ -580,11 +684,17 @@ function withDayExercises(routine: Routine, byDay: Map<string, RoutineDayExercis
           week.week_number,
           day
         );
+        const overlay = contentRoutine(routine.slug) ?? contentRoutine(routine.id);
+        const contentDay = overlay ? contentDayFor(overlay, week.week_number, day) : null;
         const coached =
           routine.type === 'strength'
             ? exercises.map((item) => withExerciseCoaching(item, exercises.length, routine.difficulty))
             : exercises;
-        return { ...day, exercises: coached };
+        return {
+          ...day,
+          estimated_minutes: contentDay?.estimated_minutes ?? day.estimated_minutes,
+          exercises: coached,
+        };
       }),
     })),
   };
@@ -925,6 +1035,7 @@ export function routineDayToProgrammeDay(day: RoutineDay): ProgrammeDay {
 export async function fetchRoutines(options?: { type?: RoutineType }): Promise<RoutineSummary[]> {
   await hydrateImages();
   const wanted = options?.type;
+  if (wanted === 'stretch' && !isFeatureEnabled('stretches')) return [];
   const attempts = [SUMMARY_SELECT_N2, SUMMARY_SELECT, SUMMARY_SELECT_BASE];
   let rows: SummaryRow[] | null = null;
   for (const select of attempts) {
@@ -1301,6 +1412,7 @@ export type RoadmapDay = {
   id: string;
   name: string;
   done: boolean;
+  sessionType: SessionType;
 };
 
 export type RoadmapWeek = {
@@ -1338,6 +1450,7 @@ export async function fetchRoutineRoadmap(enrolment: RoutineEnrolment): Promise<
       id: day.id,
       name: day.name,
       done: done.has(day.id),
+      sessionType: day.sessionType,
     })),
   }));
 }

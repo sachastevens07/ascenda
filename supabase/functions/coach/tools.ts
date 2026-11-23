@@ -464,7 +464,23 @@ export function buildSessionTool(
     const session = [...indexes.stretches].sort(
       (a, b) => Math.abs(a.duration_minutes - Math.min(minutes, 20)) - Math.abs(b.duration_minutes - Math.min(minutes, 20))
     )[0];
-    if (!session) return { ok: false, error: 'No stretch session matched' };
+    if (!session) {
+      const cardio = [...indexes.cardio].sort(
+        (a, b) => Math.abs(a.duration_minutes - Math.min(minutes, 20)) - Math.abs(b.duration_minutes - Math.min(minutes, 20))
+      )[0];
+      if (!cardio) return { ok: false, error: 'No recovery session matched' };
+      return {
+        ok: true,
+        card: {
+          id: `build-${cardio.id}`,
+          type: 'session',
+          buttons: ['Start', 'Save to My workouts'],
+          name: cardio.name,
+          estimated_minutes: cardio.duration_minutes,
+          blocks: [{ block_type: 'cardio', cardio_session_id: cardio.id, exercises: [] }],
+        },
+      };
+    }
     return {
       ok: true,
       card: {

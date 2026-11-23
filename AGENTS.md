@@ -9,7 +9,7 @@ A strength-training app for women that feels lively, clear and encouraging. She 
 - "Gym unlocked" progress: how many pieces of equipment and exercises she's tried, with first-time badges;
 - a flagship routine, "Strong Foundations in 6 Weeks", that starts with just dumbbells and a bench and gradually adds machines and the first barbell lifts.
 
-Target user: women aged 18–40 who lift or want to start, training 2–4 times a week. Tone is calm, warm and empowering. Never shaming, never weight-loss pressure, no "bikini body" language.
+Target user: women aged 18–40 who lift or want to start, training 2–4 times a week. Women in perimenopause and menopause are welcome too and get light-touch support (see "Decided 17 November 2026"); the core positioning and marketing stay aimed at 18–40. Tone is calm, warm and empowering. Never shaming, never weight-loss pressure, no "bikini body" language.
 
 ## Product vision (decided November 2026)
 **Ascenda is the all-in-one gym companion for women, especially those new to the gym or coming back to it.**
@@ -30,9 +30,27 @@ One-line pitch: "Ascenda helps women feel at home in the gym: a complete weekly 
 
 **Decided 11 November 2026: gym days, variety and tags**
 - **Days per week = gym days.** Onboarding asks "How many days a week can you get to the gym?". A routine never plans more gym days than she picked. Strength days go on her chosen days; cardio finishers sit inside strength days (by cardio preference); spare gym days (if she picked more days than the routine's strength days) get cardio sessions; recovery stretches are optional "anytime this week" extras, not a day. Each routine file's `weekly_plan` defines this. Recommendations only pick routines whose `gym_days_needed` fits her days (see `fit_rule` in onboarding.json). The two strength-and-cardio routines advertise their full total and need that many days.
-- **Variety and progression.** Routines follow progression ladders (squat: leg press or goblet squat, then Smith squat, then barbell back squat; hinge: dumbbell RDL, then barbell RDL and hip thrust; push: machine, then dumbbells, then barbell; pull: pulldown and rows, then assisted pull-ups). Every phase changes at least one main lift and some accessories; the same main lift is never used on two days in a phase; no exercise more than twice a week; core work rotates. Beginner routines finish on light barbell basics (Smith squat, barbell hip thrust, sometimes barbell RDL). Checkpoint lifts stay in the routine throughout so "start vs now" compares the same lift.
+- **Variety and progression.** Routines follow progression ladders (squat: leg press or goblet squat, then Smith squat, then barbell back squat; hinge: dumbbell RDL, then barbell RDL and hip thrust; push: machine, then dumbbells, then barbell; pull: pulldown and rows, then assisted pull-ups). Accessories rotate every phase, but main lifts stay long enough to progress on: every main lift is done in at least 3 sessions (4 or more wherever the routine allows), and a new main lift is introduced lightly as a secondary or accessory lift first where possible (updated 18 November 2026); the same main lift is never used on two days in a phase; no exercise more than twice a week; core work rotates. Beginner routines finish on light barbell basics (Smith squat, barbell hip thrust, sometimes barbell RDL). Checkpoint lifts stay in the routine throughout so "start vs now" compares the same lift.
 - **Tags are objective.** "One spot", "One spot start", "Busy gym friendly", "Whole gym" and zone-based tags and filters are retired (they depend on the gym's layout). Use equipment tags ("Dumbbells and a bench", "Machines", "Free weights", "Barbell", "Full gym"), level, days a week, length and goal. The exercise library filters by equipment. Keep the `zone` column but don't show or use it. Anywhere else in this file that mentions "one spot" or zones, read it as "dumbbells and a bench" or the equipment filter.
+- **Photos are AI-generated (decided 15 November 2026).** Every photo in content/images/image-manifest.json has an `ai_prompt`, using a recurring cast of six women (style_guide.cast) for consistency. This replaces "no AI-generated people" in R11 and X1. Exception: every machine and equipment image (machine guides and onboarding equipment cards) comes from WorkoutX, never AI (see `workoutx_hint` in the manifest). Still never AI for exercise demonstrations (WorkoutX), never present AI people as real users or testimonials, and no body-focused images. Record the generator in `images.licence_source`.
 - Routines at launch: 17 (incl. The Four-Day Foundation for beginners on 4 days and Twice a Week Strong for intermediates on 2 days). "Busy Gym? No Problem" is renamed "Dumbbells and a Bench" (slug unchanged).
+
+**Decided 17 November 2026: periods and menopause ("train with how you feel")**
+- Periods and menopause can affect energy, training and food, but the effect differs a lot between women (a 2020 meta-analysis found only a trivial, low-certainty drop in performance in the early follicular phase and said general cycle-based rules can't be justified). So Ascenda responds to how she feels on the day. It never plans training around cycle phases and never tracks or predicts cycles at launch.
+- Four stages: (1) Learn and Food content (B1); (2) a "How are you feeling today?" check-in in the logger that offers a lighter session for today, saving only that it was lighter, never the reason (B2); (3) an optional perimenopause or menopause life stage, saved only with explicit consent, that shapes recommendations and Learn (B3); (4) an optional period log, in "Later phases", only if testers ask for it.
+- Life stage (and any later period data) is special category health data under UK GDPR: explicit separate consent with version and timestamp, off by default, deletable on its own, never sent to Coach, PostHog, RevenueCat or any third party, never used for marketing, notifications or targeting, never shown on share cards, recaps or anywhere others might see. Write a DPIA before launch and have the solicitor check the consent wording.
+- Never claim Ascenda eases period or menopause symptoms, and never market "cycle syncing". Safe lines: "Lighter day? Ascenda adjusts your session", "Strength training for every stage of life".
+- Cycle notes stay removed (R1); nothing from them comes back.
+
+**Decided 21 November 2026: stretches hidden at launch**
+- Most stretch moves have no working demo yet, so stretches launch switched off behind one feature flag (`STRETCHES_ENABLED = false` in `src/config/features.ts`). Hidden: the Stretches section in Programmes, stretch routines and the stretch player, stretch single sessions, "Stretch today" on Home, recovery stretch extras and recovery days, cool-down blocks, the "28 days of stretch" challenge, stretch-only achievements, stretch reminders, and any copy that promises stretching. Warm-ups keep only steps with demos plus ramp-up sets for the first main lift.
+- Kept: Learn articles (including stretching and recovery), users' logged stretch sessions and earned badges, and all stretch content files. Turning the flag back on must restore everything exactly as before.
+- Until the flag is on again, read anything else in this file about stretches, recovery days or cool-downs (S8, G2, W5, W7, H1, H6, X2, X3) as hidden, not removed.
+
+**Decided 18 November 2026: evidence check on training rules**
+- Same rules for women and men on rest, reps and exercise choice. Don't shorten rest because "women recover faster", don't set rep ranges by age, and don't treat machines as worse than free weights (a 2023 meta-analysis found no difference in muscle growth). Learn covers the machines question in "Myth: machines are worse than free weights".
+- Rest follows Routine standard 5. The rest timer is a guide: copy says to rest until she's ready to give the next set a good effort, and she can change it per exercise.
+- Short sprint intervals are optional, never core: one bike sprint session (W2), not for beginners' first 4 weeks.
 
 ## Pricing and access (decided 4 November 2026: hard paywall)
 Ascenda is a **subscription app**. She can download it and complete onboarding for free; using the app's content needs a subscription (free trial included). This replaces the earlier free/Pro split. **Anywhere else in this file that mentions free vs Pro content, Pro badges, locked previews, free limits or "Pro only", read it as: included in the subscription. Where this section and an older task disagree, this section wins.**
@@ -328,7 +346,7 @@ Rules for every task in this group:
 **H5. Retention analytics (PostHog)**
 - Events: onboarding_completed, disclaimer_accepted, paywall_viewed, trial_started, session_started, session_completed, set_ticked, planned_week_missed, rest_week_used, streak_repaired, welcome_back_shown, welcome_back_completed, reminder_sent, reminder_opened, routine_completed, next_routine_started, learn_article_opened.
 - Dashboards: activation (2+ sessions in first 7 days; 3+ in first 14), D1/D7/D30 retention, return rate after first missed week, routine completion rate, trial to paid.
-- Never send health data, body photos or free-text to PostHog.
+- Never send health data, body photos or free-text to PostHog. For the check-in (B2) send only `checkin_shown` and `lighter_session_chosen` (true/false), never the option she picked or her life stage.
 
 **H6. Achievements rework** (replaces S6)
 - Keep easy "first time" badges and Gym unlocked prominent.
@@ -371,7 +389,7 @@ Rules for every task in this group:
 **N6. Learn section**
 - New tab: **Learn**. Navigation becomes Home, Programmes, Planner, Activity, Learn. Profile moves to an avatar button in the top-left of Home (and the header of each tab), like the reference apps.
 - Content stored as data: `learn_articles` (id, slug, title, summary, category, read_minutes, cover_image_id, body_markdown, is_pro, sources (list of links), reviewed_by, reviewed_at, published_at, sort_order) and `learn_links` (article_id, routine_id or exercise_id) to show related articles on routine and exercise pages.
-- Categories: Getting started, Gym confidence, Technique, How programmes work, Recovery and sleep, Fuelling your training (general, no calorie targets or diets), Mindset and motivation, Myths busted.
+- Categories: Getting started, Gym confidence, Technique, How programmes work, Recovery and sleep, Fuelling your training (general, no calorie targets or diets), Mindset and motivation, Myths busted, Your body and training (periods, perimenopause and menopause; added by B1).
 - Layout: featured article hero, category tiles, "Recommended for you" based on her goals, related articles at the bottom of routine and exercise pages, reading progress and "Mark as read".
 - Launch with about 15 articles (2 per category, 3 for Getting started), 2 to 5 minutes each, plain English, sources listed, coach-reviewed. All included in the subscription.
 - Content rules: no weight-loss promises, no calorie or macro targets, no body-shape language, no medical advice; any health claim needs a reputable source (NHS, peer-reviewed study, professional body).
@@ -424,6 +442,46 @@ Rules for every task in this group:
 - Meal-type pages (e.g. Breakfast): search, filter chips (High protein, High fibre, Vegetarian, Vegan, Dairy free, Quick), list rows with photo, title, tag and prep time, favourite heart.
 - No calorie-based collections or filters ("Low calorie", "Under 500 kcal"); macros stay on the recipe page only. Favourite counts only if real.
 
+**Group 8: your body and training (periods and menopause, decided 17 November 2026)**
+Follow "Decided 17 November 2026" above. Build each task where it fits: B1 with N6 (Learn) and v2.4 (Food), B2 straight after N3 and X4 (the logger), B3 with X5 (onboarding v2). Show me each migration before running it.
+
+**B1. Your body and training: content**
+- Learn: add the category "Your body and training" (slug `your_body`) and its articles from content/learn/articles.json: training on your period, period pain and low energy in the gym, heavy periods and iron, perimenopause and strength training, menopause and bones, sleep and hot flushes. Each lists sources and "see your GP if" lines (very heavy or painful periods, bleeding after menopause, symptoms affecting daily life). No weight, BMI, body-shape, HRT or supplement advice.
+- Food (v2.4): collections "Iron-rich" (`iron-rich`, iron foods with a vitamin C food alongside) and "Calcium and bone health" (`calcium-and-bones`) in content/food/collections.json, built mostly from existing recipes. Dietitian or nutritionist review as for all food content.
+- Reviewers: the coach and dietitian as usual, plus a women's health physiotherapist or GP for these articles.
+- No code beyond the new category; run npm run content:sync.
+
+**B2. "How are you feeling today?" check-in** (v2, 21 November 2026)
+- An optional card at the top of the logger, shown before her first ticked set. Options (from content/checkin/checkin.json, format version 2): Ready to go; Feeling strong; Low on energy; Period symptoms; Slept badly; Short on time. When `profiles.life_stage` is perimenopause or menopause, also show Hot flushes and Achy joints. Hide period options when life_stage is menopause. Read `life_stage` on the device only.
+- Each option shows its own card (title, body, accept and decline) and applies its own rules for today only: lighter (fewer sets, about 10% lighter); comfort (swap away from tummy pressure and heavy bracing); steady (no weight increase, no all-out); cool (extra rest, keep cardio at a steady effort); joint-friendly (extra warm-up, low-impact cardio, machine swaps); short (key lifts only); push (one increment up on the main lift if she has earned it).
+- Comfort and joint-friendly swaps must only use the exercise's own alternatives (same movement family). If none fits, keep the exercise and mark it optional.
+- Save only `sessions.lighter_session = true` for any accepted adjustment except push. Never save, log or send the option she picked.
+- A lighter or adjusted session counts fully towards the weekly target and streak. The progression rule ignores sessions where `lighter_session` is true and uses her last normal session for each exercise, so a lighter day never lowers her next suggested weights.
+- After the session, optional "How did that feel?" (Easier / About right / Harder), saved to `sessions.session_feel`. Two "Harder" in a row on the same routine day means no weight increase is suggested on those lifts next time.
+- Profile → Settings: "Daily check-in" toggle (`profiles.hide_checkin`, default false).
+- Copy is warm and neutral ("Lighter day? That still counts."), never "You should rest".
+
+**B3. Optional life stage (perimenopause and menopause)**
+- One optional onboarding screen near the end (X5) and in Profile → Your answers: "Are any of these true for you right now?" Perimenopause / Menopause or after / None of these / Prefer not to say (default). Copy in content/onboarding/onboarding.json.
+- Choosing perimenopause or menopause opens a consent screen first (what it's used for, never sent to Coach or analytics, how to delete). Saving writes `profiles.life_stage` and a `health_consents` row. Declining saves nothing.
+- Profile → Privacy: "Life stage" row to change it, or delete it and withdraw consent in one tap (clears `life_stage`, sets `withdrawn_at`).
+- Uses (`life_stage_adjustments` in onboarding.json): favour 2 to 3 strength-day routines that still build toward heavier main lifts; a "Strong bones" note on routine pages; an optional 2 to 3 minute impact finisher after lower-body days (always with incline walking as the lower-impact choice); one balance step in lower-body warm-ups; a rest day between hard lower-body sessions in the Planner; Hot flushes and Achy joints on the check-in; Learn shows Your body and training articles first. Never changes progression, never caps weights, never shortens routines, never used for predictions.
+- Read `life_stage` only on the device and in the recommendation code. Never include it in Coach payloads, PostHog, RevenueCat, notifications, share cards or monthly recaps.
+- Update the privacy policy (what's collected, why, legal basis: explicit consent) and write the DPIA notes in PROGRESS.md.
+
+**Group 9: launch polish (decided 21 November 2026)**
+Build in this order. Show me each migration before running it, and ask before adding any library.
+
+**L1. Content refresh:** run npm run content:sync. Day focus labels now come from the real lifts (Routine standard 3). Swaps now come from movement families (Routine standard 8): "If it's taken" shows 0 to 3 swaps from `alternatives`, never padded. Give any project-only exercise (not in strength-catalogue.json) a family the same way and list them in PROGRESS.md.
+**L2. Images:** list every manifest slug used in the app whose file is missing and show a placeholder for it; then use `focal_point` from the manifest as expo-image `contentPosition` on all cropped images (Home hero and banners first) so faces are fully visible.
+**L3. Home:** "This week" island shows 4 stats for Monday to Sunday: sessions, strength sessions, cardio sessions (10+ minutes, W3 rule) and minutes trained (sum of `duration_seconds`). Refer a friend banner (X6) at the bottom of Home.
+**L4. Exercise screen:** smaller demo video (about 40% of screen height, tap to expand full screen), then name and tags, then "If it's taken", then setup and form cues. Replace the example AI question chips with one "Ask AI" button that opens Coach with the exercise as context. Wire in every remaining WorkoutX animation; stretches stay hidden (`STRETCHES_ENABLED = false`).
+**L5. Logger:** remove the bottom "Ask Coach" and "Something's taken" buttons (both stay reachable through Coach, and swaps through each exercise's "⋯" menu). Make the header Coach button the same prominent style as on Home. Tap a set number to open a small menu: Warm-up set, Drop set, Normal set, Remove set. Warm-up sets show "W", drop sets "D". Store as `sets.set_type` ('normal' | 'warmup' | 'drop', default 'normal'). Warm-up and drop sets never count towards progression, personal bests or set targets; they do count in minutes and total volume.
+**L6. Train, Cardio:** replace the large "Create your own" island (W8) with a compact row at the top: one line, a "+" icon, "Create your own" and a chevron, opening a sheet with Quick start, Build intervals and Just log it.
+**L7. Planner:** week arrows slide the week strip left or right (about 250 ms, Reanimated if it's already installed; ask otherwise). Swiping does the same.
+**L8. Activity:** remove "Effort over time". Replace it with "Cardio minutes per week" (bars, last 8 weeks, 10+ minute sessions) and a "Same session, compared" card that shows her latest repeat of a cardio session against the first time (time, distance or intervals completed). Hide both until there are 2 weeks of cardio. Personal bests become an animated dropdown: collapsed it shows the latest 3, tap to expand the full list with a smooth height animation and a rotating chevron.
+**L9. Period log (B4, moved forward from Later phases):** as specified in `period_log` in content/checkin/checkin.json. Off by default, Profile → Privacy toggle with explicit consent (`health_consents` purpose 'period_log'). "Period started" / "Period ended" in the Planner, shown as a small private dot. On logged period days the check-in lists Period symptoms first. Optional private insights after 3 logged periods and 6 sessions on period days (rules in checkin.json), compared only with her own data. Nothing else: no predictions, no fertile windows, no pregnancy features, no symptom diary, no Apple Health sync. Table `period_logs` (id, user_id, start_date, end_date, created_at; RLS; all rows deleted when consent is withdrawn). Never sent to Coach, PostHog, RevenueCat, notifications, share cards or recaps. Add to the DPIA notes.
+
 **Group 6: compliance, pricing and launch**
 
 **P1. Switch to the hard paywall** (do before C3)
@@ -475,12 +533,12 @@ Build after v2.2, one task at a time, same rules as before.
 - Session styles: steady ("you can still chat"), simple intervals (e.g. 1 minute faster, 2 minutes easy), finisher (8 to 12 minutes after lifting). Beginners get steady sessions only in their first 4 weeks.
 - Each cardio block defines: machine, duration, intensity guidance as "how hard it should feel" (1 to 10) plus suggested settings ranges (e.g. treadmill speed 4.5 to 5.5 km/h, incline 6 to 10%), and intervals if any.
 - Progression rule: add minutes first (up to the session's maximum), then intensity. Visible in plain English.
-- Seed a standalone cardio library of 12 to 15 sessions, each with a cover photo of that machine in a gym.
+- Seed a standalone cardio library of 12 to 15 sessions, each with a cover photo of that machine in a gym. It includes one optional sprint session ("Bike sprints: 30 seconds hard": 4 to 5 sprints of 30 s with 2 min easy, no more than twice a week), for intermediates only.
 
 **W3. Cardio logging**
 - Cardio player: big timer (elapsed or countdown), current interval and what's next, machine settings to aim for, "Pause", "Skip interval", "End". Reuse DESIGN.md components.
 - At the end, a short log: minutes done (pre-filled), settings used (optional, quick steppers), effort 1 to 10. Optional distance or calories only if she types them; never estimated by the app.
-- Cardio counts towards the weekly target and streak; it doesn't count towards strength PBs.
+- Cardio counts towards the weekly target and streak (10+ minutes, see W8); it doesn't count towards strength PBs.
 - Progress: minutes of cardio per week, longest session, effort trend (Pro).
 
 **W4. Machine guides**
@@ -501,7 +559,22 @@ Build after v2.2, one task at a time, same rules as before.
 
 **W7. Weekly target counts all session types**
 - The weekly target from onboarding counts strength, cardio and recovery sessions. Home and Activity show a ring with three small segments or icons (strength, cardio, recovery), like the reference apps, but the main number is total sessions.
-- Decided: the weekly target Y is her onboarding days-per-week number, not the number of planned sessions. Any session type counts towards it (strength, cardio, or a stretch or recovery session of 10+ minutes). Hitting Y is a gold week. This overrides "Y comes from the planner" in R8.
+- Decided: the weekly target Y is her onboarding days-per-week number, not the number of planned sessions. Any session type counts towards it (strength, or a cardio, stretch or recovery session of 10+ minutes; see W8). Hitting Y is a gold week. This overrides "Y comes from the planner" in R8.
+
+**W8. Build your own cardio and Just log it (decided 17 November 2026)**
+Copy, defaults and rules are in content/cardio/cardio-builder.json. Set sessions stay as they are; this adds a simple way to make her own.
+- **Entry:** a "Create your own" card at the top of the Cardio section (Programmes, later Train), with three actions: Quick start, Build intervals, Just log it.
+- **Quick start (3 taps):** machine → Steady or Intervals → minutes on a wheel (10 to 60, default 20) → Start. A 3-minute warm-up and cool-down are on by default (one toggle) and fit inside the time she picked. Intervals default to 60 s work at effort 7 and 120 s recover at effort 4, repeated to fill the time. "Save for next time" is optional.
+- **Build intervals:** one card with steppers for work time and effort, recover time and effort, and repeats; total time updates live; a coloured bar timeline above shows the shape (taller bars = harder). "Add a block" is hidden by default and lets her build ladders or switch machines part-way (mixed sessions); a machine change adds a 1-minute easy block to move and set up. Max 90 minutes.
+- **Effort in words:** pick from the effort scale in cardio-sessions.json ("Steady, you can chat in full sentences"), with the number shown small. Beginners see a short tip on efforts 9 and 10; nothing is blocked.
+- **Settings filled in:** each block gets speed, incline, resistance or stroke rate from `settings_defaults` for that machine and effort (easy 1 to 4, steady 5 to 6, hard 7 to 10). She can change them, but never has to.
+- **Saving:** auto-name ("Bike intervals, 25 min"), editable. Saved to My workouts with a "Cardio" chip, next to her strength workouts: start, "Do it again", edit, duplicate, delete, Add to Planner.
+- **Playing:** uses the existing cardio player and end-of-session log (W3). No new player.
+- **Just log it:** for cardio done without the app: machine (or "Other cardio"), minutes, effort, date (today or up to 7 days ago), optional distance she types. Saved as a cardio session with a `cardio_logs` row. Counts the same as a played session. Gym unlocked counts the machine.
+- **Counting:** any cardio session of 10 minutes or more (played or logged) counts towards the weekly target and streak, matching the stretch rule. Shorter sessions are saved but don't count. Never estimate calories or distance; never count towards strength PBs.
+- **Data:** reuse `custom_workouts` with `type` ('strength' | 'cardio', default 'strength') and `cardio_plan` jsonb in the same shape as a content cardio session (machine_id, style 'steady' | 'intervals' | 'mixed', effort_target, intervals[] with label, seconds, effort, settings and optional per-block machine_id). `sessions` gains `logged_after` (boolean, default false) for Just log it.
+- **Analytics (PostHog):** cardio_builder_opened, custom_cardio_started (style, minutes), custom_cardio_saved, cardio_logged_manually (minutes). No free text.
+- **Later (v2.5):** Coach `build_session` can create custom cardio from her words ("25 minutes on the bike, something sweaty") using the same builder code.
 
 ### Phase v2.4 — Fuel: nutrition and recipes
 Build after v2.3, one task at a time, same rules as before.
@@ -549,7 +622,8 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 - **Weights:** always from the progression rule, never from the AI.
 - **Safety:** no diagnosis, injury treatment, pregnancy or postnatal advice, or medication advice; redirect to a GP or physiotherapist. No calorie targets, weight-loss plans or comments on bodies. Never save a preference for a medical reason. Label answers "AI-generated, not medical advice" with a link to the safety guidance. Emergency signs show the 999 card.
 - **Never build:** photo analysis of bodies or food for calories, body scans, AI images of her, AI form checking from video.
-- **Privacy:** never send her name, email, bodyweight, progress photos, onboarding statement answers or health information. Conversations kept 30 days, deletable, never used for training. Privacy policy names the AI provider and what's sent.
+- **Privacy:** never send her name, email, bodyweight, progress photos, onboarding statement answers or health information (including `life_stage`). Conversations kept 30 days, deletable, never used for training. Privacy policy names the AI provider and what's sent, and says that anything she types in Coach (for example "I'm on my period") is sent to the AI provider and kept in her chat history for 30 days.
+- **Periods and menopause in Coach:** if she mentions period symptoms, hot flushes or poor sleep, Coach can offer `adjust_today` (a lighter session). It never saves this as a preference or profile fact, and gives no advice on symptoms, HRT, medication, supplements or whether something is normal; it redirects to a GP and can link the Your body and training articles.
 - **Limits and cost:** 40 Coach messages a day (fair use), max 3 tool calls per turn, `ai_usage` logging, monthly budget alert, timeouts with a non-AI fallback.
 - **Quality:** the evals in ai-config.json (including multi-turn and context cases) must pass; a qualified coach reviews 50 conversations before launch.
 - **Analytics (PostHog):** ai_chat_started (with entry point), ai_tool_called, ai_card_used, ai_limit_reached, ai_fallback_used; never prompt or answer text.
@@ -576,6 +650,7 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 - Showcase Coach on the paywall and in onboarding, e.g. "Busy gym? Tell Coach what's free and it reworks your session" and "Ask anything about any exercise". Marketing line: "A coach in your pocket for every gym session."
 
 ### Later phases (do not build yet)
+**Period log (B4, only if TestFlight or launch feedback asks for it):** a "Period started" / "Period ended" tap in the Planner, off by default, switched on in Profile → Privacy with explicit consent. Shows period days in the Planner and offers the B2 lighter-session card on those days. Nothing else: no predictions, no fertile windows, no pregnancy features, no symptom diary, no Apple Health sync. Table `period_logs` (user_id, start_date, end_date, created_at; RLS; deleted when consent is withdrawn).
 **Gym buddy (after launch):** invite one friend; see each other's weekly progress (sessions, not weights); send a high five. Later small private groups. No public leaderboards, ever.
 **AI:** now specified in phase v2.5 (replaces the old A1 to A3).
 
@@ -584,16 +659,17 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 ## Routine standard (every routine must meet this)
 1. **A clear purpose:** who it's for, what she'll be able to do by the end, and why this split suits that goal (one short paragraph).
 2. **Phases:** 2 to 3 phases with names and goals (e.g. "Weeks 1 to 2: learn the movements", "Weeks 3 to 5: build", "Week 6: test"). 8-week routines include one lighter week (about 60 to 70% of normal sets) before the final checkpoint.
-3. **Sensible splits:** full body 2 or 3 days, upper/lower 4 days, glute-focused lower plus upper, push/pull/legs only for experienced users. Each day has a stated focus.
+3. **Sensible splits:** full body 2 or 3 days, upper/lower 4 days, glute-focused lower plus upper, push/pull/legs only for experienced users. Each day has a stated focus that matches its main and secondary lifts; the generator now writes `focus` automatically from them (e.g. "Legs, chest and back"), so never hand-write a focus.
 4. **Session structure:** 5 to 10 minute warm-up (general plus movement-specific ramp-up sets for the first main lift), 1 to 2 main lifts, 2 to 3 secondary or accessory lifts, optional core or finisher. Realistic duration estimate.
-5. **Prescriptions:** sets, rep range, target RIR (beginners 2 to 3, intermediates 1 to 2), rest time by role (main 2 to 3 min, accessories 60 to 90 s), tempo only where it helps (e.g. 3-second lowering for learning).
+5. **Prescriptions:** sets, rep range, target RIR (beginners 2 to 3, intermediates 1 to 2), rest time by role (main lifts 2 min, or 3 min for sets of 6 or fewer; compound secondary lifts about 2 min; isolation accessories and core 45 to 90 s; shorter only in 30-minute routines and supersets), tempo only where it helps (e.g. 3-second lowering for learning).
 6. **Progression:** main lifts use double progression with a set load increment (dumbbells 1 to 2 kg, barbell 2.5 kg, machines one plate); accessories progress reps first; holds progress time. Rules are visible to the user in plain English.
 7. **Balance:** each week covers squat, hinge, push, pull, single-leg and core patterns (unless the routine is deliberately focused, which it must say).
-8. **Alternatives:** at least 2 swaps per exercise that keep the same pattern, including a one-spot or machine-free option where possible.
+8. **Alternatives (revised 21 November 2026):** only genuine close swaps from the same movement family (`family` in content/exercises/strength-catalogue.json, defined in tools/routine-generator/families.py), closest first, up to 3. An exercise with no genuine swap (e.g. leg extension) shows none: "If it's taken" then says "There's no close swap for this one. Wait a minute or two, or skip it today." Never fill a quota with a different movement.
 9. **Checkpoints:** re-test 2 to 3 key lifts at the midpoint and the end, shown as start vs now.
 10. **Coaching notes:** one short note per day (what to focus on, how it should feel).
 11. **Safety:** conservative starting loads ("find a weight you could lift 3 more times"), no maximal testing for beginners, coach review before launch.
 12. **Variety and progression:** follow the progression ladders and rules in "Decided 11 November 2026" above. Prefer the lifts women commonly do in the gym (hip thrust, leg press, Smith and barbell squats, Romanian deadlifts, split squats and lunges, cable kickbacks, abductor machine, leg curls, pulldowns and rows) over repeating the same beginner movement every session.
+13. **Upper-body accessories:** routines with two or more upper-body days (or an upper-body goal) include at least 4 sets a week of lateral raises and at least one biceps and one triceps exercise (3 sets each).
 
 ## Safety disclaimer (full text, v1; to be checked by a solicitor)
 > **Train safely with Ascenda**
@@ -616,7 +692,7 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 Short version (first-session sheet, 4 bullets): not medical advice; check with your GP first if you're pregnant, injured or have a health condition; stop and get help if you feel chest pain, dizziness or sharp pain; use weights you can lift with good form and never train through pain.
 
 ## Out of scope (do not build unless I ask)
-Video classes, an open-ended AI chatbot (Ascenda Coach stays scoped to training, the gym, fuelling and the app), home-specific features, food logging or meal-plan diets, social feed or leaderboards (a private gym buddy is planned for later), wearable sync, any AI analysis of bodies or food photos for calories, AI machine scanning, AI form checking from video, cycle tracking, BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
+Video classes, an open-ended AI chatbot (Ascenda Coach stays scoped to training, the gym, fuelling and the app), home-specific features, food logging or meal-plan diets, social feed or leaderboards (a private gym buddy is planned for later), wearable sync, any AI analysis of bodies or food photos for calories, AI machine scanning, AI form checking from video, cycle tracking or cycle-phase training plans, period, ovulation or fertility predictions, symptom or mood diaries, menopause weight-loss content, supplement or HRT advice (an optional period log is listed in Later phases), BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
 
 ## Data model
 Check the actual schema before changing anything. Existing tables include `profiles`, `exercises` (with `zone`), `programmes` / `programme_days` / `programme_exercises`, `sessions`, `sets`, `confidence_history`, and cycle-notes storage (to be removed in R1).
@@ -656,6 +732,7 @@ New or changed in v2.2:
 - `exercise_notes`: user_id, exercise_id, note, updated_at; `exercise_rest_prefs`: user_id, exercise_id, rest_seconds
 - Remove the session detail screen's separate state; today's changes (swaps, removed or added sets and exercises) live on the in-progress session
 - `profiles`: add gym_experience ('not_yet' | 'just_started' | 'on_and_off' | 'regularly'); stop using training_location
+- Periods and menopause (B2, B3, L9): `sessions.lighter_session` (boolean, default false; no reason column); `sessions.session_feel` ('easier' | 'as_expected' | 'harder' | null); `profiles.hide_checkin` (boolean, default false); `profiles.life_stage` ('perimenopause' | 'menopause' | null; only with consent); `health_consents` (id, user_id, purpose, consent_version, granted_at, withdrawn_at; RLS); `period_logs` (id, user_id, start_date, end_date, created_at; RLS; purpose `period_log`; deleted when consent is withdrawn)
 
 New or changed in v2.3:
 - `routine_days.type` and `sessions.type`: 'strength' | 'cardio' | 'recovery'
@@ -664,6 +741,7 @@ New or changed in v2.3:
 - `cardio_logs`: id, session_id, machine_id, minutes, settings_used (jsonb), effort (1 to 10), distance_km (nullable, user-entered)
 - `machines` (or extend `exercises`/equipment): id, name, type ('cardio' | 'strength'), guide (structured), image_id
 - `profiles`: add cardio_preference ('love' | 'fine' | 'avoid')
+- W8: `custom_workouts` add type ('strength' | 'cardio', default 'strength') and cardio_plan (jsonb, same shape as a content cardio session); `sessions` add logged_after (boolean, default false)
 
 New in v2.4:
 - `recipes`, `recipe_collections`, `recipe_collection_items`, `recipe_favourites`, `shopping_list_items` (user_id, recipe_id, ingredient, quantity, unit, aisle, ticked)
@@ -718,4 +796,6 @@ New in v2.5:
 - No BMI, body-fat estimates, health scores or weight-loss promises.
 - Progress photos: opt-in, private bucket, signed URLs, never sent to AI, easy to delete.
 - Only use images and exercise media licensed for commercial use.
-- Privacy policy must reflect current data use (no cycle data; progress photos if used).
+- Privacy policy must reflect current data use (no cycle data; life stage with explicit consent (B3); progress photos if used; what's sent to the AI provider).
+- Health data (life stage, any later period log) is special category data: explicit consent, off by default, deletable, never sent to third parties or used for marketing; DPIA before launch.
+- No claims that Ascenda eases period or menopause symptoms; no "cycle syncing" marketing.

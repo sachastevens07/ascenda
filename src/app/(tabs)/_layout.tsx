@@ -1,8 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { usePathname } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import TopTabs from 'expo-router/js-top-tabs';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LockedHome } from '@/components/LockedHome';
 import { PillTabBar, TabBarHeightProvider, useTabBarHeight } from '@/components/PillTabBar';
@@ -13,8 +14,11 @@ import { useSubscription } from '@/lib/subscription';
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
-  const { colours } = useTheme();
+  const pathname = usePathname();
+  const { colours, scheme } = useTheme();
+  const { isPro, isLoading } = useSubscription();
+  const onHome = pathname === '/' || pathname === '/index';
+  const locked = !isLoading && !isPro;
 
   function tabIcon(filled: IoniconName, outline: IoniconName) {
     return ({ focused }: { focused: boolean }) => (
@@ -28,7 +32,10 @@ export default function TabLayout() {
 
   return (
     <TabBarHeightProvider>
-      <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: colours.bg }}>
+      <View style={{ flex: 1, backgroundColor: colours.bg }}>
+        <StatusBar
+          style={onHome && !locked ? 'light' : scheme === 'dark' ? 'light' : 'dark'}
+        />
         <TopTabs
           tabBarPosition="bottom"
           tabBar={(props) => <PillTabBar {...props} />}>

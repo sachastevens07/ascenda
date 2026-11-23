@@ -62,7 +62,7 @@
     "why_this_split": "Three full-body sessions with conservative weights rebuild your habit and strength without the soreness that puts people off coming back.",
     "how_it_works": [
       "Weeks 1 to 2: lighter weights and fewer sets while your body gets used to training again.",
-      "Weeks 3 to 4: full sets again, a little heavier, and the Smith squat on day C.",
+      "Weeks 3 to 4: full sets again on the lifts you've relearned, a little heavier.",
       "In weeks 2 and 4 you'll re-test your key lifts to see how far you've come."
     ],
     "progression_explained": "Start lighter than you used to lift. We'll suggest increases as your sets feel easier.",
@@ -138,7 +138,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -150,10 +150,10 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-glute-bridge",
@@ -177,8 +177,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -218,7 +218,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -230,10 +230,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-reverse-lunge",
@@ -295,10 +295,10 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "one-arm-dumbbell-row",
@@ -308,7 +308,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -322,9 +322,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "side-plank",
@@ -358,7 +358,7 @@
         3,
         4
       ],
-      "goal": "Full sets again, a little heavier, and the Smith squat on day C.",
+      "goal": "Full sets again on the lifts you've relearned, a little heavier.",
       "days": [
         {
           "key": "A",
@@ -386,7 +386,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -398,10 +398,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -425,9 +425,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -467,10 +467,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "single-arm-cable-row",
@@ -480,11 +480,11 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "walking-lunge",
@@ -509,8 +509,8 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -527,19 +527,18 @@
           "key": "C",
           "name": "Full body C",
           "focus": "Squat and pull",
-          "coach_note": "The Smith machine squat. Set the safety stops first.",
+          "coach_note": "Goblet squats again, a little heavier than in weeks 1 and 2.",
           "exercises": [
             {
-              "slug": "smith-machine-squat",
+              "slug": "goblet-squat",
               "role": "main",
               "sets": 3,
               "rep_min": 8,
-              "rep_max": 10,
+              "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
+              "load_increment_kg": 2,
               "notes": ""
             },
             {
@@ -550,7 +549,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -562,7 +561,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -575,9 +574,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "cable-crunch",
@@ -588,9 +587,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",

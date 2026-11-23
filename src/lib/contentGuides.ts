@@ -68,16 +68,43 @@ for (const file of [lowerGuides, upperGuides, coreGuides]) {
 }
 
 const CATALOGUE_ALTS = new Map<string, string[]>();
+const CATALOGUE_FAMILY = new Map<string, string>();
 for (const item of asArray(asRecord(catalogueFile).exercises)) {
   const row = asRecord(item);
   const slug = text(row.slug);
   if (!slug) continue;
-  CATALOGUE_ALTS.set(slug, asArray(row.alternatives).map(text).filter(Boolean));
+  CATALOGUE_ALTS.set(
+    slug,
+    asArray(row.alternatives)
+      .map(text)
+      .filter(Boolean)
+      .slice(0, 3)
+  );
+  const family = text(row.family);
+  if (family) CATALOGUE_FAMILY.set(slug, family);
+}
+
+const CATALOGUE_SLUG_FOR_LIBRARY: Record<string, string> = {};
+for (const [catalogueSlug, libraryId] of Object.entries(EXERCISE_SLUG_ALIASES)) {
+  CATALOGUE_SLUG_FOR_LIBRARY[libraryId] = catalogueSlug;
 }
 
 export function resolveExerciseSlug(slug: string): string {
   const trimmed = slug.trim();
   return EXERCISE_SLUG_ALIASES[trimmed] ?? trimmed;
+}
+
+function catalogueKey(exerciseId: string): string {
+  if (CATALOGUE_ALTS.has(exerciseId) || CATALOGUE_FAMILY.has(exerciseId)) return exerciseId;
+  const slug = resolveExerciseSlug(exerciseId);
+  if (CATALOGUE_ALTS.has(slug) || CATALOGUE_FAMILY.has(slug)) return slug;
+  const fromLibrary = CATALOGUE_SLUG_FOR_LIBRARY[exerciseId] ?? CATALOGUE_SLUG_FOR_LIBRARY[slug];
+  if (fromLibrary) return fromLibrary;
+  return slug;
+}
+
+export function catalogueFamily(exerciseId: string): string | null {
+  return CATALOGUE_FAMILY.get(catalogueKey(exerciseId)) ?? null;
 }
 
 export function guideForExercise(exerciseId: string): ExerciseGuide | null {
@@ -89,17 +116,20 @@ export function allExerciseGuides(): ExerciseGuide[] {
   return [...GUIDES.values()];
 }
 
-/** Guide swap list first, then catalogue alternatives. Order from /content is kept. */
-export function preferredSwapIds(exerciseId: string, extra: string[] = []): string[] {
+/**
+ * "If it's taken" swaps from the strength catalogue only. Closest first, up to 3.
+ * Never padded from guides, other patterns or extra lists.
+ */
+export function preferredSwapIds(exerciseId: string, _extra: string[] = []): string[] {
   const slug = resolveExerciseSlug(exerciseId);
-  const guide = guideForExercise(slug);
-  const seen = new Set<string>([exerciseId, slug]);
+  const seen = new Set<string>([exerciseId, slug, catalogueKey(exerciseId)]);
   const out: string[] = [];
-  for (const raw of [...(guide?.if_its_taken.swaps ?? []), ...(CATALOGUE_ALTS.get(slug) ?? []), ...extra]) {
+  for (const raw of CATALOGUE_ALTS.get(catalogueKey(exerciseId)) ?? []) {
     const id = resolveExerciseSlug(raw);
     if (!id || seen.has(id)) continue;
     seen.add(id);
     out.push(id);
+    if (out.length === 3) break;
   }
   return out;
 }

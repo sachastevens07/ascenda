@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CardioCatalogue } from '@/components/CardioCatalogue';
 import { ExerciseLibrary } from '@/components/ExerciseLibrary';
@@ -9,29 +10,44 @@ import { RoutineBrowse } from '@/components/RoutineBrowse';
 import { RoutineCatalogue } from '@/components/RoutineCatalogue';
 import { AppText, CoachButton, IconButton, TabAvatar } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
+import { isFeatureEnabled, useFeature } from '@/config/features';
 import { cardioCopy, programmesCopy } from '@/lib/copy';
 
-const SECTIONS = [
+const ALL_SECTIONS = [
   { id: 'routines', label: 'Routines' },
   { id: 'cardio', label: cardioCopy.tab },
   { id: 'stretches', label: 'Stretches' },
   { id: 'exercises', label: 'Exercises' },
 ] as const;
 
-type Section = (typeof SECTIONS)[number]['id'];
+type Section = (typeof ALL_SECTIONS)[number]['id'];
+
+function visibleSections(): (typeof ALL_SECTIONS)[number][] {
+  if (isFeatureEnabled('stretches')) return [...ALL_SECTIONS];
+  return ALL_SECTIONS.filter((item) => item.id !== 'stretches');
+}
 
 export default function ProgrammesScreen() {
   const tabBarHeight = useTabBarHeight();
+  const insets = useSafeAreaInsets();
   const { colours } = useTheme();
+  const stretchesOn = useFeature('stretches');
+  const sections = visibleSections();
   const params = useLocalSearchParams<{ section?: string | string[] }>();
   const requested = Array.isArray(params.section) ? params.section[0] : params.section;
-  const [section, setSection] = useState<Section>(
-    requested === 'stretches' || requested === 'exercises' || requested === 'routines' || requested === 'cardio'
-      ? requested
-      : 'routines'
-  );
+  const [section, setSection] = useState<Section>(() => {
+    if (requested === 'stretches' && !isFeatureEnabled('stretches')) return 'routines';
+    if (requested === 'stretches' || requested === 'exercises' || requested === 'routines' || requested === 'cardio') {
+      return requested;
+    }
+    return 'routines';
+  });
 
   useEffect(() => {
+    if (requested === 'stretches' && !stretchesOn) {
+      setSection('routines');
+      return;
+    }
     if (
       requested === 'stretches' ||
       requested === 'exercises' ||
@@ -40,11 +56,11 @@ export default function ProgrammesScreen() {
     ) {
       setSection(requested);
     }
-  }, [requested]);
+  }, [requested, stretchesOn]);
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.titleRow}>
           <TabAvatar />
           <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>{programmesCopy.tab_title}</AppText>
@@ -53,7 +69,7 @@ export default function ProgrammesScreen() {
         <View
           style={[styles.tabRow, { borderBottomColor: colours.border }]}
           accessibilityRole="tablist">
-          {SECTIONS.map((item) => {
+          {sections.map((item) => {
             const selected = section === item.id;
             return (
               <Pressable
@@ -80,15 +96,15 @@ export default function ProgrammesScreen() {
       {section === 'routines' && (
         <RoutineBrowse
           bottomInset={tabBarHeight}
-          onOpenStretches={() => setSection('stretches')}
+          onOpenStretches={stretchesOn ? () => setSection('stretches') : undefined}
           onOpenCardio={() => setSection('cardio')}
         />
       )}
       {section === 'cardio' && <CardioCatalogue bottomInset={tabBarHeight} />}
       {section === 'exercises' && <ExerciseLibrary title={null} bottomInset={tabBarHeight} />}
-      {section === 'stretches' && (
+      {section === 'stretches' && stretchesOn ? (
         <RoutineCatalogue showTitle={false} bottomInset={tabBarHeight} routineType="stretch" />
-      )}
+      ) : null}
     </View>
   );
 }

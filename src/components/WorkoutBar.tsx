@@ -4,7 +4,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
+import { isFeatureEnabled } from '@/config/features';
 import { fillCopy, loggerCopy } from '@/lib/copy';
+import { routeForActiveSession } from '@/lib/startLogger';
 import { ensureSubscribed } from '@/lib/paywall';
 import { useNow, useWorkout } from '@/lib/workout';
 import { formatClock } from '@/lib/workoutLog';
@@ -15,6 +17,7 @@ export function WorkoutBar() {
   const { active, restEndsAt } = useWorkout();
   const now = useNow(active !== null && active.startedAt !== null, 500);
   if (!active) return null;
+  if (active.source === 'stretch' && !isFeatureEnabled('stretches')) return null;
 
   const isResting = restEndsAt !== null && restEndsAt > now;
   const elapsed = active.startedAt === null ? '0:00' : formatClock((now - active.startedAt) / 1000);
@@ -27,15 +30,7 @@ export function WorkoutBar() {
     <Pressable
       onPress={() => {
         if (!ensureSubscribed()) return;
-        if (active.source === 'stretch') {
-          router.push({ pathname: '/stretches/play', params: { sessionId: active.sessionId } });
-          return;
-        }
-        if (active.source === 'cardio') {
-          router.push({ pathname: '/cardio/play', params: { sessionId: active.sessionId } });
-          return;
-        }
-        router.push({ pathname: '/session/[id]', params: { id: active.sessionId } });
+        router.push(routeForActiveSession(active.sessionId, active.source));
       }}
       style={({ pressed }) => [
         styles.bar,

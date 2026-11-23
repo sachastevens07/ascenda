@@ -70,6 +70,13 @@ import {
 import { fetchHideStreak, saveHideStreak } from '@/lib/streak';
 import { CHECKIN } from '@/lib/checkin';
 import { fetchActiveLifeStageConsent, withdrawLifeStageConsent } from '@/lib/healthConsent';
+import {
+  PERIOD_LOG,
+  buildPeriodInsights,
+  fetchPeriodLogEnabled,
+  fetchPeriodLogs,
+  withdrawPeriodLogConsent,
+} from '@/lib/periodLog';
 import { LIFE_STAGE_CONSENT_SCREEN, LIFE_STAGE_SCREEN } from '@/lib/onboardingContent';
 import {
   WEIGHT_UNITS,
@@ -182,6 +189,9 @@ export default function ProfileScreen() {
   const [recapPreview, setRecapPreview] = useState(false);
   const [lifeStageConsentActive, setLifeStageConsentActive] = useState(false);
   const [isWithdrawingLifeStage, setIsWithdrawingLifeStage] = useState(false);
+  const [periodLogOn, setPeriodLogOn] = useState(false);
+  const [periodNotes, setPeriodNotes] = useState<string[]>([]);
+  const [isWithdrawingPeriodLog, setIsWithdrawingPeriodLog] = useState(false);
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
   const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
   const [timeMenu, setTimeMenu] = useState(false);
@@ -274,6 +284,28 @@ export default function ProfileScreen() {
         })
         .catch(() => {
           if (isCurrent) setLifeStageConsentActive(false);
+        });
+      fetchPeriodLogEnabled()
+        .then(async (on) => {
+          if (!isCurrent) return;
+          setPeriodLogOn(on);
+          if (!on) {
+            setPeriodNotes([]);
+            return;
+          }
+          try {
+            const logs = await fetchPeriodLogs();
+            const notes = await buildPeriodInsights(logs);
+            if (isCurrent) setPeriodNotes(notes);
+          } catch {
+            if (isCurrent) setPeriodNotes([]);
+          }
+        })
+        .catch(() => {
+          if (isCurrent) {
+            setPeriodLogOn(false);
+            setPeriodNotes([]);
+          }
         });
       return () => {
         isCurrent = false;
@@ -547,6 +579,37 @@ export default function ProfileScreen() {
         'Couldn’t delete your account',
         error instanceof Error ? error.message : 'Check your connection and try again.'
       );
+    }
+  }
+
+  function requestTurnOffPeriodLog() {
+    if (isWithdrawingPeriodLog) return;
+    showDialog(PERIOD_LOG.turnOffTitle, PERIOD_LOG.turnOffBody, [
+      {
+        text: PERIOD_LOG.turnOffConfirm,
+        style: 'destructive',
+        onPress: () => {
+          void handleWithdrawPeriodLog();
+        },
+      },
+      { text: PERIOD_LOG.turnOffCancel, style: 'cancel' },
+    ]);
+  }
+
+  async function handleWithdrawPeriodLog() {
+    if (isWithdrawingPeriodLog) return;
+    setIsWithdrawingPeriodLog(true);
+    try {
+      await withdrawPeriodLogConsent();
+      setPeriodLogOn(false);
+      setPeriodNotes([]);
+    } catch (error) {
+      showDialog(
+        PERIOD_LOG.privacyTitle,
+        error instanceof Error ? error.message : 'Check your connection and try again.'
+      );
+    } finally {
+      setIsWithdrawingPeriodLog(false);
     }
   }
 
@@ -869,6 +932,26 @@ export default function ProfileScreen() {
             });
           }}
         />
+        <SettingsRow
+          title={PERIOD_LOG.privacyTitle}
+          subtitle={periodLogOn ? PERIOD_LOG.privacyOn : PERIOD_LOG.privacyOff}
+          onPress={() => {
+            if (periodLogOn) {
+              requestTurnOffPeriodLog();
+              return;
+            }
+            router.push('/period-log-consent' as Href);
+          }}
+        />
+        {periodLogOn && periodNotes.length > 0 ? (
+          <SettingsRow
+            title={PERIOD_LOG.insightsPrivacyTitle}
+            subtitle={PERIOD_LOG.insightsHelper}
+            onPress={() =>
+              showDialog(PERIOD_LOG.insightsTitle, periodNotes.join('\n\n'))
+            }
+          />
+        ) : null}
         {showLifeStagePrivacy ? (
           <SettingsRow
             title={lifeStageRowTitle}

@@ -139,7 +139,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -151,7 +151,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -178,13 +178,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -219,7 +219,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -231,7 +231,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -243,7 +243,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -262,7 +262,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -296,7 +296,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -308,7 +308,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -350,7 +350,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -398,7 +398,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -410,7 +410,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -437,8 +437,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -466,7 +466,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 120,
+              "rest_seconds": 180,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -478,7 +478,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -490,7 +490,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -502,7 +502,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -532,7 +532,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 50,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -566,7 +566,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -578,7 +578,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },

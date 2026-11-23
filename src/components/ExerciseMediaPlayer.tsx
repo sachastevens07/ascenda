@@ -8,9 +8,22 @@ import { AppText, TextButton } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { mediaUnavailableCopy } from '@/lib/copy';
 import { fetchExercise } from '@/lib/exercises';
-import { getExerciseMedia, type ExerciseMedia, type ExerciseMediaView } from '@/lib/getExerciseMedia';
+import {
+  getExerciseMedia,
+  hasExerciseMediaMatch,
+  type ExerciseMedia,
+  type ExerciseMediaView,
+} from '@/lib/getExerciseMedia';
 
-function LoopingClip({ uri, onError }: { uri: string; onError: () => void }) {
+function LoopingClip({
+  uri,
+  onError,
+  contentFit = 'cover',
+}: {
+  uri: string;
+  onError: () => void;
+  contentFit?: 'cover' | 'contain';
+}) {
   const player = useVideoPlayer(uri, (instance) => {
     instance.loop = true;
     instance.muted = true;
@@ -33,7 +46,7 @@ function LoopingClip({ uri, onError }: { uri: string; onError: () => void }) {
     <VideoView
       player={player}
       nativeControls={false}
-      contentFit="contain"
+      contentFit={contentFit}
       style={StyleSheet.absoluteFill}
     />
   );
@@ -58,32 +71,80 @@ function CueList({ cues }: { cues: string[] }) {
   );
 }
 
+function AngleToggle({
+  views,
+  viewIndex,
+  onChange,
+}: {
+  views: ExerciseMediaView[];
+  viewIndex: number;
+  onChange: (index: number) => void;
+}) {
+  const { colours, radius } = useTheme();
+  const namedViews = views.filter((item) => item.label === 'front' || item.label === 'side');
+  if (namedViews.length < 2) return null;
+  return (
+    <View style={styles.angles}>
+      {namedViews.map((item, index) => {
+        const selected = (views[viewIndex] ?? views[0])?.label === item.label;
+        return (
+          <Pressable
+            key={item.label}
+            onPress={() => {
+              const next = views.findIndex((view) => view.label === item.label);
+              onChange(next >= 0 ? next : index);
+            }}
+            style={[
+              styles.angle,
+              {
+                borderRadius: radius.full,
+                backgroundColor: selected ? colours.brandSoft : colours.surfaceMuted,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}>
+            <AppText variant="bodySm" style={{ color: selected ? colours.brand : colours.inkMuted }}>
+              {item.label === 'front' ? 'Front' : 'Side'}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function ExerciseMediaPlayer({
   exerciseId,
   cues = [],
   width,
   height,
   fallback,
+  expandable = false,
 }: {
   exerciseId: string;
   cues?: string[];
   width: number;
   height: number;
   fallback?: ReactNode;
+  expandable?: boolean;
 }) {
   const { colours, radius } = useTheme();
+  const insets = useSafeAreaInsets();
   const [media, setMedia] = useState<ExerciseMedia | null>(null);
-  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'empty'>('loading');
-  const [playing, setPlaying] = useState(false);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'empty'>(
+    hasExerciseMediaMatch(exerciseId) ? 'loading' : 'empty'
+  );
   const [viewIndex, setViewIndex] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const matched = hasExerciseMediaMatch(exerciseId);
 
   useEffect(() => {
     let alive = true;
-    setLoadState('loading');
-    setPlaying(false);
+    setLoadState(hasExerciseMediaMatch(exerciseId) ? 'loading' : 'empty');
     setFailed(false);
     setViewIndex(0);
+    setFullscreen(false);
     getExerciseMedia(exerciseId)
       .then((result) => {
         if (!alive) return;
@@ -103,82 +164,56 @@ export function ExerciseMediaPlayer({
   const views = media?.videos ?? [];
   const active: ExerciseMediaView | null = views[viewIndex] ?? views[0] ?? null;
   const showFallback = failed || loadState === 'empty' || (loadState === 'ready' && !media);
-  const namedViews = views.filter((item) => item.label === 'front' || item.label === 'side');
-  const showAngles = namedViews.length > 1;
+  const canExpand = expandable && loadState === 'ready' && !showFallback && Boolean(active);
+  const showClip = Boolean(active) && !showFallback && !fullscreen;
+
+  const frame = (
+    <View
+      style={[
+        styles.frame,
+        { width, height, borderRadius: radius.lg, backgroundColor: colours.surfaceMuted },
+      ]}>
+      {loadState === 'loading' ? (
+        <View style={[StyleSheet.absoluteFill, styles.centre]}>
+          {matched ? (
+            <ActivityIndicator color={colours.brand} />
+          ) : (
+            fallback ?? <ActivityIndicator color={colours.brand} />
+          )}
+        </View>
+      ) : null}
+
+      {!showFallback && media?.thumbnailUrl && !showClip ? (
+        <Image
+          source={{ uri: media.thumbnailUrl }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          accessibilityLabel="Exercise demonstration"
+        />
+      ) : null}
+
+      {showClip && active ? (
+        <LoopingClip key={active.url} uri={active.url} onError={() => setFailed(true)} />
+      ) : null}
+
+      {showFallback ? fallback ?? null : null}
+    </View>
+  );
 
   return (
     <View style={{ width, gap: 10 }}>
-      <View
-        style={[
-          styles.frame,
-          { width, height, borderRadius: radius.lg, backgroundColor: colours.surfaceMuted },
-        ]}>
-        {loadState === 'loading' ? (
-          <View style={[StyleSheet.absoluteFill, styles.centre]}>
-            {fallback ?? <ActivityIndicator color={colours.brand} />}
-          </View>
-        ) : null}
+      {canExpand ? (
+        <Pressable
+          onPress={() => setFullscreen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Open demonstration full screen">
+          {frame}
+        </Pressable>
+      ) : (
+        frame
+      )}
 
-        {!showFallback && media?.thumbnailUrl && !playing ? (
-          <Image
-            source={{ uri: media.thumbnailUrl }}
-            style={{ width, height }}
-            resizeMode="cover"
-            accessibilityLabel="Exercise demonstration"
-          />
-        ) : null}
-
-        {!showFallback && playing && active ? (
-          <LoopingClip uri={active.url} onError={() => setFailed(true)} />
-        ) : null}
-
-        {showFallback ? fallback ?? null : null}
-
-        {loadState === 'ready' && !failed && !playing ? (
-          <Pressable
-            onPress={() => {
-              if (active) setPlaying(true);
-              else setFailed(true);
-            }}
-            style={[styles.playHit, StyleSheet.absoluteFill]}
-            accessibilityRole="button"
-            accessibilityLabel="Play demonstration">
-            <View style={[styles.play, { backgroundColor: colours.overlay, borderRadius: radius.full }]}>
-              <Ionicons name="play" size={28} color={colours.onAccent} />
-            </View>
-          </Pressable>
-        ) : null}
-      </View>
-
-      {showAngles && !failed ? (
-        <View style={styles.angles}>
-          {namedViews.map((item, index) => {
-            const selected = (views[viewIndex] ?? views[0])?.label === item.label;
-            return (
-              <Pressable
-                key={item.label}
-                onPress={() => {
-                  const next = views.findIndex((view) => view.label === item.label);
-                  setViewIndex(next >= 0 ? next : index);
-                  setPlaying(false);
-                }}
-                style={[
-                  styles.angle,
-                  {
-                    borderRadius: radius.full,
-                    backgroundColor: selected ? colours.brandSoft : colours.surfaceMuted,
-                  },
-                ]}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}>
-                <AppText variant="bodySm" style={{ color: selected ? colours.brand : colours.inkMuted }}>
-                  {item.label === 'front' ? 'Front' : 'Side'}
-                </AppText>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
+      {!failed ? <AngleToggle views={views} viewIndex={viewIndex} onChange={setViewIndex} /> : null}
 
       {failed || (loadState === 'empty' && !fallback) ? (
         <View style={[styles.fallbackCopy, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
@@ -188,6 +223,36 @@ export function ExerciseMediaPlayer({
           <CueList cues={cues} />
         </View>
       ) : null}
+
+      <Modal
+        visible={fullscreen && Boolean(active)}
+        animationType="fade"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setFullscreen(false)}>
+        <View style={styles.fullscreen}>
+          {active ? (
+            <LoopingClip
+              key={`full-${active.url}`}
+              uri={active.url}
+              contentFit="contain"
+              onError={() => {
+                setFailed(true);
+                setFullscreen(false);
+              }}
+            />
+          ) : null}
+          <Pressable
+            onPress={() => setFullscreen(false)}
+            style={[styles.fullscreenClose, { top: insets.top + 8 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Close full screen">
+            <Ionicons name="close" size={28} color="#FFFFFF" />
+          </Pressable>
+          <View style={[styles.fullscreenAngles, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+            <AngleToggle views={views} viewIndex={viewIndex} onChange={setViewIndex} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -271,17 +336,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  playHit: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  play: {
-    width: 64,
-    height: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingLeft: 4,
-  },
   angles: {
     flexDirection: 'row',
     gap: 8,
@@ -314,6 +368,25 @@ const styles = StyleSheet.create({
   sheet: {
     padding: 20,
     gap: 14,
+    alignItems: 'center',
+  },
+  fullscreen: {
+    flex: 1,
+    backgroundColor: '#111111',
+  },
+  fullscreenClose: {
+    position: 'absolute',
+    right: 16,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fullscreenAngles: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 0,
     alignItems: 'center',
   },
 });

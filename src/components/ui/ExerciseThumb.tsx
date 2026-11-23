@@ -77,10 +77,11 @@ export function ExerciseThumb({
   const photo = posterUri ? { uri: posterUri } : stock;
   const tint = equipmentIconColour(exercise.equipment, colours, scheme);
   const iconSize = Math.round(size * 0.42);
-  const canPlay = showPlay && hasExerciseMediaMatch(exercise.id);
+  const matched = hasExerciseMediaMatch(exercise.id);
+  const canPlay = showPlay && matched;
 
   useEffect(() => {
-    if (!canPlay) return;
+    if (!matched) return;
     let alive = true;
     getExerciseMedia(exercise.id)
       .then((media) => {
@@ -90,7 +91,7 @@ export function ExerciseThumb({
     return () => {
       alive = false;
     };
-  }, [exercise.id, canPlay]);
+  }, [exercise.id, matched]);
 
   const body = (
     <View
@@ -104,7 +105,13 @@ export function ExerciseThumb({
         },
       ]}>
       {photo ? (
-        <Image source={photo} style={{ width: size, height: size }} resizeMode="cover" accessibilityLabel="" />
+        <Image
+          source={photo}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          onError={() => setPosterUri(null)}
+          accessibilityLabel=""
+        />
       ) : (
         <MaterialCommunityIcons
           name={equipmentIconName(exercise.equipment)}

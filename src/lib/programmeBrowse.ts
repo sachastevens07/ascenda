@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/config/features';
 import { contentRoutine } from '@/lib/contentRoutines';
 import { programmesCopy } from '@/lib/copy';
 import {
@@ -150,7 +151,7 @@ export function stylesWithContent(
   singles: SingleSession[] = listSingleSessions()
 ): TrainingStyle[] {
   return TRAINING_STYLES.filter((style) => {
-    if (style.id === 'stretch') return true;
+    if (style.id === 'stretch') return isFeatureEnabled('stretches');
     const hasRoutine = browseableRoutines(routines).some((routine) =>
       routineMatchesStyle(routine, style.id)
     );

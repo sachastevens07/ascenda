@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { router, Stack, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -26,6 +26,7 @@ import { SwapSheet } from '@/components/SwapSheet';
 import {
   AppText,
   Chip,
+  CoachButton,
   DestructiveTextButton,
   EmptyState,
   ExerciseNameHit,
@@ -36,7 +37,6 @@ import {
   NoteChip,
   OverflowMenu,
   PrimaryButton,
-  SecondaryButton,
   RestChip,
   RestTimerBar,
   SetRow,
@@ -50,11 +50,19 @@ import {
 import { useTheme } from '@/constants/theme';
 import { collectSessionWins } from '@/lib/activityStats';
 import { trackCheckinShown, trackLighterSessionChosen } from '@/lib/analytics';
-import { CHECKIN, shouldShowCheckin } from '@/lib/checkin';
+import { CHECKIN, shouldShowCheckin, type CheckinAdjustmentId } from '@/lib/checkin';
+import { isDateOnLoggedPeriod } from '@/lib/periodLog';
+import { applyCheckinAdjustment } from '@/lib/checkinAdjust';
+import {
+  balanceWarmupStep,
+  impactFinisherCopy,
+  isLifeStageActive,
+  isLowerBodyFocus,
+} from '@/lib/lifeStage';
 import { applyBusyGymPlanToDay, remainingBusyGymItems, toBusyGymRemaining, type BusyGymPlan } from '@/lib/busyGym';
 import { fetchBusyGymSlots } from '@/lib/busyGymFix';
-import { openCoach, takeCoachPlan } from '@/lib/coach';
-import { cardioSession, gentleCardioFinisher } from '@/lib/cardio';
+import { COACH_UI, openCoach, takeCoachPlan } from '@/lib/coach';
+import { cardioSession } from '@/lib/cardio';
 import { contentDayFor, contentRoutine } from '@/lib/contentRoutines';
 import { finisherForDay } from '@/lib/completeWeek';
 import { fillBlockTargetsFromSession } from '@/lib/blocks';
@@ -120,13 +128,18 @@ import {
   fetchSession,
   fetchSessionSets,
   finishSession,
+  deleteSet,
   describeSetSaveError,
+  consecutiveHarderOnRoutineDay,
   markSessionLighter,
+  saveSessionFeel,
   saveSessionSwaps,
   saveSet,
   updateSessionRoutineDay,
+  workingSetsForProgression,
   type LoggedSet,
   type Session,
+  type SetType,
 } from '@/lib/sessions';
 import { isCardioSession, isStrengthSession } from '@/lib/sessionTypes';
 import { deleteUserSwap, exerciseFits, saveUserSwap, swapIds, type SwapScope } from '@/lib/swaps';
@@ -138,12 +151,16 @@ import {
   buildEntries,
   clearSessionPlan,
   completedWorkingSetCount,
+  defaultSetType,
+  displaySetLabel,
+  entrySetType,
   formatClock,
   formatDuration,
   formatPreviousSet,
   formatWeightInput,
   getNextSet,
   getSetRecords,
+  isSetEntryBlank,
   isWarmupSetNumber,
   applyCheckinLighter,
   loadSessionLog,
@@ -164,9 +181,12 @@ import {
   blockForSession,
   getWarmupTemplate,
   playStepsFromBlock,
+  withBalanceWarmupStep,
+  withExtraWarmup,
   type BlockPlayStatus,
   type ResolvedBlock,
 } from '@/lib/warmupBlocks';
+import { routeForActiveSession } from '@/lib/startLogger';
 import { consumeWelcomeBackSession, recordWelcomeBackCompleted } from '@/lib/welcomeBack';
 
 type LoadState = 'loading' | 'error' | 'not-found' | 'ready';
@@ -216,8 +236,9 @@ function lastSetPlaceholders(
   setNumber: number,
   weighted: boolean
 ): { kg?: string; reps?: string } {
-  if (!sets || sets.length === 0) return {};
-  const last = sets.find((set) => set.set_number === setNumber) ?? sets[sets.length - 1];
+  const working = workingSetsForProgression(sets);
+  if (working.length === 0) return {};
+  const last = working.find((set) => set.set_number === setNumber) ?? working[working.length - 1];
   return {
     kg: weighted && last.weight_kg !== null ? formatWeightInput(last.weight_kg) : undefined,
     reps: last.reps !== null ? String(last.reps) : undefined,
@@ -301,6 +322,16 @@ export default function SessionScreen() {
   const [menuMode, setMenuMode] = useState<MenuMode>('actions');
   const [slotMenuItem, setSlotMenuItem] = useState<ProgrammeExercise | null>(null);
   const [slotMenuAnchor, setSlotMenuAnchor] = useState<AnchorRect | null>(null);
+  const [setMenu, setSetMenu] = useState<{
+    item: ProgrammeExercise;
+    setNumber: number;
+    anchor: AnchorRect;
+  } | null>(null);
+  const [undoToast, setUndoToast] = useState<{
+    day: ProgrammeDay;
+    entries: Record<string, SetEntry>;
+  } | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [coachOpen, setCoachOpen] = useState(true);
   const [warmupStatus, setWarmupStatus] = useState<BlockPlayStatus>('pending');
   const [cooldownStatus, setCooldownStatus] = useState<BlockPlayStatus>('pending');
@@ -309,8 +340,14 @@ export default function SessionScreen() {
   const [cooldownTemplateId, setCooldownTemplateId] = useState<string | null>(null);
   const [rampUpApplied, setRampUpApplied] = useState(false);
   const [checkinResolved, setCheckinResolved] = useState(false);
+  const [onPeriodDay, setOnPeriodDay] = useState(false);
   const [lighterChosen, setLighterChosen] = useState(false);
+  const [coachAppliedNotice, setCoachAppliedNotice] = useState<string | null>(null);
   const [checkinFinisherSlug, setCheckinFinisherSlug] = useState<string | null>(null);
+  const [holdIncrease, setHoldIncrease] = useState(false);
+  const [extraWarmup, setExtraWarmup] = useState(false);
+  const [harderHold, setHarderHold] = useState(false);
+  const [impactChoice, setImpactChoice] = useState<'pending' | 'impact' | 'lower_impact' | 'skipped'>('pending');
   const [playingBlock, setPlayingBlock] = useState<ResolvedBlock | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [restPrefs, setRestPrefs] = useState<Record<string, number>>({});
@@ -333,7 +370,7 @@ export default function SessionScreen() {
   const customWorkoutId = session?.custom_workout_id ?? null;
   const mutateCustom = Boolean(customWorkoutId && customWorkoutId !== STARTER_WORKOUT_ID);
 
-  const totalSets = day ? workingSetCount(day) : 0;
+  const totalSets = day ? workingSetCount(day, entries) : 0;
   const doneSets = day ? completedWorkingSetCount(day, entries) : 0;
   const volumeKg = day ? sessionVolumeKg(day, entries) : 0;
   const hasTickedSet = Object.values(entries).some((entry) => entry.completed);
@@ -351,14 +388,20 @@ export default function SessionScreen() {
     () => (routine && weekNumber !== null ? daysInWeek(routine, weekNumber) : []),
     [routine, weekNumber]
   );
-  const warmupBlock = useMemo(
-    () =>
-      day
-        ? (warmupTemplateId ? getWarmupTemplate(warmupTemplateId) : null) ??
-          blockForSession('warmup', day, routine?.session_minutes)
-        : null,
-    [day, routine?.session_minutes, warmupTemplateId]
-  );
+  const warmupBlock = useMemo(() => {
+    if (!day) return null;
+    const base =
+      (warmupTemplateId ? getWarmupTemplate(warmupTemplateId) : null) ??
+      blockForSession('warmup', day, routine?.session_minutes);
+    const withJoints = withExtraWarmup(base, extraWarmup);
+    if (
+      isLifeStageActive(profile?.life_stage) &&
+      isLowerBodyFocus(day.focus, day.name)
+    ) {
+      return withBalanceWarmupStep(withJoints, balanceWarmupStep());
+    }
+    return withJoints;
+  }, [day, routine?.session_minutes, warmupTemplateId, extraWarmup, profile?.life_stage]);
   const cooldownBlock = useMemo(
     () =>
       day
@@ -395,19 +438,23 @@ export default function SessionScreen() {
   }, [pbGlowKey]);
 
   useEffect(() => {
-    if (!id || !day) return;
-    let current = true;
-    void takeCoachPlan(id).then(async (plan) => {
-      if (!plan || !current) return;
-      const ids = plan.exercises.map((row) => row.exercise_id);
-      const byId = await fetchBusyGymSlots(ids);
-      if (!current) return;
-      await applyBusyGymPlan(plan, byId);
-    });
     return () => {
-      current = false;
+      if (undoTimer.current) clearTimeout(undoTimer.current);
     };
-  }, [id, day]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!id || !day) return;
+      void takeCoachPlan(id).then(async (plan) => {
+        if (!plan) return;
+        const ids = plan.exercises.map((row) => row.exercise_id);
+        const byId = await fetchBusyGymSlots(ids);
+        await applyBusyGymPlan(plan, byId);
+        setCoachAppliedNotice(plan.lighter ? COACH_UI.card_applied_lighter : COACH_UI.card_applied_look);
+      });
+    }, [id, day])
+  );
 
   useEffect(() => {
     if (!equipment) return;
@@ -416,7 +463,7 @@ export default function SessionScreen() {
       try {
         const current = await fetchSession(id);
         if (current?.source === 'stretch') {
-          router.replace({ pathname: '/stretches/play', params: { sessionId: id } });
+          router.replace(routeForActiveSession(id, 'stretch'));
           return;
         }
         if (current && isCardioSession(current)) {
@@ -429,15 +476,18 @@ export default function SessionScreen() {
           return;
         }
         const exerciseIds = log.day.exercises.map((item) => item.exercise.id);
-        const [historyBests, prefs] = await Promise.all([
+        const [historyBests, prefs, consecutiveHarder] = await Promise.all([
           fetchExerciseBests(exerciseIds, id).catch(() => ({})),
           fetchExercisePrefs(exerciseIds).catch(() => ({ notes: {}, rest: {} })),
+          consecutiveHarderOnRoutineDay(log.session.routine_day_id, id).catch(() => false),
         ]);
         if (!isCurrent) return;
         setSession(log.session);
+        const hold = Boolean(log.plan?.holdIncrease) || consecutiveHarder;
         const built = applyWarmupCompletions(
           buildEntries(log.day, log.logged, log.previous, true, {
             easeBack: log.easeBack ?? undefined,
+            holdIncrease: hold,
           }),
           log.plan
         );
@@ -464,6 +514,9 @@ export default function SessionScreen() {
         setCheckinResolved(resolved);
         setLighterChosen(lighter);
         setCheckinFinisherSlug(log.plan?.checkinFinisherSlug ?? null);
+        setHoldIncrease(Boolean(log.plan?.holdIncrease) || consecutiveHarder);
+        setExtraWarmup(Boolean(log.plan?.extraWarmup));
+        setHarderHold(consecutiveHarder);
         setLoadState('ready');
         if (!log.rampUpApplied) {
           await saveSessionPlan(
@@ -477,6 +530,8 @@ export default function SessionScreen() {
               checkinResolved: resolved,
               lighterChosen: lighter,
               checkinFinisherSlug: log.plan?.checkinFinisherSlug ?? null,
+              holdIncrease: hold,
+              extraWarmup: Boolean(log.plan?.extraWarmup),
             })
           );
         }
@@ -515,6 +570,25 @@ export default function SessionScreen() {
     trackCheckinShown(id);
   }, [showCheckin, id]);
 
+  useEffect(() => {
+    let current = true;
+    const date = session?.date;
+    if (!date) {
+      setOnPeriodDay(false);
+      return;
+    }
+    isDateOnLoggedPeriod(date)
+      .then((on) => {
+        if (current) setOnPeriodDay(on);
+      })
+      .catch(() => {
+        if (current) setOnPeriodDay(false);
+      });
+    return () => {
+      current = false;
+    };
+  }, [session?.date]);
+
   async function persistPlan(
     nextDay: ProgrammeDay,
     timerAt: number | null = startedAt,
@@ -527,6 +601,8 @@ export default function SessionScreen() {
       checkinResolved?: boolean;
       lighterChosen?: boolean;
       checkinFinisherSlug?: string | null;
+      holdIncrease?: boolean;
+      extraWarmup?: boolean;
     },
     mergedEntries: Record<string, SetEntry> = entries,
     patch?: { position: number; setNumber: number; completed: boolean },
@@ -547,6 +623,8 @@ export default function SessionScreen() {
           checkinResolved: extras?.checkinResolved ?? checkinResolved,
           lighterChosen: extras?.lighterChosen ?? lighterChosen,
           checkinFinisherSlug: extras?.checkinFinisherSlug ?? checkinFinisherSlug,
+          holdIncrease: extras?.holdIncrease ?? holdIncrease,
+          extraWarmup: extras?.extraWarmup ?? extraWarmup,
         },
         mergedEntries,
         patch
@@ -563,49 +641,53 @@ export default function SessionScreen() {
     }
   }
 
-  async function acceptLighterSession(scaleWeights: boolean) {
-    trackLighterSessionChosen(true);
+  async function acceptCheckinAdjustment(adjustment: CheckinAdjustmentId) {
+    if (!day) {
+      resolveCheckin(false, false);
+      return;
+    }
+    const result = await applyCheckinAdjustment({
+      day,
+      adjustment,
+      previous,
+      finisherSlug: checkinFinisherSlug ?? finisher?.slug ?? null,
+    });
+    if (result.marksLighter) trackLighterSessionChosen(true);
     setCheckinResolved(true);
-    setLighterChosen(true);
-    const alreadyLight = Boolean(easeBack) || session?.lighter_session === true;
-    let nextDay = day;
-    let nextEase = easeBack;
-    let nextEntries = entries;
-    let nextFinisher = checkinFinisherSlug;
-    if (day && !alreadyLight) {
-      const light = applyCheckinLighter(day, { scaleWeights });
-      nextDay = light.day;
-      nextEase = light.plan.easeBack ?? null;
-      nextEntries = buildEntries(nextDay, [], previous, true, { easeBack: nextEase ?? undefined });
-      setDay(nextDay);
-      setEaseBack(nextEase);
-      setEntries(nextEntries);
-      if (finisher) {
-        nextFinisher = gentleCardioFinisher(finisher.slug)?.slug ?? finisher.slug;
-        setCheckinFinisherSlug(nextFinisher);
+    setLighterChosen(result.marksLighter);
+    setHoldIncrease(result.holdIncrease || harderHold);
+    setExtraWarmup(result.extraWarmup);
+    setDay(result.day);
+    setEaseBack(result.plan.easeBack ?? easeBack);
+    setCheckinFinisherSlug(result.finisherSlug);
+    const nextEntries = buildEntries(result.day, [], previous, true, {
+      easeBack: result.plan.easeBack,
+      holdIncrease: result.holdIncrease || harderHold,
+    });
+    setEntries(nextEntries);
+    if (result.marksLighter) {
+      setSession((current) => (current ? { ...current, lighter_session: true } : current));
+      try {
+        await markSessionLighter(id);
+      } catch {
+        /* Column missing or offline: the on-device plan still keeps today lighter. */
       }
     }
-    setSession((current) => (current ? { ...current, lighter_session: true } : current));
-    try {
-      await markSessionLighter(id);
-    } catch {
-      /* Column missing or offline: the on-device plan still keeps today lighter. */
-    }
-    if (nextDay) {
-      await saveSessionPlan(
-        id,
-        sessionPlanFromDay(nextDay, nextEase ?? undefined, startedAt, {
-          warmupStatus,
-          cooldownStatus,
-          rampUpApplied,
-          warmupTemplateId,
-          cooldownTemplateId,
-          checkinResolved: true,
-          lighterChosen: true,
-          checkinFinisherSlug: nextFinisher,
-        }, nextEntries)
-      );
-    }
+    await saveSessionPlan(
+      id,
+      sessionPlanFromDay(result.day, result.plan.easeBack, startedAt, {
+        warmupStatus,
+        cooldownStatus,
+        rampUpApplied,
+        warmupTemplateId,
+        cooldownTemplateId,
+        checkinResolved: true,
+        lighterChosen: result.marksLighter,
+        checkinFinisherSlug: result.finisherSlug,
+        holdIncrease: result.holdIncrease || harderHold,
+        extraWarmup: result.extraWarmup,
+      }, nextEntries)
+    );
   }
 
   function startTimer() {
@@ -634,7 +716,6 @@ export default function SessionScreen() {
         }
       );
     }
-    if (isWarmupSetNumber(setNumber)) return;
     await saveSet({
       session_id: id,
       exercise_id: item.exercise.id,
@@ -642,6 +723,7 @@ export default function SessionScreen() {
       weight_kg: weighted ? parseWeight(next.weight) : null,
       reps: parseReps(next.reps),
       completed: next.completed,
+      set_type: entrySetType(next, setNumber),
     });
   }
 
@@ -665,7 +747,7 @@ export default function SessionScreen() {
     }
     if (completing) {
       startTimer();
-      if (!isWarmupSetNumber(setNumber)) startRest(slotRestSeconds(item, restPrefs));
+      if (entrySetType(current, setNumber) !== 'warmup') startRest(slotRestSeconds(item, restPrefs));
       if (!checkinResolved) setCheckinResolved(true);
     } else stopRest();
     const next = { ...current, completed: completing };
@@ -781,6 +863,7 @@ export default function SessionScreen() {
             weight: last?.weight ?? '',
             reps: last?.reps ?? String(item.rep_min),
             completed: false,
+            setType: defaultSetType(setNumber),
           };
         }
       }
@@ -997,6 +1080,7 @@ export default function SessionScreen() {
               weight: last?.weight ?? '',
               reps: last?.reps ?? String(nextItem.rep_min),
               completed: false,
+              setType: defaultSetType(setNumber),
             };
           }
         }
@@ -1046,48 +1130,108 @@ export default function SessionScreen() {
     updateSlot(item.position, { warmup_sets: count + 1 });
   }
 
-  function removeLoggedSet(item: ProgrammeExercise, setNumber: number) {
-    if (!day) return;
-    const drop = () => {
-      if (isWarmupSetNumber(setNumber)) {
-        const oldNumbers = warmupSetNumbers(item.warmup_sets ?? 0);
-        const remaining = oldNumbers.filter((number) => number !== setNumber);
-        const nextDay: ProgrammeDay = {
-          ...day,
-          exercises: day.exercises.map((slot) =>
-            slot.position === item.position ? { ...slot, warmup_sets: remaining.length } : slot
-          ),
-        };
-        const nextEntries = { ...entries };
-        const kept = remaining.map((number) => entries[setKey(item.exercise.id, number)]);
-        for (const number of oldNumbers) delete nextEntries[setKey(item.exercise.id, number)];
-        kept.forEach((entry, index) => {
-          if (entry) nextEntries[setKey(item.exercise.id, -index)] = entry;
-        });
-        setDay(nextDay);
-        setEntries(nextEntries);
-        void persistPlan(nextDay, startedAt, undefined, nextEntries);
-        return;
-      }
-      if (item.sets <= MIN_SETS) return;
+  function clearUndoToast() {
+    if (undoTimer.current) {
+      clearTimeout(undoTimer.current);
+      undoTimer.current = null;
+    }
+    setUndoToast(null);
+  }
+
+  function applyRemovedSet(item: ProgrammeExercise, setNumber: number): boolean {
+    if (!day) return false;
+    if (isWarmupSetNumber(setNumber)) {
+      const oldNumbers = warmupSetNumbers(item.warmup_sets ?? 0);
+      const remaining = oldNumbers.filter((number) => number !== setNumber);
       const nextDay: ProgrammeDay = {
         ...day,
         exercises: day.exercises.map((slot) =>
-          slot.position === item.position ? { ...slot, sets: item.sets - 1 } : slot
+          slot.position === item.position ? { ...slot, warmup_sets: remaining.length } : slot
         ),
       };
       const nextEntries = { ...entries };
-      for (let number = setNumber; number < item.sets; number += 1) {
-        const from = entries[setKey(item.exercise.id, number + 1)];
-        if (from) nextEntries[setKey(item.exercise.id, number)] = from;
-        else delete nextEntries[setKey(item.exercise.id, number)];
-      }
-      delete nextEntries[setKey(item.exercise.id, item.sets)];
+      const kept = remaining.map((number) => entries[setKey(item.exercise.id, number)]);
+      for (const number of oldNumbers) delete nextEntries[setKey(item.exercise.id, number)];
+      kept.forEach((entry, index) => {
+        if (entry) nextEntries[setKey(item.exercise.id, -index)] = entry;
+      });
       setDay(nextDay);
       setEntries(nextEntries);
       void persistPlan(nextDay, startedAt, undefined, nextEntries);
+      void deleteSet(id, item.exercise.id, setNumber).catch(() => {});
+      return true;
+    }
+    const type = entrySetType(entries[setKey(item.exercise.id, setNumber)], setNumber);
+    const remainingNormal = allSetNumbers(item).filter(
+      (number) =>
+        number !== setNumber &&
+        entrySetType(entries[setKey(item.exercise.id, number)], number) === 'normal'
+    ).length;
+    if (type === 'normal' && remainingNormal < MIN_SETS) return false;
+    const nextDay: ProgrammeDay = {
+      ...day,
+      exercises: day.exercises.map((slot) =>
+        slot.position === item.position ? { ...slot, sets: item.sets - 1 } : slot
+      ),
     };
-    drop();
+    const nextEntries = { ...entries };
+    for (let number = setNumber; number < item.sets; number += 1) {
+      const from = entries[setKey(item.exercise.id, number + 1)];
+      if (from) nextEntries[setKey(item.exercise.id, number)] = from;
+      else delete nextEntries[setKey(item.exercise.id, number)];
+    }
+    delete nextEntries[setKey(item.exercise.id, item.sets)];
+    setDay(nextDay);
+    setEntries(nextEntries);
+    void persistPlan(nextDay, startedAt, undefined, nextEntries);
+    void deleteSet(id, item.exercise.id, item.sets).catch(() => {});
+    for (let number = setNumber; number < item.sets; number += 1) {
+      const shifted = nextEntries[setKey(item.exercise.id, number)];
+      if (!shifted) continue;
+      void persistSet({ ...item, sets: item.sets - 1 }, number, shifted).catch(() => {});
+    }
+    return true;
+  }
+
+  function removeLoggedSet(item: ProgrammeExercise, setNumber: number) {
+    if (!day) return;
+    const entry = entries[setKey(item.exercise.id, setNumber)];
+    const snapshot = { day, entries };
+    if (!applyRemovedSet(item, setNumber)) return;
+    if (isSetEntryBlank(entry)) {
+      clearUndoToast();
+      return;
+    }
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    setUndoToast(snapshot);
+    undoTimer.current = setTimeout(() => setUndoToast(null), 4000);
+  }
+
+  function undoRemovedSet() {
+    if (!undoToast) return;
+    setDay(undoToast.day);
+    setEntries(undoToast.entries);
+    void persistPlan(undoToast.day, startedAt, undefined, undoToast.entries);
+    for (const item of undoToast.day.exercises) {
+      for (const setNumber of allSetNumbers(item)) {
+        const entry = undoToast.entries[setKey(item.exercise.id, setNumber)];
+        if (entry) void persistSet(item, setNumber, entry).catch(() => {});
+      }
+    }
+    clearUndoToast();
+  }
+
+  function changeSetType(item: ProgrammeExercise, setNumber: number, setType: SetType) {
+    const key = setKey(item.exercise.id, setNumber);
+    const current = entries[key];
+    if (!current) return;
+    const next = { ...current, setType };
+    updateEntry(key, { setType });
+    persistSet(item, setNumber, next).catch((error) => {
+      if (__DEV__) console.warn('save set failed', error);
+      updateEntry(key, { setType: current.setType });
+      showDialog('Couldn’t save that set', describeSetSaveError(error));
+    });
   }
 
   function moveExerciseTo(fromIndex: number, toIndex: number) {
@@ -1200,6 +1344,8 @@ export default function SessionScreen() {
             checkinResolved,
             lighterChosen,
             checkinFinisherSlug,
+            holdIncrease,
+            extraWarmup,
           })
         );
         await saveSessionSwaps(id, {});
@@ -1306,7 +1452,7 @@ export default function SessionScreen() {
       const ticked: Record<string, { weightKg: number | null; reps: number }[]> = {};
       for (const item of day.exercises) {
         ticked[item.exercise.id] = allSetNumbers(item)
-          .filter((setNumber) => !isWarmupSetNumber(setNumber))
+          .filter((setNumber) => entrySetType(entries[setKey(item.exercise.id, setNumber)], setNumber) === 'normal')
           .map((setNumber) => entries[setKey(item.exercise.id, setNumber)])
           .filter((entry): entry is SetEntry => Boolean(entry?.completed))
           .map((entry) => ({
@@ -1327,12 +1473,6 @@ export default function SessionScreen() {
         await recordWelcomeBackCompleted(session?.date ?? new Date().toISOString().slice(0, 10));
         wins.unshift(welcomeBackCopy.complete_title);
       }
-      end();
-      if (finishedRoutine && enrolmentId) {
-        router.replace({ pathname: '/routines/complete', params: { enrolmentId } } as Href);
-        return;
-      }
-      router.back();
       const trained =
         durationSeconds === undefined ? '' : `You trained for ${formatDuration(durationSeconds)}.`;
       const fuel = pickFuelSuggestion({
@@ -1346,18 +1486,46 @@ export default function SessionScreen() {
         ? [welcomeBackCopy.complete_body, trained, fuelLine].filter(Boolean).join('\n')
         : [...wins.slice(0, 3), trained, fuelLine].filter(Boolean).join('\n') ||
           'Nice work. That’s another one done.';
-      showDialog(
-        welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved',
-        body,
-        fuel
-          ? [
-              { text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) },
-              { text: 'OK', style: 'cancel' },
-            ]
-          : undefined
-      );
-      void maybeAskSessionReminders();
-      void syncPlannerReminders();
+
+      const leave = () => {
+        end();
+        if (finishedRoutine && enrolmentId) {
+          router.replace({ pathname: '/routines/complete', params: { enrolmentId } } as Href);
+          return;
+        }
+        router.back();
+        showDialog(
+          welcomeBackDone ? welcomeBackCopy.complete_title : 'Session saved',
+          body,
+          fuel
+            ? [
+                { text: foodCopy.see_recipe, onPress: () => openRecipe(fuel.recipe.slug) },
+                { text: 'OK', style: 'cancel' },
+              ]
+            : undefined
+        );
+        void maybeAskSessionReminders();
+        void syncPlannerReminders();
+      };
+
+      if (CHECKIN.feelTitle && CHECKIN.feelOptions.length > 0) {
+        showDialog(
+          CHECKIN.feelTitle,
+          CHECKIN.feelHelper,
+          [
+            ...CHECKIN.feelOptions.map((option) => ({
+              text: option.label,
+              onPress: () => {
+                void saveSessionFeel(id, option.id).catch(() => {});
+                leave();
+              },
+            })),
+            { text: CHECKIN.feelSkip, style: 'cancel' as const, onPress: leave },
+          ]
+        );
+        return;
+      }
+      leave();
     } catch {
       setIsFinishing(false);
       showDialog('Couldn’t finish the session', 'Check your connection and try again.');
@@ -1462,6 +1630,9 @@ export default function SessionScreen() {
   const elapsedLabel = startedAt === null ? '0:00' : formatClock((now - startedAt) / 1000);
   const eyebrow =
     weekNumber !== null ? `Week ${weekNumber} · day ${day.day_number}` : null;
+  const impactCopy = impactFinisherCopy();
+  const showImpactFinisher =
+    isLifeStageActive(profile?.life_stage) && isLowerBodyFocus(day.focus, day.name);
 
   return (
     <KeyboardAvoidingView
@@ -1480,10 +1651,7 @@ export default function SessionScreen() {
           <AppText variant="title3" style={[styles.flex, { color: colours.ink, textAlign: 'center' }]} numberOfLines={1}>
             {day.name}
           </AppText>
-          <IconButton
-            icon="sparkles-outline"
-            variant="muted"
-            accessibilityLabel="Ask Coach"
+          <CoachButton
             onPress={() =>
               openCoach({
                 context: { type: 'session_today', id, label: day.name },
@@ -1518,6 +1686,20 @@ export default function SessionScreen() {
           <View style={{ marginTop: 6, alignItems: 'flex-start' }}>
             <Chip label={CHECKIN.loggerBadge} selected />
           </View>
+        ) : null}
+        {coachAppliedNotice ? (
+          <Pressable
+            onPress={() => setCoachAppliedNotice(null)}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss"
+            style={[
+              styles.coachNotice,
+              { backgroundColor: colours.accentSoft, borderRadius: radius.md },
+            ]}>
+            <AppText variant="bodySm" style={{ color: colours.ink }}>
+              {coachAppliedNotice}
+            </AppText>
+          </Pressable>
         ) : null}
         {eyebrow ? (
           <AppText variant="eyebrow" style={{ color: colours.accent, marginTop: 6 }}>
@@ -1567,9 +1749,11 @@ export default function SessionScreen() {
         scrollEnabled={dragFrom === null}>
         {showCheckin ? (
           <CheckinCard
+            lifeStage={profile?.life_stage}
+            onPeriodDay={onPeriodDay}
             onDismiss={() => resolveCheckin(false, false)}
-            onDeclineLighter={() => resolveCheckin(false, true)}
-            onAcceptLighter={({ scaleWeights }) => void acceptLighterSession(scaleWeights)}
+            onDecline={() => resolveCheckin(false, true)}
+            onAccept={({ adjustment }) => void acceptCheckinAdjustment(adjustment)}
           />
         ) : null}
 
@@ -1615,7 +1799,7 @@ export default function SessionScreen() {
           </View>
         ) : null}
 
-        {warmupBlock ? (
+        {warmupBlock && warmupBlock.steps.length > 0 ? (
           <SessionBlockCard
             block={warmupBlock}
             status={warmupStatus}
@@ -1625,6 +1809,10 @@ export default function SessionScreen() {
               if (day) void persistPlan(day, startedAt, { warmupStatus: 'skipped' });
             }}
           />
+        ) : warmupBlock ? (
+          <AppText variant="body" style={{ color: colours.inkMuted }}>
+            {warmupBlock.intro}
+          </AppText>
         ) : null}
 
         {day.exercises.length === 0 ? (
@@ -1638,7 +1826,11 @@ export default function SessionScreen() {
         {day.exercises.map((item, index) => {
           const weighted = usesWeight(item.exercise.equipment);
           const suggestion =
-            !easeBack ? getWeightSuggestion(item, previous[item.exercise.id]) : null;
+            !easeBack
+              ? getWeightSuggestion(item, previous[item.exercise.id], {
+                  holdIncrease: holdIncrease || harderHold,
+                })
+              : null;
           const increase = suggestion?.kind === 'increase' ? suggestion : null;
           const restSeconds = slotRestSeconds(item, restPrefs);
           const note = notes[item.exercise.id];
@@ -1695,9 +1887,9 @@ export default function SessionScreen() {
                       index < day.exercises.length - 1 ? () => moveExerciseTo(index, index + 1) : undefined
                     }
                     dragEnabled={day.exercises.length > 1 && (dragFrom === null || dragging)}>
-                    {reordering || !roleLabel(item.role) ? null : (
+                    {reordering || !(item.optional || roleLabel(item.role)) ? null : (
                       <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: 4 }}>
-                        {roleLabel(item.role)}
+                        {item.optional ? CHECKIN.optionalLabel : roleLabel(item.role)}
                       </AppText>
                     )}
                     <AppText variant="title3" style={{ color: colours.brand }} numberOfLines={2}>
@@ -1717,7 +1909,7 @@ export default function SessionScreen() {
                 </View>
                 {reordering ? null : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    {showLighterBadge && (item.role === 'core' || item.role === 'finisher') ? (
+                    {item.optional || (showLighterBadge && (item.role === 'core' || item.role === 'finisher')) ? (
                       <TextButton label={loggerCopy.block_skip} onPress={() => skipExerciseToday(item)} />
                     ) : null}
                     <SlotMenuButton name={item.exercise.name} onOpen={(anchor) => openSlotMenu(item, anchor)} />
@@ -1747,6 +1939,11 @@ export default function SessionScreen() {
                   {item.tempo ? (
                     <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                       {formatTempo(item.tempo)}
+                    </AppText>
+                  ) : null}
+                  {suggestion?.kind === 'find-starting-weight' ? (
+                    <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                      {loggerCopy.find_starting_weight}
                     </AppText>
                   ) : null}
                   {firstTime ? (
@@ -1792,21 +1989,38 @@ export default function SessionScreen() {
                     const entry = entries[key];
                     if (!entry) return null;
                     const setRecords = records[key];
-                    const placeholders = lastSetPlaceholders(previous[item.exercise.id], setNumber, weighted);
-                    const workingIndex = allSetNumbers(item).filter((n) => !isWarmupSetNumber(n))[0];
+                    const workingIndex = allSetNumbers(item).find(
+                      (number) => entrySetType(entries[setKey(item.exercise.id, number)], number) === 'normal'
+                    );
                     const chip =
                       setNumber === workingIndex && increase
                         ? fillCopy(loggerCopy.suggested_chip, { weight: formatKg(increase.kg) })
                         : undefined;
-                    const previousSet = (previous[item.exercise.id] ?? []).find(
-                      (set) => set.set_number === setNumber
-                    ) ?? (isWarmupSetNumber(setNumber) ? undefined : (previous[item.exercise.id] ?? [])[setNumber - 1]);
+                    const previousWorking = workingSetsForProgression(previous[item.exercise.id]);
+                    const workingNumbers = allSetNumbers(item).filter(
+                      (number) =>
+                        entrySetType(entries[setKey(item.exercise.id, number)], number) === 'normal'
+                    );
+                    const workingPos = workingNumbers.indexOf(setNumber);
+                    const previousForRow =
+                      workingPos >= 0
+                        ? previousWorking[workingPos] ??
+                          previousWorking.find((set) => set.set_number === setNumber)
+                        : undefined;
+                    const canDelete =
+                      entrySetType(entry, setNumber) !== 'normal' ||
+                      workingNumbers.length > MIN_SETS;
+                    const placeholders =
+                      entrySetType(entry, setNumber) === 'normal'
+                        ? lastSetPlaceholders(previous[item.exercise.id], setNumber, weighted)
+                        : {};
                     return (
                       <SetRow
                         key={key}
                         setNumber={setNumber}
-                        warmup={isWarmupSetNumber(setNumber)}
-                        previousLabel={formatPreviousSet(previousSet, weighted)}
+                        setLabel={displaySetLabel(item, setNumber, entries)}
+                        warmup={entrySetType(entry, setNumber) === 'warmup'}
+                        previousLabel={formatPreviousSet(previousForRow, weighted)}
                         kg={entry.weight}
                         reps={entry.reps}
                         completed={entry.completed}
@@ -1831,11 +2045,8 @@ export default function SessionScreen() {
                             : undefined
                         }
                         onRecord={setRecords ? () => showRecords(setRecords) : undefined}
-                        onDelete={
-                          isWarmupSetNumber(setNumber) || item.sets > MIN_SETS
-                            ? () => removeLoggedSet(item, setNumber)
-                            : undefined
-                        }
+                        onPressSetNumber={(anchor) => setSetMenu({ item, setNumber, anchor })}
+                        onDelete={canDelete ? () => removeLoggedSet(item, setNumber) : undefined}
                         style={{ marginTop: spacing.sm }}
                       />
                     );
@@ -1913,34 +2124,88 @@ export default function SessionScreen() {
           </View>
         ) : null}
 
+        {showImpactFinisher ? (
+          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, padding: 14, gap: 8 }]}>
+            <AppText variant="eyebrow" style={{ color: colours.accent }}>
+              {fillCopy(weekRingCopy.finisher_block, { minutes: impactCopy.minutes })}
+            </AppText>
+            <AppText variant="title3" style={{ color: colours.ink }}>
+              {impactCopy.title}
+            </AppText>
+            {impactCopy.body ? (
+              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+                {impactCopy.body}
+              </AppText>
+            ) : null}
+            {impactChoice === 'pending' ? (
+              <>
+                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+                  {impactCopy.impact.body}
+                </AppText>
+                <TextButton
+                  label={impactCopy.impact.label}
+                  onPress={() => setImpactChoice('impact')}
+                  style={{ alignSelf: 'flex-start' }}
+                />
+                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+                  {impactCopy.lowerImpact.body}
+                </AppText>
+                <PrimaryButton
+                  label={impactCopy.lowerImpact.label}
+                  onPress={() => setImpactChoice('lower_impact')}
+                />
+                <TextButton
+                  label={impactCopy.skip}
+                  onPress={() => setImpactChoice('skipped')}
+                  style={{ alignSelf: 'flex-start' }}
+                />
+              </>
+            ) : (
+              <AppText variant="bodySm" style={{ color: colours.success }}>
+                {impactChoice === 'skipped'
+                  ? loggerCopy.block_skipped
+                  : impactChoice === 'impact'
+                    ? impactCopy.impact.label
+                    : impactCopy.lowerImpact.label}
+              </AppText>
+            )}
+          </View>
+        ) : null}
+
         {dragFrom === null ? (
-          <>
-            <TextButton
-              label="Ask Coach"
-              onPress={() =>
-                openCoach({
-                  context: { type: 'session_today', id, label: day.name },
-                  entry: 'logger',
-                  sessionToday: toBusyGymRemaining(day, entries),
-                })
-              }
-            />
-            <SecondaryButton
-              label={loggerCopy.header_menu.taken}
-              onPress={() => openBusyGym(null)}
-            />
-            <PrimaryButton
-              label={isAdding ? 'Adding…' : loggerCopy.add_exercise}
-              onPress={() => setPickerOpen(true)}
-              disabled={isAdding || isFinishing || day.exercises.length >= MAX_WORKOUT_EXERCISES}
-              loading={isAdding}
-            />
-          </>
+          <PrimaryButton
+            label={isAdding ? 'Adding…' : loggerCopy.add_exercise}
+            onPress={() => setPickerOpen(true)}
+            disabled={isAdding || isFinishing || day.exercises.length >= MAX_WORKOUT_EXERCISES}
+            loading={isAdding}
+          />
         ) : null}
         {doneSets > 0 ? (
           <DestructiveTextButton label="Discard" onPress={confirmDiscard} disabled={isFinishing} />
         ) : null}
       </ScrollView>
+
+      {undoToast ? (
+        <Pressable
+          onPress={undoRemovedSet}
+          style={[
+            styles.undoToast,
+            {
+              backgroundColor: colours.ink,
+              borderRadius: radius.full,
+              marginBottom: restEndsAt !== null ? 8 : Math.max(insets.bottom, 12),
+            },
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={`${loggerCopy.set_menu.removed}. ${loggerCopy.set_menu.undo}`}>
+          <AppText variant="bodySm" style={{ color: colours.onBrand, flex: 1 }}>
+            {loggerCopy.set_menu.removed}
+          </AppText>
+          <AppText variant="bodyStrong" style={{ color: colours.onBrand }}>
+            {loggerCopy.set_menu.undo}
+          </AppText>
+        </Pressable>
+      ) : null}
 
       {restEndsAt !== null ? (
         <RestTimerBar
@@ -2068,6 +2333,46 @@ export default function SessionScreen() {
         ) : null}
       </OverflowMenu>
 
+      <OverflowMenu visible={setMenu !== null} anchor={setMenu?.anchor ?? null} onClose={() => setSetMenu(null)}>
+        {setMenu ? (
+          <>
+            <MenuRow
+              label={loggerCopy.set_menu.warmup}
+              selected={entrySetType(entries[setKey(setMenu.item.exercise.id, setMenu.setNumber)], setMenu.setNumber) === 'warmup'}
+              onPress={() => {
+                changeSetType(setMenu.item, setMenu.setNumber, 'warmup');
+                setSetMenu(null);
+              }}
+            />
+            <MenuRow
+              label={loggerCopy.set_menu.drop}
+              selected={entrySetType(entries[setKey(setMenu.item.exercise.id, setMenu.setNumber)], setMenu.setNumber) === 'drop'}
+              onPress={() => {
+                changeSetType(setMenu.item, setMenu.setNumber, 'drop');
+                setSetMenu(null);
+              }}
+            />
+            <MenuRow
+              label={loggerCopy.set_menu.normal}
+              selected={entrySetType(entries[setKey(setMenu.item.exercise.id, setMenu.setNumber)], setMenu.setNumber) === 'normal'}
+              onPress={() => {
+                changeSetType(setMenu.item, setMenu.setNumber, 'normal');
+                setSetMenu(null);
+              }}
+            />
+            <MenuRow
+              label={loggerCopy.set_menu.remove}
+              danger
+              onPress={() => {
+                const target = setMenu;
+                setSetMenu(null);
+                removeLoggedSet(target.item, target.setNumber);
+              }}
+            />
+          </>
+        ) : null}
+      </OverflowMenu>
+
       <ExerciseMediaSheet
         visible={playingExercise !== null}
         exerciseId={playingExercise?.id ?? ''}
@@ -2094,6 +2399,9 @@ export default function SessionScreen() {
             </AppText>
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
               {loggerCopy.rest_sheet_note}
+            </AppText>
+            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 8 }}>
+              {loggerCopy.rest_sheet_hint}
             </AppText>
             <View style={styles.restChoices}>
               {EXERCISE_REST_OPTIONS.map((seconds) => {
@@ -2173,6 +2481,11 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 4,
+  },
+  coachNotice: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -2255,5 +2568,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 12,
     textAlignVertical: 'top',
+  },
+  undoToast: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
 });

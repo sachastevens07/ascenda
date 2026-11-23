@@ -56,16 +56,45 @@ export function ProgressRing({
 
 export function ProgressBar({
   progress,
+  done,
+  total,
   tone = 'brand',
   style,
 }: {
-  progress: number;
+  progress?: number;
+  /** Filled notches. Used with `total` for a stepped bar. */
+  done?: number;
+  /** One notch per unit. When 2 or more, the bar steps instead of filling smoothly. */
+  total?: number;
   tone?: 'brand' | 'accent';
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, radius } = useTheme();
-  const clamped = Math.min(1, Math.max(0, progress));
   const fill = tone === 'accent' ? colours.accent : colours.brand;
+  const notchTotal = total != null && total > 0 ? Math.round(total) : 0;
+  if (notchTotal > 0) {
+    const filled = Math.min(notchTotal, Math.max(0, Math.round(done ?? 0)));
+    return (
+      <View
+        accessibilityRole="progressbar"
+        accessibilityValue={{ min: 0, max: notchTotal, now: filled }}
+        style={[styles.notchTrack, style]}>
+        {Array.from({ length: notchTotal }, (_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.notch,
+              {
+                backgroundColor: index < filled ? fill : colours.surfaceMuted,
+                borderRadius: radius.full,
+              },
+            ]}
+          />
+        ))}
+      </View>
+    );
+  }
+  const clamped = Math.min(1, Math.max(0, progress ?? 0));
   return (
     <View
       accessibilityRole="progressbar"
@@ -103,6 +132,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   barFill: {
+    height: '100%',
+  },
+  notchTrack: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 3,
+    height: 8,
+  },
+  notch: {
+    flex: 1,
     height: '100%',
   },
 });

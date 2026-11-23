@@ -1,5 +1,7 @@
 import microcopy from '../../content/microcopy/en-GB.json';
 
+import { isFeatureEnabled } from '@/config/features';
+
 const profile = microcopy.strings.profile;
 const safety = microcopy.strings.safety;
 
@@ -71,7 +73,7 @@ export const paywallScreenCopy = {
   title: paywall.headline_fallback,
   body: paywall.subheadline,
   subheadline: paywall.subheadline,
-  benefits: paywall.benefits,
+  benefits: isFeatureEnabled('stretches') ? paywall.benefits : paywall.benefits_no_stretch,
   annual_title: paywall.annual_title,
   annual_trial_line: paywall.annual_trial_line,
   annual_monthly_equiv: paywall.annual_monthly_equiv,
@@ -103,7 +105,7 @@ const home = microcopy.strings.home;
 /** X2 Home sections. Bundled from content/microcopy. Every section hides itself if empty. */
 export const homeCopy = {
   hero_planned_today: home.hero_planned_today,
-  hero_rest_day: home.hero_rest_day,
+  hero_rest_day: isFeatureEnabled('stretches') ? home.hero_rest_day : home.hero_rest_day_no_stretch,
   hero_done_today: home.hero_done_today,
   hero_nothing_planned: home.hero_nothing_planned,
   hero_no_routine: home.hero_no_routine,
@@ -113,6 +115,11 @@ export const homeCopy = {
   meals_empty: home.meals_empty,
   section_featured: home.section_featured,
   section_week_so_far: home.section_week_so_far,
+  stat_sessions: home.stat_sessions,
+  stat_strength: home.stat_strength,
+  stat_cardio: home.stat_cardio,
+  stat_minutes: home.stat_minutes,
+  share_week_body: home.share_week_body,
   section_awards: home.section_awards,
   section_stretch_today: home.section_stretch_today,
   section_personalised: home.section_personalised,
@@ -164,7 +171,32 @@ export const programmesCopy = {
   style_stretch: programmes.style_stretch,
   style_cant_get_to_gym: programmes.style_cant_get_to_gym,
   empty_style: programmes.empty_style,
+  stretch_filter_time: programmes.stretch_filter_time,
+  stretch_filter_under_5: programmes.stretch_filter_under_5,
+  stretch_filter_5_10: programmes.stretch_filter_5_10,
+  stretch_filter_10_20: programmes.stretch_filter_10_20,
+  stretch_filter_muscle: programmes.stretch_filter_muscle,
+  stretch_filter_when: programmes.stretch_filter_when,
+  stretch_muscle_full_body: programmes.stretch_muscle_full_body,
+  stretch_muscle_legs: programmes.stretch_muscle_legs,
+  stretch_muscle_upper_body: programmes.stretch_muscle_upper_body,
+  stretch_muscle_hips: programmes.stretch_muscle_hips,
+  stretch_muscle_back: programmes.stretch_muscle_back,
+  stretch_when_morning: programmes.stretch_when_morning,
+  stretch_when_pre_workout: programmes.stretch_when_pre_workout,
+  stretch_when_post_workout: programmes.stretch_when_post_workout,
+  stretch_when_evening: programmes.stretch_when_evening,
+  stretch_empty_filters: programmes.stretch_empty_filters,
 } as const;
+
+export function stretchMuscleLabel(area: string | null | undefined): string {
+  if (area === 'full_body') return programmesCopy.stretch_muscle_full_body;
+  if (area === 'lower_body') return programmesCopy.stretch_muscle_legs;
+  if (area === 'upper_body') return programmesCopy.stretch_muscle_upper_body;
+  if (area === 'hips') return programmesCopy.stretch_muscle_hips;
+  if (area === 'back') return programmesCopy.stretch_muscle_back;
+  return 'Stretch';
+}
 
 const food = microcopy.strings.food;
 
@@ -208,6 +240,24 @@ export const mediaUnavailableCopy = microcopy.strings.errors.media_unavailable;
 
 export function fillCopy(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? ''));
+}
+
+/** Strip stretch promises from schedule lines when the launch flag is off. */
+export function withoutStretchPromises(text: string): string {
+  if (isFeatureEnabled('stretches')) return text;
+  return text
+    .replace(/,?\s*and an optional recovery stretch you can do anytime/gi, '')
+    .replace(/ and stretching/gi, '')
+    .replace(/\s+,/g, ',')
+    .replace(/,\s*$/g, '')
+    .trim();
+}
+
+export function scheduleLabelFallback(days: number): string {
+  const template = isFeatureEnabled('stretches')
+    ? home.schedule_label_fallback
+    : home.schedule_label_fallback_no_stretch;
+  return fillCopy(template, { days });
 }
 
 const streak = microcopy.strings.streak;

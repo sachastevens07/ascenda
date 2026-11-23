@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
 
 import { AppText, ArticleCard, ListRow, PhotoFill, SectionHeader } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
@@ -51,17 +51,28 @@ export default function LearnCategoryScreen() {
           <ActivityIndicator color={colours.brand} />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={[styles.content, { gap: spacing.md }]}>
-          {category === 'gym_confidence' ? <MachineGuidesBlock /> : null}
-          <AppText variant="body" style={{ color: colours.inkMuted }}>
-            Short reads to sit beside your training.
-          </AppText>
-          {articles.length === 0 ? (
-            <AppText variant="body" style={{ color: colours.inkMuted }}>Nothing in this category yet.</AppText>
-          ) : (
-            articles.map((article) => <ArticleCard key={article.id} article={article} />)
-          )}
-        </ScrollView>
+        <FlatList
+          data={articles}
+          keyExtractor={(article) => article.id}
+          initialNumToRender={4}
+          maxToRenderPerBatch={4}
+          windowSize={5}
+          contentContainerStyle={[styles.content, { gap: spacing.md }]}
+          ListHeaderComponent={
+            <View style={{ gap: spacing.md }}>
+              {category === 'gym_confidence' ? <MachineGuidesBlock /> : null}
+              <AppText variant="body" style={{ color: colours.inkMuted }}>
+                Short reads to sit beside your training.
+              </AppText>
+              {articles.length === 0 ? (
+                <AppText variant="body" style={{ color: colours.inkMuted }}>
+                  Nothing in this category yet.
+                </AppText>
+              ) : null}
+            </View>
+          }
+          renderItem={({ item }) => <ArticleCard article={item} />}
+        />
       )}
     </View>
   );

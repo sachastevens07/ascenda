@@ -13,7 +13,6 @@
       "sort_order": 1,
       "is_pro": false,
       "cover_image_slug": "collection-strong-and-nourished",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "chicken-quinoa-prep-bowls",
         "salmon-rice-bowl",
@@ -22,7 +21,8 @@
         "pesto-cod-quinoa",
         "halloumi-veg-traybake",
         "beef-burrito-bowls"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "ten-breakfasts",
@@ -31,7 +31,6 @@
       "sort_order": 2,
       "is_pro": false,
       "cover_image_slug": "collection-ten-breakfasts",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "berry-overnight-oats",
         "peanut-butter-banana-porridge",
@@ -43,7 +42,8 @@
         "tofu-scramble",
         "avocado-eggs-on-sourdough",
         "smoky-beans-on-toast"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "high-protein-dinners",
@@ -75,7 +75,6 @@
       "sort_order": 4,
       "is_pro": false,
       "cover_image_slug": "collection-prep-ahead-lunches",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "chicken-quinoa-prep-bowls",
         "tuna-sweetcorn-pasta-salad",
@@ -83,7 +82,8 @@
         "roasted-tomato-bean-soup",
         "peanut-noodle-jars",
         "lentil-feta-salad"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "dinner-in-30",
@@ -92,7 +92,6 @@
       "sort_order": 5,
       "is_pro": false,
       "cover_image_slug": "collection-dinner-in-30",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "beef-broccoli-noodles",
         "pesto-cod-quinoa",
@@ -102,7 +101,8 @@
         "coconut-fish-curry",
         "veg-egg-fried-rice",
         "beef-burrito-bowls"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "busy-days",
@@ -111,7 +111,6 @@
       "sort_order": 6,
       "is_pro": false,
       "cover_image_slug": "collection-busy-days",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "berry-overnight-oats",
         "peanut-butter-banana-porridge",
@@ -135,7 +134,8 @@
         "beef-broccoli-noodles",
         "garlic-prawn-pasta",
         "veg-egg-fried-rice"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "one-pot",
@@ -144,7 +144,6 @@
       "sort_order": 7,
       "is_pro": false,
       "cover_image_slug": "collection-one-pot",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "red-lentil-soup",
         "one-pot-chicken-orzo",
@@ -153,7 +152,8 @@
         "lentil-mushroom-bolognese",
         "one-pot-bean-rice",
         "coconut-fish-curry"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "prep-ahead-breakfasts",
@@ -162,7 +162,6 @@
       "sort_order": 8,
       "is_pro": false,
       "cover_image_slug": "collection-prep-ahead-breakfasts",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "berry-overnight-oats",
         "breakfast-burritos",
@@ -170,7 +169,8 @@
         "veggie-egg-muffins",
         "apple-cinnamon-bircher",
         "mango-chia-pudding"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "smoothies",
@@ -179,14 +179,14 @@
       "sort_order": 9,
       "is_pro": false,
       "cover_image_slug": "collection-smoothies",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "berry-yoghurt-smoothie",
         "peanut-butter-banana-smoothie",
         "green-mango-smoothie",
         "chocolate-banana-recovery-smoothie",
         "blueberry-oat-smoothie"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "snacks",
@@ -195,7 +195,6 @@
       "sort_order": 10,
       "is_pro": false,
       "cover_image_slug": "collection-snacks",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "peanut-butter-energy-balls",
         "yoghurt-berry-pot",
@@ -206,7 +205,8 @@
         "chilli-lime-edamame",
         "cottage-cheese-crispbreads",
         "gym-bag-snack-box"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "family-friendly",
@@ -215,7 +215,6 @@
       "sort_order": 11,
       "is_pro": false,
       "cover_image_slug": "collection-family-friendly",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "peanut-butter-banana-porridge",
         "breakfast-burritos",
@@ -240,7 +239,8 @@
         "beef-burrito-bowls",
         "banana-blueberry-oat-muffins",
         "peanut-butter-banana-smoothie"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "high-protein",
@@ -280,7 +280,6 @@
       "sort_order": 13,
       "is_pro": false,
       "cover_image_slug": "collection-seasonal-favourites",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "peanut-butter-banana-porridge",
         "blueberry-baked-oats",
@@ -294,7 +293,8 @@
         "lentil-mushroom-bolognese",
         "coconut-fish-curry",
         "turkey-cottage-pie"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "before-an-evening-session",
@@ -303,7 +303,6 @@
       "sort_order": 14,
       "is_pro": false,
       "cover_image_slug": "collection-before-an-evening-session",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "berry-overnight-oats",
         "greek-yoghurt-power-bowl",
@@ -313,7 +312,8 @@
         "banana-blueberry-oat-muffins",
         "berry-yoghurt-smoothie",
         "blueberry-oat-smoothie"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "after-leg-day",
@@ -322,7 +322,6 @@
       "sort_order": 15,
       "is_pro": false,
       "cover_image_slug": "collection-after-leg-day",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "chicken-quinoa-prep-bowls",
         "chicken-caesar-wraps",
@@ -335,7 +334,8 @@
         "veg-egg-fried-rice",
         "beef-burrito-bowls",
         "chocolate-banana-recovery-smoothie"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "gym-bag-snacks",
@@ -344,7 +344,6 @@
       "sort_order": 16,
       "is_pro": false,
       "cover_image_slug": "collection-gym-bag-snacks",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "veggie-egg-muffins",
         "peanut-butter-energy-balls",
@@ -352,7 +351,8 @@
         "hummus-veg-pots",
         "banana-blueberry-oat-muffins",
         "gym-bag-snack-box"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "lunches",
@@ -361,7 +361,6 @@
       "sort_order": 17,
       "is_pro": false,
       "cover_image_slug": "collection-lunches",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "chicken-quinoa-prep-bowls",
         "tuna-sweetcorn-pasta-salad",
@@ -377,7 +376,8 @@
         "chilli-bean-sweet-potatoes",
         "lentil-feta-salad",
         "egg-salad-sandwiches"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "dinners",
@@ -386,7 +386,6 @@
       "sort_order": 18,
       "is_pro": false,
       "cover_image_slug": "collection-dinners",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "one-pot-chicken-orzo",
         "turkey-chilli",
@@ -408,7 +407,8 @@
         "veg-egg-fried-rice",
         "halloumi-veg-traybake",
         "beef-burrito-bowls"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "iron-rich",
@@ -417,7 +417,6 @@
       "sort_order": 19,
       "is_pro": false,
       "cover_image_slug": "collection-iron-rich",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "spinach-feta-omelette",
         "chickpea-spinach-curry",
@@ -427,7 +426,8 @@
         "turkey-chilli",
         "lentil-feta-salad",
         "black-bean-sweet-potato-tacos"
-      ]
+      ],
+      "requires_verified_claim": null
     },
     {
       "slug": "calcium-and-bones",
@@ -436,7 +436,6 @@
       "sort_order": 20,
       "is_pro": false,
       "cover_image_slug": "collection-calcium-and-bones",
-      "requires_verified_claim": null,
       "recipe_slugs": [
         "greek-yoghurt-power-bowl",
         "yoghurt-berry-pot",
@@ -447,7 +446,8 @@
         "halloumi-couscous-salad",
         "berry-yoghurt-smoothie",
         "tofu-scramble"
-      ]
+      ],
+      "requires_verified_claim": null
     }
   ],
   "training_suggestions": {

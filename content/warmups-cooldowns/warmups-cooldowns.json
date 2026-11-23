@@ -52,6 +52,13 @@
       "one_spot_alternative": null
     },
     {
+      "slug": "single-leg-stand",
+      "name": "Single-leg stand",
+      "equipment": "bodyweight",
+      "cue": "Stand on one leg. Hold something nearby if you want, then switch sides.",
+      "one_spot_alternative": null
+    },
+    {
       "slug": "bodyweight-glute-bridge",
       "name": "Glute bridge",
       "equipment": "bodyweight",

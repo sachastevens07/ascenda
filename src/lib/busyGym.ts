@@ -1,13 +1,13 @@
 /**
- * AI2 Busy gym fix. Eligible swaps come from exercise-guide "if it's taken" lists
- * (plus catalogue alternatives). Rule-based fallback matches the Edge Function.
+ * AI2 Busy gym fix. Eligible swaps come from catalogue `alternatives` only.
+ * Rule-based fallback matches the Edge Function.
  */
 import catalogueFile from '../../content/exercises/strength-catalogue.json';
 import { preferredSwapIds, resolveExerciseSlug } from '@/lib/contentGuides';
-import { EQUIPMENT, EQUIPMENT_LABELS, type Equipment } from '@/lib/exercises';
+import { EQUIPMENT, EQUIPMENT_LABELS, type Equipment, type Zone } from '@/lib/exercises';
 import type { ProgrammeDay, ProgrammeExercise, SlotExercise } from '@/lib/programmes';
 import type { ExerciseRole } from '@/lib/routineStandard';
-import { setKey, setNumbers, type SetEntry } from '@/lib/workoutLog';
+import { allSetNumbers, entrySetType, setKey, type SetEntry } from '@/lib/workoutLog';
 
 export const BUSY_GYM_MINUTES = [15, 30, 45] as const;
 export type BusyGymMinutes = (typeof BUSY_GYM_MINUTES)[number];
@@ -69,6 +69,7 @@ type CatalogueRow = {
   name: string;
   equipment: Equipment;
   pattern: string;
+  zone: Zone;
 };
 
 function asRecord(value: unknown): Json {
@@ -94,11 +95,13 @@ for (const item of asArray(asRecord(catalogueFile).exercises)) {
   const name = text(row.name);
   const equipment = text(row.equipment);
   if (!slug || !name || !isEquipment(equipment)) continue;
+  const zoneRaw = typeof row.zone === 'number' ? row.zone : Number(row.zone);
   const parsed: CatalogueRow = {
     id: slug,
     name,
     equipment,
     pattern: text(row.pattern) || 'other',
+    zone: zoneRaw === 1 || zoneRaw === 2 || zoneRaw === 3 || zoneRaw === 4 ? zoneRaw : 1,
   };
   if (!CATALOGUE.has(slug)) CATALOGUE.set(slug, parsed);
   CATALOGUE.set(text(row.slug), parsed);
@@ -125,24 +128,37 @@ export function completedWorkingSets(
   entries: Record<string, SetEntry>
 ): number {
   let done = 0;
-  for (const setNumber of setNumbers(item)) {
-    if (entries[setKey(item.exercise.id, setNumber)]?.completed) done += 1;
+  for (const setNumber of allSetNumbers(item)) {
+    const entry = entries[setKey(item.exercise.id, setNumber)];
+    if (entrySetType(entry, setNumber) !== 'normal') continue;
+    if (entry?.completed) done += 1;
   }
   return done;
+}
+
+function plannedWorkingSets(
+  item: ProgrammeExercise,
+  entries: Record<string, SetEntry>
+): number {
+  return allSetNumbers(item).filter(
+    (setNumber) => entrySetType(entries[setKey(item.exercise.id, setNumber)], setNumber) === 'normal'
+  ).length;
 }
 
 export function remainingBusyGymItems(
   day: ProgrammeDay,
   entries: Record<string, SetEntry>
 ): ProgrammeExercise[] {
-  return day.exercises.filter((item) => completedWorkingSets(item, entries) < item.sets);
+  return day.exercises.filter(
+    (item) => completedWorkingSets(item, entries) < plannedWorkingSets(item, entries)
+  );
 }
 
 export function remainingSetCount(
   item: ProgrammeExercise,
   entries: Record<string, SetEntry>
 ): number {
-  return Math.max(0, item.sets - completedWorkingSets(item, entries));
+  return Math.max(0, plannedWorkingSets(item, entries) - completedWorkingSets(item, entries));
 }
 
 export function toBusyGymRemaining(

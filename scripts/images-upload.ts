@@ -159,6 +159,10 @@ async function main(): Promise<void> {
       console.log(`${slug}: skipped, that choice has no file`);
       continue;
     }
+    if (entry.licence_source === 'Generated for Ascenda') {
+      console.log(`${slug}: skipped, a generated photo is already in this slot`);
+      continue;
+    }
     if (!photo.photographer || !photo.source_url || photo.licence_source !== 'Unsplash License') {
       console.log(`${slug}: skipped, licence details are incomplete`);
       continue;

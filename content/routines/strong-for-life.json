@@ -141,10 +141,10 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-cable-row",
@@ -154,10 +154,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-step-up",
@@ -182,13 +182,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -222,10 +222,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-dumbbell-shoulder-press",
@@ -235,7 +235,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -265,7 +265,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -312,10 +312,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-cable-row",
@@ -325,10 +325,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "walking-lunge",
@@ -357,7 +357,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -391,10 +391,10 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "shoulder-press-machine",
@@ -404,10 +404,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-calf-raise",
@@ -435,7 +435,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -481,10 +481,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-cable-row",
@@ -494,10 +494,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "walking-lunge",
@@ -526,7 +526,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -560,10 +560,10 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "shoulder-press-machine",
@@ -573,10 +573,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-calf-raise",
@@ -604,7 +604,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",

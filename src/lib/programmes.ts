@@ -1,6 +1,7 @@
+import { loggerCopy } from '@/lib/copy';
 import type { Equipment, Muscle, Zone } from '@/lib/exercises';
 import type { EquipmentAccess } from '@/lib/profile';
-import { heaviestWeight, type LoggedSet } from '@/lib/sessions';
+import { heaviestWeight, workingSetsForProgression, type LoggedSet } from '@/lib/sessions';
 import type { ExerciseRole, ProgressionRule, WarmupStep } from '@/lib/routineStandard';
 import { supabase } from '@/lib/supabase';
 import { formatWeight } from '@/lib/units';
@@ -54,6 +55,8 @@ export type ProgrammeExercise = {
   load_increment_kg?: number;
   notes?: string;
   alternative_exercise_ids?: string[];
+  /** Today-only: skip with one tap. Used when a check-in swap had no same-family fit. */
+  optional?: boolean;
 };
 
 export type ProgrammeDay = {
@@ -234,21 +237,27 @@ export type WeightSuggestion =
 /** `previousSets` are the completed sets from the last session she did this exercise in. */
 export function getWeightSuggestion(
   item: ProgrammeExercise,
-  previousSets: LoggedSet[] = []
+  previousSets: LoggedSet[] = [],
+  options?: { holdIncrease?: boolean }
 ): WeightSuggestion {
   const { equipment, weight_increase_kg } = item.exercise;
-  const firstSet = previousSets.find((set) => set.set_number === 1);
+  const working = workingSetsForProgression(previousSets);
+  const firstSet = working.find((set) => set.set_number === 1) ?? working[0];
   const hitTop = firstSet !== undefined && (firstSet.reps ?? 0) >= item.rep_max;
+  const holdIncrease = options?.holdIncrease === true;
 
   if (equipment === 'bodyweight' || equipment === 'band') {
-    if (previousSets.length === 0) return { kind: 'first-time', equipment };
+    if (working.length === 0) return { kind: 'first-time', equipment };
+    if (holdIncrease) return { kind: 'more-reps', equipment };
     return hitTop ? { kind: 'harder-variation', equipment } : { kind: 'more-reps', equipment };
   }
 
-  const lastKg = heaviestWeight(previousSets);
+  const lastKg = heaviestWeight(working);
   if (lastKg === null) return { kind: 'find-starting-weight' };
   const baseKg = firstSet?.weight_kg ?? null;
-  if (!hitTop || baseKg === null || !weight_increase_kg) return { kind: 'same-weight', kg: lastKg };
+  if (holdIncrease || !hitTop || baseKg === null || !weight_increase_kg) {
+    return { kind: 'same-weight', kg: lastKg };
+  }
   const kg = Math.max(0, Number((baseKg + weight_increase_kg).toFixed(2)));
   if (kg === baseKg) return { kind: 'same-weight', kg: lastKg };
   return { kind: 'increase', kg, changeKg: kg - baseKg };
@@ -267,7 +276,7 @@ export function describeWeightSuggestion(suggestion: WeightSuggestion): string {
     case 'same-weight':
       return `Last time: ${formatKg(suggestion.kg)}. Stay here and aim for more reps`;
     case 'find-starting-weight':
-      return 'Find your starting weight';
+      return loggerCopy.find_starting_weight;
     case 'harder-variation':
     case 'more-reps':
       return describeProgressionGoal(suggestion) ?? '';
@@ -293,6 +302,8 @@ export function describeProgressionGoal(suggestion: WeightSuggestion): string | 
       return suggestion.equipment === 'band'
         ? 'Same band, aim for more reps'
         : 'Bodyweight, aim for more reps';
+    case 'find-starting-weight':
+      return loggerCopy.find_starting_weight;
     default:
       return null;
   }

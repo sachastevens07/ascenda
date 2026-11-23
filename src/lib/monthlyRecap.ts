@@ -233,7 +233,7 @@ export function buildMonthlyRecap(
   sessions: FinishedSessionMeta[],
   sets: ProgressSet[]
 ): MonthlyRecap | null {
-  // Stats from sessions and sets only. Never read or include life_stage.
+  // Stats from sessions and sets only. Never read or include life_stage or period dates.
   const totals = totalsForMonth(monthKey, sessions, sets);
   if (totals.workouts < MIN_SESSIONS) return null;
   const { start, end } = monthBounds(monthKey);

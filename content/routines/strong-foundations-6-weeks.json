@@ -59,8 +59,8 @@
     "why_this_split": "Three full-body sessions a week means you practise every movement more than once a week, which is the fastest way to learn them. Each session trains your legs, upper body and core, so missing a day never leaves a gap.",
     "how_it_works": [
       "Weeks 1 to 2: learn the key movements with just dumbbells and a bench, so you only need one area of the gym.",
-      "Weeks 3 to 4: try the most common machines, a couple each session, while your dumbbell lifts keep going up.",
-      "Weeks 5 to 6: try the Smith machine squat and barbell hip thrust, starting light, and finish with a checkpoint.",
+      "Weeks 3 to 4: try the Smith machine, leg press and cable machines, and a light first barbell hip thrust, while your dumbbell lifts keep going up.",
+      "Weeks 5 to 6: add weight to the Smith squat and barbell hip thrust you learned in weeks 3 and 4, and finish with a checkpoint.",
       "In weeks 3 and 6 you'll re-test your key lifts to see how far you've come."
     ],
     "progression_explained": "When you hit the top of the rep range on every set with good form, we'll suggest a little more weight next time. Until then, aim for one more rep than last time.",
@@ -73,13 +73,13 @@
       },
       {
         "week": 3,
-        "title": "First machines",
-        "description": "Using the most common machines with confidence"
+        "title": "Machines and a barbell",
+        "description": "The Smith machine, leg press and your first barbell hip thrust"
       },
       {
         "week": 5,
-        "title": "First barbell lifts",
-        "description": "The Smith machine squat and barbell hip thrust"
+        "title": "Building on them",
+        "description": "More weight on your Smith squat and hip thrust"
       },
       {
         "week": 6,
@@ -146,7 +146,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -158,7 +158,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -185,13 +185,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -227,7 +227,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -239,7 +239,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -269,7 +269,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -280,12 +280,24 @@
         {
           "key": "C",
           "name": "Full body C",
-          "focus": "Legs and glutes",
-          "coach_note": "Single-leg work today. Hold the bench for balance whenever you need it.",
+          "focus": "Glutes and legs",
+          "coach_note": "Hip thrusts lead today, then single-leg work. Hold the bench for balance whenever you need it.",
           "exercises": [
             {
-              "slug": "dumbbell-split-squat",
+              "slug": "dumbbell-hip-thrust",
               "role": "main",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "load_increment_kg": 2,
+              "notes": "Upper back on the bench, pause at the top."
+            },
+            {
+              "slug": "dumbbell-split-squat",
+              "role": "secondary",
               "sets": 3,
               "rep_min": 8,
               "rep_max": 10,
@@ -297,18 +309,6 @@
               "notes": ""
             },
             {
-              "slug": "dumbbell-hip-thrust",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": 2,
-              "notes": "Upper back on the bench, pause at the top."
-            },
-            {
               "slug": "incline-dumbbell-press",
               "role": "secondary",
               "sets": 3,
@@ -316,7 +316,7 @@
               "rep_max": 12,
               "target_rir": 3,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -346,7 +346,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -359,30 +359,30 @@
     },
     {
       "number": 2,
-      "name": "Add the machines",
+      "name": "Machines and your first barbell lift",
       "weeks": [
         3,
         4
       ],
-      "goal": "Try the most common machines, a couple each session, while your dumbbell lifts keep going up.",
+      "goal": "Try the Smith machine, leg press and cable machines, and a light first barbell hip thrust, while your dumbbell lifts keep going up.",
       "days": [
         {
           "key": "A",
           "name": "Full body A",
           "focus": "Squat and push",
-          "coach_note": "Meet the leg press and lat pulldown. Open each guide first and start light.",
+          "coach_note": "Your first Smith machine squat. Set the safety stops, start with just the bar and add weight only if your form feels solid. Then meet the lat pulldown.",
           "exercises": [
             {
-              "slug": "leg-press",
+              "slug": "smith-machine-squat",
               "role": "main",
               "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
+              "rep_min": 8,
+              "rep_max": 10,
               "target_rir": 3,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": 5,
-              "notes": "Feet hip-width in the middle of the platform."
+              "load_increment_note": "One plate on the stack",
+              "notes": "Feet slightly forward of the bar."
             },
             {
               "slug": "dumbbell-bench-press",
@@ -392,7 +392,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -404,10 +404,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-hip-thrust",
@@ -431,14 +431,14 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -451,7 +451,7 @@
           "key": "B",
           "name": "Full body B",
           "focus": "Hinge and pull",
-          "coach_note": "Heavier Romanian deadlifts than in weeks 1 and 2, with the same smooth tempo.",
+          "coach_note": "Heavier Romanian deadlifts than in weeks 1 and 2. Then meet the leg press: open its guide first and start light.",
           "exercises": [
             {
               "slug": "dumbbell-romanian-deadlift",
@@ -473,10 +473,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "seated-cable-row",
@@ -486,13 +486,13 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
-              "slug": "seated-leg-curl",
+              "slug": "leg-press",
               "role": "accessory",
               "sets": 2,
               "rep_min": 10,
@@ -500,9 +500,8 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "load_increment_kg": 5,
+              "notes": "Feet hip-width in the middle of the platform."
             },
             {
               "slug": "dead-bug",
@@ -514,13 +513,13 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -532,7 +531,7 @@
           "key": "C",
           "name": "Full body C",
           "focus": "Legs and glutes",
-          "coach_note": "Goblet squats are back and should feel much stronger. Then two new machines for your glutes and chest.",
+          "coach_note": "Goblet squats are back and should feel much stronger. Then your first barbell hip thrust: use a pad on the bar and start light.",
           "exercises": [
             {
               "slug": "goblet-squat",
@@ -547,6 +546,18 @@
               "notes": ""
             },
             {
+              "slug": "barbell-hip-thrust",
+              "role": "secondary",
+              "sets": 3,
+              "rep_min": 10,
+              "rep_max": 12,
+              "target_rir": 3,
+              "progression_rule": "load",
+              "rest_seconds": 120,
+              "load_increment_kg": 2.5,
+              "notes": "Start with just the bar or a light weight."
+            },
+            {
               "slug": "one-arm-dumbbell-row",
               "role": "secondary",
               "sets": 3,
@@ -554,22 +565,9 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
-              "notes": ""
-            },
-            {
-              "slug": "chest-press-machine",
-              "role": "secondary",
-              "sets": 3,
-              "rep_min": 10,
-              "rep_max": 12,
-              "target_rir": 2,
-              "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
-              "load_increment_note": "One plate on the stack",
               "notes": ""
             },
             {
@@ -594,9 +592,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "side-plank",
@@ -625,18 +623,18 @@
     },
     {
       "number": 3,
-      "name": "Your first barbell lifts",
+      "name": "Build on your new lifts",
       "weeks": [
         5,
         6
       ],
-      "goal": "Try the Smith machine squat and barbell hip thrust, starting light, and finish with a checkpoint.",
+      "goal": "Add weight to the Smith squat and barbell hip thrust you learned in weeks 3 and 4, and finish with a checkpoint.",
       "days": [
         {
           "key": "A",
           "name": "Full body A",
           "focus": "Squat and push",
-          "coach_note": "Your first Smith machine squat. Set the safety stops, start with just the bar and add weight only if your form feels solid.",
+          "coach_note": "Smith machine squats lead again, a little heavier than in weeks 3 and 4. Same safety stops, same depth.",
           "exercises": [
             {
               "slug": "smith-machine-squat",
@@ -644,12 +642,12 @@
               "sets": 3,
               "rep_min": 8,
               "rep_max": 10,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "dumbbell-bench-press",
@@ -659,7 +657,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -671,10 +669,10 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "walking-lunge",
@@ -698,14 +696,14 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 45,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -740,7 +738,7 @@
               "rep_max": 10,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 2,
               "notes": ""
             },
@@ -752,13 +750,13 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
-              "load_increment_kg": null,
+              "rest_seconds": 120,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
-              "slug": "lying-leg-curl",
+              "slug": "seated-leg-curl",
               "role": "accessory",
               "sets": 2,
               "rep_min": 10,
@@ -766,9 +764,9 @@
               "target_rir": 2,
               "progression_rule": "reps",
               "rest_seconds": 75,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "forearm-plank",
@@ -783,7 +781,7 @@
           ],
           "warmup_id": "warmup-full-body",
           "cooldown_id": "cooldown-full-body",
-          "estimated_minutes": 45,
+          "estimated_minutes": 40,
           "type": "strength",
           "blocks": [
             "warmup",
@@ -795,7 +793,7 @@
           "key": "C",
           "name": "Full body C",
           "focus": "Glutes and legs",
-          "coach_note": "Barbell hip thrust day. Use a pad on the bar and start with a weight you could lift 3 more times.",
+          "coach_note": "Barbell hip thrusts lead now. Add a little weight if last time felt solid.",
           "exercises": [
             {
               "slug": "barbell-hip-thrust",
@@ -803,7 +801,7 @@
               "sets": 3,
               "rep_min": 8,
               "rep_max": 12,
-              "target_rir": 3,
+              "target_rir": 2,
               "progression_rule": "load",
               "rest_seconds": 120,
               "load_increment_kg": 2.5,
@@ -817,7 +815,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "load_increment_kg": 5,
               "notes": ""
             },
@@ -829,7 +827,7 @@
               "rep_max": 12,
               "target_rir": 2,
               "progression_rule": "load",
-              "rest_seconds": 90,
+              "rest_seconds": 120,
               "per_side": true,
               "load_increment_kg": 2,
               "notes": ""
@@ -856,9 +854,9 @@
               "progression_rule": "reps",
               "rest_seconds": 75,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             },
             {
               "slug": "pallof-press",
@@ -870,9 +868,9 @@
               "progression_rule": "reps",
               "rest_seconds": 45,
               "per_side": true,
-              "load_increment_kg": null,
               "load_increment_note": "One plate on the stack",
-              "notes": ""
+              "notes": "",
+              "load_increment_kg": null
             }
           ],
           "warmup_id": "warmup-full-body",
@@ -909,21 +907,21 @@
       "phase": 2,
       "is_checkpoint": true,
       "is_lighter_week": false,
-      "week_note": "Checkpoint week and your first machines. Start light on anything new."
+      "week_note": "Checkpoint week, plus your first machines and a light barbell hip thrust. Start light on anything new."
     },
     {
       "week": 4,
       "phase": 2,
       "is_checkpoint": false,
       "is_lighter_week": false,
-      "week_note": "The machines should feel familiar now. Keep nudging the weights up."
+      "week_note": "The new lifts should feel more familiar now. Keep nudging the weights up."
     },
     {
       "week": 5,
       "phase": 3,
       "is_checkpoint": false,
       "is_lighter_week": false,
-      "week_note": "Barbell week. Empty bar first, then add weight only if your form feels solid."
+      "week_note": "Your Smith squat and barbell hip thrust lead now. Add weight only if your form feels solid."
     },
     {
       "week": 6,

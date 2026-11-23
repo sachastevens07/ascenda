@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/config/features';
 import { trackAi } from '@/lib/analytics';
 import {
   BUILD_SESSION_FEATURE,
@@ -162,7 +163,7 @@ export async function requestBuiltSession(input: {
         logged_barbell_ids: request.logged_barbell_ids,
         eligible_exercises: eligible,
         warmup_templates: warmupTemplates(),
-        cooldown_templates: cooldownTemplates(),
+        cooldown_templates: isFeatureEnabled('stretches') ? cooldownTemplates() : [],
         cardio_sessions: cardioCatalog(),
         stretch_routines: stretchCatalog(),
         single_sessions: singleSessionsPayload(),

@@ -143,8 +143,8 @@
     "treadmill": {
       "easy": {
         "speed_kmh": [
-          4.0,
-          5.0
+          4,
+          5
         ],
         "incline_percent": [
           0,
@@ -163,8 +163,8 @@
       },
       "hard": {
         "speed_kmh": [
-          6.0,
-          8.0
+          6,
+          8
         ],
         "incline_percent": [
           0,

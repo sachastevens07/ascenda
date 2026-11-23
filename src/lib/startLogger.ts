@@ -1,5 +1,6 @@
 import { router, type Href } from 'expo-router';
 
+import { isFeatureEnabled } from '@/config/features';
 import { showDialog } from '@/components/Dialog';
 import { beginCardioSession, cardioSession, describeCardioError, isSessionInProgressError } from '@/lib/cardio';
 import { beginCustomWorkoutSession } from '@/lib/customWorkouts';
@@ -97,13 +98,19 @@ export async function openRoutineLogger(
   }
 }
 
+export function routeForActiveSession(id: string, source?: string): Href {
+  if (source === 'stretch') {
+    if (!isFeatureEnabled('stretches')) return '/(tabs)' as Href;
+    return { pathname: '/stretches/play', params: { sessionId: id } } as Href;
+  }
+  if (source === 'cardio') {
+    return { pathname: '/cardio/play', params: { sessionId: id } } as Href;
+  }
+  return { pathname: '/session/[id]', params: { id } } as Href;
+}
+
 function openActive(id: string, source?: string, replace = false): void {
-  const route =
-    source === 'stretch'
-      ? ({ pathname: '/stretches/play', params: { sessionId: id } } as Href)
-      : source === 'cardio'
-        ? ({ pathname: '/cardio/play', params: { sessionId: id } } as Href)
-        : ({ pathname: '/session/[id]', params: { id } } as Href);
+  const route = routeForActiveSession(id, source);
   if (replace) router.replace(route);
   else router.push(route);
 }
@@ -201,6 +208,7 @@ export async function openStretchDayFromPlan(
   options?: { replace?: boolean }
 ): Promise<void> {
   try {
+    if (!isFeatureEnabled('stretches')) return;
     if (!ensureSubscribed()) throw new SessionStartCancelled();
     const allowed = await confirmFirstSessionSafety();
     if (!allowed) throw new SessionStartCancelled();
@@ -239,6 +247,7 @@ export async function openRecoveryFromPlan(
   options?: { replace?: boolean }
 ): Promise<void> {
   try {
+    if (!isFeatureEnabled('stretches')) return;
     if (!ensureSubscribed()) throw new SessionStartCancelled();
     const allowed = await confirmFirstSessionSafety();
     if (!allowed) throw new SessionStartCancelled();

@@ -29,6 +29,12 @@
         "subtitle": "Fancy a gentle stretch? 10 minutes or more counts towards your week.",
         "cta": "Browse stretches"
       },
+      "hero_rest_day_no_stretch": {
+        "eyebrow": "REST DAY",
+        "title": "Recovery is part of the plan",
+        "subtitle": "A rest day helps you come back ready for your next session.",
+        "cta": "Open Planner"
+      },
       "hero_done_today": {
         "eyebrow": "DONE FOR TODAY",
         "title": "Nice work, {name}",
@@ -57,7 +63,12 @@
       "week_tab_meals": "Meals",
       "meals_empty": "Nothing suggested today. Browse Food when you want an idea.",
       "section_featured": "Featured for you",
-      "section_week_so_far": "Your week so far",
+      "section_week_so_far": "This week",
+      "stat_sessions": "Sessions",
+      "stat_strength": "Strength",
+      "stat_cardio": "Cardio",
+      "stat_minutes": "Minutes",
+      "share_week_body": "{sessions} sessions, {strength} strength, {cardio} cardio, {minutes} minutes.",
       "section_awards": "Awards",
       "section_stretch_today": "Stretch today",
       "section_personalised": "Picked for you",
@@ -71,6 +82,8 @@
       "week_ring_strength": "strength",
       "week_ring_cardio": "cardio",
       "week_ring_recovery": "recovery",
+      "schedule_label_fallback": "{days} strength days a week, plus optional cardio and stretching",
+      "schedule_label_fallback_no_stretch": "{days} strength days a week, plus optional cardio",
       "optional_chip": "Optional",
       "optional_skip": "Skip",
       "anytime_this_week": "Anytime this week",
@@ -192,10 +205,16 @@
         "Track your lifts and watch yourself get stronger",
         "Stretches, warm-ups and recovery built in"
       ],
+      "benefits_no_stretch": [
+        "Your full plan, week by week",
+        "Guides for every machine, so nothing feels unfamiliar",
+        "Track your lifts and watch yourself get stronger",
+        "Warm-ups and a rest timer built into every session"
+      ],
       "benefits_future": {
         "cardio": "Cardio sessions with machine guides",
         "food": "Recipes that fuel your training",
-        "ai": "Scan any machine and we'll show you how to use it"
+        "ai": "Ascenda Coach: ask anything, or tell it what's free and it reworks your session"
       },
       "annual_title": "Annual",
       "annual_trial_line": "{trial_days} days free, then {annual_price} a year",
@@ -312,6 +331,15 @@
         "reps": "Reps"
       },
       "warmup_set_label": "W",
+      "drop_set_label": "D",
+      "set_menu": {
+        "warmup": "Warm-up set",
+        "drop": "Drop set",
+        "normal": "Normal set",
+        "remove": "Remove set",
+        "removed": "Set removed",
+        "undo": "Undo"
+      },
       "add_set": "+ Add set",
       "delete_set": "Delete",
       "delete_set_a11y": "Delete set {set}",
@@ -364,6 +392,7 @@
       "tempo": "Tempo: {down} seconds down, {pause} pause, {up} up",
       "coach_note_label": "Coach note",
       "warmup_block": "Warm-up · {minutes} min",
+      "warmup_fallback": "Warm up with 5 minutes easy on the bike or cross-trainer, then 1 or 2 light sets of your first lift.",
       "cooldown_block": "Cool-down · {minutes} min",
       "block_skip": "Skip",
       "block_skipped": "Skipped. No problem.",
@@ -371,10 +400,12 @@
       "pb_detail": "{exercise}: {weight} × {reps}",
       "swap_title": "Swap {exercise}",
       "swap_subtitle": "Same movement, different kit.",
-      "swap_none": "No close swaps for this one. You could skip it today or try it later in the session.",
+      "swap_none": "There's no close swap for this one. Wait a minute or two, or skip it today.",
       "different_day_title": "Do a different day",
       "different_day_body": "Pick another session from this week. Your planner updates to match.",
-      "leave_empty_note": ""
+      "leave_empty_note": "",
+      "rest_sheet_hint": "The timer is a guide. Start your next set when your breathing has settled and you're ready to give it a good effort.",
+      "find_starting_weight": "Find a weight you could lift 3 more times"
     },
     "session_complete": {
       "_note": "Shown after Finish. Wins are chosen by the app from real data: max 3, most meaningful first.",
@@ -441,11 +472,11 @@
       "weeks_unit_one": "{count} week",
       "weeks_unit_many": "{count} weeks",
       "gold_weeks": "Gold weeks",
-      "goal_progress": "Streak goal: {current} of {goal} weeks",
-      "this_week_progress": "This week: {done} of {target} sessions",
-      "this_week_counted": "Gold week is {target} sessions. {remaining} to go.",
+      "goal_progress": "{current} of {goal} weeks",
+      "this_week_progress": "This week: {done} of {target}",
+      "this_week_counted": "This week counts. Anything more is a bonus.",
       "this_week_gold": "Gold week. You hit your full target.",
-      "this_week_none_yet": "Aim for {target} sessions this week.",
+      "this_week_none_yet": "One session makes this week count.",
       "goal_reached_title": "You reached {goal} weeks!",
       "goal_reached_body": "That's a real habit. Fancy aiming for {next_goal}?",
       "goal_reached_cta": "Set {next_goal} weeks",
@@ -627,26 +658,34 @@
       "deleted": "Deleted."
     },
     "refer": {
-      "_note": "AGENTS.md X6. Friend trial is Apple Offer Code FRIEND14 (14 days on annual). Referrer reward is a 30-day Apple renewal extension, or a 1-month RevenueCat promotional entitlement if she has no store subscription. Cap {max_rewards} a year.",
-      "banner_title": "Train better together",
-      "banner_body": "Give a friend {friend_trial_days} days free.",
-      "banner_cta": "Share your link",
+      "_note": "AGENTS.md X6. Final terms depend on what Apple's offer types allow; adjust {friend_trial_days} and reward copy once confirmed.",
+      "banner_title": "Get {extend_days} days free",
+      "banner_body": "Your friend gets {friend_trial_days} days free. When she starts a paid plan, you get {extend_days} days free.",
+      "banner_cta": "Invite a friend",
       "hero_title": "Train with a friend",
       "screen_title": "Refer a friend",
-      "screen_body": "Your friend gets {friend_trial_days} days free instead of 7. When they become a subscriber, you get a month free.",
+      "screen_headline": "Get {extend_days} days free for every successful invite",
+      "screen_body": "You get {extend_days} days free every time a friend starts a paid plan with your invite. She gets {friend_trial_days} days free.",
+      "photo_caption": "Share Ascenda with a friend",
+      "invite_via": "Invite friends",
+      "share_row": "Share invite",
+      "copy_row": "Copy link",
+      "close_a11y": "Close",
+      "info_a11y": "How it works",
+      "terms_footer": "By sharing this link you agree to the terms.",
       "code_label": "Your code",
       "copy": "Copy",
       "copied": "Copied",
       "share": "Share invite",
-      "share_link": "Share your link",
+      "share_link": "Share my link",
       "share_message": "I've been using Ascenda to train at the gym and I think you'd like it. Use my code {code} for {friend_trial_days} days free: {link}",
       "progress_title": "Your invites",
-      "empty_invites": "No invites yet. Share your link when you're ready.",
+      "empty_invites": "No invites yet",
       "how_it_works_title": "How it works",
       "how_it_works": [
-        "Share your link or code with a friend who is new to Ascenda.",
-        "She gets {friend_trial_days} days free instead of 7 when she starts the annual plan.",
-        "When she becomes a paying subscriber, you get a month free, up to {max_rewards} a year."
+        "Share your link with a friend who is new to Ascenda.",
+        "She gets {friend_trial_days} days free.",
+        "When she starts a paid plan, you get {extend_days} days free."
       ],
       "status": {
         "invited": "Invited",
@@ -654,11 +693,11 @@
         "subscribed": "Subscribed",
         "rewarded": "Free month earned"
       },
-      "terms_link": "Terms",
+      "terms_link": "How it works",
       "terms": [
         "Your friend needs to be new to Ascenda.",
-        "You get one free month for each friend who starts a paid subscription, up to {max_rewards} a year.",
-        "If you have a paid Apple subscription, the free month is added to it. If you don't, we unlock a month in the app for you.",
+        "You get {extend_days} days free for each friend who starts a paid plan, up to {max_rewards} a year.",
+        "Free months are added to your existing subscription.",
         "There are no cash rewards."
       ],
       "redeem_title": "{friend_trial_days} days free with your invite",
@@ -669,7 +708,7 @@
       "own_code": "That's your own code.",
       "unknown_code": "We don't recognise that invite code.",
       "already_claimed": "This account already used an invite.",
-      "reward_toast": "Your friend subscribed. You've earned a free month!"
+      "reward_toast": "{friend_name} subscribed. You've earned a free month!"
     },
     "challenges": {
       "join": "Join challenge",
@@ -802,8 +841,10 @@
       "effort_hint_2": "Easy",
       "effort_hint_5": "Steady",
       "effort_hint_8": "Hard",
-      "settings_optional": "Settings you used (optional)",
+      "settings_optional": "Settings you used",
       "speed": "Speed (km/h)",
+      "speed_min": "Min speed (km/h)",
+      "speed_max": "Max speed (km/h)",
       "incline": "Incline (%)",
       "cadence": "Cadence (rpm)",
       "strides": "Strides per minute",
@@ -812,9 +853,9 @@
       "steps": "Steps per minute",
       "resistance": "Resistance",
       "level": "Level",
-      "distance": "Distance (km) (optional)",
-      "calories": "Calories (optional)",
-      "notes": "Notes (optional)",
+      "distance": "Distance (km)",
+      "calories": "Calories",
+      "notes": "Notes",
       "save": "Save",
       "saving": "Saving…",
       "dont_save": "Don't save",
@@ -832,7 +873,9 @@
       "activity_week": "{minutes} min this week",
       "activity_longest": "Longest: {minutes} min",
       "activity_empty": "Finish a cardio session and your minutes will land here.",
-      "activity_effort": "Effort over time",
+      "activity_minutes_week": "Cardio minutes per week",
+      "activity_compare": "Same session, compared",
+      "activity_compare_line": "{name}: {then} then, {now} now",
       "counts_note": "From 10 minutes, this counts towards your week."
     },
     "machines": {
@@ -997,6 +1040,7 @@
       "build_fallback": "Couldn't reach the usual helper, so this uses a session from our library.",
       "build_error": "Something went wrong. Please try again.",
       "build_ai_label": "AI-generated, not medical advice.",
+      "ask_ai": "Ask AI",
       "ask_title": "Ask Ascenda",
       "ask_placeholder": "Ask about your training…",
       "ask_send": "Send",

@@ -35,7 +35,7 @@ export {
 } from './Cards';
 export { DetailLayout } from './DetailLayout';
 export { ExerciseThumb, equipmentIconColour, equipmentIconName } from './ExerciseThumb';
-export { ChipScroller, ListRow, SectionHeader, StickyDayHeader } from './List';
+export { CarouselList, ChipScroller, ListRow, SectionHeader, StickyDayHeader } from './List';
 export { ProgressBar, ProgressRing } from './Progress';
 export { TypeRing } from './TypeRing';
 export { ExerciseNameHit, NoteChip, RestChip, RestTimerBar, SetRow, SetTableHeader } from './Workout';
@@ -57,6 +57,7 @@ export {
   ReferralBanner,
   ShareStatsCard,
   WeekStripCard,
+  WeekTabSwitch,
   WeekTodayEmpty,
   WeekTodaySession,
   WelcomeHero,
@@ -74,6 +75,7 @@ export {
   StyleTile,
 } from './Programmes';
 export {
+  FuelSheetProvider,
   FuelSuggestionCard,
   IngredientRow,
   MealTypeTile,
@@ -88,6 +90,7 @@ export {
   filterLabel,
   openRecipe,
   openRecipeCollection,
+  presentFuelSheet,
   recipeMetaLine,
   recipePrepLine,
   recipeTagLabel,

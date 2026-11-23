@@ -2,9 +2,11 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Image,
   Pressable,
   ScrollView,
@@ -12,6 +14,7 @@ import {
   View,
   type ScrollViewInstance,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { LineChart } from '@/components/LineChart';
@@ -65,9 +68,12 @@ import {
   type WeeklyStreak,
 } from '@/lib/activityStats';
 import {
+  cardioMinutesLastEightWeeks,
   cardioWeekMinutes,
+  cardioWeeksLogged,
   fetchCardioLogs,
   longestCardioMinutes,
+  mostRepeatedCardioCompare,
   type CardioLog,
 } from '@/lib/cardio';
 import { cardioCopy, fillCopy, progressPhotosCopy, routineActionsCopy, streakCopy } from '@/lib/copy';
@@ -151,6 +157,8 @@ const BAR_WIDTH = 20;
 const BAR_GAP = 8;
 const BAR_AREA_HEIGHT = 120;
 const MIN_BAR_SCALE = 4;
+const PB_PREVIEW = 3;
+const PB_ANIM_MS = 250;
 
 const TABS = [
   { id: 'progress', label: 'Progress' },
@@ -198,6 +206,7 @@ function familyIcon(family: AchievementFamily): IconName {
 
 export default function ActivityScreen() {
   const tabBarHeight = useTabBarHeight();
+  const insets = useSafeAreaInsets();
   const { colours, radius, shadow } = useTheme();
   useWeightUnit();
   const { profile } = useProfile();
@@ -415,7 +424,7 @@ export default function ActivityScreen() {
 
   if (loadState !== 'ready' || !data) {
     return (
-      <View style={[styles.centre, { backgroundColor: colours.bg }]}>
+      <View style={[styles.centre, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
         {loadState === 'loading' ? (
           <ActivityIndicator color={colours.brand} />
         ) : (
@@ -491,7 +500,7 @@ export default function ActivityScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.titleRow}>
           <TabAvatar />
           <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>Activity</AppText>
@@ -539,34 +548,7 @@ export default function ActivityScreen() {
 
             <CardioProgressCard logs={data.cardioLogs} />
 
-            <SectionHeader title="Personal bests" />
-            <View style={card}>
-              {bests.length === 0 ? (
-                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                  Finish a weighted session and your bests will land here.
-                </AppText>
-              ) : (
-                bests.map((best, index) => (
-                  <View
-                    key={best.exerciseId}
-                    style={[
-                      styles.goalRow,
-                      index > 0 && { borderTopColor: colours.border, borderTopWidth: StyleSheet.hairlineWidth },
-                    ]}>
-                    <View style={[styles.goalIcon, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
-                      <Ionicons name="trophy-outline" size={18} color={colours.accent} />
-                    </View>
-                    <View style={styles.flex}>
-                      <AppText variant="bodyStrong" style={{ color: colours.ink }}>{best.exerciseName}</AppText>
-                      <AppText variant="bodySm" style={{ color: colours.accent, marginTop: 2 }}>{describeBest(best)}</AppText>
-                    </View>
-                    <AppText variant="caption" style={{ color: colours.inkMuted }}>
-                      {formatShortDate(parseDate(best.date))}
-                    </AppText>
-                  </View>
-                ))
-              )}
-            </View>
+            <PersonalBestsCard bests={bests} />
 
             {weeks.filter((week) => week.count > 0).length >= 2 ? (
               <View style={card}>
@@ -831,18 +813,15 @@ function CardioProgressCard({ logs }: { logs: CardioLog[] }) {
   const weekStart = toIso(startOfWeekMonday(new Date()));
   const weekMinutes = Math.round(cardioWeekMinutes(logs, weekStart));
   const longest = Math.round(longestCardioMinutes(logs));
-  const effortPoints = logs
-    .filter((log) => log.effort != null)
-    .map((log) => ({
-      x: Date.parse(log.createdAt) || parseDate(log.createdAt.slice(0, 10)).getTime(),
-      y: log.effort ?? 0,
-    }))
-    .filter((point) => Number.isFinite(point.x));
+  const showHistory = cardioWeeksLogged(logs) >= 2;
+  const minuteWeeks = showHistory ? cardioMinutesLastEightWeeks(logs) : [];
+  const compare = showHistory ? mostRepeatedCardioCompare(logs) : null;
+  const card = [styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow];
 
   return (
     <>
       <SectionHeader title={cardioCopy.activity_title} />
-      <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+      <View style={card}>
         {logs.length === 0 ? (
           <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
             {cardioCopy.activity_empty}
@@ -855,24 +834,160 @@ function CardioProgressCard({ logs }: { logs: CardioLog[] }) {
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
               {fillCopy(cardioCopy.activity_longest, { minutes: longest })}
             </AppText>
-            {effortPoints.length >= 2 ? (
-              <>
-                <AppText variant="bodyStrong" style={{ color: colours.ink, marginTop: 16 }}>
-                  {cardioCopy.activity_effort}
-                </AppText>
-                <LineChart
-                  points={effortPoints}
-                  formatX={(x) => formatShortDate(new Date(x))}
-                  formatY={(y) => String(Math.round(y))}
-                  height={160}
-                />
-              </>
-            ) : null}
           </>
         )}
       </View>
+      {showHistory ? (
+        <View style={card}>
+          <AppText variant="title2" style={{ color: colours.ink }}>
+            {cardioCopy.activity_minutes_week}
+          </AppText>
+          <WeeklyBars weeks={minuteWeeks} />
+        </View>
+      ) : null}
+      {compare ? (
+        <View style={card}>
+          <AppText variant="title2" style={{ color: colours.ink }}>
+            {cardioCopy.activity_compare}
+          </AppText>
+          <AppText variant="body" style={{ color: colours.ink }}>
+            {fillCopy(cardioCopy.activity_compare_line, {
+              name: compare.name,
+              then: compare.firstLabel,
+              now: compare.latestLabel,
+            })}
+          </AppText>
+        </View>
+      ) : null}
     </>
   );
+}
+
+function PersonalBestsCard({ bests }: { bests: PersonalBest[] }) {
+  const { colours, radius, shadow } = useTheme();
+  const [open, setOpen] = useState(false);
+  const [restHeight, setRestHeight] = useState(0);
+  const extraHeight = useRef(new Animated.Value(0)).current;
+  const spin = useRef(new Animated.Value(0)).current;
+  const expandable = bests.length > PB_PREVIEW;
+  const preview = bests.slice(0, PB_PREVIEW);
+  const rest = bests.slice(PB_PREVIEW);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(extraHeight, {
+        toValue: open ? restHeight : 0,
+        duration: PB_ANIM_MS,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      Animated.timing(spin, {
+        toValue: open ? 1 : 0,
+        duration: PB_ANIM_MS,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [extraHeight, open, restHeight, spin]);
+
+  return (
+    <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+      <Pressable
+        onPress={() => {
+          if (!expandable) return;
+          setOpen((value) => !value);
+        }}
+        disabled={!expandable}
+        accessibilityRole={expandable ? 'button' : 'header'}
+        accessibilityState={expandable ? { expanded: open } : undefined}
+        accessibilityLabel="Personal bests"
+        accessibilityHint={
+          expandable ? (open ? 'Hides the full list' : 'Shows all personal bests') : undefined
+        }
+        style={styles.pbHeader}>
+        <AppText variant="title2" style={{ color: colours.ink, flex: 1 }}>
+          Personal bests
+        </AppText>
+        {expandable ? (
+          <Animated.View
+            style={{
+              transform: [
+                {
+                  rotate: spin.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '180deg'],
+                  }),
+                },
+              ],
+            }}>
+            <Ionicons name="chevron-down" size={20} color={colours.inkMuted} />
+          </Animated.View>
+        ) : null}
+      </Pressable>
+      {bests.length === 0 ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+          Finish a weighted session and your bests will land here.
+        </AppText>
+      ) : (
+        <View style={styles.pbList}>
+          {preview.map((best, index) => (
+            <BestRow key={best.exerciseId} best={best} bordered={index > 0} />
+          ))}
+          {rest.length > 0 ? (
+            <>
+              <View
+                collapsable={false}
+                pointerEvents="none"
+                style={styles.pbMeasure}
+                onLayout={(event) => {
+                  const height = Math.round(event.nativeEvent.layout.height);
+                  if (height > 0 && height !== restHeight) setRestHeight(height);
+                }}>
+                {rest.map((best) => (
+                  <BestRow key={`measure-${best.exerciseId}`} best={best} bordered />
+                ))}
+              </View>
+              <Animated.View style={{ height: extraHeight, overflow: 'hidden' }}>
+                {rest.map((best) => (
+                  <BestRow key={best.exerciseId} best={best} bordered />
+                ))}
+              </Animated.View>
+            </>
+          ) : null}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function BestRow({ best, bordered }: { best: PersonalBest; bordered: boolean }) {
+  const { colours, radius } = useTheme();
+  return (
+    <View
+      style={[
+        styles.goalRow,
+        bordered && { borderTopColor: colours.border, borderTopWidth: StyleSheet.hairlineWidth },
+      ]}>
+      <View style={[styles.goalIcon, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
+        <Ionicons name="trophy-outline" size={18} color={colours.accent} />
+      </View>
+      <View style={styles.flex}>
+        <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+          {best.exerciseName}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.accent, marginTop: 2 }}>
+          {describeBest(best)}
+        </AppText>
+      </View>
+      <AppText variant="caption" style={{ color: colours.inkMuted }}>
+        {formatShortDate(parseDate(best.date))}
+      </AppText>
+    </View>
+  );
+}
+
+function gymDaysInRoadmap(roadmap: RoadmapWeek[]) {
+  return roadmap.flatMap((week) => week.days.filter((day) => day.sessionType !== 'recovery'));
 }
 
 function CurrentRoutineCard({
@@ -884,12 +999,14 @@ function CurrentRoutineCard({
 }) {
   const { colours, radius, shadow } = useTheme();
   const week = enrolment ? currentEnrolmentWeek(enrolment) : 0;
-  const totalDays = enrolment
-    ? Math.max(1, enrolment.routine.length_weeks * enrolment.routine.days_per_week)
-    : 1;
-  const doneDays = roadmap.reduce((count, item) => count + item.days.filter((day) => day.done).length, 0);
-  const currentWeek =
-    roadmap.find((item) => item.current) ?? roadmap.find((item) => item.weekNumber === week) ?? null;
+  const gymDays = gymDaysInRoadmap(roadmap);
+  const gymDone = gymDays.filter((day) => day.done).length;
+  const gymTotal =
+    gymDays.length > 0
+      ? gymDays.length
+      : enrolment
+        ? Math.max(1, enrolment.routine.length_weeks * enrolment.routine.days_per_week)
+        : 1;
 
   function openPlan() {
     if (enrolment) {
@@ -900,56 +1017,39 @@ function CurrentRoutineCard({
   }
 
   return (
-    <View>
-      <Pressable
-        onPress={openPlan}
-        accessibilityRole="button"
-        accessibilityLabel={enrolment ? enrolment.routine.name : 'Start a routine'}
-        style={({ pressed }) => [pressed && styles.pressed]}>
-        <View style={[{ borderRadius: radius.lg }, shadow]}>
-          <View style={[styles.routineCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
-            <View style={[styles.routineMark, { backgroundColor: colours.brand }]}>
-              <Ionicons name="barbell-outline" size={22} color={colours.onBrand} />
-            </View>
-            <View style={[styles.flex, styles.routineBody]}>
-              <View style={styles.routineTitleRow}>
-                <AppText variant="bodyStrong" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
-                  {enrolment ? enrolment.routine.name : 'No routine yet'}
-                </AppText>
-              </View>
-              <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                {enrolment
-                  ? `Week ${week} of ${enrolment.routine.length_weeks}`
-                  : 'Start one from Train'}
-              </AppText>
-              {enrolment ? <ProgressBar progress={doneDays / totalDays} style={{ marginTop: 8 }} /> : null}
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colours.brand} />
+    <Pressable
+      onPress={openPlan}
+      accessibilityRole="button"
+      accessibilityLabel={
+        enrolment
+          ? `${enrolment.routine.name}, ${gymDone} of ${gymTotal} gym days`
+          : 'Start a routine'
+      }
+      style={({ pressed }) => [pressed && styles.pressed]}>
+      <View style={[{ borderRadius: radius.lg }, shadow]}>
+        <View style={[styles.routineCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+          <View style={[styles.routineMark, { backgroundColor: colours.brand }]}>
+            <Ionicons name="barbell-outline" size={22} color={colours.onBrand} />
           </View>
-        </View>
-      </Pressable>
-      {enrolment && currentWeek ? (
-        <View style={[styles.roadmapWeek, { borderTopColor: colours.border }]}>
-          <AppText variant="bodySm" style={{ color: colours.brand }}>
-            This week
-            {currentWeek.checkpoint ? ' · checkpoint' : ''}
-          </AppText>
-          {currentWeek.days.map((day) => (
-            <View key={day.id} style={styles.roadmapDay}>
-              <Ionicons
-                name={day.done ? 'checkmark-circle' : 'ellipse-outline'}
-                size={16}
-                color={day.done ? colours.success : colours.border}
-              />
-              <AppText variant="caption" style={{ color: colours.inkMuted }}>{day.name}</AppText>
+          <View style={[styles.flex, styles.routineBody]}>
+            <View style={styles.routineTitleRow}>
+              <AppText variant="bodyStrong" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
+                {enrolment ? enrolment.routine.name : 'No routine yet'}
+              </AppText>
             </View>
-          ))}
-          <TextButton label="See full plan" onPress={openPlan} style={styles.inlineAction} />
+            <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
+              {enrolment
+                ? `Week ${week} of ${enrolment.routine.length_weeks}`
+                : 'Start one from Train'}
+            </AppText>
+            {enrolment ? (
+              <ProgressBar done={gymDone} total={gymTotal} style={{ marginTop: 8 }} />
+            ) : null}
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colours.brand} />
         </View>
-      ) : enrolment ? (
-        <TextButton label="See full plan" onPress={openPlan} style={styles.inlineAction} />
-      ) : null}
-    </View>
+      </View>
+    </Pressable>
   );
 }
 
@@ -1225,6 +1325,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  pbHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 44,
+  },
+  pbList: {
+    position: 'relative',
+  },
+  pbMeasure: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    opacity: 0,
+    zIndex: -1,
+  },
   goalRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1312,18 +1428,6 @@ const styles = StyleSheet.create({
   badgeCell: {
     width: '30%',
     alignItems: 'center',
-  },
-  roadmapWeek: {
-    gap: 4,
-    paddingTop: 10,
-    marginTop: 4,
-    paddingHorizontal: 4,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  roadmapDay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
   },
   pressed: {
     opacity: 0.8,

@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useFocusEffect, type Href } from 'expo-router';
+import { router, useFocusEffect, useNavigation, type Href } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
+import { PlannerWeekStrip } from '@/components/PlannerWeekStrip';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AppText,
@@ -79,6 +80,19 @@ import {
   syncPlannerReminders,
   type ReminderPrefs,
 } from '@/lib/reminders';
+import {
+  PERIOD_LOG,
+  buildPeriodInsights,
+  canMarkPeriodEnd,
+  canMarkPeriodStart,
+  fetchPeriodLogEnabled,
+  fetchPeriodLogs,
+  localIsoDate,
+  markPeriodEnded,
+  markPeriodStarted,
+  periodDaySet,
+  type PeriodLog,
+} from '@/lib/periodLog';
 
 type LoadState = 'loading' | 'error' | 'ready';
 type SheetMode = 'day' | 'fab' | 'workouts' | 'pick-day' | 'reminder-time' | null;
@@ -86,9 +100,8 @@ type PickDayReason = 'workout' | 'rest';
 type ViewMode = 'agenda' | 'month';
 type AgendaSection = { iso: string; day: PlannerDayView; data: PlannerDayView[] };
 
-const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
-
 export default function PlannerScreen() {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const tabBarHeight = useTabBarHeight();
   const { colours, spacing, radius, shadow } = useTheme();
@@ -113,6 +126,10 @@ export default function PlannerScreen() {
   const [weekStartIso, setWeekStartIso] = useState(() => toIso(startOfWeekMonday(new Date())));
   const [reminderPrefs, setReminderPrefs] = useState<ReminderPrefs | null>(null);
   const [lastSessionTime, setLastSessionTime] = useState<string | null>(null);
+  const [periodEnabled, setPeriodEnabled] = useState(false);
+  const [periodLogs, setPeriodLogs] = useState<PeriodLog[]>([]);
+  const [periodDays, setPeriodDays] = useState<Set<string>>(() => new Set());
+  const [periodInsights, setPeriodInsights] = useState<string[]>([]);
 
   const horizon = useMemo(() => plannerHorizon(), []);
   const todayIso = toIso(new Date());
@@ -129,6 +146,24 @@ export default function PlannerScreen() {
     setLoadState('ready');
     void maybeAskSessionReminders();
     void syncPlannerReminders();
+    const enabled = await fetchPeriodLogEnabled().catch(() => false);
+    setPeriodEnabled(enabled);
+    if (!enabled) {
+      setPeriodLogs([]);
+      setPeriodDays(new Set());
+      setPeriodInsights([]);
+      return;
+    }
+    try {
+      const logs = await fetchPeriodLogs();
+      setPeriodLogs(logs);
+      setPeriodDays(periodDaySet(logs, toIso(horizon.from), toIso(horizon.to), localIsoDate()));
+      setPeriodInsights(await buildPeriodInsights(logs));
+    } catch {
+      setPeriodLogs([]);
+      setPeriodDays(new Set());
+      setPeriodInsights([]);
+    }
   }, [horizon.from, horizon.to]);
 
   useFocusEffect(
@@ -144,6 +179,20 @@ export default function PlannerScreen() {
         isCurrent = false;
       };
     }, [reload, attempt])
+  );
+
+  const lockTabSwipe = useCallback(
+    (locked: boolean) => {
+      navigation.setOptions({ swipeEnabled: !locked });
+    },
+    [navigation]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      navigation.setOptions({ swipeEnabled: true });
+      return () => navigation.setOptions({ swipeEnabled: true });
+    }, [navigation])
   );
 
   const daysByIso = useMemo(() => {
@@ -166,11 +215,6 @@ export default function PlannerScreen() {
     const sunday = toIso(addDays(startOfWeekMonday(new Date()), 6));
     return (range?.days ?? []).filter((day) => day.iso >= monday && day.iso <= sunday);
   }, [range]);
-
-  const stripDays = useMemo(() => {
-    const start = parseIsoDate(weekStartIso);
-    return Array.from({ length: 7 }, (_, index) => daysByIso.get(toIso(addDays(start, index))) ?? null);
-  }, [weekStartIso, daysByIso]);
 
   const canPrevWeek = parseIsoDate(weekStartIso) > startOfWeekMonday(horizon.from);
   const canNextWeek = parseIsoDate(weekStartIso) < startOfWeekMonday(horizon.to);
@@ -461,58 +505,17 @@ export default function PlannerScreen() {
         />
       </View>
 
-      <View style={styles.strip}>
-        <IconButton
-          icon="chevron-back"
-          accessibilityLabel="Previous week"
-          disabled={!canPrevWeek}
-          onPress={() => shiftWeek(-1)}
-        />
-        {stripDays.map((day, index) => {
-          const letter = WEEKDAY_LETTERS[index];
-          const planned = day ? isPlannedSessionKind(day.kind) : false;
-          const selected = day?.iso === (selectedDay?.iso ?? todayIso);
-          return (
-            <Pressable
-              key={letter + String(index)}
-              onPress={() => day && handleStripDay(day)}
-              disabled={!day}
-              style={styles.stripDay}
-              accessibilityRole="button"
-              accessibilityLabel={day ? `${day.weekday} ${day.dayNumber}` : letter}>
-              <AppText variant="caption" style={{ color: colours.inkMuted }}>{letter}</AppText>
-              <View
-                style={[
-                  styles.stripCircle,
-                  { borderRadius: radius.full },
-                  day?.isToday && { backgroundColor: colours.ink },
-                  selected && !day?.isToday && { borderWidth: 1.5, borderColor: colours.brand },
-                ]}>
-                <AppText
-                  variant="bodySm"
-                  style={[
-                    { color: day?.isToday ? colours.onBrand : colours.ink },
-                    day?.isPast && !day.isToday && { color: colours.inkMuted },
-                  ]}>
-                  {day?.dayNumber ?? ''}
-                </AppText>
-              </View>
-              <View
-                style={[
-                  styles.stripDot,
-                  { backgroundColor: planned ? colours.accent : 'transparent' },
-                ]}
-              />
-            </Pressable>
-          );
-        })}
-        <IconButton
-          icon="chevron-forward"
-          accessibilityLabel="Next week"
-          disabled={!canNextWeek}
-          onPress={() => shiftWeek(1)}
-        />
-      </View>
+      <PlannerWeekStrip
+        weekStartIso={weekStartIso}
+        daysByIso={daysByIso}
+        periodIsos={periodDays}
+        canPrev={canPrevWeek}
+        canNext={canNextWeek}
+        selectedIso={selectedDay?.iso ?? todayIso}
+        onShiftWeek={shiftWeek}
+        onPressDay={handleStripDay}
+        onLockTabSwipe={lockTabSwipe}
+      />
 
       {movingDay ? (
         <View
@@ -527,6 +530,29 @@ export default function PlannerScreen() {
         </View>
       ) : (
         <>
+          {periodInsights.length > 0 ? (
+            <View
+              style={{
+                marginHorizontal: 20,
+                marginBottom: 12,
+                backgroundColor: colours.surface,
+                borderRadius: radius.lg,
+                padding: 14,
+                gap: 8,
+              }}>
+              <AppText variant="eyebrow" style={{ color: colours.inkMuted }}>
+                {PERIOD_LOG.insightsTitle}
+              </AppText>
+              {periodInsights.map((note) => (
+                <AppText key={note} variant="bodySm" style={{ color: colours.ink }}>
+                  {note}
+                </AppText>
+              ))}
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>
+                {PERIOD_LOG.insightsHelper}
+              </AppText>
+            </View>
+          ) : null}
           {weekPlanned.length > 0 ? (
             <AppText variant="caption" style={{ color: colours.inkMuted, paddingHorizontal: 20, paddingBottom: 8 }}>
               This week: {weekDone} of {weekPlanned.length} {weekPlanned.length === 1 ? 'workout' : 'workouts'}
@@ -553,6 +579,7 @@ export default function PlannerScreen() {
           renderSectionHeader={({ section }) => (
             <DaySectionHeader
               day={section.day}
+              privateDot={periodDays.has(section.day.iso)}
               onAdd={
                 section.day.kind === 'empty'
                   ? (from) => openDay(section.day, from)
@@ -624,6 +651,7 @@ export default function PlannerScreen() {
               year={month.year}
               month={month.month}
               daysByIso={daysByIso}
+              periodIsos={periodDays}
               selectedIso={selectedDay?.iso ?? todayIso}
               movingId={movingId}
               onPressDay={(iso, from) => {
@@ -704,6 +732,22 @@ export default function PlannerScreen() {
             {selectedDay.plan && selectedDay.plan.status === 'planned' && (
               <MenuRow label="Remove from this day" danger onPress={handleClear} />
             )}
+            {periodEnabled && canMarkPeriodStart(selectedDay.iso, periodLogs) ? (
+              <MenuRow
+                label={PERIOD_LOG.started}
+                onPress={() =>
+                  void runAction(() => markPeriodStarted(selectedDay.iso), PERIOD_LOG.started)
+                }
+              />
+            ) : null}
+            {periodEnabled && canMarkPeriodEnd(selectedDay.iso, periodLogs) ? (
+              <MenuRow
+                label={PERIOD_LOG.ended}
+                onPress={() =>
+                  void runAction(() => markPeriodEnded(selectedDay.iso), PERIOD_LOG.ended)
+                }
+              />
+            ) : null}
           </>
         ) : null}
 
@@ -789,9 +833,11 @@ export default function PlannerScreen() {
 
 function DaySectionHeader({
   day,
+  privateDot = false,
   onAdd,
 }: {
   day: PlannerDayView;
+  privateDot?: boolean;
   onAdd?: (from: AnchorHandle | null) => void;
 }) {
   const headerRef = useRef<AnchorHandle>(null);
@@ -800,6 +846,7 @@ function DaySectionHeader({
       <StickyDayHeader
         title={formatStickyDayHeading(day)}
         today={day.isToday}
+        privateDot={privateDot}
         onAdd={onAdd ? () => onAdd(headerRef.current) : undefined}
       />
     </View>
@@ -923,6 +970,7 @@ function MonthBlock({
   year,
   month,
   daysByIso,
+  periodIsos,
   selectedIso,
   movingId,
   onPressDay,
@@ -931,6 +979,7 @@ function MonthBlock({
   year: number;
   month: number;
   daysByIso: Map<string, PlannerDayView>;
+  periodIsos: Set<string>;
   selectedIso: string;
   movingId: string | null;
   onPressDay: (iso: string, from: AnchorHandle | null) => void;
@@ -966,6 +1015,7 @@ function MonthBlock({
               isToday={isToday}
               isSelected={isSelected}
               hasWorkout={hasWorkout}
+              isPeriodDay={periodIsos.has(iso)}
               isMoving={isMoving}
               onPressDay={onPressDay}
             />
@@ -982,6 +1032,7 @@ function MonthCell({
   isToday,
   isSelected,
   hasWorkout,
+  isPeriodDay,
   isMoving,
   onPressDay,
 }: {
@@ -990,6 +1041,7 @@ function MonthCell({
   isToday: boolean;
   isSelected: boolean;
   hasWorkout: boolean;
+  isPeriodDay: boolean;
   isMoving: boolean;
   onPressDay: (iso: string, from: AnchorHandle | null) => void;
 }) {
@@ -1002,7 +1054,7 @@ function MonthCell({
       onPress={() => onPressDay(iso, cellRef.current)}
       style={styles.monthCell}
       accessibilityRole="button"
-      accessibilityLabel={`${day?.weekday ?? ''} ${day?.dayNumber ?? ''}${hasWorkout ? ', session planned' : ''}`}>
+      accessibilityLabel={`${day?.weekday ?? ''} ${day?.dayNumber ?? ''}${hasWorkout ? ', session planned' : ''}${isPeriodDay ? `, ${PERIOD_LOG.dotAccessibility}` : ''}`}>
       <View
         style={[
           styles.dateBubble,
@@ -1021,9 +1073,14 @@ function MonthCell({
           {day?.dayNumber ?? Number(iso.slice(8))}
         </AppText>
       </View>
-      <View
-        style={[styles.dot, { backgroundColor: hasWorkout ? colours.accent : 'transparent' }]}
-      />
+      <View style={{ flexDirection: 'row', gap: 3, height: 5, marginTop: 4 }}>
+        <View
+          style={[styles.dot, { marginTop: 0, backgroundColor: hasWorkout ? colours.accent : 'transparent' }]}
+        />
+        {isPeriodDay ? (
+          <View style={[styles.dot, { marginTop: 0, backgroundColor: colours.brand }]} />
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -1046,29 +1103,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 8,
     gap: 12,
-  },
-  strip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingBottom: 8,
-  },
-  stripDay: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-  },
-  stripCircle: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stripDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
   },
   agenda: {
     flex: 1,

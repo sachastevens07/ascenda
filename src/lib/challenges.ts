@@ -1,9 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { fetchFinishedSessionMeta, sessionDurationSeconds, type FinishedSessionMeta } from '@/lib/activityStats';
+import { isFeatureEnabled } from '@/config/features';
 import {
   contentChallenge,
   contentChallenges,
+  isStretchBuiltChallenge,
   type ChallengeMission,
   type ChallengeRequirement,
   type ContentChallenge,
@@ -575,7 +577,10 @@ export async function fetchChallenges(input?: {
   const sessions = hintsFromMeta(loadedSessions, dayIds);
   const sets = loadedSets;
   const daysPerWeek = input?.daysPerWeek ?? 3;
-  const list = contentChallenges().map((catalogue) => {
+  const catalogueList = isFeatureEnabled('stretches')
+    ? contentChallenges()
+    : contentChallenges().filter((item) => !isStretchBuiltChallenge(item));
+  const list = catalogueList.map((catalogue) => {
     const join = joinFor(catalogue.slug, user?.id ?? null, remote, local);
     const progress = evaluateChallengeProgress({
       catalogue,

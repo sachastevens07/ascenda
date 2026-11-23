@@ -4,6 +4,7 @@
  */
 import file from '../../content/single-sessions/single-sessions.json';
 
+import { isFeatureEnabled } from '@/config/features';
 import { resolveExerciseSlug } from '@/lib/contentGuides';
 import { fetchExercisesForBuilder } from '@/lib/customWorkouts';
 import {
@@ -161,7 +162,8 @@ const SESSIONS = asArray(asRecord(file).single_sessions)
   .filter((item): item is SingleSession => Boolean(item));
 
 export function listSingleSessions(): SingleSession[] {
-  return SESSIONS;
+  if (isFeatureEnabled('stretches')) return SESSIONS;
+  return SESSIONS.filter((item) => item.type !== 'stretch');
 }
 
 export function singleSessionBySlug(slug: string): SingleSession | null {
@@ -170,7 +172,7 @@ export function singleSessionBySlug(slug: string): SingleSession | null {
 
 /** Gym singles for the Programmes carousel. Home-only sessions stay in the backup style. */
 export function featuredSingleSessions(): SingleSession[] {
-  return SESSIONS.filter((item) => item.where !== 'home');
+  return listSingleSessions().filter((item) => item.where !== 'home');
 }
 
 function matchExercise(list: SlotExercise[], slug: string): SlotExercise | null {

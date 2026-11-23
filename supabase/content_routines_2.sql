@@ -1,4 +1,21 @@
 -- Part 2 of 3. Run after content_routines_1.sql.
+-- Clears slots first so a retry of this file does not hit routine_day_exercises_day_position_idx.
+delete from public.routine_day_exercises
+where routine_day_id in (
+  select rd.id
+  from public.routine_days rd
+  join public.routine_weeks rw on rw.id = rd.routine_week_id
+  where rw.routine_id in (
+    '30-day-glute-challenge', 'busy-gym-no-problem', 'glutes-and-legs-in-8-weeks',
+    'higher-ground', 'machines-made-easy', 'quick-ascent', 'strength-and-stamina',
+    'strong-and-fit-in-8-weeks', 'strong-for-life', 'strong-foundations-6-weeks',
+    'summit', 'the-climb-in-8-weeks', 'the-four-day-foundation', 'the-two-day-start',
+    'twice-a-week-strong', 'upper-body-strong-in-6-weeks', 'welcome-back-4-week-restart',
+    'stretch-morning', 'stretch-post-leg', 'stretch-desk', 'stretch-hips',
+    'stretch-lower-back', 'stretch-upper', 'stretch-full-body', 'wind-down'
+  )
+);
+
 insert into public.routine_day_exercises (
   routine_day_id, position, exercise_id, sets, rep_min, rep_max, rest_seconds,
   duration_seconds, role, target_rir, tempo, progression_rule, load_increment_kg,

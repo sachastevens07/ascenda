@@ -3,7 +3,6 @@ import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-ro
 import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   StyleSheet,
   View,
@@ -36,9 +35,9 @@ import {
   describeCustomWorkoutError,
   duplicateRoutineDay,
 } from '@/lib/customWorkouts';
+import { ExerciseThumb } from '@/components/ui/ExerciseThumb';
 import { EQUIPMENT_LABELS, MUSCLE_LABELS, type Equipment } from '@/lib/exercises';
 import { ROLE_LABELS, formatRir } from '@/lib/routineStandard';
-import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { coverForRoutine } from '@/lib/images';
 import {
   fetchHandOffPreview,
@@ -49,6 +48,7 @@ import {
 } from '@/lib/handOff';
 import { contentRoutine, contentWeeklyStructure, routineCardDays } from '@/lib/contentRoutines';
 import { WEEKDAY_LONG } from '@/lib/onboardingAnswers';
+import { isLifeStageActive, strongBonesNote } from '@/lib/lifeStage';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatSetsAndReps } from '@/lib/programmes';
 import {
@@ -78,7 +78,8 @@ import {
   type RoutineWeek,
 } from '@/lib/routines';
 import { fetchLastFinishedRoutineSession } from '@/lib/sessions';
-import { fillCopy, routineActionsCopy } from '@/lib/copy';
+import { isFeatureEnabled } from '@/config/features';
+import { fillCopy, routineActionsCopy, withoutStretchPromises } from '@/lib/copy';
 import { ensureSubscribed } from '@/lib/paywall';
 import { openRoutineLogger } from '@/lib/startLogger';
 
@@ -162,13 +163,16 @@ function WeekHeaderBody({
 
 function DayThumb({ day }: { day: RoutineDay }) {
   const { colours, radius } = useTheme();
-  const photo = day.exercises[0] ? getExerciseImageSource(day.exercises[0].exercise) : null;
+  const lead =
+    day.exercises.find((item) => item.role === 'main')?.exercise ?? day.exercises[0]?.exercise ?? null;
   return (
     <View style={[styles.thumb, { backgroundColor: colours.surfaceMuted, borderRadius: radius.md }]}>
-      {photo ? (
-        <Image source={photo} style={styles.photoFill} resizeMode="cover" />
+      {lead ? (
+        <ExerciseThumb exercise={lead} size={56} />
       ) : (
-        <AppText variant="title3" style={{ color: colours.brand }}>{day.name.slice(0, 1)}</AppText>
+        <AppText variant="title3" style={{ color: colours.brand }}>
+          {day.name.slice(0, 1)}
+        </AppText>
       )}
     </View>
   );
@@ -209,6 +213,10 @@ export default function RoutineDetailScreen() {
         .then(async ([next, active]) => {
           if (!isCurrent) return;
           if (next?.type === 'stretch') {
+            if (!isFeatureEnabled('stretches')) {
+              router.replace('/(tabs)' as Href);
+              return;
+            }
             router.replace({ pathname: '/stretches/[id]', params: { id: next.id } } as Href);
             return;
           }
@@ -422,7 +430,9 @@ export default function RoutineDetailScreen() {
   const weekShape = overlay
     ? contentWeeklyStructure(overlay, profile?.cardio_preference)
     : routine.weeklyStructure;
-  const scheduleLabel = overlay?.schedule_label;
+  const scheduleLabel = overlay?.schedule_label
+    ? withoutStretchPromises(overlay.schedule_label)
+    : overlay?.schedule_label;
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
@@ -501,6 +511,16 @@ export default function RoutineDetailScreen() {
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
               {scheduleLabel}
             </AppText>
+          ) : null}
+          {isLifeStageActive(profile?.life_stage) && strongBonesNote() ? (
+            <View style={{ marginTop: spacing.lg, gap: 8 }}>
+              <AppText variant="title3" style={{ color: colours.ink }}>
+                {strongBonesNote()?.title}
+              </AppText>
+              <AppText variant="body" style={{ color: colours.ink }}>
+                {strongBonesNote()?.body}
+              </AppText>
+            </View>
           ) : null}
           {overlay?.weekly_plan?.default_week.length ? (
             <View style={{ marginTop: spacing.sm, gap: 4 }}>
@@ -657,7 +677,7 @@ export default function RoutineDetailScreen() {
                                       </AppText>
                                       <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                                         {day.focus ? `${day.focus} · ` : `Day ${day.day_number} · `}
-                                        {routine.session_minutes} min
+                                        {day.estimated_minutes ?? routine.session_minutes} min
                                       </AppText>
                                     </View>
                                     {done ? (
@@ -866,10 +886,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  photoFill: {
-    width: '100%',
-    height: '100%',
   },
   flex: {
     flex: 1,

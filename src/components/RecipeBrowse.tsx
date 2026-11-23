@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Chip, ChipScroller, EmptyState, RecipeListRow, filterLabel, openRecipe } from '@/components/ui';
@@ -20,7 +20,7 @@ export function RecipeBrowse({
   showSearch?: boolean;
 }) {
   const { colours, radius, type } = useTheme();
-  const { isFavourite, toggle } = useFoodFavourites();
+  const { slugs, isFavourite, toggle } = useFoodFavourites();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<RecipeFilter[]>([]);
   const chips = useMemo(() => availableFilters(recipes), [recipes]);
@@ -80,18 +80,25 @@ export function RecipeBrowse({
           body={searching ? foodCopy.empty_search_body : emptyBody}
         />
       ) : (
-        <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled">
-          {shown.map((recipe) => (
+        <FlatList
+          data={shown}
+          keyExtractor={(recipe) => recipe.slug}
+          extraData={slugs}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={7}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.list}
+          renderItem={({ item: recipe }) => (
             <RecipeListRow
-              key={recipe.slug}
               recipe={recipe}
               mealTypeName={mealTypeName(recipe.mealType)}
               saved={isFavourite(recipe.slug)}
               onToggleFavourite={() => void toggle(recipe.slug)}
               onPress={() => openRecipe(recipe.slug)}
             />
-          ))}
-        </ScrollView>
+          )}
+        />
       )}
     </View>
   );

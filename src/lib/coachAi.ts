@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/config/features';
 import { track, trackAi } from '@/lib/analytics';
 import {
   COACH_FEATURE,
@@ -61,13 +62,14 @@ export async function requestCoachAnswer(input: {
   } = await supabase.auth.getSession();
   const { data, error, response } = await supabase.functions.invoke('coach', {
     body: {
-      // Never include life_stage. Special-category health data stays on-device/DB only.
+      // Never include life_stage or period dates. Special-category health data stays on-device/DB only.
       message: input.message,
       context: input.context,
       conversation_id: input.conversationId,
       new_chat: input.newChat,
       history: input.history.slice(-COACH_HISTORY_LIMIT),
       session_today: input.sessionToday ?? [],
+      stretches_enabled: isFeatureEnabled('stretches'),
       ...aiLimitBypassPayload(),
     },
     headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,

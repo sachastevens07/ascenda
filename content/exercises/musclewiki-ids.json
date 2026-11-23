@@ -1,0 +1,228 @@
+{
+  "_format_version": 1,
+  "_loader_notes": [
+    "MuscleWiki female-model ids from supabase/musclewiki_ids.sql (reviewed). Never put the API key here. Store ids, never media URLs or tokens."
+  ],
+  "matches": [
+    {
+      "slug": "band-chest-press",
+      "musclewiki_id": 502
+    },
+    {
+      "slug": "band-pallof-press",
+      "musclewiki_id": 268
+    },
+    {
+      "slug": "band-row",
+      "musclewiki_id": 276
+    },
+    {
+      "slug": "barbell-bench-press",
+      "musclewiki_id": 4
+    },
+    {
+      "slug": "barbell-deadlift",
+      "musclewiki_id": 39
+    },
+    {
+      "slug": "barbell-glute-bridge",
+      "musclewiki_id": 334
+    },
+    {
+      "slug": "barbell-hip-thrust",
+      "musclewiki_id": 30
+    },
+    {
+      "slug": "barbell-overhead-press",
+      "musclewiki_id": 303
+    },
+    {
+      "slug": "barbell-romanian-deadlift",
+      "musclewiki_id": 313
+    },
+    {
+      "slug": "barbell-sumo-deadlift",
+      "musclewiki_id": 305
+    },
+    {
+      "slug": "bench-dip",
+      "musclewiki_id": 18
+    },
+    {
+      "slug": "bird-dog",
+      "musclewiki_id": 867
+    },
+    {
+      "slug": "bodyweight-reverse-lunge",
+      "musclewiki_id": 373
+    },
+    {
+      "slug": "bodyweight-squat",
+      "musclewiki_id": 192
+    },
+    {
+      "slug": "bulgarian-split-squat",
+      "musclewiki_id": 42
+    },
+    {
+      "slug": "cable-hammer-curl",
+      "musclewiki_id": 1032
+    },
+    {
+      "slug": "cable-hip-abduction",
+      "musclewiki_id": 223
+    },
+    {
+      "slug": "cable-hip-adduction",
+      "musclewiki_id": 1008
+    },
+    {
+      "slug": "cable-pallof-press",
+      "musclewiki_id": 250
+    },
+    {
+      "slug": "dead-bug",
+      "musclewiki_id": 869
+    },
+    {
+      "slug": "dumbbell-bench-press",
+      "musclewiki_id": 377
+    },
+    {
+      "slug": "dumbbell-calf-raise",
+      "musclewiki_id": 294
+    },
+    {
+      "slug": "dumbbell-floor-press",
+      "musclewiki_id": 1181
+    },
+    {
+      "slug": "dumbbell-front-raise",
+      "musclewiki_id": 46
+    },
+    {
+      "slug": "dumbbell-hammer-curl",
+      "musclewiki_id": 3
+    },
+    {
+      "slug": "dumbbell-hip-thrust",
+      "musclewiki_id": 286
+    },
+    {
+      "slug": "dumbbell-lateral-raise",
+      "musclewiki_id": 20
+    },
+    {
+      "slug": "dumbbell-pullover",
+      "musclewiki_id": 413
+    },
+    {
+      "slug": "dumbbell-reverse-lunge",
+      "musclewiki_id": 414
+    },
+    {
+      "slug": "dumbbell-romanian-deadlift",
+      "musclewiki_id": 291
+    },
+    {
+      "slug": "dumbbell-shrug",
+      "musclewiki_id": 290
+    },
+    {
+      "slug": "dumbbell-sumo-squat",
+      "musclewiki_id": 467
+    },
+    {
+      "slug": "glute-bridge",
+      "musclewiki_id": 29
+    },
+    {
+      "slug": "glute-kickback-machine",
+      "musclewiki_id": 1687
+    },
+    {
+      "slug": "hanging-knee-raise",
+      "musclewiki_id": 206
+    },
+    {
+      "slug": "hip-abduction-machine",
+      "musclewiki_id": 1505
+    },
+    {
+      "slug": "hip-adduction-machine",
+      "musclewiki_id": 1504
+    },
+    {
+      "slug": "hip-thrust-machine",
+      "musclewiki_id": 1498
+    },
+    {
+      "slug": "incline-barbell-bench-press",
+      "musclewiki_id": 55
+    },
+    {
+      "slug": "incline-dumbbell-curl",
+      "musclewiki_id": 1530
+    },
+    {
+      "slug": "inverted-row",
+      "musclewiki_id": 183
+    },
+    {
+      "slug": "jump-squat",
+      "musclewiki_id": 191
+    },
+    {
+      "slug": "kettlebell-floor-press",
+      "musclewiki_id": 1175
+    },
+    {
+      "slug": "kettlebell-goblet-squat",
+      "musclewiki_id": 100
+    },
+    {
+      "slug": "kettlebell-reverse-lunge",
+      "musclewiki_id": 918
+    },
+    {
+      "slug": "kettlebell-romanian-deadlift",
+      "musclewiki_id": 919
+    },
+    {
+      "slug": "kettlebell-row",
+      "musclewiki_id": 920
+    },
+    {
+      "slug": "kettlebell-sumo-deadlift",
+      "musclewiki_id": 931
+    },
+    {
+      "slug": "kettlebell-swing",
+      "musclewiki_id": 79
+    },
+    {
+      "slug": "machine-chest-press",
+      "musclewiki_id": 1513
+    },
+    {
+      "slug": "mountain-climber",
+      "musclewiki_id": 474
+    },
+    {
+      "slug": "reverse-crunch",
+      "musclewiki_id": 882
+    },
+    {
+      "slug": "seated-leg-curl",
+      "musclewiki_id": 828
+    },
+    {
+      "slug": "superman",
+      "musclewiki_id": 195
+    },
+    {
+      "slug": "wall-sit",
+      "musclewiki_id": 1596
+    }
+  ]
+}
