@@ -308,7 +308,21 @@
       "seated-cable-row"
     ],
     "turkish-get-up": [],
-    "wall-sit": []
+    "wall-sit": [],
+    "crunch": [
+      "reverse-crunch",
+      "cable-crunch"
+    ],
+    "bicycle-crunch": [
+      "crunch",
+      "russian-twist"
+    ],
+    "russian-twist": [
+      "bicycle-crunch",
+      "pallof-press"
+    ],
+    "ab-wheel-rollout": [],
+    "cable-upright-row": []
   },
   "fixes": {
     "dumbbell-shrug": {
@@ -316,6 +330,7 @@
     }
   },
   "advanced": [
+    "ab-wheel-rollout",
     "chest-dip",
     "chin-up",
     "copenhagen-plank",
@@ -328,9 +343,7 @@
     "renegade-row",
     "turkish-get-up"
   ],
-  "wrong_demo": [
-    "wall-sit"
-  ],
+  "wrong_demo": [],
   "no_demo_hidden": [
     "assisted-dip",
     "band-row",

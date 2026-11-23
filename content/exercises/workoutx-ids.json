@@ -40,6 +40,12 @@
       "confidence": "high"
     },
     {
+      "slug": "ab-wheel-rollout",
+      "workoutx_id": "ex_AR3UIX",
+      "workoutx_name": "Ab Wheel Halfway Out",
+      "confidence": "high"
+    },
+    {
       "slug": "arnold-press",
       "workoutx_id": "ex_BORKNT",
       "workoutx_name": "Dumbbell Alternating Arnold Press",
@@ -226,6 +232,12 @@
       "confidence": "high"
     },
     {
+      "slug": "bicycle-crunch",
+      "workoutx_id": "ex_SXLWAV",
+      "workoutx_name": "Bicycles Crunches",
+      "confidence": "high"
+    },
+    {
       "slug": "bird-dog",
       "workoutx_id": "ex_5DV46E",
       "workoutx_name": "Bird Dog",
@@ -352,6 +364,12 @@
       "confidence": "high"
     },
     {
+      "slug": "cable-upright-row",
+      "workoutx_id": "ex_FJTCB4",
+      "workoutx_name": "Cable Upright Row With Straight Bar",
+      "confidence": "high"
+    },
+    {
       "slug": "calf-raise-machine",
       "workoutx_id": "ex_H3VK5N",
       "workoutx_name": "Bodyweight Standing Calf Raise",
@@ -421,6 +439,12 @@
       "slug": "cross-body-shoulder-stretch",
       "workoutx_id": "ex_GUHHB2",
       "workoutx_name": "Cross Body Shoulder Stretch",
+      "confidence": "high"
+    },
+    {
+      "slug": "crunch",
+      "workoutx_id": "ex_4YKHMA",
+      "workoutx_name": "Abdominal Crunches",
       "confidence": "high"
     },
     {
@@ -991,6 +1015,12 @@
       "slug": "reverse-pec-deck",
       "workoutx_id": "ex_HPQDH6",
       "workoutx_name": "Reverse Machine Fly",
+      "confidence": "high"
+    },
+    {
+      "slug": "russian-twist",
+      "workoutx_id": "ex_FMODK4",
+      "workoutx_name": "Russian Twist",
       "confidence": "high"
     },
     {

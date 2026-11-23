@@ -1,0 +1,10 @@
+-- 23 Nov 2026: five common exercises with WorkoutX demos (found by scripts/wx-lookup.mjs --new).
+-- Adds new library rows only. Changes no existing data. Safe to run twice.
+insert into public.exercises (id, name, primary_muscle, secondary_muscles, equipment, cues, location_hint, weight_increase_kg, workoutx_id) values
+('crunch', 'Crunch', 'core', '{}'::text[], 'bodyweight', array['Lie on your back with your knees bent and feet flat', 'Breathe out and curl your shoulders off the floor', 'Lower slowly without letting your head drop'], 'Any mat in the stretching area or a quiet corner.', null, 'ex_4YKHMA'),
+('bicycle-crunch', 'Bicycle crunch', 'core', '{}'::text[], 'bodyweight', array['Lift your shoulders and both feet off the floor', 'Bring one elbow towards the opposite knee as the other leg straightens', 'Switch sides slowly and keep your lower back down'], 'Any mat in the stretching area or a quiet corner.', null, 'ex_SXLWAV'),
+('russian-twist', 'Russian twist', 'core', '{}'::text[], 'bodyweight', array['Sit tall and lean back slightly with your knees bent', 'Turn your chest and hands to one side, then the other', 'Keep your back long and move slowly'], 'Any mat in the stretching area or a quiet corner.', null, 'ex_FMODK4'),
+('ab-wheel-rollout', 'Ab wheel rollout', 'core', array['shoulders']::text[], 'bodyweight', array['Kneel on a mat and hold the wheel under your shoulders', 'Roll forward slowly, only as far as you can keep your back flat', 'Squeeze your stomach to pull the wheel back'], 'Ab wheels are usually kept with the mats or in the stretching area.', null, 'ex_AR3UIX'),
+('cable-upright-row', 'Cable upright row', 'shoulders', array['back']::text[], 'cable', array['Hold the bar with hands about shoulder-width apart', 'Pull the bar up to chest height, leading with your elbows', 'Lower slowly and keep your shoulders down'], 'Any cable machine with the pulley set at the bottom and a straight bar attached.', 2.5, 'ex_FJTCB4')
+on conflict (id) do nothing;
+update public.exercises set workoutx_id = 'ex_SS42OF' where id = 'wall-sit';

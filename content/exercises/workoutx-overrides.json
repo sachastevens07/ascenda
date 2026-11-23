@@ -483,6 +483,24 @@
     },
     "t-bar-row": {
       "workoutx_id": "ex_6BRSFE"
+    },
+    "crunch": {
+      "workoutx_id": "ex_4YKHMA"
+    },
+    "bicycle-crunch": {
+      "workoutx_id": "ex_SXLWAV"
+    },
+    "russian-twist": {
+      "workoutx_id": "ex_FMODK4"
+    },
+    "ab-wheel-rollout": {
+      "workoutx_id": "ex_AR3UIX"
+    },
+    "cable-upright-row": {
+      "workoutx_id": "ex_FJTCB4"
+    },
+    "wall-sit": {
+      "workoutx_id": "ex_SS42OF"
     }
   },
   "reject": {

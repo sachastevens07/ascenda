@@ -306,6 +306,125 @@
         ],
         "tip": "No space to walk? Hold the dumbbell and march slowly on the spot."
       }
+    },
+    {
+      "slug": "crunch",
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Lie on your back with your knees bent and your feet flat on the floor.",
+        "Rest your fingertips lightly by your ears, or cross your arms over your chest."
+      ],
+      "form_cues": [
+        "Breathe out and curl your head and shoulders off the floor.",
+        "Think about bringing your ribs towards your hips.",
+        "Lower slowly back down."
+      ],
+      "where_you_should_feel_it": "The front of your stomach.",
+      "common_mistakes": [
+        "Pulling on your head. Keep your hands light.",
+        "Swinging up fast. Keep it slow and controlled."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "reverse-crunch"
+        ],
+        "tip": "You only need a bit of floor space."
+      }
+    },
+    {
+      "slug": "bicycle-crunch",
+      "primary_muscles": [
+        "abs",
+        "obliques"
+      ],
+      "secondary_muscles": [
+        "hip flexors"
+      ],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Lie on your back with your fingertips lightly by your ears.",
+        "Lift your shoulders and both feet off the floor, knees bent."
+      ],
+      "form_cues": [
+        "Turn one elbow towards the opposite knee as the other leg straightens.",
+        "Switch sides in a slow, steady rhythm.",
+        "Keep your lower back pressed into the mat."
+      ],
+      "where_you_should_feel_it": "The front and sides of your stomach.",
+      "common_mistakes": [
+        "Going too fast. Slow reps work harder.",
+        "Pulling on your neck. Keep your hands light."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "crunch",
+          "russian-twist"
+        ],
+        "tip": "You only need a bit of floor space."
+      }
+    },
+    {
+      "slug": "russian-twist",
+      "primary_muscles": [
+        "obliques"
+      ],
+      "secondary_muscles": [
+        "abs"
+      ],
+      "where_to_find": "Any mat in the stretching area or a quiet corner.",
+      "setup": [
+        "Sit on the floor with your knees bent and your heels on the floor.",
+        "Lean back slightly with a long, straight back and your hands together in front of you."
+      ],
+      "form_cues": [
+        "Turn your chest and hands to one side, then the other.",
+        "Move from your middle, not just your arms.",
+        "Lift your feet off the floor only once it feels easy."
+      ],
+      "where_you_should_feel_it": "The sides of your stomach.",
+      "common_mistakes": [
+        "Rounding your back. Sit tall and lean back less.",
+        "Twisting fast. Slow and controlled works best."
+      ],
+      "if_its_taken": {
+        "swaps": [
+          "bicycle-crunch"
+        ],
+        "tip": "You only need a bit of floor space. Hold a light dumbbell once it feels easy."
+      }
+    },
+    {
+      "slug": "ab-wheel-rollout",
+      "primary_muscles": [
+        "abs"
+      ],
+      "secondary_muscles": [
+        "shoulders",
+        "lats"
+      ],
+      "where_to_find": "Ab wheels are usually kept with the mats or in the stretching area.",
+      "setup": [
+        "Kneel on a mat and hold the wheel handles with the wheel under your shoulders.",
+        "Tuck your hips slightly so your back is flat."
+      ],
+      "form_cues": [
+        "Roll forward slowly, only as far as you can keep your back flat.",
+        "Keep your stomach tight the whole time.",
+        "Pull the wheel back by squeezing your stomach."
+      ],
+      "where_you_should_feel_it": "The front of your stomach.",
+      "common_mistakes": [
+        "Rolling too far and letting your lower back sag. Start with short rollouts.",
+        "Bending at the hips on the way back. Keep your body in one line."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Try forearm plank today, or wait for the wheel."
+      }
     }
   ]
 }

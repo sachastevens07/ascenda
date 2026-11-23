@@ -960,6 +960,34 @@
         ],
         "tip": "Dumbbells are rarely all taken. If your pair is in use, grab the next weight up or down and adjust your reps."
       }
+    },
+    {
+      "slug": "cable-upright-row",
+      "primary_muscles": [
+        "shoulders"
+      ],
+      "secondary_muscles": [
+        "upper back"
+      ],
+      "where_to_find": "Any cable machine with the pulley set at the bottom and a straight bar attached.",
+      "setup": [
+        "Set the pulley at the bottom and clip on a straight bar.",
+        "Stand close to the machine and hold the bar with your hands about shoulder-width apart."
+      ],
+      "form_cues": [
+        "Pull the bar up to chest height, leading with your elbows.",
+        "Keep the bar close to your body.",
+        "Lower it slowly."
+      ],
+      "where_you_should_feel_it": "The tops and sides of your shoulders.",
+      "common_mistakes": [
+        "Pulling higher than chest height. Stop when your elbows reach shoulder level.",
+        "Using a very narrow grip. Shoulder-width is easier on your shoulders."
+      ],
+      "if_its_taken": {
+        "swaps": [],
+        "tip": "Wait a minute or two, or do dumbbell lateral raises today."
+      }
     }
   ]
 }
