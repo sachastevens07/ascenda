@@ -11,7 +11,9 @@ import bundled from './ids.json' with { type: 'json' };
 
 const WORKOUTX = 'https://api.workoutxapp.com/v2';
 const USER_WINDOW_MS = 5 * 60 * 1000;
-const USER_MAX = 40;
+// Only real provider fetches count; cached answers are free. Browsing the
+// exercise list loads a thumbnail per row, so 40 was too low (23 Nov 2026).
+const USER_MAX = 150;
 const CACHE_SKEW_MS = 60 * 60 * 1000;
 
 type BundledFile = { matches?: { slug?: string; workoutx_id?: string }[]; no_demo?: string[] };
@@ -220,9 +222,6 @@ Deno.serve(async (req) => {
   }
 
   const now = Date.now();
-  if (pruneHits(userId, now).length >= USER_MAX) {
-    return fail('rate_limited', 429);
-  }
 
   if (bundledBlocked(exerciseId)) {
     return json({ ok: false, reason: 'unmatched' });
@@ -243,6 +242,10 @@ Deno.serve(async (req) => {
   const cached = cacheGet(wxId, exerciseId);
   if (cached) {
     return json(cached);
+  }
+
+  if (pruneHits(userId, now).length >= USER_MAX) {
+    return fail('rate_limited', 429);
   }
 
   if (!wxKey) {
