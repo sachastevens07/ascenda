@@ -9,6 +9,12 @@
 alter table public.profiles
   add column if not exists main_goals text[];
 
+-- Drop the old goal checks first so the id updates below can run.
+-- New, wider checks are added again at the end of this file.
+alter table public.profiles drop constraint if exists profiles_goal_check;
+alter table public.profiles drop constraint if exists profiles_main_goal_check;
+alter table public.profiles drop constraint if exists profiles_main_goals_check;
+
 update public.profiles
 set main_goals = array[coalesce(main_goal, goal)]
 where (main_goals is null or cardinality(main_goals) = 0)
