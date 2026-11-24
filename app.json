@@ -11,7 +11,8 @@
       "supportsTablet": false,
       "config": {
         "usesNonExemptEncryption": false
-      }
+      },
+      "bundleIdentifier": "app.evoluma"
     },
     "android": {
       "adaptiveIcon": {

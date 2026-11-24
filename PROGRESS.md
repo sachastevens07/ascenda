@@ -626,3 +626,4 @@ Developer also has **Send a test trial-ending reminder** and **Send a test renew
 - Machines Made Easy: no single-leg work by design; `why_this_split` now says so (Routine standard 7).
 - Daily quote (N7) is back on Home after the week strip (it had only been showing in the Learn hub). Hide from its menu or Profile → Appearance; hiding applies to both places.
 - Routine page: the three suggested Coach questions are replaced by one large Ask AI button (`src/components/AskAiButton.tsx`, opens Coach with the routine as context), and the full description shows without More/Less.
+- Build setup (24 Nov 2026): `ios.bundleIdentifier` is `app.evoluma` (change before the app is created in App Store Connect if needed; permanent after). `eas.json` added with development, preview and production profiles; build numbers auto-increment remotely. Step-by-step setup is in the Evoluma launch setup guide doc.
