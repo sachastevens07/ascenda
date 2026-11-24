@@ -1,11 +1,11 @@
-# Strivella: App Store listing (v1.0 launch)
+# Evoluma: App Store listing (v1.0 launch)
 
-Draft copy for App Store Connect. Character counts are checked. Only describe features that ship in the build you submit; swap in the future sections below as they launch. Name decided 24 November 2026: Strivella. Reserve it in App Store Connect and file the UK trademark (classes 9 and 41).
+Draft copy for App Store Connect. Character counts are checked. Only describe features that ship in the build you submit; swap in the future sections below as they launch. Name decided 24 November 2026: Evoluma. Reserve it in App Store Connect and file the UK trademark (classes 9 and 41).
 
 ## App name (29/30)
-`Strivella: Strength for Women`
+`Evoluma: Women's Gym Workouts`
 
-Alternatives: `Strivella: Gym Plans for Women` (30/30), `Strivella: Women's Gym Plans` (28/30). "Strivella: Women's Gym Workouts" is 31 characters, one over Apple's 30 limit.
+Alternatives: `Evoluma: Gym Plans for Women` (28/30), `Evoluma: Women's Gym Training` (29/30). Avoid `Evoluma: Strength for Women`: EvolveYou's App Store title is "EvolveYou: Strength For Women".
 
 ## Subtitle (27/30)
 `Strength plans & gym guides`
@@ -27,9 +27,9 @@ Can be changed any time without a new review.
 ## Description (2821/4000)
 
 ```
-Strivella helps women feel at home in the gym.
+Evoluma helps women feel at home in the gym.
 
-Whether it's your first time or you're coming back after a break, Strivella gives you a clear plan for every week, a guide for every exercise and a simple way to see yourself get stronger.
+Whether it's your first time or you're coming back after a break, Evoluma gives you a clear plan for every week, a guide for every exercise and a simple way to see yourself get stronger.
 
 A PLAN THAT'S MADE FOR YOU
 Answer a few quick questions and we'll recommend a routine that suits your goals, experience and schedule. Every routine has a clear finish line, from Strong Foundations in 6 Weeks to The Climb in 8 Weeks, with phases, checkpoints and a coach note for every day.
@@ -61,21 +61,21 @@ CALM AND ENCOURAGING
 No shaming, no weight-loss pressure and no countdowns. Just a clear plan and a little encouragement on the days you need it.
 
 SUBSCRIPTION
-Strivella is a subscription app. You can download it and get your personalised plan for free. A subscription unlocks every routine, guide and feature.
+Evoluma is a subscription app. You can download it and get your personalised plan for free. A subscription unlocks every routine, guide and feature.
 • Annual plan with a 7-day free trial, or a monthly plan
 • Payment is charged to your Apple Account when you confirm your purchase, or at the end of the free trial
 • Your subscription renews automatically unless you cancel at least 24 hours before the end of the current period
 • Manage or cancel anytime in your Apple Account settings
 • If your subscription ends, your history and personal bests stay yours and you can export them
 
-Strivella is for adults aged 18 and over. It gives general fitness guidance and is not medical advice. Please check with your GP before starting if you're pregnant, injured or have a health condition.
+Evoluma is for adults aged 18 and over. It gives general fitness guidance and is not medical advice. Please check with your GP before starting if you're pregnant, injured or have a health condition.
 
 Terms of Use: [TERMS_URL]
 Privacy Policy: [PRIVACY_URL]
 ```
 
 ## What's New (214/4000)
-> Welcome to Strivella. This is our first release: personalised strength routines, first-time guides for every exercise, a fast workout logger, a planner and Learn articles. We'd love to hear what you think.
+> Welcome to Evoluma. This is our first release: personalised strength routines, first-time guides for every exercise, a fast workout logger, a planner and Learn articles. We'd love to hear what you think.
 
 ## Screenshots
 Up to 10 for the 6.9" iPhone size (Apple scales them for smaller phones). Short caption at the top, the real screen below, light theme, plum and warm palette. Use real app screens with realistic but invented example data (no real user data). No photos of anyone without a licence that allows advertising use.
@@ -95,11 +95,11 @@ The first three screenshots matter most: most people never scroll past them.
 
 ## Category and age rating
 - Primary category: **Health & Fitness**. Secondary: **Lifestyle** (optional).
-- Age rating: answer Apple's questionnaire honestly (it will probably give a low rating, as there's no mature content). Because Strivella is for adults only, consider choosing a higher age rating than the minimum, up to 18+, so the store matches your 18+ terms. Check the option in App Store Connect when you get there.
+- Age rating: answer Apple's questionnaire honestly (it will probably give a low rating, as there's no mature content). Because Evoluma is for adults only, consider choosing a higher age rating than the minimum, up to 18+, so the store matches your 18+ terms. Check the option in App Store Connect when you get there.
 
 ## App Review notes (for Apple's reviewer)
 ```
-Strivella is a strength-training app for adult women (18+). Users confirm their age at the start of onboarding.
+Evoluma is a strength-training app for adult women (18+). Users confirm their age at the start of onboarding.
 
 Demo account (with an active sandbox subscription):
 Email: [DEMO_EMAIL]
@@ -148,7 +148,7 @@ Promotional text: `New: recipes that fuel your training. Favourites, shopping li
 Add to the description (above SUBSCRIPTION):
 ```
 SCAN ANY MACHINE
-Not sure what a machine does? Take a photo and Strivella shows you what it is, how to use it and which exercises you can do on it.
+Not sure what a machine does? Take a photo and Evoluma shows you what it is, how to use it and which exercises you can do on it.
 ```
 Promotional text: `New: scan any machine and we'll show you how to use it. The app that knows every machine in your gym.` (101/170)
 

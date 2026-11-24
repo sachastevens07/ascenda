@@ -1,6 +1,6 @@
-# Project brief: Strivella, a women's strength app
+# Project brief: Evoluma, a women's strength app
 
-Name decided 24 November 2026: **Strivella** (Ascenda was dropped because of trademark clashes). Internal identifiers keep the old name on purpose and must not be renamed: RevenueCat entitlement and products (`ascenda_pro`, `ascenda_annual`, `ascenda_monthly`), the `ask-ascenda` Edge Function, the `ask_ascenda` feature id, `userHasAscendaPro`, `generated-for-ascenda` licence markers, storage and cache keys, and SQL policy names.
+Name decided 24 November 2026: **Evoluma** (Ascenda was dropped because of trademark clashes; Strivella was briefly chosen the same day, then replaced). Internal identifiers keep the old name on purpose and must not be renamed: RevenueCat entitlement and products (`ascenda_pro`, `ascenda_annual`, `ascenda_monthly`), the `ask-ascenda` Edge Function, the `ask_ascenda` feature id, `userHasAscendaPro`, `generated-for-ascenda` licence markers, storage and cache keys, and SQL policy names.
 
 ## What we're building
 A strength-training app for women that feels lively, clear and encouraging. She picks (or is recommended) a routine with a clear finish line, sees exactly what's planned each day, logs sessions in seconds, and watches her progress and achievements build up.
@@ -14,14 +14,14 @@ A strength-training app for women that feels lively, clear and encouraging. She 
 Target user: women aged 18–40 who lift or want to start, training 2–4 times a week. Women in perimenopause and menopause are welcome too and get light-touch support (see "Decided 17 November 2026"); the core positioning and marketing stay aimed at 18–40. Tone is calm, warm and empowering. Never shaming, never weight-loss pressure, no "bikini body" language.
 
 ## Product vision (decided November 2026)
-**Strivella is the all-in-one gym companion for women, especially those new to the gym or coming back to it.**
-One-line pitch: "Strivella helps women feel at home in the gym: a complete weekly plan of strength, cardio and stretching, guidance for every machine, and food that fuels your training."
+**Evoluma is the all-in-one gym companion for women, especially those new to the gym or coming back to it.**
+One-line pitch: "Evoluma helps women feel at home in the gym: a complete weekly plan of strength, cardio and stretching, guidance for every machine, and food that fuels your training."
 
 **Gym-first.** Every feature is designed for women who train in a gym. Home training exists only as a backup ("Days you can't get to the gym": a few dumbbell or band sessions, plus stretches). No home-specific features. All copy, App Store keywords and Learn content say "gym".
 
-**Four pillars**, each with the gym-confidence angle that sets Strivella apart from Sweat, EvolveYou and Alive:
+**Four pillars**, each with the gym-confidence angle that sets Evoluma apart from Sweat, EvolveYou and Alive:
 
-| Pillar | What it includes | The Strivella angle |
+| Pillar | What it includes | The Evoluma angle |
 |---|---|---|
 | Strength (core) | Routines, logger, progression, checkpoints | First-time guides, "if it's taken" swaps, Gym unlocked |
 | Cardio | Gym cardio sessions inside routines, cardio logging | Machine guides (how to start, set up and stop each machine), beginner-friendly progressions |
@@ -38,10 +38,10 @@ One-line pitch: "Strivella helps women feel at home in the gym: a complete weekl
 - Routines at launch: 17 (incl. The Four-Day Foundation for beginners on 4 days and Twice a Week Strong for intermediates on 2 days). "Busy Gym? No Problem" is renamed "Dumbbells and a Bench" (slug unchanged).
 
 **Decided 17 November 2026: periods and menopause ("train with how you feel")**
-- Periods and menopause can affect energy, training and food, but the effect differs a lot between women (a 2020 meta-analysis found only a trivial, low-certainty drop in performance in the early follicular phase and said general cycle-based rules can't be justified). So Strivella responds to how she feels on the day. It never plans training around cycle phases and never tracks or predicts cycles at launch.
+- Periods and menopause can affect energy, training and food, but the effect differs a lot between women (a 2020 meta-analysis found only a trivial, low-certainty drop in performance in the early follicular phase and said general cycle-based rules can't be justified). So Evoluma responds to how she feels on the day. It never plans training around cycle phases and never tracks or predicts cycles at launch.
 - Four stages: (1) Learn and Food content (B1); (2) a "How are you feeling today?" check-in in the logger that offers a lighter session for today, saving only that it was lighter, never the reason (B2); (3) an optional perimenopause or menopause life stage, saved only with explicit consent, that shapes recommendations and Learn (B3); (4) an optional period log, in "Later phases", only if testers ask for it.
 - Life stage (and any later period data) is special category health data under UK GDPR: explicit separate consent with version and timestamp, off by default, deletable on its own, never sent to Coach, PostHog, RevenueCat or any third party, never used for marketing, notifications or targeting, never shown on share cards, recaps or anywhere others might see. Write a DPIA before launch and have the solicitor check the consent wording.
-- Never claim Strivella eases period or menopause symptoms, and never market "cycle syncing". Safe lines: "Lighter day? Strivella adjusts your session", "Strength training for every stage of life".
+- Never claim Evoluma eases period or menopause symptoms, and never market "cycle syncing". Safe lines: "Lighter day? Evoluma adjusts your session", "Strength training for every stage of life".
 - Cycle notes stay removed (R1); nothing from them comes back.
 
 **Decided 21 November 2026: stretches hidden at launch**
@@ -55,7 +55,7 @@ One-line pitch: "Strivella helps women feel at home in the gym: a complete weekl
 - Short sprint intervals are optional, never core: one bike sprint session (W2), not for beginners' first 4 weeks.
 
 ## Pricing and access (decided 4 November 2026: hard paywall)
-Strivella is a **subscription app**. She can download it and complete onboarding for free; using the app's content needs a subscription (free trial included). This replaces the earlier free/Pro split. **Anywhere else in this file that mentions free vs Pro content, Pro badges, locked previews, free limits or "Pro only", read it as: included in the subscription. Where this section and an older task disagree, this section wins.**
+Evoluma is a **subscription app**. She can download it and complete onboarding for free; using the app's content needs a subscription (free trial included). This replaces the earlier free/Pro split. **Anywhere else in this file that mentions free vs Pro content, Pro badges, locked previews, free limits or "Pro only", read it as: included in the subscription. Where this section and an older task disagree, this section wins.**
 
 **Plans (UK launch prices, set in App Store Connect and RevenueCat):**
 | Plan | Price | Trial | Notes |
@@ -73,7 +73,7 @@ Strivella is a **subscription app**. She can download it and complete onboarding
 - **always see her own data:** if a subscription lapses, her history, PBs and awards stay visible read-only and she can export everything (CSV). Never delete or hide her data because she stopped paying;
 - use Refer a friend (share her link and code).
 
-**Everything else needs an active subscription or trial:** Home, routines, stretches, exercises and guides, the logger, Planner, Activity, Learn, cardio, Food, Strivella AI, reminders and challenges.
+**Everything else needs an active subscription or trial:** Home, routines, stretches, exercises and guides, the logger, Planner, Activity, Learn, cardio, Food, Evoluma AI, reminders and challenges.
 
 **Entitlement:** a single RevenueCat entitlement `ascenda_pro`. Check it in one place (a `useSubscription` hook or similar). No per-feature locks, no Pro badges inside the app, no free limits.
 
@@ -398,7 +398,7 @@ Rules for every task in this group:
 
 **N7. Daily motivational quote**
 - A small card on Home with one quote a day, the same for everyone that day (pick by date from the list).
-- Store in a `quotes` table (id, text, attribution, is_active). Write original quotes in the Strivella voice (attribution "Strivella"); only use quotes from other people if they are public domain or I approve them. No song lyrics.
+- Store in a `quotes` table (id, text, attribution, is_active). Write original quotes in the Evoluma voice (attribution "Evoluma"); only use quotes from other people if they are public domain or I approve them. No song lyrics.
 - Tone: calm, encouraging, strength and consistency focused. No guilt, no body or weight references.
 - Launch with at least 90 quotes so none repeat within three months. Profile setting to hide the quote.
 
@@ -414,17 +414,17 @@ Rules for every task in this group:
 - Every section hides itself if it has nothing useful to show.
 
 **X3. Programmes as a discovery page** (DESIGN.md 8.3)
-- Routines section becomes a WEGLOW-style browse page: Recommended for you hero card, "Find a routine" filter (days, level, goal, equipment; AI plan help lives in Strivella Coach), Training style tiles, carousels (Start here, Popular once we have real data, New, Single sessions).
+- Routines section becomes a WEGLOW-style browse page: Recommended for you hero card, "Find a routine" filter (days, level, goal, equipment; AI plan help lives in Evoluma Coach), Training style tiles, carousels (Start here, Popular once we have real data, New, Single sessions).
 - Add **single sessions**: standalone one-off workouts (strength, cardio, stretch) built from existing routine days and stored as data, so she can do one workout without starting a programme.
 - No invented trainers or coach personas. Show "Coach reviewed" on content once a qualified coach has reviewed it.
 
-**X4. Logger, Hevy-inspired but Strivella's own** (DESIGN.md 8.4; extends N3)
+**X4. Logger, Hevy-inspired but Evoluma's own** (DESIGN.md 8.4; extends N3)
 - Header: minimise (chevron down), session name, live timer, "Finish" button top right. Stats row: duration, volume (kg), sets done.
 - Per exercise: thumbnail, name (tap opens guide), "⋯" menu; chips row with **Rest timer** (tap to change for this exercise; remembered next time) and **Note** (a note for this exercise that she sees again next time).
 - Set table columns: Set, Previous (last time's "8 kg × 10"), kg, Reps, tick. Warm-up sets marked "W". "+ Add set" under each exercise.
 - **Long-press and drag to reorder exercises** (ask before adding a drag-and-drop library; `react-native-draggable-flatlist` is the likely choice).
 - Minimised session: a floating bar on every tab ("Full body A · 12:34 · Resume"), like the existing stretch mini bar.
-- Strivella touches that stay: suggested-weight chip, role and RIR line, first-time guide link, warm-up and cool-down blocks, rest timer bar, gentle PB celebration (small animation and haptic), plum and warm palette rather than Hevy's dark blue.
+- Evoluma touches that stay: suggested-weight chip, role and RIR line, first-time guide link, warm-up and cool-down blocks, rest timer bar, gentle PB celebration (small animation and haptic), plum and warm palette rather than Hevy's dark blue.
 
 **X5. Onboarding v2: engaging, varied and honest** (DESIGN.md 8.5)
 - About 22 screens with varied input types (icon cards, wheel picker, sliders, agree/disagree statements, photo cards, day pills, time picker), a progress bar, smooth animations between screens (Reanimated) and light haptics (`expo-haptics`, ask before adding).
@@ -596,7 +596,7 @@ Rules for every task in this phase:
 **F2. Recipes (data and content)**
 - Tables: `recipes` (id, slug, title, summary, cover_image_id, meal_type, prep_minutes, cook_minutes, servings, ingredients (structured: name, quantity, unit, food_id), method_steps, nutrition_per_serving, allergens, dietary_tags, is_pro, reviewed_by, reviewed_at, published_at), `recipe_collections` (id, name, slug, sort_order, is_pro), `recipe_collection_items` (collection_id, recipe_id), `recipe_favourites` (user_id, recipe_id).
 - A recipe can be in several collections.
-- Collections (reworded in Strivella's voice): Strong and nourished; Prep-ahead lunches; High-protein dinners; Top 10 breakfasts; Most-loved smoothies; One pot; Busy days; Dinner in 30; Prep-ahead breakfasts; Dinners; Snack smarter; Family friendly; High protein; Lunches; Seasonal favourites. Plus training-linked ones: Before an evening session; After leg day; Gym bag snacks.
+- Collections (reworded in Evoluma's voice): Strong and nourished; Prep-ahead lunches; High-protein dinners; Top 10 breakfasts; Most-loved smoothies; One pot; Busy days; Dinner in 30; Prep-ahead breakfasts; Dinners; Snack smarter; Family friendly; High protein; Lunches; Seasonal favourites. Plus training-linked ones: Before an evening session; After leg day; Gym bag snacks.
 - At least 5 recipes per collection; launch with about 60 recipes in total (reused across collections). Each has a real, matching food photo (licensed), never a mismatched one.
 
 **F3. Recipe pages**
@@ -612,14 +612,14 @@ Rules for every task in this phase:
 **F6. Fuelling basics in Learn**
 - Articles: protein for training, eating enough to train, pre- and post-workout food, hydration, caffeine and training, supplements basics (what has evidence, what doesn't), eating around periods of low appetite. Reviewed by the dietitian or nutritionist; sources listed; no calorie targets.
 
-### Phase v2.5 — Strivella AI: one Coach chat (revised 11 November 2026)
+### Phase v2.5 — Evoluma AI: one Coach chat (revised 11 November 2026)
 Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec is content/ai/ai-config.json and content/ai/prompts.
 
-**Why:** AI gives women another reason to subscribe, but only if it's genuinely useful and easy to find. So all AI lives in one place, **Strivella Coach**, a chat that understands her in her own words and can act on her training using Strivella's own rules. Scan a machine is removed (gyms label their machines and our demos show them). The earlier separate features (Busy gym fix, Build me a session, Ask Strivella, What can I cook) become Coach tools.
+**Why:** AI gives women another reason to subscribe, but only if it's genuinely useful and easy to find. So all AI lives in one place, **Evoluma Coach**, a chat that understands her in her own words and can act on her training using Evoluma's own rules. Scan a machine is removed (gyms label their machines and our demos show them). The earlier separate features (Busy gym fix, Build me a session, Ask Evoluma, What can I cook) become Coach tools.
 
 **AI rules (apply to every task in this phase)**
 - **Architecture:** all AI calls go through Supabase Edge Functions; the Claude API key is an Edge Function secret. Default model Claude Haiku 5.5; Claude Sonnet 5.5 only where the evals show it's needed. Prompt caching for the system prompt and fixed indexes.
-- **The AI understands, our code decides:** the model chooses a tool and its inputs; Strivella's own code (session builder, swap engine, recommendation rules, Planner) produces the result. The model never writes exercises, sessions, routines, recipes, weights or stats itself.
+- **The AI understands, our code decides:** the model chooses a tool and its inputs; Evoluma's own code (session builder, swap engine, recommendation rules, Planner) produces the result. The model never writes exercises, sessions, routines, recipes, weights or stats itself.
 - **Grounding:** answers come from our guides, articles, routines, recipes and her own history, re-sent or fetched every turn.
 - **Weights:** always from the progression rule, never from the AI.
 - **Safety:** no diagnosis, injury treatment, pregnancy or postnatal advice, or medication advice; redirect to a GP or physiotherapist. No calorie targets, weight-loss plans or comments on bodies. Never save a preference for a medical reason. Label answers "AI-generated, not medical advice" with a link to the safety guidance. Emergency signs show the 999 card.
@@ -630,7 +630,7 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 - **Quality:** the evals in ai-config.json (including multi-turn and context cases) must pass; a qualified coach reviews 50 conversations before launch.
 - **Analytics (PostHog):** ai_chat_started (with entry point), ai_tool_called, ai_card_used, ai_limit_reached, ai_fallback_used; never prompt or answer text.
 
-**AI1. Strivella Coach chat**
+**AI1. Evoluma Coach chat**
 - **Where:** a Coach icon next to the profile avatar in the header of every tab, plus contextual "Ask Coach" buttons and suggested-question chips on exercise pages, the logger, routine pages, machine guides, recipes and Learn articles.
 - **Context:** contextual entry points open a NEW chat with a context object (exercise, machine, today's session, routine, recipe or article), shown as a chip ("About: Leg extension"). Every turn re-sends the context with its guide, her training summary and the guides retrieved for that message, so "this exercise" always works and earlier answers are never retracted.
 - **Conversations:** separate chats. Contextual entry always starts a new chat; the header button reopens her latest chat if used in the last 6 hours, otherwise starts a new one; a New chat button; a list of past chats titled from her first message. Send the last 12 messages plus a running summary.
@@ -674,9 +674,9 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 13. **Upper-body accessories:** routines with two or more upper-body days (or an upper-body goal) include at least 4 sets a week of lateral raises and at least one biceps and one triceps exercise (3 sets each).
 
 ## Safety disclaimer (full text, v1; to be checked by a solicitor)
-> **Train safely with Strivella**
+> **Train safely with Evoluma**
 >
-> Strivella gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor, physiotherapist or other qualified professional.
+> Evoluma gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor, physiotherapist or other qualified professional.
 >
 > **Check with your GP or a qualified professional before you start if you:**
 > - are pregnant, have given birth in the last year, or are trying to conceive
@@ -694,7 +694,7 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 Short version (first-session sheet, 4 bullets): not medical advice; check with your GP first if you're pregnant, injured or have a health condition; stop and get help if you feel chest pain, dizziness or sharp pain; use weights you can lift with good form and never train through pain.
 
 ## Out of scope (do not build unless I ask)
-Video classes, an open-ended AI chatbot (Strivella Coach stays scoped to training, the gym, fuelling and the app), home-specific features, food logging or meal-plan diets, social feed or leaderboards (a private gym buddy is planned for later), wearable sync, any AI analysis of bodies or food photos for calories, AI machine scanning, AI form checking from video, cycle tracking or cycle-phase training plans, period, ovulation or fertility predictions, symptom or mood diaries, menopause weight-loss content, supplement or HRT advice (an optional period log is listed in Later phases), BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
+Video classes, an open-ended AI chatbot (Evoluma Coach stays scoped to training, the gym, fuelling and the app), home-specific features, food logging or meal-plan diets, social feed or leaderboards (a private gym buddy is planned for later), wearable sync, any AI analysis of bodies or food photos for calories, AI machine scanning, AI form checking from video, cycle tracking or cycle-phase training plans, period, ovulation or fertility predictions, symptom or mood diaries, menopause weight-loss content, supplement or HRT advice (an optional period log is listed in Later phases), BMI or body-fat estimates, XP points or arbitrary user levels, calorie or macro targets, countdown timers on offers.
 
 ## Data model
 Check the actual schema before changing anything. Existing tables include `profiles`, `exercises` (with `zone`), `programmes` / `programme_days` / `programme_exercises`, `sessions`, `sets`, `confidence_history`, and cycle-notes storage (to be removed in R1).
@@ -800,4 +800,4 @@ New in v2.5:
 - Only use images and exercise media licensed for commercial use.
 - Privacy policy must reflect current data use (no cycle data; life stage with explicit consent (B3); progress photos if used; what's sent to the AI provider).
 - Health data (life stage, any later period log) is special category data: explicit consent, off by default, deletable, never sent to third parties or used for marketing; DPIA before launch.
-- No claims that Strivella eases period or menopause symptoms; no "cycle syncing" marketing.
+- No claims that Evoluma eases period or menopause symptoms; no "cycle syncing" marketing.

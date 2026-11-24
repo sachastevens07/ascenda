@@ -27,7 +27,7 @@ import {
 import indexesFile from './indexes.json' with { type: 'json' };
 
 /**
- * Strivella Coach. One chat with tools. Claude key: ANTHROPIC_API_KEY.
+ * Evoluma Coach. One chat with tools. Claude key: ANTHROPIC_API_KEY.
  * The model chooses tools; this file and tools.ts produce the result.
  * Never read or send profiles.life_stage or period dates. Special-category health data.
  */
@@ -121,7 +121,7 @@ const TOOLS = [
   },
   {
     name: 'build_session',
-    description: "Build a one-off session from Strivella's library.",
+    description: "Build a one-off session from Evoluma's library.",
     input_schema: {
       type: 'object',
       additionalProperties: false,
@@ -138,7 +138,7 @@ const TOOLS = [
   },
   {
     name: 'recommend_routine',
-    description: "Recommend routines using Strivella's recommendation rules.",
+    description: "Recommend routines using Evoluma's recommendation rules.",
     input_schema: {
       type: 'object',
       additionalProperties: false,
@@ -193,7 +193,7 @@ const TOOLS = [
   },
   {
     name: 'find_recipes',
-    description: "Find recipes from Strivella's reviewed recipes that use ingredients she has.",
+    description: "Find recipes from Evoluma's reviewed recipes that use ingredients she has.",
     input_schema: {
       type: 'object',
       additionalProperties: false,
@@ -418,12 +418,12 @@ function fallbackAnswer(question: string, retrieved: { type: string; id: string 
       'I cannot advise on pregnancy or postnatal training. Please speak to your GP or midwife, and a qualified pre- and postnatal trainer.';
   } else if (detected === 'body_or_diet') {
     reply =
-      'Strivella focuses on strength and fuelling your training, not calorie targets or comments on bodies. A fuelling article may be more useful here.';
+      'Evoluma focuses on strength and fuelling your training, not calorie targets or comments on bodies. A fuelling article may be more useful here.';
   } else if (detected === 'wellbeing') {
     reply =
       'Thank you for saying this. Please speak to a GP about how you are feeling. If eating feels hard, Beat (beat.org.uk) can help.';
   } else if (detected === 'off_topic') {
-    reply = 'I can only help with your training, the gym, food for training and using Strivella.';
+    reply = 'I can only help with your training, the gym, food for training and using Evoluma.';
   }
   return {
     reply: stripEmDashes(reply),

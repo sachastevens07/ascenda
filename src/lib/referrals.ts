@@ -1,6 +1,6 @@
 /**
  * Refer a friend (AGENTS.md X6).
- * Personal Strivella codes track who invited whom. The friend's 14-day trial is
+ * Personal Evoluma codes track who invited whom. The friend's 14-day trial is
  * Apple Offer Code FRIEND14 on the annual plan. Rewards are applied by the
  * RevenueCat webhook, not from the app.
  */

@@ -107,7 +107,7 @@ export default function SignInScreen() {
           <>
             <AppText variant="display" style={styles.title}>Thanks for stopping by</AppText>
             <AppText variant="body" style={styles.subtitle}>
-              Strivella is for adults aged 18 and over, so we can’t create an account for you yet. We
+              Evoluma is for adults aged 18 and over, so we can’t create an account for you yet. We
               haven’t saved anything about you. We’d love to train with you when you’re 18.
             </AppText>
           </>

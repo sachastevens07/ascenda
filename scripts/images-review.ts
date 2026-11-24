@@ -30,7 +30,7 @@ const page = `<!doctype html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Strivella photo review</title>
+<title>Evoluma photo review</title>
 <style>
   body { font-family: Georgia, serif; margin: 24px; background: #f6f1ec; color: #2b211c; }
   h1 { font-weight: 500; }

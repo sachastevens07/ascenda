@@ -1,4 +1,4 @@
-# Strivella design direction (v1)
+# Evoluma design direction (v1)
 
 Status: sections 1 to 5 approved and partly built. Later sections override earlier ones where they disagree (section 9, hard paywall, overrides all Pro badge and locked preview guidance). Feature and data changes are specified in AGENTS.md.
 
@@ -93,19 +93,19 @@ Current screens analysed: Home, Programmes (Routines, Stretches), routine detail
 
 ### How Pro / locked is shown
 - Sweat: persistent "Subscription expired" banner above the tab bar; paywall on tap.
-- Note: the reference apps show very few explicit lock icons. Strivella will be clearer than them (a consistent Pro badge and locked previews), as AGENTS.md requires.
+- Note: the reference apps show very few explicit lock icons. Evoluma will be clearer than them (a consistent Pro badge and locked previews), as AGENTS.md requires.
 - Leap: "Go Premium" bar in Mine; "Special Discount" countdown banners.
 - WEGLOW: small brand badge icons on cards for premium content.
 - All three keep locked content visible and attractive, and put the upsell at the moment of intent.
 
 ### What NOT to borrow
-- Leap's body-part framing and claims ("Flat Stomach", "Round Booty", "Breast Lift"), BMI with "Overweight" labels, ads and countdown discount banners. These clash with Strivella's calm, non-shaming brand and AGENTS.md safety rules.
+- Leap's body-part framing and claims ("Flat Stomach", "Round Booty", "Breast Lift"), BMI with "Overweight" labels, ads and countdown discount banners. These clash with Evoluma's calm, non-shaming brand and AGENTS.md safety rules.
 - Unverifiable stats ("67% of women ... achieved their goals", "240K+ users joined"). Only show numbers we can back up.
 - Heavy midriff-focused photography.
 
 ---
 
-## 2. Where Strivella falls short today
+## 2. Where Evoluma falls short today
 
 **Every screen**
 - Floating grey gear button (and "Tools" label on Home) overlaps content. It's a dev tool showing in normal use.
@@ -175,7 +175,7 @@ Current screens analysed: Home, Programmes (Routines, Stretches), routine detail
 
 ## 3. Proposed design system
 
-Goal: calm, warm, premium, encouraging. Keep Strivella's plum identity, add a warm contrast accent and an editorial display font. Not a copy of any one reference.
+Goal: calm, warm, premium, encouraging. Keep Evoluma's plum identity, add a warm contrast accent and an editorial display font. Not a copy of any one reference.
 
 ### 3.1 Colour tokens
 
@@ -502,7 +502,7 @@ QuoteCard, WelcomeBackCard, StreakCard (with week circles), RestWeekBanner, Remi
 
 ### 7.8 Food tab (F1 to F3)
 - Header: avatar, display serif title "Food", search icon, Favourites heart.
-- Meal-type tiles: horizontal carousel of tall tiles with a food photo and a display serif label (Breakfast, Lunch, Dinner, Snacks, Smoothies), in the style of the reference app but in Strivella colours.
+- Meal-type tiles: horizontal carousel of tall tiles with a food photo and a display serif label (Breakfast, Lunch, Dinner, Snacks, Smoothies), in the style of the reference app but in Evoluma colours.
 - Collections: SectionHeader + "See all" + carousel of RecipeCards, one carousel per collection.
 - "Fuel for today" card at the top if today has a training session (F4).
 - Empty or loading states use soft placeholders, never blank boxes.
@@ -541,7 +541,7 @@ Short version: real women training in real, warm, well-lit gyms. About half the 
 
 ### 8.2 Home (X2)
 1. **Header:** avatar (left), search and calendar icons (right).
-2. **Welcome hero:** full-bleed photo of a smiling woman (about 45% of screen height), display serif headline, one short line, PrimaryButton. States: first visit ("Welcome to Strivella" / "Start your first session"), normal (next session), welcome back (H2), rest day ("Rest day. Fancy a 10-minute stretch?").
+2. **Welcome hero:** full-bleed photo of a smiling woman (about 45% of screen height), display serif headline, one short line, PrimaryButton. States: first visit ("Welcome to Evoluma" / "Start your first session"), normal (next session), welcome back (H2), rest day ("Rest day. Fancy a 10-minute stretch?").
 3. **This week card:** segmented Workouts | Meals (Meals appears once Food exists); week strip Mon to Sun with today filled in `brand` and dots on planned days; below it today's planned session as a photo card with title and time, or an empty state (image, "Nothing planned today", "Explore programmes").
 4. **Daily quote** (QuoteCard).
 5. **Featured for you** carousel (ImageCards with smiling-women photos).
@@ -591,7 +591,7 @@ Short version: real women training in real, warm, well-lit gyms. About half the 
   7. How you feel in the gym (slider with five labelled stops from "Nervous" to "At home")
   8. Statement: "I'm not sure what to do when I get to the gym"
   9. Statement: "I feel like people are watching me"
-  10. Insight: "You're not alone" with a real, sourced statistic (e.g. the 2025 Gymshark survey of UK women) and how Strivella helps (first-time guides, one-spot sessions)
+  10. Insight: "You're not alone" with a real, sourced statistic (e.g. the 2025 Gymshark survey of UK women) and how Evoluma helps (first-time guides, one-spot sessions)
   11. Statement: "I find it hard to stay motivated on my own"
   12. Statement: "I've started and stopped before"
   13. Insight: "Plans beat willpower" style encouragement plus how reminders and the planner help (no invented numbers)

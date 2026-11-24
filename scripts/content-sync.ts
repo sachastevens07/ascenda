@@ -655,7 +655,7 @@ function reportCoach(): void {
   }
   const tools = asArray(row.tools).map((item) => text(asRecord(item).name)).filter(Boolean);
   const evals = asArray(asRecord(readJson('ai/ai-config.json')).evals);
-  line(`  Feature: ${text(row.feature) || 'Strivella Coach'}`);
+  line(`  Feature: ${text(row.feature) || 'Evoluma Coach'}`);
   line(
     `  Model: ${text(row.model) || 'claude-haiku-5-5'}. Daily limit: ${num(row.daily_message_limit) ?? 40} messages. Max tools: ${num(row.max_tool_calls_per_turn) ?? 3}.`
   );
@@ -1215,7 +1215,7 @@ async function reportQuotes(client: SupabaseClient): Promise<void> {
     if (byExactText) matchedText += 1;
     else matchedId += 1;
     const nextActive = item.is_active !== false;
-    if (row.text !== body || (row.attribution ?? 'Strivella') !== (text(item.attribution) || 'Strivella') || row.is_active !== nextActive) {
+    if (row.text !== body || (row.attribution ?? 'Evoluma') !== (text(item.attribution) || 'Evoluma') || row.is_active !== nextActive) {
       wouldUpdate += 1;
     }
   }

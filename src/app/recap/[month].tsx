@@ -170,7 +170,7 @@ function ShareCards({ recap }: { recap: MonthlyRecap }) {
           ))}
         </View>
         <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 'auto' }}>
-          Strivella
+          Evoluma
         </AppText>
       </View>
 
@@ -214,7 +214,7 @@ function ShareCards({ recap }: { recap: MonthlyRecap }) {
           ) : null}
         </View>
         <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
-          Strivella
+          Evoluma
         </AppText>
       </View>
     </ScrollView>

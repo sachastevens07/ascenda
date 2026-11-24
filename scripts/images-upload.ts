@@ -159,7 +159,7 @@ async function main(): Promise<void> {
       console.log(`${slug}: skipped, that choice has no file`);
       continue;
     }
-    if (entry.licence_source === 'Generated for Strivella') {
+    if (entry.licence_source === 'Generated for Evoluma') {
       console.log(`${slug}: skipped, a generated photo is already in this slot`);
       continue;
     }

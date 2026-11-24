@@ -402,7 +402,7 @@ export function adjustTodayTool(
         exercises.length === 0
           ? 'Nothing we can swap in from the list. Try marking less as taken, or swap one lift yourself.'
           : energy === 'low'
-            ? 'A lighter version of today. Tap Use this and Strivella will ease the sets and suggestions, the same way as the check-in.'
+            ? 'A lighter version of today. Tap Use this and Evoluma will ease the sets and suggestions, the same way as the check-in.'
             : 'Swapped taken kit where we could, and trimmed the rest to fit the time you have.',
     },
   };

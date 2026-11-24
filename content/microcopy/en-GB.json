@@ -214,7 +214,7 @@
       "benefits_future": {
         "cardio": "Cardio sessions with machine guides",
         "food": "Recipes that fuel your training",
-        "ai": "Strivella Coach: ask anything, or tell it what's free and it reworks your session"
+        "ai": "Evoluma Coach: ask anything, or tell it what's free and it reworks your session"
       },
       "annual_title": "Annual",
       "annual_trial_line": "{trial_days} days free, then {annual_price} a year",
@@ -272,7 +272,7 @@
       "manage_help": "Opens your Apple subscription settings, where you can change or cancel your plan in a couple of taps.",
       "restore": "Restore purchases",
       "how_to_cancel_title": "How to cancel",
-      "how_to_cancel_body": "Tap Manage subscription, choose Strivella and tap Cancel subscription. You'll keep access until the end of your current period, and your history stays yours.",
+      "how_to_cancel_body": "Tap Manage subscription, choose Evoluma and tap Cancel subscription. You'll keep access until the end of your current period, and your history stays yours.",
       "banner_trial_ending": "Your free trial ends on {day}. You can manage it in Settings.",
       "banner_trial_ending_cta": "Manage",
       "banner_grace": "There's a problem with your payment. Update it in Settings to keep access.",
@@ -291,7 +291,7 @@
     },
     "safety": {
       "_note": "Full disclaimer text lives in AGENTS.md 'Safety disclaimer' (keep it in one file in the app). These are the surrounding strings.",
-      "onboarding_title": "Train safely with Strivella",
+      "onboarding_title": "Train safely with Evoluma",
       "onboarding_checkbox": "I've read this and I'm 18 or over",
       "onboarding_cta": "Continue",
       "updated_title": "We've updated our safety guidance",
@@ -299,7 +299,7 @@
       "updated_cta": "I've read this",
       "first_session_sheet_title": "Train within your limits",
       "first_session_bullets": [
-        "Strivella gives general fitness guidance, not medical advice.",
+        "Evoluma gives general fitness guidance, not medical advice.",
         "Check with your GP first if you're pregnant, injured or have a health condition.",
         "Stop and get help if you feel chest pain, dizziness or sharp pain.",
         "Use weights you can lift with good form, and never train through pain."
@@ -423,7 +423,7 @@
         "reps_up": "{delta} more reps on {exercise} than last time",
         "first_exercise": "First time doing {exercise}",
         "first_equipment": "First time on the {equipment}!",
-        "first_session": "Your first Strivella session. The hardest one is done.",
+        "first_session": "Your first Evoluma session. The hardest one is done.",
         "week_target_hit": "That's your week done: {done} of {target}",
         "gold_week": "Gold week! You hit your full weekly target",
         "streak_extended": "{weeks} weeks in a row",
@@ -517,7 +517,7 @@
         },
         {
           "title": "Today: {session_name}",
-          "body": "Everything's laid out for you in Strivella."
+          "body": "Everything's laid out for you in Evoluma."
         }
       ],
       "stretch_reminder": {
@@ -556,7 +556,7 @@
         "weekly_summary": "Sunday plan-your-week",
         "offers": "Offers and news",
         "offers_help": "Occasional updates about new features and offers",
-        "system_off": "Notifications are off for Strivella. Turn them on in your phone's Settings.",
+        "system_off": "Notifications are off for Evoluma. Turn them on in your phone's Settings.",
         "open_settings": "Open Settings"
       }
     },
@@ -666,7 +666,7 @@
       "screen_title": "Refer a friend",
       "screen_headline": "Get {extend_days} days free for every successful invite",
       "screen_body": "You get {extend_days} days free every time a friend starts a paid plan with your invite. She gets {friend_trial_days} days free.",
-      "photo_caption": "Share Strivella with a friend",
+      "photo_caption": "Share Evoluma with a friend",
       "invite_via": "Invite friends",
       "share_row": "Share invite",
       "copy_row": "Copy link",
@@ -678,12 +678,12 @@
       "copied": "Copied",
       "share": "Share invite",
       "share_link": "Share my link",
-      "share_message": "I've been using Strivella to train at the gym and I think you'd like it. Use my code {code} for {friend_trial_days} days free: {link}",
+      "share_message": "I've been using Evoluma to train at the gym and I think you'd like it. Use my code {code} for {friend_trial_days} days free: {link}",
       "progress_title": "Your invites",
       "empty_invites": "No invites yet",
       "how_it_works_title": "How it works",
       "how_it_works": [
-        "Share your link with a friend who is new to Strivella.",
+        "Share your link with a friend who is new to Evoluma.",
         "She gets {friend_trial_days} days free.",
         "When she starts a paid plan, you get {extend_days} days free."
       ],
@@ -695,7 +695,7 @@
       },
       "terms_link": "How it works",
       "terms": [
-        "Your friend needs to be new to Strivella.",
+        "Your friend needs to be new to Evoluma.",
         "You get {extend_days} days free for each friend who starts a paid plan, up to {max_rewards} a year.",
         "Free months are added to your existing subscription.",
         "There are no cash rewards."
@@ -775,7 +775,7 @@
       "resend": "Resend email",
       "resent": "Sent again. It can take a minute to arrive.",
       "wrong_email": "Use a different email",
-      "verified": "You're verified. Welcome to Strivella."
+      "verified": "You're verified. Welcome to Evoluma."
     },
     "errors": {
       "generic": "Something went wrong. Please try again.",
@@ -900,7 +900,7 @@
       "no_session": "Start a session first, then you can add this to today.",
       "added": "Added to today.",
       "share": "Share",
-      "share_message": "I just unlocked the {machine} with Strivella",
+      "share_message": "I just unlocked the {machine} with Evoluma",
       "browse": "Browse machine guides",
       "ai_label": "AI-generated, not medical advice."
     },
@@ -986,7 +986,7 @@
       "cook_results": "Recipes you can make",
       "cook_ai_label": "AI-generated, not medical advice.",
       "dev_unlimited": "Remove AI daily limits",
-      "dev_unlimited_on": "On. Scan, Busy gym fix, Build me a session, Ask Strivella and What can I cook skip today's cap.",
+      "dev_unlimited_on": "On. Scan, Busy gym fix, Build me a session, Ask Evoluma and What can I cook skip today's cap.",
       "dev_unlimited_off": "Off. Daily limits apply.",
       "busy_title": "Something's taken",
       "busy_body": "Tell us what's busy, how long you have, and how you're feeling. We'll rework the rest of today only.",
@@ -1041,23 +1041,23 @@
       "build_error": "Something went wrong. Please try again.",
       "build_ai_label": "AI-generated, not medical advice.",
       "ask_ai": "Ask AI",
-      "ask_title": "Ask Strivella",
+      "ask_title": "Ask Evoluma",
       "ask_placeholder": "Ask about your training…",
       "ask_send": "Send",
-      "ask_empty": "Ask about your plan, an exercise, or how to use the gym. I only help with training and Strivella.",
-      "ask_limit": "You've hit today's limit for Ask Strivella. It resets tomorrow.",
+      "ask_empty": "Ask about your plan, an exercise, or how to use the gym. I only help with training and Evoluma.",
+      "ask_limit": "You've hit today's limit for Ask Evoluma. It resets tomorrow.",
       "ask_move_title": "Move this session?",
       "ask_move_body": "Move {name} to {date}. Your plan only changes if you confirm.",
       "ask_move_confirm": "Move it",
       "ask_move_cancel": "Not now",
       "ask_moved": "Moved. You can still change it in Planner.",
-      "ask_delete_history": "Delete Ask Strivella history",
+      "ask_delete_history": "Delete Ask Evoluma history",
       "ask_delete_body": "Removes your questions and answers from the last 30 days. This cannot be undone.",
-      "ask_deleted": "Ask Strivella history deleted.",
+      "ask_deleted": "Ask Evoluma history deleted.",
       "ask_card_medical": "This is not medical advice. Stop anything that hurts and speak to a doctor or physiotherapist.",
       "ask_card_pregnancy": "This is not pregnancy or postnatal advice. Speak to your doctor or midwife, and a qualified trainer.",
-      "ask_card_body": "Strivella focuses on strength and fuelling your training, not calorie targets or comments on bodies.",
-      "ask_card_off_topic": "I can only help with your training, the gym and using Strivella.",
+      "ask_card_body": "Evoluma focuses on strength and fuelling your training, not calorie targets or comments on bodies.",
+      "ask_card_off_topic": "I can only help with your training, the gym and using Evoluma.",
       "ask_card_wellbeing": "Please speak to a doctor about how you are feeling. Beat can help if eating feels hard: beat.org.uk.",
       "ask_fallback": "Couldn't reach the usual helper, so this uses matching guides from our library."
     }

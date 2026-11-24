@@ -48,12 +48,12 @@ function parseQuote(raw: unknown): (DailyQuote & { sort_order: number }) | null 
   return {
     id: quoteId(sort),
     text: body,
-    attribution: text(row.attribution) || 'Strivella',
+    attribution: text(row.attribution) || 'Evoluma',
     sort_order: sort,
   };
 }
 
-/** Original quotes in the Strivella voice, ordered by content sort_order. */
+/** Original quotes in the Evoluma voice, ordered by content sort_order. */
 export const DAILY_QUOTES: DailyQuote[] = asArray(asRecord(file).quotes)
   .map(parseQuote)
   .filter((item): item is NonNullable<typeof item> => Boolean(item))
@@ -78,7 +78,7 @@ export async function fetchDailyQuotes(): Promise<DailyQuote[]> {
     .map((row) => ({
       id: row.id,
       text: row.text.trim(),
-      attribution: (row.attribution ?? 'Strivella').trim() || 'Strivella',
+      attribution: (row.attribution ?? 'Evoluma').trim() || 'Evoluma',
     }))
     .filter((row) => row.id && row.text);
   return rows.length > 0 ? rows : DAILY_QUOTES;

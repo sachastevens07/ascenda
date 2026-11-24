@@ -1,9 +1,9 @@
 {
   "_format_version": 2,
   "_loader_notes": [
-    "Strivella AI v2 (AGENTS.md v2.5). One chat, Strivella Coach, with tools, plus the monthly recap. Replaces the six separate features. Scan a machine is removed.",
+    "Evoluma AI v2 (AGENTS.md v2.5). One chat, Evoluma Coach, with tools, plus the monthly recap. Replaces the six separate features. Scan a machine is removed.",
     "Prompts live in content/ai/prompts and are loaded by Supabase Edge Functions; never ship them in the app. Claude API key is an Edge Function secret.",
-    "Tools: the model only chooses which tool to call and with what inputs. Every tool runs Strivella's own code (server_runs) and returns a validated result. Cards need her tap before anything changes.",
+    "Tools: the model only chooses which tool to call and with what inputs. Every tool runs Evoluma's own code (server_runs) and returns a validated result. Cards need her tap before anything changes.",
     "Build the per-turn payload exactly as in conversations.per_turn_payload. Re-sending context and retrieved guides every turn is what stops the coach losing track of what 'this' means or retracting earlier answers.",
     "Use prompt caching for the system prompt and cached_context. Send per-turn data in the user message inside <context>, <her_training> and <retrieved> tags.",
     "Log every call to ai_usage. Never send prompt or answer text to PostHog.",
@@ -11,7 +11,7 @@
   ],
   "features": {
     "coach": {
-      "feature": "Strivella Coach",
+      "feature": "Evoluma Coach",
       "model": "claude-haiku-5-5",
       "model_note": "Start with Haiku. Move to claude-sonnet-5-5 only if the evals or coach review show Haiku isn't good enough at tool choice or answers.",
       "max_tokens": 700,
@@ -221,7 +221,7 @@
         },
         {
           "name": "build_session",
-          "description": "Build a one-off session from Strivella's library.",
+          "description": "Build a one-off session from Evoluma's library.",
           "input_schema": {
             "type": "object",
             "additionalProperties": false,
@@ -291,7 +291,7 @@
         },
         {
           "name": "recommend_routine",
-          "description": "Recommend routines using Strivella's recommendation rules. Fill in what she's told you; use her profile for anything she hasn't mentioned.",
+          "description": "Recommend routines using Evoluma's recommendation rules. Fill in what she's told you; use her profile for anything she hasn't mentioned.",
           "input_schema": {
             "type": "object",
             "additionalProperties": false,
@@ -393,7 +393,7 @@
         },
         {
           "name": "save_preference",
-          "description": "Save a lasting preference when she asks Strivella to always avoid an exercise, or says her gym doesn't have some equipment. The swap engine then applies it everywhere.",
+          "description": "Save a lasting preference when she asks Evoluma to always avoid an exercise, or says her gym doesn't have some equipment. The swap engine then applies it everywhere.",
           "input_schema": {
             "type": "object",
             "additionalProperties": false,
@@ -444,7 +444,7 @@
         },
         {
           "name": "find_recipes",
-          "description": "Find recipes from Strivella's reviewed recipes that use ingredients she has.",
+          "description": "Find recipes from Evoluma's reviewed recipes that use ingredients she has.",
           "input_schema": {
             "type": "object",
             "additionalProperties": false,
@@ -492,7 +492,7 @@
       ],
       "cached_context": [
         "prompts/coach.md",
-        "app_help (short notes on how Strivella's features work)",
+        "app_help (short notes on how Evoluma's features work)",
         "exercise index (slug, name, equipment, pattern) and machine index",
         "ingredient list (from v2.4)"
       ],
@@ -612,7 +612,7 @@
     "_note": "'How heavy should I go?' style questions are answered by explaining reps in reserve and the suggested-weight chip, never with a number."
   },
   "ui_copy": {
-    "title": "Strivella Coach",
+    "title": "Evoluma Coach",
     "label": "AI-generated, not medical advice.",
     "safety_link": "Read the safety guidance",
     "new_chat": "New chat",

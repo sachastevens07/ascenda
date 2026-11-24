@@ -1,7 +1,7 @@
 {
   "_format_version": 1,
   "_loader_notes": [
-    "Daily quotes (AGENTS.md N7). All original, attribution 'Strivella'. No lyrics or third-party quotes.",
+    "Daily quotes (AGENTS.md N7). All original, attribution 'Evoluma'. No lyrics or third-party quotes.",
     "Pick by date so everyone sees the same quote that day: list active quotes ordered by sort_order, then index = (days since 2026-01-01) mod count. With 100 quotes, none repeat for over three months.",
     "sort_order interleaves themes so consecutive days feel different. 'theme' is for your reference and possible future filtering.",
     "Adding quotes later: append with new ids and sort_orders. Deactivate with is_active=false rather than deleting.",
@@ -11,7 +11,7 @@
     {
       "id": 1,
       "text": "Showing up is the hardest rep. You've already done it.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 1
@@ -19,7 +19,7 @@
     {
       "id": 14,
       "text": "Strength is built quietly, one ordinary session at a time.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 2
@@ -27,7 +27,7 @@
     {
       "id": 27,
       "text": "The weight that felt heavy last month is your warm-up now.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 3
@@ -35,7 +35,7 @@
     {
       "id": 39,
       "text": "You belong in every corner of this gym.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 4
@@ -43,7 +43,7 @@
     {
       "id": 51,
       "text": "Be patient with yourself. Strength takes its time.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 5
@@ -51,7 +51,7 @@
     {
       "id": 65,
       "text": "Strong enough to carry the shopping in one trip.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 6
@@ -59,7 +59,7 @@
     {
       "id": 77,
       "text": "One set at a time. That's all you have to think about.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 7
@@ -67,7 +67,7 @@
     {
       "id": 89,
       "text": "Every first time deserves a little celebration.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 8
@@ -75,7 +75,7 @@
     {
       "id": 2,
       "text": "You don't need a perfect week. You need a week with you in it.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 9
@@ -83,7 +83,7 @@
     {
       "id": 15,
       "text": "Consistent beats intense, every single time.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 10
@@ -91,7 +91,7 @@
     {
       "id": 28,
       "text": "One more rep is still progress.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 11
@@ -99,7 +99,7 @@
     {
       "id": 40,
       "text": "Everyone here was new once.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 12
@@ -107,7 +107,7 @@
     {
       "id": 52,
       "text": "Rest is part of the plan, not a break from it.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 13
@@ -115,7 +115,7 @@
     {
       "id": 66,
       "text": "Train for the life you want to live, not just the next session.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 14
@@ -123,7 +123,7 @@
     {
       "id": 78,
       "text": "Breathe, brace, lift. Then breathe again.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 15
@@ -131,7 +131,7 @@
     {
       "id": 90,
       "text": "You chose yourself today. That's worth noticing.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 16
@@ -139,7 +139,7 @@
     {
       "id": 3,
       "text": "Done is better than perfect, in the gym and everywhere else.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 17
@@ -147,7 +147,7 @@
     {
       "id": 16,
       "text": "The magic is in the weeks nobody sees.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 18
@@ -155,7 +155,7 @@
     {
       "id": 29,
       "text": "Look how far you've come, not how far you have to go.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 19
@@ -163,7 +163,7 @@
     {
       "id": 41,
       "text": "The free-weights area is for you too.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 20
@@ -171,7 +171,7 @@
     {
       "id": 53,
       "text": "A lighter day is still a good day.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 21
@@ -179,7 +179,7 @@
     {
       "id": 67,
       "text": "Every squat is practice for every chair you'll ever stand up from.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 22
@@ -187,7 +187,7 @@
     {
       "id": 79,
       "text": "Leave the day at the door for the next forty minutes.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 23
@@ -195,7 +195,7 @@
     {
       "id": 91,
       "text": "Proud of the work, whatever the numbers say.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 24
@@ -203,7 +203,7 @@
     {
       "id": 4,
       "text": "One session is enough to keep the thread going.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 25
@@ -211,7 +211,7 @@
     {
       "id": 17,
       "text": "Little by little is still a lot by the end.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 26
@@ -219,7 +219,7 @@
     {
       "id": 30,
       "text": "Strong today, stronger next week.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 27
@@ -227,7 +227,7 @@
     {
       "id": 42,
       "text": "Try one new thing today. That's how the gym becomes yours.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 28
@@ -235,7 +235,7 @@
     {
       "id": 54,
       "text": "Listen to your body. It's on your side.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 29
@@ -243,7 +243,7 @@
     {
       "id": 68,
       "text": "Strength you build now is strength you keep for years.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 30
@@ -251,7 +251,7 @@
     {
       "id": 80,
       "text": "Focus on the rep you're doing, not the ones still to come.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 31
@@ -259,7 +259,7 @@
     {
       "id": 92,
       "text": "A full week of training is a full week of keeping your word.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 32
@@ -267,7 +267,7 @@
     {
       "id": 5,
       "text": "The version of you who turned up today is the one getting stronger.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 33
@@ -275,7 +275,7 @@
     {
       "id": 18,
       "text": "Habits are just promises you keep to yourself.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 34
@@ -283,7 +283,7 @@
     {
       "id": 31,
       "text": "Two kilos at a time is how mountains are moved.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 35
@@ -291,7 +291,7 @@
     {
       "id": 43,
       "text": "Confidence isn't the starting point. It's what you build along the way.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 36
@@ -299,7 +299,7 @@
     {
       "id": 55,
       "text": "Missed a session? Pick up where you are.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 37
@@ -307,7 +307,7 @@
     {
       "id": 69,
       "text": "Lift for the energy, stay for the confidence.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 38
@@ -315,7 +315,7 @@
     {
       "id": 81,
       "text": "Hard sets end. The pride stays.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 39
@@ -323,7 +323,7 @@
     {
       "id": 93,
       "text": "You started something. Look at you keep it going.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 40
@@ -331,7 +331,7 @@
     {
       "id": 6,
       "text": "Ten minutes still counts. It always counts.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 41
@@ -339,7 +339,7 @@
     {
       "id": 19,
       "text": "Progress loves a routine.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 42
@@ -347,7 +347,7 @@
     {
       "id": 32,
       "text": "Every personal best started as a new beginning.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 43
@@ -355,7 +355,7 @@
     {
       "id": 44,
       "text": "Nobody's watching as closely as you think. Train for you.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 44
@@ -363,7 +363,7 @@
     {
       "id": 56,
       "text": "New week, fresh start.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 45
@@ -371,7 +371,7 @@
     {
       "id": 70,
       "text": "Feeling capable is the best kind of strong.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 46
@@ -379,7 +379,7 @@
     {
       "id": 82,
       "text": "You can do hard things. You do them every session.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 47
@@ -387,7 +387,7 @@
     {
       "id": 94,
       "text": "Count the wins: the sessions, the firsts, the weeks.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 48
@@ -395,7 +395,7 @@
     {
       "id": 7,
       "text": "Start small. Small is how everything strong began.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 49
@@ -403,7 +403,7 @@
     {
       "id": 20,
       "text": "Repeat the basics until they feel like yours.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 50
@@ -411,7 +411,7 @@
     {
       "id": 33,
       "text": "Notice the small wins. They're the big ones in disguise.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 51
@@ -419,7 +419,7 @@
     {
       "id": 45,
       "text": "Ask the question. Take the space. Lift the weight.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 52
@@ -427,7 +427,7 @@
     {
       "id": 57,
       "text": "You're allowed to go gently and still go forward.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 53
@@ -435,7 +435,7 @@
     {
       "id": 71,
       "text": "Strong bones, steady joints, a clearer head. All from here.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 54
@@ -443,7 +443,7 @@
     {
       "id": 83,
       "text": "Don't wait for motivation. Let the first exercise find it for you.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 55
@@ -451,7 +451,7 @@
     {
       "id": 95,
       "text": "The hardest part of today is already behind you.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 56
@@ -459,7 +459,7 @@
     {
       "id": 8,
       "text": "Getting here was the decision. The rest is just the plan.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 57
@@ -467,7 +467,7 @@
     {
       "id": 21,
       "text": "Strong is something you practise, not something you're born with.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 58
@@ -475,7 +475,7 @@
     {
       "id": 34,
       "text": "Your progress doesn't have to be loud to be real.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 59
@@ -483,7 +483,7 @@
     {
       "id": 46,
       "text": "Every machine was unfamiliar until you tried it.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 60
@@ -491,7 +491,7 @@
     {
       "id": 58,
       "text": "Recovery is where the strength settles in.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 61
@@ -499,7 +499,7 @@
     {
       "id": 72,
       "text": "You're not just training muscles. You're building trust in yourself.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 62
@@ -507,7 +507,7 @@
     {
       "id": 84,
       "text": "Effort is the part you control. Make it count.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 63
@@ -515,7 +515,7 @@
     {
       "id": 96,
       "text": "You did the thing. Now enjoy the rest of your day.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 64
@@ -523,7 +523,7 @@
     {
       "id": 9,
       "text": "Some days the win is simply walking through the door.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 65
@@ -531,7 +531,7 @@
     {
       "id": 22,
       "text": "Today's session is a brick. Keep building.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 66
@@ -539,7 +539,7 @@
     {
       "id": 35,
       "text": "Slow progress is still progress. Keep going.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 67
@@ -547,7 +547,7 @@
     {
       "id": 47,
       "text": "Curiosity first, confidence follows.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 68
@@ -555,7 +555,7 @@
     {
       "id": 59,
       "text": "Talk to yourself like you'd talk to a friend at the gym.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 69
@@ -563,7 +563,7 @@
     {
       "id": 73,
       "text": "The gym is where you practise being someone who doesn't give up.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 70
@@ -571,7 +571,7 @@
     {
       "id": 85,
       "text": "A calm mind lifts better.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 71
@@ -579,7 +579,7 @@
     {
       "id": 97,
       "text": "You're stronger than when you started. That's the whole point.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 72
@@ -587,7 +587,7 @@
     {
       "id": 10,
       "text": "You don't have to feel ready. You just have to begin.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 73
@@ -595,7 +595,7 @@
     {
       "id": 23,
       "text": "You're not starting over. You're carrying on.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 74
@@ -603,7 +603,7 @@
     {
       "id": 36,
       "text": "You're lifting things today you couldn't lift when you started.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 75
@@ -611,7 +611,7 @@
     {
       "id": 48,
       "text": "Your plan is your map. You know where you're going today.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 76
@@ -619,7 +619,7 @@
     {
       "id": 60,
       "text": "There's no falling behind. There's only your next session.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 77
@@ -627,7 +627,7 @@
     {
       "id": 74,
       "text": "Strong looks like whatever you can do now that you couldn't before.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 78
@@ -635,7 +635,7 @@
     {
       "id": 86,
       "text": "When it feels tough, slow down and own the movement.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 79
@@ -643,7 +643,7 @@
     {
       "id": 98,
       "text": "This is what starting looks like, and you've already started.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 80
@@ -651,7 +651,7 @@
     {
       "id": 11,
       "text": "A short session beats the perfect one you didn't do.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 81
@@ -659,7 +659,7 @@
     {
       "id": 24,
       "text": "The best plan is the one you keep coming back to.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 82
@@ -667,7 +667,7 @@
     {
       "id": 37,
       "text": "Better form is a personal best too.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 83
@@ -675,7 +675,7 @@
     {
       "id": 49,
       "text": "Taking up space is allowed. So is taking your time.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 84
@@ -683,7 +683,7 @@
     {
       "id": 61,
       "text": "Your pace is the right pace.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 85
@@ -691,7 +691,7 @@
     {
       "id": 75,
       "text": "Move well today so you can keep moving for years.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 86
@@ -699,7 +699,7 @@
     {
       "id": 87,
       "text": "The plan is set. All you have to do is follow it.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 87
@@ -707,7 +707,7 @@
     {
       "id": 99,
       "text": "Today you trained. That's the headline.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 88
@@ -715,7 +715,7 @@
     {
       "id": 12,
       "text": "Every week you train is a week that counts.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 89
@@ -723,7 +723,7 @@
     {
       "id": 25,
       "text": "Steady weeks make strong months.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 90
@@ -731,7 +731,7 @@
     {
       "id": 38,
       "text": "Climb at your own pace. The view is still yours.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "progress",
       "is_active": true,
       "sort_order": 91
@@ -739,7 +739,7 @@
     {
       "id": 50,
       "text": "A little brave today, a lot more at home here next month.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "confidence",
       "is_active": true,
       "sort_order": 92
@@ -747,7 +747,7 @@
     {
       "id": 62,
       "text": "Stretch, breathe, reset. Then go again.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 93
@@ -755,7 +755,7 @@
     {
       "id": 76,
       "text": "Strength makes everything else a little easier.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "strength_for_life",
       "is_active": true,
       "sort_order": 94
@@ -763,7 +763,7 @@
     {
       "id": 88,
       "text": "Finish the set with good form and you've done your job.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "focus_and_mindset",
       "is_active": true,
       "sort_order": 95
@@ -771,7 +771,7 @@
     {
       "id": 100,
       "text": "Small steps, big climb. Enjoy the view on the way up.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "celebration",
       "is_active": true,
       "sort_order": 96
@@ -779,7 +779,7 @@
     {
       "id": 13,
       "text": "Turning up when it's hard is how it becomes easy.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "showing_up",
       "is_active": true,
       "sort_order": 97
@@ -787,7 +787,7 @@
     {
       "id": 26,
       "text": "Your weeks trained only ever go up.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "consistency",
       "is_active": true,
       "sort_order": 98
@@ -795,7 +795,7 @@
     {
       "id": 63,
       "text": "Coming back is always worth it.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 99
@@ -803,7 +803,7 @@
     {
       "id": 64,
       "text": "Good sleep is training too.",
-      "attribution": "Strivella",
+      "attribution": "Evoluma",
       "theme": "kindness",
       "is_active": true,
       "sort_order": 100
