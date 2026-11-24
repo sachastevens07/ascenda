@@ -12,7 +12,7 @@ Alternatives: `Strivella: Gym Plans for Women` (30/30), `Strivella: Women's Gym 
 
 Alternatives: `Feel at home in the gym` (23/30), `Gym plans, guides & tracking` (28/30)
 
-## Keywords (99/100)
+## Keywords (98/100)
 `weightlifting,lifting,glutes,beginner,fitness,routine,tracker,planner,dumbbell,female,coach,logger`
 
 - Don't repeat words already in the name or subtitle (Apple indexes those already), so 'women', 'gym', 'workout', 'strength', 'plans' and 'guides' are left out.
