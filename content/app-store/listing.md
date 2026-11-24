@@ -1,11 +1,11 @@
 # Strivella: App Store listing (v1.0 launch)
 
-Draft copy for App Store Connect. Character counts are checked. Only describe features that ship in the build you submit; swap in the future sections below as they launch. "Strivella" is still a working name: check the name is free in App Store Connect and with a trademark search before you commit.
+Draft copy for App Store Connect. Character counts are checked. Only describe features that ship in the build you submit; swap in the future sections below as they launch. Name decided 24 November 2026: Strivella. Reserve it in App Store Connect and file the UK trademark (classes 9 and 41).
 
 ## App name (29/30)
-`Strivella: Women's Gym Workouts`
+`Strivella: Strength for Women`
 
-Alternatives: `Strivella: Women's Gym Training` (29/30), `Strivella: Gym Plans for Women` (28/30), `Strivella: Strength for Women` (27/30)
+Alternatives: `Strivella: Gym Plans for Women` (30/30), `Strivella: Women's Gym Plans` (28/30). "Strivella: Women's Gym Workouts" is 31 characters, one over Apple's 30 limit.
 
 ## Subtitle (27/30)
 `Strength plans & gym guides`
