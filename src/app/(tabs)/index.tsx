@@ -31,6 +31,7 @@ import {
   ImageCard,
   OverflowMenu,
   PrimaryButton,
+  QuoteCard,
   RecapHomeCard,
   ReferralBanner,
   SectionHeader,
@@ -95,6 +96,14 @@ import {
   type PlannerWeek,
 } from '@/lib/planner';
 import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
+import {
+  DAILY_QUOTES,
+  fetchDailyQuotes,
+  fetchHideQuote,
+  pickDailyQuote,
+  saveHideQuote,
+  type DailyQuote,
+} from '@/lib/quotes';
 import { fetchProgressSets } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { ensureSubscribed } from '@/lib/paywall';
@@ -311,6 +320,30 @@ export default function HomeScreen() {
   const [welcomeBackMenuAnchor, setWelcomeBackMenuAnchor] = useState<AnchorRect | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [recap, setRecap] = useState<MonthlyRecap | null>(null);
+  // N7: daily quote on Home, straight after the week strip. Same quote for everyone that day.
+  const [quotes, setQuotes] = useState<DailyQuote[]>(DAILY_QUOTES);
+  const [quoteHidden, setQuoteHidden] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      Promise.all([fetchDailyQuotes().catch(() => DAILY_QUOTES), fetchHideQuote().catch(() => false)]).then(
+        ([list, hidden]) => {
+          if (!active) return;
+          setQuotes(list.length > 0 ? list : DAILY_QUOTES);
+          setQuoteHidden(hidden);
+        }
+      );
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+  const dailyQuote = pickDailyQuote(quotes);
+  const showQuote = !quoteHidden && Boolean(dailyQuote?.text);
+  function hideDailyQuote() {
+    setQuoteHidden(true);
+    saveHideQuote(true).catch(() => setQuoteHidden(false));
+  }
   const [weekTab, setWeekTab] = useState<'workouts' | 'meals'>('workouts');
   const [pickedIso, setPickedIso] = useState<string | null>(null);
   const featuredWidth = width * 0.78;
@@ -1090,6 +1123,10 @@ export default function HomeScreen() {
             }
           />
         </View>
+
+        {showQuote && dailyQuote ? (
+          <QuoteCard quote={dailyQuote} eyebrow={homeCopy.quote_eyebrow} onHide={hideDailyQuote} />
+        ) : null}
 
         {recap ? (
           <RecapHomeCard
