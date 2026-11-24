@@ -418,11 +418,16 @@ export default function RoutineDetailScreen() {
       : routineActionsCopy.start;
   const showSticky = !isCurrent || Boolean(nextSession);
   const currentWeek = enrolment && isCurrent ? currentEnrolmentWeek(enrolment) : 0;
+  // Goal and tags can repeat (e.g. "Build strength" twice), so show each label once.
   const chips = [
     ROUTINE_EQUIPMENT_LABELS[routine.equipment],
     ROUTINE_GOAL_LABELS[routine.goal],
     ...routine.tags.map((tag) => formatTagLabel(tag)),
-  ];
+  ].filter((label, index, all) => {
+    if (!label) return false;
+    const key = label.trim().toLowerCase();
+    return all.findIndex((other) => other?.trim().toLowerCase() === key) === index;
+  });
   const overlay = contentRoutine(routine.slug) ?? contentRoutine(routine.id);
   const weekShape = overlay
     ? contentWeeklyStructure(overlay, profile?.cardio_preference)
@@ -476,13 +481,14 @@ export default function RoutineDetailScreen() {
             </View>
           ) : null}
 
-          <AskAiButton
-            type="routine"
-            id={routine.slug || routine.id}
-            label={routine.name}
-            entry="routine"
-            style={styles.askAi}
-          />
+          <View style={styles.askAi}>
+            <AskAiButton
+              type="routine"
+              id={routine.slug || routine.id}
+              label={routine.name}
+              entry="routine"
+            />
+          </View>
 
           {isCurrent && enrolment ? (
             <View style={styles.progressBlock}>
@@ -802,8 +808,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   askAi: {
-    marginTop: 20,
-    marginBottom: 4,
+    paddingTop: 24,
+    paddingBottom: 8,
   },
   progressBlock: {
     marginTop: 16,
