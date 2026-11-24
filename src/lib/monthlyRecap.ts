@@ -392,7 +392,7 @@ export function recapShareMessage(recap: MonthlyRecap): string {
   if (personalBests[0]) {
     lines.push(`PR: ${personalBests[0].name} · ${personalBests[0].detail}`);
   }
-  lines.push('Ascenda');
+  lines.push('Strivella');
   return lines.join('\n');
 }
 

@@ -2,7 +2,7 @@ import { Linking } from 'react-native';
 
 import privacy from '../../content/legal/privacy.json';
 
-export const CONTACT_EMAIL = 'hello@ascenda.app';
+export const CONTACT_EMAIL = 'hello@strivella.app';
 
 export type LegalSection = {
   heading?: string;
@@ -13,11 +13,11 @@ export const TERMS_TITLE = 'Terms of use';
 
 export const TERMS_SECTIONS: LegalSection[] = [
   {
-    body: 'This is a plain-language draft until it is checked legally. Using Ascenda means you agree to these terms.',
+    body: 'This is a plain-language draft until it is checked legally. Using Strivella means you agree to these terms.',
   },
   {
     heading: 'Who it is for',
-    body: 'Ascenda is for healthy adults aged 18 and over. It gives general fitness information and workout plans. It is not medical advice and does not replace advice from a doctor or other qualified health professional.',
+    body: 'Strivella is for healthy adults aged 18 and over. It gives general fitness information and workout plans. It is not medical advice and does not replace advice from a doctor or other qualified health professional.',
   },
   {
     heading: 'Your account',
@@ -49,7 +49,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = privacy.sections.map((section) =
 }));
 
 export async function openContactEmail(): Promise<boolean> {
-  const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Ascenda')}`;
+  const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent('Strivella')}`;
   const supported = await Linking.canOpenURL(url);
   if (!supported) return false;
   await Linking.openURL(url);

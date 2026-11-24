@@ -22,7 +22,7 @@
       "id": "age",
       "type": "single_choice",
       "title": "How old are you?",
-      "why_we_ask": "Ascenda is designed for adults, and it helps us pitch your plan at the right pace.",
+      "why_we_ask": "Strivella is designed for adults, and it helps us pitch your plan at the right pace.",
       "options": [
         {
           "value": "under_18",
@@ -53,7 +53,7 @@
       "privacy_note": "We only store an age range, never your date of birth.",
       "blocked_values": {
         "under_18": {
-          "inline_message_title": "Ascenda is for adults",
+          "inline_message_title": "Strivella is for adults",
           "inline_message": "Our plans are designed for people aged 18 and over, so we can't set you up just yet. A PE teacher or a qualified coach at your local leisure centre can help you get started safely.",
           "continue_disabled": true
         }
@@ -309,7 +309,7 @@
         "source": "Gymshark survey of 1,000 UK women, September 2025",
         "source_note": "Show the source line under the stat."
       },
-      "body": "That's why every exercise in Ascenda comes with a first-time guide: where to find it, how to set it up and what to do if it's taken. You can start with just dumbbells and a bench, and add more of the gym when you're ready.",
+      "body": "That's why every exercise in Strivella comes with a first-time guide: where to find it, how to set it up and what to do if it's taken. You can start with just dumbbells and a bench, and add more of the gym when you're ready.",
       "show_if": "gym_comfort <= 3 or st_not_sure >= 3 or st_watched >= 3",
       "alt_title": "Here's how we'll help",
       "alt_body": "Every exercise comes with a first-time guide and quick swaps for when the gym is busy, so your session never stalls.",
@@ -409,7 +409,7 @@
       "title": "Plans beat willpower",
       "body": "Deciding when and where you'll train makes it much more likely you'll actually go. You'll pick your days in a moment, and we'll remind you before each session.",
       "extra_if": {
-        "st_stopped>=3": "And if life gets in the way, that's normal. Ascenda gives you rest weeks and an easy way back in, so a missed week never means starting over."
+        "st_stopped>=3": "And if life gets in the way, that's normal. Strivella gives you rest weeks and an easy way back in, so a missed week never means starting over."
       },
       "button": "Continue"
     },
@@ -651,10 +651,10 @@
       "body": [
         "This is health information, so we only save it if you say yes.",
         "We use it for one thing: suggesting routines, cardio and articles that suit this stage of life. It never changes your weights or progress.",
-        "It stays private to you. It's never sent to Ascenda Coach, analytics, advertisers or anyone else.",
+        "It stays private to you. It's never sent to Strivella Coach, analytics, advertisers or anyone else.",
         "You can change it or delete it any time in Profile, Privacy."
       ],
-      "checkbox": "I agree to Ascenda saving my life stage for this purpose",
+      "checkbox": "I agree to Strivella saving my life stage for this purpose",
       "accept_button": "Save and continue",
       "decline_button": "Don't save it",
       "withdraw_button": "Delete and withdraw consent",

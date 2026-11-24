@@ -212,10 +212,10 @@
         "This is health information, so we only save it if you say yes.",
         "If you switch this on, you can tap Period started and Period ended on a day in the Planner. We store those start and end dates, and nothing else: no symptoms, no flow, no mood.",
         "We use the dates for three things: a small private dot on those days, listing Period symptoms first on the check-in if that day is logged, and later a short private note from your own training logs once you have enough of them.",
-        "We never predict your next period, fertile days, pregnancy or anything else. The dates stay on your account. They are never sent to Ascenda Coach, analytics, billing, notifications, share cards or monthly recaps.",
+        "We never predict your next period, fertile days, pregnancy or anything else. The dates stay on your account. They are never sent to Strivella Coach, analytics, billing, notifications, share cards or monthly recaps.",
         "Off by default. You can turn it off any time in Profile, Privacy. That deletes every period date we hold."
       ],
-      "checkbox": "I agree to Ascenda saving period start and end dates for this purpose",
+      "checkbox": "I agree to Strivella saving period start and end dates for this purpose",
       "accept_button": "Save and switch on",
       "decline_button": "Don't save it"
     },

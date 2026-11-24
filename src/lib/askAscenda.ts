@@ -1,5 +1,5 @@
 /**
- * AI4 Ask Ascenda. Context, chips and local fallback.
+ * AI4 Ask Strivella. Context, chips and local fallback.
  * Never sends name, email, bodyweight, photos, onboarding statements or health info.
  */
 import { router, type Href } from 'expo-router';
@@ -111,7 +111,7 @@ export const ASK_UI = aiConfig.ui_copy;
 export const APP_HELP: { id: string; text: string }[] = [
   {
     id: 'suggested_weight',
-    text: 'Suggested weights come from the double-progression rule and her log. The logger shows a chip when it is time to go up. Ask Ascenda never gives a kg number.',
+    text: 'Suggested weights come from the double-progression rule and her log. The logger shows a chip when it is time to go up. Ask Strivella never gives a kg number.',
   },
   {
     id: 'rir',
@@ -123,7 +123,7 @@ export const APP_HELP: { id: string; text: string }[] = [
   },
   {
     id: 'planner',
-    text: 'She can move a planned session in the Planner. Ask Ascenda can propose a move. The app always asks her to confirm first.',
+    text: 'She can move a planned session in the Planner. Ask Strivella can propose a move. The app always asks her to confirm first.',
   },
   {
     id: 'streak',
@@ -490,12 +490,12 @@ export function fallbackAskAnswer(context: AskContext): AskAnswer {
       'I cannot advise on pregnancy or postnatal training. Please speak to your doctor or midwife, and a qualified pre- and postnatal trainer.';
   } else if (detected === 'body_or_diet') {
     reply =
-      'Ascenda focuses on strength and fuelling your training, not calorie targets or comments on bodies. A fuelling article may be more useful here.';
+      'Strivella focuses on strength and fuelling your training, not calorie targets or comments on bodies. A fuelling article may be more useful here.';
   } else if (detected === 'wellbeing') {
     reply =
       'Thank you for saying this. Please speak to a doctor about how you are feeling. If eating feels hard, Beat (beat.org.uk) can help.';
   } else if (detected === 'off_topic') {
-    reply = 'I can only help with your training, the gym and using Ascenda.';
+    reply = 'I can only help with your training, the gym and using Strivella.';
   }
   return {
     reply: stripEmDashes(reply),

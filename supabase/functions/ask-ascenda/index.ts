@@ -4,7 +4,7 @@ import { bypassAiLimit } from '../_shared/aiQuota.ts';
 import { userHasAscendaPro } from '../_shared/entitlement.ts';
 
 /**
- * AI4 Ask Ascenda. Coach chat grounded in her plan, last sessions and
+ * AI4 Ask Strivella. Coach chat grounded in her plan, last sessions and
  * matching guides. Never name, email, bodyweight or health info.
  * Claude key: Edge Function secret ANTHROPIC_API_KEY.
  */
@@ -389,12 +389,12 @@ function fallbackAnswer(
       'I cannot advise on pregnancy or postnatal training. Please speak to your doctor or midwife, and a qualified pre- and postnatal trainer.';
   } else if (detected === 'body_or_diet') {
     reply =
-      'Ascenda focuses on strength and fuelling your training, not calorie targets or comments on bodies. A fuelling article may be more useful here.';
+      'Strivella focuses on strength and fuelling your training, not calorie targets or comments on bodies. A fuelling article may be more useful here.';
   } else if (detected === 'wellbeing') {
     reply =
       'Thank you for saying this. Please speak to a doctor about how you are feeling. If eating feels hard, Beat (beat.org.uk) can help.';
   } else if (detected === 'off_topic') {
-    reply = 'I can only help with your training, the gym and using Ascenda.';
+    reply = 'I can only help with your training, the gym and using Strivella.';
   }
   return { reply: stripEmDashes(reply), links, action: null, safety_flag: detected };
 }
@@ -437,7 +437,7 @@ async function callClaude(
         tools: [
           {
             name: 'report_ask_answer',
-            description: 'Return the Ask Ascenda answer. Always call this tool.',
+            description: 'Return the Ask Strivella answer. Always call this tool.',
             input_schema: toolSchema,
           },
         ],

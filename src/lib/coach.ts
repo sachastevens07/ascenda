@@ -1,5 +1,5 @@
 /**
- * Ascenda Coach. Context, chips, new-chat rules and card helpers.
+ * Strivella Coach. Context, chips, new-chat rules and card helpers.
  * Never sends name, email, bodyweight, photos, onboarding statements, life_stage, period dates or health info.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -9,7 +9,7 @@
     "One active challenge at a time keeps Home simple. Joining a new one asks to leave the current one.",
     "Challenges run alongside any routine. Sessions count towards the challenge, the weekly target and the streak at the same time.",
     "Completion awards the existing 'challenge-complete' badge (achievements.json) once per challenge, plus a share card (numbers and challenge name only).",
-    "Requirement types: sessions (count may be 'weekly_target'), stretch_sessions, new_exercises, new_equipment. 'New' means first time ever logged in Ascenda.",
+    "Requirement types: sessions (count may be 'weekly_target'), stretch_sessions, new_exercises, new_equipment. 'New' means first time ever logged in Strivella.",
     "featured_window controls when a challenge is pushed on Home; all active challenges are always browsable in Programmes."
   ],
   "challenges": [
@@ -17,7 +17,7 @@
       "slug": "four-weeks-strong",
       "name": "Four Weeks Strong",
       "summary": "Three sessions a week for four weeks. Build the habit that makes everything else easier.",
-      "description": "This is the classic Ascenda challenge. Train three times a week for four weeks, using your current routine or any sessions you like. Strength, stretch sessions of 10 minutes or more and (once they arrive) cardio sessions all count. If your plan has two training days a week, your target is two.",
+      "description": "This is the classic Strivella challenge. Train three times a week for four weeks, using your current routine or any sessions you like. Strength, stretch sessions of 10 minutes or more and (once they arrive) cardio sessions all count. If your plan has two training days a week, your target is two.",
       "cover_image_slug": "challenge-four-weeks-strong",
       "tags": [
         "Any routine",
@@ -127,7 +127,7 @@
         {
           "week": 1,
           "title": "One new exercise",
-          "body": "Log one exercise you've never done in Ascenda before. Open its guide first if you'd like.",
+          "body": "Log one exercise you've never done in Strivella before. Open its guide first if you'd like.",
           "requirement": {
             "type": "new_exercises",
             "count": 1

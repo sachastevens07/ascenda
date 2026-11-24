@@ -217,10 +217,10 @@ async function main(): Promise<void> {
       url: publicUrl,
       storage_path: storagePath,
       alt_text: alt,
-      photographer: 'Generated for Ascenda',
+      photographer: 'Generated for Strivella',
       photographer_url: null,
       source_url: 'generated-for-ascenda',
-      licence_source: 'Generated for Ascenda',
+      licence_source: 'Generated for Strivella',
       model_release: 'not applicable',
       ai_score: null,
       ai_notes: `Imported from ${item.file}`,
@@ -232,10 +232,10 @@ async function main(): Promise<void> {
     }
     entry.status = 'ready';
     entry.file = `${item.slug}.jpg`;
-    entry.photographer = 'Generated for Ascenda';
+    entry.photographer = 'Generated for Strivella';
     entry.photographer_url = null;
     entry.source_url = 'generated-for-ascenda';
-    entry.licence_source = 'Generated for Ascenda';
+    entry.licence_source = 'Generated for Strivella';
     entry.model_release = 'not applicable';
     entry.alt_text = alt;
     entry.ai_notes = `Imported from ${item.file}`;

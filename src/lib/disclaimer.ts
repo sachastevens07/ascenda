@@ -1,10 +1,10 @@
 /** Bump this when the wording changes. She is asked to accept again. */
 export const DISCLAIMER_VERSION = 2;
 
-export const DISCLAIMER_TITLE = 'Train safely with Ascenda';
+export const DISCLAIMER_TITLE = 'Train safely with Strivella';
 
 export const DISCLAIMER_INTRO =
-  'Ascenda gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor or other qualified health professional.';
+  'Strivella gives general fitness information and workout plans for healthy adults aged 18 and over. It is not medical advice and does not replace advice from a doctor or other qualified health professional.';
 
 export const DISCLAIMER_CHECK_HEADING =
   'Check with a doctor or other qualified professional before you start if you:';

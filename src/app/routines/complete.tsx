@@ -144,7 +144,7 @@ export default function RoutineCompleteScreen() {
       <View
         style={[styles.card, { backgroundColor: colours.ink, borderRadius: radius.xl }]}
         accessibilityLabel="Completion card">
-        <AppText variant="eyebrow" style={{ color: colours.accent }}>Ascenda</AppText>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>Strivella</AppText>
         <AppText variant="title2" style={{ color: colours.bg, marginTop: spacing.sm }}>
           {review.enrolment.routine.name}
         </AppText>
