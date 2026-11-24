@@ -1,10 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { userHasAscendaPro } from '../_shared/entitlement.ts';
 
 /**
  * AI5 Monthly recap. Stats in, story out.
  * The app calculates every number. This function never adds numbers.
  * Claude key: Edge Function secret ANTHROPIC_API_KEY.
- * Free for everyone with an account. No entitlement check.
+ * Subscription only (decided 24 November 2026): needs an active ascenda_pro entitlement or trial.
  */
 
 const FEATURE = 'monthly_recap';
@@ -309,6 +310,8 @@ Deno.serve(async (req) => {
   if (userError || !userId) {
     return fail('unauthorized', 401);
   }
+  const entitled = await userHasAscendaPro(userClient);
+  if (entitled === false) return fail('unauthorized', 401);
 
   let parsedBody: Record<string, unknown> = {};
   try {

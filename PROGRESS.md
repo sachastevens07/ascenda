@@ -617,3 +617,9 @@ Dev tools (long-press Profile → Version, then Developer → Testing as). Tap t
 7. Annual renews in 6 days (`active`, renewal banner)
 
 Developer also has **Send a test trial-ending reminder** and **Send a test renewal reminder** (about 8 seconds, needs notification permission).
+
+### Decisions, 24 November 2026
+- iPad support off (`supportsTablet: false`); iPhone only, so no iPad screenshots needed.
+- Monthly recap is subscription only: the screen was already behind the paywall, and the `monthly-recap` Edge Function now checks `ascenda_pro` too.
+- Learn articles that mention cool-downs and stretch routines stay as general advice.
+- Hip thrust in Strong Foundations and The Four-Day Foundation: on a closer look both meet the rule (each hip thrust variation is done 4 times across the routine, and the barbell version is introduced lightly first). No change.
