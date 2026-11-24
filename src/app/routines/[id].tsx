@@ -476,7 +476,13 @@ export default function RoutineDetailScreen() {
             </View>
           ) : null}
 
-          <AskAiButton type="routine" id={routine.slug || routine.id} label={routine.name} entry="routine" />
+          <AskAiButton
+            type="routine"
+            id={routine.slug || routine.id}
+            label={routine.name}
+            entry="routine"
+            style={styles.askAi}
+          />
 
           {isCurrent && enrolment ? (
             <View style={styles.progressBlock}>
@@ -794,6 +800,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 12,
+  },
+  askAi: {
+    marginTop: 20,
+    marginBottom: 4,
   },
   progressBlock: {
     marginTop: 16,
