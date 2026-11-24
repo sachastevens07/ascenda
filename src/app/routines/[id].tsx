@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CoachChips } from '@/components/CoachChips';
+import { AskAiButton } from '@/components/AskAiButton';
 import { showDialog } from '@/components/Dialog';
 import {
   AppText,
@@ -24,7 +24,6 @@ import {
   RelatedLearn,
   SafetyNotice,
   StatStrip,
-  TextButton,
   WhatsNextCard,
   measureAnchor,
   type AnchorHandle,
@@ -196,7 +195,6 @@ export default function RoutineDetailScreen() {
   const [isEnding, setIsEnding] = useState(false);
   const [openWeek, setOpenWeek] = useState<number | null>(null);
   const [openDayId, setOpenDayId] = useState<string | null>(null);
-  const [descriptionOpen, setDescriptionOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<AnchorRect | null>(null);
   const [handOff, setHandOff] = useState<NextRoutineOffer | null>(null);
@@ -411,7 +409,6 @@ export default function RoutineDetailScreen() {
   const nextPlan = handOff ? handOffCardCopy(handOff) : null;
   const coverRecord = coverForRoutine(routine);
   const busy = isStarting || isDuplicating || isEnding;
-  const showMore = routine.description.trim().length > 90;
   const phases = groupRoutinePhases(routine.weeks);
   const weeksByNumber = new Map(routine.weeks.map((week) => [week.week_number, week]));
   const stickyLabel = isCurrent
@@ -467,17 +464,9 @@ export default function RoutineDetailScreen() {
             {isCurrent ? <Chip label="Current" selected /> : null}
           </View>
 
-          <AppText variant="body" style={{ color: colours.ink }}
-            numberOfLines={descriptionOpen ? undefined : 2}>
+          <AppText variant="body" style={{ color: colours.ink }}>
             {routine.description}
           </AppText>
-          {showMore ? (
-            <TextButton
-              label={descriptionOpen ? 'Less' : 'More'}
-              onPress={() => setDescriptionOpen((open) => !open)}
-              style={styles.more}
-            />
-          ) : null}
 
           {chips.length > 0 ? (
             <View style={styles.tagRow}>
@@ -487,7 +476,7 @@ export default function RoutineDetailScreen() {
             </View>
           ) : null}
 
-          <CoachChips type="routine" id={routine.slug || routine.id} label={routine.name} />
+          <AskAiButton type="routine" id={routine.slug || routine.id} label={routine.name} entry="routine" />
 
           {isCurrent && enrolment ? (
             <View style={styles.progressBlock}>
@@ -799,11 +788,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 12,
-  },
-  more: {
-    alignSelf: 'flex-start',
-    minHeight: 36,
-    paddingHorizontal: 0,
   },
   tagRow: {
     flexDirection: 'row',

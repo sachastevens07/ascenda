@@ -625,3 +625,4 @@ Developer also has **Send a test trial-ending reminder** and **Send a test renew
 - Hip thrust in Strong Foundations and The Four-Day Foundation: on a closer look both meet the rule (each hip thrust variation is done 4 times across the routine, and the barbell version is introduced lightly first). No change.
 - Machines Made Easy: no single-leg work by design; `why_this_split` now says so (Routine standard 7).
 - Daily quote (N7) is back on Home after the week strip (it had only been showing in the Learn hub). Hide from its menu or Profile → Appearance; hiding applies to both places.
+- Routine page: the three suggested Coach questions are replaced by one large Ask AI button (`src/components/AskAiButton.tsx`, opens Coach with the routine as context), and the full description shows without More/Less.
