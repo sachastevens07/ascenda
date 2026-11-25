@@ -27,7 +27,7 @@ import { claimPendingReferral } from '@/lib/referrals';
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription';
 import { hydrateImages } from '@/lib/images';
 import { hydrateDefaultRestSeconds } from '@/lib/restTimer';
-import { supabase } from '@/lib/supabase';
+import { SUPABASE_CONFIGURED, supabase } from '@/lib/supabase';
 import { hydrateWeightUnit } from '@/lib/units';
 import { WorkoutProvider } from '@/lib/workout';
 
@@ -46,7 +46,34 @@ function FontGate({ children }: { children: ReactNode }) {
   return children;
 }
 
+function SetupProblemScreen() {
+  return (
+    <View style={setupStyles.screen}>
+      <AppText variant="title2" style={setupStyles.title}>
+        Setup problem
+      </AppText>
+      <AppText variant="body" style={setupStyles.body}>
+        This build was made without its Supabase keys, so the app can't connect. Add the EXPO_PUBLIC_ variables on
+        expo.dev for this build's environment, then make a new build.
+      </AppText>
+    </View>
+  );
+}
+
+const setupStyles = StyleSheet.create({
+  screen: { flex: 1, justifyContent: 'center', padding: 32, backgroundColor: '#F6F1EA' },
+  title: { color: '#2C1810', marginBottom: 12 },
+  body: { color: '#7A6A60' },
+});
+
 export default function RootLayout() {
+  if (!SUPABASE_CONFIGURED) {
+    return (
+      <FontGate>
+        <SetupProblemScreen />
+      </FontGate>
+    );
+  }
   return (
     <FontGate>
       <ThemeProvider>
