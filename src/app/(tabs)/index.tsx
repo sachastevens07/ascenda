@@ -1241,7 +1241,7 @@ export default function HomeScreen() {
         ) : null}
 
         <ReferralBanner
-          image={require('../../../assets/covers/hero-refer-thumb.jpg')}
+          imageSlug="hero-refer"
           onPress={inviteFriend}
         />
       </ScrollView>

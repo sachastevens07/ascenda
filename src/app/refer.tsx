@@ -1,11 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { AppText, ListRow, PhotoFill, PrimaryButton } from '@/components/ui';
+import { AppText, PhotoFill, PrimaryButton } from '@/components/ui';
 import { IconButton } from '@/components/ui/IconButton';
 import { useTheme } from '@/constants/theme';
 import { useAuth } from '@/lib/auth';
@@ -14,7 +14,6 @@ import { formatShortDate } from '@/lib/progress';
 import {
   ensureMyReferralCode,
   fetchMyInvites,
-  inviteLinkForCode,
   referralOfferVars,
   shareInvite,
   type ReferralInvite,
@@ -94,55 +93,82 @@ export default function ReferScreen() {
     }
   }
 
-  async function handleCopyLink() {
-    if (!code) return;
-    try {
-      await Share.share({ message: inviteLinkForCode(code), title: referCopy.copy_row });
-    } catch {
-      showDialog(referCopy.code_label, code);
-    }
-  }
+  const steps = referCopy.steps.map((step) => fillCopy(step, vars));
 
   return (
-    <View style={[styles.screen, { backgroundColor: colours.bg, paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <IconButton icon="close" accessibilityLabel={referCopy.close_a11y} onPress={close} />
-        <AppText variant="title3" style={{ color: colours.accent, flex: 1, textAlign: 'center' }}>
-          {referCopy.screen_title}
-        </AppText>
-        <IconButton icon="information-circle-outline" accessibilityLabel={referCopy.info_a11y} onPress={showTerms} />
-      </View>
-
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{ paddingBottom: spacing.lg }}
-        showsVerticalScrollIndicator={false}>
-        <View style={styles.photo}>
-          <PhotoFill slug="hero-refer" kind="people" label={referCopy.hero_title} />
+        showsVerticalScrollIndicator={false}
+        bounces={false}>
+        <View style={[styles.photo, { height: 260 + insets.top }]}>
+          <PhotoFill slug="hero-refer" kind="people" label={referCopy.hero_title} align="center" />
         </View>
 
         <View style={styles.content}>
-          <AppText variant="display" style={{ color: colours.accent }}>
-            {fillCopy(referCopy.screen_headline, vars)}
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            {referCopy.screen_title}
           </AppText>
-          <AppText variant="body" style={{ color: colours.inkMuted, marginTop: spacing.md }}>
-            {fillCopy(referCopy.screen_body, vars)}
+          <AppText variant="display" style={{ color: colours.ink, marginTop: spacing.xs }}>
+            {fillCopy(referCopy.screen_headline_short, vars)}
           </AppText>
 
-          {loadState === 'loading' ? (
-            <ActivityIndicator color={colours.brand} style={{ marginTop: spacing.xl }} />
-          ) : invites.length === 0 ? (
-            <View
-              style={[
-                styles.empty,
-                { backgroundColor: colours.surfaceMuted, borderRadius: radius.full, marginTop: spacing.xl },
-              ]}>
-              <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
-                {referCopy.empty_invites}
+          <View style={{ marginTop: spacing.lg, gap: spacing.md }}>
+            {steps.map((step, index) => (
+              <View key={step} style={styles.step}>
+                <View style={[styles.stepNumber, { backgroundColor: colours.brand }]}>
+                  <AppText variant="bodyStrong" style={{ color: colours.onBrand }}>
+                    {index + 1}
+                  </AppText>
+                </View>
+                <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>
+                  {step}
+                </AppText>
+              </View>
+            ))}
+          </View>
+
+          <View
+            style={[
+              styles.codeCard,
+              { backgroundColor: colours.surface, borderRadius: radius.xl, borderColor: colours.border, marginTop: spacing.xl },
+            ]}>
+            <View style={styles.flex}>
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>
+                {referCopy.code_label}
+              </AppText>
+              {code ? (
+                <AppText variant="title2" selectable style={{ color: colours.ink, letterSpacing: 1.5, marginTop: 2 }}>
+                  {code}
+                </AppText>
+              ) : (
+                <ActivityIndicator color={colours.brand} style={{ alignSelf: 'flex-start', marginTop: 6 }} />
+              )}
+              <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                {referCopy.code_hint}
               </AppText>
             </View>
-          ) : (
+            <Pressable
+              onPress={() => void handleShare()}
+              disabled={!code}
+              accessibilityRole="button"
+              accessibilityLabel={referCopy.share}
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.codeButton,
+                { backgroundColor: colours.brandSoft, borderRadius: radius.full },
+                pressed && { opacity: 0.7 },
+              ]}>
+              <Ionicons name="share-outline" size={20} color={colours.brand} />
+            </Pressable>
+          </View>
+
+          {loadState === 'ready' && invites.length > 0 ? (
             <View style={{ marginTop: spacing.xl, gap: spacing.sm }}>
+              <AppText variant="title3" style={{ color: colours.ink }}>
+                {referCopy.progress_title}
+              </AppText>
               {invites.map((invite, index) => (
                 <View
                   key={invite.id}
@@ -158,52 +184,33 @@ export default function ReferScreen() {
                       {formatShortDate(new Date(invite.createdAt))}
                     </AppText>
                   </View>
-                  <AppText variant="bodySm" style={{ color: colours.brand }}>
-                    {STATUS_LABEL[invite.status]}
-                  </AppText>
+                  <View style={[styles.status, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
+                    <AppText variant="caption" style={{ color: colours.brand }}>
+                      {STATUS_LABEL[invite.status]}
+                    </AppText>
+                  </View>
                 </View>
               ))}
             </View>
-          )}
-
-          <AppText variant="title3" style={{ color: colours.ink, marginTop: spacing.xl }}>
-            {referCopy.invite_via}
-          </AppText>
-          <View
-            style={[
-              styles.methods,
-              { borderColor: colours.border, borderRadius: radius.lg, marginTop: spacing.sm },
-            ]}>
-            <ListRow
-              title={referCopy.share_row}
-              left={<Ionicons name="share-outline" size={22} color={colours.brand} style={styles.methodIcon} />}
-              onPress={() => void handleShare()}
-            />
-            <ListRow
-              title={referCopy.copy_row}
-              left={<Ionicons name="link-outline" size={22} color={colours.brand} style={styles.methodIcon} />}
-              onPress={() => void handleCopyLink()}
-              style={styles.methodLast}
-            />
-          </View>
+          ) : null}
         </View>
       </ScrollView>
 
-      <View
-        style={[
-          styles.sticky,
-          { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12, borderTopColor: colours.border },
-        ]}>
+      <View pointerEvents="box-none" style={[styles.topBar, { paddingTop: insets.top + 4 }]}>
+        <IconButton icon="close" variant="overlay" accessibilityLabel={referCopy.close_a11y} onPress={close} />
+        <IconButton icon="information-circle-outline" variant="overlay" accessibilityLabel={referCopy.info_a11y} onPress={showTerms} />
+      </View>
+
+      <View style={[styles.sticky, { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12 }]}>
         <PrimaryButton
           label={sharing ? 'Sharing…' : referCopy.share_link}
           onPress={() => void handleShare()}
           disabled={!code || sharing}
           loading={sharing}
         />
-        <Pressable onPress={showTerms} accessibilityRole="button" style={styles.terms}>
-          <Ionicons name="information-circle-outline" size={16} color={colours.inkMuted} />
-          <AppText variant="caption" style={{ color: colours.inkMuted, flex: 1 }}>
-            {referCopy.terms_footer}
+        <Pressable onPress={showTerms} accessibilityRole="link" style={styles.terms}>
+          <AppText variant="caption" style={{ color: colours.inkMuted, textDecorationLine: 'underline' }}>
+            {referCopy.terms_link}
           </AppText>
         </Pressable>
       </View>
@@ -215,22 +222,49 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  header: {
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    minHeight: 52,
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
   },
   scroll: {
     flex: 1,
   },
+  photo: {
+    overflow: 'hidden',
+  },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 24,
   },
-  empty: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+  step: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  stepNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  codeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 18,
+    gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  codeButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   invite: {
     flexDirection: 'row',
@@ -238,33 +272,20 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: StyleSheet.hairlineWidth,
   },
+  status: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
   flex: {
     flex: 1,
-  },
-  photo: {
-    height: 220,
-    overflow: 'hidden',
-  },
-  methods: {
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  methodIcon: {
-    marginRight: 12,
-  },
-  methodLast: {
-    borderBottomWidth: 0,
   },
   sticky: {
     paddingHorizontal: 24,
     paddingTop: 12,
-    gap: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 6,
   },
   terms: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 4,
+    alignSelf: 'center',
+    paddingVertical: 6,
   },
 });

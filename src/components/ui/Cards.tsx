@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
-import { useEffect, useState, type ComponentProps, ReactNode } from 'react';
+import { useEffect, useId, useState, type ComponentProps, ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { AppText } from '@/components/ui/AppText';
 import { THEME_PREFERENCES, THEME_PREFERENCE_LABELS, useTheme, type ThemePreference } from '@/constants/theme';
@@ -223,12 +224,23 @@ export function HeroImage({
   style?: StyleProp<ViewStyle>;
 }) {
   const { colours, spacing } = useTheme();
+  const fadeId = `heroFade${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <View style={[{ height, backgroundColor: colours.surfaceMuted, overflow: 'hidden' }, style]}>
       <PhotoFill slug={imageSlug} source={imageSlug ? null : image} label={title} focus={imageFocus} />
       {title || eyebrow ? (
         <View style={styles.heroOverlay} pointerEvents="none">
-          <View style={[styles.heroFade, { backgroundColor: colours.overlay }]}>
+          <Svg style={StyleSheet.absoluteFill}>
+            <Defs>
+              <LinearGradient id={fadeId} x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#000" stopOpacity={0} />
+                <Stop offset="0.35" stopColor="#000" stopOpacity={0.08} />
+                <Stop offset="1" stopColor="#000" stopOpacity={0.7} />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${fadeId})`} />
+          </Svg>
+          <View style={styles.heroFade}>
             {eyebrow ? (
               <AppText variant="eyebrow" style={{ color: colours.onAccent, marginBottom: spacing.sm }}>
                 {eyebrow}

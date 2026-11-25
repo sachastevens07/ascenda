@@ -2,6 +2,8 @@ import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+
 import { AppText } from '@/components/ui/AppText';
 import { PhotoFill } from '@/components/ui/Cards';
 import { SectionHeader } from '@/components/ui/List';
@@ -97,8 +99,18 @@ export function CategoryTile({
           { borderRadius: radius.lg, backgroundColor: colours.surfaceMuted },
         ]}>
         <PhotoFill slug={LEARN_CATEGORY_COVERS[category]} kind="people" label={label} />
-        <View style={[styles.tileFade, { backgroundColor: colours.overlay }]} />
-        <AppText variant="title3" style={[styles.tileLabel, { color: colours.onAccent }]} numberOfLines={2}>
+        {/* Dark fade at the bottom so the white label always reads, whatever the photo. */}
+        <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Defs>
+            <LinearGradient id={`tileFade-${category}`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#000" stopOpacity={0} />
+              <Stop offset="0.35" stopColor="#000" stopOpacity={0.05} />
+              <Stop offset="1" stopColor="#000" stopOpacity={0.72} />
+            </LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill={`url(#tileFade-${category})`} />
+        </Svg>
+        <AppText variant="bodyStrong" style={[styles.tileLabel, { color: '#FFFFFF' }]} numberOfLines={2}>
           {label}
         </AppText>
       </View>
@@ -264,8 +276,7 @@ const styles = StyleSheet.create({
   },
   tile: {
     width: '100%',
-    aspectRatio: 16 / 10,
-    minHeight: 96,
+    height: 116,
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
@@ -274,7 +285,10 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   tileLabel: {
-    padding: 12,
+    paddingHorizontal: 14,
+    paddingBottom: 12,
+    fontSize: 17,
+    lineHeight: 22,
   },
   quote: {
     borderLeftWidth: 3,

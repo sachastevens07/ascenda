@@ -135,7 +135,7 @@ export default function LearnHubScreen() {
         ]}>
         <View style={styles.header}>
           <IconButton icon="chevron-back" variant="muted" accessibilityLabel="Back" onPress={goBack} />
-          <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>
+          <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>
             Learn
           </AppText>
         </View>

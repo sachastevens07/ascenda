@@ -12,9 +12,9 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  type ScrollViewInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 
 import { showDialog } from '@/components/Dialog';
 import { LineChart } from '@/components/LineChart';
@@ -24,9 +24,9 @@ import {
   AppText,
   BadgeSheet,
   DestructiveTextButton,
-  HighlightTile,
   MenuRow,
   OverflowMenu,
+  PhotoFill,
   PrimaryButton,
   ProgressBar,
   SecondaryButton,
@@ -35,11 +35,11 @@ import {
   CoachButton,
   TabAvatar,
   TextButton,
-  TypeRing,
   measureAnchor,
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
+import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
 import {
   countEarnedAwards,
@@ -466,38 +466,6 @@ export default function ActivityScreen() {
   const awardsEarned = countEarnedAwards(badges);
   const card = [styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow];
 
-  const highlights = (
-    <>
-      <AppText variant="title2" style={{ color: colours.ink }}>Highlights</AppText>
-      <View style={styles.highlightRow}>
-        <HighlightTile
-          value={String(totals.sessions)}
-          label={totals.sessions === 1 ? 'Session completed' : 'Sessions completed'}
-          icon="barbell-outline"
-          onPress={() => setTab('achievements')}
-        />
-        <HighlightTile
-          value={hoursTileValue(totals.durationSeconds)}
-          label="Hours trained"
-          icon="time-outline"
-        />
-      </View>
-      <View style={styles.highlightRow}>
-        <HighlightTile
-          value={String(bests.length)}
-          label={bests.length === 1 ? 'Personal best' : 'Personal bests'}
-          icon="trophy-outline"
-        />
-        <HighlightTile
-          value={String(awardsEarned)}
-          label={awardsEarned === 1 ? 'Award earned' : 'Awards earned'}
-          icon="medal-outline"
-          onPress={() => setTab('achievements')}
-        />
-      </View>
-    </>
-  );
-
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
@@ -533,12 +501,16 @@ export default function ActivityScreen() {
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 24 }]}>
         {tab === 'progress' ? (
           <>
-            {highlights}
-
-            <TypeRing
+            <SummaryCard
               done={data.streak.doneThisWeek}
               target={data.streak.targetThisWeek}
               counts={data.weekTypes}
+              sessions={data.sessions}
+              totalSessions={totals.sessions}
+              hours={hoursTileValue(totals.durationSeconds)}
+              personalBests={bests.length}
+              awards={awardsEarned}
+              onOpenAwards={() => setTab('achievements')}
             />
 
             {data.hideStreak ? null : <StreakCard streak={data.streak} />}
@@ -546,16 +518,19 @@ export default function ActivityScreen() {
             <SectionHeader title="Your routine" />
             <CurrentRoutineCard enrolment={data.enrolment} roadmap={data.roadmap} />
 
-            <CardioProgressCard logs={data.cardioLogs} />
-
-            <PersonalBestsCard bests={bests} />
-
             {weeks.filter((week) => week.count > 0).length >= 2 ? (
               <View style={card}>
-                <AppText variant="title2" style={{ color: colours.ink }}>Sessions per week</AppText>
+                <View style={styles.cardHeader}>
+                  <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>Sessions per week</AppText>
+                  <AppText variant="caption" style={{ color: colours.inkMuted }}>Last 8 weeks</AppText>
+                </View>
                 <WeeklyBars weeks={weeks} />
               </View>
             ) : null}
+
+            <PersonalBestsCard bests={bests} />
+
+            <CardioProgressCard logs={data.cardioLogs} />
 
             {lift && history.length >= 2 ? (
               <View style={card}>
@@ -1016,6 +991,8 @@ function CurrentRoutineCard({
     router.push('/(tabs)/programmes' as Href);
   }
 
+  const percent = enrolment ? Math.round((gymDone / gymTotal) * 100) : 0;
+
   return (
     <Pressable
       onPress={openPlan}
@@ -1026,27 +1003,38 @@ function CurrentRoutineCard({
           : 'Start a routine'
       }
       style={({ pressed }) => [pressed && styles.pressed]}>
-      <View style={[{ borderRadius: radius.lg }, shadow]}>
-        <View style={[styles.routineCard, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
-          <View style={[styles.routineMark, { backgroundColor: colours.brand }]}>
-            <Ionicons name="barbell-outline" size={22} color={colours.onBrand} />
+      <View style={[{ borderRadius: radius.xl }, shadow]}>
+        <View style={[styles.routineCard, { backgroundColor: colours.surface, borderRadius: radius.xl }]}>
+          <View style={[styles.routinePhoto, { backgroundColor: colours.brand, borderRadius: radius.lg }]}>
+            {enrolment?.routine.cover ? (
+              <PhotoFill
+                slug={enrolment.routine.cover.id}
+                kind={enrolment.routine.cover.kind}
+                label={enrolment.routine.name}
+              />
+            ) : (
+              <Ionicons name="barbell-outline" size={24} color={colours.onBrand} />
+            )}
           </View>
-          <View style={[styles.flex, styles.routineBody]}>
-            <View style={styles.routineTitleRow}>
-              <AppText variant="bodyStrong" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
-                {enrolment ? enrolment.routine.name : 'No routine yet'}
-              </AppText>
-            </View>
+          <View style={styles.flex}>
+            <AppText variant="bodyStrong" style={{ color: colours.ink }} numberOfLines={1}>
+              {enrolment ? enrolment.routine.name : 'No routine yet'}
+            </AppText>
             <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
               {enrolment
-                ? `Week ${week} of ${enrolment.routine.length_weeks}`
+                ? `Week ${week} of ${enrolment.routine.length_weeks} · ${gymDone} of ${gymTotal} sessions`
                 : 'Start one from Train'}
             </AppText>
             {enrolment ? (
-              <ProgressBar done={gymDone} total={gymTotal} style={{ marginTop: 8 }} />
+              <View style={styles.routineProgressRow}>
+                <ProgressBar progress={gymDone / gymTotal} style={styles.flex} />
+                <AppText variant="caption" style={{ color: colours.brand, fontFamily: fonts.bold }}>
+                  {percent}%
+                </AppText>
+              </View>
             ) : null}
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colours.brand} />
+          <Ionicons name="chevron-forward" size={18} color={colours.inkMuted} />
         </View>
       </View>
     </Pressable>
@@ -1206,47 +1194,271 @@ function describeChange(history: { kg: number }[], assisted: boolean): string {
 
 function WeeklyBars({ weeks }: { weeks: WeekCount[] }) {
   const { colours } = useTheme();
-  const scrollRef = useRef<ScrollViewInstance>(null);
-  const scale = Math.max(MIN_BAR_SCALE, ...weeks.map((week) => week.count));
+  const shown = weeks.slice(-8);
+  const scale = Math.max(MIN_BAR_SCALE, ...shown.map((week) => week.count));
   return (
-    <ScrollView
-      ref={scrollRef}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
-      contentContainerStyle={styles.bars}>
-      {weeks.map((week, index) => {
-        const isThisWeek = index === weeks.length - 1;
-        const showLabel = (weeks.length - 1 - index) % 4 === 0;
-        return (
-          <View key={week.weekStart.getTime()} style={styles.barColumn}>
-            <View style={styles.barArea}>
-              {week.count > 0 ? (
-                <AppText variant="caption" style={{ color: colours.accent, marginBottom: 4 }}>
-                  {week.count}
-                </AppText>
-              ) : null}
+    <View>
+      <View style={styles.bars}>
+        {shown.map((week, index) => {
+          const isThisWeek = index === shown.length - 1;
+          return (
+            <View key={week.weekStart.getTime()} style={styles.barColumn}>
+              <AppText
+                variant="caption"
+                style={{ color: week.count > 0 ? colours.ink : 'transparent', marginBottom: 4, fontFamily: fonts.bold }}>
+                {week.count}
+              </AppText>
               <View
                 style={[
                   styles.bar,
                   {
-                    height: Math.max(4, (week.count / scale) * (BAR_AREA_HEIGHT - 20)),
-                    backgroundColor: week.count === 0 ? colours.border : colours.accent,
+                    height: Math.max(6, (week.count / scale) * (BAR_AREA_HEIGHT - 24)),
+                    backgroundColor:
+                      week.count === 0 ? colours.surfaceMuted : isThisWeek ? colours.accent : colours.brand,
                   },
                 ]}
               />
             </View>
-            <AppText variant="caption" style={[styles.barLabel, { color: colours.inkMuted }]} numberOfLines={1}>
-              {isThisWeek ? 'Now' : showLabel ? formatShortDate(week.weekStart) : ''}
-            </AppText>
-          </View>
-        );
-      })}
-    </ScrollView>
+          );
+        })}
+      </View>
+      <View style={[styles.barAxis, { borderTopColor: colours.border }]}>
+        <AppText variant="caption" style={{ color: colours.inkMuted }}>
+          {shown[0] ? formatShortDate(shown[0].weekStart) : ''}
+        </AppText>
+        <AppText variant="caption" style={{ color: colours.inkMuted }}>
+          This week
+        </AppText>
+      </View>
+    </View>
+  );
+}
+
+const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+/** Days this week (Monday first) with at least one session that counts. */
+function daysTrainedThisWeek(sessions: FinishedSessionMeta[]): boolean[] {
+  const monday = startOfWeekMonday(new Date());
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    return toIso(date);
+  });
+  const trained = new Set(sessions.filter(sessionCountsTowardStreak).map((session) => session.date));
+  return days.map((iso) => trained.has(iso));
+}
+
+function WeekRing({ done, target }: { done: number; target: number }) {
+  const { colours } = useTheme();
+  const size = 76;
+  const stroke = 8;
+  const r = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * r;
+  const progress = Math.min(1, done / Math.max(1, target));
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={colours.onBrand} strokeOpacity={0.2} strokeWidth={stroke} fill="none" />
+        <Circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          stroke={colours.accent}
+          strokeWidth={stroke}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={circumference * (1 - progress)}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        />
+      </Svg>
+      {done >= target && target > 0 ? (
+        <Ionicons name="checkmark" size={28} color={colours.onBrand} />
+      ) : (
+        <AppText variant="bodyStrong" style={{ color: colours.onBrand }}>
+          {done}/{target}
+        </AppText>
+      )}
+    </View>
+  );
+}
+
+function SummaryCard({
+  done,
+  target,
+  counts,
+  sessions,
+  totalSessions,
+  hours,
+  personalBests,
+  awards,
+  onOpenAwards,
+}: {
+  done: number;
+  target: number;
+  counts: WeekTypeCounts;
+  sessions: FinishedSessionMeta[];
+  totalSessions: number;
+  hours: string;
+  personalBests: number;
+  awards: number;
+  onOpenAwards: () => void;
+}) {
+  const { colours, radius, shadow } = useTheme();
+  const goal = Math.max(1, Math.round(target));
+  const trainedDays = daysTrainedThisWeek(sessions);
+  const todayIndex = (new Date().getDay() + 6) % 7;
+  const soft = { color: colours.onBrand, opacity: 0.72 };
+  const breakdown = [
+    `${counts.strength} strength`,
+    `${counts.cardio} cardio`,
+    ...(counts.recovery > 0 ? [`${counts.recovery} recovery`] : []),
+  ].join(' · ');
+  const stats: { value: string; label: string; onPress?: () => void }[] = [
+    { value: String(totalSessions), label: totalSessions === 1 ? 'Session' : 'Sessions' },
+    { value: hours, label: 'Hours trained' },
+    { value: String(personalBests), label: personalBests === 1 ? 'Personal best' : 'Personal bests' },
+    { value: String(awards), label: awards === 1 ? 'Award' : 'Awards', onPress: onOpenAwards },
+  ];
+
+  return (
+    <View
+      style={[styles.summary, { backgroundColor: colours.brand, borderRadius: radius.xl }, shadow]}
+      accessibilityLabel={`This week: ${done} of ${goal} sessions. ${breakdown}.`}>
+      <View style={styles.summaryTop}>
+        <View style={styles.flex}>
+          <AppText variant="eyebrow" style={soft}>
+            This week
+          </AppText>
+          <AppText variant="title1" style={{ color: colours.onBrand, marginTop: 4 }}>
+            {done} of {goal} sessions
+          </AppText>
+          <AppText variant="bodySm" style={[soft, { marginTop: 2 }]}>
+            {breakdown}
+          </AppText>
+        </View>
+        <WeekRing done={done} target={goal} />
+      </View>
+
+      <View style={styles.dayRow}>
+        {WEEKDAY_LETTERS.map((letter, index) => {
+          const trained = trainedDays[index];
+          const isToday = index === todayIndex;
+          return (
+            <View key={index} style={styles.dayColumn}>
+              <AppText variant="caption" style={[soft, isToday && { opacity: 1, fontFamily: fonts.bold }]}>
+                {letter}
+              </AppText>
+              <View
+                style={[
+                  styles.dayDot,
+                  {
+                    backgroundColor: trained ? colours.accent : 'transparent',
+                    borderColor: trained ? colours.accent : isToday ? colours.onBrand : 'rgba(255,255,255,0.3)',
+                  },
+                ]}>
+                {trained ? <Ionicons name="checkmark" size={12} color={colours.onAccent} /> : null}
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={[styles.summaryDivider, { backgroundColor: colours.onBrand }]} />
+
+      <View style={styles.summaryStats}>
+        {stats.map((stat) => {
+          const body = (
+            <>
+              <AppText variant="title2" style={{ color: colours.onBrand }}>
+                {stat.value}
+              </AppText>
+              <AppText variant="caption" style={soft} numberOfLines={2}>
+                {stat.label}
+              </AppText>
+            </>
+          );
+          return stat.onPress ? (
+            <Pressable
+              key={stat.label}
+              onPress={stat.onPress}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.summaryStat, pressed && styles.pressed]}>
+              {body}
+            </Pressable>
+          ) : (
+            <View key={stat.label} style={styles.summaryStat}>
+              {body}
+            </View>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  summary: {
+    padding: 20,
+    gap: 16,
+  },
+  summaryTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  dayRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dayColumn: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  dayDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  summaryDivider: {
+    height: StyleSheet.hairlineWidth,
+    opacity: 0.3,
+  },
+  summaryStats: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  summaryStat: {
+    flex: 1,
+    gap: 2,
+  },
+  routinePhoto: {
+    width: 64,
+    height: 64,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  routineProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 10,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  barAxis: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 6,
+    marginTop: 2,
+  },
   screen: {
     flex: 1,
   },
@@ -1305,20 +1517,14 @@ const styles = StyleSheet.create({
   routineCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    overflow: 'hidden',
-    gap: 12,
-    paddingRight: 12,
-    minHeight: 72,
+    gap: 14,
+    padding: 12,
   },
   routineMark: {
-    width: 56,
-    alignSelf: 'stretch',
-    minHeight: 72,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 0,
   },
   routineBody: {
-    paddingVertical: 12,
+    paddingVertical: 0,
   },
   routineTitleRow: {
     flexDirection: 'row',
@@ -1362,29 +1568,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   bars: {
+    flexDirection: 'row',
     alignItems: 'flex-end',
+    height: BAR_AREA_HEIGHT,
     gap: BAR_GAP,
     paddingTop: 4,
-    paddingHorizontal: BAR_WIDTH,
   },
   barColumn: {
-    width: BAR_WIDTH,
+    flex: 1,
     alignItems: 'center',
-    overflow: 'visible',
+    justifyContent: 'flex-end',
   },
   barArea: {
-    height: BAR_AREA_HEIGHT,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    flex: 1,
   },
   bar: {
-    width: BAR_WIDTH,
-    borderRadius: 6,
+    width: '70%',
+    maxWidth: 32,
+    borderRadius: 8,
   },
   barLabel: {
-    width: BAR_WIDTH * 3,
     textAlign: 'center',
-    marginTop: 6,
   },
   photoActions: {
     flexDirection: 'row',

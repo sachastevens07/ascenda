@@ -742,7 +742,16 @@
       "own_code": "That's your own code.",
       "unknown_code": "We don't recognise that invite code.",
       "already_claimed": "This account already used an invite.",
-      "reward_toast": "{friend_name} subscribed. You've earned a free month!"
+      "reward_toast": "{friend_name} subscribed. You've earned a free month!",
+      "banner_subtitle": "Give a friend {friend_trial_days} days free",
+      "screen_headline_short": "Give {friend_trial_days} days, get {extend_days} days",
+      "steps": [
+        "Share your link with a friend who's new to Evoluma.",
+        "She starts with {friend_trial_days} days free instead of 7.",
+        "When she subscribes, you get {extend_days} days free."
+      ],
+      "code_hint": "Or she can type your code when she signs up.",
+      "copied_body": "Your code is copied. Paste it into a message to a friend."
     },
     "challenges": {
       "join": "Join challenge",

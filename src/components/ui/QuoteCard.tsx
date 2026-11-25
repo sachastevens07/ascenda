@@ -1,12 +1,12 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRef, useState } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { AnchoredMenu, MenuRow, measureAnchor, type AnchorHandle, type AnchorRect } from '@/components/AnchoredMenu';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
 import type { DailyQuote } from '@/lib/quotes';
 
-import { IconButton } from './IconButton';
 
 export function QuoteCard({
   quote,
@@ -19,7 +19,7 @@ export function QuoteCard({
   eyebrow?: string;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colours, radius, spacing, shadow } = useTheme();
+  const { colours, radius, spacing } = useTheme();
   const menuRef = useRef<AnchorHandle>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [anchor, setAnchor] = useState<AnchorRect | null>(null);
@@ -35,32 +35,37 @@ export function QuoteCard({
     <View
       style={[
         styles.card,
-        { backgroundColor: colours.surface, borderRadius: radius.xl, padding: spacing.lg },
-        shadow,
+        { backgroundColor: colours.brandSoft, borderRadius: radius.xl, padding: spacing.lg },
         style,
       ]}>
-      {eyebrow ? (
-        <AppText variant="eyebrow" style={{ color: colours.accent, marginBottom: spacing.xs }}>
-          {eyebrow}
-        </AppText>
-      ) : null}
+      {/* Large decorative quote mark behind the text. */}
+      <AppText
+        variant="display"
+        italic
+        style={[styles.mark, { color: colours.brand }]}
+        accessibilityElementsHidden
+        importantForAccessibility="no">
+        “
+      </AppText>
       <View style={styles.top}>
-        <AppText variant="displaySm" italic style={{ color: colours.accent, marginTop: -8 }} accessibilityElementsHidden>
-          “
+        <AppText variant="eyebrow" style={{ color: colours.brand, flex: 1 }}>
+          {eyebrow ?? ''}
         </AppText>
         <View ref={menuRef} collapsable={false}>
-          <IconButton
-            icon="ellipsis-horizontal"
-            variant="muted"
-            accessibilityLabel="Quote options"
+          <Pressable
             onPress={openMenu}
-          />
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Quote options"
+            style={({ pressed }) => [styles.menu, pressed && { opacity: 0.6 }]}>
+            <Ionicons name="ellipsis-horizontal" size={20} color={colours.brand} />
+          </Pressable>
         </View>
       </View>
-      <AppText variant="displaySm" italic style={{ color: colours.ink }}>
+      <AppText variant="displaySm" italic style={{ color: colours.ink, marginTop: spacing.sm }}>
         {quote.text}
       </AppText>
-      <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: spacing.sm }}>
+      <AppText variant="caption" style={{ color: colours.brand, marginTop: spacing.sm }}>
         {quote.attribution}
       </AppText>
       <AnchoredMenu visible={menuOpen} anchor={anchor} onClose={() => setMenuOpen(false)}>
@@ -82,8 +87,18 @@ const styles = StyleSheet.create({
   },
   top: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+  },
+  menu: {
+    padding: 2,
+  },
+  mark: {
+    position: 'absolute',
+    right: 18,
+    bottom: -38,
+    fontSize: 140,
+    lineHeight: 160,
+    opacity: 0.12,
   },
 });
