@@ -634,3 +634,4 @@ Developer also has **Send a test trial-ending reminder** and **Send a test renew
 - AI prompts and the coach Edge Function now say "local emergency number" instead of 999 (the app's card names the exact number). Emergency detection also matches 911 and 112. Redeploy `coach` (and `ask-ascenda` if still used) for the server text change.
 - Prices: nothing hard-coded; the paywall shows Apple's local price. Set the US as base country in App Store Connect if most subscribers are American.
 - Added `expo-dev-client` (~58.0.21, approved 25 November 2026) so the development build loads code from `npx expo start`. `npm start` now starts in dev-client mode; `npm run start:go` for Expo Go.
+- Added `ws@^8` as a devDependency (25 November 2026): Expo's tunnel (`@expo/ws-tunnel`) needs ws 8 but npm hoisted ws 7 from Metro/React Native, giving "n.WebSocket is not a constructor" on `expo start --tunnel`. Metro and React Native keep their own nested ws 7.
