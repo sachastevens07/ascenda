@@ -237,7 +237,38 @@
       "cancelled_by_user": "",
       "error": "That didn't go through. You haven't been charged. Please try again.",
       "restore_none": "We couldn't find a subscription on this Apple ID.",
-      "restore_success": "Welcome back. Your subscription has been restored."
+      "restore_success": "Welcome back. Your subscription has been restored.",
+      "eyebrow_with_plan": "Your plan: {routine_name}",
+      "eyebrow_fallback": "Your plan is ready",
+      "headline_lead": "Feel at home",
+      "headline_accent": "in the gym.",
+      "benefit_rows": [
+        {
+          "icon": "map-outline",
+          "title": "Your plan, week by week",
+          "body": "Every session laid out, so you always know what to do next."
+        },
+        {
+          "icon": "barbell-outline",
+          "title": "Guides for every machine",
+          "body": "Set-up steps, form cues and a swap if it's taken."
+        },
+        {
+          "icon": "trending-up-outline",
+          "title": "See how far you've come",
+          "body": "Track every lift, personal best and milestone."
+        },
+        {
+          "icon": "restaurant-outline",
+          "title": "Food that fuels you",
+          "body": "Simple recipes for your training days."
+        }
+      ],
+      "save_tag": "Save {percent}%",
+      "per_month": "{price} / month",
+      "annual_billed": "{annual_price} a year, billed yearly",
+      "monthly_billed": "Billed monthly",
+      "trial_line_short": "{trial_days} days free"
     },
     "locked_home": {
       "_note": "DESIGN.md 9.3. Shown when there's no active subscription or trial. Every tab shows this screen.",
@@ -277,7 +308,10 @@
       "banner_trial_ending_cta": "Manage",
       "banner_grace": "There's a problem with your payment. Update it in Settings to keep access.",
       "banner_grace_cta": "Update",
-      "banner_dismiss_a11y": "Dismiss"
+      "banner_dismiss_a11y": "Dismiss",
+      "banner_browse": "You're looking around. Start your free trial to open any routine, session or guide.",
+      "banner_browse_lapsed": "Welcome back. Your history is safe. Resubscribe to open your routines and sessions again.",
+      "banner_browse_cta": "See plans"
     },
     "onboarding_end": {
       "building_plan_title": "Building your plan",

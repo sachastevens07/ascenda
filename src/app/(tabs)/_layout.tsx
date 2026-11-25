@@ -5,20 +5,16 @@ import TopTabs from 'expo-router/js-top-tabs';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 
-import { LockedHome } from '@/components/LockedHome';
-import { PillTabBar, TabBarHeightProvider, useTabBarHeight } from '@/components/PillTabBar';
+import { PillTabBar, TabBarHeightProvider } from '@/components/PillTabBar';
 import { useTheme } from '@/constants/theme';
 import { foodCopy, programmesCopy } from '@/lib/copy';
-import { useSubscription } from '@/lib/subscription';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export default function TabLayout() {
   const pathname = usePathname();
   const { colours, scheme } = useTheme();
-  const { isPro, isLoading } = useSubscription();
   const onHome = pathname === '/' || pathname === '/index';
-  const locked = !isLoading && !isPro;
 
   function tabIcon(filled: IoniconName, outline: IoniconName) {
     return ({ focused }: { focused: boolean }) => (
@@ -34,7 +30,7 @@ export default function TabLayout() {
     <TabBarHeightProvider>
       <View style={{ flex: 1, backgroundColor: colours.bg }}>
         <StatusBar
-          style={onHome && !locked ? 'light' : scheme === 'dark' ? 'light' : 'dark'}
+          style={onHome ? 'light' : scheme === 'dark' ? 'light' : 'dark'}
         />
         <TopTabs
           tabBarPosition="bottom"
@@ -60,28 +56,7 @@ export default function TabLayout() {
             options={{ title: 'Activity', tabBarIcon: tabIcon('stats-chart', 'stats-chart-outline') }}
           />
         </TopTabs>
-        <LockedOverlay />
       </View>
     </TabBarHeightProvider>
-  );
-}
-
-function LockedOverlay() {
-  const { isPro, isLoading } = useSubscription();
-  const tabBarHeight = useTabBarHeight();
-  const { colours } = useTheme();
-  if (isLoading || isPro) return null;
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: Math.max(tabBarHeight, 72),
-        backgroundColor: colours.bg,
-      }}>
-      <LockedHome />
-    </View>
   );
 }

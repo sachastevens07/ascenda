@@ -1,5 +1,5 @@
 import { useFonts } from 'expo-font';
-import { Redirect, Stack, usePathname, type Href } from 'expo-router';
+import { Redirect, router, Stack, usePathname, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, type ReactNode } from 'react';
@@ -17,6 +17,7 @@ import {
   resetAnalytics,
   startAnalytics,
 } from '@/lib/analytics';
+import { track } from '@/lib/analytics';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { DevToolsProvider, useDevTools } from '@/lib/devFlags';
 import { needsDisclaimerAcceptance } from '@/lib/disclaimer';
@@ -164,6 +165,31 @@ function RootNavigator() {
   const subscription = useSubscription();
   const { colours } = useTheme();
   const pathname = usePathname();
+  const isOnboarded =
+    getQuizAnswers(profile.profile) !== null && !!profile.profile?.age_confirmed_at;
+  const needsDisclaimerGate = isOnboarded && needsDisclaimerAcceptance(profile.profile);
+
+  // Browse mode (25 November 2026): without a subscription she can look around the main tabs,
+  // but opening any content (a routine, session, exercise, article, recipe, Coach...) swaps
+  // that screen for the paywall. Closing the paywall returns her to where she was browsing.
+  const blockedContent =
+    !!session &&
+    isOnboarded &&
+    !needsDisclaimerGate &&
+    !subscription.isLoading &&
+    !subscription.isPro &&
+    !isUnlockedWithoutSubscription(pathname);
+  const lastPaywallPath = useRef<string | null>(null);
+  useEffect(() => {
+    if (!blockedContent) {
+      lastPaywallPath.current = null;
+      return;
+    }
+    if (lastPaywallPath.current === pathname) return;
+    lastPaywallPath.current = pathname;
+    track('paywall_viewed', { reason: 'content' });
+    router.replace({ pathname: '/paywall', params: { reason: 'general' } } as Href);
+  }, [blockedContent, pathname]);
 
   if (isLoading || (session && profile.isLoading)) {
     return <View style={[styles.blank, { backgroundColor: colours.bg }]} />;
@@ -173,18 +199,8 @@ function RootNavigator() {
     return <ProfileError detail={profile.error} onRetry={profile.reload} />;
   }
 
-  const isOnboarded =
-    getQuizAnswers(profile.profile) !== null && !!profile.profile?.age_confirmed_at;
-  const needsDisclaimerGate = isOnboarded && needsDisclaimerAcceptance(profile.profile);
-
   if (session && needsDisclaimerGate) {
     return <AcceptDisclaimerScreen />;
-  }
-
-  if (session && isOnboarded && !needsDisclaimerGate && !subscription.isLoading && !subscription.isPro) {
-    if (!isUnlockedWithoutSubscription(pathname)) {
-      return <Redirect href={'/' as Href} />;
-    }
   }
 
   if (

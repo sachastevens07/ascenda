@@ -97,7 +97,7 @@ import {
 import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthlyRecap';
 import { fetchProgressSets } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
-import { ensureSubscribed } from '@/lib/paywall';
+import { ensureSubscribed, openPaywall } from '@/lib/paywall';
 import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
@@ -347,7 +347,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
-      if (subscription.isLoading || !subscription.isPro) return;
+      // Browse mode: load Home for everyone; opening content shows the paywall (root layout).
+      if (subscription.isLoading) return;
       (async () => {
         try {
           const [
@@ -881,13 +882,29 @@ export default function HomeScreen() {
     isRenewalSoon(subscription) &&
     Boolean(subscription.expiresAt) &&
     !renewalBannerHidden;
-  const showStatusBanner = showGraceBanner || showTrialBanner || showRenewalBanner;
+  const showBrowseBanner = !subscription.isLoading && !subscription.isPro;
+  const showStatusBanner = showBrowseBanner || showGraceBanner || showTrialBanner || showRenewalBanner;
 
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + 40 }]}>
         {showStatusBanner ? (
         <View style={{ paddingTop: insets.top + 8, gap: 16 }}>
+        {showBrowseBanner ? (
+          <View style={[styles.banner, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <AppText variant="bodySm" style={{ color: colours.ink }}>
+                {subscription.status === 'expired' ? subscriptionBanners.browse_lapsed : subscriptionBanners.browse}
+              </AppText>
+              <TextButton
+                label={subscriptionBanners.browse_cta}
+                onPress={() => openPaywall('general')}
+                style={{ alignSelf: 'flex-start' }}
+              />
+            </View>
+          </View>
+        ) : null}
+
         {showGraceBanner ? (
           <View style={[styles.banner, { backgroundColor: colours.accentSoft, borderRadius: radius.lg }]}>
             <AppText variant="bodySm" style={{ color: colours.ink, flex: 1 }}>

@@ -88,6 +88,16 @@ export const paywallScreenCopy = {
   terms: paywall.terms,
   privacy: paywall.privacy,
   close_a11y: paywall.close_a11y,
+  eyebrow_with_plan: paywall.eyebrow_with_plan,
+  eyebrow_fallback: paywall.eyebrow_fallback,
+  headline_lead: paywall.headline_lead,
+  headline_accent: paywall.headline_accent,
+  benefit_rows: paywall.benefit_rows,
+  save_tag: paywall.save_tag,
+  per_month: paywall.per_month,
+  annual_billed: paywall.annual_billed,
+  monthly_billed: paywall.monthly_billed,
+  trial_line_short: paywall.trial_line_short,
   purchasing: paywall.purchasing,
   success_title: paywall.success_title,
   success_body: paywall.success_body,
@@ -209,6 +219,9 @@ export const subscriptionBanners = {
   grace: subscription.banner_grace,
   grace_cta: subscription.banner_grace_cta,
   dismiss_a11y: subscription.banner_dismiss_a11y,
+  browse: subscription.banner_browse,
+  browse_lapsed: subscription.banner_browse_lapsed,
+  browse_cta: subscription.banner_browse_cta,
 } as const;
 
 const notifications = microcopy.strings.notifications;

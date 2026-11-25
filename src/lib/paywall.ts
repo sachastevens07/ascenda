@@ -1,5 +1,4 @@
 import { router, type Href } from 'expo-router';
-import { useEffect } from 'react';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { track } from '@/lib/analytics';
@@ -97,9 +96,13 @@ const UNLOCKED_WITHOUT_SUB = new Set([
   '/paywall',
   '/profile',
   '/history',
+  '/photos-consent',
+  '/period-log-consent',
+  '/photo-credits',
   '/safety',
   '/terms',
   '/privacy',
+  '/learn',
   '/onboarding',
   '/accept-disclaimer',
   '/sign-in',
@@ -112,18 +115,14 @@ export function isReferralPath(pathname: string): boolean {
   return pathname === '/refer' || pathname === '/r' || pathname.startsWith('/r/');
 }
 
-/** Account, legal, paywall, refer and locked home stay reachable without a subscription. */
+/** Main tabs, the Learn hub, account, legal, paywall and refer stay reachable without a subscription (browse mode). */
 export function isUnlockedWithoutSubscription(pathname: string): boolean {
   return UNLOCKED_WITHOUT_SUB.has(pathname) || isReferralPath(pathname);
 }
 
-/** Logger and stretch player: send her to locked home if she has no access. */
+/** Logger and stretch player: true when she has access. Without it the root layout swaps the screen for the paywall. */
 export function useSubscriptionGate(): boolean {
-  const { isPro, isLoading } = useSubscription();
-  useEffect(() => {
-    if (isLoading || isPro) return;
-    router.replace('/');
-  }, [isLoading, isPro]);
+  const { isPro } = useSubscription();
   return isPro;
 }
 

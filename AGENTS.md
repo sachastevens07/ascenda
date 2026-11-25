@@ -73,13 +73,15 @@ Evoluma is a **subscription app**. She can download it and complete onboarding f
 - **always see her own data:** if a subscription lapses, her history, PBs and awards stay visible read-only and she can export everything (CSV). Never delete or hide her data because she stopped paying;
 - use Refer a friend (share her link and code).
 
-**Everything else needs an active subscription or trial:** Home, routines, stretches, exercises and guides, the logger, Planner, Activity, Learn, cardio, Food, Evoluma AI, reminders and challenges.
+**Browse mode (decided 25 November 2026, replaces the locked home screen):** without a subscription she can look around the main tabs (Home, Train, Food, Planner, Activity) and the Learn hub, with a small "See plans" banner on Home. The moment she opens any content (a routine, session or logger, exercise or machine guide, Learn article, recipe, challenge, Coach, single session, custom workout), that screen is swapped for the paywall; closing the paywall returns her to where she was browsing. The server-side protection in P1 stays as it is.
+
+**Everything else needs an active subscription or trial:** opening routines, stretches, exercises and guides, the logger, Learn articles, cardio sessions, recipes, Evoluma AI, reminders and challenges.
 
 **Entitlement:** a single RevenueCat entitlement `ascenda_pro`. Check it in one place (a `useSubscription` hook or similar). No per-feature locks, no Pro badges inside the app, no free limits.
 
 **Referral offer:** an invited friend gets a 14-day free trial instead of 7 (where Apple's offer types allow it); the referrer gets one free month when the friend's paid subscription starts (X6).
 
-**Paywall flow** (C1, C3): onboarding → plan reveal → safety disclaimer → paywall. If she closes the paywall she lands on the "locked home" screen (C3), never on a second pop-up.
+**Paywall flow** (C1, C3): onboarding → plan reveal → safety disclaimer → paywall. If she closes the paywall she lands on Home in browse mode, never on a second pop-up. Paywall layout (25 November 2026): full-bleed photo fading into the page, eyebrow with her plan name, two-line headline (bold lead, Fraunces italic accent), four benefit rows with icons, plan cards (selected card filled plum, "Save X%" tag only when the annual price really saves against 12 monthly payments), large CTA, honest small print. No sale framing, strike-through prices or countdowns.
 
 ## Tech stack (do not change without asking)
 - Expo (React Native) with TypeScript and Expo Router

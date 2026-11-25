@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Platform,
@@ -8,18 +8,21 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import type { PurchasesPackage } from 'react-native-purchases';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { AppText, HeroImage, IconButton, PrimaryButton, TextButton } from '@/components/ui';
+import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, paywallScreenCopy, referCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
 import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
 import { recommendPlan } from '@/lib/onboardingPlan';
-import { PRO_FEATURES, defaultPackageId } from '@/lib/paywall';
+import { defaultPackageId } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import { fetchActiveEnrolment } from '@/lib/routines';
@@ -59,6 +62,7 @@ function chargeDateLabel(trialDays: number): string {
 
 export default function PaywallScreen() {
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const { colours, radius, spacing, shadow } = useTheme();
   const { profile } = useProfile();
   const answers = getQuizAnswers(profile);
@@ -162,9 +166,6 @@ export default function PaywallScreen() {
       : getFreeTrialDays(selected.product)
     : null;
   const annualSaving = getAnnualSaving(packages);
-  const headline = routineName
-    ? fillCopy(paywallScreenCopy.headline_with_plan, { routine_name: routineName })
-    : paywallScreenCopy.headline_fallback;
   const showTrialCta = Boolean(trialDays && selected?.packageType === 'ANNUAL');
 
   async function handleSubscribe() {
@@ -227,39 +228,62 @@ export default function PaywallScreen() {
     }
   }
 
+  const heroHeight = Math.round(Math.min(Math.max(windowHeight * 0.5, 340), 520));
+  const eyebrow = routineName
+    ? fillCopy(paywallScreenCopy.eyebrow_with_plan, { routine_name: routineName })
+    : paywallScreenCopy.eyebrow_fallback;
+  const ordered = [...packages].sort(
+    (a, b) => (a.packageType === 'ANNUAL' ? 0 : 1) - (b.packageType === 'ANNUAL' ? 0 : 1)
+  );
+
   return (
     <View style={[styles.screen, { backgroundColor: colours.bg }]}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <HeroImage
-          imageSlug="hero-paywall"
-          height={240}
-          imageFocus="top"
-        />
-        <View style={[styles.body, { paddingHorizontal: spacing.lg, gap: spacing.md }]}>
-          <AppText variant="display" style={{ color: colours.ink }}>
-            {headline}
-          </AppText>
-          <AppText variant="body" style={{ color: colours.inkMuted }}>
-            {paywallScreenCopy.subheadline}
-          </AppText>
+        bounces={false}>
+        {/* Full-bleed photo that fades into the page, with the headline sitting on the fade. */}
+        <View style={{ height: heroHeight }}>
+          <HeroImage imageSlug="hero-paywall" height={heroHeight} imageFocus="top" style={StyleSheet.absoluteFill} />
+          <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+            <Defs>
+              <LinearGradient id="paywallFade" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={colours.bg} stopOpacity={0} />
+                <Stop offset="0.5" stopColor={colours.bg} stopOpacity={0} />
+                <Stop offset="0.86" stopColor={colours.bg} stopOpacity={0.92} />
+                <Stop offset="1" stopColor={colours.bg} stopOpacity={1} />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100%" height="100%" fill="url(#paywallFade)" />
+          </Svg>
+          <View style={[styles.headline, { paddingHorizontal: spacing.lg }]}>
+            <AppText variant="eyebrow" style={{ color: colours.accent }} numberOfLines={2}>
+              {eyebrow}
+            </AppText>
+            <AppText style={[styles.headlineLead, { color: colours.ink, fontFamily: fonts.bold }]}>
+              {paywallScreenCopy.headline_lead}
+            </AppText>
+            <AppText style={[styles.headlineAccent, { color: colours.brand, fontFamily: fonts.displayItalic }]}>
+              {paywallScreenCopy.headline_accent}
+            </AppText>
+          </View>
+        </View>
 
-          <View
-            style={[
-              styles.benefits,
-              { backgroundColor: colours.surface, borderRadius: radius.xl, padding: spacing.md },
-              shadow,
-            ]}>
-            {PRO_FEATURES.map((feature) => (
-              <View key={feature.text} style={styles.benefit}>
-                <View style={[styles.benefitIcon, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
-                  <Ionicons name={feature.icon} size={20} color={colours.brand} />
+        <View style={{ paddingHorizontal: spacing.lg, gap: spacing.lg, paddingTop: spacing.md }}>
+          <View style={styles.benefits}>
+            {paywallScreenCopy.benefit_rows.map((row) => (
+              <View key={row.title} style={styles.benefit}>
+                <View style={[styles.benefitIcon, { backgroundColor: colours.brandSoft }]}>
+                  <Ionicons name={row.icon as BenefitIconName} size={20} color={colours.brand} />
                 </View>
-                <AppText variant="body" style={{ color: colours.ink, flex: 1 }}>
-                  {feature.text}
-                </AppText>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <AppText variant="eyebrow" style={{ color: colours.accent }}>
+                    {row.title}
+                  </AppText>
+                  <AppText variant="body" style={{ color: colours.ink }}>
+                    {row.body}
+                  </AppText>
+                </View>
               </View>
             ))}
           </View>
@@ -280,59 +304,64 @@ export default function PaywallScreen() {
           ) : (
             <>
               <View style={styles.plans}>
-                {packages.map((item) => {
+                {ordered.map((item) => {
                   const isSelected = item.identifier === selectedId;
                   const isAnnual = item.packageType === 'ANNUAL';
                   const itemTrial =
                     showFriendTrial && isAnnual ? FRIEND_TRIAL_DAYS : getFreeTrialDays(item.product);
+                  const ink = isSelected ? colours.onBrand : colours.ink;
+                  const muted = isSelected ? colours.onBrand : colours.inkMuted;
+                  const perMonth = isAnnual ? item.product.pricePerMonthString : item.product.priceString;
                   return (
                     <Pressable
                       key={item.identifier}
                       onPress={() => setSelectedId(item.identifier)}
-                      style={[
+                      style={({ pressed }) => [
                         styles.plan,
                         {
                           borderRadius: radius.xl,
                           borderColor: isSelected ? colours.brand : colours.border,
-                          backgroundColor: isSelected ? colours.brandSoft : colours.surface,
+                          backgroundColor: isSelected ? colours.brand : colours.surface,
                         },
+                        isSelected ? shadow : null,
+                        pressed && styles.pressed,
                       ]}
                       accessibilityRole="radio"
                       accessibilityState={{ checked: isSelected }}>
-                      <View style={styles.planHeader}>
-                        <AppText variant="title3" style={{ color: colours.ink }}>
-                          {isAnnual ? paywallScreenCopy.annual_title : paywallScreenCopy.monthly_title}
-                        </AppText>
-                        {isAnnual && annualSaving !== null ? (
-                          <AppText
-                            variant="caption"
-                            style={[
-                              styles.tag,
-                              { backgroundColor: colours.pro, color: colours.onPro, borderRadius: radius.full },
-                            ]}>
-                            {paywallScreenCopy.annual_tag}
+                      {isAnnual && annualSaving !== null ? (
+                        <View style={[styles.saveTag, { backgroundColor: colours.accent, borderRadius: radius.full }]}>
+                          <AppText variant="caption" style={{ color: colours.onAccent, fontFamily: fonts.bold }}>
+                            {fillCopy(paywallScreenCopy.save_tag, { percent: annualSaving })}
+                          </AppText>
+                        </View>
+                      ) : null}
+                      <View style={styles.planRow}>
+                        <View style={{ flex: 1, gap: 2 }}>
+                          <AppText variant="title3" style={{ color: ink }}>
+                            {isAnnual ? paywallScreenCopy.annual_title : paywallScreenCopy.monthly_title}
+                          </AppText>
+                          <AppText variant="bodySm" style={{ color: muted }}>
+                            {isAnnual
+                              ? fillCopy(paywallScreenCopy.annual_billed, { annual_price: item.product.priceString })
+                              : paywallScreenCopy.monthly_billed}
+                          </AppText>
+                          {isAnnual && itemTrial ? (
+                            <AppText variant="bodySm" style={{ color: isSelected ? colours.onBrand : colours.brand, fontFamily: fonts.bold }}>
+                              {fillCopy(paywallScreenCopy.trial_line_short, { trial_days: itemTrial })}
+                            </AppText>
+                          ) : null}
+                        </View>
+                        {perMonth ? (
+                          <AppText variant="title3" style={{ color: ink }}>
+                            {fillCopy(paywallScreenCopy.per_month, { price: perMonth })}
                           </AppText>
                         ) : null}
+                        <Ionicons
+                          name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
+                          size={24}
+                          color={isSelected ? colours.onBrand : colours.border}
+                        />
                       </View>
-                      <AppText variant="body" style={{ color: colours.ink, marginTop: 4 }}>
-                        {isAnnual
-                          ? itemTrial
-                            ? fillCopy(paywallScreenCopy.annual_trial_line, {
-                                trial_days: itemTrial,
-                                annual_price: item.product.priceString,
-                              })
-                            : `${item.product.priceString} a year`
-                          : fillCopy(paywallScreenCopy.monthly_line, {
-                              monthly_price: item.product.priceString,
-                            })}
-                      </AppText>
-                      {isAnnual && item.product.pricePerMonthString ? (
-                        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-                          {fillCopy(paywallScreenCopy.annual_monthly_equiv, {
-                            annual_per_month: item.product.pricePerMonthString,
-                          })}
-                        </AppText>
-                      ) : null}
                     </Pressable>
                   );
                 })}
@@ -349,6 +378,7 @@ export default function PaywallScreen() {
                 onPress={() => void handleSubscribe()}
                 disabled={busy !== null || !selected}
                 loading={busy === 'buy'}
+                style={styles.cta}
               />
 
               {selected ? (
@@ -375,6 +405,8 @@ export default function PaywallScreen() {
                 disabled={busy !== null}
               />
             ) : null}
+            <TextButton label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
+            <TextButton label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
             <TextButton
               label={subscriptionStatusCopy.how_to_cancel_title}
               onPress={() =>
@@ -393,9 +425,6 @@ export default function PaywallScreen() {
                 ])
               }
             />
-            <TextButton label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
-            <TextButton label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
-            <TextButton label={paywallScreenCopy.close_a11y} onPress={dismiss} />
           </View>
         </View>
       </ScrollView>
@@ -415,6 +444,8 @@ export default function PaywallScreen() {
   );
 }
 
+type BenefitIconName = ComponentProps<typeof Ionicons>['name'];
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -428,23 +459,39 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   close: {
-    marginLeft: 8,
-    alignSelf: 'flex-start',
+    marginRight: 12,
+    alignSelf: 'flex-end',
   },
-  body: {
-    paddingTop: 20,
+  headline: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    gap: 2,
+  },
+  headlineLead: {
+    fontSize: 40,
+    lineHeight: 46,
+    letterSpacing: -0.5,
+    marginTop: 6,
+  },
+  headlineAccent: {
+    fontSize: 44,
+    lineHeight: 52,
+    letterSpacing: -0.5,
   },
   benefits: {
-    gap: 12,
+    gap: 16,
   },
   benefit: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    alignItems: 'flex-start',
+    gap: 14,
   },
   benefitIcon: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -456,23 +503,32 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   plans: {
-    gap: 12,
+    gap: 14,
+    paddingTop: 8,
   },
   plan: {
-    minHeight: 88,
-    padding: 16,
-    borderWidth: 1.5,
+    minHeight: 84,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderWidth: 2,
   },
-  planHeader: {
+  planRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
+    gap: 12,
   },
-  tag: {
-    overflow: 'hidden',
-    paddingHorizontal: 10,
+  saveTag: {
+    position: 'absolute',
+    top: -12,
+    left: 16,
+    paddingHorizontal: 12,
     paddingVertical: 4,
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+  cta: {
+    minHeight: 58,
   },
   footer: {
     flexDirection: 'row',
