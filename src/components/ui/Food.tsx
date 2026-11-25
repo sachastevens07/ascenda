@@ -152,7 +152,8 @@ export function RecipeCard({
           <AppText variant="eyebrow" style={{ color: colours.accent }}>
             {mealTypeName}
           </AppText>
-          <AppText variant="title3" style={{ color: colours.ink, marginTop: 4 }} numberOfLines={2}>
+          {/* Always two lines tall, so every card in a row is the same height. */}
+          <AppText variant="title3" style={{ color: colours.ink, marginTop: 4, minHeight: 48 }} numberOfLines={2}>
             {recipe.title}
           </AppText>
           <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }} numberOfLines={1}>

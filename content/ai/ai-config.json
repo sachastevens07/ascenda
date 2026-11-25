@@ -634,7 +634,53 @@
     "recap_share_note": "Your recap card shows numbers only, never photos or body data.",
     "card_applied_look": "Today's session is updated. Check your sets and suggested weights.",
     "card_applied_lighter": "Today is a lighter session. Extra sets are dropped and suggested weights are eased, just for today.",
-    "card_needs_session": "Open today's session first, then tap Use this."
+    "card_needs_session": "Open today's session first, then tap Use this.",
+    "header_subtitle": "Your AI gym coach",
+    "welcome_eyebrow": "Evoluma Coach",
+    "welcome_title": "Hi {name}, what's the plan today?",
+    "welcome_title_no_name": "Hi, what's the plan today?",
+    "welcome_body": "I know your plan, your history and every exercise in Evoluma. Ask me anything, or tell me what's going on and I'll change today's session.",
+    "context_title": "Ask me about {label}",
+    "try_title": "Try asking",
+    "thinking": "Coach is thinking",
+    "capabilities": [
+      {
+        "icon": "swap-horizontal",
+        "title": "Something's taken",
+        "body": "I'll rework today's session around it.",
+        "prompt": "Something's taken at the gym. Can you rework today's session?"
+      },
+      {
+        "icon": "timer-outline",
+        "title": "Short on time",
+        "body": "I'll trim today to the key lifts.",
+        "prompt": "I only have 30 minutes today. Can you shorten my session?"
+      },
+      {
+        "icon": "barbell-outline",
+        "title": "Build me a session",
+        "body": "A one-off workout from your words.",
+        "prompt": "Build me a 45 minute lower body session."
+      },
+      {
+        "icon": "map-outline",
+        "title": "What should I do next?",
+        "body": "A routine that fits your goals and days.",
+        "prompt": "Which routine should I do next?"
+      },
+      {
+        "icon": "help-circle-outline",
+        "title": "How do I do this?",
+        "body": "Set-up, form cues and swaps.",
+        "prompt": "How do I do a Romanian deadlift properly?"
+      },
+      {
+        "icon": "restaurant-outline",
+        "title": "What can I cook?",
+        "body": "Recipes from what's in your kitchen.",
+        "prompt": "__cook__"
+      }
+    ]
   },
   "evals": [
     {

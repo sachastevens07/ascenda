@@ -277,10 +277,13 @@ const styles = StyleSheet.create({
   },
   carouselBleed: {
     marginHorizontal: -24,
+    // Room for the card shadows, without adding space to the page.
+    marginVertical: -12,
   },
   carousel: {
     gap: 12,
     paddingHorizontal: 24,
+    paddingVertical: 12,
   },
   cookCard: {
     flexDirection: 'row',

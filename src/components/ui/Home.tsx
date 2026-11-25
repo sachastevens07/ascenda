@@ -398,7 +398,7 @@ export function ReferralBanner({
         </View>
       </View>
       <View style={[styles.referPhoto, { borderRadius: radius.lg, overflow: 'hidden' }]}>
-        {/* Square crop of the fist-bump photo, so both women stay in frame. */}
+        {/* Landscape slot so the wide fist-bump photo keeps both women in frame. */}
         <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" align="center" />
       </View>
     </Pressable>
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   referPhoto: {
-    width: 96,
+    width: 132,
     height: 96,
   },
   recapCard: {
