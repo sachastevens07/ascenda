@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AskAiButton } from '@/components/AskAiButton';
 import { ExerciseMediaPlayer } from '@/components/ExerciseMediaPlayer';
 import { equipmentIconName, RelatedLearn } from '@/components/ui';
 import { AppText } from '@/components/ui/AppText';
@@ -28,12 +29,10 @@ import {
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { exerciseDemoHeightForScreen } from '@/lib/getExerciseMedia';
 import { recordGuideOpened } from '@/lib/achievements';
-import { openCoach } from '@/lib/coach';
 import { guideForExercise, preferredSwapIds } from '@/lib/contentGuides';
-import { aiCopy, fillCopy, loggerCopy, machineCopy } from '@/lib/copy';
+import { fillCopy, loggerCopy, machineCopy } from '@/lib/copy';
 import { machineGuideForExercise } from '@/lib/machineGuides';
 import { setupStepsFor } from '@/lib/gymUnlocked';
-import { ensureSubscribed } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import type { SlotExercise } from '@/lib/programmes';
 import { fetchAlternatives } from '@/lib/swaps';
@@ -185,22 +184,7 @@ export default function ExerciseScreen() {
         </AppText>
       </View>
 
-      <Pressable
-        onPress={() => {
-          if (!ensureSubscribed()) return;
-          openCoach({
-            context: { type: 'exercise', id: exercise.id, label: exercise.name },
-            entry: 'exercise',
-          });
-        }}
-        style={({ pressed }) => [styles.askAi, pressed && styles.pressed]}
-        accessibilityRole="button"
-        accessibilityLabel={aiCopy.ask_ai}>
-        <Ionicons name="sparkles" size={18} color={colours.accent} />
-        <AppText variant="bodyStrong" style={styles.askAiLabel}>
-          {aiCopy.ask_ai}
-        </AppText>
-      </Pressable>
+      <AskAiButton type="exercise" id={exercise.id} label={exercise.name} entry="exercise" />
 
       <View style={styles.card}>
         <View style={styles.cardHeading}>
@@ -365,18 +349,6 @@ const styles = StyleSheet.create({
   tagEquipment: {
     color: colours.accent,
     backgroundColor: colours.accentSoft,
-  },
-  askAi: {
-    minHeight: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: 999,
-    backgroundColor: colours.accentSoft,
-  },
-  askAiLabel: {
-    color: colours.accent,
   },
   machineLink: {
     marginTop: 2,

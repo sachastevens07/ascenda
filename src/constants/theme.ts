@@ -109,8 +109,9 @@ export const colours: ThemeColours = {
   surface: '#FFFFFF',
   text: '#1F1B24',
   textMuted: '#6B6570',
-  accent: '#7A3E6B',
-  accentSoft: '#F2E6EE',
+  // Same plum as brand / brandSoft (one purple across the app, 25 November 2026).
+  accent: '#5C3A4E',
+  accentSoft: '#E8D5DF',
   border: '#E6E0DA',
   trophy: '#C8901A',
   danger: '#A8443F',

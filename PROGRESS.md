@@ -635,3 +635,9 @@ Developer also has **Send a test trial-ending reminder** and **Send a test renew
 - Prices: nothing hard-coded; the paywall shows Apple's local price. Set the US as base country in App Store Connect if most subscribers are American.
 - Added `expo-dev-client` (~58.0.21, approved 25 November 2026) so the development build loads code from `npx expo start`. `npm start` now starts in dev-client mode; `npm run start:go` for Expo Go.
 - Added `ws@^8` as a devDependency (25 November 2026): Expo's tunnel (`@expo/ws-tunnel`) needs ws 8 but npm hoisted ws 7 from Metro/React Native, giving "n.WebSocket is not a constructor" on `expo start --tunnel`. Metro and React Native keep their own nested ws 7.
+
+## 25 November 2026: one purple, Ask AI on exercises, quote in Learn only, test data
+- Legacy `colours.accent` (#7A3E6B) and `accentSoft` (#F2E6EE) now equal brand plum #5C3A4E and brandSoft #E8D5DF, so every screen uses one purple.
+- Exercise page uses the shared `AskAiButton` (same large style as routine pages).
+- Daily quote removed from Home (Sacha's call); it stays at the top of Learn. Profile setting subtitle now says "Shown in Learn".
+- `supabase/test_data_mid_routine.sql`: TEST ACCOUNTS ONLY (refuses emails without "+"). Wipes that account's sessions, enrolments and checkpoint results, enrols in Strong Foundations from the Monday 3 weeks ago (so today is week 4), logs Mon/Wed/Fri strength sessions for weeks 1 to 3 with weights rising each week, and saves the week 3 checkpoint. Re-runnable. Tested against a local Postgres copy of the schema.
