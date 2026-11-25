@@ -627,3 +627,9 @@ Developer also has **Send a test trial-ending reminder** and **Send a test renew
 - Daily quote (N7) is back on Home after the week strip (it had only been showing in the Learn hub). Hide from its menu or Profile → Appearance; hiding applies to both places.
 - Routine page: the three suggested Coach questions are replaced by one large Ask AI button (`src/components/AskAiButton.tsx`, opens Coach with the routine as context), and the full description shows without More/Less.
 - Build setup (24 Nov 2026): `ios.bundleIdentifier` is `app.evoluma` (change before the app is created in App Store Connect if needed; permanent after). `eas.json` added with development, preview and production profiles; build numbers auto-increment remotely. Step-by-step setup is in the Evoluma launch setup guide doc.
+
+## 25 November 2026: region defaults (US users)
+- Weight unit: until she picks one, the default follows her phone region (`src/lib/region.ts`, expo-localization, already installed): lbs in the US (also Liberia, Myanmar), kg everywhere else. The profile column defaults to 'kg', so a stored 'kg' is only trusted if she chose a unit on this phone; 'lbs' is always trusted. Storage stays in kg.
+- Emergency number: the safety disclaimer, the Coach emergency card and the Ask fallback name her number from her phone region (911 US/Canada, 999 UK, 112 EU, 000 Australia, 111 NZ and others), otherwise "your local emergency number". The region is read on the device only and never sent anywhere.
+- AI prompts and the coach Edge Function now say "local emergency number" instead of 999 (the app's card names the exact number). Emergency detection also matches 911 and 112. Redeploy `coach` (and `ask-ascenda` if still used) for the server text change.
+- Prices: nothing hard-coded; the paywall shows Apple's local price. Set the US as base country in App Store Connect if most subscribers are American.

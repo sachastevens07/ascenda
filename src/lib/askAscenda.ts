@@ -15,6 +15,7 @@ import { exerciseNameFromSlug } from '@/lib/onboardingAnswers';
 import { addDays, loadPlannerWeek, startOfWeekMonday, toIso, type PlannedSession } from '@/lib/planner';
 import { currentEnrolmentWeek, fetchActiveEnrolment } from '@/lib/routines';
 import { supabase } from '@/lib/supabase';
+import { callEmergencyPhrase } from '@/lib/region';
 
 export const ASK_FEATURE = 'coach' as const;
 export const ASK_DAILY_LIMIT = 30;
@@ -207,7 +208,7 @@ export function stripEmDashes(value: string): string {
 export function detectSafetyFlag(question: string): AskSafetyFlag {
   const q = question.toLowerCase();
   if (
-    /chest pain|tightness in (my )?chest|can'?t breathe|severe breath|faint|fainting|pass out|collapsed|call 999|heart attack/.test(
+    /chest pain|tightness in (my )?chest|can'?t breathe|severe breath|faint|fainting|pass out|collapsed|call (999|911|112)|heart attack/.test(
       q
     )
   ) {
@@ -481,7 +482,7 @@ export function fallbackAskAnswer(context: AskContext): AskAnswer {
     'I could not put a full answer together just now. These guides and articles are a good place to look, or try the question again in a moment.';
   if (detected === 'emergency') {
     reply =
-      'Please stop and get medical help now. If this is an emergency, call your local emergency number.';
+      `Please stop and get medical help now. If this is an emergency, ${callEmergencyPhrase()}.`;
   } else if (detected === 'medical') {
     reply =
       'I cannot advise on pain or injury. Stop anything that hurts and speak to a doctor or physiotherapist.';

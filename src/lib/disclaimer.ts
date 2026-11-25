@@ -1,3 +1,5 @@
+import { callEmergencyPhrase } from '@/lib/region';
+
 /** Bump this when the wording changes. She is asked to accept again. */
 export const DISCLAIMER_VERSION = 2;
 
@@ -19,8 +21,10 @@ export const DISCLAIMER_CHECK_ITEMS = [
 
 export const DISCLAIMER_STOP_HEADING = 'Stop straight away and get medical help';
 
-export const DISCLAIMER_STOP_BODY =
-  'Stop if you feel chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call your local emergency number.';
+/** Names her number when we know her region: "call 911", "call 999", otherwise "call your local emergency number". */
+export function disclaimerStopBody(): string {
+  return `Stop if you feel chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, ${callEmergencyPhrase()}.`;
+}
 
 export const DISCLAIMER_LIMITS_HEADING = 'Train within your limits.';
 

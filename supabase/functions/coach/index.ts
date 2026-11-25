@@ -293,7 +293,7 @@ function stripEmDashes(value: string): string {
 function detectSafetyFlag(question: string): SafetyFlag {
   const q = question.toLowerCase();
   if (
-    /chest pain|tightness in (my )?chest|can'?t breathe|severe breath|faint|fainting|pass out|collapsed|call 999|heart attack/.test(
+    /chest pain|tightness in (my )?chest|can'?t breathe|severe breath|faint|fainting|pass out|collapsed|call (999|911|112)|heart attack/.test(
       q
     )
   ) {
@@ -410,7 +410,7 @@ function fallbackAnswer(question: string, retrieved: { type: string; id: string 
   let reply =
     'I could not put a full answer together just now. These guides are a good place to look, or try the question again in a moment.';
   if (detected === 'emergency') {
-    reply = 'Please stop and get medical help now. If this is an emergency, call 999.';
+    reply = 'Please stop and get medical help now. If this is an emergency, call your local emergency number.';
   } else if (detected === 'medical') {
     reply = 'I cannot advise on pain or injury. Stop anything that hurts and speak to a GP or physiotherapist.';
   } else if (detected === 'pregnancy') {

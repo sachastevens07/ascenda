@@ -15,7 +15,7 @@ import {
   DISCLAIMER_INTRO,
   DISCLAIMER_LIMITS_BODY,
   DISCLAIMER_LIMITS_HEADING,
-  DISCLAIMER_STOP_BODY,
+  disclaimerStopBody,
   DISCLAIMER_STOP_HEADING,
   DISCLAIMER_TITLE,
   FIRST_SESSION_BULLETS,
@@ -44,7 +44,7 @@ export function DisclaimerBody({ hideTitle = false }: { hideTitle?: boolean }) {
         ))}
       </View>
       <AppText variant="title3" style={{ color: colours.ink }}>{DISCLAIMER_STOP_HEADING}</AppText>
-      <AppText variant="body" style={{ color: colours.ink }}>{DISCLAIMER_STOP_BODY}</AppText>
+      <AppText variant="body" style={{ color: colours.ink }}>{disclaimerStopBody()}</AppText>
       <AppText variant="title3" style={{ color: colours.ink }}>{DISCLAIMER_LIMITS_HEADING}</AppText>
       <AppText variant="body" style={{ color: colours.ink }}>{DISCLAIMER_LIMITS_BODY}</AppText>
       <AppText variant="body" style={{ color: colours.ink }}>{DISCLAIMER_CLOSE}</AppText>

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 
+import { regionDefaultWeightUnit } from '@/lib/region';
 import { supabase } from '@/lib/supabase';
 
 export type WeightUnit = 'kg' | 'lbs';
@@ -11,7 +12,12 @@ export const DEFAULT_WEIGHT_UNIT: WeightUnit = 'kg';
 const UNIT_KEY = 'weight_unit';
 const LBS_PER_KG = 2.2046226218;
 
-let currentUnit: WeightUnit = DEFAULT_WEIGHT_UNIT;
+/** Until she picks one: lbs if her phone is set to the US, kg everywhere else. */
+function startingUnit(): WeightUnit {
+  return regionDefaultWeightUnit();
+}
+
+let currentUnit: WeightUnit = startingUnit();
 const listeners = new Set<(unit: WeightUnit) => void>();
 
 function isWeightUnit(value: string | null | undefined): value is WeightUnit {
@@ -86,14 +92,18 @@ export async function hydrateWeightUnit(): Promise<WeightUnit> {
 export async function fetchWeightUnit(): Promise<WeightUnit> {
   try {
     const stored = await AsyncStorage.getItem(UNIT_KEY);
-    const local = isWeightUnit(stored) ? stored : DEFAULT_WEIGHT_UNIT;
+    const chosenOnThisPhone = isWeightUnit(stored) ? stored : null;
+    const local = chosenOnThisPhone ?? startingUnit();
     const { data, error } = await supabase.from('profiles').select('weight_unit').maybeSingle();
     if (error) {
       setCurrentUnit(local);
       return local;
     }
     const remote = (data as { weight_unit?: string | null } | null)?.weight_unit;
-    if (isWeightUnit(remote)) {
+    // The profile column defaults to 'kg', so 'kg' there doesn't mean she chose it.
+    // Trust it only if she picked a unit on this phone or the profile says 'lbs'
+    // (which can only come from a real choice); otherwise use her region's default.
+    if (isWeightUnit(remote) && (chosenOnThisPhone || remote === 'lbs')) {
       setCurrentUnit(remote);
       return remote;
     }

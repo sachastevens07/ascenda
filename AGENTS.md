@@ -685,7 +685,7 @@ Build after v2.4 (or earlier if I say so), one task at a time. The detailed spec
 > - take medication that affects your heart rate, blood pressure or balance
 > - have been told by a professional to limit exercise, or are unsure whether exercise is safe for you
 >
-> **Stop straight away and get medical help if you feel** chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call 999 (or your local emergency number).
+> **Stop straight away and get medical help if you feel** chest pain or tightness, severe breathlessness, dizziness or faintness, sudden or sharp pain, or anything that feels wrong. In an emergency, call your local emergency number (the app names it from her phone region: 911 in the US, 999 in the UK, 112 in most of Europe).
 >
 > **Train within your limits.** Warm up, use weights you can lift with good form, and never train through pain. Suggested weights are estimates based on what you log, not personal prescriptions. Exercise demos and tips are for guidance only; if you're unsure how to do a movement, ask a qualified instructor at your gym.
 >
@@ -767,7 +767,7 @@ New in v2.5:
 - Encouraging copy, never shaming. Celebrate wins and firsts. No weight-loss pressure.
 - Always make progress visible: what's planned, what she's done, what she's unlocked.
 - Everything in the logger usable one-handed mid-workout.
-- Units: kg by default, lbs option in settings. UK spelling.
+- Units: default follows her phone region (lbs in the US, kg everywhere else, decided 25 November 2026), changeable in settings. UK spelling.
 - Never use em dashes (—) in any user-facing text. Use commas, full stops, colons or "to" instead.
 - Hard paywall: no Pro badges or locks inside the app; the subscription unlocks everything (see "Pricing and access").
 - Navigation (from v2.2): Home, Programmes (Routines / Stretches / Exercises), Planner, Activity, Learn. Profile opens from an avatar in the tab headers.

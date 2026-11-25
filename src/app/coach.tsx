@@ -41,10 +41,11 @@ import {
 import { historyFromMessages, requestCoachAnswer } from '@/lib/coachAi';
 import { aiCopy } from '@/lib/copy';
 import { ensureSubscribed, useSubscriptionGate } from '@/lib/paywall';
+import { callEmergencyPhrase } from '@/lib/region';
 
 function safetyCard(flag: CoachSafetyFlag | null): { title: string; body: string; emergency: boolean } | null {
   if (!flag || flag === 'none') return null;
-  if (flag === 'emergency') return { title: 'Stop and get help', body: COACH_UI.emergency_card, emergency: true };
+  if (flag === 'emergency') return { title: 'Stop and get help', body: COACH_UI.emergency_card.replace('{call_emergency}', callEmergencyPhrase()), emergency: true };
   if (flag === 'medical') return { title: 'Not medical advice', body: aiCopy.ask_card_medical, emergency: false };
   if (flag === 'pregnancy') return { title: 'Not pregnancy advice', body: aiCopy.ask_card_pregnancy, emergency: false };
   if (flag === 'body_or_diet') return { title: 'Strength, not body talk', body: aiCopy.ask_card_body, emergency: false };

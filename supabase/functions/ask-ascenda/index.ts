@@ -199,7 +199,7 @@ function stripNeverSend(value: unknown): unknown {
 function detectSafetyFlag(question: string): SafetyFlag {
   const q = question.toLowerCase();
   if (
-    /chest pain|tightness in (my )?chest|can'?t breathe|severe breath|faint|fainting|pass out|collapsed|call 999|heart attack/.test(
+    /chest pain|tightness in (my )?chest|can'?t breathe|severe breath|faint|fainting|pass out|collapsed|call (999|911|112)|heart attack/.test(
       q
     )
   ) {
