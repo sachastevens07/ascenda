@@ -744,10 +744,10 @@
       "already_claimed": "This account already used an invite.",
       "reward_toast": "{friend_name} subscribed. You've earned a free month!",
       "banner_subtitle": "Give a friend {friend_trial_days} days free",
-      "screen_headline_short": "Give {friend_trial_days} days, get {extend_days} days",
+      "screen_headline_short": "Give {friend_trial_days} days.\nGet {extend_days} days.",
       "steps": [
         "Share your link with a friend who's new to Evoluma.",
-        "She starts with {friend_trial_days} days free instead of 7.",
+        "She gets {friend_trial_days} days free, not the usual 7.",
         "When she subscribes, you get {extend_days} days free."
       ],
       "code_hint": "Or she can type your code when she signs up.",

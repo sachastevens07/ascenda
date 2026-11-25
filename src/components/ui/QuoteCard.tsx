@@ -38,15 +38,6 @@ export function QuoteCard({
         { backgroundColor: colours.brandSoft, borderRadius: radius.xl, padding: spacing.lg },
         style,
       ]}>
-      {/* Large decorative quote mark behind the text. */}
-      <AppText
-        variant="display"
-        italic
-        style={[styles.mark, { color: colours.brand }]}
-        accessibilityElementsHidden
-        importantForAccessibility="no">
-        “
-      </AppText>
       <View style={styles.top}>
         <AppText variant="eyebrow" style={{ color: colours.brand, flex: 1 }}>
           {eyebrow ?? ''}
@@ -92,13 +83,5 @@ const styles = StyleSheet.create({
   },
   menu: {
     padding: 2,
-  },
-  mark: {
-    position: 'absolute',
-    right: 18,
-    bottom: -38,
-    fontSize: 140,
-    lineHeight: 160,
-    opacity: 0.12,
   },
 });

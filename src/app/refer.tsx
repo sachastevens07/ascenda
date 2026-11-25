@@ -201,7 +201,7 @@ export default function ReferScreen() {
         <IconButton icon="information-circle-outline" variant="overlay" accessibilityLabel={referCopy.info_a11y} onPress={showTerms} />
       </View>
 
-      <View style={[styles.sticky, { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.sticky, { backgroundColor: colours.bg, paddingBottom: insets.bottom + 12, borderTopColor: colours.border }]}>
         <PrimaryButton
           label={sharing ? 'Sharing…' : referCopy.share_link}
           onPress={() => void handleShare()}
@@ -283,6 +283,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 12,
     gap: 6,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   terms: {
     alignSelf: 'center',

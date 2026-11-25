@@ -110,7 +110,7 @@ export function CategoryTile({
           </Defs>
           <Rect x="0" y="0" width="100%" height="100%" fill={`url(#tileFade-${category})`} />
         </Svg>
-        <AppText variant="bodyStrong" style={[styles.tileLabel, { color: '#FFFFFF' }]} numberOfLines={2}>
+        <AppText variant="bodyStrong" style={[styles.tileLabel, { color: '#FFFFFF' }]} numberOfLines={3}>
           {label}
         </AppText>
       </View>

@@ -154,7 +154,9 @@ export default function LearnHubScreen() {
               imageSlug={featured.cover_image_id}
               title={featured.title}
               eyebrow={LEARN_CATEGORY_LABELS[featured.category]}
-              height={200}
+              height={220}
+              titleVariant="displaySm"
+              titleLines={3}
             />
             <View style={[styles.heroMeta, { backgroundColor: colours.surface }]}>
               <AppText variant="caption" style={{ color: colours.inkMuted }}>
@@ -199,6 +201,7 @@ export default function LearnHubScreen() {
           </View>
         ) : null}
       </ScrollView>
+      <View pointerEvents="none" style={[styles.statusStrip, { height: insets.top, backgroundColor: colours.bg }]} />
     </View>
   );
 }
@@ -206,6 +209,12 @@ export default function LearnHubScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  statusStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
   },
   content: {
     padding: 24,

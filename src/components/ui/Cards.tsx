@@ -208,9 +208,14 @@ export function HeroImage({
   eyebrow,
   height = 220,
   imageFocus = 'center',
+  titleVariant = 'display',
+  titleLines = 2,
   children,
   style,
 }: {
+  /** Smaller title for cards where the full headline should fit. */
+  titleVariant?: 'display' | 'displaySm';
+  titleLines?: number;
   image?: ImageSourcePropType | null;
   /** Manifest slug. When set, this is the photo, and `image` is ignored. */
   imageSlug?: string | null;
@@ -234,8 +239,8 @@ export function HeroImage({
             <Defs>
               <LinearGradient id={fadeId} x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor="#000" stopOpacity={0} />
-                <Stop offset="0.35" stopColor="#000" stopOpacity={0.08} />
-                <Stop offset="1" stopColor="#000" stopOpacity={0.7} />
+                <Stop offset="0.25" stopColor="#000" stopOpacity={0.12} />
+                <Stop offset="1" stopColor="#000" stopOpacity={0.78} />
               </LinearGradient>
             </Defs>
             <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${fadeId})`} />
@@ -247,7 +252,7 @@ export function HeroImage({
               </AppText>
             ) : null}
             {title ? (
-              <AppText variant="display" style={{ color: colours.onAccent }} numberOfLines={2}>
+              <AppText variant={titleVariant} style={{ color: colours.onAccent }} numberOfLines={titleLines}>
                 {title}
               </AppText>
             ) : null}

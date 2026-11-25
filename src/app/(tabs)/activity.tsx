@@ -534,7 +534,7 @@ export default function ActivityScreen() {
 
             {lift && history.length >= 2 ? (
               <View style={card}>
-                <AppText variant="title2" style={{ color: colours.ink }}>
+                <AppText variant="title3" style={{ color: colours.ink }}>
                   {lift.assisted ? 'Help over time' : 'Weight over time'}
                 </AppText>
                 <Pressable
@@ -578,8 +578,13 @@ export default function ActivityScreen() {
 
             {data.photosEnabled ? (
                 <>
-                  <SectionHeader title="Progress photos" />
                   <View style={card}>
+                    <View style={styles.cardHeader}>
+                      <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>
+                        Progress photos
+                      </AppText>
+                      <Ionicons name="lock-closed-outline" size={18} color={colours.inkMuted} />
+                    </View>
                     <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
                       Optional, private, and never sent to AI. Hidden until you choose to show them.
                     </AppText>
@@ -704,7 +709,7 @@ export default function ActivityScreen() {
                         ) : null}
                       </>
                     ) : (
-                      <TextButton
+                      <SecondaryButton
                         label={progressPhotosCopy.show}
                         onPress={() => {
                           setShowPhotos(true);
@@ -795,26 +800,39 @@ function CardioProgressCard({ logs }: { logs: CardioLog[] }) {
 
   return (
     <>
-      <SectionHeader title={cardioCopy.activity_title} />
       <View style={card}>
+        <View style={styles.cardHeader}>
+          <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>
+            {cardioCopy.activity_title}
+          </AppText>
+          <Ionicons name="heart-outline" size={20} color={colours.accent} />
+        </View>
         {logs.length === 0 ? (
           <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
             {cardioCopy.activity_empty}
           </AppText>
         ) : (
-          <>
-            <AppText variant="title3" style={{ color: colours.ink }}>
-              {fillCopy(cardioCopy.activity_week, { minutes: weekMinutes })}
-            </AppText>
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-              {fillCopy(cardioCopy.activity_longest, { minutes: longest })}
-            </AppText>
-          </>
+          <View style={styles.cardioRow}>
+            <View style={styles.flex}>
+              <AppText variant="title1" style={{ color: colours.ink }}>
+                {weekMinutes}
+                <AppText variant="bodyStrong" style={{ color: colours.inkMuted }}> min</AppText>
+              </AppText>
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>This week</AppText>
+            </View>
+            <View style={styles.flex}>
+              <AppText variant="title1" style={{ color: colours.ink }}>
+                {longest}
+                <AppText variant="bodyStrong" style={{ color: colours.inkMuted }}> min</AppText>
+              </AppText>
+              <AppText variant="caption" style={{ color: colours.inkMuted }}>Longest session</AppText>
+            </View>
+          </View>
         )}
       </View>
       {showHistory ? (
         <View style={card}>
-          <AppText variant="title2" style={{ color: colours.ink }}>
+          <AppText variant="title3" style={{ color: colours.ink }}>
             {cardioCopy.activity_minutes_week}
           </AppText>
           <WeeklyBars weeks={minuteWeeks} />
@@ -822,7 +840,7 @@ function CardioProgressCard({ logs }: { logs: CardioLog[] }) {
       ) : null}
       {compare ? (
         <View style={card}>
-          <AppText variant="title2" style={{ color: colours.ink }}>
+          <AppText variant="title3" style={{ color: colours.ink }}>
             {cardioCopy.activity_compare}
           </AppText>
           <AppText variant="body" style={{ color: colours.ink }}>
@@ -880,7 +898,7 @@ function PersonalBestsCard({ bests }: { bests: PersonalBest[] }) {
           expandable ? (open ? 'Hides the full list' : 'Shows all personal bests') : undefined
         }
         style={styles.pbHeader}>
-        <AppText variant="title2" style={{ color: colours.ink, flex: 1 }}>
+        <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>
           Personal bests
         </AppText>
         {expandable ? (
@@ -1316,8 +1334,8 @@ function SummaryCard({
   ].join(' · ');
   const stats: { value: string; label: string; onPress?: () => void }[] = [
     { value: String(totalSessions), label: totalSessions === 1 ? 'Session' : 'Sessions' },
-    { value: hours, label: 'Hours trained' },
-    { value: String(personalBests), label: personalBests === 1 ? 'Personal best' : 'Personal bests' },
+    { value: hours, label: 'Hours' },
+    { value: String(personalBests), label: personalBests === 1 ? 'PB' : 'PBs' },
     { value: String(awards), label: awards === 1 ? 'Award' : 'Awards', onPress: onOpenAwards },
   ];
 
@@ -1373,7 +1391,7 @@ function SummaryCard({
               <AppText variant="title2" style={{ color: colours.onBrand }}>
                 {stat.value}
               </AppText>
-              <AppText variant="caption" style={soft} numberOfLines={2}>
+              <AppText variant="caption" style={soft} numberOfLines={1}>
                 {stat.label}
               </AppText>
             </>
@@ -1451,6 +1469,10 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  cardioRow: {
+    flexDirection: 'row',
+    gap: 12,
   },
   barAxis: {
     flexDirection: 'row',
@@ -1535,7 +1557,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    minHeight: 44,
+    minHeight: 28,
   },
   pbList: {
     position: 'relative',
