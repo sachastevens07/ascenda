@@ -20,16 +20,15 @@ export default function AuthCallbackScreen() {
     return () => data.subscription.unsubscribe();
   }, []);
 
-  // Never spin forever: no link, a slow network or a stuck request all end in a clear message.
+  // Never spin forever. The message doesn't wait on Supabase, in case its auth request is the thing that's stuck.
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
-      if (data.session) {
-        router.replace('/' as Href);
-        return;
-      }
-      setError((current) => current ?? 'Signing in took too long. Open the newest email and tap the link again, or sign in with your password.');
-    }, url ? 15000 : 4000);
+    const timer = setTimeout(() => {
+      setError(
+        (current) =>
+          current ??
+          'Signing in took too long. Go back and sign in with your email and password, or tap the newest email link again.'
+      );
+    }, url ? 12000 : 4000);
     return () => clearTimeout(timer);
   }, [url]);
 
