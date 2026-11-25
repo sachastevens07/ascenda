@@ -561,7 +561,7 @@ export default function SessionScreen() {
 
   useEffect(() => {
     if (!day) return;
-    publish({ sessionId: id, dayName: day.name, startedAt }, getNextSet(day, entries));
+    publish({ sessionId: id, dayName: day.name.charAt(0).toUpperCase() + day.name.slice(1), startedAt }, getNextSet(day, entries));
   }, [id, day, entries, startedAt, publish]);
 
   useEffect(() => {
@@ -1652,7 +1652,7 @@ export default function SessionScreen() {
           />
           <View style={[styles.flex, { alignItems: 'center' }]}>
             <AppText variant="title3" style={{ color: colours.ink, textAlign: 'center' }} numberOfLines={1}>
-              {day.name}
+              {day.name.charAt(0).toUpperCase() + day.name.slice(1)}
             </AppText>
             <AppText
               variant="caption"

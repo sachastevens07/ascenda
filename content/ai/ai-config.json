@@ -639,7 +639,7 @@
     "welcome_eyebrow": "Evoluma Coach",
     "welcome_title": "Hi {name}, what's the plan today?",
     "welcome_title_no_name": "Hi, what's the plan today?",
-    "welcome_body": "I know your plan, your history and every exercise in Evoluma. Ask me anything, or tell me what's going on and I'll adjust today.",
+    "welcome_body": "Ask about any exercise, machine or your routine. If something's taken or you're short on time, tell me and I'll rework today's session.",
     "context_title": "Ask me about {label}",
     "try_title": "Try asking",
     "thinking": "Coach is thinking",
