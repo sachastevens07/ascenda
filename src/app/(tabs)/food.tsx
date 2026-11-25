@@ -120,7 +120,7 @@ export default function FoodScreen() {
           <View style={styles.headerBlock}>
             <View style={styles.header}>
               <TabAvatar />
-              <AppText variant="display" style={{ color: colours.ink, flex: 1 }}>
+              <AppText variant="title1" style={{ color: colours.ink, flex: 1 }}>
                 {foodCopy.title}
               </AppText>
               <CoachButton />
@@ -144,7 +144,7 @@ export default function FoodScreen() {
             <Pressable
               onPress={() =>
                 openCoach({
-                  question: 'What can I cook with what I have?',
+                  intent: 'cook',
                   entry: 'food',
                 })
               }
@@ -155,7 +155,7 @@ export default function FoodScreen() {
                 { backgroundColor: colours.brandSoft, borderRadius: radius.lg },
                 pressed && styles.pressed,
               ]}>
-              <Ionicons name="restaurant-outline" size={22} color={colours.brand} />
+              <Ionicons name="sparkles" size={22} color={colours.brand} />
               <View style={styles.cookText}>
                 <AppText variant="title3" style={{ color: colours.ink }}>
                   {aiCopy.cook_title}

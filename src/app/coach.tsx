@@ -29,6 +29,7 @@ import {
   deleteCoachThread,
   loadCoachMessages,
   loadCoachThreads,
+  coachLinkLabel,
   openCoachLink,
   parseCoachContextType,
   saveCoachFeedback,
@@ -39,7 +40,7 @@ import {
   type SessionTodayExercise,
 } from '@/lib/coach';
 import { historyFromMessages, requestCoachAnswer } from '@/lib/coachAi';
-import { aiCopy } from '@/lib/copy';
+import { aiCopy, fillCopy } from '@/lib/copy';
 import { ensureSubscribed, useSubscriptionGate } from '@/lib/paywall';
 import { callEmergencyPhrase } from '@/lib/region';
 
@@ -118,6 +119,7 @@ export default function CoachScreen() {
     conversation?: string;
     newChat?: string;
     session?: string;
+    intent?: string;
   }>();
   const context: CoachContext = {
     type: parseCoachContextType(params.type),
@@ -126,6 +128,7 @@ export default function CoachScreen() {
   };
   const preset = (Array.isArray(params.question) ? params.question[0] : params.question)?.trim() ?? '';
   const startNew = params.newChat !== '0';
+  const cookMode = (Array.isArray(params.intent) ? params.intent[0] : params.intent) === 'cook';
   const sessionToday = parseSessionParam(Array.isArray(params.session) ? params.session[0] : params.session);
   const sessionId = context.type === 'session_today' ? context.id : undefined;
 
@@ -160,7 +163,11 @@ export default function CoachScreen() {
   }, [preset]);
 
   async function send(text: string) {
-    const question = text.trim();
+    const typed = text.trim();
+    const question =
+      cookMode && messages.length === 0 && typed
+        ? fillCopy(aiCopy.cook_message, { ingredients: typed })
+        : typed;
     if (!question || busy || !ensureSubscribed()) return;
     Keyboard.dismiss();
     setBusy(true);
@@ -338,11 +345,11 @@ export default function CoachScreen() {
           </View>
         ) : null}
         {messages.length === 0 ? (
-          <AppText variant="body" style={{ color: colours.inkMuted }}>
-            {COACH_UI.empty}
+          <AppText variant="body" style={{ color: cookMode ? colours.ink : colours.inkMuted }}>
+            {cookMode ? aiCopy.cook_intro : COACH_UI.empty}
           </AppText>
         ) : null}
-        {messages.length === 0 ? (
+        {messages.length === 0 && !cookMode ? (
           <View style={styles.chips}>
             {chips.map((label) => (
               <Chip key={label} label={label} size="lg" onPress={() => void send(label)} />
@@ -388,7 +395,7 @@ export default function CoachScreen() {
                     {item.links.map((link) => (
                       <Chip
                         key={`${link.type}:${link.id}`}
-                        label={link.type}
+                        label={coachLinkLabel(link)}
                         onPress={() => openCoachLink(link)}
                       />
                     ))}
@@ -477,7 +484,8 @@ export default function CoachScreen() {
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          placeholder={COACH_UI.input_placeholder}
+          placeholder={cookMode && messages.length === 0 ? aiCopy.cook_placeholder : COACH_UI.input_placeholder}
+          autoFocus={cookMode}
           placeholderTextColor={colours.inkSubtle}
           multiline
           onFocus={() => requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }))}

@@ -663,7 +663,7 @@ export default function HomeScreen() {
     if (!data?.activeSession) return;
     if (data.activeSession.source === 'stretch') {
       if (!isFeatureEnabled('stretches')) {
-        router.push('/(tabs)' as Href);
+        router.navigate('/(tabs)' as Href);
         return;
       }
       router.push({ pathname: '/stretches/play', params: { sessionId: data.activeSession.id } });
@@ -1004,7 +1004,7 @@ export default function HomeScreen() {
               return;
             }
             if (todayPlan?.completed) {
-              router.push('/(tabs)/activity' as Href);
+              router.navigate('/(tabs)/activity' as Href);
               return;
             }
             if (todayPlan?.kind === 'rest') {
@@ -1180,8 +1180,8 @@ export default function HomeScreen() {
         {showAwards ? (
           <AwardsPreview
             badges={awardPreview}
-            onSeeAll={() => router.push('/(tabs)/activity' as Href)}
-            onOpen={() => router.push('/(tabs)/activity' as Href)}
+            onSeeAll={() => router.navigate('/(tabs)/activity' as Href)}
+            onOpen={() => router.navigate('/(tabs)/activity' as Href)}
           />
         ) : null}
 
@@ -1241,7 +1241,7 @@ export default function HomeScreen() {
         ) : null}
 
         <ReferralBanner
-          imageSlug="hero-refer"
+          image={require('../../../assets/covers/hero-refer-thumb.jpg')}
           onPress={inviteFriend}
         />
       </ScrollView>

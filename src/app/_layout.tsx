@@ -214,7 +214,7 @@ function RootNavigator() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, title: '', headerBackTitle: 'Back' }}>
       <Stack.Screen
         name="paywall"
         options={{

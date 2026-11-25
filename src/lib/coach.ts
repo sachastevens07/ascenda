@@ -12,6 +12,7 @@ import { startBuiltStrengthSession, type BuiltSession } from '@/lib/buildSession
 import type { BusyGymPlan } from '@/lib/busyGym';
 import { isHealthPreferenceText, saveCoachPreference } from '@/lib/coachPreferences';
 import { recipeBySlug } from '@/lib/food';
+import { LEARN_ARTICLES, canonicalLearnArticleId } from '@/lib/learnArticles';
 import { movePlannedSession } from '@/lib/planner';
 import { startRoutine } from '@/lib/routines';
 import { addRecipeToShoppingList } from '@/lib/shoppingList';
@@ -139,6 +140,8 @@ export function openCoach(params?: {
   newChat?: boolean;
   entry?: string;
   sessionToday?: SessionTodayExercise[];
+  /** 'cook': open ready to list ingredients, nothing sent until she types. */
+  intent?: 'cook';
 }): void {
   const contextType = parseCoachContextType(params?.context?.type);
   const contextual = contextType !== 'none';
@@ -153,6 +156,7 @@ export function openCoach(params?: {
       conversation: params?.conversationId ?? '',
       newChat: params?.newChat === false && !contextual ? '0' : '1',
       session: params?.sessionToday ? JSON.stringify(params.sessionToday) : '',
+      intent: params?.intent ?? '',
     },
   } as Href);
 }
@@ -164,6 +168,25 @@ export async function openCoachFromHeader(): Promise<void> {
     return;
   }
   openCoach({ newChat: true, entry: 'header' });
+}
+
+function humaniseSlug(value: string): string {
+  const words = value.replace(/[-_]+/g, ' ').trim();
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : '';
+}
+
+/** A readable label for a Coach link chip: the article, recipe or exercise name, never just "article". */
+export function coachLinkLabel(link: CoachLink): string {
+  if (link.type === 'article') {
+    const id = canonicalLearnArticleId(link.id) ?? link.id;
+    const article = LEARN_ARTICLES.find((item) => item.id === id || item.slug === id);
+    if (article) return article.title;
+  }
+  if (link.type === 'recipe') {
+    const recipe = recipeBySlug(link.id);
+    if (recipe) return recipe.title;
+  }
+  return humaniseSlug(link.id) || humaniseSlug(link.type);
 }
 
 export function openCoachLink(link: CoachLink): void {
@@ -189,7 +212,7 @@ export function openCoachLink(link: CoachLink): void {
   }
   if (link.type === 'stretch') {
     if (!isFeatureEnabled('stretches')) {
-      router.push('/(tabs)' as Href);
+      router.navigate('/(tabs)' as Href);
       return;
     }
     router.push({ pathname: '/stretches/[id]', params: { id: link.id } } as Href);

@@ -376,33 +376,30 @@ export function ReferralBanner({
 }) {
   const { colours, radius } = useTheme();
   const title = fillCopy(referCopy.banner_title, referralOfferVars());
-  const subtitle = fillCopy(referCopy.banner_subtitle, referralOfferVars());
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${title}. ${subtitle}. ${referCopy.banner_cta}`}
+      accessibilityLabel={`${title}. ${referCopy.banner_cta}`}
       style={({ pressed }) => [
         styles.refer,
         { backgroundColor: colours.accentSoft, borderRadius: radius.xl },
         pressed && styles.pressed,
         style,
       ]}>
-      <View style={[styles.flex, styles.referText]}>
+      <View style={styles.flex}>
         <AppText variant="displaySm" style={{ color: colours.ink }}>
           {title}
         </AppText>
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-          {subtitle}
-        </AppText>
-        <View style={[styles.referPill, { backgroundColor: colours.brand, borderRadius: radius.full }]}>
-          <AppText variant="bodyStrong" style={{ color: colours.onBrand }}>
+        <View style={[styles.referPill, { backgroundColor: colours.surface, borderRadius: radius.full }]}>
+          <AppText variant="bodyStrong" style={{ color: colours.brand }}>
             {referCopy.banner_cta}
           </AppText>
         </View>
       </View>
-      <View style={styles.referPhoto}>
-        <PhotoFill slug={imageSlug ?? 'hero-refer'} source={imageSlug ? null : image} kind="people" align="center" />
+      <View style={[styles.referPhoto, { borderRadius: radius.lg, overflow: 'hidden' }]}>
+        {/* Square crop of the fist-bump photo, so both women stay in frame. */}
+        <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" align="center" />
       </View>
     </Pressable>
   );
@@ -694,14 +691,10 @@ const styles = StyleSheet.create({
   },
   refer: {
     flexDirection: 'row',
-    alignItems: 'stretch',
-    overflow: 'hidden',
-    minHeight: 150,
-  },
-  referText: {
+    alignItems: 'center',
     padding: 20,
-    paddingRight: 8,
-    justifyContent: 'center',
+    paddingRight: 12,
+    gap: 12,
   },
   referPill: {
     alignSelf: 'flex-start',
@@ -710,8 +703,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   referPhoto: {
-    width: '40%',
-    overflow: 'hidden',
+    width: 96,
+    height: 96,
   },
   recapCard: {
     gap: 0,

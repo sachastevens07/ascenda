@@ -192,7 +192,7 @@
       "see_recipe": "See recipe",
       "fuel_done": "Done",
       "share_failed": "Could not open the share sheet. Try again.",
-      "cook_a11y": "What can I cook?"
+      "cook_a11y": "Ask Coach what to cook"
     },
     "paywall": {
       "_note": "DESIGN.md 9.2. Prices, periods and trial length come from RevenueCat, never hard-coded. {trial_days} is 7, or 14 for referred friends.",
@@ -994,11 +994,11 @@
       "timeout": "That took too long. Here's another way to find what you need.",
       "error": "Something went wrong. Please try again.",
       "fallback": "Browse the machine list instead.",
-      "cook_title": "What can I cook?",
-      "cook_card_body": "Type, tick or photograph what you have.",
-      "cook_intro": "Choose one way to tell us what you have.",
+      "cook_title": "Ask Coach what to cook",
+      "cook_card_body": "List what's in your kitchen and Coach finds Evoluma recipes that use it.",
+      "cook_intro": "Tell me what's in your kitchen, like \"eggs, spinach, rice, feta\", and I'll find Evoluma recipes that use it.",
       "cook_privacy": "Photograph the food, not people. Photos are checked and then deleted.",
-      "cook_placeholder": "Eggs, spinach, feta…",
+      "cook_placeholder": "e.g. eggs, spinach, rice, feta",
       "cook_find": "Find recipes",
       "cook_enter": "Find recipes",
       "cook_mode_type": "Type",
@@ -1102,7 +1102,8 @@
       "ask_card_body": "Evoluma focuses on strength and fuelling your training, not calorie targets or comments on bodies.",
       "ask_card_off_topic": "I can only help with your training, the gym and using Evoluma.",
       "ask_card_wellbeing": "Please speak to a doctor about how you are feeling. Beat can help if eating feels hard: beat.org.uk.",
-      "ask_fallback": "Couldn't reach the usual helper, so this uses matching guides from our library."
+      "ask_fallback": "Couldn't reach the usual helper, so this uses matching guides from our library.",
+      "cook_message": "What can I cook? I have: {ingredients}"
     }
   }
 }

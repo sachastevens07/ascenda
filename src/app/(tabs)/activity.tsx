@@ -1006,7 +1006,7 @@ function CurrentRoutineCard({
       router.push({ pathname: '/routines/[id]', params: { id: enrolment.routine.id } } as Href);
       return;
     }
-    router.push('/(tabs)/programmes' as Href);
+    router.navigate('/(tabs)/programmes' as Href);
   }
 
   const percent = enrolment ? Math.round((gymDone / gymTotal) * 100) : 0;

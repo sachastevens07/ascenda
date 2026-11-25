@@ -4,7 +4,7 @@ import { Redirect, type Href } from 'expo-router';
 export default function CookRedirect() {
   return (
     <Redirect
-      href={{ pathname: '/coach', params: { question: 'What can I cook with what I have?' } } as Href}
+      href={{ pathname: '/coach', params: { intent: 'cook' } } as Href}
     />
   );
 }
