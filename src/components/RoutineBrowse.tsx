@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
@@ -32,6 +33,7 @@ import {
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/ui';
+import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
 import { routineCardDays } from '@/lib/contentRoutines';
 import { fillCopy, programmesCopy, routineActionsCopy } from '@/lib/copy';
@@ -74,12 +76,14 @@ type BrowseView =
   | { kind: 'singles' }
   | { kind: 'find' };
 
+type FindKey = 'days' | 'level' | 'goal' | 'equipment';
+
 const FIND_FILTERS: {
-  key: 'days' | 'level' | 'goal' | 'equipment';
+  key: FindKey;
   label: string;
   options: [string | number, string][];
 }[] = [
-  { key: 'days', label: 'Days a week', options: [[2, '2 days'], [3, '3 days'], [4, '4 days'], [5, '5 days']] },
+  { key: 'days', label: 'Days', options: [[2, '2 days'], [3, '3 days'], [4, '4 days'], [5, '5 days']] },
   { key: 'level', label: 'Level', options: [['beginner', 'Beginner'], ['intermediate', 'Intermediate'], ['experienced', 'Experienced']] },
   {
     key: 'goal',
@@ -127,8 +131,23 @@ export function RoutineBrowse({
   const [view, setView] = useState<BrowseView>({ kind: 'home' });
   const [findDays, setFindDays] = useState<number | null>(null);
   const [findLevel, setFindLevel] = useState<string | null>(null);
+  const [findMenu, setFindMenu] = useState<FindKey | null>(null);
+  const [findAnchor, setFindAnchor] = useState<AnchorRect | null>(null);
+  const findRefs = useRef<Partial<Record<FindKey, AnchorHandle | null>>>({});
   const [findGoal, setFindGoal] = useState<string | null>(null);
   const [findEquipment, setFindEquipment] = useState<string | null>(null);
+  function findValue(key: FindKey): string | number | null {
+    if (key === 'days') return findDays;
+    if (key === 'level') return findLevel;
+    if (key === 'goal') return findGoal;
+    return findEquipment;
+  }
+  function setFindValue(key: FindKey, next: string | number | null) {
+    if (key === 'days') setFindDays(next as number | null);
+    else if (key === 'level') setFindLevel(next as string | null);
+    else if (key === 'goal') setFindGoal(next as string | null);
+    else setFindEquipment(next as string | null);
+  }
   const singles = listSingleSessions();
   const featuredSingles = featuredSingleSessions();
   const menuRef = useRef<AnchorHandle>(null);
@@ -325,48 +344,46 @@ export function RoutineBrowse({
           <>
             {view.kind === 'find' ? (
               <>
-                <View style={[styles.findCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
-                  {FIND_FILTERS.map((group, groupIndex) => {
-                    const value =
-                      group.key === 'days'
-                        ? findDays
-                        : group.key === 'level'
-                          ? findLevel
-                          : group.key === 'goal'
-                            ? findGoal
-                            : findEquipment;
-                    const setValue = (next: string | number | null) => {
-                      if (group.key === 'days') setFindDays(next as number | null);
-                      else if (group.key === 'level') setFindLevel(next as string | null);
-                      else if (group.key === 'goal') setFindGoal(next as string | null);
-                      else setFindEquipment(next as string | null);
-                    };
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.findBarBleed}
+                  contentContainerStyle={styles.findBar}>
+                  {FIND_FILTERS.map((group) => {
+                    const value = findValue(group.key);
+                    const chosen = group.options.find(([id]) => id === value);
+                    const active = Boolean(chosen);
                     return (
-                      <View
-                        key={group.key}
-                        style={[
-                          styles.findGroup,
-                          groupIndex > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colours.border },
-                        ]}>
-                        <AppText variant="eyebrow" style={{ color: colours.inkMuted }}>
-                          {group.label}
-                        </AppText>
-                        <View style={styles.findChips}>
-                          {group.options.map(([id, label]) => (
-                            <Chip
-                              key={String(id)}
-                              label={label}
-                              selected={value === id}
-                              onPress={() => setValue(value === id ? null : id)}
-                            />
-                          ))}
-                        </View>
+                      <View key={group.key} ref={(node) => { findRefs.current[group.key] = node; }} collapsable={false}>
+                        <Pressable
+                          onPress={() =>
+                            measureAnchor(findRefs.current[group.key] ?? null, (rect) => {
+                              setFindAnchor(rect);
+                              setFindMenu(group.key);
+                            })
+                          }
+                          accessibilityRole="button"
+                          accessibilityLabel={`${group.label}${chosen ? `: ${chosen[1]}` : ''}`}
+                          style={({ pressed }) => [
+                            styles.findPill,
+                            {
+                              backgroundColor: active ? colours.brand : colours.surface,
+                              borderColor: active ? colours.brand : colours.border,
+                              borderRadius: radius.full,
+                            },
+                            pressed && { opacity: 0.85 },
+                          ]}>
+                          <AppText variant="bodySm" style={{ color: active ? colours.onBrand : colours.ink, fontFamily: fonts.semibold }}>
+                            {chosen ? chosen[1] : group.label}
+                          </AppText>
+                          <Ionicons name="chevron-down" size={14} color={active ? colours.onBrand : colours.inkMuted} />
+                        </Pressable>
                       </View>
                     );
                   })}
-                </View>
+                </ScrollView>
                 <View style={styles.findResultsHead}>
-                  <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, flex: 1 }}>
                     {foundRoutines.length === 1 ? '1 routine' : `${foundRoutines.length} routines`}
                   </AppText>
                   {findDays !== null || findLevel || findGoal || findEquipment ? (
@@ -379,8 +396,8 @@ export function RoutineBrowse({
                       }}
                       accessibilityRole="button"
                       hitSlop={8}>
-                      <AppText variant="bodyStrong" style={{ color: colours.brand }}>
-                        Clear filters
+                      <AppText variant="bodySm" style={{ color: colours.brand, fontFamily: fonts.semibold }}>
+                        Clear all
                       </AppText>
                     </Pressable>
                   ) : null}
@@ -573,6 +590,33 @@ export function RoutineBrowse({
         )}
       </ScrollView>
 
+      <OverflowMenu visible={findMenu !== null} anchor={findAnchor} onClose={() => setFindMenu(null)}>
+        {findMenu ? (
+          <>
+            <MenuHeader label={FIND_FILTERS.find((group) => group.key === findMenu)?.label ?? ''} />
+            <MenuRow
+              label="Any"
+              selected={findValue(findMenu) === null}
+              onPress={() => {
+                setFindValue(findMenu, null);
+                setFindMenu(null);
+              }}
+            />
+            {(FIND_FILTERS.find((group) => group.key === findMenu)?.options ?? []).map(([id, label]) => (
+              <MenuRow
+                key={String(id)}
+                label={label}
+                selected={findValue(findMenu) === id}
+                onPress={() => {
+                  setFindValue(findMenu, id);
+                  setFindMenu(null);
+                }}
+              />
+            ))}
+          </>
+        ) : null}
+      </OverflowMenu>
+
       <OverflowMenu visible={menuOpen} anchor={menuAnchor} onClose={() => setMenuOpen(false)}>
         <MenuHeader label={enrolment?.routine.name ?? 'Your routine'} />
         <MenuRow
@@ -596,23 +640,28 @@ export function RoutineBrowse({
 }
 
 const styles = StyleSheet.create({
-  findCard: {
-    paddingHorizontal: 16,
-    marginBottom: 4,
+  findBarBleed: {
+    marginHorizontal: -24,
+    flexGrow: 0,
   },
-  findGroup: {
-    paddingVertical: 14,
-    gap: 10,
-  },
-  findChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  findBar: {
     gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 4,
+  },
+  findPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   findResultsHead: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 4,
+    marginBottom: 2,
   },
   scroll: {
     flex: 1,
