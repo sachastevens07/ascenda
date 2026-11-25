@@ -104,3 +104,4 @@ export {
   type AnchorHandle,
   type AnchorRect,
 } from '@/components/AnchoredMenu';
+export { WheelPicker } from './WheelPicker';

@@ -38,6 +38,7 @@ import {
   OverflowMenu,
   PrimaryButton,
   SecondaryButton,
+  WheelPicker,
   RestChip,
   RestTimerBar,
   SetRow,
@@ -86,7 +87,6 @@ import {
   saveCustomWorkout,
 } from '@/lib/customWorkouts';
 import {
-  EXERCISE_REST_OPTIONS,
   fetchExercisePrefs,
   saveExerciseNote,
   saveExerciseRestPref,
@@ -293,6 +293,16 @@ function SlotMenuButton({
   );
 }
 
+
+/** Rest wheel: every 15 seconds from 15 s to 5 min. */
+const REST_WHEEL_OPTIONS = Array.from({ length: 20 }, (_, index) => (index + 1) * 15);
+
+function nearestRestOption(seconds: number): number {
+  return REST_WHEEL_OPTIONS.reduce((best, option) =>
+    Math.abs(option - seconds) < Math.abs(best - seconds) ? option : best
+  );
+}
+
 export default function SessionScreen() {
   const { id: idParam, addExercise } = useLocalSearchParams<{ id: string; addExercise?: string }>();
   const id = Array.isArray(idParam) ? idParam[0] : idParam;
@@ -355,6 +365,7 @@ export default function SessionScreen() {
   const [noteItem, setNoteItem] = useState<ProgrammeExercise | null>(null);
   const [noteDraft, setNoteDraft] = useState('');
   const [restItem, setRestItem] = useState<ProgrammeExercise | null>(null);
+  const [restDraft, setRestDraft] = useState(90);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState(0);
   const dragDy = useRef(new Animated.Value(0)).current;
@@ -1880,7 +1891,10 @@ export default function SessionScreen() {
                     </AppText>
                     <RestChip
                       label={formatRestChipTime(restSeconds)}
-                      onPress={() => setRestItem(item)}
+                      onPress={() => {
+                        setRestDraft(nearestRestOption(restSeconds));
+                        setRestItem(item);
+                      }}
                     />
                     <NoteChip
                       label={loggerCopy.note_chip}
@@ -2347,26 +2361,25 @@ export default function SessionScreen() {
             <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 8 }}>
               {loggerCopy.rest_sheet_hint}
             </AppText>
-            <View style={styles.restChoices}>
-              {EXERCISE_REST_OPTIONS.map((seconds) => {
-                const selected = restItem ? slotRestSeconds(restItem, restPrefs) === seconds : false;
-                return (
-                  <Pressable
-                    key={seconds}
-                    onPress={() => restItem && void saveRestPref(restItem, seconds)}
-                    style={[
-                      styles.restChoice,
-                      {
-                        backgroundColor: selected ? colours.brandSoft : colours.surfaceMuted,
-                        borderRadius: radius.md,
-                      },
-                    ]}>
-                    <AppText variant="bodyStrong" style={{ color: selected ? colours.brand : colours.ink }}>
-                      {formatRestChipTime(seconds)}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
+            <WheelPicker
+              options={REST_WHEEL_OPTIONS}
+              value={restDraft}
+              onChange={setRestDraft}
+              format={formatRestChipTime}
+              accessibilityLabel={loggerCopy.rest_sheet_title}
+            />
+            <View style={styles.choiceRow}>
+              <SecondaryButton
+                label="Cancel"
+                appearance="outline"
+                onPress={() => setRestItem(null)}
+                style={styles.flex}
+              />
+              <PrimaryButton
+                label="Save"
+                onPress={() => restItem && void saveRestPref(restItem, restDraft)}
+                style={styles.flex}
+              />
             </View>
           </Pressable>
         </Pressable>

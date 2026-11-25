@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { ComponentProps, ReactNode, Ref } from 'react';
 import { Pressable, StyleSheet, View, type ImageSourcePropType, type StyleProp, type ViewStyle } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AnchorHandle } from '@/components/AnchoredMenu';
@@ -72,16 +73,29 @@ export function WelcomeHero({
     <View style={[{ borderRadius: radius.xl, overflow: 'hidden', backgroundColor: colours.surfaceMuted }, style]}>
       <View style={{ height, backgroundColor: colours.surfaceMuted }}>
         <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
-        <View style={[styles.heroTopFade, { height: insets.top + 56 }]} pointerEvents="none">
-          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.28)' }]} />
-          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.08)' }]} />
-        </View>
-        <View style={styles.heroFade} pointerEvents="none">
-          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.06)' }]} />
-          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.22)' }]} />
-          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.5)' }]} />
-          <View style={[styles.heroFadeBand, { backgroundColor: 'rgba(44, 24, 16, 0.72)' }]} />
-        </View>
+        {/* Smooth fades instead of stepped bands: a soft top shade for the status bar and buttons,
+            a dark scrim behind the text, and the last strip melting into the page colour. */}
+        <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Defs>
+            <LinearGradient id="homeHeroTop" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="#2C1810" stopOpacity={0.32} />
+              <Stop offset="0.18" stopColor="#2C1810" stopOpacity={0} />
+            </LinearGradient>
+            <LinearGradient id="homeHeroScrim" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0.38" stopColor="#2C1810" stopOpacity={0} />
+              <Stop offset="0.62" stopColor="#2C1810" stopOpacity={0.45} />
+              <Stop offset="0.86" stopColor="#2C1810" stopOpacity={0.62} />
+              <Stop offset="1" stopColor="#2C1810" stopOpacity={0.35} />
+            </LinearGradient>
+            <LinearGradient id="homeHeroBlend" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0.88" stopColor={colours.bg} stopOpacity={0} />
+              <Stop offset="1" stopColor={colours.bg} stopOpacity={1} />
+            </LinearGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#homeHeroTop)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#homeHeroScrim)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#homeHeroBlend)" />
+        </Svg>
         {leading ? (
           <View
             style={[styles.heroChrome, { paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.sm }]}
@@ -90,7 +104,11 @@ export function WelcomeHero({
           </View>
         ) : null}
         <View
-          style={[styles.heroCopy, { padding: spacing.md, paddingBottom: spacing.lg, gap: spacing.sm }]}
+          style={[
+            styles.heroCopy,
+            // White secondary link stays above the cream blend at the bottom.
+            { padding: spacing.md, paddingBottom: secondaryLabel ? 56 : spacing.sm, gap: spacing.sm },
+          ]}
           pointerEvents="box-none">
           <View style={styles.heroHeading}>
             <View style={styles.flex}>
