@@ -641,3 +641,4 @@ Developer also has **Send a test trial-ending reminder** and **Send a test renew
 - Exercise page uses the shared `AskAiButton` (same large style as routine pages).
 - Daily quote removed from Home (Sacha's call); it stays at the top of Learn. Profile setting subtitle now says "Shown in Learn".
 - `supabase/test_data_mid_routine.sql`: TEST ACCOUNTS ONLY (refuses emails without "+"). Wipes that account's sessions, enrolments and checkpoint results, enrols in Strong Foundations from the Monday 3 weeks ago (so today is week 4), logs Mon/Wed/Fri strength sessions for weeks 1 to 3 with weights rising each week, and saves the week 3 checkpoint. Re-runnable. Tested against a local Postgres copy of the schema.
+- Sign-in link screen (`auth/callback`) can no longer spin forever: it moves on as soon as a session exists, shows a clear message after 4 s with no link or 15 s with a stuck request, and goes to the app after a successful link (25 November 2026).

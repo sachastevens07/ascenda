@@ -6,10 +6,32 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui';
 import { colours } from '@/constants/theme';
 import { completeSessionFromUrl, describeAuthLinkError } from '@/lib/emailAuth';
+import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackScreen() {
   const url = Linking.useURL();
   const [error, setError] = useState<string | null>(null);
+
+  // Signed in (by this screen or by the root link handler): go to the app.
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) router.replace('/' as Href);
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  // Never spin forever: no link, a slow network or a stuck request all end in a clear message.
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+      if (data.session) {
+        router.replace('/' as Href);
+        return;
+      }
+      setError((current) => current ?? 'Signing in took too long. Open the newest email and tap the link again, or sign in with your password.');
+    }, url ? 15000 : 4000);
+    return () => clearTimeout(timer);
+  }, [url]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -17,7 +39,9 @@ export default function AuthCallbackScreen() {
     completeSessionFromUrl(url)
       .then((handled) => {
         if (!isCurrent) return;
-        if (!handled) {
+        if (handled) {
+          router.replace('/' as Href);
+        } else {
           setError('This sign-in link is missing details. Open the newest email and try again.');
         }
       })
