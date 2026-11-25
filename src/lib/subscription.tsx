@@ -375,7 +375,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           if (isCurrent) setInfo(customerInfo);
         } else {
           if (isCurrent) setInfo(null);
-          await Purchases.logOut().catch(() => {});
+          // logOut errors (and logs a red error) if no one is signed in to RevenueCat yet.
+          const anonymous = await Purchases.isAnonymous().catch(() => true);
+          if (!anonymous) await Purchases.logOut().catch(() => {});
         }
       } catch {
         if (isCurrent) setInfo(null);
