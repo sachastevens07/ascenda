@@ -16,7 +16,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
-import { AppText, HeroImage, IconButton, PrimaryButton, TextButton } from '@/components/ui';
+import { AppText, HeroImage, IconButton, PrimaryButton } from '@/components/ui';
 import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
 import { fillCopy, paywallScreenCopy, referCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
@@ -74,6 +74,7 @@ export default function PaywallScreen() {
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   const [routineName, setRoutineName] = useState<string | null>(null);
   const [referred, setReferred] = useState(false);
+  const [scrolledPastPhoto, setScrolledPastPhoto] = useState(false);
 
   function dismiss() {
     if (router.canDismiss()) {
@@ -228,7 +229,7 @@ export default function PaywallScreen() {
     }
   }
 
-  const heroHeight = Math.round(Math.min(Math.max(windowHeight * 0.5, 340), 520));
+  const heroHeight = Math.round(Math.min(Math.max(windowHeight * 0.58, 380), 560));
   const eyebrow = routineName
     ? fillCopy(paywallScreenCopy.eyebrow_with_plan, { routine_name: routineName })
     : paywallScreenCopy.eyebrow_fallback;
@@ -241,7 +242,9 @@ export default function PaywallScreen() {
       <ScrollView
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 16 }}
         showsVerticalScrollIndicator={false}
-        bounces={false}>
+        bounces={false}
+        scrollEventThrottle={32}
+        onScroll={(event) => setScrolledPastPhoto(event.nativeEvent.contentOffset.y > heroHeight * 0.55)}>
         {/* Full-bleed photo that fades into the page, with the headline sitting on the fade. */}
         <View style={{ height: heroHeight }}>
           <HeroImage imageSlug="hero-paywall" height={heroHeight} imageFocus="top" style={StyleSheet.absoluteFill} />
@@ -249,15 +252,16 @@ export default function PaywallScreen() {
             <Defs>
               <LinearGradient id="paywallFade" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor={colours.bg} stopOpacity={0} />
-                <Stop offset="0.5" stopColor={colours.bg} stopOpacity={0} />
-                <Stop offset="0.86" stopColor={colours.bg} stopOpacity={0.92} />
+                <Stop offset="0.38" stopColor={colours.bg} stopOpacity={0} />
+                <Stop offset="0.62" stopColor={colours.bg} stopOpacity={0.82} />
+                <Stop offset="0.74" stopColor={colours.bg} stopOpacity={0.96} />
                 <Stop offset="1" stopColor={colours.bg} stopOpacity={1} />
               </LinearGradient>
             </Defs>
             <Rect x="0" y="0" width="100%" height="100%" fill="url(#paywallFade)" />
           </Svg>
           <View style={[styles.headline, { paddingHorizontal: spacing.lg }]}>
-            <AppText variant="eyebrow" style={{ color: colours.accent }} numberOfLines={2}>
+            <AppText variant="eyebrow" style={{ color: colours.brand }} numberOfLines={2}>
               {eyebrow}
             </AppText>
             <AppText style={[styles.headlineLead, { color: colours.ink, fontFamily: fonts.bold }]}>
@@ -336,21 +340,9 @@ export default function PaywallScreen() {
                         </View>
                       ) : null}
                       <View style={styles.planRow}>
-                        <View style={{ flex: 1, gap: 2 }}>
-                          <AppText variant="title3" style={{ color: ink }}>
-                            {isAnnual ? paywallScreenCopy.annual_title : paywallScreenCopy.monthly_title}
-                          </AppText>
-                          <AppText variant="bodySm" style={{ color: muted }}>
-                            {isAnnual
-                              ? fillCopy(paywallScreenCopy.annual_billed, { annual_price: item.product.priceString })
-                              : paywallScreenCopy.monthly_billed}
-                          </AppText>
-                          {isAnnual && itemTrial ? (
-                            <AppText variant="bodySm" style={{ color: isSelected ? colours.onBrand : colours.brand, fontFamily: fonts.bold }}>
-                              {fillCopy(paywallScreenCopy.trial_line_short, { trial_days: itemTrial })}
-                            </AppText>
-                          ) : null}
-                        </View>
+                        <AppText variant="title3" style={{ color: ink, flex: 1 }}>
+                          {isAnnual ? paywallScreenCopy.annual_title : paywallScreenCopy.monthly_title}
+                        </AppText>
                         {perMonth ? (
                           <AppText variant="title3" style={{ color: ink }}>
                             {fillCopy(paywallScreenCopy.per_month, { price: perMonth })}
@@ -362,6 +354,14 @@ export default function PaywallScreen() {
                           color={isSelected ? colours.onBrand : colours.border}
                         />
                       </View>
+                      <AppText variant="bodySm" style={{ color: muted, marginTop: 4 }}>
+                        {isAnnual
+                          ? fillCopy(paywallScreenCopy.annual_billed, { annual_price: item.product.priceString })
+                          : paywallScreenCopy.monthly_billed}
+                        {isAnnual && itemTrial
+                          ? ` · ${fillCopy(paywallScreenCopy.trial_line_short, { trial_days: itemTrial })}`
+                          : ''}
+                      </AppText>
                     </Pressable>
                   );
                 })}
@@ -399,15 +399,15 @@ export default function PaywallScreen() {
 
           <View style={styles.footer}>
             {isAvailable ? (
-              <TextButton
+              <FooterLink
                 label={busy === 'restore' ? 'Restoring…' : paywallScreenCopy.restore}
                 onPress={() => void handleRestore()}
                 disabled={busy !== null}
               />
             ) : null}
-            <TextButton label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
-            <TextButton label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
-            <TextButton
+            <FooterLink label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
+            <FooterLink label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
+            <FooterLink
               label={subscriptionStatusCopy.how_to_cancel_title}
               onPress={() =>
                 showDialog(subscriptionStatusCopy.how_to_cancel_title, subscriptionStatusCopy.how_to_cancel_body, [
@@ -428,6 +428,9 @@ export default function PaywallScreen() {
           </View>
         </View>
       </ScrollView>
+      {scrolledPastPhoto ? (
+        <View pointerEvents="none" style={[styles.statusStrip, { height: insets.top, backgroundColor: colours.bg }]} />
+      ) : null}
       <View
         pointerEvents="box-none"
         collapsable={false}
@@ -446,9 +449,33 @@ export default function PaywallScreen() {
 
 type BenefitIconName = ComponentProps<typeof Ionicons>['name'];
 
+/** Small underlined links under the paywall, like the store apps. */
+function FooterLink({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+  const { colours } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="link"
+      hitSlop={8}
+      style={({ pressed }) => [styles.footerLink, (pressed || disabled) && styles.pressed]}>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted, textDecorationLine: 'underline' }}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  statusStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
   closeLayer: {
     position: 'absolute',
@@ -459,8 +486,8 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   close: {
-    marginRight: 12,
-    alignSelf: 'flex-end',
+    marginLeft: 12,
+    alignSelf: 'flex-start',
   },
   headline: {
     position: 'absolute',
@@ -534,6 +561,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 4,
+    columnGap: 20,
+    rowGap: 10,
+    paddingTop: 4,
+  },
+  footerLink: {
+    paddingVertical: 4,
   },
 });
