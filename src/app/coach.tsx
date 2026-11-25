@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
 import { AppText, Chip, PrimaryButton, SecondaryButton } from '@/components/ui';
+import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
 import { trackAi } from '@/lib/analytics';
 import {
@@ -30,6 +31,8 @@ import {
   loadCoachMessages,
   loadCoachThreads,
   coachLinkLabel,
+  sessionCardExercises,
+  sessionCardName,
   openCoachLink,
   parseCoachContextType,
   saveCoachFeedback,
@@ -39,7 +42,8 @@ import {
   type CoachSafetyFlag,
   type SessionTodayExercise,
 } from '@/lib/coach';
-import { historyFromMessages, requestCoachAnswer } from '@/lib/coachAi';
+import { coachHerTraining, historyFromMessages, requestCoachAnswer } from '@/lib/coachAi';
+import { currentEnrolmentWeek, fetchActiveEnrolment } from '@/lib/routines';
 import { aiCopy, fillCopy } from '@/lib/copy';
 import { ensureSubscribed, useSubscriptionGate } from '@/lib/paywall';
 import { useProfile } from '@/lib/profile';
@@ -137,6 +141,24 @@ export default function CoachScreen() {
   const { profile } = useProfile();
   const firstName = (profile?.display_name ?? '').trim().split(/\s+/)[0] ?? '';
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const [activeRoutine, setActiveRoutine] = useState<{ id: string; name: string; week: number; length_weeks: number } | null>(null);
+  useEffect(() => {
+    let isCurrent = true;
+    fetchActiveEnrolment()
+      .then((enrolment) => {
+        if (!isCurrent || !enrolment) return;
+        setActiveRoutine({
+          id: enrolment.routine.id,
+          name: enrolment.routine.name,
+          week: currentEnrolmentWeek(enrolment),
+          length_weeks: enrolment.routine.length_weeks,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
   const sessionToday = parseSessionParam(Array.isArray(params.session) ? params.session[0] : params.session);
   const sessionId = context.type === 'session_today' ? context.id : undefined;
 
@@ -201,6 +223,7 @@ export default function CoachScreen() {
         newChat: !conversationId,
         history: historyFromMessages(messages),
         sessionToday,
+        herTraining: coachHerTraining(profile, activeRoutine),
       });
       if (outcome.kind === 'limit') {
         setNotice(COACH_UI.limit_reached);
@@ -435,11 +458,8 @@ export default function CoachScreen() {
                     <View style={[styles.capabilityIcon, { backgroundColor: colours.brandSoft }]}>
                       <Ionicons name={item.icon as IconName} size={18} color={colours.brand} />
                     </View>
-                    <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                    <AppText variant="bodySm" style={{ color: colours.ink, flex: 1, fontFamily: fonts.semibold }} numberOfLines={2}>
                       {item.title}
-                    </AppText>
-                    <AppText variant="caption" style={{ color: colours.inkMuted }}>
-                      {item.body}
                     </AppText>
                   </Pressable>
                 ))}
@@ -499,13 +519,44 @@ export default function CoachScreen() {
                     ))}
                   </View>
                 ) : null}
-                {item.cards.map((toolCard) => (
+                {item.cards.map((toolCard) => {
+                  const isSession = toolCard.type === 'session';
+                  const exercises = isSession ? sessionCardExercises(toolCard) : [];
+                  const buttons = toolCard.buttons ?? [];
+                  return (
                   <View
                     key={toolCard.id}
-                    style={[styles.toolCard, { backgroundColor: colours.brandSoft, borderRadius: radius.md }]}>
-                    <AppText variant="bodyStrong" style={{ color: colours.ink }}>
-                      {cardSummary(toolCard)}
-                    </AppText>
+                    style={[
+                      styles.toolCard,
+                      { backgroundColor: colours.bg, borderRadius: radius.lg, borderColor: colours.border },
+                    ]}>
+                    <View style={styles.toolHeader}>
+                      <View style={[styles.capabilityIcon, { backgroundColor: colours.brandSoft }]}>
+                        <Ionicons name={isSession ? 'barbell-outline' : 'sparkles-outline'} size={18} color={colours.brand} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                          {isSession ? sessionCardName(toolCard) : cardSummary(toolCard)}
+                        </AppText>
+                        {isSession && exercises.length > 0 ? (
+                          <AppText variant="caption" style={{ color: colours.inkMuted }}>
+                            {fillCopy(COACH_UI.session_card_meta, {
+                              count: exercises.length,
+                              minutes: Number(toolCard.estimated_minutes) || 30,
+                            })}
+                          </AppText>
+                        ) : null}
+                      </View>
+                    </View>
+                    {exercises.length > 0 ? (
+                      <View style={{ gap: 4 }}>
+                        {exercises.map((line, index) => (
+                          <AppText key={`${line}-${index}`} variant="bodySm" style={{ color: colours.ink }}>
+                            {index + 1}. {line}
+                          </AppText>
+                        ))}
+                      </View>
+                    ) : null}
                     {cardState[toolCard.id] === 'applied' ? (
                       <AppText variant="bodySm" style={{ color: colours.brand }}>
                         {toolCard.lighter === true || toolCard.energy === 'low'
@@ -514,20 +565,22 @@ export default function CoachScreen() {
                       </AppText>
                     ) : cardState[toolCard.id] === 'dismissed' ? null : (
                     <View style={styles.cardButtons}>
-                      {(toolCard.buttons ?? []).map((button) =>
-                        button === 'Not now' || button === 'Cancel' ? (
-                          <SecondaryButton
-                            key={button}
-                            label={button}
-                            appearance="outline"
-                            size="compact"
-                            onPress={() => void onCard(toolCard, button)}
-                          />
-                        ) : (
+                      {buttons.map((button, index) =>
+                        index === 0 && button !== 'Not now' && button !== 'Cancel' ? (
                           <PrimaryButton
                             key={button}
                             label={button}
                             size="compact"
+                            style={styles.cardButton}
+                            onPress={() => void onCard(toolCard, button)}
+                          />
+                        ) : (
+                          <SecondaryButton
+                            key={button}
+                            label={button === 'Save to My workouts' ? 'Save' : button}
+                            appearance="outline"
+                            size="compact"
+                            style={styles.cardButton}
                             onPress={() => void onCard(toolCard, button)}
                           />
                         )
@@ -535,7 +588,8 @@ export default function CoachScreen() {
                     </View>
                     )}
                   </View>
-                ))}
+                  );
+                })}
                 {item.role === 'assistant' ? (
                   <View style={styles.feedback}>
                     <Pressable
@@ -628,12 +682,12 @@ const styles = StyleSheet.create({
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 18, marginRight: 8 },
   headerTitle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   coachMark: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  welcome: { padding: 20, gap: 10 },
+  welcome: { padding: 18, gap: 8 },
   welcomeTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   welcomeMark: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  capability: { width: '48.5%', flexGrow: 1, padding: 14, gap: 6, borderWidth: StyleSheet.hairlineWidth, minHeight: 124 },
-  capabilityIcon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  capability: { width: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 12, gap: 10, borderWidth: StyleSheet.hairlineWidth, minHeight: 62 },
+  capabilityIcon: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   suggestion: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderWidth: StyleSheet.hairlineWidth },
   pressed: { opacity: 0.8 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, maxWidth: '100%' },
@@ -659,7 +713,9 @@ const styles = StyleSheet.create({
   bubble: { paddingHorizontal: 14, paddingVertical: 12, gap: 8 },
   card: { padding: 12, marginBottom: 8 },
   innerCard: { padding: 8 },
-  toolCard: { padding: 10, gap: 8 },
+  toolCard: { padding: 14, gap: 12, borderWidth: StyleSheet.hairlineWidth },
+  toolHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  cardButton: { flex: 1 },
   cardButtons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   links: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   feedback: { flexDirection: 'row', gap: 16, marginTop: 4 },

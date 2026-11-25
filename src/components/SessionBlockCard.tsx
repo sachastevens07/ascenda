@@ -24,7 +24,8 @@ export function SessionBlockCard({
 }) {
   const { colours, radius } = useTheme();
   const done = status === 'done' || status === 'skipped';
-  const [open, setOpen] = useState(!done);
+  // Collapsed by default to keep the logger calm; tap the row to see the moves.
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (done) setOpen(false);
@@ -33,7 +34,6 @@ export function SessionBlockCard({
     block.kind === 'warmup'
       ? fillCopy(loggerCopy.warmup_block, { minutes: block.estimatedMinutes })
       : fillCopy(loggerCopy.cooldown_block, { minutes: block.estimatedMinutes });
-  const startLabel = block.kind === 'warmup' ? 'Start warm-up' : 'Start cool-down';
 
   return (
     <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
@@ -44,15 +44,19 @@ export function SessionBlockCard({
           accessibilityRole="button"
           accessibilityLabel={open ? `Hide ${title}` : `Show ${title}`}>
           <Ionicons
-            name={status === 'done' ? 'checkmark-circle' : status === 'skipped' ? 'remove-circle-outline' : 'ellipse-outline'}
+            name={status === 'done' ? 'checkmark-circle' : status === 'skipped' ? 'remove-circle-outline' : block.kind === 'warmup' ? 'flame-outline' : 'leaf-outline'}
             size={22}
-            color={status === 'done' ? colours.success : colours.inkMuted}
+            color={status === 'done' ? colours.success : status === 'skipped' ? colours.inkMuted : colours.brand}
           />
           <View style={styles.flex}>
-            <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            <AppText variant="bodyStrong" style={{ color: colours.ink }}>
               {title}
             </AppText>
-            {status === 'skipped' ? (
+            {status === 'pending' ? (
+              <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 2 }}>
+                {block.steps.length === 1 ? '1 move' : `${block.steps.length} moves`} · {open ? 'Hide' : 'Show'}
+              </AppText>
+            ) : status === 'skipped' ? (
               <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
                 {loggerCopy.block_skipped}
               </AppText>
@@ -67,7 +71,10 @@ export function SessionBlockCard({
           )}
         </Pressable>
         {status === 'pending' ? (
-          <TextButton label={loggerCopy.block_skip} onPress={onSkip} />
+          <>
+            <TextButton label={loggerCopy.block_skip} onPress={onSkip} />
+            <PrimaryButton label="Start" size="compact" onPress={onStart} />
+          </>
         ) : null}
       </View>
 
@@ -81,7 +88,6 @@ export function SessionBlockCard({
               {formatBlockStepLine(step)}
             </AppText>
           ))}
-          {status === 'pending' ? <PrimaryButton label={startLabel} onPress={onStart} /> : null}
         </View>
       ) : null}
     </View>

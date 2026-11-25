@@ -74,6 +74,34 @@ type BrowseView =
   | { kind: 'singles' }
   | { kind: 'find' };
 
+const FIND_FILTERS: {
+  key: 'days' | 'level' | 'goal' | 'equipment';
+  label: string;
+  options: [string | number, string][];
+}[] = [
+  { key: 'days', label: 'Days a week', options: [[2, '2 days'], [3, '3 days'], [4, '4 days'], [5, '5 days']] },
+  { key: 'level', label: 'Level', options: [['beginner', 'Beginner'], ['intermediate', 'Intermediate'], ['experienced', 'Experienced']] },
+  {
+    key: 'goal',
+    label: 'Goal',
+    options: [
+      ['confidence', 'Gym confidence'],
+      ['strength', 'Build strength'],
+      ['glutes_legs', 'Glutes and legs'],
+      ['general', 'All round'],
+    ],
+  },
+  {
+    key: 'equipment',
+    label: 'Equipment',
+    options: [
+      ['machines', 'Machines'],
+      ['dumbbells', 'Dumbbells and a bench'],
+      ['barbell', 'Barbell'],
+    ],
+  },
+];
+
 export function RoutineBrowse({
   bottomInset,
   onOpenStretches,
@@ -260,8 +288,8 @@ export function RoutineBrowse({
         contentContainerStyle={[styles.container, { paddingBottom }]}>
         {nested ? (
           <View style={styles.nestedHead}>
-            <IconButton icon="chevron-back" accessibilityLabel="Back" onPress={nested.onBack} />
-            <AppText variant="title1" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
+            <IconButton icon="chevron-back" variant="muted" accessibilityLabel="Back" onPress={nested.onBack} />
+            <AppText variant="title2" style={{ color: colours.ink, flex: 1 }} numberOfLines={1}>
               {nested.title}
             </AppText>
           </View>
@@ -296,56 +324,68 @@ export function RoutineBrowse({
         {nested ? (
           <>
             {view.kind === 'find' ? (
-              <View style={{ gap: 10, marginBottom: 12 }}>
-                <AppText variant="caption" style={{ color: colours.inkMuted }}>Days a week</AppText>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {[2, 3, 4, 5].map((days) => (
-                    <Chip
-                      key={days}
-                      label={`${days} days`}
-                      selected={findDays === days}
-                      onPress={() => setFindDays(findDays === days ? null : days)}
-                    />
-                  ))}
+              <>
+                <View style={[styles.findCard, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow]}>
+                  {FIND_FILTERS.map((group, groupIndex) => {
+                    const value =
+                      group.key === 'days'
+                        ? findDays
+                        : group.key === 'level'
+                          ? findLevel
+                          : group.key === 'goal'
+                            ? findGoal
+                            : findEquipment;
+                    const setValue = (next: string | number | null) => {
+                      if (group.key === 'days') setFindDays(next as number | null);
+                      else if (group.key === 'level') setFindLevel(next as string | null);
+                      else if (group.key === 'goal') setFindGoal(next as string | null);
+                      else setFindEquipment(next as string | null);
+                    };
+                    return (
+                      <View
+                        key={group.key}
+                        style={[
+                          styles.findGroup,
+                          groupIndex > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colours.border },
+                        ]}>
+                        <AppText variant="eyebrow" style={{ color: colours.inkMuted }}>
+                          {group.label}
+                        </AppText>
+                        <View style={styles.findChips}>
+                          {group.options.map(([id, label]) => (
+                            <Chip
+                              key={String(id)}
+                              label={label}
+                              selected={value === id}
+                              onPress={() => setValue(value === id ? null : id)}
+                            />
+                          ))}
+                        </View>
+                      </View>
+                    );
+                  })}
                 </View>
-                <AppText variant="caption" style={{ color: colours.inkMuted }}>Level</AppText>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {['beginner', 'intermediate', 'experienced'].map((level) => (
-                    <Chip
-                      key={level}
-                      label={level}
-                      selected={findLevel === level}
-                      onPress={() => setFindLevel(findLevel === level ? null : level)}
-                    />
-                  ))}
+                <View style={styles.findResultsHead}>
+                  <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>
+                    {foundRoutines.length === 1 ? '1 routine' : `${foundRoutines.length} routines`}
+                  </AppText>
+                  {findDays !== null || findLevel || findGoal || findEquipment ? (
+                    <Pressable
+                      onPress={() => {
+                        setFindDays(null);
+                        setFindLevel(null);
+                        setFindGoal(null);
+                        setFindEquipment(null);
+                      }}
+                      accessibilityRole="button"
+                      hitSlop={8}>
+                      <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+                        Clear filters
+                      </AppText>
+                    </Pressable>
+                  ) : null}
                 </View>
-                <AppText variant="caption" style={{ color: colours.inkMuted }}>Goal</AppText>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {['confidence', 'strength', 'glutes_legs', 'general'].map((goal) => (
-                    <Chip
-                      key={goal}
-                      label={goal.replace('_', ' ')}
-                      selected={findGoal === goal}
-                      onPress={() => setFindGoal(findGoal === goal ? null : goal)}
-                    />
-                  ))}
-                </View>
-                <AppText variant="caption" style={{ color: colours.inkMuted }}>Equipment</AppText>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                  {[
-                    ['machines', 'Machines'],
-                    ['dumbbells', 'Dumbbells and a bench'],
-                    ['barbell', 'Barbell'],
-                  ].map(([id, label]) => (
-                    <Chip
-                      key={id}
-                      label={label}
-                      selected={findEquipment === id}
-                      onPress={() => setFindEquipment(findEquipment === id ? null : id)}
-                    />
-                  ))}
-                </View>
-              </View>
+              </>
             ) : null}
             {styleRoutines.map((summary) => (
               <CatalogueCard
@@ -556,6 +596,24 @@ export function RoutineBrowse({
 }
 
 const styles = StyleSheet.create({
+  findCard: {
+    paddingHorizontal: 16,
+    marginBottom: 4,
+  },
+  findGroup: {
+    paddingVertical: 14,
+    gap: 10,
+  },
+  findChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  findResultsHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
   scroll: {
     flex: 1,
   },

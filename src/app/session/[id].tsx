@@ -37,6 +37,7 @@ import {
   NoteChip,
   OverflowMenu,
   PrimaryButton,
+  SecondaryButton,
   RestChip,
   RestTimerBar,
   SetRow,
@@ -332,7 +333,7 @@ export default function SessionScreen() {
     entries: Record<string, SetEntry>;
   } | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [coachOpen, setCoachOpen] = useState(true);
+  const [coachOpen, setCoachOpen] = useState(false);
   const [warmupStatus, setWarmupStatus] = useState<BlockPlayStatus>('pending');
   const [cooldownStatus, setCooldownStatus] = useState<BlockPlayStatus>('pending');
   const [finisherStatus, setFinisherStatus] = useState<BlockPlayStatus>('pending');
@@ -493,14 +494,16 @@ export default function SessionScreen() {
         );
         const ramped = applyRampUp(log.day, built, log.rampUpApplied);
         setDay(ramped.day);
-        setCoachOpen(true);
+        setCoachOpen(false);
         setPrevious(log.previous);
         setEaseBack(log.easeBack);
         setNotes(prefs.notes);
         setRestPrefs(prefs.rest);
         setEntries(ramped.entries);
         setBests(historyBests);
-        setStartedAt(log.timerStartedAt);
+        // The session timer starts as soon as the session opens (decided 25 November 2026).
+        const timerAt = log.timerStartedAt ?? Date.now();
+        setStartedAt(timerAt);
         setWarmupStatus(log.warmupStatus);
         setCooldownStatus(log.cooldownStatus);
         setWarmupTemplateId(log.plan?.warmupTemplateId ?? null);
@@ -521,7 +524,7 @@ export default function SessionScreen() {
         if (!log.rampUpApplied) {
           await saveSessionPlan(
             id,
-            sessionPlanFromDay(ramped.day, log.easeBack ?? undefined, log.timerStartedAt, {
+            sessionPlanFromDay(ramped.day, log.easeBack ?? undefined, timerAt, {
               warmupStatus: log.warmupStatus,
               cooldownStatus: log.cooldownStatus,
               rampUpApplied: true,
@@ -1625,7 +1628,6 @@ export default function SessionScreen() {
 
   const restRemaining = restEndsAt === null ? 0 : Math.ceil((restEndsAt - now) / 1000);
   const records = getSetRecords(day, entries, bests);
-  const showGuideTip = day.exercises.some((item) => !previous[item.exercise.id]?.length);
   const saveLabel = isSavingWorkout ? 'Saving…' : 'Save as workout';
   const elapsedLabel = startedAt === null ? '0:00' : formatClock((now - startedAt) / 1000);
   const eyebrow =
@@ -1648,9 +1650,17 @@ export default function SessionScreen() {
             accessibilityLabel={loggerCopy.minimise_a11y}
             onPress={minimise}
           />
-          <AppText variant="title3" style={[styles.flex, { color: colours.ink, textAlign: 'center' }]} numberOfLines={1}>
-            {day.name}
-          </AppText>
+          <View style={[styles.flex, { alignItems: 'center' }]}>
+            <AppText variant="title3" style={{ color: colours.ink, textAlign: 'center' }} numberOfLines={1}>
+              {day.name}
+            </AppText>
+            <AppText
+              variant="caption"
+              style={{ color: colours.inkMuted, fontVariant: ['tabular-nums'], marginTop: 2 }}
+              numberOfLines={1}>
+              {elapsedLabel} · {formatKg(volumeKg)} · {doneSets}/{totalSets} {loggerCopy.stats.sets.toLowerCase()}
+            </AppText>
+          </View>
           <CoachButton
             onPress={() =>
               openCoach({
@@ -1668,19 +1678,6 @@ export default function SessionScreen() {
               onPress={openMenu}
             />
           </View>
-        </View>
-        <View style={styles.headerRow}>
-          <AppText variant="bodySm" style={{ color: colours.inkMuted, fontVariant: ['tabular-nums'] }}>
-            {elapsedLabel}
-          </AppText>
-          <View style={styles.flex} />
-          <PrimaryButton
-            label={loggerCopy.finish}
-            onPress={confirmFinish}
-            loading={isFinishing}
-            disabled={isFinishing || doneSets === 0}
-            size="compact"
-          />
         </View>
         {showLighterBadge && CHECKIN.loggerBadge ? (
           <View style={{ marginTop: 6, alignItems: 'flex-start' }}>
@@ -1706,40 +1703,6 @@ export default function SessionScreen() {
             {eyebrow}
           </AppText>
         ) : null}
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <AppText variant="caption" style={{ color: colours.inkMuted }}>
-              {loggerCopy.stats.duration}
-            </AppText>
-            <AppText variant="title3" style={{ color: colours.ink, fontVariant: ['tabular-nums'] }}>
-              {elapsedLabel}
-            </AppText>
-          </View>
-          <View style={styles.stat}>
-            <AppText variant="caption" style={{ color: colours.inkMuted }}>
-              {loggerCopy.stats.volume}
-            </AppText>
-            <AppText variant="title3" style={{ color: colours.ink }}>
-              {formatKg(volumeKg)}
-            </AppText>
-          </View>
-          <View style={styles.stat}>
-            <AppText variant="caption" style={{ color: colours.inkMuted }}>
-              {loggerCopy.stats.sets}
-            </AppText>
-            <AppText variant="title3" style={{ color: colours.ink }}>
-              {doneSets} / {totalSets}
-            </AppText>
-          </View>
-        </View>
-        {startedAt === null ? (
-          <View style={styles.timerHint}>
-            <AppText variant="bodySm" style={{ color: colours.inkMuted, flex: 1 }}>
-              {loggerCopy.timer_hint}
-            </AppText>
-            <TextButton label={loggerCopy.start_timer} onPress={startTimer} />
-          </View>
-        ) : null}
       </View>
 
       <ScrollView
@@ -1755,15 +1718,6 @@ export default function SessionScreen() {
             onDecline={() => resolveCheckin(false, true)}
             onAccept={({ adjustment }) => void acceptCheckinAdjustment(adjustment)}
           />
-        ) : null}
-
-        {showGuideTip ? (
-          <View style={[styles.tip, { backgroundColor: colours.brandSoft, borderRadius: radius.lg }]}>
-            <Ionicons name="information-circle-outline" size={20} color={colours.brand} />
-            <AppText variant="bodySm" style={{ color: colours.ink, flex: 1 }}>
-              {loggerCopy.first_time_link}
-            </AppText>
-          </View>
         ) : null}
 
         {day.coach_note || day.finisher ? (
@@ -1920,8 +1874,12 @@ export default function SessionScreen() {
               {reordering ? null : (
               <>
               <View style={styles.chipRow}>
+                    <AppText variant="bodySm" style={{ color: colours.inkMuted, flex: 1 }} numberOfLines={2}>
+                      {formatTargetLine(item)}
+                      {item.tempo ? ` · ${formatTempo(item.tempo)}` : ''}
+                    </AppText>
                     <RestChip
-                      label={fillCopy(loggerCopy.rest_chip, { time: formatRestChipTime(restSeconds) })}
+                      label={formatRestChipTime(restSeconds)}
                       onPress={() => setRestItem(item)}
                     />
                     <NoteChip
@@ -1933,34 +1891,25 @@ export default function SessionScreen() {
                       }}
                     />
                   </View>
-                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-                    {formatTargetLine(item)}
-                  </AppText>
-                  {item.tempo ? (
-                    <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                      {formatTempo(item.tempo)}
-                    </AppText>
-                  ) : null}
                   {suggestion?.kind === 'find-starting-weight' ? (
                     <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
                       {loggerCopy.find_starting_weight}
                     </AppText>
                   ) : null}
                   {firstTime ? (
-                    <Pressable onPress={() => openGuide(item.exercise.id)} hitSlop={6}>
-                      <AppText variant="bodySm" style={{ color: colours.brand, marginTop: 4 }}>
-                        {loggerCopy.first_time_link}
-                      </AppText>
-                    </Pressable>
-                  ) : null}
-                  {machine ? (
                     <Pressable
                       onPress={() =>
-                        router.push({ pathname: '/machines/[id]', params: { id: machine.id } } as Href)
+                        machine
+                          ? router.push({ pathname: '/machines/[id]', params: { id: machine.id } } as Href)
+                          : openGuide(item.exercise.id)
                       }
-                      hitSlop={6}>
-                      <AppText variant="bodySm" style={{ color: colours.brand, marginTop: 4 }}>
-                        {fillCopy(machineCopy.first_time, { machine: machine.name.toLowerCase() })}
+                      hitSlop={6}
+                      style={styles.guideLink}>
+                      <Ionicons name="information-circle-outline" size={16} color={colours.brand} />
+                      <AppText variant="bodySm" style={{ color: colours.brand }}>
+                        {machine
+                          ? fillCopy(machineCopy.first_time, { machine: machine.name.toLowerCase() })
+                          : loggerCopy.first_time_link}
                       </AppText>
                     </Pressable>
                   ) : null}
@@ -2076,104 +2025,84 @@ export default function SessionScreen() {
         ) : null}
 
         {finisher ? (
-          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, padding: 14 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Ionicons
-                name={
-                  finisherStatus === 'done'
-                    ? 'checkmark-circle'
-                    : finisherStatus === 'skipped'
-                      ? 'remove-circle-outline'
-                      : 'ellipse-outline'
-                }
-                size={22}
-                color={finisherStatus === 'done' ? colours.success : colours.inkMuted}
-              />
-              <View style={{ flex: 1 }}>
-                <AppText variant="eyebrow" style={{ color: colours.accent }}>
-                  {fillCopy(weekRingCopy.finisher_block, { minutes: finisher.minutes })}
-                </AppText>
-                <AppText variant="body" style={{ color: colours.ink, marginTop: 2 }}>
-                  {finisher.name}
-                </AppText>
-                {finisherStatus === 'skipped' ? (
-                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                    {loggerCopy.block_skipped}
-                  </AppText>
-                ) : finisherStatus === 'done' ? (
-                  <AppText variant="bodySm" style={{ color: colours.success, marginTop: 2 }}>
-                    Done
-                  </AppText>
-                ) : (
-                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                    Optional. Skip with one tap, or do it after your last set.
-                  </AppText>
-                )}
-              </View>
-              {finisherStatus === 'pending' ? (
-                <TextButton label={loggerCopy.block_skip} onPress={() => setFinisherStatus('skipped')} />
-              ) : null}
+          <View style={[styles.compactBlock, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
+            <Ionicons
+              name={
+                finisherStatus === 'done'
+                  ? 'checkmark-circle'
+                  : finisherStatus === 'skipped'
+                    ? 'remove-circle-outline'
+                    : 'heart-outline'
+              }
+              size={22}
+              color={finisherStatus === 'done' ? colours.success : colours.brand}
+            />
+            <View style={styles.flex}>
+              <AppText variant="bodyStrong" style={{ color: colours.ink }} numberOfLines={1}>
+                {finisher.name}
+              </AppText>
+              <AppText variant="caption" style={{ color: finisherStatus === 'done' ? colours.success : colours.inkMuted }}>
+                {finisherStatus === 'skipped'
+                  ? loggerCopy.block_skipped
+                  : finisherStatus === 'done'
+                    ? 'Done'
+                    : fillCopy(weekRingCopy.finisher_block, { minutes: finisher.minutes })}
+              </AppText>
             </View>
             {finisherStatus === 'pending' ? (
-              <PrimaryButton
-                label="Mark done"
-                onPress={() => setFinisherStatus('done')}
-                style={{ marginTop: 10 }}
-              />
+              <>
+                <TextButton label={loggerCopy.block_skip} onPress={() => setFinisherStatus('skipped')} />
+                <PrimaryButton label="Done" size="compact" onPress={() => setFinisherStatus('done')} />
+              </>
             ) : null}
           </View>
         ) : null}
 
         {showImpactFinisher ? (
-          <View style={[{ backgroundColor: colours.surface, borderRadius: radius.lg, padding: 14, gap: 8 }]}>
-            <AppText variant="eyebrow" style={{ color: colours.accent }}>
-              {fillCopy(weekRingCopy.finisher_block, { minutes: impactCopy.minutes })}
-            </AppText>
-            <AppText variant="title3" style={{ color: colours.ink }}>
-              {impactCopy.title}
-            </AppText>
-            {impactCopy.body ? (
-              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                {impactCopy.body}
-              </AppText>
-            ) : null}
+          <View style={[styles.card, { backgroundColor: colours.surface, borderRadius: radius.lg, gap: 10 }]}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="flash-outline" size={20} color={colours.brand} />
+              <View style={styles.flex}>
+                <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                  {impactCopy.title}
+                </AppText>
+                <AppText variant="caption" style={{ color: colours.inkMuted }}>
+                  {impactChoice === 'pending'
+                    ? fillCopy(weekRingCopy.finisher_block, { minutes: impactCopy.minutes })
+                    : impactChoice === 'skipped'
+                      ? loggerCopy.block_skipped
+                      : impactChoice === 'impact'
+                        ? impactCopy.impact.label
+                        : impactCopy.lowerImpact.label}
+                </AppText>
+              </View>
+              {impactChoice === 'pending' ? (
+                <TextButton label={impactCopy.skip} onPress={() => setImpactChoice('skipped')} />
+              ) : null}
+            </View>
             {impactChoice === 'pending' ? (
-              <>
-                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                  {impactCopy.impact.body}
-                </AppText>
-                <TextButton
+              <View style={styles.choiceRow}>
+                <SecondaryButton
                   label={impactCopy.impact.label}
+                  appearance="outline"
+                  size="compact"
                   onPress={() => setImpactChoice('impact')}
-                  style={{ alignSelf: 'flex-start' }}
+                  style={styles.flex}
                 />
-                <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                  {impactCopy.lowerImpact.body}
-                </AppText>
                 <PrimaryButton
                   label={impactCopy.lowerImpact.label}
+                  size="compact"
                   onPress={() => setImpactChoice('lower_impact')}
+                  style={styles.flex}
                 />
-                <TextButton
-                  label={impactCopy.skip}
-                  onPress={() => setImpactChoice('skipped')}
-                  style={{ alignSelf: 'flex-start' }}
-                />
-              </>
-            ) : (
-              <AppText variant="bodySm" style={{ color: colours.success }}>
-                {impactChoice === 'skipped'
-                  ? loggerCopy.block_skipped
-                  : impactChoice === 'impact'
-                    ? impactCopy.impact.label
-                    : impactCopy.lowerImpact.label}
-              </AppText>
-            )}
+              </View>
+            ) : null}
           </View>
         ) : null}
 
         {dragFrom === null ? (
-          <PrimaryButton
+          <SecondaryButton
+            appearance="outline"
             label={isAdding ? 'Adding…' : loggerCopy.add_exercise}
             onPress={() => setPickerOpen(true)}
             disabled={isAdding || isFinishing || day.exercises.length >= MAX_WORKOUT_EXERCISES}
@@ -2205,6 +2134,21 @@ export default function SessionScreen() {
             {loggerCopy.set_menu.undo}
           </AppText>
         </Pressable>
+      ) : null}
+
+      {restEndsAt === null ? (
+        <View
+          style={[
+            styles.finishBar,
+            { backgroundColor: colours.bg, borderTopColor: colours.border, paddingBottom: Math.max(insets.bottom, 12) },
+          ]}>
+          <PrimaryButton
+            label={loggerCopy.finish}
+            onPress={confirmFinish}
+            loading={isFinishing}
+            disabled={isFinishing || doneSets === 0}
+          />
+        </View>
       ) : null}
 
       {restEndsAt !== null ? (
@@ -2492,10 +2436,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  statsRow: {
+  finishBar: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  compactBlock: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 10,
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+  },
+  choiceRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  guideLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
   },
   stat: {
     flex: 1,
@@ -2531,7 +2491,7 @@ const styles = StyleSheet.create({
   },
   chipRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 8,
     marginTop: 8,
   },

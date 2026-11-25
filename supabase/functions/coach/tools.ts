@@ -556,7 +556,13 @@ export function buildSessionTool(
     if (finisher) blocks.push({ block_type: 'cardio', cardio_session_id: finisher.id, exercises: [] });
   }
   blocks.push({ block_type: 'cooldown', template_id: cooldown?.id ?? null, exercises: [] });
-  const name = `${focus.replace(/_/g, ' ')}, ${minutes} min`;
+  const FOCUS_LABELS: Record<string, string> = {
+    upper: 'Upper body',
+    lower: 'Lower body',
+    glutes_and_legs: 'Glutes and legs',
+    full_body: 'Full body',
+  };
+  const name = `${FOCUS_LABELS[focus] ?? focus.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())}, ${minutes} min`;
   return {
     ok: true,
     card: {

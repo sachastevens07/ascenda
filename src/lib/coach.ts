@@ -8,7 +8,8 @@ import { router, type Href } from 'expo-router';
 import aiConfig from '../../content/ai/ai-config.json';
 
 import { isFeatureEnabled } from '@/config/features';
-import { startBuiltStrengthSession, type BuiltSession } from '@/lib/buildSession';
+import { builtSessionToDay, startBuiltStrengthSession, type BuiltSession } from '@/lib/buildSession';
+import { saveCustomWorkout } from '@/lib/customWorkouts';
 import type { BusyGymPlan } from '@/lib/busyGym';
 import { isHealthPreferenceText, saveCoachPreference } from '@/lib/coachPreferences';
 import { recipeBySlug } from '@/lib/food';
@@ -176,6 +177,39 @@ function humaniseSlug(value: string): string {
 }
 
 /** A readable label for a Coach link chip: the article, recipe or exercise name, never just "article". */
+/** Built-session card title in sentence case ("Lower body, 45 min"). */
+export function sessionCardName(card: CoachCard): string {
+  const raw = text(card.name) || 'Coach session';
+  const labelled = raw
+    .replace(/^glutes and legs\b/i, 'Glutes and legs')
+    .replace(/^full body\b/i, 'Full body')
+    .replace(/^upper\b(?! body)/i, 'Upper body')
+    .replace(/^lower\b(?! body)/i, 'Lower body');
+  return labelled.charAt(0).toUpperCase() + labelled.slice(1);
+}
+
+/** Strength exercises in a built-session card, for the preview list. */
+export function sessionCardExercises(card: CoachCard): string[] {
+  const blocks = Array.isArray(card.blocks) ? card.blocks : [];
+  return blocks.flatMap((block) => {
+    const row = asRecord(block);
+    if (text(row.block_type) !== 'strength') return [];
+    return (Array.isArray(row.exercises) ? row.exercises : [])
+      .map((item) => {
+        const ex = asRecord(item);
+        const name = text(ex.name) || text(ex.exercise_id).replace(/[-_]+/g, ' ');
+        const sets = Number(ex.sets);
+        const repMin = Number(ex.rep_min);
+        const repMax = Number(ex.rep_max);
+        const label = name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
+        return label && sets && repMin
+          ? `${label} · ${sets} × ${repMin === repMax || !repMax ? repMin : `${repMin} to ${repMax}`}`
+          : label;
+      })
+      .filter(Boolean);
+  });
+}
+
 export function coachLinkLabel(link: CoachLink): string {
   if (link.type === 'article') {
     const id = canonicalLearnArticleId(link.id) ?? link.id;
@@ -376,15 +410,31 @@ export async function applyCoachCard(
     await stashCoachPlan(sessionId, plan);
     return plan.lighter ? COACH_UI.card_applied_lighter : COACH_UI.card_applied_look;
   }
-  if (card.type === 'session' && button === 'Start') {
-    await startBuiltStrengthSession({
-      name: text(card.name) || 'Coach session',
+  if (card.type === 'session' && (button === 'Start' || button === 'Save to My workouts')) {
+    const plan: BuiltSession = {
+      name: sessionCardName(card),
       why: '',
       estimated_minutes: Number(card.estimated_minutes) || 30,
       blocks: Array.isArray(card.blocks) ? (card.blocks as BuiltSession['blocks']) : [],
       fallback: false,
-    });
-    return COACH_UI.card_applied;
+    };
+    if (button === 'Start') {
+      await startBuiltStrengthSession(plan);
+      return '';
+    }
+    const day = await builtSessionToDay(plan);
+    if (!day) return COACH_UI.error;
+    await saveCustomWorkout(
+      null,
+      plan.name,
+      day.exercises.map((item) => ({
+        exercise: item.exercise,
+        sets: item.sets,
+        rep_min: item.rep_min,
+        rep_max: item.rep_max,
+      }))
+    );
+    return COACH_UI.card_saved_workout;
   }
   if (card.type === 'routine_options') {
     const options = Array.isArray(card.options) ? card.options : [];

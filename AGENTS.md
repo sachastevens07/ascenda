@@ -289,7 +289,7 @@ Before starting: compare PROGRESS.md and the code against v2.0, v2.1 and this li
   - "Add exercise" button at the end of the list;
   - "Do a different day" in the logger header "⋯" menu (and in the Home card "⋯" menu);
   - changes apply to today only, never to the routine.
-- The session timer starts when she ticks her first set (or taps "Start timer"), not when the screen opens, so browsing the session first doesn't distort time trained.
+- The session timer starts as soon as the session opens (changed 25 November 2026; it used to wait for the first ticked set).
 - If she leaves without ticking any set, nothing is saved and no "discard" prompt is needed.
 - Logger improvements at the same time (DESIGN.md 6.3): last-time weight shown as placeholder in each kg cell, a suggested-weight chip when the progression rule says go up, bigger tick buttons in `brand` that fill `success` when done, rest timer bar after each ticked set, real exercise thumbnails (MuscleWiki) instead of letters.
 

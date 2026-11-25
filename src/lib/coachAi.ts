@@ -11,6 +11,7 @@ import {
   type SessionTodayExercise,
 } from '@/lib/coach';
 import { aiLimitBypassPayload } from '@/lib/devFlags';
+import { getQuizAnswers, type Profile } from '@/lib/profile';
 import { supabase } from '@/lib/supabase';
 
 export type CoachOutcome =
@@ -49,6 +50,33 @@ function asFlag(value: unknown): CoachSafetyFlag {
     : 'none';
 }
 
+/**
+ * What she already told Evoluma, so Coach never asks again (AI rules: no name, email,
+ * bodyweight, statement answers or health data such as life_stage).
+ */
+export function coachHerTraining(
+  profile: Profile | null,
+  activeRoutine: { id: string; name: string; week: number; length_weeks: number } | null
+): Record<string, unknown> {
+  const answers = getQuizAnswers(profile);
+  return {
+    plan_answers: answers
+      ? {
+          goals: answers.main_goals,
+          days_per_week: answers.days_per_week,
+          experience: answers.experience,
+          gym_experience: answers.gym_experience,
+          session_minutes: answers.session_minutes,
+          equipment: answers.equipment,
+          gym_comfort: answers.confidence,
+          focus_areas: answers.focus_areas,
+          cardio_preference: profile?.cardio_preference ?? null,
+        }
+      : null,
+    active_routine: activeRoutine,
+  };
+}
+
 export async function requestCoachAnswer(input: {
   message: string;
   context: CoachContext;
@@ -56,6 +84,7 @@ export async function requestCoachAnswer(input: {
   newChat: boolean;
   history: { role: 'user' | 'assistant'; content: string }[];
   sessionToday?: SessionTodayExercise[];
+  herTraining?: Record<string, unknown>;
 }): Promise<CoachOutcome> {
   const {
     data: { session },
@@ -69,6 +98,7 @@ export async function requestCoachAnswer(input: {
       new_chat: input.newChat,
       history: input.history.slice(-COACH_HISTORY_LIMIT),
       session_today: input.sessionToday ?? [],
+      her_training: input.herTraining ?? {},
       stretches_enabled: isFeatureEnabled('stretches'),
       ...aiLimitBypassPayload(),
     },

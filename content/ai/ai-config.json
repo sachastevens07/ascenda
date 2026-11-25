@@ -639,7 +639,7 @@
     "welcome_eyebrow": "Evoluma Coach",
     "welcome_title": "Hi {name}, what's the plan today?",
     "welcome_title_no_name": "Hi, what's the plan today?",
-    "welcome_body": "I know your plan, your history and every exercise in Evoluma. Ask me anything, or tell me what's going on and I'll change today's session.",
+    "welcome_body": "I know your plan, your history and every exercise in Evoluma. Ask me anything, or tell me what's going on and I'll adjust today.",
     "context_title": "Ask me about {label}",
     "try_title": "Try asking",
     "thinking": "Coach is thinking",
@@ -660,7 +660,7 @@
         "icon": "barbell-outline",
         "title": "Build me a session",
         "body": "A one-off workout from your words.",
-        "prompt": "Build me a 45 minute lower body session."
+        "prompt": "Build me a one-off session."
       },
       {
         "icon": "map-outline",
@@ -680,7 +680,9 @@
         "body": "Recipes from what's in your kitchen.",
         "prompt": "__cook__"
       }
-    ]
+    ],
+    "card_saved_workout": "Saved. You'll find it in Profile, My workouts.",
+    "session_card_meta": "{count} exercises · about {minutes} min"
   },
   "evals": [
     {
