@@ -439,7 +439,7 @@
       "different_day_body": "Pick another session from this week. Your planner updates to match.",
       "leave_empty_note": "",
       "rest_sheet_hint": "The timer is a guide. Start your next set when your breathing has settled and you're ready to give it a good effort.",
-      "find_starting_weight": "Find a weight you could lift 3 more times"
+      "find_starting_weight": "New to this one? Start light. Pick a weight where your last rep still feels like you could do 3 more with good form."
     },
     "session_complete": {
       "_note": "Shown after Finish. Wins are chosen by the app from real data: max 3, most meaningful first.",

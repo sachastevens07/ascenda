@@ -71,7 +71,6 @@ import { fillBlockTargetsFromSession } from '@/lib/blocks';
 import { recordCheckpointIfNeeded } from '@/lib/checkpoints';
 import { aiCopy, fillCopy, foodCopy, loggerCopy, machineCopy, weekRingCopy, welcomeBackCopy } from '@/lib/copy';
 import { pickFuelSuggestion } from '@/lib/foodSuggestions';
-import { machineGuideForExercise } from '@/lib/machineGuides';
 import {
   DEFAULT_SLOT,
   MAX_SETS,
@@ -1799,8 +1798,6 @@ export default function SessionScreen() {
           const increase = suggestion?.kind === 'increase' ? suggestion : null;
           const restSeconds = slotRestSeconds(item, restPrefs);
           const note = notes[item.exercise.id];
-          const firstTime = !previous[item.exercise.id]?.length;
-          const machine = machineGuideForExercise(item.exercise.id);
           const reordering = dragFrom !== null;
           const dragging = dragFrom === index;
           let shift = 0;
@@ -1909,23 +1906,6 @@ export default function SessionScreen() {
                     <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
                       {loggerCopy.find_starting_weight}
                     </AppText>
-                  ) : null}
-                  {firstTime ? (
-                    <Pressable
-                      onPress={() =>
-                        machine
-                          ? router.push({ pathname: '/machines/[id]', params: { id: machine.id } } as Href)
-                          : openGuide(item.exercise.id)
-                      }
-                      hitSlop={6}
-                      style={styles.guideLink}>
-                      <Ionicons name="information-circle-outline" size={16} color={colours.brand} />
-                      <AppText variant="bodySm" style={{ color: colours.brand }}>
-                        {machine
-                          ? fillCopy(machineCopy.first_time, { machine: machine.name.toLowerCase() })
-                          : loggerCopy.first_time_link}
-                      </AppText>
-                    </Pressable>
                   ) : null}
 
                   {equipment ? (
