@@ -54,6 +54,7 @@ export {
   ChallengeHomeCard,
   HomeHeader,
   RecapHomeCard,
+  MissedSessionCard,
   ReferralBanner,
   ShareStatsCard,
   WeekStripCard,

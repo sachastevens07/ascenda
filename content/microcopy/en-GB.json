@@ -90,7 +90,19 @@
       "finisher_block": "Cardio finisher · {minutes} min",
       "eyebrow_strength": "Strength",
       "eyebrow_cardio": "Cardio",
-      "eyebrow_recovery": "Recovery"
+      "eyebrow_recovery": "Recovery",
+      "missed_session": {
+        "eyebrow": "Plans changed?",
+        "title": "{session_name} from {day} is still here",
+        "body": "Life happens. Fit it in later this week, or let it go and carry on with your plan.",
+        "body_week_full": "Life happens. Your week is full, so you can swap it in for another day or let it go.",
+        "move_today": "Do it today",
+        "move_day": "Move to {day}",
+        "choose_day": "Choose a day",
+        "let_go": "Let it go",
+        "moved": "Moved to {day}. It's ready when you are.",
+        "let_go_done": "No problem. Your next session is ready when you are."
+      }
     },
     "programmes": {
       "tab_title": "Train",

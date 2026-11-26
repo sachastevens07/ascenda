@@ -20,6 +20,7 @@ import {
   type AnchorRect,
 } from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
+import { track } from '@/lib/analytics';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AppText,
@@ -32,6 +33,7 @@ import {
   OverflowMenu,
   PrimaryButton,
   RecapHomeCard,
+  MissedSessionCard,
   ReferralBanner,
   SectionHeader,
   ShareStatsCard,
@@ -88,7 +90,12 @@ import { coverForChallenge, coverForRoutine, homeHeroSlug, imageSourceForSlug, t
 import {
   addDays,
   isPlannedSessionKind,
+  findMissedSession,
   loadPlannerWeek,
+  movePlannedSession,
+  skipPlannedSession,
+  suggestMakeUpDay,
+  weekdayName,
   startOfWeekMonday,
   toIso,
   type PlannerDayView,
@@ -303,6 +310,10 @@ export default function HomeScreen() {
   const [trialBannerHidden, setTrialBannerHidden] = useState(false);
   const [renewalBannerHidden, setRenewalBannerHidden] = useState(false);
   const routineMenuRef = useRef<AnchorHandle>(null);
+  const missedChooseRef = useRef<AnchorHandle>(null);
+  const [missedBusy, setMissedBusy] = useState(false);
+  const [missedMenuOpen, setMissedMenuOpen] = useState(false);
+  const [missedMenuAnchor, setMissedMenuAnchor] = useState<AnchorRect | null>(null);
   const [routineMenuOpen, setRoutineMenuOpen] = useState(false);
   const [routineMenuAnchor, setRoutineMenuAnchor] = useState<AnchorRect | null>(null);
   const [routineMenuMode, setRoutineMenuMode] = useState<'actions' | 'days'>('actions');
@@ -852,6 +863,34 @@ export default function HomeScreen() {
   );
   const firstName = profile?.display_name?.trim().split(/\s+/)[0] ?? 'you';
   const todayLive = todayPlan && isPlannedSessionKind(todayPlan.kind) && !todayPlan.completed ? todayPlan : null;
+  // A planned session earlier this week that didn't happen: offer to move it or let it go.
+  const missed = !inProgress && !welcomeBack ? findMissedSession(plannerDays) : null;
+  const makeUp = missed ? suggestMakeUpDay(plannerDays) : null;
+  const missedMoveTargets = missed
+    ? plannerDays.filter(
+        (day) => (day.isToday || !day.isPast) && !day.anytime && !day.completed && day.iso !== missed.iso
+      )
+    : [];
+
+  async function handleMissed(action: 'move' | 'let_go', toIso?: string) {
+    if (!missed?.plan || missedBusy) return;
+    setMissedBusy(true);
+    setMissedMenuOpen(false);
+    try {
+      if (action === 'move' && toIso) {
+        await movePlannedSession(missed.plan.id, toIso, missed.plan);
+      } else {
+        await skipPlannedSession(missed.plan);
+      }
+      track('missed_session_handled', { action });
+      setAttempt((n) => n + 1);
+    } catch {
+      showDialog('Couldn’t update your plan', 'Check your connection and try again.');
+    } finally {
+      setMissedBusy(false);
+    }
+  }
+
   const hero = heroCopyFor({
     inProgress,
     welcomeBack,
@@ -1008,20 +1047,22 @@ export default function HomeScreen() {
               return;
             }
             if (todayPlan?.kind === 'rest') {
-              router.push(isFeatureEnabled('stretches')
+              router.navigate(isFeatureEnabled('stretches')
                 ? ({ pathname: '/programmes', params: { section: 'stretches' } } as Href)
-                : ('/planner' as Href));
+                : ('/(tabs)/planner' as Href));
               return;
             }
             if (todayPlan && isPlannedSessionKind(todayPlan.kind)) {
               void startTodayFromPlanner(todayPlan);
               return;
             }
-            if (next) {
+            // Same rule as the hero copy: only start the next session when the hero offers it.
+            // Otherwise the button says "Open Planner" and must open the Planner.
+            if (!todayPlan && next) {
               openSessionDetail();
               return;
             }
-            router.push('/planner' as Href);
+            router.navigate('/(tabs)/planner' as Href);
           }}
           ctaLoading={isStarting}
           ctaDisabled={isStarting || subscription.isLoading}
@@ -1054,6 +1095,33 @@ export default function HomeScreen() {
             onSeeRoutine={handOff.mode === 'start' ? () => openRoutine(handOff.routine) : undefined}
             seeRoutineLabel={handOffCard.secondaryLabel}
             style={shadow}
+          />
+        ) : null}
+
+        {missed?.plan ? (
+          <MissedSessionCard
+            title={fillCopy(homeCopy.missed_session.title, {
+              session_name: missed.title ?? 'Your session',
+              day: weekdayName(missed.iso),
+            })}
+            body={makeUp ? homeCopy.missed_session.body : homeCopy.missed_session.body_week_full}
+            primaryLabel={
+              makeUp
+                ? makeUp.isToday
+                  ? homeCopy.missed_session.move_today
+                  : fillCopy(homeCopy.missed_session.move_day, { day: weekdayName(makeUp.iso) })
+                : null
+            }
+            onPrimary={() => makeUp && void handleMissed('move', makeUp.iso)}
+            onChooseDay={() =>
+              measureAnchor(missedChooseRef.current, (rect) => {
+                setMissedMenuAnchor(rect);
+                setMissedMenuOpen(true);
+              })
+            }
+            onLetGo={() => void handleMissed('let_go')}
+            busy={missedBusy}
+            chooseRef={missedChooseRef}
           />
         ) : null}
 
@@ -1245,6 +1313,18 @@ export default function HomeScreen() {
           onPress={inviteFriend}
         />
       </ScrollView>
+
+      <OverflowMenu visible={missedMenuOpen} anchor={missedMenuAnchor} onClose={() => setMissedMenuOpen(false)}>
+        <MenuHeader label={homeCopy.missed_session.choose_day} detail="If that day has a session, the two swap." />
+        {missedMoveTargets.map((day) => (
+          <MenuRow
+            key={day.iso}
+            label={day.isToday ? 'Today' : weekdayName(day.iso)}
+            detail={day.title ?? (day.kind === 'rest' ? 'Rest day' : 'Free')}
+            onPress={() => void handleMissed('move', day.iso)}
+          />
+        ))}
+      </OverflowMenu>
 
       <OverflowMenu
         visible={welcomeBackMenuOpen}

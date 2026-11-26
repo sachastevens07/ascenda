@@ -381,6 +381,60 @@ export function ChallengeHomeCard({
   );
 }
 
+/** Guilt-free nudge for a planned session that didn't happen earlier this week. */
+export function MissedSessionCard({
+  title,
+  body,
+  primaryLabel,
+  onPrimary,
+  onChooseDay,
+  onLetGo,
+  busy = false,
+  chooseRef,
+  style,
+}: {
+  title: string;
+  body: string;
+  primaryLabel: string | null;
+  onPrimary: () => void;
+  onChooseDay: () => void;
+  onLetGo: () => void;
+  busy?: boolean;
+  chooseRef?: Ref<AnchorHandle>;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { colours, radius, shadow } = useTheme();
+  return (
+    <View style={[styles.missed, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow, style]}>
+      <View style={styles.missedTop}>
+        <View style={[styles.missedIcon, { backgroundColor: colours.brandSoft }]}>
+          <Ionicons name="calendar-outline" size={20} color={colours.brand} />
+        </View>
+        <View style={styles.flex}>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            {homeCopy.missed_session.eyebrow}
+          </AppText>
+          <AppText variant="bodyStrong" style={{ color: colours.ink, marginTop: 2 }}>
+            {title}
+          </AppText>
+        </View>
+      </View>
+      <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+        {body}
+      </AppText>
+      {primaryLabel ? (
+        <PrimaryButton label={primaryLabel} onPress={onPrimary} loading={busy} disabled={busy} />
+      ) : null}
+      <View style={styles.missedLinks}>
+        <View ref={chooseRef} collapsable={false}>
+          <TextButton label={homeCopy.missed_session.choose_day} onPress={onChooseDay} disabled={busy} />
+        </View>
+        <TextButton label={homeCopy.missed_session.let_go} onPress={onLetGo} disabled={busy} />
+      </View>
+    </View>
+  );
+}
+
 export function ReferralBanner({
   onPress,
   image,
@@ -593,6 +647,26 @@ export function pickAwardsPreview(badges: AchievementBadge[]): AchievementBadge[
 }
 
 const styles = StyleSheet.create({
+  missed: {
+    padding: 18,
+    gap: 12,
+  },
+  missedTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  missedIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missedLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

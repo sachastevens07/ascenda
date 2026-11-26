@@ -334,6 +334,11 @@ Rules for every task in this group:
 - Finishing it earns a "Back on track" badge (repeatable, counts once per return).
 - Time re-engagement for fresh starts: Monday, the 1st of the month, start of term.
 
+**H2b. Missed session this week (decided 26 November 2026)**
+- If a planned (not optional) session earlier this week wasn't done and hasn't been moved or skipped, Home shows a calm card under the hero: "Plans changed? Full body A from Tuesday is still here. Life happens. Fit it in later this week, or let it go and carry on with your plan."
+- One tap: "Do it today" (today free) or "Move to Thursday" (next free day). "Choose a day" lists the rest of the week (a day that already has a session swaps). "Let it go" marks it skipped. Nothing moves on its own.
+- Never "missed", "behind" or streak warnings in the copy. Missed whole weeks stay with the welcome-back flow (H2). Analytics: `missed_session_handled` with action only.
+
 **H3. Planner-linked reminders**
 - Ask for notification permission after her first completed session (already planned), with a short explanation.
 - Reminders are tied to sessions she has planned: she picks a time for each planned day (default: same time as her last session, or 6pm).

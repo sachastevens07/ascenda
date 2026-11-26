@@ -70,6 +70,42 @@ export type PlannerDayView = {
   anytime: boolean;
 };
 
+/**
+ * The most recent planned session earlier this week that wasn't done and hasn't been
+ * dealt with (moved, skipped or swapped for rest). Optional extras don't count.
+ */
+export function findMissedSession(days: PlannerDayView[]): PlannerDayView | null {
+  const missed = days.filter(
+    (day) =>
+      day.isPast &&
+      !day.isToday &&
+      !day.completed &&
+      !day.isOptional &&
+      !day.anytime &&
+      day.plan?.status === 'planned' &&
+      isPlannedSessionKind(day.kind)
+  );
+  return missed.length > 0 ? missed[missed.length - 1] : null;
+}
+
+/** "Tuesday" for an ISO date. */
+export function weekdayName(iso: string): string {
+  return WEEKDAYS_FULL[parseIsoDate(iso).getDay()];
+}
+
+/** Today if it's free, otherwise the next free day this week. Null when the rest of the week is full. */
+export function suggestMakeUpDay(days: PlannerDayView[]): PlannerDayView | null {
+  return (
+    days.find(
+      (day) =>
+        (day.isToday || !day.isPast) &&
+        !day.anytime &&
+        (day.kind === 'empty' || day.kind === 'rest') &&
+        !day.completed
+    ) ?? null
+  );
+}
+
 export function isPlannedSessionKind(kind: PlannerDayKind): boolean {
   return kind === 'routine' || kind === 'custom' || kind === 'cardio' || kind === 'recovery';
 }

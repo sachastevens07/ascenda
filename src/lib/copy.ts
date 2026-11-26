@@ -119,6 +119,7 @@ export const homeCopy = {
   hero_done_today: home.hero_done_today,
   hero_nothing_planned: home.hero_nothing_planned,
   hero_no_routine: home.hero_no_routine,
+  missed_session: home.missed_session,
   week_strip_empty: home.week_strip_empty,
   week_tab_workouts: home.week_tab_workouts,
   week_tab_meals: home.week_tab_meals,

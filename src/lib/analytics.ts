@@ -22,6 +22,7 @@ export const ANALYTICS_EVENTS = [
   'session_completed',
   'set_ticked',
   'planned_week_missed',
+  'missed_session_handled',
   'rest_week_used',
   'streak_repaired',
   'welcome_back_shown',
