@@ -147,7 +147,7 @@ export async function recordGuideOpened(exerciseId: string): Promise<void> {
   }
 }
 
-async function fetchGuidesOpened(): Promise<number> {
+export async function fetchGuidesOpened(): Promise<number> {
   try {
     const raw = await AsyncStorage.getItem(GUIDES_KEY);
     if (!raw) return 0;

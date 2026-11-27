@@ -126,6 +126,9 @@ export const sessionCompleteCopy = microcopy.strings.session_complete;
 
 const home = microcopy.strings.home;
 
+/** Home "Your first steps" checklist. Bundled from content/microcopy. */
+export const gettingStartedCopy = home.getting_started;
+
 /** X2 Home sections. Bundled from content/microcopy. Every section hides itself if empty. */
 export const homeCopy = {
   hero_planned_today: home.hero_planned_today,

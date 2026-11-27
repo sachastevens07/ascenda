@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useNavigation, type Href } from 'expo-router';
+import { markPlannerSeen } from '@/lib/gettingStarted';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -190,6 +191,7 @@ export default function PlannerScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      void markPlannerSeen();
       navigation.setOptions({ swipeEnabled: true });
       return () => navigation.setOptions({ swipeEnabled: true });
     }, [navigation])

@@ -16,6 +16,47 @@
       "late": "Hi, {name}"
     },
     "home": {
+      "getting_started": {
+        "_note": "Home checklist for her first weeks (27 November 2026). Rewards small first steps, never pressure. Hides when dismissed, when everything is done, or 30 days after onboarding.",
+        "eyebrow": "GETTING STARTED",
+        "title": "Your first steps",
+        "progress": "{done} of {total} done",
+        "hide": "Hide",
+        "hide_title": "Hide your first steps?",
+        "hide_body": "You can still find everything in the app. This card won't come back.",
+        "hide_confirm": "Hide",
+        "hide_cancel": "Keep it",
+        "done_title": "You're all set up",
+        "done_body": "That's everything. From here it's just showing up, one session at a time.",
+        "done_button": "Done",
+        "items": [
+          {
+            "id": "first_session",
+            "title": "Do your first session",
+            "body": "Your plan is ready. Start whenever suits you."
+          },
+          {
+            "id": "guide",
+            "title": "Open a first-time guide",
+            "body": "Where to find it, how to set it up, and what to do if it's taken."
+          },
+          {
+            "id": "planner",
+            "title": "Look at your week",
+            "body": "See what's on each day, and move things if plans change."
+          },
+          {
+            "id": "reminders",
+            "title": "Turn on session reminders",
+            "body": "One nudge on the days you've planned. Nothing on rest days."
+          },
+          {
+            "id": "learn",
+            "title": "Read one Learn article",
+            "body": "Two to five minutes, in plain English."
+          }
+        ]
+      },
       "hero_planned_today": {
         "eyebrow": "TODAY",
         "title": "{session_name}",
@@ -1215,6 +1256,8 @@
       "get_started": "Get started",
       "have_account": "Already have an account?",
       "log_in": "Log in",
+      "or_email": "or use email",
+      "apple_error": "Sign in with Apple didn't work. Try again, or use your email.",
       "back": "Back",
       "a11y_slide": "Slide {index} of {count}"
     }

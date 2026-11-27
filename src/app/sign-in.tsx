@@ -14,10 +14,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AppleSignInButton } from '@/components/AppleSignInButton';
 import { WelcomeCarousel } from '@/components/WelcomeCarousel';
 import { AppText } from '@/components/ui';
 import { colours, useTheme } from '@/constants/theme';
 import { welcomeCopy } from '@/lib/copy';
+import { signInWithApple } from '@/lib/appleAuth';
+import { track } from '@/lib/analytics';
 import { authRedirectUrl, isEmailNotConfirmed } from '@/lib/emailAuth';
 import { supabase } from '@/lib/supabase';
 
@@ -93,6 +96,19 @@ export default function SignInScreen() {
     }
 
     setIsSubmitting(false);
+  }
+
+  /** Log in (or create an account) with Apple. The layout routes her on once the session exists. */
+  async function handleApple() {
+    setIsSubmitting(true);
+    setMessage(null);
+    const result = await signInWithApple();
+    setIsSubmitting(false);
+    if (result.status === 'ok') {
+      track('apple_sign_in', { from: mode });
+      return;
+    }
+    if (result.status === 'error') setMessage({ kind: 'error', text: welcomeCopy.apple_error });
   }
 
   function switchMode() {
@@ -214,6 +230,13 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled">
         <AppText variant="display" style={styles.title}>{isSignUp ? 'Create your account' : 'Welcome back'}</AppText>
         <AppText variant="body" style={styles.subtitle}>Walk in with a plan. Leave stronger.</AppText>
+
+        <AppleSignInButton
+          kind={isSignUp ? 'continue' : 'sign-in'}
+          onPress={() => void handleApple()}
+          disabled={isSubmitting}
+          dividerLabel={welcomeCopy.or_email}
+        />
 
         <View style={styles.field}>
           <AppText variant="bodySm" style={styles.label}>Email</AppText>

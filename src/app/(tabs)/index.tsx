@@ -20,6 +20,7 @@ import {
   type AnchorRect,
 } from '@/components/AnchoredMenu';
 import { showDialog } from '@/components/Dialog';
+import { GettingStartedCard } from '@/components/GettingStartedCard';
 import { track } from '@/lib/analytics';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
@@ -105,7 +106,15 @@ import { dismissRecap, loadMonthlyRecap, type MonthlyRecap } from '@/lib/monthly
 import { fetchProgressSets } from '@/lib/progress';
 import { fetchLearnArticles, recommendArticles, type LearnArticle } from '@/lib/learn';
 import { ensureSubscribed, openPaywall } from '@/lib/paywall';
-import { maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
+import { enableSessionReminders, maybeAskSessionReminders, syncPlannerReminders } from '@/lib/reminders';
+import {
+  dismissGettingStarted,
+  fetchGettingStarted,
+  rememberSeenDone,
+  type GettingStartedId,
+  type GettingStartedItem,
+} from '@/lib/gettingStarted';
+import { successTap } from '@/lib/haptics';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
 import {
@@ -324,6 +333,48 @@ export default function HomeScreen() {
   const [recap, setRecap] = useState<MonthlyRecap | null>(null);
   const [weekTab, setWeekTab] = useState<'workouts' | 'meals'>('workouts');
   const [pickedIso, setPickedIso] = useState<string | null>(null);
+  const [firstSteps, setFirstSteps] = useState<GettingStartedItem[] | null>(null);
+
+  /** Show the checklist and celebrate any step ticked since she last saw it, once. */
+  function showFirstSteps(items: GettingStartedItem[] | null) {
+    setFirstSteps(items);
+    if (!items) return;
+    const fresh = items.filter((item) => item.justDone);
+    if (fresh.length === 0) return;
+    for (const item of fresh) track('getting_started_item_done', { item: item.id });
+    if (items.every((item) => item.done)) track('getting_started_completed', {});
+    successTap();
+    void rememberSeenDone(items.filter((item) => item.done).map((item) => item.id));
+  }
+
+  function hideFirstSteps() {
+    if (firstSteps && !firstSteps.every((item) => item.done)) track('getting_started_dismissed', {});
+    setFirstSteps(null);
+    void dismissGettingStarted();
+  }
+
+  function openFirstStep(id: GettingStartedId) {
+    switch (id) {
+      case 'first_session':
+        if (data?.next) openSessionDetail();
+        else router.navigate('/programmes' as Href);
+        return;
+      case 'guide':
+        router.navigate({ pathname: '/programmes', params: { section: 'exercises' } } as Href);
+        return;
+      case 'planner':
+        router.navigate('/(tabs)/planner' as Href);
+        return;
+      case 'reminders':
+        void enableSessionReminders().then((on) => {
+          if (on) setAttempt((value) => value + 1);
+        });
+        return;
+      case 'learn':
+        router.push('/learn' as Href);
+        return;
+    }
+  }
   const featuredWidth = width * 0.78;
   const stretchWidth = width * 0.56;
   const heroHeight = Math.round(Math.min(Math.max(height * 0.45, 260), 380)) + insets.top;
@@ -485,6 +536,15 @@ export default function HomeScreen() {
             awardPreview: pickAwardsPreview(badges),
           });
           setLoadState('ready');
+          void fetchGettingStarted({
+            userId: profile?.user_id,
+            sessionsDone: sessions.length,
+            onboardingCompletedAt: profile?.onboarding_completed_at,
+          })
+            .then((items) => {
+              if (isCurrent) showFirstSteps(items);
+            })
+            .catch(() => {});
           void loadMonthlyRecap({ sessions, sets })
             .then((next) => {
               if (isCurrent) setRecap(next);
@@ -1093,6 +1153,15 @@ export default function HomeScreen() {
 
         {showHeroFuel && fuel ? (
           <FuelSuggestionCard suggestion={fuel} onPress={() => openRecipe(fuel.recipe.slug)} />
+        ) : null}
+
+        {firstSteps && firstSteps.length > 0 && !inProgress ? (
+          <GettingStartedCard
+            items={firstSteps}
+            onPressItem={openFirstStep}
+            onHide={hideFirstSteps}
+            style={shadow}
+          />
         ) : null}
 
         {handOff && handOffCard && !inProgress ? (
