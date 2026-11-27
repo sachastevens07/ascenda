@@ -36,7 +36,9 @@ export default function SignInScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   /** Asked before an account exists, so nothing is stored about anyone under 18. */
-  const [ageAnswer, setAgeAnswer] = useState<'adult' | 'under-18' | null>(null);
+  // The yes/no 18+ screen was removed on 27 November 2026: the age-range question in onboarding
+  // (Under 18 is blocked) and the safety tick ("I'm 18 or over") cover it, and the terms say 18+.
+  const [ageAnswer, setAgeAnswer] = useState<'adult' | 'under-18' | null>('adult');
 
   const isSignUp = mode === 'sign-up';
 
@@ -96,7 +98,7 @@ export default function SignInScreen() {
   function switchMode() {
     setMode(isSignUp ? 'sign-in' : 'sign-up');
     setMessage(null);
-    if (ageAnswer === 'under-18') setAgeAnswer(null);
+    if (ageAnswer === 'under-18') setAgeAnswer('adult');
   }
 
   /**
@@ -110,7 +112,9 @@ export default function SignInScreen() {
     const { error } = await supabase.auth.signInAnonymously({ options: { data: { age_confirmed: true } } });
     setIsSubmitting(false);
     if (error) {
+      // Anonymous sign-ins are off: fall back to creating the account first.
       setAgeAnswer('adult');
+      setMode('sign-up');
       return;
     }
     router.replace('/onboarding' as Href);
@@ -119,7 +123,7 @@ export default function SignInScreen() {
   function backToWelcome() {
     setMode('welcome');
     setMessage(null);
-    setAgeAnswer(null);
+    setAgeAnswer('adult');
   }
 
   const backButton = (
@@ -140,7 +144,7 @@ export default function SignInScreen() {
         <WelcomeCarousel
           onGetStarted={() => {
             setMessage(null);
-            setMode('sign-up');
+            if (!isSubmitting) void startWithoutAccount();
           }}
           onLogIn={() => {
             setMessage(null);
