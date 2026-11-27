@@ -1,3 +1,5 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { StatusBar } from 'expo-status-bar';
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -12,12 +14,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { WelcomeCarousel } from '@/components/WelcomeCarousel';
 import { AppText } from '@/components/ui';
 import { colours, useTheme } from '@/constants/theme';
+import { welcomeCopy } from '@/lib/copy';
 import { authRedirectUrl, isEmailNotConfirmed } from '@/lib/emailAuth';
 import { supabase } from '@/lib/supabase';
 
-type Mode = 'sign-in' | 'sign-up';
+type Mode = 'welcome' | 'sign-in' | 'sign-up';
 
 type Message = { kind: 'error' | 'info'; text: string };
 
@@ -26,7 +30,7 @@ const MIN_PASSWORD_LENGTH = 6;
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const { type } = useTheme();
-  const [mode, setMode] = useState<Mode>('sign-in');
+  const [mode, setMode] = useState<Mode>('welcome');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,6 +99,41 @@ export default function SignInScreen() {
     if (ageAnswer === 'under-18') setAgeAnswer(null);
   }
 
+  function backToWelcome() {
+    setMode('welcome');
+    setMessage(null);
+    setAgeAnswer(null);
+  }
+
+  const backButton = (
+    <Pressable
+      onPress={backToWelcome}
+      accessibilityRole="button"
+      accessibilityLabel={welcomeCopy.back}
+      hitSlop={10}
+      style={[styles.back, { top: insets.top + 8 }]}>
+      <Ionicons name="chevron-back" size={26} color={colours.text} />
+    </Pressable>
+  );
+
+  if (mode === 'welcome') {
+    return (
+      <>
+        <StatusBar style="light" />
+        <WelcomeCarousel
+          onGetStarted={() => {
+            setMessage(null);
+            setMode('sign-up');
+          }}
+          onLogIn={() => {
+            setMessage(null);
+            setMode('sign-in');
+          }}
+        />
+      </>
+    );
+  }
+
   if (isSignUp && ageAnswer !== 'adult') {
     return (
       <ScrollView
@@ -132,6 +171,7 @@ export default function SignInScreen() {
         <Pressable onPress={switchMode} style={styles.switch} accessibilityRole="button">
           <AppText variant="bodyStrong" style={styles.switchText}>Already have an account? Sign in</AppText>
         </Pressable>
+        {backButton}
       </ScrollView>
     );
   }
@@ -209,6 +249,7 @@ export default function SignInScreen() {
           </AppText>
         </Pressable>
       </ScrollView>
+      {backButton}
     </KeyboardAvoidingView>
   );
 }
@@ -279,6 +320,14 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: colours.surface,
+  },
+  back: {
+    position: 'absolute',
+    left: 16,
+    width: 40,
+    height: 40,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   switch: {
     alignItems: 'center',

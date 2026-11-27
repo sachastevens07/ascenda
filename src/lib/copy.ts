@@ -108,6 +108,9 @@ export const lockedHomeCopy = microcopy.strings.locked_home;
 
 export const referCopy = microcopy.strings.refer;
 
+/** Signed-out welcome carousel. Bundled from content/microcopy. */
+export const welcomeCopy = microcopy.strings.welcome;
+
 export const sessionCompleteCopy = microcopy.strings.session_complete;
 
 const home = microcopy.strings.home;

@@ -1139,6 +1139,37 @@
       "ask_card_wellbeing": "Please speak to a doctor about how you are feeling. Beat can help if eating feels hard: beat.org.uk.",
       "ask_fallback": "Couldn't reach the usual helper, so this uses matching guides from our library.",
       "cook_message": "What can I cook? I have: {ingredients}"
+    },
+    "welcome": {
+      "_note": "Signed-out welcome carousel on the sign-in route. Honest claims only: no user counts or testimonials (DMCC Act).",
+      "wordmark": "Evoluma",
+      "slides": [
+        {
+          "image": "onboarding-welcome",
+          "title": "Feel at home in the gym",
+          "body": "A clear plan for every session, built around your goals and your week."
+        },
+        {
+          "image": "onboarding-insight-plans",
+          "title": "Always know what's next",
+          "body": "Step-by-step routines, a guide for every machine, and a swap when something's taken."
+        },
+        {
+          "image": "hero-programmes",
+          "title": "Watch your strength grow",
+          "body": "Log a set in seconds and see every personal best, first and finished week."
+        },
+        {
+          "image": "hero-food",
+          "title": "Food that fuels you",
+          "body": "Recipes for training days. No calorie counting, ever."
+        }
+      ],
+      "get_started": "Get started",
+      "have_account": "Already have an account?",
+      "log_in": "Log in",
+      "back": "Back",
+      "a11y_slide": "Slide {index} of {count}"
     }
   }
 }
