@@ -21,6 +21,7 @@ import {
   type Weekday,
 } from '@/lib/onboardingAnswers';
 import type { RecommendedPlan } from '@/lib/onboardingPlan';
+import manifest from '../../../content/images/image-manifest.json';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -812,9 +813,19 @@ export function Appear({
   );
 }
 
-/** Rounded photo above a question, with a slow zoom-out as it appears. */
-export function QuestionPhoto({ slug, height = 170 }: { slug: string; height?: number }) {
+function orientationOf(slug: string): 'portrait' | 'landscape' {
+  const row = (manifest.images as { slug: string; orientation?: string }[]).find((item) => item.slug === slug);
+  return row?.orientation?.startsWith('portrait') ? 'portrait' : 'landscape';
+}
+
+/**
+ * Rounded photo above a question, with a slow zoom-out as it appears. Portrait photos get a taller
+ * frame and a crop anchored near the top, so faces stay in view instead of being cut at the chin.
+ */
+export function QuestionPhoto({ slug, height }: { slug: string; height?: number }) {
   const { radius } = useTheme();
+  const portrait = orientationOf(slug) === 'portrait';
+  const frame = height ?? (portrait ? 230 : 180);
   const zoom = useRef(new Animated.Value(1.12)).current;
   const fade = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -824,9 +835,9 @@ export function QuestionPhoto({ slug, height = 170 }: { slug: string; height?: n
     ]).start();
   }, [fade, zoom]);
   return (
-    <Animated.View style={{ height, borderRadius: radius.xl, overflow: 'hidden', marginBottom: 20, opacity: fade }}>
+    <Animated.View style={{ height: frame, borderRadius: radius.xl, overflow: 'hidden', marginBottom: 20, opacity: fade }}>
       <Animated.View style={{ flex: 1, transform: [{ scale: zoom }] }}>
-        <PhotoFill slug={slug} />
+        <PhotoFill slug={slug} focalPoint={portrait ? { x: 0.5, y: 0.22 } : { x: 0.5, y: 0.4 }} />
       </Animated.View>
     </Animated.View>
   );
@@ -871,7 +882,7 @@ export function RewardScreen({
       {imageSlug ? (
         <Animated.View style={{ transform: [{ scale: pop }] }}>
           <View style={[styles.rewardPhoto, { borderColor: colours.surface }]}>
-            <PhotoFill slug={imageSlug} />
+            <PhotoFill slug={imageSlug} focalPoint={orientationOf(imageSlug) === 'portrait' ? { x: 0.5, y: 0.2 } : { x: 0.5, y: 0.35 }} />
           </View>
           <View style={[styles.rewardBadge, { backgroundColor: colours.brand, borderColor: colours.bg }]}>
             <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={28} color={colours.onBrand} />

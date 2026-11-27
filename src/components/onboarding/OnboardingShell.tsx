@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Animated,
   Dimensions,
@@ -46,6 +46,7 @@ export function OnboardingShell({
   onSkip,
   footerNote,
   sections,
+  primaryDelayMs = 0,
 }: {
   children: ReactNode;
   screenKey: string;
@@ -66,11 +67,30 @@ export function OnboardingShell({
   footerNote?: string;
   /** Segmented progress with labels. Replaces the plain bar when set. */
   sections?: ShellSections | null;
+  /** Reading screens: the button fades in after this many ms so the screen gets read first. */
+  primaryDelayMs?: number;
 }) {
   const insets = useSafeAreaInsets();
   const { colours } = useTheme();
   const slideX = useRef(new Animated.Value(0)).current;
   const fadeIn = useRef(new Animated.Value(1)).current;
+  const buttonIn = useRef(new Animated.Value(1)).current;
+  const [buttonReady, setButtonReady] = useState(true);
+
+  useEffect(() => {
+    if (primaryDelayMs <= 0) {
+      buttonIn.setValue(1);
+      setButtonReady(true);
+      return;
+    }
+    buttonIn.setValue(0);
+    setButtonReady(false);
+    const timer = setTimeout(() => {
+      setButtonReady(true);
+      Animated.timing(buttonIn, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    }, primaryDelayMs);
+    return () => clearTimeout(timer);
+  }, [buttonIn, primaryDelayMs, screenKey]);
   const lastKey = useRef(screenKey);
 
   useEffect(() => {
@@ -134,15 +154,22 @@ export function OnboardingShell({
           </AppText>
         ) : null}
         {primaryLabel ? (
-          <PrimaryButton
-            label={primaryLabel}
-            onPress={() => {
-              lightTap();
-              onPrimary();
-            }}
-            disabled={primaryDisabled}
-            loading={primaryLoading}
-          />
+          <Animated.View
+            pointerEvents={buttonReady ? 'auto' : 'none'}
+            style={{
+              opacity: buttonIn,
+              transform: [{ translateY: buttonIn.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
+            }}>
+            <PrimaryButton
+              label={primaryLabel}
+              onPress={() => {
+                lightTap();
+                onPrimary();
+              }}
+              disabled={primaryDisabled || !buttonReady}
+              loading={primaryLoading}
+            />
+          </Animated.View>
         ) : null}
         {skipLabel && onSkip ? (
           <TextButton label={skipLabel} onPress={onSkip} style={styles.skip} />

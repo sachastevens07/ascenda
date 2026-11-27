@@ -796,6 +796,8 @@ export default function OnboardingScreen() {
   const primaryLabel = (() => {
     if (index < 0) return 'Save';
     if (!contentScreen) return 'Continue';
+    // Picking an option moves on by itself, so there's no button (unless editing from Profile).
+    if (contentScreen.raw.auto_advance === true && !isEditing) return '';
     if (contentScreen.type === 'welcome') return contentScreen.primary_button || "Let's build your plan";
     if (contentScreen.type === 'building') return '';
     if (contentScreen.type === 'consent') return contentScreen.accept_button;
@@ -999,7 +1001,14 @@ export default function OnboardingScreen() {
         }
       }}
       footerNote={error ?? accountNoteFor(contentScreen) ?? contentScreen?.privacy_note ?? undefined}
-      sections={sections}>
+      sections={sections}
+      primaryDelayMs={
+        contentScreen && ['reward', 'preview', 'projection', 'insight'].includes(contentScreen.type) && !isEditing
+          ? contentScreen.type === 'preview'
+            ? 2200
+            : 1400
+          : 0
+      }>
       {contentScreen && !['reward', 'commit', 'obstacles'].includes(contentScreen.type) ? (
         screenText(contentScreen, 'hero_image') ? (
           <QuestionPhoto slug={screenText(contentScreen, 'hero_image')} />
