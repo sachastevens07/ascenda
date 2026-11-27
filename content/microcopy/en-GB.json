@@ -1145,22 +1145,22 @@
       "wordmark": "Evoluma",
       "slides": [
         {
-          "image": "onboarding-welcome",
+          "image": "welcome-1",
           "title": "Feel at home in the gym",
           "body": "A clear plan for every session, built around your goals and your week."
         },
         {
-          "image": "onboarding-insight-plans",
+          "image": "welcome-2",
           "title": "Always know what's next",
           "body": "Step-by-step routines, a guide for every machine, and a swap when something's taken."
         },
         {
-          "image": "hero-programmes",
+          "image": "welcome-3",
           "title": "Watch your strength grow",
           "body": "Log a set in seconds and see every personal best, first and finished week."
         },
         {
-          "image": "hero-food",
+          "image": "welcome-4",
           "title": "Food that fuels you",
           "body": "Recipes for training days. No calorie counting, ever."
         }

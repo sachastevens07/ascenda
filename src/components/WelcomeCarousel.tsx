@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { EvolumaMark } from '@/components/EvolumaMark';
 import { AppText, PhotoFill } from '@/components/ui';
 import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
@@ -94,7 +95,8 @@ export function WelcomeCarousel({
         <Rect width="100%" height="100%" fill="url(#welcomeBottom)" />
       </Svg>
 
-      <View style={[styles.top, { paddingTop: insets.top + 18 }]} pointerEvents="none">
+      <View style={[styles.top, { paddingTop: insets.top + 14 }]} pointerEvents="none">
+        <EvolumaMark size={44} color="#FFFFFF" />
         <AppText style={styles.wordmark} accessibilityRole="header">
           {copy.wordmark}
         </AppText>
@@ -167,8 +169,9 @@ const styles = StyleSheet.create({
   },
   wordmark: {
     fontFamily: fonts.displaySemibold,
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 30,
+    lineHeight: 36,
+    marginTop: 4,
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },

@@ -5221,6 +5221,89 @@
       "model_release": "not applicable",
       "alt_text": "A meal from this collection with a calcium-rich food, such as Greek yoghurt power bowl or cottage cheese toast. Must not be the same file as any recipe card on the Food tab.",
       "ai_notes": "Imported from collection-calcium-and-bones-f224ac92-b83a-4c93-959e-8a38323e6e2c.jpg"
+    },
+    {
+      "slug": "welcome-1",
+      "kind": "people",
+      "shot": "connection",
+      "used_in": [
+        "Welcome carousel (sign-in)"
+      ],
+      "orientation": "portrait 9:16",
+      "status": "ready",
+      "photographer": "Generated for Evoluma",
+      "source_url": "generated-for-ascenda",
+      "licence_source": "Generated for Evoluma (Gemini)",
+      "model_release": "not applicable",
+      "file": "welcome-1.jpg",
+      "alt_text": "Sofia smiling at the camera in a bright, airy gym, dumbbell rack behind.",
+      "focal_point": {
+        "x": 0.5,
+        "y": 0.33
+      },
+      "character": "sofia"
+    },
+    {
+      "slug": "welcome-2",
+      "kind": "people",
+      "shot": "connection",
+      "used_in": [
+        "Welcome carousel (sign-in)"
+      ],
+      "orientation": "portrait 9:16",
+      "status": "ready",
+      "photographer": "Generated for Evoluma",
+      "source_url": "generated-for-ascenda",
+      "licence_source": "Generated for Evoluma (Gemini)",
+      "model_release": "not applicable",
+      "file": "welcome-2.jpg",
+      "alt_text": "Jade on a bench by tall windows, smiling at her phone, water bottle beside her.",
+      "focal_point": {
+        "x": 0.48,
+        "y": 0.3
+      },
+      "character": "jade"
+    },
+    {
+      "slug": "welcome-3",
+      "kind": "people",
+      "shot": "connection",
+      "used_in": [
+        "Welcome carousel (sign-in)"
+      ],
+      "orientation": "portrait 9:16",
+      "status": "ready",
+      "photographer": "Generated for Evoluma",
+      "source_url": "generated-for-ascenda",
+      "licence_source": "Generated for Evoluma (Gemini)",
+      "model_release": "not applicable",
+      "file": "welcome-3.jpg",
+      "alt_text": "Ellie laughing on a bench in a bright gym, a dumbbell resting on her knee.",
+      "focal_point": {
+        "x": 0.5,
+        "y": 0.36
+      },
+      "character": "ellie"
+    },
+    {
+      "slug": "welcome-4",
+      "kind": "food",
+      "shot": "food",
+      "used_in": [
+        "Welcome carousel (sign-in)"
+      ],
+      "orientation": "portrait 9:16",
+      "status": "ready",
+      "photographer": "Generated for Evoluma",
+      "source_url": "generated-for-ascenda",
+      "licence_source": "Generated for Evoluma (Gemini)",
+      "model_release": "not applicable",
+      "file": "welcome-4.jpg",
+      "alt_text": "A salmon and quinoa bowl with greens on a wooden kitchen counter, glass of water and fruit beside it.",
+      "focal_point": {
+        "x": 0.48,
+        "y": 0.37
+      }
     }
   ]
 }
