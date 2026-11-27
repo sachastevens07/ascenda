@@ -57,13 +57,17 @@ function isUuid(value: string): boolean {
   );
 }
 
+// Backup check if an event arrives without entitlement ids. The evoluma_ ids are the live
+// products; the ascenda_ ids were created in a stray App Store Connect app and are unused.
+const PRODUCT_IDS = ['evoluma_annual', 'evoluma_monthly', 'ascenda_annual', 'ascenda_monthly'];
+
 function coversEntitlement(event: RcEvent): boolean {
   if (event.entitlement_id === ENTITLEMENT) return true;
   if (Array.isArray(event.entitlement_ids) && event.entitlement_ids.includes(ENTITLEMENT)) {
     return true;
   }
   const product = event.new_product_id ?? event.product_id ?? '';
-  return product === 'ascenda_annual' || product === 'ascenda_monthly';
+  return PRODUCT_IDS.includes(product);
 }
 
 function statusFromEvent(event: RcEvent): Status {

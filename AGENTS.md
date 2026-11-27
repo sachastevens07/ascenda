@@ -1,6 +1,6 @@
 # Project brief: Evoluma, a women's strength app
 
-Name decided 24 November 2026: **Evoluma** (Ascenda was dropped because of trademark clashes; Strivella was briefly chosen the same day, then replaced). Internal identifiers keep the old name on purpose and must not be renamed: RevenueCat entitlement and products (`ascenda_pro`, `ascenda_annual`, `ascenda_monthly`), the `ask-ascenda` Edge Function, the `ask_ascenda` feature id, `userHasAscendaPro`, `generated-for-ascenda` licence markers, storage and cache keys, and SQL policy names.
+Name decided 24 November 2026: **Evoluma** (Ascenda was dropped because of trademark clashes; Strivella was briefly chosen the same day, then replaced). Internal identifiers keep the old name on purpose and must not be renamed: RevenueCat entitlement `ascenda_pro`, the `ask-ascenda` Edge Function, the `ask_ascenda` feature id, `userHasAscendaPro`, `generated-for-ascenda` licence markers, storage and cache keys, and SQL policy names.
 
 ## What we're building
 A strength-training app for women that feels lively, clear and encouraging. She picks (or is recommended) a routine with a clear finish line, sees exactly what's planned each day, logs sessions in seconds, and watches her progress and achievements build up.
@@ -498,7 +498,7 @@ Build in this order. Show me each migration before running it, and ask before ad
 - Remove: Pro badges and FreeBadges inside the app, locked previews (blurred weeks), the 4 custom workout limit and duplicate counting, free AI quotas, free/Pro routine flags in the UI, and every contextual "Unlock with Pro" paywall. Keep `is_pro` columns in the database but stop using them (they may be useful for a future tier).
 - Server-side protection: routine weeks, exercise prescriptions, recipes, Learn article bodies and AI Edge Functions only return content to users with an active entitlement. Use a Supabase table synced from RevenueCat webhooks (`subscriptions`: user_id, entitlement, status, expires_at, updated_at) and check it in RLS policies and Edge Functions. Plan-reveal data for her own recommended routine (name, description, cover, why it suits her, week 1 overview) stays readable without a subscription.
 - Update Profile → Plan and subscription: status (trial ends on, renews on, expired), Manage subscription, Restore purchases.
-- Update RevenueCat: products `ascenda_annual` (£59.99, 7-day introductory free trial) and `ascenda_monthly` (£9.99, no trial), one offering with both, the `ascenda_pro` entitlement attached to both. Tell me exactly what to set up in App Store Connect and RevenueCat.
+- Update RevenueCat: products `evoluma_annual` (renamed 27 November 2026; the `ascenda_` products were created in a stray App Store Connect app and Apple never reuses product IDs) (£59.99, 7-day introductory free trial) and `evoluma_monthly` (£9.99, no trial), one offering with both, the `ascenda_pro` entitlement attached to both. Tell me exactly what to set up in App Store Connect and RevenueCat.
 
 **C1. Subscription compliance (UK DMCC Act, expected from January 2027; Apple guidelines)**
 - Paywall shows clearly: price, billing period, trial length, when she'll be charged, how to cancel.
