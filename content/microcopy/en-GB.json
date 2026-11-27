@@ -280,7 +280,54 @@
       "per_month": "{price} / month",
       "annual_billed": "{annual_price} a year, billed yearly",
       "monthly_billed": "Billed monthly",
-      "trial_line_short": "{trial_days} days free"
+      "trial_line_short": "{trial_days} days free",
+      "headline_personal_lead": "{name}, your plan",
+      "headline_personal_accent": "is ready.",
+      "benefit_pool": {
+        "plan": {
+          "icon": "map-outline",
+          "title": "Your plan, week by week",
+          "body": "Every session laid out, so you always know what to do next."
+        },
+        "guides": {
+          "icon": "barbell-outline",
+          "title": "Guides for every machine",
+          "body": "Where it is, how to set it up and what to focus on."
+        },
+        "swaps": {
+          "icon": "swap-horizontal-outline",
+          "title": "Busy gym? Keep moving",
+          "body": "Swap in a close match when a machine's taken, or ask Coach to rework your session."
+        },
+        "flexible": {
+          "icon": "calendar-outline",
+          "title": "A plan that bends",
+          "body": "Missed a session? Move it in one tap. No guilt, no starting over."
+        },
+        "progress": {
+          "icon": "trending-up-outline",
+          "title": "See how far you've come",
+          "body": "Track every lift, personal best and milestone."
+        },
+        "food": {
+          "icon": "restaurant-outline",
+          "title": "Food that fuels you",
+          "body": "Simple recipes for your training days."
+        }
+      },
+      "benefit_default_order": [
+        "plan",
+        "guides",
+        "progress",
+        "food"
+      ],
+      "timeline_title": "How your free trial works",
+      "timeline_today_title": "Today",
+      "timeline_today_body": "Full access to your plan, guides and Coach.",
+      "timeline_reminder_title": "Day {reminder_day}",
+      "timeline_reminder_body": "We'll remind you that your trial is ending.",
+      "timeline_charge_title": "Day {trial_days}",
+      "timeline_charge_body": "Your subscription starts on {charge_date}. Cancel before then and you won't pay a thing."
     },
     "locked_home": {
       "_note": "DESIGN.md 9.3. Shown when there's no active subscription or trial. Every tab shows this screen.",

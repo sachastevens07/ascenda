@@ -6,18 +6,10 @@
     "statement answers use a 1 to 5 scale and are stored in profiles.onboarding_answers.",
     "Social proof rule: the only statistic shown is the sourced Gymshark survey figure. No invented user counts or testimonials.",
     "Paywall copy lives in the microcopy content file.",
-    "Draft: check the Gymshark statistic and wording with your solicitor alongside the paywall."
+    "Draft: check the Gymshark statistic and wording with your solicitor alongside the paywall.",
+    "27 Nov 2026 redesign: screens carry a section (you, gym, week, plan, setup) shown as a segmented progress bar. Screens with skip_when_hidden are skipped unless show_if is true. preview screens play a short animated glimpse of the app. commit is a press-and-hold commitment. save_account links an email and password to the anonymous onboarding account. The paywall comes after save_account; the setup section (including the safety disclaimer) comes after the paywall. Removed: welcome (the sign-in carousel replaces it), st_watched, st_motivation, insight_plans."
   ],
   "screens": [
-    {
-      "id": "welcome",
-      "type": "welcome",
-      "image_slug": "onboarding-welcome",
-      "title": "Feel at home in the gym",
-      "body": "Tell us a little about you and we'll build a plan that fits your goals, your week and how you feel about the gym.",
-      "primary_button": "Let's build your plan",
-      "secondary_link": "I already have an account"
-    },
     {
       "id": "age",
       "type": "single_choice",
@@ -58,7 +50,8 @@
           "continue_disabled": true
         }
       },
-      "note_for_dev": "Asked before any other personal data. If Under 18 is selected: show the inline message below the options, keep Continue disabled, store nothing and send no analytics events with answers. She can change her selection (for mis-taps), but never show 'are you sure?' or any hint about changing it."
+      "note_for_dev": "Asked before any other personal data. If Under 18 is selected: show the inline message below the options, keep Continue disabled, store nothing and send no analytics events with answers. She can change her selection (for mis-taps), but never show 'are you sure?' or any hint about changing it.",
+      "section": "you"
     },
     {
       "id": "name",
@@ -70,7 +63,8 @@
         "required": true,
         "max_length": 30
       },
-      "button": "Continue"
+      "button": "Continue",
+      "section": "you"
     },
     {
       "id": "goals",
@@ -153,7 +147,8 @@
         }
       ],
       "main_label": "Main",
-      "limit_hint": "You can pick up to 3. Tap one to swap it out."
+      "limit_hint": "You can pick up to 3. Tap one to swap it out.",
+      "section": "you"
     },
     {
       "id": "insight_goals",
@@ -181,7 +176,8 @@
         "template": "Around week {first_milestone_week}: {first_milestone_title}",
         "source": "default_routine"
       },
-      "button": "Continue"
+      "button": "Continue",
+      "section": "you"
     },
     {
       "id": "gym_experience",
@@ -209,7 +205,8 @@
           "label": "I train regularly",
           "icon": "tree"
         }
-      ]
+      ],
+      "section": "gym"
     },
     {
       "id": "gym_comfort",
@@ -238,7 +235,8 @@
           "label": "At home"
         }
       ],
-      "default": 3
+      "default": 3,
+      "section": "gym"
     },
     {
       "id": "st_not_sure",
@@ -267,36 +265,8 @@
           "label": "That's so me"
         }
       ],
-      "stores_to": "profiles.onboarding_answers.not_sure_what_to_do"
-    },
-    {
-      "id": "st_watched",
-      "type": "statement",
-      "eyebrow": "HOW MUCH IS THIS YOU?",
-      "title": "\"I feel like people are watching me\"",
-      "options": [
-        {
-          "value": 1,
-          "label": "Not me at all"
-        },
-        {
-          "value": 2,
-          "label": "Not really"
-        },
-        {
-          "value": 3,
-          "label": "Sometimes"
-        },
-        {
-          "value": 4,
-          "label": "Quite a lot"
-        },
-        {
-          "value": 5,
-          "label": "That's so me"
-        }
-      ],
-      "stores_to": "profiles.onboarding_answers.feel_watched"
+      "stores_to": "profiles.onboarding_answers.not_sure_what_to_do",
+      "section": "gym"
     },
     {
       "id": "insight_not_alone",
@@ -309,69 +279,32 @@
         "source": "Gymshark survey of 1,000 UK women, September 2025",
         "source_note": "Show the source line under the stat."
       },
-      "body": "That's why every exercise in Evoluma comes with a first-time guide: where to find it, how to set it up and what to do if it's taken. You can start with just dumbbells and a bench, and add more of the gym when you're ready.",
-      "show_if": "gym_comfort <= 3 or st_not_sure >= 3 or st_watched >= 3",
-      "alt_title": "Here's how we'll help",
-      "alt_body": "Every exercise comes with a first-time guide and quick swaps for when the gym is busy, so your session never stalls.",
+      "body": "That's why Evoluma is built for exactly this. You can start with just dumbbells and a bench, and add more of the gym when you're ready.",
+      "show_if": "gym_comfort <= 3 or st_not_sure >= 3",
+      "button": "Continue",
+      "skip_when_hidden": true,
+      "section": "gym"
+    },
+    {
+      "id": "preview_guide",
+      "type": "preview",
+      "preview": "guide",
+      "section": "gym",
+      "show_if": "st_not_sure >= 3 or gym_comfort <= 2",
+      "skip_when_hidden": true,
+      "eyebrow": "HOW EVOLUMA HELPS",
+      "title": "Never guess what to do",
+      "body": "Every exercise comes with a first-time guide: where to find it, how to set it up and what to focus on.",
+      "demo": {
+        "exercise": "Lat pulldown",
+        "equipment": "machine",
+        "steps": [
+          "Usually with the cable machines",
+          "Set the thigh pad so your legs are snug",
+          "Pull to your upper chest, elbows down"
+        ]
+      },
       "button": "Continue"
-    },
-    {
-      "id": "st_motivation",
-      "type": "statement",
-      "eyebrow": "HOW MUCH IS THIS YOU?",
-      "title": "\"I find it hard to stay motivated on my own\"",
-      "options": [
-        {
-          "value": 1,
-          "label": "Not me at all"
-        },
-        {
-          "value": 2,
-          "label": "Not really"
-        },
-        {
-          "value": 3,
-          "label": "Sometimes"
-        },
-        {
-          "value": 4,
-          "label": "Quite a lot"
-        },
-        {
-          "value": 5,
-          "label": "That's so me"
-        }
-      ],
-      "stores_to": "profiles.onboarding_answers.hard_to_stay_motivated"
-    },
-    {
-      "id": "st_stopped",
-      "type": "statement",
-      "eyebrow": "HOW MUCH IS THIS YOU?",
-      "title": "\"I've started and stopped before\"",
-      "options": [
-        {
-          "value": 1,
-          "label": "Not me at all"
-        },
-        {
-          "value": 2,
-          "label": "Not really"
-        },
-        {
-          "value": 3,
-          "label": "Sometimes"
-        },
-        {
-          "value": 4,
-          "label": "Quite a lot"
-        },
-        {
-          "value": 5,
-          "label": "That's so me"
-        }
-      ],
-      "stores_to": "profiles.onboarding_answers.started_and_stopped"
     },
     {
       "id": "st_busy",
@@ -400,16 +333,77 @@
           "label": "That's so me"
         }
       ],
-      "stores_to": "profiles.onboarding_answers.gym_usually_busy"
+      "stores_to": "profiles.onboarding_answers.gym_usually_busy",
+      "section": "gym"
     },
     {
-      "id": "insight_plans",
-      "type": "insight",
-      "image_slug": "onboarding-insight-plans",
-      "title": "Plans beat willpower",
-      "body": "Deciding when and where you'll train makes it much more likely you'll actually go. You'll pick your days in a moment, and we'll remind you before each session.",
-      "extra_if": {
-        "st_stopped>=3": "And if life gets in the way, that's normal. Evoluma gives you rest weeks and an easy way back in, so a missed week never means starting over."
+      "id": "preview_swap",
+      "type": "preview",
+      "preview": "swap",
+      "section": "gym",
+      "show_if": "st_busy >= 3",
+      "skip_when_hidden": true,
+      "eyebrow": "HOW EVOLUMA HELPS",
+      "title": "Busy gym? Keep moving",
+      "body": "If a machine's taken, tap Swap and pick a close match that works the same muscles. Your session never stalls.",
+      "demo": {
+        "from_name": "Leg press",
+        "from_equipment": "machine",
+        "taken_label": "Taken",
+        "to_name": "Goblet squat",
+        "to_equipment": "dumbbell",
+        "to_note": "Same muscles, free right now",
+        "action_label": "Swap"
+      },
+      "button": "Continue"
+    },
+    {
+      "id": "st_stopped",
+      "type": "statement",
+      "eyebrow": "HOW MUCH IS THIS YOU?",
+      "title": "\"I've started and stopped before\"",
+      "options": [
+        {
+          "value": 1,
+          "label": "Not me at all"
+        },
+        {
+          "value": 2,
+          "label": "Not really"
+        },
+        {
+          "value": 3,
+          "label": "Sometimes"
+        },
+        {
+          "value": 4,
+          "label": "Quite a lot"
+        },
+        {
+          "value": 5,
+          "label": "That's so me"
+        }
+      ],
+      "stores_to": "profiles.onboarding_answers.started_and_stopped",
+      "section": "gym"
+    },
+    {
+      "id": "preview_missed",
+      "type": "preview",
+      "preview": "missed",
+      "section": "gym",
+      "show_if": "st_stopped >= 3",
+      "skip_when_hidden": true,
+      "eyebrow": "HOW EVOLUMA HELPS",
+      "title": "Life happens. Your plan bends",
+      "body": "Missed a session? It waits for you. Move it to another day in one tap, with no guilt and no starting over.",
+      "demo": {
+        "session": "Full body A",
+        "from_day": "tue",
+        "to_day": "thu",
+        "card_title": "Plans changed?",
+        "card_body": "Full body A from Tuesday is still here.",
+        "action_label": "Move to Thursday"
       },
       "button": "Continue"
     },
@@ -471,7 +465,8 @@
           "exclusive": true
         }
       ],
-      "note_for_dev": "Feeds the Gym unlocked baseline: these count as already tried, but don't award first-time badges for them."
+      "note_for_dev": "Feeds the Gym unlocked baseline: these count as already tried, but don't award first-time badges for them.",
+      "section": "gym"
     },
     {
       "id": "cardio",
@@ -495,7 +490,8 @@
           "icon": "shrug"
         }
       ],
-      "helper": "No wrong answer. It just tells us how much cardio to add to your week."
+      "helper": "No wrong answer. It just tells us how much cardio to add to your week.",
+      "section": "gym"
     },
     {
       "id": "days_per_week",
@@ -505,7 +501,8 @@
       "min": 2,
       "max": 5,
       "default": 3,
-      "stores_to": "profiles.days_per_week"
+      "stores_to": "profiles.days_per_week",
+      "section": "week"
     },
     {
       "id": "which_days",
@@ -537,7 +534,10 @@
           "fri",
           "sat"
         ]
-      }
+      },
+      "week_preview_title": "Your week",
+      "week_preview_rest": "Rest",
+      "section": "week"
     },
     {
       "id": "session_length",
@@ -558,7 +558,115 @@
           "label": "An hour or more"
         }
       ],
-      "default": 45
+      "default": 45,
+      "section": "week"
+    },
+    {
+      "id": "building_plan",
+      "type": "building",
+      "title": "Building your plan, {name}",
+      "duration_seconds": 4,
+      "steps": [
+        "Matching your goals",
+        "Choosing your routine",
+        "Planning your week",
+        "Setting your starting point"
+      ],
+      "note_for_dev": "Run the real recommendation while this shows. Each step ticks as that part completes; minimum 3 seconds total.",
+      "section": "plan",
+      "steps_personal": [
+        {
+          "text": "Focusing on {main_goal_label_lower}"
+        },
+        {
+          "text": "Fitting {days_per_week} sessions into {preferred_days_text}"
+        },
+        {
+          "text": "Keeping sessions to about {session_minutes} minutes"
+        },
+        {
+          "if": "st_busy >= 3",
+          "text": "Adding swaps for when it's busy"
+        },
+        {
+          "if": "gym_experience in ['not_yet','just_started'] or gym_comfort <= 2",
+          "text": "Starting you with dumbbells and machines"
+        },
+        {
+          "text": "Choosing your routine"
+        }
+      ],
+      "steps_max": 5
+    },
+    {
+      "id": "plan_reveal",
+      "type": "plan_reveal",
+      "eyebrow": "YOUR PLAN",
+      "title": "{routine_name}",
+      "subtitle": "{routine_subtitle}",
+      "why_title": "Why this plan suits you",
+      "why_lines_source": "why_lines (max 3, picked by rules below)",
+      "week_title": "Your week",
+      "week_template": "{routine.schedule_strength_days} strength days a week: {preferred_days_text}",
+      "week_extras_line": "Plus optional cardio and stretching to suit you",
+      "week_extras_line_no_stretch": "Plus optional cardio to suit you",
+      "week_extras_line_balanced": "Including {routine.cardio_days} cardio days",
+      "timeline_title": "What to look forward to",
+      "timeline_source": "routine.plan_reveal_milestones plus strength_estimate",
+      "estimate_label": "Estimates based on your plan. Everyone progresses differently.",
+      "alternatives_title": "Other plans that suit you",
+      "alternatives_count": 2,
+      "button": "This is my plan",
+      "section": "plan",
+      "eyebrow_personal": "Made for you, {name}",
+      "stats_line": "{length_weeks} weeks · {days_per_week} days a week · about {session_minutes} min",
+      "week_title_short": "Your week",
+      "rest_label": "Rest",
+      "first_title": "First up",
+      "first_meta": "About {first_minutes} minutes · {first_count} exercises",
+      "more_exercises": "+ {count} more",
+      "alternatives_toggle": "Not quite right? See other plans"
+    },
+    {
+      "id": "commit",
+      "type": "commit",
+      "section": "plan",
+      "eyebrow": "READY WHEN YOU ARE",
+      "title": "Ready to start, {name}?",
+      "body": "Strength is built one session at a time. Here's what you're signing up for.",
+      "first_label": "First up",
+      "days_label": "Your days",
+      "length_label": "{length_weeks} weeks · {sessions_per_week} sessions a week",
+      "hold_label": "Hold to commit",
+      "hold_done": "You're in",
+      "hold_a11y": "Press and hold to commit to your plan",
+      "hold_ms": 1200
+    },
+    {
+      "id": "save_account",
+      "type": "save_account",
+      "section": "plan",
+      "eyebrow": "SAVE YOUR PLAN",
+      "title": "Keep your plan safe",
+      "body": "Create your account so your plan, progress and personal bests are saved, even if you change phones.",
+      "email_label": "Email",
+      "password_label": "Password",
+      "password_placeholder": "At least 6 characters",
+      "button": "Save my plan",
+      "have_account": "Already have an account? Log in",
+      "have_account_title": "Log in instead?",
+      "have_account_body": "Your answers here won't be saved. You can redo them any time from Profile.",
+      "error_exists": "That email already has an account. Log in instead, or use a different email.",
+      "error_generic": "That didn't save. Check your connection and try again.",
+      "error_short_password": "Your password needs at least 6 characters.",
+      "error_email": "Please enter a valid email address.",
+      "confirm_note": "We've sent you an email to confirm your address. You can carry on now."
+    },
+    {
+      "id": "paywall",
+      "type": "paywall",
+      "source": "DESIGN.md 9.2 and content/microcopy (paywall)",
+      "section": "plan"
     },
     {
       "id": "streak_goal",
@@ -583,7 +691,9 @@
           "sub": "Make it part of life"
         }
       ],
-      "default": 4
+      "default": 4,
+      "section": "setup",
+      "eyebrow": "BEFORE YOUR FIRST SESSION"
     },
     {
       "id": "reminder_time",
@@ -592,7 +702,8 @@
       "helper": "We'll ask for permission to send reminders after your first session.",
       "default": "18:00",
       "stores_to": "profiles.default_reminder_time",
-      "skip_label": "No reminders for now"
+      "skip_label": "No reminders for now",
+      "section": "setup"
     },
     {
       "id": "bodyweight",
@@ -605,7 +716,8 @@
       ],
       "stores_to": "profiles.bodyweight_kg",
       "skip_label": "Skip this",
-      "button": "Continue"
+      "button": "Continue",
+      "section": "setup"
     },
     {
       "id": "life_stage",
@@ -641,7 +753,8 @@
         "menopause": "life_stage_consent"
       },
       "button": "Continue",
-      "note_for_dev": "AGENTS.md B3. Never send this answer to PostHog, Coach, RevenueCat or notifications."
+      "note_for_dev": "AGENTS.md B3. Never send this answer to PostHog, Coach, RevenueCat or notifications.",
+      "section": "setup"
     },
     {
       "id": "life_stage_consent",
@@ -661,40 +774,8 @@
       "consent_purpose": "life_stage_personalisation",
       "consent_version": 1,
       "stores_to": "health_consents (purpose, consent_version, granted_at) and profiles.life_stage",
-      "on_decline": "Save nothing and continue. Don't ask again during onboarding."
-    },
-    {
-      "id": "building_plan",
-      "type": "building",
-      "title": "Building your plan, {name}",
-      "duration_seconds": 3,
-      "steps": [
-        "Matching your goals",
-        "Choosing your routine",
-        "Planning your week",
-        "Setting your starting point"
-      ],
-      "note_for_dev": "Run the real recommendation while this shows. Each step ticks as that part completes; minimum 3 seconds total."
-    },
-    {
-      "id": "plan_reveal",
-      "type": "plan_reveal",
-      "eyebrow": "YOUR PLAN",
-      "title": "{routine_name}",
-      "subtitle": "{routine_subtitle}",
-      "why_title": "Why this plan suits you",
-      "why_lines_source": "why_lines (max 3, picked by rules below)",
-      "week_title": "Your week",
-      "week_template": "{routine.schedule_strength_days} strength days a week: {preferred_days_text}",
-      "week_extras_line": "Plus optional cardio and stretching to suit you",
-      "week_extras_line_no_stretch": "Plus optional cardio to suit you",
-      "week_extras_line_balanced": "Including {routine.cardio_days} cardio days",
-      "timeline_title": "What to look forward to",
-      "timeline_source": "routine.plan_reveal_milestones plus strength_estimate",
-      "estimate_label": "Estimates based on your plan. Everyone progresses differently.",
-      "alternatives_title": "Other plans that suit you",
-      "alternatives_count": 2,
-      "button": "Continue"
+      "on_decline": "Save nothing and continue. Don't ask again during onboarding.",
+      "section": "setup"
     },
     {
       "id": "safety",
@@ -702,12 +783,8 @@
       "title": "Train safely",
       "source": "AGENTS.md Safety disclaimer (current version)",
       "checkbox": "I've read this and I'm 18 or over",
-      "button": "Continue"
-    },
-    {
-      "id": "paywall",
-      "type": "paywall",
-      "source": "DESIGN.md 9.2 and content/microcopy (paywall)"
+      "button": "Continue",
+      "section": "setup"
     }
   ],
   "why_lines": [
@@ -970,5 +1047,27 @@
     "display": "About +{estimated_increase_kg} kg on your {lift_name} by week {routine.length_weeks}",
     "hide_if": "estimated_increase_kg < 2 or the lift is bodyweight or machine-based without a kg increment",
     "first_estimate": "On insight_goals, use the default routine for her experience level (strong-foundations-6-weeks for beginners, the-climb-in-8-weeks otherwise) and its first milestone. After building_plan, recalculate with the recommended routine. The result can move earlier or later."
-  }
+  },
+  "sections": [
+    {
+      "id": "you",
+      "label": "You"
+    },
+    {
+      "id": "gym",
+      "label": "Your gym"
+    },
+    {
+      "id": "week",
+      "label": "Your week"
+    },
+    {
+      "id": "plan",
+      "label": "Your plan"
+    },
+    {
+      "id": "setup",
+      "label": "Almost done"
+    }
+  ]
 }

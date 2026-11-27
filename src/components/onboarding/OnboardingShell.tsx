@@ -14,6 +14,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton, PrimaryButton, ProgressBar, TextButton } from '@/components/ui';
 import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/constants/theme';
+import { lightTap } from '@/lib/haptics';
+
+export type ShellSections = {
+  labels: string[];
+  /** Index into labels. */
+  current: number;
+  /** 0 to 1 within the current section. */
+  within: number;
+};
 
 const TRANSITION_MS = 250;
 
@@ -35,6 +44,7 @@ export function OnboardingShell({
   skipLabel,
   onSkip,
   footerNote,
+  sections,
 }: {
   children: ReactNode;
   screenKey: string;
@@ -53,6 +63,8 @@ export function OnboardingShell({
   skipLabel?: string;
   onSkip?: () => void;
   footerNote?: string;
+  /** Segmented progress with labels. Replaces the plain bar when set. */
+  sections?: ShellSections | null;
 }) {
   const insets = useSafeAreaInsets();
   const { colours } = useTheme();
@@ -87,7 +99,9 @@ export function OnboardingShell({
           <View style={styles.backSpacer} />
         )}
       </View>
-      {showProgress ? (
+      {showProgress && sections ? (
+        <SectionProgress sections={sections} />
+      ) : showProgress ? (
         <ProgressBar progress={progress} style={styles.progress} />
       ) : null}
 
@@ -111,7 +125,10 @@ export function OnboardingShell({
         {primaryLabel ? (
           <PrimaryButton
             label={primaryLabel}
-            onPress={onPrimary}
+            onPress={() => {
+              lightTap();
+              onPrimary();
+            }}
             disabled={primaryDisabled}
             loading={primaryLoading}
           />
@@ -127,7 +144,62 @@ export function OnboardingShell({
   );
 }
 
+/** Four labelled segments (You, Your gym, Your week, Your plan). The current one fills as she goes. */
+function SectionProgress({ sections }: { sections: ShellSections }) {
+  const { colours } = useTheme();
+  const fill = useRef(new Animated.Value(sections.within)).current;
+  useEffect(() => {
+    Animated.timing(fill, {
+      toValue: sections.within,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [fill, sections.within, sections.current]);
+  return (
+    <View style={styles.sections} accessibilityRole="progressbar" accessibilityLabel={sections.labels[sections.current]}>
+      {sections.labels.map((label, index) => {
+        const done = index < sections.current;
+        const active = index === sections.current;
+        return (
+          <View key={label} style={styles.section}>
+            <View style={[styles.track, { backgroundColor: colours.border }]}>
+              {done ? (
+                <View style={[styles.trackFill, { width: '100%', backgroundColor: colours.brand }]} />
+              ) : active ? (
+                <Animated.View
+                  style={[
+                    styles.trackFill,
+                    {
+                      backgroundColor: colours.brand,
+                      width: fill.interpolate({ inputRange: [0, 1], outputRange: ['6%', '100%'] }),
+                    },
+                  ]}
+                />
+              ) : null}
+            </View>
+            <AppText
+              variant="caption"
+              numberOfLines={1}
+              style={{
+                color: active ? colours.brand : done ? colours.ink : colours.inkMuted,
+                fontWeight: active ? '700' : '500',
+                marginTop: 6,
+              }}>
+              {label}
+            </AppText>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  sections: { flexDirection: 'row', gap: 6, marginHorizontal: 24, marginBottom: 10 },
+  section: { flex: 1 },
+  track: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  trackFill: { height: 4, borderRadius: 2 },
   screen: { flex: 1 },
   topBar: {
     minHeight: 44,

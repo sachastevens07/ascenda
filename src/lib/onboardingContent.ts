@@ -108,7 +108,29 @@ export type OnboardingScreen = {
   stat: InsightStat | null;
   extra_stats: InsightStat[];
   stat_min_value: number | null;
+  /** Progress-bar section: you, gym, week, plan or setup. */
+  section: OnboardingSectionId;
+  /** Skip this screen unless show_if is true (previews and the not-alone insight). */
+  skip_when_hidden: boolean;
+  /** For type 'preview': guide, swap or missed. */
+  preview: string;
+  /** Everything else in the screen's JSON (copy for commit, save_account, previews). */
+  raw: Record<string, unknown>;
 };
+
+export type OnboardingSectionId = 'you' | 'gym' | 'week' | 'plan' | 'setup';
+
+export type OnboardingSection = { id: OnboardingSectionId; label: string };
+
+/** A string from a screen's JSON that has no typed field. */
+export function screenText(screen: OnboardingScreen, key: string): string {
+  return text(screen.raw[key]);
+}
+
+/** A nested object from a screen's JSON, such as a preview's demo. */
+export function screenRecord(screen: OnboardingScreen, key: string): Record<string, unknown> {
+  return asRecord(screen.raw[key]);
+}
 
 export type WhyLine = { if: string; text: string };
 export type RecommendRule = { if: string; recommend: string; alternatives: string[] };
@@ -235,12 +257,25 @@ function parseScreen(raw: unknown): OnboardingScreen {
       .map(parseStat)
       .filter((row): row is InsightStat => Boolean(row)),
     stat_min_value: num(item.stat_min_value),
+    section: (['you', 'gym', 'week', 'plan', 'setup'].includes(text(item.section))
+      ? text(item.section)
+      : 'you') as OnboardingSectionId,
+    skip_when_hidden: item.skip_when_hidden === true,
+    preview: text(item.preview),
+    raw: item,
   };
 }
 
 const ROOT = asRecord(onboarding);
 
 export const ONBOARDING_SCREENS: OnboardingScreen[] = asArray(ROOT.screens).map(parseScreen);
+
+export const ONBOARDING_SECTIONS: OnboardingSection[] = asArray(ROOT.sections)
+  .map((raw) => {
+    const item = asRecord(raw);
+    return { id: text(item.id) as OnboardingSectionId, label: text(item.label) };
+  })
+  .filter((item) => item.id && item.label);
 
 export const WHY_LINES: WhyLine[] = asArray(ROOT.why_lines).map((raw) => {
   const item = asRecord(raw);

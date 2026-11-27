@@ -215,6 +215,7 @@ function RootNavigator() {
     !isOnboarded &&
     pathname !== '/onboarding' &&
     pathname !== '/paywall' &&
+    !LEGAL_PATHS.has(pathname) &&
     !isReferralPath(pathname)
   ) {
     return <Redirect href={'/onboarding' as Href} />;
@@ -239,6 +240,40 @@ function RootNavigator() {
         }}
       />
       <Stack.Screen name="r/[code]" />
+      {/* Legal and safety pages: reachable from the paywall and onboarding before she's onboarded. */}
+      <Stack.Screen
+        name="safety"
+        options={{
+          headerShown: true,
+          title: 'Safety and disclaimer',
+          headerBackTitle: 'Back',
+          headerTintColor: colours.brand,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colours.bg },
+        }}
+      />
+      <Stack.Screen
+        name="terms"
+        options={{
+          headerShown: true,
+          title: 'Terms of use',
+          headerBackTitle: 'Back',
+          headerTintColor: colours.brand,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colours.bg },
+        }}
+      />
+      <Stack.Screen
+        name="privacy"
+        options={{
+          headerShown: true,
+          title: 'Privacy policy',
+          headerBackTitle: 'Back',
+          headerTintColor: colours.brand,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: colours.bg },
+        }}
+      />
       <Stack.Protected guard={!!session && isOnboarded && !needsDisclaimerGate}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen
@@ -373,39 +408,6 @@ function RootNavigator() {
           }}
         />
         <Stack.Screen
-          name="safety"
-          options={{
-            headerShown: true,
-            title: 'Safety and disclaimer',
-            headerBackTitle: 'Back',
-            headerTintColor: colours.brand,
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.bg },
-          }}
-        />
-        <Stack.Screen
-          name="terms"
-          options={{
-            headerShown: true,
-            title: 'Terms of use',
-            headerBackTitle: 'Back',
-            headerTintColor: colours.brand,
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.bg },
-          }}
-        />
-        <Stack.Screen
-          name="privacy"
-          options={{
-            headerShown: true,
-            title: 'Privacy policy',
-            headerBackTitle: 'Back',
-            headerTintColor: colours.brand,
-            headerShadowVisible: false,
-            headerStyle: { backgroundColor: colours.bg },
-          }}
-        />
-        <Stack.Screen
           name="photo-credits"
           options={{
             headerShown: true,
@@ -432,6 +434,9 @@ function RootNavigator() {
   );
 }
 
+/** Terms, privacy and safety are readable before onboarding is finished (paywall and onboarding links). */
+const LEGAL_PATHS = new Set(['/terms', '/privacy', '/safety']);
+
 /** Screens that make sense with no session: sign-in, the inbox check, email links and invite links. */
 function isSignedOutPath(pathname: string): boolean {
   return (
@@ -440,7 +445,8 @@ function isSignedOutPath(pathname: string): boolean {
     pathname === '/auth' ||
     pathname.startsWith('/auth/') ||
     pathname === '/r' ||
-    pathname.startsWith('/r/')
+    pathname.startsWith('/r/') ||
+    LEGAL_PATHS.has(pathname)
   );
 }
 

@@ -99,6 +99,23 @@ export default function SignInScreen() {
     if (ageAnswer === 'under-18') setAgeAnswer(null);
   }
 
+  /**
+   * Onboarding before the account (27 November 2026): start an anonymous session so her answers can be
+   * saved as she goes. She adds her email and password on "Save your plan", after the plan reveal.
+   * If anonymous sign-ins are switched off in Supabase, fall back to creating the account first.
+   */
+  async function startWithoutAccount() {
+    setIsSubmitting(true);
+    setMessage(null);
+    const { error } = await supabase.auth.signInAnonymously({ options: { data: { age_confirmed: true } } });
+    setIsSubmitting(false);
+    if (error) {
+      setAgeAnswer('adult');
+      return;
+    }
+    router.replace('/onboarding' as Href);
+  }
+
   function backToWelcome() {
     setMode('welcome');
     setMessage(null);
@@ -155,10 +172,15 @@ export default function SignInScreen() {
             <AppText variant="display" style={styles.title}>Create your account</AppText>
             <AppText variant="body" style={styles.subtitle}>First, are you 18 or over?</AppText>
             <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-              onPress={() => setAgeAnswer('adult')}
+              style={({ pressed }) => [styles.button, (pressed || isSubmitting) && styles.buttonPressed]}
+              onPress={() => void startWithoutAccount()}
+              disabled={isSubmitting}
               accessibilityRole="button">
-              <AppText variant="bodyStrong" style={styles.buttonText}>Yes, I’m 18 or over</AppText>
+              {isSubmitting ? (
+                <ActivityIndicator color={colours.surface} />
+              ) : (
+                <AppText variant="bodyStrong" style={styles.buttonText}>Yes, I’m 18 or over</AppText>
+              )}
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}

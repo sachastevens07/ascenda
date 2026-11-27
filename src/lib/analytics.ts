@@ -13,6 +13,9 @@ import PostHog from 'posthog-react-native';
  */
 export const ANALYTICS_EVENTS = [
   'onboarding_completed',
+  'onboarding_step_viewed',
+  'onboarding_committed',
+  'account_saved',
   'disclaimer_accepted',
   'paywall_viewed',
   'trial_started',

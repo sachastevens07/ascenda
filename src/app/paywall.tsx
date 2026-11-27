@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, type Href } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useEffect, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
@@ -75,6 +75,12 @@ export default function PaywallScreen() {
   const [routineName, setRoutineName] = useState<string | null>(null);
   const [referred, setReferred] = useState(false);
   const [scrolledPastPhoto, setScrolledPastPhoto] = useState(false);
+  // From onboarding: her plan, first name and what she told us she worries about.
+  const params = useLocalSearchParams<{ plan?: string; name?: string; focus?: string }>();
+  const paramPlan = typeof params.plan === 'string' ? params.plan.trim() : '';
+  const firstName = typeof params.name === 'string' ? params.name.trim() : '';
+  const focus = typeof params.focus === 'string' ? params.focus.split(',').filter(Boolean) : [];
+  const benefitRows = pickBenefits(focus);
 
   function dismiss() {
     if (router.canDismiss()) {
@@ -97,6 +103,10 @@ export default function PaywallScreen() {
   );
 
   useEffect(() => {
+    if (paramPlan) {
+      setRoutineName(paramPlan);
+      return;
+    }
     let isCurrent = true;
     const draft = answers
       ? draftFromSaved({
@@ -124,7 +134,7 @@ export default function PaywallScreen() {
     return () => {
       isCurrent = false;
     };
-  }, [answers, profile?.age_band, profile?.bodyweight_kg, profile?.cardio_preference, profile?.onboarding_answers]);
+  }, [paramPlan, answers, profile?.age_band, profile?.bodyweight_kg, profile?.cardio_preference, profile?.onboarding_answers]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -265,17 +275,19 @@ export default function PaywallScreen() {
               {eyebrow}
             </AppText>
             <AppText style={[styles.headlineLead, { color: colours.ink, fontFamily: fonts.bold }]}>
-              {paywallScreenCopy.headline_lead}
+              {firstName
+                ? fillCopy(paywallScreenCopy.headline_personal_lead, { name: firstName })
+                : paywallScreenCopy.headline_lead}
             </AppText>
             <AppText style={[styles.headlineAccent, { color: colours.brand, fontFamily: fonts.displayItalic }]}>
-              {paywallScreenCopy.headline_accent}
+              {firstName ? paywallScreenCopy.headline_personal_accent : paywallScreenCopy.headline_accent}
             </AppText>
           </View>
         </View>
 
         <View style={{ paddingHorizontal: spacing.lg, gap: spacing.lg, paddingTop: spacing.md }}>
           <View style={styles.benefits}>
-            {paywallScreenCopy.benefit_rows.map((row) => (
+            {benefitRows.map((row) => (
               <View key={row.title} style={styles.benefit}>
                 <View style={[styles.benefitIcon, { backgroundColor: colours.brandSoft }]}>
                   <Ionicons name={row.icon as BenefitIconName} size={20} color={colours.brand} />
@@ -307,6 +319,7 @@ export default function PaywallScreen() {
             </View>
           ) : (
             <>
+              {showTrialCta && trialDays ? <TrialTimeline trialDays={trialDays} /> : null}
               <View style={styles.plans}>
                 {ordered.map((item) => {
                   const isSelected = item.identifier === selectedId;
@@ -448,6 +461,76 @@ export default function PaywallScreen() {
 }
 
 type BenefitIconName = ComponentProps<typeof Ionicons>['name'];
+
+/** Four benefit rows: the ones that answer her worries first, then the defaults. */
+function pickBenefits(focus: string[]): { icon: string; title: string; body: string }[] {
+  const pool = paywallScreenCopy.benefit_pool ?? {};
+  const keys = [...focus, 'plan', ...paywallScreenCopy.benefit_default_order];
+  const seen = new Set<string>();
+  const rows: { icon: string; title: string; body: string }[] = [];
+  for (const key of keys) {
+    if (seen.has(key) || !pool[key]) continue;
+    seen.add(key);
+    rows.push(pool[key]);
+    if (rows.length === 4) break;
+  }
+  return rows.length > 0 ? rows : paywallScreenCopy.benefit_rows;
+}
+
+/** Honest trial timeline: today, the reminder, the day billing starts. */
+function TrialTimeline({ trialDays }: { trialDays: number }) {
+  const { colours, radius } = useTheme();
+  const reminderDay = Math.max(1, trialDays - 2);
+  const steps: { icon: BenefitIconName; title: string; body: string; strong?: boolean }[] = [
+    { icon: 'lock-open', title: paywallScreenCopy.timeline_today_title, body: paywallScreenCopy.timeline_today_body, strong: true },
+    {
+      icon: 'notifications',
+      title: fillCopy(paywallScreenCopy.timeline_reminder_title, { reminder_day: reminderDay }),
+      body: paywallScreenCopy.timeline_reminder_body,
+    },
+    {
+      icon: 'star',
+      title: fillCopy(paywallScreenCopy.timeline_charge_title, { trial_days: trialDays }),
+      body: fillCopy(paywallScreenCopy.timeline_charge_body, { charge_date: chargeDateLabel(trialDays) }),
+    },
+  ];
+  return (
+    <View style={{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: 16 }}>
+      <AppText variant="title3" style={{ color: colours.ink, marginBottom: 12 }}>
+        {paywallScreenCopy.timeline_title}
+      </AppText>
+      {steps.map((step, index) => {
+        const last = index === steps.length - 1;
+        return (
+          <View key={step.title} style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ alignItems: 'center', width: 32 }}>
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: step.strong ? colours.brand : colours.brandSoft,
+                }}>
+                <Ionicons name={step.icon} size={16} color={step.strong ? colours.onBrand : colours.brand} />
+              </View>
+              {!last ? <View style={{ width: 2, flex: 1, backgroundColor: colours.brandSoft, marginVertical: 2 }} /> : null}
+            </View>
+            <View style={{ flex: 1, paddingBottom: last ? 0 : 14 }}>
+              <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                {step.title}
+              </AppText>
+              <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+                {step.body}
+              </AppText>
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
 
 /** Small underlined links under the paywall, like the store apps. */
 function FooterLink({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {

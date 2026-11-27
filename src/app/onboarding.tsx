@@ -1,8 +1,19 @@
-import { router, useLocalSearchParams, type Href } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
-import { OnboardingShell } from '@/components/onboarding/OnboardingShell';
+import { showDialog } from '@/components/Dialog';
+import {
+  AccountField,
+  HoldToCommit,
+  PlanRevealV2,
+  PreviewGlimpse,
+  WeekPreview,
+  firstSessionOf,
+  sessionNamesForDays,
+} from '@/components/onboarding/OnboardingExtras';
+import { OnboardingShell, type ShellSections } from '@/components/onboarding/OnboardingShell';
 import {
   BlockMessage,
   BodyweightField,
@@ -21,13 +32,19 @@ import {
   TimePickerChips,
 } from '@/components/onboarding/OnboardingInputs';
 import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow } from '@/components/ui';
+import { track } from '@/lib/analytics';
+import { successTap } from '@/lib/haptics';
+import { useAuth } from '@/lib/auth';
+import { GOAL_LABELS, type Goal } from '@/lib/goals';
 import { useTheme } from '@/constants/theme';
-import { routineCoverSlug } from '@/lib/images';
-import { queueOnboardingPaywall, startOnboardingRoutine } from '@/lib/onboarding';
+import { startOnboardingRoutine } from '@/lib/onboarding';
 import { fetchActiveLifeStageConsent, persistLifeStageChoice } from '@/lib/healthConsent';
 import {
+  WEEKDAYS,
+  WEEKDAY_LONG,
   defaultDaysFor,
   emptyOnboardingDraft,
+  formatPreferredDays,
   extrasFromDraft,
   draftFromSaved,
   experienceFromGymExperience,
@@ -40,16 +57,17 @@ import {
 import {
   LIFE_STAGE_SCREEN,
   ONBOARDING_SCREENS,
-  QUESTION_SCREEN_IDS,
+  ONBOARDING_SECTIONS,
   draftPlaceholders,
   evalCondition,
   fillTemplate,
   lifeStageConsentTarget,
   ruleContextFromDraft,
+  screenRecord,
+  screenText,
   type OnboardingScreen,
 } from '@/lib/onboardingContent';
 import { defaultRoutineSlug, firstMilestone, recommendPlan, type RecommendedPlan } from '@/lib/onboardingPlan';
-import { openPaywall } from '@/lib/paywall';
 import {
   GYM_EXPERIENCE_LABELS,
   MAX_BODYWEIGHT_KG,
@@ -65,7 +83,12 @@ import { DEFAULT_REMINDER_TIME, saveReminderPrefs, setDefaultReminderTime } from
 import { useSubscription } from '@/lib/subscription';
 import { supabase } from '@/lib/supabase';
 
-const FLOW = ONBOARDING_SCREENS.filter((screen) => screen.type !== 'paywall');
+/** The whole first-run flow, paywall step included (27 November 2026 redesign). */
+const FLOW = ONBOARDING_SCREENS;
+const MAIN_SECTIONS = ONBOARDING_SECTIONS.filter((section) => section.id !== 'setup');
+const SETUP_SECTION = ONBOARDING_SECTIONS.find((section) => section.id === 'setup');
+const DRAFT_KEY = 'onboarding-draft-v2';
+const MIN_PASSWORD = 6;
 const REBUILD_IDS = new Set([
   'goals',
   'insight_goals',
@@ -75,7 +98,6 @@ const REBUILD_IDS = new Set([
   'insight_not_alone',
   'st_stopped',
   'st_busy',
-  'insight_plans',
   'cardio',
   'days_per_week',
   'which_days',
@@ -126,6 +148,8 @@ export default function OnboardingScreen() {
   const { colours, radius, shadow } = useTheme();
   const { profile, saveQuizAnswers, confirmAge, acceptDisclaimer, setLifeStage } = useProfile();
   const subscription = useSubscription();
+  const { session } = useAuth();
+  const isAnonymous = session?.user?.is_anonymous === true;
   const params = useLocalSearchParams<{ rebuild?: string | string[]; screen?: string | string[] }>();
   const rebuildParam = Array.isArray(params.rebuild) ? params.rebuild[0] : params.rebuild;
   const screenParam = Array.isArray(params.screen) ? params.screen[0] : params.screen;
@@ -176,27 +200,45 @@ export default function OnboardingScreen() {
   const [stonesText, setStonesText] = useState('');
   const [poundsText, setPoundsText] = useState('');
   const [weightUnit, setWeightUnit] = useState<'kg' | 'st_lb'>('kg');
+  const [accountEmail, setAccountEmail] = useState('');
+  const [accountPassword, setAccountPassword] = useState('');
+  const [accountNote, setAccountNote] = useState<string | null>(null);
+  const awaitingPaywall = useRef(false);
+  const restored = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const screen: OnboardingScreen | { id: string; type: string } =
     index < 0 ? { id: REVIEW_ID, type: REVIEW_ID } : screens[index];
   const contentScreen = index >= 0 ? screens[index] : null;
 
-  const questionIndex = contentScreen ? QUESTION_SCREEN_IDS.indexOf(contentScreen.id) : -1;
-  const progress = isRebuild
-    ? (index + 1) / Math.max(screens.length, 1)
-    : questionIndex >= 0
-      ? (questionIndex + 1) / QUESTION_SCREEN_IDS.length
-      : isEditing
-        ? 1
-        : 0;
+  const progress = isRebuild ? (index + 1) / Math.max(screens.length, 1) : isEditing ? 1 : 0;
+  const sections: ShellSections | null = (() => {
+    if (isRebuild || isEditing || !contentScreen) return null;
+    const inSection = screens.filter((item) => item.section === contentScreen.section);
+    const position = Math.max(0, inSection.findIndex((item) => item.id === contentScreen.id));
+    const within = (position + 1) / Math.max(inSection.length, 1);
+    if (contentScreen.section === 'setup') {
+      return { labels: [SETUP_SECTION?.label ?? 'Almost done'], current: 0, within };
+    }
+    const current = MAIN_SECTIONS.findIndex((section) => section.id === contentScreen.section);
+    return { labels: MAIN_SECTIONS.map((section) => section.label), current: Math.max(0, current), within };
+  })();
   const showProgress = isRebuild
     ? Boolean(contentScreen && contentScreen.type !== 'building')
-    : Boolean(contentScreen && QUESTION_SCREEN_IDS.includes(contentScreen.id));
+    : Boolean(contentScreen && !['building', 'paywall'].includes(contentScreen.type));
 
   const vars = useMemo(() => {
     const defaultSlug = defaultRoutineSlug(draft);
     const milestone = firstMilestone(plan?.recommended.slug ?? defaultSlug);
+    const firstDay = plan ? firstSessionOf(plan) : null;
+    const mainGoal = draft.main_goals[0] as Goal | undefined;
     return draftPlaceholders(draft, {
+      main_goal_label_lower: mainGoal ? GOAL_LABELS[mainGoal].toLowerCase() : 'your goals',
+      session_minutes: draft.session_minutes,
+      length_weeks: plan?.recommended.overlay.length_weeks ?? '',
+      sessions_per_week: draft.days_per_week,
+      first_minutes: firstDay?.estimated_minutes ?? draft.session_minutes,
+      first_count: firstDay?.exercises.length ?? '',
       first_milestone_week: milestone?.week ?? '',
       first_milestone_title: milestone?.title ?? '',
       routine_name: plan?.recommended.name ?? '',
@@ -213,13 +255,31 @@ export default function OnboardingScreen() {
   const body = contentScreen ? fillTemplate(contentScreen.body, vars) : '';
   const helper = contentScreen ? fillTemplate(contentScreen.helper, vars) : '';
 
+  const buildingSteps = useMemo(() => {
+    if (contentScreen?.type !== 'building') return [];
+    const personal = Array.isArray(contentScreen.raw.steps_personal)
+      ? (contentScreen.raw.steps_personal as { if?: string; text?: string }[])
+      : [];
+    const ctx = ruleContextFromDraft(draft);
+    const picked = personal
+      .filter((step) => typeof step.text === 'string' && (!step.if || evalCondition(step.if, ctx)))
+      .map((step) => fillTemplate(step.text ?? '', vars))
+      .filter((line) => line.trim().length > 0);
+    const max = typeof contentScreen.raw.steps_max === 'number' ? contentScreen.raw.steps_max : 5;
+    if (picked.length === 0) return contentScreen.steps;
+    // Keep the last line ("Choosing your routine") and the first ones that apply.
+    const last = picked[picked.length - 1];
+    const head = picked.slice(0, -1).slice(0, max - 1);
+    return [...head, last];
+  }, [contentScreen, draft, vars]);
+
   useEffect(() => {
     if (contentScreen?.id !== 'building_plan') return;
     const next = recommendPlan(draft, chosenSlug ?? undefined);
     setPlan(next);
     setChosenSlug(next?.recommended.slug ?? null);
     setBuildDone(0);
-    const steps = contentScreen.steps.length || 4;
+    const steps = buildingSteps.length || contentScreen.steps.length || 4;
     const total = (contentScreen.duration_seconds || 3) * 1000;
     const tick = total / steps;
     let count = 0;
@@ -228,6 +288,7 @@ export default function OnboardingScreen() {
       setBuildDone(count);
       if (count >= steps) {
         clearInterval(timer);
+        successTap();
         setTimeout(() => {
           setDirection(1);
           setIndex((current) => current + 1);
@@ -236,6 +297,84 @@ export default function OnboardingScreen() {
     }, tick);
     return () => clearInterval(timer);
   }, [contentScreen?.id]);
+
+  // Keep her place if the app closes mid-way (new flow only).
+  useEffect(() => {
+    if (isEditing || isRebuild || restored.current) return;
+    restored.current = true;
+    void AsyncStorage.getItem(DRAFT_KEY)
+      .then((raw) => {
+        if (!raw) return;
+        const saved = JSON.parse(raw) as { userId?: string; draft?: OnboardingDraft; index?: number };
+        if (!saved.draft || saved.userId !== session?.user?.id) return;
+        setDraft(saved.draft);
+        const at = typeof saved.index === 'number' ? saved.index : 0;
+        // Never resume on the paywall step, the hold or the building animation: go back to the plan.
+        const resumeId = screens[at]?.type;
+        const safe =
+          resumeId && ['building', 'plan_reveal', 'commit', 'save_account', 'paywall'].includes(resumeId)
+            ? Math.max(0, screens.findIndex((item) => item.id === 'building_plan'))
+            : at;
+        setIndex(Math.min(Math.max(0, safe), screens.length - 1));
+      })
+      .catch(() => {})
+      .finally(() => setHydrated(true));
+  }, [isEditing, isRebuild, screens, session?.user?.id]);
+
+  useEffect(() => {
+    if (isEditing || isRebuild || !hydrated || index < 0) return;
+    void AsyncStorage.setItem(
+      DRAFT_KEY,
+      JSON.stringify({ userId: session?.user?.id, draft, index })
+    ).catch(() => {});
+  }, [draft, hydrated, index, isEditing, isRebuild, session?.user?.id]);
+
+  useEffect(() => {
+    if (!contentScreen || isEditing || isRebuild) return;
+    track('onboarding_step_viewed', { step: contentScreen.id });
+  }, [contentScreen?.id, isEditing, isRebuild]);
+
+  // Paywall step: open it once on arrival. Subscribed already: skip straight on.
+  useEffect(() => {
+    if (contentScreen?.type !== 'paywall') return;
+    if (!subscription.isLoading && subscription.isPro) {
+      move(1);
+      return;
+    }
+    openPlanPaywall();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentScreen?.id]);
+
+  // Back from the paywall (bought or closed): carry on to the setup screens.
+  useFocusEffect(
+    useCallback(() => {
+      if (!awaitingPaywall.current) return;
+      awaitingPaywall.current = false;
+      setDirection(1);
+      setIndex((current) => {
+        const next = current + 1;
+        return next < screens.length ? next : current;
+      });
+    }, [screens.length])
+  );
+
+  function openPlanPaywall() {
+    awaitingPaywall.current = true;
+    const focus: string[] = [];
+    if ((draft.statements.not_sure_what_to_do ?? 0) >= 3 || draft.gym_comfort <= 2) focus.push('guides');
+    if ((draft.statements.gym_usually_busy ?? 0) >= 3) focus.push('swaps');
+    if ((draft.statements.started_and_stopped ?? 0) >= 3) focus.push('flexible');
+    track('paywall_viewed', { reason: 'onboarding' });
+    router.push({
+      pathname: '/paywall',
+      params: {
+        reason: 'onboarding',
+        plan: plan?.recommended.name ?? '',
+        name: draft.display_name.trim(),
+        focus: focus.join(','),
+      },
+    } as Href);
+  }
 
   useEffect(() => {
     let isCurrent = true;
@@ -257,10 +396,19 @@ export default function OnboardingScreen() {
     );
   }
 
+  /** Screens that don't apply to her right now: unmatched previews, save_account once she has one, the paywall once subscribed. */
+  function isSkipped(item: OnboardingScreen | undefined, delta: number): boolean {
+    if (!item) return false;
+    if (item.id === 'life_stage_consent') return !shouldShowLifeStageConsent(draft.life_stage_choice);
+    if (item.skip_when_hidden && item.show_if && !evalCondition(item.show_if, ruleContextFromDraft(draft))) return true;
+    if (item.type === 'save_account') return !isAnonymous || delta < 0;
+    if (item.type === 'paywall') return delta < 0 || (!subscription.isLoading && subscription.isPro);
+    return false;
+  }
+
   function skipConsentIndex(from: number, delta: number): number {
     let next = from + delta;
-    while (next >= 0 && next < screens.length && screens[next]?.id === 'life_stage_consent') {
-      if (shouldShowLifeStageConsent(draft.life_stage_choice)) break;
+    while (next >= 0 && next < screens.length && isSkipped(screens[next], delta)) {
       next += delta;
     }
     return next;
@@ -304,8 +452,7 @@ export default function OnboardingScreen() {
     }
     let next = skipConsentIndex(index, delta);
     if (delta < 0 && screens[index]?.id === 'plan_reveal') {
-      const backId = isRebuild ? 'session_length' : 'life_stage';
-      const bodyIndex = screens.findIndex((item) => item.id === backId);
+      const bodyIndex = screens.findIndex((item) => item.id === 'session_length');
       if (bodyIndex >= 0) next = bodyIndex;
     }
     if (delta > 0 && screens[index]?.id === 'life_stage' && shouldShowLifeStageConsent(draft.life_stage_choice)) {
@@ -348,7 +495,40 @@ export default function OnboardingScreen() {
     if (contentScreen.type === 'disclaimer') return safetyChecked;
     if (contentScreen.type === 'consent') return consentChecked;
     if (contentScreen.type === 'building') return false;
+    if (contentScreen.type === 'save_account') {
+      return accountEmail.trim().length > 3 && accountPassword.length >= MIN_PASSWORD;
+    }
     return true;
+  }
+
+  /** Turns the anonymous onboarding account into a real one. Same user id, so answers and purchases stay. */
+  async function saveAccount(screenItem: OnboardingScreen) {
+    const email = accountEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError(screenText(screenItem, 'error_email'));
+      return;
+    }
+    if (accountPassword.length < MIN_PASSWORD) {
+      setError(screenText(screenItem, 'error_short_password'));
+      return;
+    }
+    setIsSaving(true);
+    setError(null);
+    const { data, error: linkError } = await supabase.auth.updateUser({ email, password: accountPassword });
+    setIsSaving(false);
+    if (linkError) {
+      const message = linkError.message.toLowerCase();
+      setError(
+        message.includes('already') || message.includes('registered') || message.includes('exists')
+          ? screenText(screenItem, 'error_exists')
+          : screenText(screenItem, 'error_generic')
+      );
+      return;
+    }
+    track('account_saved', {});
+    // With email confirmation on, the address is pending until she taps the link.
+    if (data.user?.new_email && !data.user.email) setAccountNote(screenText(screenItem, 'confirm_note'));
+    move(1);
   }
 
   async function handlePrimary() {
@@ -445,6 +625,14 @@ export default function OnboardingScreen() {
       }
       return;
     }
+    if (contentScreen.type === 'save_account') {
+      await saveAccount(contentScreen);
+      return;
+    }
+    if (contentScreen.type === 'paywall') {
+      openPlanPaywall();
+      return;
+    }
     if (contentScreen.id === 'plan_reveal') {
       if (isRebuild) {
         void finish();
@@ -501,14 +689,12 @@ export default function OnboardingScreen() {
         else router.replace('/');
         return;
       }
-      await queueOnboardingPaywall(recommended?.recommended.slug ?? '');
       await startOnboardingRoutine({
         recommendedId: recommended?.recommended.slug,
       }).catch(() => {});
+      await AsyncStorage.removeItem(DRAFT_KEY).catch(() => {});
+      // The paywall was already shown inside the flow, before the setup screens.
       router.replace('/');
-      if (!subscription.isLoading && !subscription.isPro) {
-        openPaywall('onboarding');
-      }
     } catch {
       setError("Sorry, we couldn't save your answers. Check your connection and try again.");
       setIsSaving(false);
@@ -541,11 +727,24 @@ export default function OnboardingScreen() {
     if (contentScreen.type === 'building') return '';
     if (contentScreen.type === 'consent') return contentScreen.accept_button;
     if (contentScreen.type === 'plan_reveal') return contentScreen.button || 'Continue';
+    if (contentScreen.type === 'commit') return '';
+    if (contentScreen.type === 'paywall') return 'See plans';
     return contentScreen.button || contentScreen.primary_button || 'Continue';
   })();
 
+  const firstSetupIndex = screens.findIndex((item) => item.section === 'setup');
   const showBack =
-    isRebuild || isEditing || (index > 0 && contentScreen?.type !== 'building');
+    isRebuild ||
+    isEditing ||
+    (index >= 0 &&
+      contentScreen?.type !== 'building' &&
+      contentScreen?.type !== 'paywall' &&
+      index !== firstSetupIndex);
+
+  function accountNoteFor(item: OnboardingScreen | null): string | undefined {
+    if (accountNote && item?.section === 'setup' && item.id === screens[firstSetupIndex]?.id) return accountNote;
+    return undefined;
+  }
 
   function jumpTo(id: string) {
     const next = screens.findIndex((item) => item.id === id);
@@ -570,6 +769,8 @@ export default function OnboardingScreen() {
         }
         if (index <= 0) {
           if (isRebuild && router.canGoBack()) router.back();
+          // First question of a new flow: back out to the welcome screen.
+          else if (!isRebuild && !isEditing && isAnonymous) void supabase.auth.signOut();
           return;
         }
         move(-1);
@@ -583,11 +784,27 @@ export default function OnboardingScreen() {
           ? contentScreen.secondary_link
           : contentScreen?.type === 'consent'
             ? contentScreen.decline_button
-            : undefined
+            : contentScreen?.type === 'save_account'
+              ? screenText(contentScreen, 'have_account')
+              : undefined
       }
       onSecondary={
         contentScreen?.type === 'welcome'
           ? () => void supabase.auth.signOut()
+          : contentScreen?.type === 'save_account'
+            ? () => {
+                const item = contentScreen;
+                showDialog(screenText(item, 'have_account_title'), screenText(item, 'have_account_body'), [
+                  { text: 'Stay here', style: 'cancel' },
+                  {
+                    text: 'Log in',
+                    onPress: () => {
+                      void AsyncStorage.removeItem(DRAFT_KEY).catch(() => {});
+                      void supabase.auth.signOut();
+                    },
+                  },
+                ]);
+              }
           : contentScreen?.type === 'consent'
             ? () => {
                 setLifeStageConsentDeclined(true);
@@ -620,7 +837,8 @@ export default function OnboardingScreen() {
           move(1);
         }
       }}
-      footerNote={error ?? contentScreen?.privacy_note ?? undefined}>
+      footerNote={error ?? accountNoteFor(contentScreen) ?? contentScreen?.privacy_note ?? undefined}
+      sections={sections}>
       {index < 0 ? (
         <View>
           <ScreenHeading title="Your answers" helper="Tap a row to change it." />
@@ -868,6 +1086,13 @@ export default function OnboardingScreen() {
             targetCount={draft.days_per_week}
             onChange={(preferred_days) => setDraft((current) => ({ ...current, preferred_days }))}
           />
+          {!isEditing ? (
+            <WeekPreview
+              title={screenText(contentScreen, 'week_preview_title')}
+              days={draft.preferred_days}
+              restLabel={screenText(contentScreen, 'week_preview_rest') || 'Rest'}
+            />
+          ) : null}
         </>
       ) : null}
 
@@ -969,22 +1194,91 @@ export default function OnboardingScreen() {
       {contentScreen?.type === 'building' ? (
         <>
           <ScreenHeading title={title} />
-          <BuildingSteps steps={contentScreen.steps} doneCount={buildDone} />
+          <BuildingSteps steps={buildingSteps} doneCount={buildDone} />
         </>
       ) : null}
 
       {contentScreen?.type === 'plan_reveal' && plan ? (
-        <PlanReveal
-          screen={contentScreen}
+        <PlanRevealV2
           plan={plan}
-          vars={vars}
+          days={draft.preferred_days}
           chosenSlug={chosenSlug ?? plan.recommended.slug}
           onChoose={(slug) => {
             const next = recommendPlan(draft, slug);
             setChosenSlug(slug);
             setPlan(next);
           }}
+          copy={{
+            eyebrow: fillTemplate(screenText(contentScreen, 'eyebrow_personal') || contentScreen.eyebrow, vars),
+            title: fillTemplate(contentScreen.title, vars),
+            subtitle: fillTemplate(plan.recommended.subtitle, vars),
+            statsLine: fillTemplate(screenText(contentScreen, 'stats_line'), vars),
+            weekTitle: screenText(contentScreen, 'week_title_short') || contentScreen.week_title,
+            restLabel: screenText(contentScreen, 'rest_label') || 'Rest',
+            firstTitle: screenText(contentScreen, 'first_title'),
+            firstMeta: fillTemplate(screenText(contentScreen, 'first_meta'), vars),
+            moreExercises: screenText(contentScreen, 'more_exercises'),
+            whyTitle: contentScreen.why_title,
+            timelineTitle: contentScreen.timeline_title,
+            estimateLabel: contentScreen.estimate_label,
+            alternativesTitle: contentScreen.alternatives_title,
+            alternativesToggle: screenText(contentScreen, 'alternatives_toggle'),
+          }}
         />
+      ) : null}
+
+      {contentScreen?.type === 'preview' ? (
+        <>
+          <ScreenHeading
+            eyebrow={contentScreen.eyebrow}
+            title={fillTemplate(contentScreen.title, vars)}
+            body={fillTemplate(contentScreen.body, vars)}
+          />
+          <PreviewGlimpse kind={contentScreen.preview} demo={screenRecord(contentScreen, 'demo')} />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'commit' && plan ? (
+        <CommitScreen
+          screen={contentScreen}
+          vars={vars}
+          plan={plan}
+          days={draft.preferred_days}
+          onDone={() => {
+            track('onboarding_committed', {});
+            move(1);
+          }}
+        />
+      ) : null}
+
+      {contentScreen?.type === 'save_account' ? (
+        <>
+          <ScreenHeading
+            eyebrow={contentScreen.eyebrow}
+            title={fillTemplate(contentScreen.title, vars)}
+            body={fillTemplate(contentScreen.body, vars)}
+          />
+          <AccountField
+            label={screenText(contentScreen, 'email_label')}
+            value={accountEmail}
+            onChange={setAccountEmail}
+            placeholder="you@example.com"
+            email
+          />
+          <AccountField
+            label={screenText(contentScreen, 'password_label')}
+            value={accountPassword}
+            onChange={setAccountPassword}
+            placeholder={screenText(contentScreen, 'password_placeholder')}
+            secure
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'paywall' ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 }}>
+          <ActivityIndicator color={colours.brand} />
+        </View>
       ) : null}
 
       {contentScreen?.type === 'disclaimer' ? (
@@ -1007,102 +1301,66 @@ export default function OnboardingScreen() {
   );
 }
 
-function PlanReveal({
+function CommitScreen({
   screen,
-  plan,
   vars,
-  chosenSlug,
-  onChoose,
+  plan,
+  days,
+  onDone,
 }: {
   screen: OnboardingScreen;
-  plan: RecommendedPlan;
   vars: Record<string, string | number | null | undefined>;
-  chosenSlug: string;
-  onChoose: (slug: string) => void;
+  plan: RecommendedPlan;
+  days: OnboardingDraft['preferred_days'];
+  onDone: () => void;
 }) {
   const { colours, radius, shadow } = useTheme();
-  const coverSlug = routineCoverSlug({
-    slug: plan.recommended.slug,
-    name: plan.recommended.name,
-  });
+  const first = firstSessionOf(plan);
+  const names = sessionNamesForDays(plan, days);
+  const ordered = WEEKDAYS.filter((day) => days.includes(day));
+  const firstDay = ordered[0];
+  const holdMs = typeof screen.raw.hold_ms === 'number' ? screen.raw.hold_ms : 1200;
   return (
     <View>
-      <HeroImage
-        imageSlug={coverSlug}
+      <ScreenHeading
         eyebrow={screen.eyebrow}
         title={fillTemplate(screen.title, vars)}
-        height={200}
-        style={{ marginHorizontal: -24, marginBottom: 16 }}
+        body={fillTemplate(screen.body, vars)}
       />
-      <AppText variant="body" style={{ color: colours.inkMuted, marginBottom: 16 }}>
-        {fillTemplate(plan.recommended.subtitle, vars)}
-      </AppText>
-      <AppText variant="title3" style={{ color: colours.ink, marginBottom: 8 }}>
-        {screen.why_title}
-      </AppText>
-      {plan.why.map((line) => (
-        <AppText key={line} variant="body" style={{ color: colours.ink, marginBottom: 6 }}>
-          {line}
-        </AppText>
-      ))}
-      <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
-        {screen.week_title}
-      </AppText>
-      <AppText variant="body" style={{ color: colours.inkMuted }}>
-        {fillTemplate(screen.week_template, vars)}
-      </AppText>
-      {plan.recommended.overlay.cardio_balanced && screen.week_extras_line_balanced ? (
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
-          {fillTemplate(screen.week_extras_line_balanced, vars)}
-        </AppText>
-      ) : screen.week_extras_line || screen.week_extra ? (
-        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 6 }}>
-          {fillTemplate(screen.week_extras_line || screen.week_extra, vars)}
-        </AppText>
-      ) : null}
-      <AppText variant="title3" style={{ color: colours.ink, marginTop: 16, marginBottom: 8 }}>
-        {screen.timeline_title}
-      </AppText>
-      {plan.milestones.map((item) => (
-        <View
-          key={`${item.week}-${item.title}`}
-          style={{
-            backgroundColor: colours.surface,
-            borderRadius: radius.lg,
-            padding: 12,
-            marginBottom: 8,
-            ...shadow,
-          }}>
+      <View style={{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: 16, gap: 14, ...shadow }}>
+        <View>
           <AppText variant="eyebrow" style={{ color: colours.accent }}>
-            Week {item.week}
+            {screenText(screen, 'first_label')}
           </AppText>
-          <AppText variant="bodyStrong" style={{ color: colours.ink, marginTop: 4 }}>
-            {item.title}
+          <AppText variant="title3" style={{ color: colours.ink, marginTop: 2 }}>
+            {(firstDay && names[firstDay]) || first?.name || plan.recommended.name}
           </AppText>
-          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-            {item.description}
+          {firstDay ? (
+            <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+              {WEEKDAY_LONG[firstDay]}
+              {first?.estimated_minutes ? ` · about ${first.estimated_minutes} min` : ''}
+            </AppText>
+          ) : null}
+        </View>
+        <View>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            {screenText(screen, 'days_label')}
+          </AppText>
+          <AppText variant="bodyStrong" style={{ color: colours.ink, marginTop: 2 }}>
+            {formatPreferredDays(days)}
+          </AppText>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+            {fillTemplate(screenText(screen, 'length_label'), vars)}
           </AppText>
         </View>
-      ))}
-      <AppText variant="caption" style={{ color: colours.inkMuted, marginBottom: 16 }}>
-        {screen.estimate_label}
-      </AppText>
-      {plan.alternatives.length > 0 ? (
-        <>
-          <AppText variant="title3" style={{ color: colours.ink, marginBottom: 8 }}>
-            {screen.alternatives_title}
-          </AppText>
-          <CardChoiceList
-            options={plan.alternatives.map((item) => ({
-              value: item.slug,
-              label: item.name,
-              sub: item.subtitle,
-            }))}
-            value={chosenSlug}
-            onChange={onChoose}
-          />
-        </>
-      ) : null}
+      </View>
+      <HoldToCommit
+        label={screenText(screen, 'hold_label')}
+        doneLabel={screenText(screen, 'hold_done')}
+        accessibilityLabel={screenText(screen, 'hold_a11y')}
+        durationMs={holdMs}
+        onDone={onDone}
+      />
     </View>
   );
 }

@@ -266,9 +266,16 @@ export function storedAgeBand(draft: OnboardingDraft): StoredAgeBand | null {
 }
 
 const NAME_BY_SLUG = new Map<string, string>();
+const EQUIPMENT_BY_SLUG = new Map<string, string>();
 for (const item of Array.isArray(catalogue.exercises) ? catalogue.exercises : []) {
-  const row = item as { slug?: string; name?: string };
+  const row = item as { slug?: string; name?: string; equipment?: string };
   if (row.slug && row.name) NAME_BY_SLUG.set(row.slug, row.name);
+  if (row.slug && row.equipment) EQUIPMENT_BY_SLUG.set(row.slug, row.equipment);
+}
+
+/** Catalogue equipment for an exercise slug (dumbbell, machine, cable...). */
+export function exerciseEquipmentFromSlug(slug: string): string | null {
+  return EQUIPMENT_BY_SLUG.get(slug) ?? null;
 }
 
 export function exerciseNameFromSlug(slug: string): string {
