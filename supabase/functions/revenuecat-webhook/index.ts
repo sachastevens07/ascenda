@@ -4,8 +4,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
  * RevenueCat webhook. The only writer of public.subscriptions.
  * Set REVENUECAT_WEBHOOK_SECRET to the same Authorization value as the
  * RevenueCat dashboard. verify_jwt is off: this is not a user JWT.
- * Set REVENUECAT_SECRET_API_KEY (v1 secret) so X6 can extend a paid renewal
- * or grant a promotional month. Never logs product payloads or customer info.
+ * Set REVENUECAT_SECRET_API_KEY (v1 secret) so each event re-reads her current
+ * entitlement from RevenueCat (events can arrive late or out of order), and so X6
+ * can extend a paid renewal or grant a promotional month. Never logs product payloads or customer info.
  */
 
 const ENTITLEMENT = 'ascenda_pro';
@@ -113,6 +114,65 @@ async function rcPost(path: string, body: Record<string, unknown>): Promise<bool
     return false;
   }
   return true;
+}
+
+type Snapshot = { status: Status; product: string | null; expires: string | null };
+
+type RcEntitlement = {
+  expires_date?: string | null;
+  grace_period_expires_date?: string | null;
+  product_identifier?: string;
+};
+
+type RcSubscription = {
+  period_type?: string;
+  billing_issues_detected_at?: string | null;
+};
+
+/**
+ * Current state of her `ascenda_pro` entitlement, read from RevenueCat rather than
+ * from the event. Webhooks can arrive late or out of order (for example an old Test
+ * Store purchase expiring after a real one started), so the latest event is not
+ * always the truth. Null when the secret key is missing or the call fails; the
+ * caller then falls back to the event.
+ */
+async function fetchSnapshot(userId: string): Promise<Snapshot | null> {
+  const key = (Deno.env.get('REVENUECAT_SECRET_API_KEY') ?? '').trim();
+  if (!key || !isUuid(userId)) return null;
+  try {
+    const res = await fetch(`${RC_API}/subscribers/${encodeURIComponent(userId)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) {
+      console.log('revenuecat-webhook subscriber fetch failed');
+      return null;
+    }
+    const body = (await res.json()) as {
+      subscriber?: {
+        entitlements?: Record<string, RcEntitlement>;
+        subscriptions?: Record<string, RcSubscription>;
+      };
+    };
+    const ent = body.subscriber?.entitlements?.[ENTITLEMENT];
+    if (!ent) return { status: 'expired', product: null, expires: null };
+    const product = ent.product_identifier ?? null;
+    const now = Date.now();
+    const expiresMs = ent.expires_date ? Date.parse(ent.expires_date) : Number.POSITIVE_INFINITY;
+    const graceMs = ent.grace_period_expires_date ? Date.parse(ent.grace_period_expires_date) : 0;
+    const expires = ent.expires_date ?? null;
+    if (expiresMs <= now && graceMs <= now) return { status: 'expired', product, expires };
+    const sub = product ? body.subscriber?.subscriptions?.[product] : undefined;
+    if (expiresMs <= now || sub?.billing_issues_detected_at) {
+      return { status: 'grace', product, expires };
+    }
+    if ((sub?.period_type ?? '').toLowerCase() === 'trial') {
+      return { status: 'trial', product, expires };
+    }
+    return { status: 'active', product, expires };
+  } catch {
+    console.log('revenuecat-webhook subscriber fetch failed');
+    return null;
+  }
 }
 
 async function rewardsThisYear(admin: Admin, referrerId: string): Promise<number> {
@@ -268,16 +328,39 @@ Deno.serve(async (req) => {
     if (type === 'TRANSFER') {
       const fromId = event.transferred_from?.find((id) => isUuid(id));
       const toId = event.transferred_to?.find((id) => isUuid(id)) ?? event.app_user_id;
-      if (fromId) await write(fromId, 'expired', productId(event), expiresAt(event), transactionId(event));
+      if (fromId) {
+        const from = await fetchSnapshot(fromId);
+        await write(
+          fromId,
+          from?.status ?? 'expired',
+          from ? from.product : productId(event),
+          from ? from.expires : expiresAt(event),
+          transactionId(event)
+        );
+      }
       if (toId) {
-        await write(toId, statusFromEvent(event), productId(event), expiresAt(event), transactionId(event));
+        const to = await fetchSnapshot(toId);
+        await write(
+          toId,
+          to?.status ?? statusFromEvent(event),
+          to ? to.product : productId(event),
+          to ? to.expires : expiresAt(event),
+          transactionId(event)
+        );
       }
       return json({ ok: true });
     }
 
     const userId = event.app_user_id ?? '';
-    const status = statusFromEvent(event);
-    await write(userId, status, productId(event), expiresAt(event), transactionId(event));
+    const snapshot = await fetchSnapshot(userId);
+    const status = snapshot?.status ?? statusFromEvent(event);
+    await write(
+      userId,
+      status,
+      snapshot ? snapshot.product : productId(event),
+      snapshot ? snapshot.expires : expiresAt(event),
+      transactionId(event)
+    );
     try {
       await handleReferrals(admin, event, status);
     } catch {
