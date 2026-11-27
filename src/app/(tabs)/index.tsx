@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router, useFocusEffect, type Href } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -662,6 +662,17 @@ export default function HomeScreen() {
       ]
     );
   }
+
+  // Coming from onboarding's "Start my first session": open it once the plan has loaded.
+  const startParam = useLocalSearchParams<{ start?: string }>().start;
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (startParam !== '1' || autoStarted.current || !data?.next) return;
+    autoStarted.current = true;
+    router.setParams({ start: undefined });
+    openSessionDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startParam, data?.next]);
 
   function openSessionDetail() {
     if (!ensureSubscribed()) return;

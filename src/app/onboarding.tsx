@@ -37,7 +37,7 @@ import {
   StatementScale,
   TimePickerChips,
 } from '@/components/onboarding/OnboardingInputs';
-import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow } from '@/components/ui';
+import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow, TextButton } from '@/components/ui';
 import { track } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 import { GOAL_LABELS, type Goal } from '@/lib/goals';
@@ -713,6 +713,11 @@ export default function OnboardingScreen() {
       try {
         await acceptDisclaimer();
         setIsSaving(false);
+        // The ready screen (start your first session) follows when it's in the flow.
+        if (screens[index + 1]?.type === 'ready') {
+          move(1);
+          return;
+        }
         await finish();
       } catch {
         setIsSaving(false);
@@ -722,6 +727,10 @@ export default function OnboardingScreen() {
     }
     if (contentScreen.type === 'save_account') {
       await saveAccount(contentScreen);
+      return;
+    }
+    if (contentScreen.type === 'ready') {
+      await finish(true);
       return;
     }
     if (contentScreen.type === 'paywall') {
@@ -739,7 +748,7 @@ export default function OnboardingScreen() {
     move(1);
   }
 
-  async function finish() {
+  async function finish(startNow = false) {
     finishing.current = true;
     const answers = quizFromDraft(draft);
     if (!answers) {
@@ -790,7 +799,8 @@ export default function OnboardingScreen() {
       }).catch(() => {});
       await AsyncStorage.removeItem(DRAFT_KEY).catch(() => {});
       // The paywall was already shown inside the flow, before the setup screens.
-      router.replace('/');
+      // "Start my first session" asks Home to open the next session straight away.
+      router.replace((startNow ? { pathname: '/', params: { start: '1' } } : '/') as Href);
     } catch {
       setError("Sorry, we couldn't save your answers. Check your connection and try again.");
       setIsSaving(false);
@@ -949,11 +959,15 @@ export default function OnboardingScreen() {
             ? contentScreen.decline_button
             : contentScreen?.type === 'save_account'
               ? screenText(contentScreen, 'have_account')
-              : undefined
+              : contentScreen?.type === 'ready'
+                ? screenText(contentScreen, 'secondary')
+                : undefined
       }
       onSecondary={
         contentScreen?.type === 'welcome'
           ? () => void supabase.auth.signOut()
+          : contentScreen?.type === 'ready'
+            ? () => void finish(false)
           : contentScreen?.type === 'save_account'
             ? () => {
                 const item = contentScreen;
@@ -1005,8 +1019,8 @@ export default function OnboardingScreen() {
       primaryDelayMs={
         contentScreen && ['reward', 'preview', 'projection', 'insight'].includes(contentScreen.type) && !isEditing
           ? contentScreen.type === 'preview' || contentScreen.type === 'projection'
-            ? 2400
-            : 1400
+            ? 1600
+            : 900
           : 0
       }>
       {contentScreen && !['reward', 'commit', 'obstacles'].includes(contentScreen.type) ? (
@@ -1426,6 +1440,28 @@ export default function OnboardingScreen() {
         </>
       ) : null}
 
+      {contentScreen?.type === 'ready' && (plan ?? recommendPlan(draft)) ? (
+        <ReadyScreen
+          screen={contentScreen}
+          vars={vars}
+          plan={(plan ?? recommendPlan(draft))!}
+          days={draft.preferred_days}
+        />
+      ) : null}
+
+      {contentScreen?.id === 'goals' && screenText(contentScreen, 'not_sure_label') ? (
+        <TextButton
+          label={screenText(contentScreen, 'not_sure_label')}
+          onPress={() => {
+            const picks = (Array.isArray(contentScreen.raw.not_sure_goals) ? contentScreen.raw.not_sure_goals : [])
+              .map(String) as Goal[];
+            setDraft((current) => ({ ...current, main_goals: picks }));
+            move(1);
+          }}
+          style={{ alignSelf: 'center', marginTop: 8 }}
+        />
+      ) : null}
+
       {contentScreen?.type === 'projection' ? (
         <>
           <ScreenHeading eyebrow={contentScreen.eyebrow} title={fillTemplate(contentScreen.title, vars)} />
@@ -1606,6 +1642,46 @@ function CommitScreen({
         durationMs={holdMs}
         onDone={onDone}
       />
+    </View>
+  );
+}
+
+/** Last screen: lead her to the key action, her first session, with a quiet way to look around first. */
+function ReadyScreen({
+  screen,
+  vars,
+  plan,
+  days,
+}: {
+  screen: OnboardingScreen;
+  vars: Record<string, string | number | null | undefined>;
+  plan: RecommendedPlan;
+  days: OnboardingDraft['preferred_days'];
+}) {
+  const { colours, radius, shadow } = useTheme();
+  const first = firstSessionOf(plan);
+  const names = sessionNamesForDays(plan, days);
+  const firstDay = WEEKDAYS.filter((day) => days.includes(day))[0];
+  return (
+    <View>
+      <ScreenHeading
+        eyebrow={screen.eyebrow}
+        title={fillTemplate(screen.title, vars)}
+        body={fillTemplate(screen.body, vars)}
+      />
+      <View style={{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: 16, ...shadow }}>
+        <AppText variant="eyebrow" style={{ color: colours.accent }}>
+          {screenText(screen, 'first_label')}
+        </AppText>
+        <AppText variant="title3" style={{ color: colours.ink, marginTop: 2 }}>
+          {(firstDay && names[firstDay]) || first?.name || plan.recommended.name}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+          {plan.recommended.name}
+          {first?.estimated_minutes ? ` · about ${first.estimated_minutes} min` : ''}
+          {first?.exercises.length ? ` · ${first.exercises.length} exercises` : ''}
+        </AppText>
+      </View>
     </View>
   );
 }
