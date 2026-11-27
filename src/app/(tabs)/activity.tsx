@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,12 +17,12 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { showDialog } from '@/components/Dialog';
 import { LineChart } from '@/components/LineChart';
+import { ProgressPhotosCard } from '@/components/ProgressPhotosCard';
 import { useTabBarHeight } from '@/components/PillTabBar';
 import {
   AchievementBadge as BadgeMark,
   AppText,
   BadgeSheet,
-  DestructiveTextButton,
   MenuRow,
   OverflowMenu,
   PhotoFill,
@@ -34,7 +33,6 @@ import {
   StreakCard,
   CoachButton,
   TabAvatar,
-  TextButton,
   measureAnchor,
   type AnchorHandle,
   type AnchorRect,
@@ -220,7 +218,6 @@ export default function ActivityScreen() {
   const [pickerAnchor, setPickerAnchor] = useState<AnchorRect | null>(null);
   const [tab, setTab] = useState<ActivityTab>('progress');
   const [showPhotos, setShowPhotos] = useState(false);
-  const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isPhotoBusy, setIsPhotoBusy] = useState(false);
   const [openBadge, setOpenBadge] = useState<AchievementBadge | null>(null);
   const [startingNext, setStartingNext] = useState(false);
@@ -278,7 +275,6 @@ export default function ActivityScreen() {
           if (!isCurrent) return;
           if (!photosEnabled) {
             setShowPhotos(false);
-            setCompareIds([]);
           }
           setData({
             sets,
@@ -379,7 +375,6 @@ export default function ActivityScreen() {
         onPress: async () => {
           try {
             await deleteProgressPhoto(photo);
-            setCompareIds((current) => current.filter((id) => id !== photo.id));
             await reloadPhotos();
           } catch (error) {
             showDialog('Couldn’t delete that photo', describePhotosError(error));
@@ -398,7 +393,6 @@ export default function ActivityScreen() {
         onPress: async () => {
           try {
             await deleteAllProgressPhotos(photos);
-            setCompareIds([]);
             await reloadPhotos();
           } catch (error) {
             showDialog('Couldn’t delete those photos', describePhotosError(error));
@@ -462,7 +456,6 @@ export default function ActivityScreen() {
     extras: data.extras,
   });
   const badges = awardGroups.flatMap((group) => group.badges);
-  const comparePhotos = data.photos.filter((photo) => compareIds.includes(photo.id));
   const awardsEarned = countEarnedAwards(badges);
   const card = [styles.card, { backgroundColor: colours.surface, borderRadius: radius.xl }, shadow];
 
@@ -577,148 +570,25 @@ export default function ActivityScreen() {
             ) : null}
 
             {data.photosEnabled ? (
-                <>
-                  <View style={card}>
-                    <View style={styles.cardHeader}>
-                      <AppText variant="title3" style={{ color: colours.ink, flex: 1 }}>
-                        Progress photos
-                      </AppText>
-                      <Ionicons name="lock-closed-outline" size={18} color={colours.inkMuted} />
-                    </View>
-                    <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                      Optional, private, and never sent to AI. Hidden until you choose to show them.
-                    </AppText>
-                    {data.photosError ? (
-                      <AppText variant="caption" style={{ color: colours.inkMuted }}>{data.photosError}</AppText>
-                    ) : null}
-                    {showPhotos ? (
-                      <>
-                        <TextButton
-                          label={progressPhotosCopy.hide}
-                          onPress={() => {
-                            setShowPhotos(false);
-                            setCompareIds([]);
-                            setData((current) =>
-                              current ? { ...current, photos: [], photosError: null } : current
-                            );
-                          }}
-                        />
-                        <View style={styles.photoActions}>
-                          <SecondaryButton
-                            label="Camera"
-                            appearance="outline"
-                            onPress={() => void pickPhoto('camera')}
-                            disabled={isPhotoBusy}
-                            style={styles.photoAction}
-                          />
-                          <SecondaryButton
-                            label="Library"
-                            appearance="outline"
-                            onPress={() => void pickPhoto('library')}
-                            disabled={isPhotoBusy}
-                            style={styles.photoAction}
-                          />
-                        </View>
-                        {isPhotoBusy ? <ActivityIndicator color={colours.brand} /> : null}
-                        {comparePhotos.length === 2 ? (
-                          <View style={styles.compareRow}>
-                            {comparePhotos.map((photo) => (
-                              <View key={photo.id} style={styles.flex}>
-                                {photo.url ? (
-                                  <Image
-                                    source={{ uri: photo.url }}
-                                    style={[
-                                      styles.compareImage,
-                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                                    ]}
-                                  />
-                                ) : (
-                                  <View
-                                    style={[
-                                      styles.compareImage,
-                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                                    ]}
-                                  />
-                                )}
-                                <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 6 }}>
-                                  {formatShortDate(parseDate(photo.taken_on))}
-                                </AppText>
-                              </View>
-                            ))}
-                          </View>
-                        ) : null}
-                        {data.photos.length === 0 ? (
-                          <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
-                            No photos yet. Add one when you want.
-                          </AppText>
-                        ) : (
-                          data.photos.map((photo) => {
-                            const selected = compareIds.includes(photo.id);
-                            return (
-                              <View key={photo.id} style={styles.photoRow}>
-                                {photo.url ? (
-                                  <Image
-                                    source={{ uri: photo.url }}
-                                    style={[
-                                      styles.photoThumb,
-                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                                    ]}
-                                  />
-                                ) : (
-                                  <View
-                                    style={[
-                                      styles.photoThumb,
-                                      { backgroundColor: colours.surfaceMuted, borderRadius: radius.md },
-                                    ]}
-                                  />
-                                )}
-                                <View style={styles.flex}>
-                                  <AppText variant="bodyStrong" style={{ color: colours.ink }}>
-                                    {formatShortDate(parseDate(photo.taken_on))}
-                                  </AppText>
-                                  <TextButton
-                                    label={selected ? 'Remove from compare' : progressPhotosCopy.compare}
-                                    onPress={() =>
-                                      setCompareIds((current) => {
-                                        if (current.includes(photo.id)) {
-                                          return current.filter((id) => id !== photo.id);
-                                        }
-                                        return current.length >= 2
-                                          ? [current[1], photo.id]
-                                          : [...current, photo.id];
-                                      })
-                                    }
-                                    style={styles.inlineAction}
-                                  />
-                                </View>
-                                <Pressable
-                                  onPress={() => confirmDeletePhoto(photo)}
-                                  accessibilityRole="button"
-                                  accessibilityLabel="Delete photo">
-                                  <Ionicons name="trash-outline" size={22} color={colours.inkMuted} />
-                                </Pressable>
-                              </View>
-                            );
-                          })
-                        )}
-                        {data.photos.length > 0 ? (
-                          <DestructiveTextButton
-                            label="Delete all photos"
-                            onPress={() => confirmDeleteAll(data.photos)}
-                          />
-                        ) : null}
-                      </>
-                    ) : (
-                      <SecondaryButton
-                        label={progressPhotosCopy.show}
-                        onPress={() => {
-                          setShowPhotos(true);
-                          void reloadPhotos();
-                        }}
-                      />
-                    )}
-                  </View>
-                </>
+              <ProgressPhotosCard
+                photos={data.photos}
+                error={data.photosError}
+                shown={showPhotos}
+                busy={isPhotoBusy}
+                onShow={() => {
+                  setShowPhotos(true);
+                  void reloadPhotos();
+                }}
+                onHide={() => {
+                  setShowPhotos(false);
+                  setData((current) =>
+                    current ? { ...current, photos: [], photosError: null } : current
+                  );
+                }}
+                onPick={(source) => void pickPhoto(source)}
+                onDelete={confirmDeletePhoto}
+                onDeleteAll={confirmDeleteAll}
+              />
             ) : null}
 
             <RoutineReviewCard
@@ -1611,36 +1481,6 @@ const styles = StyleSheet.create({
   },
   barLabel: {
     textAlign: 'center',
-  },
-  photoActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  photoAction: {
-    flex: 1,
-    minHeight: 48,
-  },
-  photoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  photoThumb: {
-    width: 64,
-    height: 64,
-  },
-  compareRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  compareImage: {
-    width: '100%',
-    aspectRatio: 3 / 4,
-  },
-  inlineAction: {
-    alignSelf: 'flex-start',
-    minHeight: 36,
-    paddingHorizontal: 0,
   },
   awardCard: {
     padding: 16,
