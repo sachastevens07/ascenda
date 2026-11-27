@@ -1064,7 +1064,7 @@ export default function ProfileScreen() {
           {showAnswers ? (
             <SettingsRow
               title="Change answers"
-              onPress={() => router.push('/onboarding')}
+              onPress={() => router.push({ pathname: '/onboarding', params: { edit: '1' } } as Href)}
               last
             />
           ) : null}

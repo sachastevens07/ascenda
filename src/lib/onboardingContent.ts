@@ -332,6 +332,7 @@ export type RuleContext = {
   st_motivation: number | null;
   st_stopped: number | null;
   st_busy: number | null;
+  age_band?: string | null;
   routine?: {
     days_per_week: number;
     session_minutes: number;
@@ -360,6 +361,7 @@ export function ruleContextFromDraft(
     st_motivation: draft.statements.hard_to_stay_motivated ?? null,
     st_stopped: draft.statements.started_and_stopped ?? null,
     st_busy: draft.statements.gym_usually_busy ?? null,
+    age_band: draft.age_band,
     routine: routine ?? null,
   };
 }
@@ -446,6 +448,7 @@ function lookupIdent(name: string, ctx: RuleContext): EvalValue {
   if (name === 'st_motivation') return ctx.st_motivation;
   if (name === 'st_stopped') return ctx.st_stopped;
   if (name === 'st_busy') return ctx.st_busy;
+  if (name === 'age_band') return ctx.age_band ?? null;
   if (name === 'routine.days_per_week') return ctx.routine?.days_per_week ?? null;
   if (name === 'routine.session_minutes') return ctx.routine?.session_minutes ?? null;
   if (name === 'routine.goal') return ctx.routine?.goal ?? null;

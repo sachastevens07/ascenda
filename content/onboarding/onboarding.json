@@ -8,7 +8,8 @@
     "Paywall copy lives in the microcopy content file.",
     "Draft: check the Gymshark statistic and wording with your solicitor alongside the paywall.",
     "27 Nov 2026 redesign: screens carry a section (you, gym, week, plan, setup) shown as a segmented progress bar. Screens with skip_when_hidden are skipped unless show_if is true. preview screens play a short animated glimpse of the app. commit is a press-and-hold commitment. save_account links an email and password to the anonymous onboarding account. The paywall comes after save_account; the setup section (including the safety disclaimer) comes after the paywall. Removed: welcome (the sign-in carousel replaces it), st_watched, st_motivation, insight_plans.",
-    "27 Nov 2026 (round 2): the five 1-to-5 statement screens and the not-alone insight are replaced by one obstacles screen (up to two). Each obstacle with maps_to sets that statement to 4 and the others to 1, so rules, previews and the paywall keep working. reward screens give a one-line payoff after big answers. projection screens draw her real strength estimate (strengthProjection), first from early answers, then recalculated after the week questions; they only say it changed if the numbers changed. Building shows honest counts from the bundled content."
+    "27 Nov 2026 (round 2): the five 1-to-5 statement screens and the not-alone insight are replaced by one obstacles screen (up to two). Each obstacle with maps_to sets that statement to 4 and the others to 1, so rules, previews and the paywall keep working. reward screens give a one-line payoff after big answers. projection screens draw her real strength estimate (strengthProjection), first from early answers, then recalculated after the week questions; they only say it changed if the numbers changed. Building shows honest counts from the bundled content.",
+    "27 Nov 2026 (round 3): only the safety disclaimer comes after the paywall. Streak goal and reminder time moved into Your week; life stage moved into You (only for 35 and over, and before the plan so it can shape the recommendation); bodyweight left out of onboarding (optional, set later). auto_advance screens move on as soon as she picks. hero_image adds a photo above the question."
   ],
   "screens": [
     {
@@ -53,7 +54,8 @@
       },
       "note_for_dev": "Asked before any other personal data. If Under 18 is selected: show the inline message below the options, keep Continue disabled, store nothing and send no analytics events with answers. She can change her selection (for mis-taps), but never show 'are you sure?' or any hint about changing it.",
       "section": "you",
-      "hero_icon": "sparkles-outline"
+      "hero_icon": "sparkles-outline",
+      "auto_advance": true
     },
     {
       "id": "name",
@@ -67,7 +69,8 @@
       },
       "button": "Continue",
       "section": "you",
-      "hero_icon": "person-outline"
+      "hero_icon": "person-outline",
+      "hero_image": "hero-home-morning"
     },
     {
       "id": "goals",
@@ -181,7 +184,70 @@
       },
       "button": "Continue",
       "section": "you",
-      "icon": "checkmark"
+      "icon": "checkmark",
+      "hero_image": "onboarding-insight-goals"
+    },
+    {
+      "id": "life_stage",
+      "type": "cards",
+      "optional": true,
+      "title": "Are any of these true for you right now?",
+      "helper": "Optional. It helps us suggest routines, cardio and articles that suit you. You can change or delete it any time in Profile.",
+      "profile_row_title": "Life stage",
+      "options": [
+        {
+          "value": "perimenopause",
+          "label": "Perimenopause",
+          "sub": "Changes in the years before periods stop"
+        },
+        {
+          "value": "menopause",
+          "label": "Menopause or after",
+          "sub": "It's been 12 months or more since your last period"
+        },
+        {
+          "value": "none",
+          "label": "None of these"
+        },
+        {
+          "value": "prefer_not",
+          "label": "Prefer not to say"
+        }
+      ],
+      "default": "prefer_not",
+      "stores_to": "profiles.life_stage (only 'perimenopause' or 'menopause', and only after life_stage_consent is accepted; 'none' and 'prefer_not' store null)",
+      "next_if": {
+        "perimenopause": "life_stage_consent",
+        "menopause": "life_stage_consent"
+      },
+      "button": "Continue",
+      "note_for_dev": "AGENTS.md B3. Never send this answer to PostHog, Coach, RevenueCat or notifications.",
+      "section": "you",
+      "hero_icon": "leaf-outline",
+      "show_if": "age_band in ['35_44','45_54','55_plus']",
+      "skip_when_hidden": true,
+      "auto_advance": true
+    },
+    {
+      "id": "life_stage_consent",
+      "type": "consent",
+      "shown_only_after": "life_stage",
+      "title": "Can we save this?",
+      "body": [
+        "This is health information, so we only save it if you say yes.",
+        "We use it for one thing: suggesting routines, cardio and articles that suit this stage of life. It never changes your weights or progress.",
+        "It stays private to you. It's never sent to Evoluma Coach, analytics, advertisers or anyone else.",
+        "You can change it or delete it any time in Profile, Privacy."
+      ],
+      "checkbox": "I agree to Evoluma saving my life stage for this purpose",
+      "accept_button": "Save and continue",
+      "decline_button": "Don't save it",
+      "withdraw_button": "Delete and withdraw consent",
+      "consent_purpose": "life_stage_personalisation",
+      "consent_version": 1,
+      "stores_to": "health_consents (purpose, consent_version, granted_at) and profiles.life_stage",
+      "on_decline": "Save nothing and continue. Don't ask again during onboarding.",
+      "section": "you"
     },
     {
       "id": "gym_experience",
@@ -211,7 +277,9 @@
         }
       ],
       "section": "gym",
-      "hero_icon": "time-outline"
+      "hero_icon": "time-outline",
+      "hero_image": "hero-learn",
+      "auto_advance": true
     },
     {
       "id": "gym_comfort",
@@ -242,7 +310,8 @@
       ],
       "default": 3,
       "section": "gym",
-      "hero_icon": "happy-outline"
+      "hero_icon": "happy-outline",
+      "hero_image": "onboarding-insight-not-alone"
     },
     {
       "id": "obstacles",
@@ -324,7 +393,8 @@
         "source_note": "Show the source line under the stat."
       },
       "button": "Continue",
-      "section": "gym"
+      "section": "gym",
+      "hero_image": "hero-challenges"
     },
     {
       "id": "preview_guide",
@@ -473,7 +543,9 @@
       ],
       "helper": "No wrong answer. It just tells us how much cardio to add to your week.",
       "section": "gym",
-      "hero_icon": "bicycle-outline"
+      "hero_icon": "bicycle-outline",
+      "hero_image": "welcome-back-cover",
+      "auto_advance": true
     },
     {
       "id": "projection_early",
@@ -500,7 +572,9 @@
       "default": 3,
       "stores_to": "profiles.days_per_week",
       "section": "week",
-      "hero_icon": "calendar-outline"
+      "hero_icon": "calendar-outline",
+      "hero_image": "hero-programmes",
+      "auto_advance": true
     },
     {
       "id": "which_days",
@@ -559,7 +633,50 @@
       ],
       "default": 45,
       "section": "week",
-      "hero_icon": "stopwatch-outline"
+      "hero_icon": "stopwatch-outline",
+      "hero_image": "hero-home-done",
+      "auto_advance": true
+    },
+    {
+      "id": "streak_goal",
+      "type": "cards",
+      "title": "How many weeks would you like to aim for first?",
+      "helper": "A week counts when you train at least once. It's a milestone, not a test.",
+      "stores_to": "profiles.streak_goal_weeks",
+      "options": [
+        {
+          "value": 4,
+          "label": "4 weeks",
+          "sub": "A great first goal"
+        },
+        {
+          "value": 8,
+          "label": "8 weeks",
+          "sub": "Build a real habit"
+        },
+        {
+          "value": 12,
+          "label": "12 weeks",
+          "sub": "Make it part of life"
+        }
+      ],
+      "default": 4,
+      "section": "week",
+      "hero_icon": "flame-outline",
+      "hero_image": "hero-refer",
+      "auto_advance": true
+    },
+    {
+      "id": "reminder_time",
+      "type": "time_picker",
+      "title": "When would you like a nudge on training days?",
+      "helper": "We'll ask for permission to send reminders after your first session.",
+      "default": "18:00",
+      "stores_to": "profiles.default_reminder_time",
+      "skip_label": "No reminders for now",
+      "section": "week",
+      "hero_icon": "notifications-outline",
+      "auto_advance": true
     },
     {
       "id": "projection_final",
@@ -666,7 +783,8 @@
       "hold_label": "Hold to commit",
       "hold_done": "You're in",
       "hold_a11y": "Press and hold to commit to your plan",
-      "hold_ms": 1200
+      "hold_ms": 1200,
+      "hero_image": "onboarding-welcome"
     },
     {
       "id": "save_account",
@@ -695,126 +813,14 @@
       "section": "plan"
     },
     {
-      "id": "streak_goal",
-      "type": "cards",
-      "title": "How many weeks would you like to aim for first?",
-      "helper": "A week counts when you train at least once. It's a milestone, not a test.",
-      "stores_to": "profiles.streak_goal_weeks",
-      "options": [
-        {
-          "value": 4,
-          "label": "4 weeks",
-          "sub": "A great first goal"
-        },
-        {
-          "value": 8,
-          "label": "8 weeks",
-          "sub": "Build a real habit"
-        },
-        {
-          "value": 12,
-          "label": "12 weeks",
-          "sub": "Make it part of life"
-        }
-      ],
-      "default": 4,
-      "section": "setup",
-      "eyebrow": "BEFORE YOUR FIRST SESSION",
-      "hero_icon": "flame-outline"
-    },
-    {
-      "id": "reminder_time",
-      "type": "time_picker",
-      "title": "When would you like a nudge on training days?",
-      "helper": "We'll ask for permission to send reminders after your first session.",
-      "default": "18:00",
-      "stores_to": "profiles.default_reminder_time",
-      "skip_label": "No reminders for now",
-      "section": "setup",
-      "hero_icon": "notifications-outline"
-    },
-    {
-      "id": "bodyweight",
-      "type": "number_optional",
-      "title": "Would you like to add your bodyweight?",
-      "why_we_ask": "Only used for your own strength stats, like lifting your bodyweight on the leg press. It's never used to predict anything, never shared and you can delete it any time.",
-      "unit_options": [
-        "kg",
-        "st_lb"
-      ],
-      "stores_to": "profiles.bodyweight_kg",
-      "skip_label": "Skip this",
-      "button": "Continue",
-      "section": "setup",
-      "hero_icon": "scale-outline"
-    },
-    {
-      "id": "life_stage",
-      "type": "cards",
-      "optional": true,
-      "title": "Are any of these true for you right now?",
-      "helper": "Optional. It helps us suggest routines, cardio and articles that suit you. You can change or delete it any time in Profile.",
-      "profile_row_title": "Life stage",
-      "options": [
-        {
-          "value": "perimenopause",
-          "label": "Perimenopause",
-          "sub": "Changes in the years before periods stop"
-        },
-        {
-          "value": "menopause",
-          "label": "Menopause or after",
-          "sub": "It's been 12 months or more since your last period"
-        },
-        {
-          "value": "none",
-          "label": "None of these"
-        },
-        {
-          "value": "prefer_not",
-          "label": "Prefer not to say"
-        }
-      ],
-      "default": "prefer_not",
-      "stores_to": "profiles.life_stage (only 'perimenopause' or 'menopause', and only after life_stage_consent is accepted; 'none' and 'prefer_not' store null)",
-      "next_if": {
-        "perimenopause": "life_stage_consent",
-        "menopause": "life_stage_consent"
-      },
-      "button": "Continue",
-      "note_for_dev": "AGENTS.md B3. Never send this answer to PostHog, Coach, RevenueCat or notifications.",
-      "section": "setup",
-      "hero_icon": "leaf-outline"
-    },
-    {
-      "id": "life_stage_consent",
-      "type": "consent",
-      "shown_only_after": "life_stage",
-      "title": "Can we save this?",
-      "body": [
-        "This is health information, so we only save it if you say yes.",
-        "We use it for one thing: suggesting routines, cardio and articles that suit this stage of life. It never changes your weights or progress.",
-        "It stays private to you. It's never sent to Evoluma Coach, analytics, advertisers or anyone else.",
-        "You can change it or delete it any time in Profile, Privacy."
-      ],
-      "checkbox": "I agree to Evoluma saving my life stage for this purpose",
-      "accept_button": "Save and continue",
-      "decline_button": "Don't save it",
-      "withdraw_button": "Delete and withdraw consent",
-      "consent_purpose": "life_stage_personalisation",
-      "consent_version": 1,
-      "stores_to": "health_consents (purpose, consent_version, granted_at) and profiles.life_stage",
-      "on_decline": "Save nothing and continue. Don't ask again during onboarding.",
-      "section": "setup"
-    },
-    {
       "id": "safety",
       "type": "disclaimer",
       "title": "Train safely",
       "source": "AGENTS.md Safety disclaimer (current version)",
       "checkbox": "I've read this and I'm 18 or over",
       "button": "Continue",
-      "section": "setup"
+      "section": "setup",
+      "eyebrow": "ONE LAST THING"
     }
   ],
   "why_lines": [

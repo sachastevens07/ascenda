@@ -5,7 +5,7 @@ import { Animated, Easing, Pressable, StyleSheet, TextInput, View } from 'react-
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { CardChoiceList } from '@/components/onboarding/OnboardingInputs';
-import { AppText, HeroImage, TextButton } from '@/components/ui';
+import { AppText, HeroImage, PhotoFill, TextButton } from '@/components/ui';
 import { equipmentIconColour, equipmentIconName } from '@/components/ui/ExerciseThumb';
 import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
@@ -467,9 +467,12 @@ function demoText(demo: Demo, key: string): string {
   return typeof value === 'string' ? value : '';
 }
 
-function useSequence(steps: number, stepMs: number, startDelay = 500): [Animated.Value[], () => void] {
+/** Plays a staggered reveal, holds it, then quietly plays it again while the screen is open. */
+function useSequence(steps: number, stepMs: number, startDelay = 500): Animated.Value[] {
   const values = useRef(Array.from({ length: steps }, () => new Animated.Value(0))).current;
+  const alive = useRef(true);
   const play = () => {
+    if (!alive.current) return;
     values.forEach((value) => value.setValue(0));
     Animated.sequence([
       Animated.delay(startDelay),
@@ -484,13 +487,34 @@ function useSequence(steps: number, stepMs: number, startDelay = 500): [Animated
           })
         )
       ),
-    ]).start();
+      Animated.delay(2600),
+      Animated.parallel(
+        values.map((value) => Animated.timing(value, { toValue: 0, duration: 250, useNativeDriver: true }))
+      ),
+    ]).start(({ finished }) => {
+      if (finished) play();
+    });
   };
   useEffect(() => {
+    alive.current = true;
     play();
+    return () => {
+      alive.current = false;
+      values.forEach((value) => value.stopAnimation());
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return [values, play];
+  return values;
+}
+
+/** Runs `play` now and again every `everyMs` while mounted. */
+function useLoop(play: () => void, everyMs: number) {
+  useEffect(() => {
+    play();
+    const timer = setInterval(play, everyMs);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }
 
 function PhoneFrame({ children }: { children: ReactNode }) {
@@ -510,7 +534,7 @@ function PhoneFrame({ children }: { children: ReactNode }) {
 function GuideDemo({ demo }: { demo: Demo }) {
   const { colours, radius } = useTheme();
   const steps = Array.isArray(demo.steps) ? (demo.steps as unknown[]).map(String) : [];
-  const [values, replay] = useSequence(steps.length, 650);
+  const values = useSequence(steps.length, 650);
   const labels = ['Where to find it', 'Set it up', 'Focus on'];
   return (
     <>
@@ -556,7 +580,6 @@ function GuideDemo({ demo }: { demo: Demo }) {
           </Animated.View>
         ))}
       </PhoneFrame>
-      <TextButton label="Play again" onPress={replay} style={styles.replay} />
     </>
   );
 }
@@ -581,10 +604,7 @@ function SwapDemo({ demo }: { demo: Demo }) {
       Animated.timing(incoming, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
     ]).start();
   };
-  useEffect(() => {
-    play();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useLoop(play, 5200);
 
   return (
     <>
@@ -652,7 +672,6 @@ function SwapDemo({ demo }: { demo: Demo }) {
           </Animated.View>
         </View>
       </PhoneFrame>
-      <TextButton label="Play again" onPress={play} style={styles.replay} />
     </>
   );
 }
@@ -681,10 +700,7 @@ function MissedDemo({ demo }: { demo: Demo }) {
       if (finished) setMoved(true);
     });
   };
-  useEffect(() => {
-    play();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useLoop(play, 5600);
 
   return (
     <>
@@ -752,7 +768,6 @@ function MissedDemo({ demo }: { demo: Demo }) {
           )}
         </View>
       </PhoneFrame>
-      <TextButton label="Play again" onPress={play} style={styles.replay} />
     </>
   );
 }
@@ -765,6 +780,57 @@ export function PreviewGlimpse({ kind, demo }: { kind: string; demo: Demo }) {
 }
 
 // ---------- Round 2: icons, rewards, obstacles, projection, building, calendar ----------
+
+/** Fades and lifts its children in after `delay` ms. Used to stagger onboarding content. */
+export function Appear({
+  delay = 0,
+  children,
+  distance = 14,
+}: {
+  delay?: number;
+  children: ReactNode;
+  distance?: number;
+}) {
+  const value = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(value, {
+      toValue: 1,
+      duration: 380,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [delay, value]);
+  return (
+    <Animated.View
+      style={{
+        opacity: value,
+        transform: [{ translateY: value.interpolate({ inputRange: [0, 1], outputRange: [distance, 0] }) }],
+      }}>
+      {children}
+    </Animated.View>
+  );
+}
+
+/** Rounded photo above a question, with a slow zoom-out as it appears. */
+export function QuestionPhoto({ slug, height = 170 }: { slug: string; height?: number }) {
+  const { radius } = useTheme();
+  const zoom = useRef(new Animated.Value(1.12)).current;
+  const fade = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(zoom, { toValue: 1, duration: 1400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(fade, { toValue: 1, duration: 420, useNativeDriver: true }),
+    ]).start();
+  }, [fade, zoom]);
+  return (
+    <Animated.View style={{ height, borderRadius: radius.xl, overflow: 'hidden', marginBottom: 20, opacity: fade }}>
+      <Animated.View style={{ flex: 1, transform: [{ scale: zoom }] }}>
+        <PhotoFill slug={slug} />
+      </Animated.View>
+    </Animated.View>
+  );
+}
 
 /** Soft circle with an icon, above a question's heading. */
 export function HeadingIcon({ name }: { name: string }) {
@@ -782,11 +848,13 @@ export function RewardScreen({
   title,
   lines,
   stat,
+  imageSlug,
 }: {
   icon: string;
   title: string;
   lines: string[];
   stat?: { value: string; text: string; source: string } | null;
+  imageSlug?: string | null;
 }) {
   const { colours, radius } = useTheme();
   const pop = useRef(new Animated.Value(0)).current;
@@ -800,13 +868,24 @@ export function RewardScreen({
   }, [fade, pop]);
   return (
     <View style={styles.reward}>
-      <Animated.View
-        style={[
-          styles.rewardIcon,
-          { backgroundColor: colours.brand, transform: [{ scale: pop }] },
-        ]}>
-        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={64} color={colours.onBrand} />
-      </Animated.View>
+      {imageSlug ? (
+        <Animated.View style={{ transform: [{ scale: pop }] }}>
+          <View style={[styles.rewardPhoto, { borderColor: colours.surface }]}>
+            <PhotoFill slug={imageSlug} />
+          </View>
+          <View style={[styles.rewardBadge, { backgroundColor: colours.brand, borderColor: colours.bg }]}>
+            <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={28} color={colours.onBrand} />
+          </View>
+        </Animated.View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.rewardIcon,
+            { backgroundColor: colours.brand, transform: [{ scale: pop }] },
+          ]}>
+          <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={64} color={colours.onBrand} />
+        </Animated.View>
+      )}
       <AppText variant="display" style={{ color: colours.ink, textAlign: 'center', marginTop: 28 }}>
         {title}
       </AppText>
@@ -865,11 +944,11 @@ export function ObstaclePicker({
   }
   return (
     <View style={{ gap: 10 }}>
-      {options.map((option) => {
+      {options.map((option, index) => {
         const on = selected.includes(option.value);
         return (
+          <Appear key={option.value} delay={120 + index * 45}>
           <Pressable
-            key={option.value}
             onPress={() => toggle(option)}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: on }}
@@ -898,6 +977,7 @@ export function ObstaclePicker({
               color={on ? colours.brand : colours.border}
             />
           </Pressable>
+          </Appear>
         );
       })}
     </View>
@@ -1211,6 +1291,18 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 const styles = StyleSheet.create({
   headingIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
   reward: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 24 },
+  rewardPhoto: { width: 180, height: 180, borderRadius: 90, overflow: 'hidden', borderWidth: 5 },
+  rewardBadge: {
+    position: 'absolute',
+    right: 2,
+    bottom: 2,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   rewardIcon: { width: 128, height: 128, borderRadius: 64, alignItems: 'center', justifyContent: 'center' },
   statCard: { alignItems: 'center', padding: 18, marginTop: 14 },
   obstacle: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 15, borderWidth: 1.5 },

@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useEffect, useMemo, useRef, useState, type ElementRef } from 'react';
+import { useEffect, useMemo, useRef, useState, type ElementRef, type ReactNode } from 'react';
 import {
   Animated,
   Easing,
@@ -56,6 +56,29 @@ const EQUIP_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   squat_rack: 'cube-outline',
   treadmill: 'speedometer-outline',
 };
+
+/** Staggered fade-and-lift for rows as a screen opens. */
+function Rise({ index, children }: { index: number; children: ReactNode }) {
+  const value = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(value, {
+      toValue: 1,
+      duration: 360,
+      delay: 140 + index * 55,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [index, value]);
+  return (
+    <Animated.View
+      style={{
+        opacity: value,
+        transform: [{ translateY: value.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+      }}>
+      {children}
+    </Animated.View>
+  );
+}
 
 function iconName(icon?: string): keyof typeof Ionicons.glyphMap {
   return (icon && ICON_MAP[icon]) || 'ellipse-outline';
@@ -122,10 +145,16 @@ function ChoiceRow({
   onPress: () => void;
 }) {
   const { colours, radius } = useTheme();
+  const pop = useRef(new Animated.Value(1)).current;
   return (
+    <Animated.View style={{ transform: [{ scale: pop }] }}>
     <Pressable
       onPress={() => {
         hapticSelection();
+        Animated.sequence([
+          Animated.timing(pop, { toValue: 0.96, duration: 70, useNativeDriver: true }),
+          Animated.spring(pop, { toValue: 1, friction: 4, tension: 160, useNativeDriver: true }),
+        ]).start();
         onPress();
       }}
       accessibilityRole="button"
@@ -152,6 +181,7 @@ function ChoiceRow({
         ) : null}
       </View>
     </Pressable>
+    </Animated.View>
   );
 }
 
@@ -166,14 +196,15 @@ export function SingleChoiceList({
 }) {
   return (
     <View style={styles.stack}>
-      {options.map((option) => (
-        <ChoiceRow
-          key={option.value}
-          label={option.label}
-          icon={option.icon}
-          selected={value === option.value}
-          onPress={() => onChange(option.value)}
-        />
+      {options.map((option, index) => (
+        <Rise key={option.value} index={index}>
+          <ChoiceRow
+            label={option.label}
+            icon={option.icon}
+            selected={value === option.value}
+            onPress={() => onChange(option.value)}
+          />
+        </Rise>
       ))}
     </View>
   );
@@ -192,14 +223,15 @@ export function CardChoiceList({
   const selected = options.find((option) => String(option.value) === String(value));
   return (
     <View style={styles.stack}>
-      {options.map((option) => (
-        <ChoiceRow
-          key={option.value}
-          label={option.label}
-          sub={option.sub}
-          selected={String(value) === String(option.value)}
-          onPress={() => onChange(option.value)}
-        />
+      {options.map((option, index) => (
+        <Rise key={option.value} index={index}>
+          <ChoiceRow
+            label={option.label}
+            sub={option.sub}
+            selected={String(value) === String(option.value)}
+            onPress={() => onChange(option.value)}
+          />
+        </Rise>
       ))}
       {selected?.stat_value ? (
         <StatCallout
@@ -234,17 +266,18 @@ export function ChipChoiceList({
 }) {
   return (
     <View style={styles.chipRow}>
-      {options.map((option) => (
-        <Chip
-          key={option.value}
-          label={option.label}
-          size="lg"
-          selected={String(value) === String(option.value)}
-          onPress={() => {
-            hapticSelection();
-            onChange(option.value);
-          }}
-        />
+      {options.map((option, index) => (
+        <Rise key={option.value} index={index}>
+          <Chip
+            label={option.label}
+            size="lg"
+            selected={String(value) === String(option.value)}
+            onPress={() => {
+              hapticSelection();
+              onChange(option.value);
+            }}
+          />
+        </Rise>
       ))}
     </View>
   );

@@ -11,6 +11,7 @@ import {
   HoldToCommit,
   ObstaclePicker,
   ProjectionChart,
+  QuestionPhoto,
   RewardScreen,
   PlanRevealV2,
   PreviewGlimpse,
@@ -204,13 +205,23 @@ export default function OnboardingScreen() {
   const subscription = useSubscription();
   const { session } = useAuth();
   const isAnonymous = session?.user?.is_anonymous === true;
-  const params = useLocalSearchParams<{ rebuild?: string | string[]; screen?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    rebuild?: string | string[];
+    screen?: string | string[];
+    edit?: string | string[];
+  }>();
+  const editParam = Array.isArray(params.edit) ? params.edit[0] : params.edit;
   const rebuildParam = Array.isArray(params.rebuild) ? params.rebuild[0] : params.rebuild;
   const screenParam = Array.isArray(params.screen) ? params.screen[0] : params.screen;
   const isRebuild = rebuildParam === '1';
   const screens = isRebuild ? REBUILD_FLOW : FLOW;
   const savedAnswers = getQuizAnswers(profile);
-  const isEditing = savedAnswers !== null && !isRebuild;
+  // Editing only when Profile asked for it. Answers being saved at the end of the first run
+  // must not flip the flow into the review screen.
+  const finishing = useRef(false);
+  const isEditing =
+    savedAnswers !== null && !isRebuild && (editParam === '1' || screenParam === 'life_stage');
+  const strayAfterFinish = savedAnswers !== null && !isRebuild && !isEditing;
   const isLifeStageEdit = isEditing && screenParam === 'life_stage';
 
   const [draft, setDraft] = useState<OnboardingDraft>(() =>
@@ -335,6 +346,18 @@ export default function OnboardingScreen() {
     // BuildingShow runs the animation and moves on when it finishes.
   }, [contentScreen?.id]);
 
+  // Single-choice screens move on by themselves a moment after she picks.
+  const autoArmed = useRef(false);
+  const handlePrimaryRef = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => {
+    if (!autoArmed.current) return;
+    autoArmed.current = false;
+    const timer = setTimeout(() => {
+      void handlePrimaryRef.current();
+    }, 420);
+    return () => clearTimeout(timer);
+  }, [draft]);
+
   // Keep her place if the app closes mid-way (new flow only).
   useEffect(() => {
     if (isEditing || isRebuild || restored.current) return;
@@ -370,6 +393,12 @@ export default function OnboardingScreen() {
     if (!contentScreen || isEditing || isRebuild) return;
     track('onboarding_step_viewed', { step: contentScreen.id });
   }, [contentScreen?.id, isEditing, isRebuild]);
+
+  useEffect(() => {
+    autoArmed.current = Boolean(
+      contentScreen && contentScreen.raw.auto_advance === true && !isEditing && (hydrated || isRebuild)
+    );
+  }, [contentScreen?.id, hydrated, isEditing, isRebuild]);
 
   // Paywall step: open it once on arrival. Subscribed already: skip straight on.
   useEffect(() => {
@@ -489,7 +518,7 @@ export default function OnboardingScreen() {
     }
     let next = skipConsentIndex(index, delta);
     if (delta < 0 && screens[index]?.id === 'plan_reveal') {
-      const bodyIndex = screens.findIndex((item) => item.id === 'session_length');
+      const bodyIndex = screens.findIndex((item) => item.id === 'projection_final');
       if (bodyIndex >= 0) next = bodyIndex;
     }
     if (delta > 0 && screens[index]?.id === 'life_stage' && shouldShowLifeStageConsent(draft.life_stage_choice)) {
@@ -568,6 +597,11 @@ export default function OnboardingScreen() {
     if (data.user?.new_email && !data.user.email) setAccountNote(screenText(screenItem, 'confirm_note'));
     move(1);
   }
+
+  handlePrimaryRef.current = async () => {
+    if (canContinue()) await handlePrimary();
+    else autoArmed.current = true;
+  };
 
   async function handlePrimary() {
     if (!contentScreen) {
@@ -683,6 +717,7 @@ export default function OnboardingScreen() {
   }
 
   async function finish() {
+    finishing.current = true;
     const answers = quizFromDraft(draft);
     if (!answers) {
       setError('Please finish the questions first.');
@@ -871,6 +906,15 @@ export default function OnboardingScreen() {
     }
   }
 
+  // Already onboarded and not editing (for example right after finishing): go home, never the review.
+  useEffect(() => {
+    if (strayAfterFinish && !finishing.current) router.replace('/');
+  }, [strayAfterFinish]);
+
+  if (strayAfterFinish) {
+    return <View style={{ flex: 1, backgroundColor: colours.bg }} />;
+  }
+
   return (
     <OnboardingShell
       screenKey={screen.id}
@@ -956,8 +1000,12 @@ export default function OnboardingScreen() {
       }}
       footerNote={error ?? accountNoteFor(contentScreen) ?? contentScreen?.privacy_note ?? undefined}
       sections={sections}>
-      {contentScreen && contentScreen.type !== 'obstacles' && screenText(contentScreen, 'hero_icon') ? (
-        <HeadingIcon name={screenText(contentScreen, 'hero_icon')} />
+      {contentScreen && !['reward', 'commit', 'obstacles'].includes(contentScreen.type) ? (
+        screenText(contentScreen, 'hero_image') ? (
+          <QuestionPhoto slug={screenText(contentScreen, 'hero_image')} />
+        ) : screenText(contentScreen, 'hero_icon') ? (
+          <HeadingIcon name={screenText(contentScreen, 'hero_icon')} />
+        ) : null
       ) : null}
       {index < 0 ? (
         <View>
@@ -1331,6 +1379,7 @@ export default function OnboardingScreen() {
           title={fillTemplate(contentScreen.title, vars)}
           lines={rewardLines(contentScreen)}
           stat={rewardStat(contentScreen)}
+          imageSlug={screenText(contentScreen, 'hero_image') || null}
         />
       ) : null}
 
@@ -1500,8 +1549,10 @@ function CommitScreen({
   const ordered = WEEKDAYS.filter((day) => days.includes(day));
   const firstDay = ordered[0];
   const holdMs = typeof screen.raw.hold_ms === 'number' ? screen.raw.hold_ms : 1200;
+  const photo = screenText(screen, 'hero_image');
   return (
     <View>
+      {photo ? <QuestionPhoto slug={photo} height={150} /> : null}
       <ScreenHeading
         eyebrow={screen.eyebrow}
         title={fillTemplate(screen.title, vars)}

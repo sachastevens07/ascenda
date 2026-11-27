@@ -70,20 +70,30 @@ export function OnboardingShell({
   const insets = useSafeAreaInsets();
   const { colours } = useTheme();
   const slideX = useRef(new Animated.Value(0)).current;
+  const fadeIn = useRef(new Animated.Value(1)).current;
   const lastKey = useRef(screenKey);
 
   useEffect(() => {
     if (lastKey.current === screenKey) return;
     lastKey.current = screenKey;
     const width = Dimensions.get('window').width;
-    slideX.setValue(direction >= 0 ? width : -width);
-    Animated.timing(slideX, {
-      toValue: 0,
-      duration: TRANSITION_MS,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [direction, screenKey, slideX]);
+    slideX.setValue(direction >= 0 ? width * 0.35 : -width * 0.35);
+    fadeIn.setValue(0);
+    Animated.parallel([
+      Animated.timing(slideX, {
+        toValue: 0,
+        duration: TRANSITION_MS + 80,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeIn, {
+        toValue: 1,
+        duration: TRANSITION_MS + 40,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [direction, fadeIn, screenKey, slideX]);
 
   return (
     <KeyboardAvoidingView
@@ -107,7 +117,7 @@ export function OnboardingShell({
       ) : null}
 
       <View style={styles.slideClip}>
-        <Animated.View style={[styles.slidePane, { transform: [{ translateX: slideX }] }]}>
+        <Animated.View style={[styles.slidePane, { opacity: fadeIn, transform: [{ translateX: slideX }] }]}>
           <ScrollView
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
