@@ -253,41 +253,7 @@ export function PlanRevealV2({
         </View>
       ) : null}
 
-      {plan.milestones.length > 0 ? (
-        <View style={{ marginTop: 22 }}>
-          <AppText variant="title3" style={{ color: colours.ink, marginBottom: 12 }}>
-            {copy.timelineTitle}
-          </AppText>
-          {plan.milestones.map((item, index) => {
-            const last = index === plan.milestones.length - 1;
-            return (
-              <View key={`${item.week}-${item.title}`} style={styles.timelineRow}>
-                <View style={styles.timelineRail}>
-                  <View style={[styles.timelineDot, { backgroundColor: last ? colours.brand : colours.brandSoft, borderColor: colours.brand }]} />
-                  {!last ? <View style={[styles.timelineLine, { backgroundColor: colours.brandSoft }]} /> : null}
-                </View>
-                <View style={{ flex: 1, paddingBottom: last ? 0 : 16 }}>
-                  <AppText variant="eyebrow" style={{ color: colours.accent }}>
-                    Week {item.week}
-                  </AppText>
-                  <AppText variant="bodyStrong" style={{ color: colours.ink, marginTop: 2 }}>
-                    {item.title}
-                  </AppText>
-                  {item.description ? (
-                    <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 2 }}>
-                      {item.description}
-                    </AppText>
-                  ) : null}
-                </View>
-              </View>
-            );
-          })}
-          <AppText variant="caption" style={{ color: colours.inkMuted, marginTop: 8 }}>
-            {copy.estimateLabel}
-          </AppText>
-        </View>
-      ) : null}
-
+      {/* Milestones are shown on the "Where it can take you" screen just before this one. */}
       {plan.alternatives.length > 0 ? (
         <View style={{ marginTop: 18 }}>
           {showOthers ? (
@@ -995,57 +961,66 @@ export function ObstaclePicker({
   );
 }
 
-/** Her estimated strength curve, week by week. Draws itself left to right. */
+/**
+ * Generic progress picture: a smooth rising line (no lift names, no kilos) with her plan's
+ * milestones pinned along it. It draws slowly, and each milestone appears as the line reaches it.
+ */
 export function ProjectionChart({
-  points,
+  weeks,
+  milestones,
   startLabel,
-  endLabel,
-  endValue,
+  durationMs = 2600,
 }: {
-  points: { week: number; increase_kg: number }[];
+  weeks: number;
+  milestones: { week: number; title: string }[];
   startLabel: string;
-  endLabel: string;
-  endValue: string;
+  durationMs?: number;
 }) {
   const { colours, radius } = useTheme();
   const [width, setWidth] = useState(0);
   const draw = useRef(new Animated.Value(0)).current;
-  const height = 190;
-  const pad = 18;
+  const pins = useRef(milestones.map(() => new Animated.Value(0))).current;
+  const height = 200;
+  const pad = 20;
+  const total = Math.max(1, weeks);
+
   useEffect(() => {
+    if (width <= 0) return;
     draw.setValue(0);
-    Animated.timing(draw, { toValue: 1, duration: 1100, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
-  }, [draw, points]);
-  const maxKg = Math.max(...points.map((point) => point.increase_kg), 1);
-  const maxWeek = Math.max(...points.map((point) => point.week), 1);
-  const xy = points.map((point) => ({
-    x: pad + (point.week / maxWeek) * Math.max(0, width - pad * 2),
-    // A little lift from the floor so week 0 isn't on the axis.
-    y: height - pad - 12 - (point.increase_kg / maxKg) * (height - pad * 2 - 30),
-  }));
+    pins.forEach((pin) => pin.setValue(0));
+    Animated.timing(draw, { toValue: 1, duration: durationMs, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start();
+    milestones.forEach((item, index) => {
+      Animated.sequence([
+        Animated.delay(Math.round((item.week / total) * durationMs * 0.92)),
+        Animated.spring(pins[index], { toValue: 1, friction: 6, tension: 120, useNativeDriver: true }),
+      ]).start();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [width]);
+
+  const plotW = Math.max(0, width - pad * 2);
+  const yFor = (t: number) => height - pad - (1 - Math.pow(1 - t, 1.7)) * (height - pad * 2 - 10);
+  const steps = 24;
   let line = '';
-  xy.forEach((point, index) => {
-    if (index === 0) {
-      line = `M ${point.x} ${point.y}`;
-      return;
-    }
-    const prev = xy[index - 1];
-    const midX = (prev.x + point.x) / 2;
-    line += ` C ${midX} ${prev.y}, ${midX} ${point.y}, ${point.x} ${point.y}`;
-  });
-  const last = xy[xy.length - 1];
-  const area = last ? `${line} L ${last.x} ${height} L ${xy[0].x} ${height} Z` : '';
-  const pathLength = width * 1.6 + 200;
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps;
+    const x = pad + t * plotW;
+    const y = yFor(t);
+    line += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`;
+  }
+  const area = `${line} L ${pad + plotW} ${height} L ${pad} ${height} Z`;
+  const pathLength = plotW * 1.5 + 200;
+
   return (
     <View
       style={[styles.chartCard, { backgroundColor: colours.surface, borderRadius: radius.xl }]}
       onLayout={(event) => setWidth(event.nativeEvent.layout.width - 32)}>
-      {width > 0 && last ? (
+      {width > 0 ? (
         <View style={{ height, width }}>
           <Svg width={width} height={height}>
             <Defs>
               <LinearGradient id="projFill" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor={colours.brand} stopOpacity={0.22} />
+                <Stop offset="0" stopColor={colours.brand} stopOpacity={0.2} />
                 <Stop offset="1" stopColor={colours.brand} stopOpacity={0} />
               </LinearGradient>
             </Defs>
@@ -1059,23 +1034,30 @@ export function ProjectionChart({
               strokeDasharray={`${pathLength} ${pathLength}`}
               strokeDashoffset={draw.interpolate({ inputRange: [0, 1], outputRange: [pathLength, 0] })}
             />
-            <Circle cx={xy[0].x} cy={xy[0].y} r={7} fill={colours.surface} stroke={colours.inkMuted} strokeWidth={3} />
-            <Circle cx={last.x} cy={last.y} r={8} fill={colours.surface} stroke={colours.brand} strokeWidth={4} />
+            <Circle cx={pad} cy={yFor(0)} r={6} fill={colours.surface} stroke={colours.inkMuted} strokeWidth={3} />
           </Svg>
-          <View
-            style={[
-              styles.chartTag,
-              {
-                backgroundColor: colours.brand,
-                borderRadius: radius.md,
-                top: Math.max(0, last.y - 52),
-                right: 0,
-              },
-            ]}>
-            <AppText variant="bodyStrong" style={{ color: colours.onBrand }}>
-              {endValue}
-            </AppText>
-          </View>
+          {milestones.map((item, index) => {
+            const t = Math.min(1, item.week / total);
+            const x = pad + t * plotW;
+            const y = yFor(t);
+            return (
+              <Animated.View
+                key={`${item.week}-${item.title}`}
+                pointerEvents="none"
+                style={[
+                  styles.pin,
+                  {
+                    left: x - 9,
+                    top: y - 9,
+                    backgroundColor: colours.surface,
+                    borderColor: colours.brand,
+                    opacity: pins[index],
+                    transform: [{ scale: pins[index] }],
+                  },
+                ]}
+              />
+            );
+          })}
         </View>
       ) : (
         <View style={{ height }} />
@@ -1085,8 +1067,30 @@ export function ProjectionChart({
           {startLabel}
         </AppText>
         <AppText variant="caption" style={{ color: colours.ink, fontWeight: '700' }}>
-          {endLabel}
+          Week {weeks}
         </AppText>
+      </View>
+      <View style={{ marginTop: 14, gap: 10 }}>
+        {milestones.map((item, index) => (
+          <Animated.View
+            key={`${item.week}-${item.title}-row`}
+            style={[
+              styles.milestoneRow,
+              {
+                opacity: pins[index],
+                transform: [{ translateY: pins[index].interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }],
+              },
+            ]}>
+            <View style={[styles.milestoneWeek, { backgroundColor: colours.brandSoft, borderRadius: radius.full }]}>
+              <AppText variant="caption" style={{ color: colours.brand, fontWeight: '800' }}>
+                Week {item.week}
+              </AppText>
+            </View>
+            <AppText variant="bodyStrong" style={{ color: colours.ink, flex: 1 }}>
+              {item.title}
+            </AppText>
+          </Animated.View>
+        ))}
       </View>
     </View>
   );
@@ -1318,7 +1322,9 @@ const styles = StyleSheet.create({
   statCard: { alignItems: 'center', padding: 18, marginTop: 14 },
   obstacle: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 15, borderWidth: 1.5 },
   chartCard: { padding: 16, marginTop: 20 },
-  chartTag: { position: 'absolute', paddingHorizontal: 10, paddingVertical: 6 },
+  pin: { position: 'absolute', width: 18, height: 18, borderRadius: 9, borderWidth: 4 },
+  milestoneRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  milestoneWeek: { paddingHorizontal: 10, paddingVertical: 4 },
   chartAxis: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
   buildStep: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   buildDot: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },

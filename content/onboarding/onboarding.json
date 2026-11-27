@@ -9,13 +9,29 @@
     "Draft: check the Gymshark statistic and wording with your solicitor alongside the paywall.",
     "27 Nov 2026 redesign: screens carry a section (you, gym, week, plan, setup) shown as a segmented progress bar. Screens with skip_when_hidden are skipped unless show_if is true. preview screens play a short animated glimpse of the app. commit is a press-and-hold commitment. save_account links an email and password to the anonymous onboarding account. The paywall comes after save_account; the setup section (including the safety disclaimer) comes after the paywall. Removed: welcome (the sign-in carousel replaces it), st_watched, st_motivation, insight_plans.",
     "27 Nov 2026 (round 2): the five 1-to-5 statement screens and the not-alone insight are replaced by one obstacles screen (up to two). Each obstacle with maps_to sets that statement to 4 and the others to 1, so rules, previews and the paywall keep working. reward screens give a one-line payoff after big answers. projection screens draw her real strength estimate (strengthProjection), first from early answers, then recalculated after the week questions; they only say it changed if the numbers changed. Building shows honest counts from the bundled content.",
-    "27 Nov 2026 (round 3): only the safety disclaimer comes after the paywall. Streak goal and reminder time moved into Your week; life stage moved into You (only for 35 and over, and before the plan so it can shape the recommendation); bodyweight left out of onboarding (optional, set later). auto_advance screens move on as soon as she picks. hero_image adds a photo above the question."
+    "27 Nov 2026 (round 3): only the safety disclaimer comes after the paywall. Streak goal and reminder time moved into Your week; life stage moved into You (only for 35 and over, and before the plan so it can shape the recommendation); bodyweight left out of onboarding (optional, set later). auto_advance screens move on as soon as she picks. hero_image adds a photo above the question.",
+    "27 Nov 2026 (round 4): story order. You: name, age, goals. Your gym: experience, comfort, obstacles and the answers to them, machines. Your week: days, which days, length, cardio, reminders, first goal. Your plan: building, where it can take you (generic milestone curve, no lift names or kilos), the plan, commit, save, paywall. The early projection was removed. Goals trimmed to eight (others kept with shown: false so saved answers still read)."
   ],
   "screens": [
     {
+      "id": "name",
+      "type": "text",
+      "title": "What should we call you?",
+      "placeholder": "Your first name",
+      "stores_to": "profiles.first_name",
+      "validation": {
+        "required": true,
+        "max_length": 30
+      },
+      "button": "Continue",
+      "section": "you",
+      "hero_icon": "person-outline",
+      "hero_image": "hero-home-morning"
+    },
+    {
       "id": "age",
       "type": "single_choice",
-      "title": "How old are you?",
+      "title": "Nice to meet you, {name}. How old are you?",
       "why_we_ask": "Evoluma is designed for adults, and it helps us pitch your plan at the right pace.",
       "options": [
         {
@@ -58,21 +74,6 @@
       "auto_advance": true
     },
     {
-      "id": "name",
-      "type": "text",
-      "title": "What should we call you?",
-      "placeholder": "Your first name",
-      "stores_to": "profiles.first_name",
-      "validation": {
-        "required": true,
-        "max_length": 30
-      },
-      "button": "Continue",
-      "section": "you",
-      "hero_icon": "person-outline",
-      "hero_image": "hero-home-morning"
-    },
-    {
       "id": "goals",
       "type": "multi_choice",
       "title": "What would you love to achieve?",
@@ -87,44 +88,29 @@
           "icon": "dumbbell"
         },
         {
-          "value": "build_muscle",
-          "label": "Build muscle",
-          "icon": "muscle"
-        },
-        {
           "value": "glutes_and_legs",
           "label": "Glutes and legs",
           "icon": "legs"
         },
         {
-          "value": "upper_body_strength",
-          "label": "Upper body strength",
-          "icon": "arm"
-        },
-        {
           "value": "feel_toned",
-          "label": "Feel toned and defined",
+          "label": "Feel toned",
           "icon": "sparkle"
         },
         {
+          "value": "build_muscle",
+          "label": "Build muscle",
+          "icon": "muscle"
+        },
+        {
           "value": "gym_confidence",
-          "label": "Gym confidence",
+          "label": "Feel confident in the gym",
           "icon": "heart"
         },
         {
           "value": "fitness_stamina",
-          "label": "Get fitter and improve stamina",
+          "label": "Get fitter",
           "icon": "lungs"
-        },
-        {
-          "value": "mobility",
-          "label": "Mobility and flexibility",
-          "icon": "stretch"
-        },
-        {
-          "value": "better_posture",
-          "label": "Better posture",
-          "icon": "spine"
         },
         {
           "value": "more_energy",
@@ -132,28 +118,49 @@
           "icon": "bolt"
         },
         {
+          "value": "lose_body_fat",
+          "label": "Lose body fat",
+          "icon": "flame"
+        },
+        {
+          "value": "upper_body_strength",
+          "label": "Upper body strength",
+          "icon": "arm",
+          "shown": false
+        },
+        {
+          "value": "mobility",
+          "label": "Mobility and flexibility",
+          "icon": "stretch",
+          "shown": false
+        },
+        {
+          "value": "better_posture",
+          "label": "Better posture",
+          "icon": "spine",
+          "shown": false
+        },
+        {
           "value": "stress_relief",
           "label": "Stress relief and mental wellbeing",
-          "icon": "leaf"
+          "icon": "leaf",
+          "shown": false
         },
         {
           "value": "strong_for_life",
           "label": "Strong for life (bones and joints)",
-          "icon": "shield"
+          "icon": "shield",
+          "shown": false
         },
         {
           "value": "back_to_training",
           "label": "Get back into training after a break",
-          "icon": "refresh"
-        },
-        {
-          "value": "lose_body_fat",
-          "label": "Lose body fat",
-          "icon": "flame"
+          "icon": "refresh",
+          "shown": false
         }
       ],
       "main_label": "Main",
-      "limit_hint": "You can pick up to 3. Tap one to swap it out.",
+      "limit_hint": "You can pick up to 3. Tap one to remove it first.",
       "section": "you",
       "hero_icon": "flag-outline"
     },
@@ -279,7 +286,8 @@
       "section": "gym",
       "hero_icon": "time-outline",
       "hero_image": "hero-learn",
-      "auto_advance": true
+      "auto_advance": true,
+      "eyebrow": "NOW, YOUR GYM"
     },
     {
       "id": "gym_comfort",
@@ -403,7 +411,7 @@
       "section": "gym",
       "show_if": "st_not_sure >= 3 or gym_comfort <= 2",
       "skip_when_hidden": true,
-      "eyebrow": "HOW EVOLUMA HELPS",
+      "eyebrow": "HERE'S HOW WE'LL HELP",
       "title": "Never guess what to do",
       "body": "Every exercise comes with a first-time guide: where to find it, how to set it up and what to focus on.",
       "demo": {
@@ -424,7 +432,7 @@
       "section": "gym",
       "show_if": "st_busy >= 3",
       "skip_when_hidden": true,
-      "eyebrow": "HOW EVOLUMA HELPS",
+      "eyebrow": "HERE'S HOW WE'LL HELP",
       "title": "Busy gym? Keep moving",
       "body": "If a machine's taken, tap Swap and pick a close match that works the same muscles. Your session never stalls.",
       "demo": {
@@ -445,7 +453,7 @@
       "section": "gym",
       "show_if": "st_stopped >= 3",
       "skip_when_hidden": true,
-      "eyebrow": "HOW EVOLUMA HELPS",
+      "eyebrow": "HERE'S HOW WE'LL HELP",
       "title": "Life happens. Your plan bends",
       "body": "Missed a session? It waits for you. Move it to another day in one tap, with no guilt and no starting over.",
       "demo": {
@@ -462,7 +470,7 @@
       "id": "machines_used",
       "type": "photo_multi_choice",
       "title": "Which of these have you used before?",
-      "helper": "Tap any you've tried. It's fine if it's none yet.",
+      "helper": "So we know where to start you. It's fine if it's none yet.",
       "stores_to": "profiles.onboarding_answers.machines_used",
       "options": [
         {
@@ -520,49 +528,6 @@
       "section": "gym"
     },
     {
-      "id": "cardio",
-      "type": "single_choice",
-      "title": "How do you feel about cardio?",
-      "stores_to": "profiles.cardio_preference",
-      "options": [
-        {
-          "value": "love",
-          "label": "Love it",
-          "icon": "heart"
-        },
-        {
-          "value": "fine",
-          "label": "It's fine",
-          "icon": "thumb"
-        },
-        {
-          "value": "avoid",
-          "label": "I'd avoid it if I could",
-          "icon": "shrug"
-        }
-      ],
-      "helper": "No wrong answer. It just tells us how much cardio to add to your week.",
-      "section": "gym",
-      "hero_icon": "bicycle-outline",
-      "hero_image": "welcome-back-cover",
-      "auto_advance": true
-    },
-    {
-      "id": "projection_early",
-      "type": "projection",
-      "stage": "early",
-      "eyebrow": "A FIRST LOOK",
-      "title": "Here's where you could be, {name}",
-      "line": "About +{increase} kg on your {lift} by week {weeks}",
-      "start_label": "Now",
-      "end_label": "Week {weeks}",
-      "note": "An estimate from your plan's progression rules. We'll check it against your week next.",
-      "fallback_title": "Your first milestone, {name}",
-      "fallback_line": "Week {first_milestone_week}: {first_milestone_title}",
-      "button": "Continue",
-      "section": "gym"
-    },
-    {
       "id": "days_per_week",
       "type": "number_select",
       "title": "How many days a week can you get to the gym?",
@@ -574,7 +539,8 @@
       "section": "week",
       "hero_icon": "calendar-outline",
       "hero_image": "hero-programmes",
-      "auto_advance": true
+      "auto_advance": true,
+      "eyebrow": "NOW, YOUR WEEK"
     },
     {
       "id": "which_days",
@@ -638,6 +604,46 @@
       "auto_advance": true
     },
     {
+      "id": "cardio",
+      "type": "single_choice",
+      "title": "How do you feel about cardio?",
+      "stores_to": "profiles.cardio_preference",
+      "options": [
+        {
+          "value": "love",
+          "label": "Love it",
+          "icon": "heart"
+        },
+        {
+          "value": "fine",
+          "label": "It's fine",
+          "icon": "thumb"
+        },
+        {
+          "value": "avoid",
+          "label": "I'd avoid it if I could",
+          "icon": "shrug"
+        }
+      ],
+      "helper": "We'll fit it into your week to suit you.",
+      "section": "week",
+      "hero_icon": "bicycle-outline",
+      "hero_image": "welcome-back-cover",
+      "auto_advance": true
+    },
+    {
+      "id": "reminder_time",
+      "type": "time_picker",
+      "title": "When would you like a nudge on training days?",
+      "helper": "We'll ask for permission to send reminders after your first session.",
+      "default": "18:00",
+      "stores_to": "profiles.default_reminder_time",
+      "skip_label": "No reminders for now",
+      "section": "week",
+      "hero_icon": "notifications-outline",
+      "auto_advance": true
+    },
+    {
       "id": "streak_goal",
       "type": "cards",
       "title": "How many weeks would you like to aim for first?",
@@ -664,36 +670,8 @@
       "section": "week",
       "hero_icon": "flame-outline",
       "hero_image": "hero-refer",
-      "auto_advance": true
-    },
-    {
-      "id": "reminder_time",
-      "type": "time_picker",
-      "title": "When would you like a nudge on training days?",
-      "helper": "We'll ask for permission to send reminders after your first session.",
-      "default": "18:00",
-      "stores_to": "profiles.default_reminder_time",
-      "skip_label": "No reminders for now",
-      "section": "week",
-      "hero_icon": "notifications-outline",
-      "auto_advance": true
-    },
-    {
-      "id": "projection_final",
-      "type": "projection",
-      "stage": "final",
-      "eyebrow": "UPDATED FOR YOUR WEEK",
-      "title": "{days_per_week} days a week. Here's your path",
-      "line": "About +{increase} kg on your {lift} by week {weeks}",
-      "start_label": "Now",
-      "end_label": "Week {weeks}",
-      "changed_note": "Recalculated from your days and session length. Your first look was +{early_increase} kg on your {early_lift}.",
-      "same_note": "Checked against your week. Still on track.",
-      "note": "Estimates, not promises. Everyone progresses differently.",
-      "fallback_title": "Your week is set, {name}",
-      "fallback_line": "{days_per_week} sessions a week, about {session_minutes} minutes each.",
-      "button": "Continue",
-      "section": "week"
+      "auto_advance": true,
+      "eyebrow": "YOUR FIRST GOAL"
     },
     {
       "id": "building_plan",
@@ -738,6 +716,17 @@
         "88% of UK women surveyed have felt anxious in the gym. You're in good company."
       ],
       "proof_source": "88%: Gymshark survey of 1,000 UK women, September 2025"
+    },
+    {
+      "id": "projection_final",
+      "type": "projection",
+      "section": "plan",
+      "eyebrow": "YOUR PLAN IS READY",
+      "title": "Here's where it can take you, {name}",
+      "line": "A little more each week. It adds up fast.",
+      "start_label": "Today",
+      "note": "An illustration of how your plan builds. Everyone progresses differently.",
+      "button": "See my plan"
     },
     {
       "id": "plan_reveal",

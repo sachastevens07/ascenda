@@ -151,8 +151,18 @@ export function parseGoal(value: unknown): Goal | null {
 
 /** Goals offered in onboarding. Full `GOALS` stays for saved answers and Profile. */
 export const ONBOARDING_GOALS: Goal[] = asArray(GOALS_SCREEN.options)
+  .filter((item) => asRecord(item).shown !== false)
   .map((item) => parseGoal(asRecord(item).value))
   .filter((goal): goal is Goal => Boolean(goal));
+
+/** Goal options as shown in onboarding: value, label and icon. */
+export const ONBOARDING_GOAL_OPTIONS: { value: string; label: string; icon?: string }[] = asArray(GOALS_SCREEN.options)
+  .filter((item) => asRecord(item).shown !== false)
+  .map((item) => {
+    const row = asRecord(item);
+    return { value: text(row.value), label: text(row.label), icon: text(row.icon) || undefined };
+  })
+  .filter((item) => item.value && item.label && parseGoal(item.value));
 
 export function parseMainGoals(value: unknown): Goal[] {
   const raw = Array.isArray(value) ? value : [];

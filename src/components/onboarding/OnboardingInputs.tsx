@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-import { AppText, Chip, GoalChipGroup } from '@/components/ui';
+import { AppText, Chip } from '@/components/ui';
 import { useTheme } from '@/constants/theme';
 import { PhotoFill } from '@/components/ui/Cards';
 import { imageSourceForSlug } from '@/lib/images';
@@ -19,7 +19,7 @@ import { hapticSelection } from '@/lib/haptics';
 import type { OnboardingOption } from '@/lib/onboardingContent';
 import { WEEKDAY_LABELS, type Weekday } from '@/lib/onboardingAnswers';
 import { formatReminderClock, hourToReminderTime, REMINDER_HOURS } from '@/lib/reminders';
-import type { Goal } from '@/lib/goals';
+import { GOAL_LIMIT_HINT, MAX_MAIN_GOALS, ONBOARDING_GOAL_OPTIONS, type Goal } from '@/lib/goals';
 
 const ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
   dumbbell: 'barbell-outline',
@@ -743,6 +743,7 @@ export function BodyweightField({
   );
 }
 
+/** Onboarding goals: an even 2-column grid of icon cards. Picks are numbered; number 1 is her main goal. */
 export function GoalsPicker({
   selected,
   onChange,
@@ -750,7 +751,79 @@ export function GoalsPicker({
   selected: Goal[];
   onChange: (next: Goal[]) => void;
 }) {
-  return <GoalChipGroup selected={selected} onChange={onChange} />;
+  const { colours, radius } = useTheme();
+  const [hint, setHint] = useState<string | null>(null);
+  return (
+    <View>
+      <View style={styles.goalGrid}>
+        {ONBOARDING_GOAL_OPTIONS.map((option, index) => {
+          const order = selected.indexOf(option.value as Goal);
+          const on = order >= 0;
+          return (
+            <View key={option.value} style={styles.goalCell}>
+              <Rise index={index}>
+                <Pressable
+                  onPress={() => {
+                    hapticSelection();
+                    const value = option.value as Goal;
+                    if (on) {
+                      setHint(null);
+                      onChange(selected.filter((item) => item !== value));
+                      return;
+                    }
+                    if (selected.length >= MAX_MAIN_GOALS) {
+                      setHint(GOAL_LIMIT_HINT);
+                      return;
+                    }
+                    setHint(null);
+                    onChange([...selected, value]);
+                  }}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: on }}
+                  accessibilityLabel={order === 0 ? `${option.label}, main goal` : option.label}
+                  style={({ pressed }) => [
+                    styles.goalCard,
+                    {
+                      borderRadius: radius.lg,
+                      backgroundColor: on ? colours.brandSoft : colours.surface,
+                      borderColor: on ? colours.brand : colours.border,
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}>
+                  <View style={styles.goalTop}>
+                    <Ionicons name={iconName(option.icon)} size={24} color={on ? colours.brand : colours.inkMuted} />
+                    {on ? (
+                      <View style={[styles.goalBadge, { backgroundColor: colours.brand }]}>
+                        <AppText variant="caption" style={{ color: colours.onBrand, fontWeight: '800' }}>
+                          {order + 1}
+                        </AppText>
+                      </View>
+                    ) : null}
+                  </View>
+                  <AppText
+                    variant={on ? 'bodyStrong' : 'body'}
+                    numberOfLines={2}
+                    style={{ color: on ? colours.brand : colours.ink, marginTop: 10 }}>
+                    {option.label}
+                  </AppText>
+                  {order === 0 ? (
+                    <AppText variant="caption" style={{ color: colours.accent, fontWeight: '700', marginTop: 2 }}>
+                      Main goal
+                    </AppText>
+                  ) : null}
+                </Pressable>
+              </Rise>
+            </View>
+          );
+        })}
+      </View>
+      {hint ? (
+        <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 12, textAlign: 'center' }}>
+          {hint}
+        </AppText>
+      ) : null}
+    </View>
+  );
 }
 
 export function StatCallout({
@@ -1026,6 +1099,11 @@ export function BuildingSteps({
 }
 
 const styles = StyleSheet.create({
+  goalGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5, marginTop: 8 },
+  goalCell: { width: '50%', padding: 5 },
+  goalCard: { minHeight: 104, padding: 14, borderWidth: 1.5 },
+  goalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  goalBadge: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   heading: { marginBottom: 24 },
   stack: { gap: 10 },
   choice: {

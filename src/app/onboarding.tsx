@@ -75,7 +75,6 @@ import {
   defaultRoutineSlug,
   firstMilestone,
   recommendPlan,
-  strengthProjection,
   type RecommendedPlan,
 } from '@/lib/onboardingPlan';
 import { contentRoutineCount } from '@/lib/contentRoutines';
@@ -153,10 +152,6 @@ function withObstacles(draft: OnboardingDraft, obstacles: string[], screen: Onbo
     statements[key] = obstacles.includes(option.value) ? 4 : 1;
   }
   return { ...draft, obstacles, statements };
-}
-
-function formatKgShort(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 function exerciseCatalogueCount(): number {
@@ -260,7 +255,6 @@ export default function OnboardingScreen() {
   );
   const [plan, setPlan] = useState<RecommendedPlan | null>(null);
   const [chosenSlug, setChosenSlug] = useState<string | null>(null);
-  const [earlyEstimate, setEarlyEstimate] = useState<{ increase: number; lift: string; weeks: number } | null>(null);
   const [kgText, setKgText] = useState(profile?.bodyweight_kg ? String(profile.bodyweight_kg) : '');
   const [stonesText, setStonesText] = useState('');
   const [poundsText, setPoundsText] = useState('');
@@ -348,15 +342,23 @@ export default function OnboardingScreen() {
 
   // Single-choice screens move on by themselves a moment after she picks.
   const autoArmed = useRef(false);
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handlePrimaryRef = useRef<() => Promise<void>>(async () => {});
   useEffect(() => {
     if (!autoArmed.current) return;
     autoArmed.current = false;
-    const timer = setTimeout(() => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    autoTimer.current = setTimeout(() => {
+      autoTimer.current = null;
       void handlePrimaryRef.current();
     }, 420);
-    return () => clearTimeout(timer);
   }, [draft]);
+  useEffect(
+    () => () => {
+      if (autoTimer.current) clearTimeout(autoTimer.current);
+    },
+    []
+  );
 
   // Keep her place if the app closes mid-way (new flow only).
   useEffect(() => {
@@ -372,7 +374,7 @@ export default function OnboardingScreen() {
         // Never resume on the paywall step, the hold or the building animation: go back to the plan.
         const resumeId = screens[at]?.type;
         const safe =
-          resumeId && ['building', 'plan_reveal', 'commit', 'save_account', 'paywall'].includes(resumeId)
+          resumeId && ['building', 'projection', 'plan_reveal', 'commit', 'save_account', 'paywall'].includes(resumeId)
             ? Math.max(0, screens.findIndex((item) => item.id === 'building_plan'))
             : at;
         setIndex(Math.min(Math.max(0, safe), screens.length - 1));
@@ -498,6 +500,12 @@ export default function OnboardingScreen() {
   }
 
   function move(delta: number) {
+    // She tapped Continue before the auto-advance fired: don't move twice.
+    if (autoTimer.current) {
+      clearTimeout(autoTimer.current);
+      autoTimer.current = null;
+    }
+    autoArmed.current = false;
     setError(null);
     setDirection(delta);
     if (isEditing && index >= 0 && delta > 0) {
@@ -517,8 +525,9 @@ export default function OnboardingScreen() {
       return;
     }
     let next = skipConsentIndex(index, delta);
-    if (delta < 0 && screens[index]?.id === 'plan_reveal') {
-      const bodyIndex = screens.findIndex((item) => item.id === 'projection_final');
+    // Going back never replays Building your plan.
+    if (delta < 0 && screens[index]?.id === 'projection_final') {
+      const bodyIndex = screens.findIndex((item) => item.id === 'streak_goal');
       if (bodyIndex >= 0) next = bodyIndex;
     }
     if (delta > 0 && screens[index]?.id === 'life_stage' && shouldShowLifeStageConsent(draft.life_stage_choice)) {
@@ -796,8 +805,6 @@ export default function OnboardingScreen() {
   const primaryLabel = (() => {
     if (index < 0) return 'Save';
     if (!contentScreen) return 'Continue';
-    // Picking an option moves on by itself, so there's no button (unless editing from Profile).
-    if (contentScreen.raw.auto_advance === true && !isEditing) return '';
     if (contentScreen.type === 'welcome') return contentScreen.primary_button || "Let's build your plan";
     if (contentScreen.type === 'building') return '';
     if (contentScreen.type === 'consent') return contentScreen.accept_button;
@@ -826,51 +833,6 @@ export default function OnboardingScreen() {
     };
     return raw.map((line) => fillTemplate(line, counts)).filter((line) => !/\{|\b0 /.test(line));
   }, [contentScreen]);
-
-  /** Her strength projection for the projection screens, from the plan her answers so far point to. */
-  const projection = useMemo(() => {
-    if (contentScreen?.type !== 'projection') return null;
-    const next = recommendPlan(draft, chosenSlug ?? undefined);
-    const overlay = next?.recommended.overlay;
-    const points = overlay ? strengthProjection(overlay) : null;
-    const estimate = next?.estimate;
-    if (!points || !estimate) return null;
-    return {
-      points,
-      increase: estimate.estimated_increase_kg,
-      lift: estimate.lift_name.toLowerCase(),
-      weeks: estimate.length_weeks,
-    };
-    // Recompute when she arrives on the screen, not on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contentScreen?.id]);
-
-  useEffect(() => {
-    if (contentScreen?.id === 'projection_early' && projection) {
-      setEarlyEstimate({ increase: projection.increase, lift: projection.lift, weeks: projection.weeks });
-    }
-  }, [contentScreen?.id, projection]);
-
-  const projectionVars = {
-    ...vars,
-    increase: projection ? formatKgShort(projection.increase) : '',
-    lift: projection?.lift ?? '',
-    weeks: projection?.weeks ?? '',
-    early_increase: earlyEstimate ? formatKgShort(earlyEstimate.increase) : '',
-    early_lift: earlyEstimate?.lift ?? '',
-  };
-
-  function projectionNote(item: OnboardingScreen): string {
-    const base = screenText(item, 'note');
-    if (screenText(item, 'stage') !== 'final' || !projection || !earlyEstimate) return base;
-    // Only say it changed if the numbers really changed.
-    const changed =
-      earlyEstimate.increase !== projection.increase ||
-      earlyEstimate.lift !== projection.lift ||
-      earlyEstimate.weeks !== projection.weeks;
-    const lead = fillTemplate(screenText(item, changed ? 'changed_note' : 'same_note'), projectionVars);
-    return `${lead} ${base}`.trim();
-  }
 
   function rewardLines(item: OnboardingScreen): string[] {
     const byGoal = item.body_by_main_goal[draft.main_goals[0] ?? ''];
@@ -1004,8 +966,8 @@ export default function OnboardingScreen() {
       sections={sections}
       primaryDelayMs={
         contentScreen && ['reward', 'preview', 'projection', 'insight'].includes(contentScreen.type) && !isEditing
-          ? contentScreen.type === 'preview'
-            ? 2200
+          ? contentScreen.type === 'preview' || contentScreen.type === 'projection'
+            ? 2400
             : 1400
           : 0
       }>
@@ -1407,30 +1369,18 @@ export default function OnboardingScreen() {
 
       {contentScreen?.type === 'projection' ? (
         <>
-          <ScreenHeading
-            eyebrow={contentScreen.eyebrow}
-            title={fillTemplate(projection ? contentScreen.title : screenText(contentScreen, 'fallback_title'), vars)}
+          <ScreenHeading eyebrow={contentScreen.eyebrow} title={fillTemplate(contentScreen.title, vars)} />
+          <AppText variant="title3" style={{ color: colours.brand }}>
+            {fillTemplate(screenText(contentScreen, 'line'), vars)}
+          </AppText>
+          <ProjectionChart
+            weeks={plan?.recommended.overlay.length_weeks ?? 6}
+            milestones={(plan?.milestones ?? []).map((item) => ({ week: item.week, title: item.title }))}
+            startLabel={screenText(contentScreen, 'start_label')}
           />
-          {projection ? (
-            <>
-              <AppText variant="title3" style={{ color: colours.brand }}>
-                {fillTemplate(screenText(contentScreen, 'line'), projectionVars)}
-              </AppText>
-              <ProjectionChart
-                points={projection.points}
-                startLabel={screenText(contentScreen, 'start_label')}
-                endLabel={fillTemplate(screenText(contentScreen, 'end_label'), projectionVars)}
-                endValue={`+${formatKgShort(projection.increase)} kg`}
-              />
-              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 14 }}>
-                {projectionNote(contentScreen)}
-              </AppText>
-            </>
-          ) : (
-            <AppText variant="title3" style={{ color: colours.brand }}>
-              {fillTemplate(screenText(contentScreen, 'fallback_line'), vars)}
-            </AppText>
-          )}
+          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 14 }}>
+            {screenText(contentScreen, 'note')}
+          </AppText>
         </>
       ) : null}
 
