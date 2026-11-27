@@ -6,7 +6,12 @@ import { ActivityIndicator, View } from 'react-native';
 import { showDialog } from '@/components/Dialog';
 import {
   AccountField,
+  BuildingShow,
+  HeadingIcon,
   HoldToCommit,
+  ObstaclePicker,
+  ProjectionChart,
+  RewardScreen,
   PlanRevealV2,
   PreviewGlimpse,
   WeekPreview,
@@ -17,7 +22,6 @@ import { OnboardingShell, type ShellSections } from '@/components/onboarding/Onb
 import {
   BlockMessage,
   BodyweightField,
-  BuildingSteps,
   CardChoiceList,
   ChipChoiceList,
   ComfortSlider,
@@ -33,7 +37,6 @@ import {
 } from '@/components/onboarding/OnboardingInputs';
 import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow } from '@/components/ui';
 import { track } from '@/lib/analytics';
-import { successTap } from '@/lib/haptics';
 import { useAuth } from '@/lib/auth';
 import { GOAL_LABELS, type Goal } from '@/lib/goals';
 import { useTheme } from '@/constants/theme';
@@ -67,7 +70,16 @@ import {
   screenText,
   type OnboardingScreen,
 } from '@/lib/onboardingContent';
-import { defaultRoutineSlug, firstMilestone, recommendPlan, type RecommendedPlan } from '@/lib/onboardingPlan';
+import {
+  defaultRoutineSlug,
+  firstMilestone,
+  recommendPlan,
+  strengthProjection,
+  type RecommendedPlan,
+} from '@/lib/onboardingPlan';
+import { contentRoutineCount } from '@/lib/contentRoutines';
+import { RECIPES } from '@/lib/food';
+import catalogue from '../../content/exercises/strength-catalogue.json';
 import {
   GYM_EXPERIENCE_LABELS,
   MAX_BODYWEIGHT_KG,
@@ -107,6 +119,48 @@ const REBUILD_IDS = new Set([
 ]);
 const REBUILD_FLOW = ONBOARDING_SCREENS.filter((screen) => REBUILD_IDS.has(screen.id));
 const REVIEW_ID = 'review';
+
+type RawObstacle = { value: string; label: string; icon?: string; exclusive?: boolean; maps_to?: string; response?: string };
+
+function rawObstacleOptions(screen: OnboardingScreen): RawObstacle[] {
+  const raw = Array.isArray(screen.raw.options) ? (screen.raw.options as Record<string, unknown>[]) : [];
+  return raw
+    .map((item) => ({
+      value: String(item.value ?? ''),
+      label: String(item.label ?? ''),
+      icon: typeof item.icon === 'string' ? item.icon : undefined,
+      exclusive: item.exclusive === true,
+      maps_to: typeof item.maps_to === 'string' ? item.maps_to : undefined,
+      response: typeof item.response === 'string' ? item.response : undefined,
+    }))
+    .filter((item) => item.value && item.label);
+}
+
+function obstacleOptions(screen: OnboardingScreen) {
+  return rawObstacleOptions(screen).map(({ value, label, icon, exclusive }) => ({ value, label, icon, exclusive }));
+}
+
+/**
+ * Obstacles replace the old 1-to-5 statements. Each picked obstacle with maps_to sets that
+ * statement to 4 and the rest to 1, so the rules, previews, paywall and Coach keep working.
+ */
+function withObstacles(draft: OnboardingDraft, obstacles: string[], screen: OnboardingScreen): OnboardingDraft {
+  const statements: OnboardingDraft['statements'] = {};
+  for (const option of rawObstacleOptions(screen)) {
+    if (!option.maps_to) continue;
+    const key = option.maps_to as keyof OnboardingDraft['statements'];
+    statements[key] = obstacles.includes(option.value) ? 4 : 1;
+  }
+  return { ...draft, obstacles, statements };
+}
+
+function formatKgShort(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function exerciseCatalogueCount(): number {
+  return Array.isArray(catalogue.exercises) ? catalogue.exercises.length : 0;
+}
 
 function quizFromDraft(draft: OnboardingDraft): QuizAnswers | null {
   const goals = draft.main_goals;
@@ -195,7 +249,7 @@ export default function OnboardingScreen() {
   );
   const [plan, setPlan] = useState<RecommendedPlan | null>(null);
   const [chosenSlug, setChosenSlug] = useState<string | null>(null);
-  const [buildDone, setBuildDone] = useState(0);
+  const [earlyEstimate, setEarlyEstimate] = useState<{ increase: number; lift: string; weeks: number } | null>(null);
   const [kgText, setKgText] = useState(profile?.bodyweight_kg ? String(profile.bodyweight_kg) : '');
   const [stonesText, setStonesText] = useState('');
   const [poundsText, setPoundsText] = useState('');
@@ -278,24 +332,7 @@ export default function OnboardingScreen() {
     const next = recommendPlan(draft, chosenSlug ?? undefined);
     setPlan(next);
     setChosenSlug(next?.recommended.slug ?? null);
-    setBuildDone(0);
-    const steps = buildingSteps.length || contentScreen.steps.length || 4;
-    const total = (contentScreen.duration_seconds || 3) * 1000;
-    const tick = total / steps;
-    let count = 0;
-    const timer = setInterval(() => {
-      count += 1;
-      setBuildDone(count);
-      if (count >= steps) {
-        clearInterval(timer);
-        successTap();
-        setTimeout(() => {
-          setDirection(1);
-          setIndex((current) => current + 1);
-        }, 120);
-      }
-    }, tick);
-    return () => clearInterval(timer);
+    // BuildingShow runs the animation and moves on when it finishes.
   }, [contentScreen?.id]);
 
   // Keep her place if the app closes mid-way (new flow only).
@@ -307,7 +344,7 @@ export default function OnboardingScreen() {
         if (!raw) return;
         const saved = JSON.parse(raw) as { userId?: string; draft?: OnboardingDraft; index?: number };
         if (!saved.draft || saved.userId !== session?.user?.id) return;
-        setDraft(saved.draft);
+        setDraft({ ...emptyOnboardingDraft(), ...saved.draft });
         const at = typeof saved.index === 'number' ? saved.index : 0;
         // Never resume on the paywall step, the hold or the building animation: go back to the plan.
         const resumeId = screens[at]?.type;
@@ -495,6 +532,7 @@ export default function OnboardingScreen() {
     if (contentScreen.type === 'disclaimer') return safetyChecked;
     if (contentScreen.type === 'consent') return consentChecked;
     if (contentScreen.type === 'building') return false;
+    if (contentScreen.type === 'obstacles') return draft.obstacles.length > 0;
     if (contentScreen.type === 'save_account') {
       return accountEmail.trim().length > 3 && accountPassword.length >= MIN_PASSWORD;
     }
@@ -741,6 +779,85 @@ export default function OnboardingScreen() {
       contentScreen?.type !== 'paywall' &&
       index !== firstSetupIndex);
 
+  const buildingProof = useMemo(() => {
+    if (contentScreen?.type !== 'building') return [];
+    const raw = Array.isArray(contentScreen.raw.proof) ? (contentScreen.raw.proof as unknown[]).map(String) : [];
+    const counts = {
+      routine_count: contentRoutineCount(),
+      exercise_count: exerciseCatalogueCount(),
+      recipe_count: RECIPES.length,
+    };
+    return raw.map((line) => fillTemplate(line, counts)).filter((line) => !/\{|\b0 /.test(line));
+  }, [contentScreen]);
+
+  /** Her strength projection for the projection screens, from the plan her answers so far point to. */
+  const projection = useMemo(() => {
+    if (contentScreen?.type !== 'projection') return null;
+    const next = recommendPlan(draft, chosenSlug ?? undefined);
+    const overlay = next?.recommended.overlay;
+    const points = overlay ? strengthProjection(overlay) : null;
+    const estimate = next?.estimate;
+    if (!points || !estimate) return null;
+    return {
+      points,
+      increase: estimate.estimated_increase_kg,
+      lift: estimate.lift_name.toLowerCase(),
+      weeks: estimate.length_weeks,
+    };
+    // Recompute when she arrives on the screen, not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentScreen?.id]);
+
+  useEffect(() => {
+    if (contentScreen?.id === 'projection_early' && projection) {
+      setEarlyEstimate({ increase: projection.increase, lift: projection.lift, weeks: projection.weeks });
+    }
+  }, [contentScreen?.id, projection]);
+
+  const projectionVars = {
+    ...vars,
+    increase: projection ? formatKgShort(projection.increase) : '',
+    lift: projection?.lift ?? '',
+    weeks: projection?.weeks ?? '',
+    early_increase: earlyEstimate ? formatKgShort(earlyEstimate.increase) : '',
+    early_lift: earlyEstimate?.lift ?? '',
+  };
+
+  function projectionNote(item: OnboardingScreen): string {
+    const base = screenText(item, 'note');
+    if (screenText(item, 'stage') !== 'final' || !projection || !earlyEstimate) return base;
+    // Only say it changed if the numbers really changed.
+    const changed =
+      earlyEstimate.increase !== projection.increase ||
+      earlyEstimate.lift !== projection.lift ||
+      earlyEstimate.weeks !== projection.weeks;
+    const lead = fillTemplate(screenText(item, changed ? 'changed_note' : 'same_note'), projectionVars);
+    return `${lead} ${base}`.trim();
+  }
+
+  function rewardLines(item: OnboardingScreen): string[] {
+    const byGoal = item.body_by_main_goal[draft.main_goals[0] ?? ''];
+    if (byGoal) return [fillTemplate(byGoal, vars)];
+    const template = screenText(item, 'line_template');
+    if (template) {
+      const obstaclesScreen = screens.find((screenItem) => screenItem.type === 'obstacles');
+      const options = obstaclesScreen ? rawObstacleOptions(obstaclesScreen) : [];
+      const lines = draft.obstacles
+        .map((value) => options.find((option) => option.value === value)?.response)
+        .filter((response): response is string => Boolean(response))
+        .map((response) => fillTemplate(template, { ...vars, response }));
+      if (lines.length > 0) return lines;
+    }
+    return item.body ? [fillTemplate(item.body, vars)] : [];
+  }
+
+  function rewardStat(item: OnboardingScreen) {
+    const condition = screenText(item, 'stat_if');
+    if (!item.stat || !condition) return null;
+    const wanted = condition.split(/\s+or\s+/).map((value) => value.trim());
+    return draft.obstacles.some((value) => wanted.includes(value)) ? item.stat : null;
+  }
+
   function accountNoteFor(item: OnboardingScreen | null): string | undefined {
     if (accountNote && item?.section === 'setup' && item.id === screens[firstSetupIndex]?.id) return accountNote;
     return undefined;
@@ -839,6 +956,9 @@ export default function OnboardingScreen() {
       }}
       footerNote={error ?? accountNoteFor(contentScreen) ?? contentScreen?.privacy_note ?? undefined}
       sections={sections}>
+      {contentScreen && contentScreen.type !== 'obstacles' && screenText(contentScreen, 'hero_icon') ? (
+        <HeadingIcon name={screenText(contentScreen, 'hero_icon')} />
+      ) : null}
       {index < 0 ? (
         <View>
           <ScreenHeading title="Your answers" helper="Tap a row to change it." />
@@ -1192,9 +1312,67 @@ export default function OnboardingScreen() {
       ) : null}
 
       {contentScreen?.type === 'building' ? (
+        <BuildingShow
+          title={title}
+          steps={buildingSteps}
+          proof={buildingProof}
+          proofSource={screenText(contentScreen, 'proof_source')}
+          durationMs={(contentScreen.duration_seconds || 5) * 1000}
+          onDone={() => {
+            setDirection(1);
+            setIndex((current) => current + 1);
+          }}
+        />
+      ) : null}
+
+      {contentScreen?.type === 'reward' ? (
+        <RewardScreen
+          icon={screenText(contentScreen, 'icon') || 'checkmark'}
+          title={fillTemplate(contentScreen.title, vars)}
+          lines={rewardLines(contentScreen)}
+          stat={rewardStat(contentScreen)}
+        />
+      ) : null}
+
+      {contentScreen?.type === 'obstacles' ? (
         <>
-          <ScreenHeading title={title} />
-          <BuildingSteps steps={buildingSteps} doneCount={buildDone} />
+          <HeadingIcon name={screenText(contentScreen, 'hero_icon') || 'trail-sign-outline'} />
+          <ScreenHeading title={fillTemplate(contentScreen.title, vars)} helper={fillTemplate(contentScreen.helper, vars)} />
+          <ObstaclePicker
+            options={obstacleOptions(contentScreen)}
+            selected={draft.obstacles}
+            max={contentScreen.max ?? 2}
+            onChange={(obstacles) => setDraft((current) => withObstacles(current, obstacles, contentScreen))}
+          />
+        </>
+      ) : null}
+
+      {contentScreen?.type === 'projection' ? (
+        <>
+          <ScreenHeading
+            eyebrow={contentScreen.eyebrow}
+            title={fillTemplate(projection ? contentScreen.title : screenText(contentScreen, 'fallback_title'), vars)}
+          />
+          {projection ? (
+            <>
+              <AppText variant="title3" style={{ color: colours.brand }}>
+                {fillTemplate(screenText(contentScreen, 'line'), projectionVars)}
+              </AppText>
+              <ProjectionChart
+                points={projection.points}
+                startLabel={screenText(contentScreen, 'start_label')}
+                endLabel={fillTemplate(screenText(contentScreen, 'end_label'), projectionVars)}
+                endValue={`+${formatKgShort(projection.increase)} kg`}
+              />
+              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 14 }}>
+                {projectionNote(contentScreen)}
+              </AppText>
+            </>
+          ) : (
+            <AppText variant="title3" style={{ color: colours.brand }}>
+              {fillTemplate(screenText(contentScreen, 'fallback_line'), vars)}
+            </AppText>
+          )}
         </>
       ) : null}
 
@@ -1223,6 +1401,8 @@ export default function OnboardingScreen() {
             estimateLabel: contentScreen.estimate_label,
             alternativesTitle: contentScreen.alternatives_title,
             alternativesToggle: screenText(contentScreen, 'alternatives_toggle'),
+            calendarTitle: screenText(contentScreen, 'calendar_title'),
+            calendarStart: screenText(contentScreen, 'calendar_start') || 'Start',
           }}
         />
       ) : null}

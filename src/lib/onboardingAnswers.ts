@@ -44,6 +44,8 @@ export type OnboardingAnswersJson = {
   machines_used?: string[];
   preferred_days?: string[];
   reminders_opted_out?: boolean;
+  /** What stopped her before (onboarding obstacles screen, up to two). */
+  obstacles?: string[];
 };
 
 export const LIFE_STAGE_CHOICES = ['perimenopause', 'menopause', 'none', 'prefer_not'] as const;
@@ -132,6 +134,7 @@ export function parseOnboardingAnswers(value: unknown): OnboardingAnswersJson {
       .filter((day): day is Weekday => (WEEKDAYS as readonly string[]).includes(day));
   }
   if (row.reminders_opted_out === true) answers.reminders_opted_out = true;
+  if (Array.isArray(row.obstacles)) answers.obstacles = row.obstacles.map(String).filter(Boolean).slice(0, 2);
   return answers;
 }
 
@@ -150,6 +153,8 @@ export type OnboardingDraft = {
   gym_experience: GymExperience | null;
   gym_comfort: Confidence;
   statements: Partial<Record<StatementKey, number>>;
+  /** Obstacle values from the obstacles screen. Also mapped onto statements (4 picked, 1 not). */
+  obstacles: string[];
   machines_used: string[];
   cardio_preference: CardioPreference | null;
   days_per_week: 2 | 3 | 4 | 5;
@@ -173,6 +178,7 @@ export function emptyOnboardingDraft(): OnboardingDraft {
     gym_experience: null,
     gym_comfort: 3,
     statements: {},
+    obstacles: [],
     machines_used: [],
     cardio_preference: null,
     days_per_week: 3,
@@ -217,6 +223,7 @@ export function draftFromSaved(input: {
       started_and_stopped: extras.started_and_stopped,
       gym_usually_busy: extras.gym_usually_busy,
     },
+    obstacles: extras.obstacles ?? [],
     machines_used: extras.machines_used ?? [],
     cardio_preference: input.cardio_preference ?? null,
     days_per_week: days,
@@ -258,6 +265,7 @@ export function extrasFromDraft(draft: OnboardingDraft): OnboardingAnswersJson {
     if (value != null) extras[key] = value;
   }
   if (draft.reminders_skipped) extras.reminders_opted_out = true;
+  if (draft.obstacles.length > 0) extras.obstacles = draft.obstacles.slice(0, 2);
   return extras;
 }
 

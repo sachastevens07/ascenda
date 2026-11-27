@@ -7,7 +7,8 @@
     "Social proof rule: the only statistic shown is the sourced Gymshark survey figure. No invented user counts or testimonials.",
     "Paywall copy lives in the microcopy content file.",
     "Draft: check the Gymshark statistic and wording with your solicitor alongside the paywall.",
-    "27 Nov 2026 redesign: screens carry a section (you, gym, week, plan, setup) shown as a segmented progress bar. Screens with skip_when_hidden are skipped unless show_if is true. preview screens play a short animated glimpse of the app. commit is a press-and-hold commitment. save_account links an email and password to the anonymous onboarding account. The paywall comes after save_account; the setup section (including the safety disclaimer) comes after the paywall. Removed: welcome (the sign-in carousel replaces it), st_watched, st_motivation, insight_plans."
+    "27 Nov 2026 redesign: screens carry a section (you, gym, week, plan, setup) shown as a segmented progress bar. Screens with skip_when_hidden are skipped unless show_if is true. preview screens play a short animated glimpse of the app. commit is a press-and-hold commitment. save_account links an email and password to the anonymous onboarding account. The paywall comes after save_account; the setup section (including the safety disclaimer) comes after the paywall. Removed: welcome (the sign-in carousel replaces it), st_watched, st_motivation, insight_plans.",
+    "27 Nov 2026 (round 2): the five 1-to-5 statement screens and the not-alone insight are replaced by one obstacles screen (up to two). Each obstacle with maps_to sets that statement to 4 and the others to 1, so rules, previews and the paywall keep working. reward screens give a one-line payoff after big answers. projection screens draw her real strength estimate (strengthProjection), first from early answers, then recalculated after the week questions; they only say it changed if the numbers changed. Building shows honest counts from the bundled content."
   ],
   "screens": [
     {
@@ -51,7 +52,8 @@
         }
       },
       "note_for_dev": "Asked before any other personal data. If Under 18 is selected: show the inline message below the options, keep Continue disabled, store nothing and send no analytics events with answers. She can change her selection (for mis-taps), but never show 'are you sure?' or any hint about changing it.",
-      "section": "you"
+      "section": "you",
+      "hero_icon": "sparkles-outline"
     },
     {
       "id": "name",
@@ -64,7 +66,8 @@
         "max_length": 30
       },
       "button": "Continue",
-      "section": "you"
+      "section": "you",
+      "hero_icon": "person-outline"
     },
     {
       "id": "goals",
@@ -148,13 +151,13 @@
       ],
       "main_label": "Main",
       "limit_hint": "You can pick up to 3. Tap one to swap it out.",
-      "section": "you"
+      "section": "you",
+      "hero_icon": "flag-outline"
     },
     {
       "id": "insight_goals",
-      "type": "insight",
-      "image_slug": "onboarding-insight-goals",
-      "title": "Great choices, {name}",
+      "type": "reward",
+      "title": "We've got you, {name}",
       "body_by_main_goal": {
         "build_strength": "Strength builds faster than most people expect. Many beginners add weight to their main lifts week after week for the first few months.",
         "build_muscle": "Building muscle comes from lifting challenging weights consistently. Your plan will tell you exactly when to go heavier.",
@@ -163,7 +166,7 @@
         "feel_toned": "Feeling toned mostly comes from building a bit of muscle. Strength training is the most reliable way to get there.",
         "gym_confidence": "You're far from alone. We'll start you somewhere comfortable and add a little more of the gym at your own pace.",
         "fitness_stamina": "Strength training and cardio work brilliantly together. We'll keep your sessions moving.",
-        "mobility": "Moving well and getting strong go hand in hand. Every session starts and ends with mobility work.",
+        "mobility": "Moving well and getting strong go hand in hand. Every session starts with a warm-up to get you moving.",
         "better_posture": "A stronger upper back is one of the best things for posture. We'll make sure your plan includes it.",
         "more_energy": "Regular strength training is a great way to feel more energetic day to day. Consistency matters more than intensity.",
         "stress_relief": "Lots of women say the gym is the one hour that's just for them. We'll keep your plan simple so it never feels like another job.",
@@ -177,7 +180,8 @@
         "source": "default_routine"
       },
       "button": "Continue",
-      "section": "you"
+      "section": "you",
+      "icon": "checkmark"
     },
     {
       "id": "gym_experience",
@@ -206,12 +210,13 @@
           "icon": "tree"
         }
       ],
-      "section": "gym"
+      "section": "gym",
+      "hero_icon": "time-outline"
     },
     {
       "id": "gym_comfort",
       "type": "slider",
-      "title": "How do you feel when you're in the gym?",
+      "title": "How do you feel in the gym?",
       "stores_to": "profiles.gym_comfort",
       "stops": [
         {
@@ -236,53 +241,89 @@
         }
       ],
       "default": 3,
-      "section": "gym"
+      "section": "gym",
+      "hero_icon": "happy-outline"
     },
     {
-      "id": "st_not_sure",
-      "type": "statement",
-      "eyebrow": "HOW MUCH IS THIS YOU?",
-      "title": "\"I'm not sure what to do when I get to the gym\"",
+      "id": "obstacles",
+      "type": "obstacles",
+      "hero_icon": "trail-sign-outline",
+      "title": "What's stopped you before, {name}?",
+      "helper": "Pick up to two. We'll build your plan around them.",
+      "max": 2,
+      "stores_to": "profiles.onboarding_answers.obstacles",
       "options": [
         {
-          "value": 1,
-          "label": "Not me at all"
+          "value": "didnt_know",
+          "label": "I didn't know what to do",
+          "icon": "help-circle-outline",
+          "maps_to": "not_sure_what_to_do",
+          "response": "step-by-step guides for every exercise"
         },
         {
-          "value": 2,
-          "label": "Not really"
+          "value": "felt_watched",
+          "label": "I felt watched or out of place",
+          "icon": "eye-off-outline",
+          "maps_to": "feel_watched",
+          "response": "a start with just dumbbells and a bench, in your own space"
         },
         {
-          "value": 3,
-          "label": "Sometimes"
+          "value": "too_busy",
+          "label": "The gym was too busy",
+          "icon": "people-outline",
+          "maps_to": "gym_usually_busy",
+          "response": "a close swap whenever a machine's taken"
         },
         {
-          "value": 4,
-          "label": "Quite a lot"
+          "value": "lost_motivation",
+          "label": "I lost motivation",
+          "icon": "battery-dead-outline",
+          "maps_to": "hard_to_stay_motivated",
+          "response": "small wins and milestones every week"
         },
         {
-          "value": 5,
-          "label": "That's so me"
+          "value": "life_happened",
+          "label": "Life got in the way",
+          "icon": "calendar-clear-outline",
+          "maps_to": "started_and_stopped",
+          "response": "a plan that bends when your week changes"
+        },
+        {
+          "value": "no_plan",
+          "label": "I didn't have a plan",
+          "icon": "map-outline",
+          "response": "a clear plan, so you always know what's next"
+        },
+        {
+          "value": "didnt_suit",
+          "label": "Workouts didn't suit me",
+          "icon": "shuffle-outline",
+          "response": "a plan built around your goals, days and time"
+        },
+        {
+          "value": "just_starting",
+          "label": "Nothing yet, I'm just starting",
+          "icon": "sparkles-outline",
+          "exclusive": true,
+          "response": "a gentle start that builds week by week"
         }
       ],
-      "stores_to": "profiles.onboarding_answers.not_sure_what_to_do",
       "section": "gym"
     },
     {
-      "id": "insight_not_alone",
-      "type": "insight",
-      "image_slug": "onboarding-insight-not-alone",
-      "title": "You're not alone",
+      "id": "obstacles_reward",
+      "type": "reward",
+      "icon": "shield-checkmark",
+      "title": "Then we've got you, {name}",
+      "line_template": "You'll get {response}.",
+      "stat_if": "felt_watched or didnt_know",
       "stat": {
         "value": "88%",
         "text": "of UK women surveyed said they'd felt some form of anxiety in the gym.",
         "source": "Gymshark survey of 1,000 UK women, September 2025",
         "source_note": "Show the source line under the stat."
       },
-      "body": "That's why Evoluma is built for exactly this. You can start with just dumbbells and a bench, and add more of the gym when you're ready.",
-      "show_if": "gym_comfort <= 3 or st_not_sure >= 3",
       "button": "Continue",
-      "skip_when_hidden": true,
       "section": "gym"
     },
     {
@@ -307,36 +348,6 @@
       "button": "Continue"
     },
     {
-      "id": "st_busy",
-      "type": "statement",
-      "eyebrow": "HOW MUCH IS THIS YOU?",
-      "title": "\"My gym is usually busy when I can go\"",
-      "options": [
-        {
-          "value": 1,
-          "label": "Not me at all"
-        },
-        {
-          "value": 2,
-          "label": "Not really"
-        },
-        {
-          "value": 3,
-          "label": "Sometimes"
-        },
-        {
-          "value": 4,
-          "label": "Quite a lot"
-        },
-        {
-          "value": 5,
-          "label": "That's so me"
-        }
-      ],
-      "stores_to": "profiles.onboarding_answers.gym_usually_busy",
-      "section": "gym"
-    },
-    {
       "id": "preview_swap",
       "type": "preview",
       "preview": "swap",
@@ -356,36 +367,6 @@
         "action_label": "Swap"
       },
       "button": "Continue"
-    },
-    {
-      "id": "st_stopped",
-      "type": "statement",
-      "eyebrow": "HOW MUCH IS THIS YOU?",
-      "title": "\"I've started and stopped before\"",
-      "options": [
-        {
-          "value": 1,
-          "label": "Not me at all"
-        },
-        {
-          "value": 2,
-          "label": "Not really"
-        },
-        {
-          "value": 3,
-          "label": "Sometimes"
-        },
-        {
-          "value": 4,
-          "label": "Quite a lot"
-        },
-        {
-          "value": 5,
-          "label": "That's so me"
-        }
-      ],
-      "stores_to": "profiles.onboarding_answers.started_and_stopped",
-      "section": "gym"
     },
     {
       "id": "preview_missed",
@@ -491,6 +472,22 @@
         }
       ],
       "helper": "No wrong answer. It just tells us how much cardio to add to your week.",
+      "section": "gym",
+      "hero_icon": "bicycle-outline"
+    },
+    {
+      "id": "projection_early",
+      "type": "projection",
+      "stage": "early",
+      "eyebrow": "A FIRST LOOK",
+      "title": "Here's where you could be, {name}",
+      "line": "About +{increase} kg on your {lift} by week {weeks}",
+      "start_label": "Now",
+      "end_label": "Week {weeks}",
+      "note": "An estimate from your plan's progression rules. We'll check it against your week next.",
+      "fallback_title": "Your first milestone, {name}",
+      "fallback_line": "Week {first_milestone_week}: {first_milestone_title}",
+      "button": "Continue",
       "section": "gym"
     },
     {
@@ -502,13 +499,14 @@
       "max": 5,
       "default": 3,
       "stores_to": "profiles.days_per_week",
-      "section": "week"
+      "section": "week",
+      "hero_icon": "calendar-outline"
     },
     {
       "id": "which_days",
       "type": "day_pills",
       "title": "Which days work best?",
-      "helper": "Pick {days_per_week} days. We'll space them out if we can.",
+      "helper": "Pick {days_per_week}. We'll space them out.",
       "stores_to": "profiles.onboarding_answers.preferred_days",
       "exact_count_from": "days_per_week",
       "suggest_defaults": {
@@ -537,7 +535,8 @@
       },
       "week_preview_title": "Your week",
       "week_preview_rest": "Rest",
-      "section": "week"
+      "section": "week",
+      "hero_icon": "calendar-number-outline"
     },
     {
       "id": "session_length",
@@ -559,13 +558,31 @@
         }
       ],
       "default": 45,
+      "section": "week",
+      "hero_icon": "stopwatch-outline"
+    },
+    {
+      "id": "projection_final",
+      "type": "projection",
+      "stage": "final",
+      "eyebrow": "UPDATED FOR YOUR WEEK",
+      "title": "{days_per_week} days a week. Here's your path",
+      "line": "About +{increase} kg on your {lift} by week {weeks}",
+      "start_label": "Now",
+      "end_label": "Week {weeks}",
+      "changed_note": "Recalculated from your days and session length. Your first look was +{early_increase} kg on your {early_lift}.",
+      "same_note": "Checked against your week. Still on track.",
+      "note": "Estimates, not promises. Everyone progresses differently.",
+      "fallback_title": "Your week is set, {name}",
+      "fallback_line": "{days_per_week} sessions a week, about {session_minutes} minutes each.",
+      "button": "Continue",
       "section": "week"
     },
     {
       "id": "building_plan",
       "type": "building",
       "title": "Building your plan, {name}",
-      "duration_seconds": 4,
+      "duration_seconds": 5,
       "steps": [
         "Matching your goals",
         "Choosing your routine",
@@ -596,7 +613,14 @@
           "text": "Choosing your routine"
         }
       ],
-      "steps_max": 5
+      "steps_max": 5,
+      "proof": [
+        "{routine_count} plans built for the gym",
+        "{exercise_count} gym exercises in your library",
+        "{recipe_count} recipes to fuel your training",
+        "88% of UK women surveyed have felt anxious in the gym. You're in good company."
+      ],
+      "proof_source": "88%: Gymshark survey of 1,000 UK women, September 2025"
     },
     {
       "id": "plan_reveal",
@@ -616,7 +640,7 @@
       "estimate_label": "Estimates based on your plan. Everyone progresses differently.",
       "alternatives_title": "Other plans that suit you",
       "alternatives_count": 2,
-      "button": "This is my plan",
+      "button": "Get my plan",
       "section": "plan",
       "eyebrow_personal": "Made for you, {name}",
       "stats_line": "{length_weeks} weeks · {days_per_week} days a week · about {session_minutes} min",
@@ -625,7 +649,9 @@
       "first_title": "First up",
       "first_meta": "About {first_minutes} minutes · {first_count} exercises",
       "more_exercises": "+ {count} more",
-      "alternatives_toggle": "Not quite right? See other plans"
+      "alternatives_toggle": "Not quite right? See other plans",
+      "calendar_title": "Your first two weeks",
+      "calendar_start": "Start"
     },
     {
       "id": "commit",
@@ -693,7 +719,8 @@
       ],
       "default": 4,
       "section": "setup",
-      "eyebrow": "BEFORE YOUR FIRST SESSION"
+      "eyebrow": "BEFORE YOUR FIRST SESSION",
+      "hero_icon": "flame-outline"
     },
     {
       "id": "reminder_time",
@@ -703,7 +730,8 @@
       "default": "18:00",
       "stores_to": "profiles.default_reminder_time",
       "skip_label": "No reminders for now",
-      "section": "setup"
+      "section": "setup",
+      "hero_icon": "notifications-outline"
     },
     {
       "id": "bodyweight",
@@ -717,7 +745,8 @@
       "stores_to": "profiles.bodyweight_kg",
       "skip_label": "Skip this",
       "button": "Continue",
-      "section": "setup"
+      "section": "setup",
+      "hero_icon": "scale-outline"
     },
     {
       "id": "life_stage",
@@ -754,7 +783,8 @@
       },
       "button": "Continue",
       "note_for_dev": "AGENTS.md B3. Never send this answer to PostHog, Coach, RevenueCat or notifications.",
-      "section": "setup"
+      "section": "setup",
+      "hero_icon": "leaf-outline"
     },
     {
       "id": "life_stage_consent",

@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, type ReactNode } from 'react';
 import {
   Animated,
@@ -178,16 +179,19 @@ function SectionProgress({ sections }: { sections: ShellSections }) {
                 />
               ) : null}
             </View>
-            <AppText
-              variant="caption"
-              numberOfLines={1}
-              style={{
-                color: active ? colours.brand : done ? colours.ink : colours.inkMuted,
-                fontWeight: active ? '700' : '500',
-                marginTop: 6,
-              }}>
-              {label}
-            </AppText>
+            <View style={styles.sectionLabel}>
+              {done ? <Ionicons name="checkmark-circle" size={12} color={colours.brand} /> : null}
+              <AppText
+                variant="caption"
+                numberOfLines={1}
+                style={{
+                  color: active ? colours.brand : done ? colours.ink : colours.inkMuted,
+                  fontWeight: active ? '700' : '500',
+                  flexShrink: 1,
+                }}>
+                {label}
+              </AppText>
+            </View>
           </View>
         );
       })}
@@ -198,6 +202,7 @@ function SectionProgress({ sections }: { sections: ShellSections }) {
 const styles = StyleSheet.create({
   sections: { flexDirection: 'row', gap: 6, marginHorizontal: 24, marginBottom: 10 },
   section: { flex: 1 },
+  sectionLabel: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 6 },
   track: { height: 4, borderRadius: 2, overflow: 'hidden' },
   trackFill: { height: 4, borderRadius: 2 },
   screen: { flex: 1 },

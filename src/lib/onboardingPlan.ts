@@ -134,6 +134,37 @@ export function estimateStrength(overlay: ContentRoutineOverlay): StrengthEstima
   };
 }
 
+export type ProjectionPoint = { week: number; increase_kg: number };
+
+/**
+ * Week-by-week version of estimateStrength: the same conservative rule (one load increment
+ * every third time she does the checkpoint lift, lighter weeks skipped), so the chart and
+ * the "about +X kg" line always agree. Week 0 is her starting weight (+0).
+ */
+export function strengthProjection(overlay: ContentRoutineOverlay): ProjectionPoint[] | null {
+  const estimate = estimateStrength(overlay);
+  if (!estimate) return null;
+  let increment: number | null = null;
+  let exposures = 0;
+  const lighter = new Set(overlay.lighter_weeks);
+  const points: ProjectionPoint[] = [{ week: 0, increase_kg: 0 }];
+  for (const week of weekNumbers(overlay)) {
+    if (!lighter.has(week)) {
+      const phase = overlay.phases.find((item) => item.weeks.includes(week));
+      for (const day of phase?.days ?? []) {
+        const slot = day.exercises.find((item) => item.slug === estimate.lift_slug);
+        if (!slot) continue;
+        exposures += 1;
+        if (increment == null && slot.load_increment_kg && slot.load_increment_kg > 0) {
+          increment = slot.load_increment_kg;
+        }
+      }
+    }
+    points.push({ week, increase_kg: (increment ?? 0) * Math.floor(exposures / 3) });
+  }
+  return points;
+}
+
 function weekNumbers(overlay: ContentRoutineOverlay): number[] {
   const fromPhases = overlay.phases.flatMap((phase) => phase.weeks);
   if (fromPhases.length > 0) return [...new Set(fromPhases)].sort((a, b) => a - b);

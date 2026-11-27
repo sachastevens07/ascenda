@@ -434,6 +434,11 @@ for (const file of [
   if (overlay) BY_SLUG.set(overlay.slug, overlay);
 }
 
+/** How many routines ship in /content. Used for honest counts in onboarding. */
+export function contentRoutineCount(): number {
+  return BY_SLUG.size;
+}
+
 export function contentRoutine(slugOrId: string): ContentRoutineOverlay | null {
   return BY_SLUG.get(slugOrId) ?? null;
 }
