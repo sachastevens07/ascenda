@@ -195,6 +195,13 @@ function RootNavigator() {
     return <View style={[styles.blank, { backgroundColor: colours.bg }]} />;
   }
 
+  // Signed out (sign out, account deleted, session expired): always land on sign-in. Without this the
+  // stack falls back to whichever signed-out screen it finds first, which was the email-link screen
+  // showing "We couldn't open that link".
+  if (!session && !isSignedOutPath(pathname)) {
+    return <Redirect href={'/sign-in' as Href} />;
+  }
+
   if (session && profile.error) {
     return <ProfileError detail={profile.error} onRetry={profile.reload} />;
   }
@@ -422,6 +429,18 @@ function RootNavigator() {
         <Stack.Screen name="auth" />
       </Stack.Protected>
     </Stack>
+  );
+}
+
+/** Screens that make sense with no session: sign-in, the inbox check, email links and invite links. */
+function isSignedOutPath(pathname: string): boolean {
+  return (
+    pathname === '/sign-in' ||
+    pathname === '/check-inbox' ||
+    pathname === '/auth' ||
+    pathname.startsWith('/auth/') ||
+    pathname === '/r' ||
+    pathname.startsWith('/r/')
   );
 }
 
