@@ -533,7 +533,7 @@
       "id": "days_per_week",
       "type": "number_select",
       "title": "How many days a week can you get to the gym?",
-      "helper": "Pick what's realistic on a normal week. Your plan will never ask for more gym days than this.",
+      "helper": "Pick what's realistic on a normal week.",
       "min": 2,
       "max": 5,
       "default": 3,
@@ -545,6 +545,28 @@
       "hero_focus": {
         "x": 0.5,
         "y": 0.42
+      },
+      "encouragement": {
+        "2": {
+          "icon": "leaf-outline",
+          "title": "A brilliant start",
+          "body": "Two sessions a week is enough to get properly stronger."
+        },
+        "3": {
+          "icon": "sparkles-outline",
+          "title": "The sweet spot",
+          "body": "Three sessions gives you steady progress with plenty of rest."
+        },
+        "4": {
+          "icon": "flame-outline",
+          "title": "Real commitment",
+          "body": "Four days means more practice and faster progress."
+        },
+        "5": {
+          "icon": "trophy-outline",
+          "title": "You're all in",
+          "body": "Five days. We'll balance your week so you recover well."
+        }
       }
     },
     {
@@ -591,15 +613,21 @@
       "options": [
         {
           "value": 30,
-          "label": "About 30 minutes"
+          "label": "About 30 minutes",
+          "icon": "flash-outline",
+          "sub": "Short and focused. Every minute counts."
         },
         {
           "value": 45,
-          "label": "About 45 minutes"
+          "label": "About 45 minutes",
+          "icon": "time-outline",
+          "sub": "Time for a warm-up and every main lift."
         },
         {
           "value": 60,
-          "label": "An hour or more"
+          "label": "An hour or more",
+          "icon": "barbell-outline",
+          "sub": "Room for extra sets and a cardio finisher."
         }
       ],
       "default": 45,
@@ -609,7 +637,8 @@
       "hero_focus": {
         "x": 0.32,
         "y": 0.6
-      }
+      },
+      "style": "cards"
     },
     {
       "id": "cardio",
@@ -752,50 +781,50 @@
       },
       "milestones_by_goal": {
         "build_strength": [
-          "Your sessions feel familiar",
-          "Lifting more than when you started",
-          "Noticeably stronger in every session"
+          "Every exercise feels familiar",
+          "Your starting weights feel easy",
+          "Lifting noticeably more than in week 1"
         ],
         "glutes_and_legs": [
-          "Feeling your glutes do the work",
-          "Stairs and squats feel easier",
-          "Stronger glutes and legs you can feel"
+          "You can feel your glutes working",
+          "Squats and stairs feel easier",
+          "Stronger legs on every walk and climb"
         ],
         "feel_toned": [
-          "Into a steady routine",
-          "Feeling firmer and stronger",
-          "Stronger and more defined"
+          "Training is part of your routine",
+          "Your body feels firmer and stronger",
+          "Feeling stronger and more defined"
         ],
         "build_muscle": [
-          "Adding weight week by week",
-          "Muscles that feel worked after every session",
-          "Stronger, with muscle you can feel"
+          "Every exercise feels familiar",
+          "Your starting weights feel easy",
+          "Muscles you can feel working day to day"
         ],
         "gym_confidence": [
-          "Comfortable with your first machines",
-          "Trying new equipment on your own",
-          "Walking in with a plan, feeling at home"
+          "You know your way around your first machines",
+          "You try new equipment without a second thought",
+          "You walk in with a plan and feel at home"
         ],
         "fitness_stamina": [
           "Sessions feel easier to get through",
-          "More puff on stairs and walks",
-          "Fitter, with stamina to spare"
+          "Stairs and hills leave you less out of breath",
+          "Fitter, with energy left at the end"
         ],
         "more_energy": [
-          "Training is part of your week",
-          "Feeling brighter after sessions",
-          "More energy day to day"
+          "Training fits into your week",
+          "You leave sessions feeling brighter",
+          "More energy for everything else"
         ],
         "lose_body_fat": [
-          "Training is part of your week",
-          "Stronger in every session",
-          "Fitter, stronger and proud of the habit"
+          "Training fits into your week",
+          "Your starting weights feel easy",
+          "Fitter, stronger and proud of your habit"
         ]
       },
       "milestones_default": [
-        "Your sessions feel familiar",
-        "Stronger than when you started",
-        "Proud of how far you've come"
+        "Every exercise feels familiar",
+        "Your starting weights feel easy",
+        "Stronger than when you started"
       ]
     },
     {

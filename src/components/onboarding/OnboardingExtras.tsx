@@ -817,6 +817,43 @@ export function QuestionPhoto({
   );
 }
 
+/** Encouraging card under the days-per-week picker. Re-animates whenever the number changes. */
+export function Encouragement({ icon, title, body }: { icon: string; title: string; body: string }) {
+  const { colours, radius } = useTheme();
+  const value = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    value.setValue(0);
+    Animated.spring(value, { toValue: 1, friction: 7, tension: 110, useNativeDriver: true }).start();
+  }, [title, value]);
+  return (
+    <Animated.View
+      style={[
+        styles.encourage,
+        {
+          backgroundColor: colours.brandSoft,
+          borderRadius: radius.xl,
+          opacity: value,
+          transform: [
+            { translateY: value.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) },
+            { scale: value.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1] }) },
+          ],
+        },
+      ]}>
+      <View style={[styles.encourageIcon, { backgroundColor: colours.brand }]}>
+        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={20} color={colours.onBrand} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <AppText variant="bodyStrong" style={{ color: colours.brand }}>
+          {title}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.ink, marginTop: 2 }}>
+          {body}
+        </AppText>
+      </View>
+    </Animated.View>
+  );
+}
+
 /** Soft circle with an icon, above a question's heading. */
 export function HeadingIcon({ name }: { name: string }) {
   const { colours } = useTheme();
@@ -1312,6 +1349,8 @@ export function PlanCalendar({
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 const styles = StyleSheet.create({
+  encourage: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, marginTop: 16 },
+  encourageIcon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   headingIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   reward: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
   rewardPhoto: { width: 150, height: 150, borderRadius: 75, overflow: 'hidden', borderWidth: 5 },

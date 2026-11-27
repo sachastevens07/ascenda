@@ -81,7 +81,10 @@ function Rise({ index, children }: { index: number; children: ReactNode }) {
 }
 
 function iconName(icon?: string): keyof typeof Ionicons.glyphMap {
-  return (icon && ICON_MAP[icon]) || 'ellipse-outline';
+  if (icon && ICON_MAP[icon]) return ICON_MAP[icon];
+  // Content can also name an Ionicons glyph directly, such as "time-outline".
+  if (icon && icon in Ionicons.glyphMap) return icon as keyof typeof Ionicons.glyphMap;
+  return 'ellipse-outline';
 }
 
 export function ScreenHeading({
@@ -228,6 +231,7 @@ export function CardChoiceList({
           <ChoiceRow
             label={option.label}
             sub={option.sub}
+            icon={option.icon}
             selected={String(value) === String(option.value)}
             onPress={() => onChange(option.value)}
           />
@@ -564,36 +568,35 @@ export function PhotoMultiChoice({
               style={[
                 styles.photoCell,
                 {
-                  backgroundColor: colours.surfaceMuted,
+                  backgroundColor: on ? colours.brandSoft : colours.surface,
                   borderRadius: radius.lg,
-                  borderWidth: on ? 2 : 0,
-                  borderColor: colours.brand,
+                  borderWidth: 1.5,
+                  borderColor: on ? colours.brand : colours.border,
                 },
               ]}>
-              {image ? (
-                <View style={[styles.photo, { overflow: 'hidden' }]}>
+              <View style={[styles.photo, { borderRadius: radius.md, backgroundColor: colours.surfaceMuted }]}>
+                {image ? (
                   <PhotoFill slug={option.image_slug} kind="equipment" label={option.label} />
-                </View>
-              ) : (
-                <View style={[styles.photo, { alignItems: 'center', justifyContent: 'center' }]}>
+                ) : (
                   <Ionicons
                     name={EQUIP_ICONS[option.value] ?? 'ellipse-outline'}
-                    size={32}
+                    size={20}
                     color={on ? colours.brand : colours.inkMuted}
                   />
-                </View>
-              )}
-              <View style={styles.photoLabel}>
-                <AppText variant="caption" style={{ color: colours.ink }} numberOfLines={1}>
-                  {option.label}
-                </AppText>
+                )}
               </View>
+              <AppText
+                variant={on ? 'bodyStrong' : 'bodySm'}
+                style={{ color: on ? colours.brand : colours.ink, flex: 1 }}
+                numberOfLines={2}>
+                {option.label}
+              </AppText>
             </Pressable>
           );
         })}
       </View>
       {exclusive.length ? (
-        <AppText variant="caption" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: 16 }}>
+        <AppText variant="caption" style={{ color: colours.inkMuted, textAlign: 'center', marginTop: 8 }}>
           or
         </AppText>
       ) : null}
@@ -1134,10 +1137,10 @@ const styles = StyleSheet.create({
   sliderLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
   insightCard: { padding: 16, marginTop: 6 },
   noneRow: {
-    marginTop: 10,
-    minHeight: 64,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    marginTop: 8,
+    minHeight: 50,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -1149,9 +1152,18 @@ const styles = StyleSheet.create({
   numberCell: { flex: 1, height: 72, alignItems: 'center', justifyContent: 'center' },
   dayRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   dayPill: { paddingHorizontal: 14, paddingVertical: 10, minWidth: 52, alignItems: 'center' },
-  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  photoCell: { width: '47%', overflow: 'hidden' },
-  photo: { width: '100%', height: 96 },
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 8 },
+  photoCell: {
+    width: '48.5%',
+    minHeight: 54,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 7,
+    overflow: 'hidden',
+  },
+  photo: { width: 38, height: 38, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   photoLabel: { paddingHorizontal: 8, paddingVertical: 8 },
   input: { minHeight: 52, paddingHorizontal: 16, fontSize: 17 },
   block: { padding: 16, marginTop: 16 },

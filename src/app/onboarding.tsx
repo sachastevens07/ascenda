@@ -7,6 +7,7 @@ import { showDialog } from '@/components/Dialog';
 import {
   AccountField,
   BuildingShow,
+  Encouragement,
   HeadingIcon,
   HoldToCommit,
   ObstaclePicker,
@@ -1251,6 +1252,14 @@ export default function OnboardingScreen() {
               }));
             }}
           />
+          {(() => {
+            const cheer = screenRecord(contentScreen, 'encouragement')[String(draft.days_per_week)] as
+              | { icon?: string; title?: string; body?: string }
+              | undefined;
+            return cheer?.title ? (
+              <Encouragement icon={cheer.icon ?? 'sparkles-outline'} title={cheer.title} body={cheer.body ?? ''} />
+            ) : null;
+          })()}
         </>
       ) : null}
 
@@ -1275,6 +1284,18 @@ export default function OnboardingScreen() {
       {contentScreen?.type === 'chips' ? (
         <>
           <ScreenHeading title={title} />
+          {screenText(contentScreen, 'style') === 'cards' ? (
+            <CardChoiceList
+              options={contentScreen.options}
+              value={draft.session_minutes}
+              onChange={(value) =>
+                setDraft((current) => ({
+                  ...current,
+                  session_minutes: Number(value) as OnboardingDraft['session_minutes'],
+                }))
+              }
+            />
+          ) : (
           <ChipChoiceList
             options={contentScreen.options}
             value={draft.session_minutes}
@@ -1285,6 +1306,7 @@ export default function OnboardingScreen() {
               }))
             }
           />
+          )}
         </>
       ) : null}
 
