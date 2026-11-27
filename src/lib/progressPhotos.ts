@@ -71,6 +71,22 @@ export async function fetchProgressPhotos(): Promise<ProgressPhoto[]> {
   );
 }
 
+/** Hermes has no crypto.randomUUID; the name only needs to be unique inside her own folder. */
+function fileId(): string {
+  const random = Array.from({ length: 4 }, () =>
+    Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0')
+  ).join('');
+  return `${Date.now().toString(36)}-${random}`;
+}
+
+function mimeFromUri(uri: string): string {
+  const lower = uri.toLowerCase();
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.heic')) return 'image/heic';
+  return 'image/jpeg';
+}
+
 export async function uploadProgressPhoto(localUri: string, takenOn = todayDate()): Promise<void> {
   const {
     data: { user },
@@ -79,14 +95,16 @@ export async function uploadProgressPhoto(localUri: string, takenOn = todayDate(
 
   const response = await fetch(localUri);
   if (!response.ok) throw new Error('Couldn’t read that photo.');
-  const blob = await response.blob();
-  const mime = blob.type || 'image/jpeg';
+  const mime = response.headers.get('content-type') || mimeFromUri(localUri);
+  // React Native uploads a fetched Blob as an empty file, so send the raw bytes.
+  const bytes = await response.arrayBuffer();
+  if (bytes.byteLength === 0) throw new Error('Couldn’t read that photo.');
   const extension = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
-  const storagePath = `${user.id}/${crypto.randomUUID()}.${extension}`;
+  const storagePath = `${user.id}/${fileId()}.${extension}`;
 
   const { error: uploadError } = await supabase.storage
     .from(PROGRESS_PHOTOS_BUCKET)
-    .upload(storagePath, blob, { contentType: mime, upsert: false });
+    .upload(storagePath, bytes, { contentType: mime, upsert: false });
   if (uploadError) {
     if (isMissingPhotos(uploadError)) throw new Error(missingPhotosMessage());
     throw new Error(uploadError.message);
