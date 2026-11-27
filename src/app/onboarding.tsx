@@ -158,6 +158,19 @@ function exerciseCatalogueCount(): number {
   return Array.isArray(catalogue.exercises) ? catalogue.exercises.length : 0;
 }
 
+function screenFocus(screen: OnboardingScreen): { x: number; y: number } | null {
+  const focus = screenRecord(screen, 'hero_focus');
+  return typeof focus.x === 'number' && typeof focus.y === 'number' ? { x: focus.x, y: focus.y } : null;
+}
+
+/** "sacha smith" → "Sacha Smith". */
+function capitaliseName(value: string): string {
+  return value
+    .split(' ')
+    .map((part) => (part ? part.charAt(0).toUpperCase() + part.slice(1) : part))
+    .join(' ');
+}
+
 function quizFromDraft(draft: OnboardingDraft): QuizAnswers | null {
   const goals = draft.main_goals;
   const gym = draft.gym_experience;
@@ -834,6 +847,30 @@ export default function OnboardingScreen() {
     return raw.map((line) => fillTemplate(line, counts)).filter((line) => !/\{|\b0 /.test(line));
   }, [contentScreen]);
 
+  /** The projection line and milestones follow her main goal, not a lift. */
+  function goalLine(item: OnboardingScreen): string {
+    const byGoal = screenRecord(item, 'line_by_goal');
+    const main = draft.main_goals[0] ?? '';
+    const line = typeof byGoal[main] === 'string' ? (byGoal[main] as string) : screenText(item, 'line');
+    return fillTemplate(line, vars);
+  }
+
+  function goalMilestones(item: OnboardingScreen, weeks: number): { week: number; title: string }[] {
+    const byGoal = screenRecord(item, 'milestones_by_goal');
+    const main = draft.main_goals[0] ?? '';
+    const raw = Array.isArray(byGoal[main])
+      ? (byGoal[main] as unknown[])
+      : Array.isArray(item.raw.milestones_default)
+        ? (item.raw.milestones_default as unknown[])
+        : [];
+    const titles = raw.map(String).filter(Boolean).slice(0, 3);
+    const length = Math.max(3, weeks);
+    const first = 2;
+    const middle = Math.min(length - 1, Math.max(first + 1, Math.round(length * 0.6)));
+    const at = [first, middle, length];
+    return titles.map((title, index) => ({ week: at[index] ?? length, title }));
+  }
+
   function rewardLines(item: OnboardingScreen): string[] {
     const byGoal = item.body_by_main_goal[draft.main_goals[0] ?? ''];
     if (byGoal) return [fillTemplate(byGoal, vars)];
@@ -973,7 +1010,7 @@ export default function OnboardingScreen() {
       }>
       {contentScreen && !['reward', 'commit', 'obstacles'].includes(contentScreen.type) ? (
         screenText(contentScreen, 'hero_image') ? (
-          <QuestionPhoto slug={screenText(contentScreen, 'hero_image')} />
+          <QuestionPhoto slug={screenText(contentScreen, 'hero_image')} focus={screenFocus(contentScreen)} />
         ) : screenText(contentScreen, 'hero_icon') ? (
           <HeadingIcon name={screenText(contentScreen, 'hero_icon')} />
         ) : null
@@ -1046,7 +1083,7 @@ export default function OnboardingScreen() {
             value={draft.display_name}
             placeholder={contentScreen.placeholder}
             maxLength={contentScreen.max_length ?? 30}
-            onChange={(value) => setDraft((current) => ({ ...current, display_name: value }))}
+            onChange={(value) => setDraft((current) => ({ ...current, display_name: capitaliseName(value) }))}
           />
         </>
       ) : null}
@@ -1371,11 +1408,11 @@ export default function OnboardingScreen() {
         <>
           <ScreenHeading eyebrow={contentScreen.eyebrow} title={fillTemplate(contentScreen.title, vars)} />
           <AppText variant="title3" style={{ color: colours.brand }}>
-            {fillTemplate(screenText(contentScreen, 'line'), vars)}
+            {goalLine(contentScreen)}
           </AppText>
           <ProjectionChart
             weeks={plan?.recommended.overlay.length_weeks ?? 6}
-            milestones={(plan?.milestones ?? []).map((item) => ({ week: item.week, title: item.title }))}
+            milestones={goalMilestones(contentScreen, plan?.recommended.overlay.length_weeks ?? 6)}
             startLabel={screenText(contentScreen, 'start_label')}
           />
           <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 14 }}>
@@ -1511,12 +1548,8 @@ function CommitScreen({
   const photo = screenText(screen, 'hero_image');
   return (
     <View>
-      {photo ? <QuestionPhoto slug={photo} height={150} /> : null}
-      <ScreenHeading
-        eyebrow={screen.eyebrow}
-        title={fillTemplate(screen.title, vars)}
-        body={fillTemplate(screen.body, vars)}
-      />
+      {photo ? <QuestionPhoto slug={photo} height={120} focus={screenFocus(screen)} /> : null}
+      <ScreenHeading eyebrow={screen.eyebrow} title={fillTemplate(screen.title, vars)} />
       <View style={{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: 16, gap: 14, ...shadow }}>
         <View>
           <AppText variant="eyebrow" style={{ color: colours.accent }}>

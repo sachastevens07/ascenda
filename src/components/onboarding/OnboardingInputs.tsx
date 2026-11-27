@@ -109,16 +109,16 @@ export function ScreenHeading({
           {eyebrow}
         </AppText>
       ) : null}
-      <AppText variant="display" style={{ color: colours.ink }}>
+      <AppText variant="display" style={{ color: colours.ink, fontSize: 30, lineHeight: 36 }}>
         {title}
       </AppText>
       {body ? (
-        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
+        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 10 }}>
           {body}
         </AppText>
       ) : null}
       {helper ? (
-        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 12 }}>
+        <AppText variant="body" style={{ color: colours.inkMuted, marginTop: 8 }}>
           {helper}
         </AppText>
       ) : null}
@@ -1101,15 +1101,15 @@ export function BuildingSteps({
 const styles = StyleSheet.create({
   goalGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5, marginTop: 8 },
   goalCell: { width: '50%', padding: 5 },
-  goalCard: { minHeight: 104, padding: 14, borderWidth: 1.5 },
+  goalCard: { minHeight: 92, padding: 12, borderWidth: 1.5 },
   goalTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   goalBadge: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  heading: { marginBottom: 24 },
-  stack: { gap: 10 },
+  heading: { marginBottom: 18 },
+  stack: { gap: 8 },
   choice: {
-    minHeight: 56,
+    minHeight: 50,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,

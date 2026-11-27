@@ -598,7 +598,7 @@ export function draftPlaceholders(
 ): Record<string, string | number | null | undefined> {
   const main = draft.main_goals[0] as Goal | undefined;
   return {
-    name: draft.display_name.trim(),
+    name: draft.display_name.trim().replace(/^./, (first) => first.toUpperCase()),
     days_per_week: draft.days_per_week,
     preferred_days_text: formatPreferredDays(draft.preferred_days),
     main_goal_label: main ? GOAL_LABELS[main] : '',

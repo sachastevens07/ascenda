@@ -26,7 +26,11 @@
       "button": "Continue",
       "section": "you",
       "hero_icon": "person-outline",
-      "hero_image": "hero-home-morning"
+      "hero_image": "hero-home-morning",
+      "hero_focus": {
+        "x": 0.5,
+        "y": 0.55
+      }
     },
     {
       "id": "age",
@@ -70,8 +74,7 @@
       },
       "note_for_dev": "Asked before any other personal data. If Under 18 is selected: show the inline message below the options, keep Continue disabled, store nothing and send no analytics events with answers. She can change her selection (for mis-taps), but never show 'are you sure?' or any hint about changing it.",
       "section": "you",
-      "hero_icon": "sparkles-outline",
-      "auto_advance": true
+      "hero_icon": "sparkles-outline"
     },
     {
       "id": "goals",
@@ -232,8 +235,7 @@
       "section": "you",
       "hero_icon": "leaf-outline",
       "show_if": "age_band in ['35_44','45_54','55_plus']",
-      "skip_when_hidden": true,
-      "auto_advance": true
+      "skip_when_hidden": true
     },
     {
       "id": "life_stage_consent",
@@ -286,8 +288,11 @@
       "section": "gym",
       "hero_icon": "time-outline",
       "hero_image": "hero-learn",
-      "auto_advance": true,
-      "eyebrow": "NOW, YOUR GYM"
+      "eyebrow": "NOW, YOUR GYM",
+      "hero_focus": {
+        "x": 0.5,
+        "y": 0.4
+      }
     },
     {
       "id": "gym_comfort",
@@ -319,14 +324,17 @@
       "default": 3,
       "section": "gym",
       "hero_icon": "happy-outline",
-      "hero_image": "onboarding-insight-not-alone"
+      "hero_image": "onboarding-insight-not-alone",
+      "hero_focus": {
+        "x": 0.5,
+        "y": 0.42
+      }
     },
     {
       "id": "obstacles",
       "type": "obstacles",
-      "hero_icon": "trail-sign-outline",
       "title": "What's stopped you before, {name}?",
-      "helper": "Pick up to two. We'll build your plan around them.",
+      "helper": "Pick up to two.",
       "max": 2,
       "stores_to": "profiles.onboarding_answers.obstacles",
       "options": [
@@ -370,12 +378,6 @@
           "label": "I didn't have a plan",
           "icon": "map-outline",
           "response": "a clear plan, so you always know what's next"
-        },
-        {
-          "value": "didnt_suit",
-          "label": "Workouts didn't suit me",
-          "icon": "shuffle-outline",
-          "response": "a plan built around your goals, days and time"
         },
         {
           "value": "just_starting",
@@ -539,8 +541,11 @@
       "section": "week",
       "hero_icon": "calendar-outline",
       "hero_image": "hero-programmes",
-      "auto_advance": true,
-      "eyebrow": "NOW, YOUR WEEK"
+      "eyebrow": "NOW, YOUR WEEK",
+      "hero_focus": {
+        "x": 0.5,
+        "y": 0.42
+      }
     },
     {
       "id": "which_days",
@@ -601,7 +606,10 @@
       "section": "week",
       "hero_icon": "stopwatch-outline",
       "hero_image": "hero-home-done",
-      "auto_advance": true
+      "hero_focus": {
+        "x": 0.32,
+        "y": 0.6
+      }
     },
     {
       "id": "cardio",
@@ -629,7 +637,10 @@
       "section": "week",
       "hero_icon": "bicycle-outline",
       "hero_image": "welcome-back-cover",
-      "auto_advance": true
+      "hero_focus": {
+        "x": 0.5,
+        "y": 0.4
+      }
     },
     {
       "id": "reminder_time",
@@ -640,8 +651,7 @@
       "stores_to": "profiles.default_reminder_time",
       "skip_label": "No reminders for now",
       "section": "week",
-      "hero_icon": "notifications-outline",
-      "auto_advance": true
+      "hero_icon": "notifications-outline"
     },
     {
       "id": "streak_goal",
@@ -670,8 +680,11 @@
       "section": "week",
       "hero_icon": "flame-outline",
       "hero_image": "hero-refer",
-      "auto_advance": true,
-      "eyebrow": "YOUR FIRST GOAL"
+      "eyebrow": "YOUR FIRST GOAL",
+      "hero_focus": {
+        "x": 0.5,
+        "y": 0.45
+      }
     },
     {
       "id": "building_plan",
@@ -726,7 +739,64 @@
       "line": "A little more each week. It adds up fast.",
       "start_label": "Today",
       "note": "An illustration of how your plan builds. Everyone progresses differently.",
-      "button": "See my plan"
+      "button": "See my plan",
+      "line_by_goal": {
+        "build_strength": "Stronger every week, one session at a time.",
+        "glutes_and_legs": "Stronger glutes and legs, one session at a time.",
+        "feel_toned": "Stronger and more defined, one session at a time.",
+        "build_muscle": "More muscle, built one session at a time.",
+        "gym_confidence": "More at home in the gym every week.",
+        "fitness_stamina": "Fitter every week, one session at a time.",
+        "more_energy": "More energy, one session at a time.",
+        "lose_body_fat": "Stronger and fitter, one session at a time."
+      },
+      "milestones_by_goal": {
+        "build_strength": [
+          "Your sessions feel familiar",
+          "Lifting more than when you started",
+          "Noticeably stronger in every session"
+        ],
+        "glutes_and_legs": [
+          "Feeling your glutes do the work",
+          "Stairs and squats feel easier",
+          "Stronger glutes and legs you can feel"
+        ],
+        "feel_toned": [
+          "Into a steady routine",
+          "Feeling firmer and stronger",
+          "Stronger and more defined"
+        ],
+        "build_muscle": [
+          "Adding weight week by week",
+          "Muscles that feel worked after every session",
+          "Stronger, with muscle you can feel"
+        ],
+        "gym_confidence": [
+          "Comfortable with your first machines",
+          "Trying new equipment on your own",
+          "Walking in with a plan, feeling at home"
+        ],
+        "fitness_stamina": [
+          "Sessions feel easier to get through",
+          "More puff on stairs and walks",
+          "Fitter, with stamina to spare"
+        ],
+        "more_energy": [
+          "Training is part of your week",
+          "Feeling brighter after sessions",
+          "More energy day to day"
+        ],
+        "lose_body_fat": [
+          "Training is part of your week",
+          "Stronger in every session",
+          "Fitter, stronger and proud of the habit"
+        ]
+      },
+      "milestones_default": [
+        "Your sessions feel familiar",
+        "Stronger than when you started",
+        "Proud of how far you've come"
+      ]
     },
     {
       "id": "plan_reveal",
@@ -765,7 +835,6 @@
       "section": "plan",
       "eyebrow": "READY WHEN YOU ARE",
       "title": "Ready to start, {name}?",
-      "body": "Strength is built one session at a time. Here's what you're signing up for.",
       "first_label": "First up",
       "days_label": "Your days",
       "length_label": "{length_weeks} weeks · {sessions_per_week} sessions a week",
@@ -773,7 +842,11 @@
       "hold_done": "You're in",
       "hold_a11y": "Press and hold to commit to your plan",
       "hold_ms": 1200,
-      "hero_image": "onboarding-welcome"
+      "hero_image": "onboarding-welcome",
+      "hero_focus": {
+        "x": 0.5,
+        "y": 0.35
+      }
     },
     {
       "id": "save_account",

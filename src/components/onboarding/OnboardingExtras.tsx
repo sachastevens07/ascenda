@@ -299,8 +299,8 @@ export function HoldToCommit({
   const scale = useRef(new Animated.Value(1)).current;
   const [done, setDone] = useState(false);
   const doneRef = useRef(false);
-  const size = 148;
-  const stroke = 8;
+  const size = 120;
+  const stroke = 7;
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
 
@@ -340,7 +340,7 @@ export function HoldToCommit({
   }
 
   return (
-    <View style={{ alignItems: 'center', marginTop: 26 }}>
+    <View style={{ alignItems: 'center', marginTop: 18 }}>
       <Pressable
         onPressIn={start}
         onPressOut={cancel}
@@ -373,7 +373,7 @@ export function HoldToCommit({
                 backgroundColor: done ? colours.success : colours.brand,
               },
             ]}>
-            <Ionicons name={done ? 'checkmark' : 'finger-print'} size={34} color={colours.onBrand} />
+            <Ionicons name={done ? 'checkmark' : 'finger-print'} size={30} color={colours.onBrand} />
           </View>
         </Animated.View>
       </Pressable>
@@ -788,10 +788,18 @@ function orientationOf(slug: string): 'portrait' | 'landscape' {
  * Rounded photo above a question, with a slow zoom-out as it appears. Portrait photos get a taller
  * frame and a crop anchored near the top, so faces stay in view instead of being cut at the chin.
  */
-export function QuestionPhoto({ slug, height }: { slug: string; height?: number }) {
+export function QuestionPhoto({
+  slug,
+  height,
+  focus,
+}: {
+  slug: string;
+  height?: number;
+  focus?: { x: number; y: number } | null;
+}) {
   const { radius } = useTheme();
   const portrait = orientationOf(slug) === 'portrait';
-  const frame = height ?? (portrait ? 230 : 180);
+  const frame = height ?? (portrait ? 180 : 150);
   const zoom = useRef(new Animated.Value(1.12)).current;
   const fade = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -801,9 +809,9 @@ export function QuestionPhoto({ slug, height }: { slug: string; height?: number 
     ]).start();
   }, [fade, zoom]);
   return (
-    <Animated.View style={{ height: frame, borderRadius: radius.xl, overflow: 'hidden', marginBottom: 20, opacity: fade }}>
+    <Animated.View style={{ height: frame, borderRadius: radius.xl, overflow: 'hidden', marginBottom: 16, opacity: fade }}>
       <Animated.View style={{ flex: 1, transform: [{ scale: zoom }] }}>
-        <PhotoFill slug={slug} focalPoint={portrait ? { x: 0.5, y: 0.22 } : { x: 0.5, y: 0.4 }} />
+        <PhotoFill slug={slug} focalPoint={focus ?? (portrait ? { x: 0.5, y: 0.38 } : { x: 0.5, y: 0.4 })} />
       </Animated.View>
     </Animated.View>
   );
@@ -863,7 +871,7 @@ export function RewardScreen({
           <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={64} color={colours.onBrand} />
         </Animated.View>
       )}
-      <AppText variant="display" style={{ color: colours.ink, textAlign: 'center', marginTop: 28 }}>
+      <AppText variant="display" style={{ color: colours.ink, textAlign: 'center', marginTop: 20, fontSize: 30, lineHeight: 36 }}>
         {title}
       </AppText>
       <Animated.View style={{ opacity: fade, marginTop: 12, gap: 8, alignSelf: 'stretch' }}>
@@ -874,7 +882,7 @@ export function RewardScreen({
         ))}
         {stat ? (
           <View style={[styles.statCard, { backgroundColor: colours.surface, borderRadius: radius.xl }]}>
-            <AppText style={{ fontFamily: fonts.display, fontSize: 56, lineHeight: 62, color: colours.brand }}>
+            <AppText style={{ fontFamily: fonts.display, fontSize: 44, lineHeight: 50, color: colours.brand }}>
               {stat.value}
             </AppText>
             <AppText variant="body" style={{ color: colours.ink, textAlign: 'center' }}>
@@ -920,7 +928,7 @@ export function ObstaclePicker({
     onChange(kept.length >= max ? [...kept.slice(1), option.value] : [...kept, option.value]);
   }
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 7 }}>
       {options.map((option, index) => {
         const on = selected.includes(option.value);
         return (
@@ -980,8 +988,8 @@ export function ProjectionChart({
   const [width, setWidth] = useState(0);
   const draw = useRef(new Animated.Value(0)).current;
   const pins = useRef(milestones.map(() => new Animated.Value(0))).current;
-  const height = 200;
-  const pad = 20;
+  const height = 140;
+  const pad = 16;
   const total = Math.max(1, weeks);
 
   useEffect(() => {
@@ -1070,7 +1078,7 @@ export function ProjectionChart({
           Week {weeks}
         </AppText>
       </View>
-      <View style={{ marginTop: 14, gap: 10 }}>
+      <View style={{ marginTop: 10, gap: 8 }}>
         {milestones.map((item, index) => (
           <Animated.View
             key={`${item.week}-${item.title}-row`}
@@ -1304,9 +1312,9 @@ export function PlanCalendar({
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 const styles = StyleSheet.create({
-  headingIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
-  reward: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 24 },
-  rewardPhoto: { width: 180, height: 180, borderRadius: 90, overflow: 'hidden', borderWidth: 5 },
+  headingIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  reward: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
+  rewardPhoto: { width: 150, height: 150, borderRadius: 75, overflow: 'hidden', borderWidth: 5 },
   rewardBadge: {
     position: 'absolute',
     right: 2,
@@ -1320,7 +1328,7 @@ const styles = StyleSheet.create({
   },
   rewardIcon: { width: 128, height: 128, borderRadius: 64, alignItems: 'center', justifyContent: 'center' },
   statCard: { alignItems: 'center', padding: 18, marginTop: 14 },
-  obstacle: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 15, borderWidth: 1.5 },
+  obstacle: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 1.5 },
   chartCard: { padding: 16, marginTop: 20 },
   pin: { position: 'absolute', width: 18, height: 18, borderRadius: 9, borderWidth: 4 },
   milestoneRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
