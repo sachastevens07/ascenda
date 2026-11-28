@@ -14,12 +14,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppleSignInButton } from '@/components/AppleSignInButton';
+import { SocialSignInButtons } from '@/components/SocialSignInButtons';
 import { WelcomeCarousel } from '@/components/WelcomeCarousel';
 import { AppText } from '@/components/ui';
 import { colours, useTheme } from '@/constants/theme';
 import { welcomeCopy } from '@/lib/copy';
-import { signInWithApple } from '@/lib/appleAuth';
+import { signInWithApple, type AppleResult } from '@/lib/appleAuth';
+import { signInWithGoogle } from '@/lib/googleAuth';
 import { track } from '@/lib/analytics';
 import { authRedirectUrl, isEmailNotConfirmed } from '@/lib/emailAuth';
 import { supabase } from '@/lib/supabase';
@@ -98,17 +99,22 @@ export default function SignInScreen() {
     setIsSubmitting(false);
   }
 
-  /** Log in (or create an account) with Apple. The layout routes her on once the session exists. */
-  async function handleApple() {
+  /** Log in (or create an account) with Apple or Google. The layout routes her on once the session exists. */
+  async function handleSocial(provider: 'apple' | 'google') {
     setIsSubmitting(true);
     setMessage(null);
-    const result = await signInWithApple();
+    const result: AppleResult = provider === 'apple' ? await signInWithApple() : await signInWithGoogle();
     setIsSubmitting(false);
     if (result.status === 'ok') {
-      track('apple_sign_in', { from: mode });
+      track('social_sign_in', { provider, from: mode });
       return;
     }
-    if (result.status === 'error') setMessage({ kind: 'error', text: welcomeCopy.apple_error });
+    if (result.status === 'error') {
+      setMessage({
+        kind: 'error',
+        text: provider === 'apple' ? welcomeCopy.apple_error : welcomeCopy.google_error,
+      });
+    }
   }
 
   function switchMode() {
@@ -231,9 +237,10 @@ export default function SignInScreen() {
         <AppText variant="display" style={styles.title}>{isSignUp ? 'Create your account' : 'Welcome back'}</AppText>
         <AppText variant="body" style={styles.subtitle}>Walk in with a plan. Leave stronger.</AppText>
 
-        <AppleSignInButton
+        <SocialSignInButtons
           kind={isSignUp ? 'continue' : 'sign-in'}
-          onPress={() => void handleApple()}
+          onApple={() => void handleSocial('apple')}
+          onGoogle={() => void handleSocial('google')}
           disabled={isSubmitting}
           dividerLabel={welcomeCopy.or_email}
         />

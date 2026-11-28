@@ -1258,6 +1258,9 @@
       "log_in": "Log in",
       "or_email": "or use email",
       "apple_error": "Sign in with Apple didn't work. Try again, or use your email.",
+      "google_continue": "Continue with Google",
+      "google_sign_in": "Sign in with Google",
+      "google_error": "Sign in with Google didn't work. Try again, or use your email.",
       "back": "Back",
       "a11y_slide": "Slide {index} of {count}"
     }

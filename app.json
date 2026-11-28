@@ -76,6 +76,11 @@
       },
       "eas": {
         "projectId": "495726ab-821a-4018-932f-c56a2758647c"
+      },
+      "google": {
+        "_note": "Google sign-in client IDs from Google Cloud (not secret). Leave empty to hide the Google button. Changing them needs a new build.",
+        "iosClientId": "",
+        "webClientId": ""
       }
     },
     "owner": "sachstev"

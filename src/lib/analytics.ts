@@ -16,7 +16,7 @@ export const ANALYTICS_EVENTS = [
   'onboarding_step_viewed',
   'onboarding_committed',
   'account_saved',
-  'apple_sign_in',
+  'social_sign_in',
   'getting_started_item_done',
   'getting_started_completed',
   'getting_started_dismissed',

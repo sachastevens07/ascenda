@@ -37,9 +37,10 @@ import {
   StatementScale,
   TimePickerChips,
 } from '@/components/onboarding/OnboardingInputs';
-import { AppleSignInButton } from '@/components/AppleSignInButton';
+import { SocialSignInButtons } from '@/components/SocialSignInButtons';
 import { AppText, DisclaimerBody, DisclaimerCheckbox, HeroImage, ListRow, TextButton } from '@/components/ui';
 import { linkAppleToCurrentUser } from '@/lib/appleAuth';
+import { linkGoogleToCurrentUser } from '@/lib/googleAuth';
 import { track } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 import { GOAL_LABELS, type Goal } from '@/lib/goals';
@@ -623,22 +624,22 @@ export default function OnboardingScreen() {
     move(1);
   }
 
-  /** "Save your plan" with Apple: links Apple to the same anonymous user, so nothing is lost. */
-  async function saveAccountWithApple(screenItem: OnboardingScreen) {
+  /** "Save your plan" with Apple or Google: linked to the same anonymous user, so nothing is lost. */
+  async function saveAccountWithProvider(screenItem: OnboardingScreen, provider: 'apple' | 'google') {
     setIsSaving(true);
     setError(null);
-    const result = await linkAppleToCurrentUser();
+    const result = provider === 'apple' ? await linkAppleToCurrentUser() : await linkGoogleToCurrentUser();
     setIsSaving(false);
     if (result.status === 'cancelled') return;
     if (result.status === 'exists') {
-      setError(screenText(screenItem, 'error_apple_exists'));
+      setError(screenText(screenItem, `error_${provider}_exists`));
       return;
     }
     if (result.status === 'error') {
-      setError(screenText(screenItem, 'error_apple'));
+      setError(screenText(screenItem, `error_${provider}`));
       return;
     }
-    track('account_saved', { method: 'apple' });
+    track('account_saved', { method: provider });
     move(1);
   }
 
@@ -1562,8 +1563,9 @@ export default function OnboardingScreen() {
             title={fillTemplate(contentScreen.title, vars)}
             body={fillTemplate(contentScreen.body, vars)}
           />
-          <AppleSignInButton
-            onPress={() => void saveAccountWithApple(contentScreen)}
+          <SocialSignInButtons
+            onApple={() => void saveAccountWithProvider(contentScreen, 'apple')}
+            onGoogle={() => void saveAccountWithProvider(contentScreen, 'google')}
             disabled={isSaving}
             dividerLabel={screenText(contentScreen, 'or_email')}
           />
