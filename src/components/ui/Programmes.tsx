@@ -36,7 +36,12 @@ export function OverlayImageCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={title}
-      style={({ pressed }) => [style, shadow, pressed && styles.pressed]}>
+      style={({ pressed }) => [
+        style,
+        shadow,
+        { backgroundColor: colours.surfaceMuted, borderRadius: radius.xl },
+        pressed && styles.pressed,
+      ]}>
       <View style={[styles.overlayCard, { borderRadius: radius.xl, backgroundColor: colours.surfaceMuted }]}>
         <View style={[styles.overlayPhoto, { aspectRatio }]}>
           <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />
@@ -125,7 +130,12 @@ export function SingleSessionCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={title}
-      style={({ pressed }) => [style, shadow, pressed && styles.pressed]}>
+      style={({ pressed }) => [
+        style,
+        shadow,
+        { backgroundColor: colours.surface, borderRadius: radius.lg },
+        pressed && styles.pressed,
+      ]}>
       <View style={[styles.single, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
         <View style={[styles.singlePhoto, { backgroundColor: colours.surfaceMuted }]}>
           <PhotoFill slug={imageSlug} source={imageSlug ? null : image} kind="people" label={title} />

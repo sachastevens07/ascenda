@@ -891,7 +891,7 @@ function CurrentRoutineCard({
           : 'Start a routine'
       }
       style={({ pressed }) => [pressed && styles.pressed]}>
-      <View style={[{ borderRadius: radius.xl }, shadow]}>
+      <View style={[{ borderRadius: radius.xl, backgroundColor: colours.surface }, shadow]}>
         <View style={[styles.routineCard, { backgroundColor: colours.surface, borderRadius: radius.xl }]}>
           <View style={[styles.routinePhoto, { backgroundColor: colours.brand, borderRadius: radius.lg }]}>
             {enrolment?.routine.cover ? (

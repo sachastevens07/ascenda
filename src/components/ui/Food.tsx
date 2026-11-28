@@ -82,7 +82,12 @@ export function MealTypeTile({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={name}
-      style={({ pressed }) => [style, shadow, pressed && styles.pressed]}>
+      style={({ pressed }) => [
+        style,
+        shadow,
+        { backgroundColor: colours.surfaceMuted, borderRadius: radius.xl },
+        pressed && styles.pressed,
+      ]}>
       <View style={[styles.tile, { borderRadius: radius.xl, backgroundColor: colours.surfaceMuted }]}>
         <PhotoFill slug={coverImageSlug} kind="food" label={name} />
         <View style={[styles.tileFade, { backgroundColor: colours.overlay }]} />
@@ -135,7 +140,7 @@ export function RecipeCard({
 }) {
   const { colours, radius, shadow } = useTheme();
   return (
-    <View style={[style, shadow]}>
+    <View style={[style, shadow, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"

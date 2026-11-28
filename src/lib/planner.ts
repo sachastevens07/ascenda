@@ -423,6 +423,21 @@ type PlanInsert = {
   is_optional?: boolean;
 };
 
+/**
+ * Every row in one insert must carry the same columns with real values. Supabase fills a column
+ * that only some rows have with null, and is_optional is not-null (a mixed strength and cardio
+ * week failed with 23502). Strength rows now say is_optional: false.
+ */
+function withSupportDefaults(row: PlanInsert): PlanInsert {
+  return {
+    ...row,
+    session_kind: row.session_kind ?? null,
+    cardio_slug: row.cardio_slug ?? null,
+    stretch_slug: row.stretch_slug ?? null,
+    is_optional: row.is_optional === true,
+  };
+}
+
 function withoutSupportColumns(row: PlanInsert): PlanInsert {
   const { session_kind: _kind, cardio_slug: _cardio, stretch_slug: _stretch, is_optional: _optional, ...rest } =
     row;
@@ -430,8 +445,12 @@ function withoutSupportColumns(row: PlanInsert): PlanInsert {
 }
 
 async function insertPlan(row: PlanInsert): Promise<PlannedSession> {
-  const payload = supportColumnsReady === false ? withoutSupportColumns(row) : row;
-  const { data, error } = await supabase.from('planned_sessions').insert(payload).select(planSelect).single();
+  const payload = supportColumnsReady === false ? withoutSupportColumns(row) : withSupportDefaults(row);
+  const { data, error } = await supabase
+    .from('planned_sessions')
+    .insert(payload, { defaultToNull: false })
+    .select(planSelect)
+    .single();
   if (error) {
     if (supportColumnsReady !== false && isMissingSupportColumn(error)) {
       supportColumnsReady = false;
@@ -908,8 +927,9 @@ function buildWeekInserts(
 
 async function insertWeekPlans(inserts: WeekInsert[]): Promise<void> {
   if (inserts.length === 0) return;
-  const payload = supportColumnsReady === false ? inserts.map(withoutSupportColumns) : inserts;
-  const { error } = await supabase.from('planned_sessions').insert(payload);
+  const payload =
+    supportColumnsReady === false ? inserts.map(withoutSupportColumns) : inserts.map(withSupportDefaults);
+  const { error } = await supabase.from('planned_sessions').insert(payload, { defaultToNull: false });
   if (error && !isUniqueConflict(error)) {
     if (supportColumnsReady !== false && isMissingSupportColumn(error)) {
       supportColumnsReady = false;
@@ -923,8 +943,8 @@ async function insertWeekPlans(inserts: WeekInsert[]): Promise<void> {
     if (isRejectedRow(error) && inserts.length > 1) {
       if (__DEV__) console.warn('[planner] a planned row was refused, adding rows one by one', error.code, error.message);
       for (const row of inserts) {
-        const one = supportColumnsReady === false ? withoutSupportColumns(row) : row;
-        const { error: rowError } = await supabase.from('planned_sessions').insert(one);
+        const one = supportColumnsReady === false ? withoutSupportColumns(row) : withSupportDefaults(row);
+        const { error: rowError } = await supabase.from('planned_sessions').insert(one, { defaultToNull: false });
         if (rowError && !isUniqueConflict(rowError) && !isRejectedRow(rowError)) throwPlanner(rowError);
       }
       return;

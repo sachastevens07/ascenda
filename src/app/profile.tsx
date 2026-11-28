@@ -1283,7 +1283,7 @@ function SettingsGroup({ title, children }: { title: string; children: ReactNode
   return (
     <View style={styles.group}>
       <AppText variant="eyebrow" style={{ color: colours.inkMuted, marginBottom: 8, marginLeft: 4 }}>{title}</AppText>
-      <View style={[{ borderRadius: radius.lg }, shadow]}>
+      <View style={[{ borderRadius: radius.lg, backgroundColor: colours.surface }, shadow]}>
         <View style={[styles.groupInner, { backgroundColor: colours.surface, borderRadius: radius.lg }]}>
           {children}
         </View>
