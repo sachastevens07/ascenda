@@ -87,6 +87,7 @@ export const paywallScreenCopy = {
   cta_subscribe: paywall.cta_subscribe,
   small_print_trial: paywall.small_print_trial,
   small_print_monthly: paywall.small_print_monthly,
+  small_print_annual: paywall.small_print_annual,
   restore: paywall.restore,
   terms: paywall.terms,
   privacy: paywall.privacy,

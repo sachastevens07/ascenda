@@ -54,7 +54,8 @@ function getAnnualSaving(packages: PurchasesPackage[]): number | null {
   const annual = packages.find((item) => item.packageType === 'ANNUAL');
   const monthly = packages.find((item) => item.packageType === 'MONTHLY');
   if (!annual || !monthly || monthly.product.price <= 0) return null;
-  const saving = Math.round((1 - annual.product.price / (monthly.product.price * 12)) * 100);
+  // Rounded down, so the saving is never overstated (£59.99 vs 12 × £9.99 is 49.96%, shown as 49%).
+  const saving = Math.floor((1 - annual.product.price / (monthly.product.price * 12)) * 100);
   return saving > 0 ? saving : null;
 }
 
@@ -440,9 +441,13 @@ export default function PaywallScreen() {
                         annual_price: selected.product.priceString,
                         charge_date: chargeDateLabel(trialDays),
                       })
-                    : fillCopy(paywallScreenCopy.small_print_monthly, {
-                        monthly_price: selected.product.priceString,
-                      })}
+                    : selected.packageType === 'ANNUAL'
+                      ? fillCopy(paywallScreenCopy.small_print_annual, {
+                          annual_price: selected.product.priceString,
+                        })
+                      : fillCopy(paywallScreenCopy.small_print_monthly, {
+                          monthly_price: selected.product.priceString,
+                        })}
                 </AppText>
               ) : null}
             </>
