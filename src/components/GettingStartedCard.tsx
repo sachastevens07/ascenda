@@ -134,7 +134,7 @@ function ChecklistRow({ item, order, onPress }: { item: GettingStartedItem; orde
           }}>
           {item.title}
         </AppText>
-        {!item.done ? (
+        {!item.done && item.body ? (
           <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
             {item.body}
           </AppText>

@@ -29,6 +29,7 @@ import {
 import { getExerciseImageSource } from '@/lib/exerciseMedia';
 import { exerciseDemoHeightForScreen } from '@/lib/getExerciseMedia';
 import { recordGuideOpened } from '@/lib/achievements';
+import { markGuideOpened } from '@/lib/gettingStarted';
 import { guideForExercise, preferredSwapIds } from '@/lib/contentGuides';
 import { fillCopy, loggerCopy, machineCopy } from '@/lib/copy';
 import { machineGuideForExercise } from '@/lib/machineGuides';
@@ -54,7 +55,9 @@ export default function ExerciseScreen() {
   const [swaps, setSwaps] = useState<SlotExercise[]>([]);
 
   useEffect(() => {
-    if (id) void recordGuideOpened(id);
+    if (!id) return;
+    void recordGuideOpened(id);
+    void markGuideOpened();
   }, [id]);
 
   useEffect(() => {

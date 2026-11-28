@@ -527,6 +527,16 @@ export async function scheduleTestBillingReminder(
   return true;
 }
 
+/** What the store says about her new subscription, for the welcome screen. */
+export function proEntitlementSummary(info: CustomerInfo): { isTrial: boolean; expiresAt: Date | null } {
+  const entitlement = info.entitlements.active[PRO_ENTITLEMENT];
+  const expires = entitlement?.expirationDate ? new Date(entitlement.expirationDate) : null;
+  return {
+    isTrial: entitlement?.periodType === 'TRIAL',
+    expiresAt: expires && !Number.isNaN(expires.getTime()) ? expires : null,
+  };
+}
+
 export function hasProEntitlement(info: CustomerInfo): boolean {
   return info.entitlements.active[PRO_ENTITLEMENT] !== undefined;
 }

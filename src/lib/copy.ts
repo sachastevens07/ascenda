@@ -67,6 +67,9 @@ export const restoreCopy = {
   error: paywall.error,
 } as const;
 
+/** Welcome after a purchase or trial starts (paywall screen). */
+export const purchaseWelcomeCopy = paywall.welcome;
+
 export const paywallScreenCopy = {
   headline_with_plan: paywall.headline_with_plan,
   headline_fallback: paywall.headline_fallback,

@@ -11,7 +11,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import type { PurchasesPackage } from 'react-native-purchases';
+import type { CustomerInfo, PurchasesPackage } from 'react-native-purchases';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,9 +20,10 @@ import { showDialog } from '@/components/Dialog';
 import { AppText, HeroImage, IconButton, PrimaryButton } from '@/components/ui';
 import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
-import { fillCopy, paywallScreenCopy, referCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
+import { fillCopy, paywallScreenCopy, purchaseWelcomeCopy, referCopy, restoreCopy, subscriptionStatusCopy } from '@/lib/copy';
 import { draftFromSaved, emptyOnboardingDraft } from '@/lib/onboardingAnswers';
 import { recommendPlan } from '@/lib/onboardingPlan';
+import { successTap } from '@/lib/haptics';
 import { defaultPackageId } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { formatShortDate } from '@/lib/progress';
@@ -39,6 +41,7 @@ import {
   getFreeTrialDays,
   hasProEntitlement,
   openManageSubscription,
+  proEntitlementSummary,
   purchasePackage,
   restorePurchases,
   useSubscription,
@@ -75,6 +78,7 @@ export default function PaywallScreen() {
   const [routineName, setRoutineName] = useState<string | null>(null);
   const [referred, setReferred] = useState(false);
   const [scrolledPastPhoto, setScrolledPastPhoto] = useState(false);
+  const [welcome, setWelcome] = useState<WelcomeInfo | null>(null);
   // From onboarding: her plan, first name and what she told us she worries about.
   const params = useLocalSearchParams<{ plan?: string; name?: string; focus?: string }>();
   const paramPlan = typeof params.plan === 'string' ? params.plan.trim() : '';
@@ -188,10 +192,7 @@ export default function PaywallScreen() {
         if (result === 'opened') {
           const info = await fetchCustomerInfo();
           if (info) applyCustomerInfo(info);
-          if (info && hasProEntitlement(info)) {
-            dismiss();
-            showDialog(paywallScreenCopy.success_title, paywallScreenCopy.success_body);
-          }
+          if (info && hasProEntitlement(info)) showWelcome(info, FRIEND_TRIAL_DAYS);
           return;
         }
         if (result === 'unavailable') {
@@ -206,8 +207,7 @@ export default function PaywallScreen() {
       if (!info) return;
       applyCustomerInfo(info);
       if (hasProEntitlement(info)) {
-        dismiss();
-        showDialog(paywallScreenCopy.success_title, paywallScreenCopy.success_body);
+        showWelcome(info, trialDays);
       } else {
         showDialog(
           'Almost there',
@@ -219,6 +219,22 @@ export default function PaywallScreen() {
     } finally {
       setBusy(null);
     }
+  }
+
+  /** Swap the paywall for a welcome with her billing dates, what's included and how to cancel. */
+  function showWelcome(info: CustomerInfo, trialLength: number | null) {
+    const summary = proEntitlementSummary(info);
+    const isAnnual = selected?.packageType !== 'MONTHLY';
+    const days = summary.isTrial ? (trialLength ?? 7) : null;
+    const fallbackEnd = days ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : null;
+    successTap();
+    setWelcome({
+      isTrial: summary.isTrial,
+      trialDays: days,
+      endsAt: summary.expiresAt ?? fallbackEnd,
+      price: selected?.product.priceString ?? '',
+      isAnnual,
+    });
   }
 
   async function handleRestore() {
@@ -237,6 +253,19 @@ export default function PaywallScreen() {
     } finally {
       setBusy(null);
     }
+  }
+
+  if (welcome) {
+    const onboarded = getQuizAnswers(profile) !== null && Boolean(profile?.onboarding_completed_at);
+    return (
+      <PurchaseWelcome
+        info={welcome}
+        name={firstName}
+        routineName={routineName ?? (paramPlan || null)}
+        ctaLabel={onboarded ? purchaseWelcomeCopy.cta : purchaseWelcomeCopy.cta_onboarding}
+        onDone={dismiss}
+      />
+    );
   }
 
   const heroHeight = Math.round(Math.min(Math.max(windowHeight * 0.58, 380), 560));
@@ -528,6 +557,182 @@ function TrialTimeline({ trialDays }: { trialDays: number }) {
           </View>
         );
       })}
+    </View>
+  );
+}
+
+type WelcomeInfo = {
+  isTrial: boolean;
+  trialDays: number | null;
+  /** Trial end (first charge) or next renewal. */
+  endsAt: Date | null;
+  price: string;
+  isAnnual: boolean;
+};
+
+/** After she subscribes: a warm welcome, her billing dates, what's included and how to cancel. */
+function PurchaseWelcome({
+  info,
+  name,
+  routineName,
+  ctaLabel,
+  onDone,
+}: {
+  info: WelcomeInfo;
+  name: string;
+  routineName: string | null;
+  ctaLabel: string;
+  onDone: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const { colours, radius, spacing } = useTheme();
+  const copy = purchaseWelcomeCopy;
+  const end = info.endsAt;
+  const reminder = end ? new Date(end.getTime() - 2 * 24 * 60 * 60 * 1000) : null;
+  const billingRows: { icon: ComponentProps<typeof Ionicons>['name']; title: string; body: string }[] = info.isTrial
+    ? [
+        { icon: 'sparkles', title: copy.trial_today, body: copy.trial_today_body },
+        ...(reminder
+          ? [{ icon: 'notifications-outline' as const, title: formatShortDate(reminder), body: copy.trial_reminder_body }]
+          : []),
+        ...(end
+          ? [
+              {
+                icon: 'card-outline' as const,
+                title: formatShortDate(end),
+                body: fillCopy(copy.trial_charge_body, { price: info.price }),
+              },
+            ]
+          : []),
+      ]
+    : end
+      ? [
+          {
+            icon: 'refresh-outline',
+            title: fillCopy(copy.renews, { date: formatShortDate(end) }),
+            body: fillCopy(info.isAnnual ? copy.renews_body_annual : copy.renews_body_monthly, { price: info.price }),
+          },
+        ]
+      : [];
+
+  return (
+    <View style={[styles.screen, { backgroundColor: colours.bg }]}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingTop: insets.top + 28,
+          paddingHorizontal: spacing.lg,
+          paddingBottom: 24,
+          gap: spacing.lg,
+        }}
+        showsVerticalScrollIndicator={false}>
+        <Animated.View entering={ZoomIn.springify().damping(12)} style={{ alignItems: 'center' }}>
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: colours.success,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Ionicons name="checkmark" size={40} color="#FFFFFF" />
+          </View>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(150).duration(400)} style={{ alignItems: 'center', gap: 6 }}>
+          <AppText variant="eyebrow" style={{ color: colours.accent }}>
+            {copy.eyebrow}
+          </AppText>
+          <AppText style={[styles.headlineLead, { color: colours.ink, fontFamily: fonts.bold, textAlign: 'center' }]}>
+            {name ? fillCopy(copy.title_named, { name }) : copy.title}
+          </AppText>
+          <AppText variant="body" style={{ color: colours.inkMuted, textAlign: 'center' }}>
+            {info.isTrial
+              ? fillCopy(copy.body_trial, { trial_days: info.trialDays ?? 7 })
+              : fillCopy(copy.body_paid, { plan_length: info.isAnnual ? copy.plan_annual : copy.plan_monthly })}
+          </AppText>
+        </Animated.View>
+
+        {billingRows.length > 0 ? (
+          <Animated.View
+            entering={FadeInDown.delay(300).duration(400)}
+            style={{ backgroundColor: colours.surface, borderRadius: radius.xl, padding: 16, gap: 12 }}>
+            <AppText variant="title3" style={{ color: colours.ink }}>
+              {copy.billing_title}
+            </AppText>
+            {billingRows.map((row) => (
+              <WelcomeRow key={row.title + row.body} icon={row.icon} title={row.title} body={row.body} />
+            ))}
+          </Animated.View>
+        ) : null}
+
+        <Animated.View entering={FadeInDown.delay(450).duration(400)} style={{ gap: 12 }}>
+          <AppText variant="title3" style={{ color: colours.ink }}>
+            {copy.included_title}
+          </AppText>
+          {copy.included.map((row) => (
+            <WelcomeRow
+              key={row.title}
+              icon={row.icon as ComponentProps<typeof Ionicons>['name']}
+              title={row.title}
+              body={
+                'body_with_plan' in row && row.body_with_plan && routineName
+                  ? fillCopy(row.body_with_plan, { routine_name: routineName })
+                  : row.body
+              }
+            />
+          ))}
+        </Animated.View>
+
+        <Animated.View
+          entering={FadeInDown.delay(600).duration(400)}
+          style={{ backgroundColor: colours.brandSoft, borderRadius: radius.lg, padding: 14, gap: 4 }}>
+          <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+            {copy.cancel_title}
+          </AppText>
+          <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+            {copy.cancel_body}
+          </AppText>
+        </Animated.View>
+      </ScrollView>
+      <View style={{ paddingHorizontal: spacing.lg, paddingBottom: Math.max(insets.bottom, 16) + 8, paddingTop: 8 }}>
+        <PrimaryButton label={ctaLabel} onPress={onDone} />
+      </View>
+    </View>
+  );
+}
+
+function WelcomeRow({
+  icon,
+  title,
+  body,
+}: {
+  icon: ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  body: string;
+}) {
+  const { colours } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: colours.brandSoft,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Ionicons name={icon} size={18} color={colours.brand} />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+          {title}
+        </AppText>
+        <AppText variant="bodySm" style={{ color: colours.inkMuted }}>
+          {body}
+        </AppText>
+      </View>
     </View>
   );
 }

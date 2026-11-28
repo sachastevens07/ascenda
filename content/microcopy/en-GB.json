@@ -52,8 +52,7 @@
           },
           {
             "id": "learn",
-            "title": "Read one Learn article",
-            "body": "Two to five minutes, in plain English."
+            "title": "Read one Learn article"
           }
         ]
       },
@@ -287,6 +286,37 @@
       "success_title": "You're in",
       "success_body": "Your plan is ready. Let's do your first session.",
       "success_cta": "Let's go",
+      "welcome": {
+        "_note": "Shown on the paywall screen right after a purchase or trial starts (28 November 2026). Billing facts come from the store; never promise anything the subscription doesn't include.",
+        "eyebrow": "WELCOME TO EVOLUMA",
+        "title_named": "You're in, {name}",
+        "title": "You're in",
+        "body_trial": "Your {trial_days}-day free trial has started. Everything in Evoluma is open to you from today.",
+        "body_paid": "Your {plan_length} plan is active. Everything in Evoluma is open to you from today.",
+        "billing_title": "Your subscription",
+        "trial_today": "Today",
+        "trial_today_body": "Your free trial starts. Nothing to pay.",
+        "trial_reminder": "{date}",
+        "trial_reminder_body": "We'll remind you that your trial ends in 2 days.",
+        "trial_charge": "{date}",
+        "trial_charge_body": "{price} a year starts, unless you cancel before then.",
+        "renews": "Renews on {date}",
+        "renews_body_annual": "{price} a year. You can cancel at any time.",
+        "renews_body_monthly": "{price} a month. You can cancel at any time.",
+        "plan_annual": "annual",
+        "plan_monthly": "monthly",
+        "included_title": "What's included",
+        "included": [
+          { "icon": "calendar-outline", "title": "Your plan, week by week", "body_with_plan": "{routine_name}, with every session planned for you.", "body": "Every session planned for you, on the days you chose." },
+          { "icon": "map-outline", "title": "A guide for every exercise", "body": "Where to find it, how to set it up, and a swap if it's taken." },
+          { "icon": "chatbubble-ellipses-outline", "title": "Evoluma Coach", "body": "Ask anything about your training, or rework today's session." },
+          { "icon": "restaurant-outline", "title": "Food that fuels you", "body": "Recipes for training days. No calorie counting." }
+        ],
+        "cancel_title": "Cancel anytime",
+        "cancel_body": "Open Settings on your iPhone, tap your name, then Subscriptions. Or go to Profile, then Manage subscription, in Evoluma.",
+        "cta_onboarding": "Continue",
+        "cta": "Start training"
+      },
       "cancelled_by_user": "",
       "error": "That didn't go through. You haven't been charged. Please try again.",
       "restore_none": "We couldn't find a subscription on this Apple ID.",
