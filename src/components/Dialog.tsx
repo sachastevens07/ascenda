@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/AppText';
@@ -20,9 +20,55 @@ export type DialogOptions = {
 
 let present: ((dialog: DialogOptions) => void) | null = null;
 
+/**
+ * Screens that open as their own full-screen layer (the paywall, Refer a friend) sit above the
+ * root, and iOS won't show the root's dialog over them until they close. Each such screen
+ * mounts a `DialogHost`; while one is mounted, the newest host shows dialogs instead.
+ */
+const hosts: ((dialog: DialogOptions) => void)[] = [];
+
 /** The app's themed version of `Alert.alert`. Needs `DialogProvider` near the root. */
 export function showDialog(title: string, message?: string, buttons?: DialogButton[]) {
+  const host = hosts[hosts.length - 1];
+  if (host) {
+    host({ title, message, buttons });
+    return;
+  }
   present?.({ title, message, buttons });
+}
+
+/**
+ * Put this last inside a screen presented as `fullScreenModal` or `modal`, so its dialogs show
+ * straight away on top of it instead of waiting until the screen closes.
+ */
+export function DialogHost() {
+  const [queue, setQueue] = useState<DialogOptions[]>([]);
+  const pending = useRef<DialogOptions[]>([]);
+  pending.current = queue;
+
+  useEffect(() => {
+    const show = (dialog: DialogOptions) => setQueue((current) => [...current, dialog]);
+    hosts.push(show);
+    return () => {
+      const at = hosts.lastIndexOf(show);
+      if (at >= 0) hosts.splice(at, 1);
+      // A dialog raised as the screen closes (say "Restored" after Restore purchases) moves to
+      // whatever is underneath, so it is never lost.
+      for (const dialog of pending.current) {
+        const next = hosts[hosts.length - 1];
+        if (next) next(dialog);
+        else present?.(dialog);
+      }
+    };
+  }, []);
+
+  const dialog = queue[0] ?? null;
+  if (!dialog) return null;
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+      <DialogCard dialog={dialog} onClose={() => setQueue((current) => current.slice(1))} />
+    </View>
+  );
 }
 
 function withDefaultButton(dialog: DialogOptions): DialogButton[] {

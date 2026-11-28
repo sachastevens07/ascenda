@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { showDialog } from '@/components/Dialog';
+import { DialogHost, showDialog } from '@/components/Dialog';
 import { AppText, PhotoFill, PrimaryButton } from '@/components/ui';
 import { IconButton } from '@/components/ui/IconButton';
 import { useTheme } from '@/constants/theme';
@@ -27,7 +27,17 @@ const STATUS_LABEL: Record<ReferralStatus, string> = {
   rewarded: referCopy.status.rewarded,
 };
 
+/** Wrapped so its dialogs (How to cancel, Restore, errors) show on top of this full-screen layer. */
 export default function ReferScreen() {
+  return (
+    <View style={{ flex: 1 }}>
+      <ReferScreenContent />
+      <DialogHost />
+    </View>
+  );
+}
+
+function ReferScreenContent() {
   const insets = useSafeAreaInsets();
   const { colours, radius, spacing } = useTheme();
   const { session, isLoading: authLoading } = useAuth();

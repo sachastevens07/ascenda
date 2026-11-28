@@ -16,7 +16,7 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { showDialog } from '@/components/Dialog';
+import { DialogHost, showDialog } from '@/components/Dialog';
 import { AppText, HeroImage, IconButton, PrimaryButton } from '@/components/ui';
 import { fonts } from '@/constants/fonts';
 import { useTheme } from '@/constants/theme';
@@ -65,7 +65,17 @@ function chargeDateLabel(trialDays: number): string {
   return formatBillingDate(date);
 }
 
+/** Wrapped so its dialogs (How to cancel, Restore, errors) show on top of this full-screen layer. */
 export default function PaywallScreen() {
+  return (
+    <View style={{ flex: 1 }}>
+      <PaywallScreenContent />
+      <DialogHost />
+    </View>
+  );
+}
+
+function PaywallScreenContent() {
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const { colours, radius, spacing, shadow } = useTheme();
