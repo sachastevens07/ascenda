@@ -453,16 +453,16 @@ export default function PaywallScreen() {
             </>
           )}
 
+          {/* Two tidy rows of equal-width links, so nothing reflows when a label changes. */}
           <View style={styles.footer}>
             {isAvailable ? (
               <FooterLink
-                label={busy === 'restore' ? 'Restoring…' : paywallScreenCopy.restore}
+                label={paywallScreenCopy.restore}
                 onPress={() => void handleRestore()}
                 disabled={busy !== null}
+                busy={busy === 'restore'}
               />
             ) : null}
-            <FooterLink label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
-            <FooterLink label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
             <FooterLink
               label={subscriptionStatusCopy.how_to_cancel_title}
               onPress={() =>
@@ -481,6 +481,8 @@ export default function PaywallScreen() {
                 ])
               }
             />
+            <FooterLink label={paywallScreenCopy.terms} onPress={() => router.push('/terms' as Href)} />
+            <FooterLink label={paywallScreenCopy.privacy} onPress={() => router.push('/privacy' as Href)} />
           </View>
         </View>
       </ScrollView>
@@ -752,18 +754,35 @@ function WelcomeRow({
 }
 
 /** Small underlined links under the paywall, like the store apps. */
-function FooterLink({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+function FooterLink({
+  label,
+  onPress,
+  disabled = false,
+  busy = false,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  busy?: boolean;
+}) {
   const { colours } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="link"
-      hitSlop={8}
-      style={({ pressed }) => [styles.footerLink, (pressed || disabled) && styles.pressed]}>
-      <AppText variant="bodySm" style={{ color: colours.inkMuted, textDecorationLine: 'underline' }}>
-        {label}
-      </AppText>
+      accessibilityState={{ disabled, busy }}
+      style={({ pressed }) => [styles.footerLink, pressed && styles.footerPressed, disabled && !busy && styles.footerDisabled]}>
+      {busy ? (
+        <ActivityIndicator size="small" color={colours.inkMuted} />
+      ) : (
+        <AppText
+          variant="bodySm"
+          numberOfLines={1}
+          style={{ color: colours.inkMuted, textDecorationLine: 'underline', textAlign: 'center' }}>
+          {label}
+        </AppText>
+      )}
     </Pressable>
   );
 }
@@ -863,11 +882,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    columnGap: 20,
-    rowGap: 10,
     paddingTop: 4,
   },
   footerLink: {
-    paddingVertical: 4,
+    width: '50%',
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  footerPressed: {
+    opacity: 0.5,
+  },
+  footerDisabled: {
+    opacity: 0.4,
   },
 });
