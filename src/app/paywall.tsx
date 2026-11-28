@@ -26,7 +26,7 @@ import { recommendPlan } from '@/lib/onboardingPlan';
 import { successTap } from '@/lib/haptics';
 import { defaultPackageId } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
-import { formatShortDate } from '@/lib/progress';
+import { formatBillingDate } from '@/lib/progress';
 import { fetchActiveEnrolment } from '@/lib/routines';
 import {
   APPLE_OFFER_CODE,
@@ -60,7 +60,7 @@ function getAnnualSaving(packages: PurchasesPackage[]): number | null {
 function chargeDateLabel(trialDays: number): string {
   const date = new Date();
   date.setDate(date.getDate() + trialDays);
-  return formatShortDate(date);
+  return formatBillingDate(date);
 }
 
 export default function PaywallScreen() {
@@ -593,13 +593,13 @@ function PurchaseWelcome({
     ? [
         { icon: 'sparkles', title: copy.trial_today, body: copy.trial_today_body },
         ...(reminder
-          ? [{ icon: 'notifications-outline' as const, title: formatShortDate(reminder), body: copy.trial_reminder_body }]
+          ? [{ icon: 'notifications-outline' as const, title: formatBillingDate(reminder), body: copy.trial_reminder_body }]
           : []),
         ...(end
           ? [
               {
                 icon: 'card-outline' as const,
-                title: formatShortDate(end),
+                title: formatBillingDate(end),
                 body: fillCopy(copy.trial_charge_body, { price: info.price }),
               },
             ]
@@ -609,7 +609,7 @@ function PurchaseWelcome({
       ? [
           {
             icon: 'refresh-outline',
-            title: fillCopy(copy.renews, { date: formatShortDate(end) }),
+            title: fillCopy(copy.renews, { date: formatBillingDate(end) }),
             body: fillCopy(info.isAnnual ? copy.renews_body_annual : copy.renews_body_monthly, { price: info.price }),
           },
         ]

@@ -326,6 +326,11 @@ export function getWeeklyCounts(dates: string[], today = new Date()): WeekCount[
 }
 
 /** "6 Oct", with the year if it isn't this year. */
+/** Billing dates (trial ends, renews, charged) always show the year: "28 Dec 2026". */
+export function formatBillingDate(date: Date): string {
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
 export function formatShortDate(date: Date, today = new Date()): string {
   const label = `${date.getDate()} ${MONTHS[date.getMonth()]}`;
   return date.getFullYear() === today.getFullYear() ? label : `${label} ${date.getFullYear()}`;

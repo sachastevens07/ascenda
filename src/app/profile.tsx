@@ -1,7 +1,8 @@
 import Constants from 'expo-constants';
 import { router, useFocusEffect, type Href } from 'expo-router';
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { showDialog } from '@/components/Dialog';
@@ -111,7 +112,7 @@ import {
   useProfile,
   type Goal,
 } from '@/lib/profile';
-import { formatShortDate } from '@/lib/progress';
+import { formatBillingDate } from '@/lib/progress';
 import { currentEnrolmentWeek, fetchActiveEnrolment, type RoutineEnrolment } from '@/lib/routines';
 import {
   DEV_OVERRIDES,
@@ -128,7 +129,7 @@ import { supabase } from '@/lib/supabase';
 
 function planChip({ status, trialEndsAt, expiresAt, willRenew }: ProStatus): string {
   const date = trialEndsAt ?? expiresAt;
-  const formatted = date ? formatShortDate(date) : '';
+  const formatted = date ? formatBillingDate(date) : '';
   switch (status) {
     case 'trial':
       return fillCopy(subscriptionStatusCopy.chip_trial, { date: formatted });
@@ -145,6 +146,18 @@ function planChip({ status, trialEndsAt, expiresAt, willRenew }: ProStatus): str
     default:
       return 'No subscription';
   }
+}
+
+/** Runs after the screen's first frame has been drawn. Returns a cancel function. */
+function afterFirstFrame(run: () => void): () => void {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const frame = requestAnimationFrame(() => {
+    timer = setTimeout(run, 0);
+  });
+  return () => {
+    cancelAnimationFrame(frame);
+    if (timer) clearTimeout(timer);
+  };
 }
 
 function initials(name: string, email: string | undefined): string {
@@ -202,10 +215,17 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const email = session?.user.email ?? '';
   const displayName = answers?.display_name?.trim() || 'You';
+  const [settled, setSettled] = useState(false);
+
+  useEffect(() => afterFirstFrame(() => setSettled(true)), []);
 
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
+      // Start the 15 or so lookups after the first frame, so they don't hold up the screen opening.
+      // Each result still fills in its own row as it arrives.
+      const cancel = afterFirstFrame(() => {
+        if (!isCurrent) return;
       fetchActiveEnrolment()
         .then((next) => {
           if (isCurrent) setEnrolment(next);
@@ -307,8 +327,10 @@ export default function ProfileScreen() {
             setPeriodNotes([]);
           }
         });
+      });
       return () => {
         isCurrent = false;
+        cancel();
       };
     }, [])
   );
@@ -753,477 +775,483 @@ export default function ProfileScreen() {
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Training">
-        <SettingsRow
-          title="Streak goal"
-          subtitle={`${answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
-          onPress={requestEditStreakGoal}
-        />
-        <SettingsRow title="Units" subtitle={formatUnitName(weightUnit)} onPress={requestEditUnits} />
-        <SettingsRow
-          title="Rest timer default"
-          subtitle={formatRestTimerDefault(restDefault)}
-          onPress={requestEditRestTimer}
-        />
-        <SettingsRow
-          title="Show streak"
-          subtitle={hideStreak ? 'Hidden on Home and Activity' : 'Shown on Home and Activity'}
-          onPress={() => {
-            const next = !hideStreak;
-            setHideStreak(next);
-            saveHideStreak(next).catch((error) => {
-              setHideStreak(!next);
-              showDialog(
-                'Couldn’t save that',
-                error instanceof Error ? error.message : 'Check your connection and try again.'
-              );
-            });
-          }}
-        />
-        <SettingsRow
-          title={privacySettingsCopy.hide_achievements}
-          subtitle={hideAchievements ? 'Hidden on Activity' : 'Shown on Activity'}
-          onPress={() => {
-            const next = !hideAchievements;
-            setHideAchievements(next);
-            saveHideAchievements(next).catch((error) => {
-              setHideAchievements(!next);
-              showDialog(
-                'Couldn’t save that',
-                error instanceof Error ? error.message : 'Check your connection and try again.'
-              );
-            });
-          }}
-        />
-        <SettingsRow
-          title={CHECKIN.settingsTitle}
-          subtitle={CHECKIN.settingsSub}
-          onPress={() => {
-            const nextHide = !(profile?.hide_checkin === true);
-            setHideCheckin(nextHide).catch((error) => {
-              showDialog(
-                'Couldn’t save that',
-                error instanceof Error ? error.message : 'Check your connection and try again.'
-              );
-            });
-          }}
-          last
-        />
-      </SettingsGroup>
-
-      <SettingsGroup title={appearanceSectionTitle}>
-        <View style={styles.appearance}>
-          <AppText variant="bodySm" style={{ color: colours.inkMuted, marginBottom: 10 }}>Theme</AppText>
-          <SegmentedThemePicker value={preference} onChange={handleThemeChange} />
-        </View>
-        <SettingsRow
-          title="Show daily quote"
-          subtitle={hideQuote ? 'Hidden in Learn' : 'Shown in Learn'}
-          onPress={() => {
-            const next = !hideQuote;
-            setHideQuote(next);
-            saveHideQuote(next).catch((error) => {
-              setHideQuote(!next);
-              showDialog(
-                'Couldn’t save that',
-                error instanceof Error ? error.message : 'Check your connection and try again.'
-              );
-            });
-          }}
-          last
-        />
-      </SettingsGroup>
-
-      {reminderPrefs ? (
-        <SettingsGroup title={reminderCopy.settings.title}>
-          <SettingsRow
-            title={reminderCopy.settings.session_reminders}
-            subtitle={
-              !notificationsAvailable()
-                ? reminderCopy.settings.system_off
-                : reminderPrefs.sessionReminders
-                  ? reminderCopy.settings.session_reminders_help
-                  : 'Off'
-            }
-            onPress={() => void toggleSessionReminders()}
-          />
-          <SettingsRow
-            title={reminderCopy.settings.weekly_summary}
-            subtitle={reminderPrefs.weeklySummary ? 'On' : 'Off'}
-            onPress={() => void toggleWeeklySummary()}
-          />
-          <SettingsRow
-            title={reminderCopy.settings.offers}
-            subtitle={
-              reminderPrefs.marketingOptIn
-                ? `On. ${reminderCopy.settings.offers_help}`
-                : reminderCopy.settings.offers_help
-            }
-            onPress={() => void toggleMarketing()}
-          />
-          <View ref={timeRowRef} collapsable={false}>
+      {/* Everything below the plan card renders once the screen has slid in, so opening Profile
+          is instant. The rows above the fold (name, plan) show straight away. */}
+      {settled ? (
+        <Animated.View entering={FadeIn.duration(180)} style={{ gap: 20 }}>
+          <SettingsGroup title="Training">
             <SettingsRow
-              title={reminderCopy.settings.default_time}
-              subtitle={formatReminderClock(defaultTime)}
-              onPress={openDefaultTimeMenu}
+              title="Streak goal"
+              subtitle={`${answers?.streak_goal_weeks ?? DEFAULT_STREAK_GOAL} weeks`}
+              onPress={requestEditStreakGoal}
+            />
+            <SettingsRow title="Units" subtitle={formatUnitName(weightUnit)} onPress={requestEditUnits} />
+            <SettingsRow
+              title="Rest timer default"
+              subtitle={formatRestTimerDefault(restDefault)}
+              onPress={requestEditRestTimer}
+            />
+            <SettingsRow
+              title="Show streak"
+              subtitle={hideStreak ? 'Hidden on Home and Activity' : 'Shown on Home and Activity'}
+              onPress={() => {
+                const next = !hideStreak;
+                setHideStreak(next);
+                saveHideStreak(next).catch((error) => {
+                  setHideStreak(!next);
+                  showDialog(
+                    'Couldn’t save that',
+                    error instanceof Error ? error.message : 'Check your connection and try again.'
+                  );
+                });
+              }}
+            />
+            <SettingsRow
+              title={privacySettingsCopy.hide_achievements}
+              subtitle={hideAchievements ? 'Hidden on Activity' : 'Shown on Activity'}
+              onPress={() => {
+                const next = !hideAchievements;
+                setHideAchievements(next);
+                saveHideAchievements(next).catch((error) => {
+                  setHideAchievements(!next);
+                  showDialog(
+                    'Couldn’t save that',
+                    error instanceof Error ? error.message : 'Check your connection and try again.'
+                  );
+                });
+              }}
+            />
+            <SettingsRow
+              title={CHECKIN.settingsTitle}
+              subtitle={CHECKIN.settingsSub}
+              onPress={() => {
+                const nextHide = !(profile?.hide_checkin === true);
+                setHideCheckin(nextHide).catch((error) => {
+                  showDialog(
+                    'Couldn’t save that',
+                    error instanceof Error ? error.message : 'Check your connection and try again.'
+                  );
+                });
+              }}
               last
             />
-          </View>
-        </SettingsGroup>
-      ) : null}
+          </SettingsGroup>
 
-      <SettingsGroup title="Coach">
-        <SettingsRow
-          title="Coach preferences"
-          subtitle="Exercises and kit Coach should skip"
-          onPress={() => router.push('/coach-preferences' as Href)}
-          last
-        />
-      </SettingsGroup>
+          <SettingsGroup title={appearanceSectionTitle}>
+            <View style={styles.appearance}>
+              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginBottom: 10 }}>Theme</AppText>
+              <SegmentedThemePicker value={preference} onChange={handleThemeChange} />
+            </View>
+            <SettingsRow
+              title="Show daily quote"
+              subtitle={hideQuote ? 'Hidden in Learn' : 'Shown in Learn'}
+              onPress={() => {
+                const next = !hideQuote;
+                setHideQuote(next);
+                saveHideQuote(next).catch((error) => {
+                  setHideQuote(!next);
+                  showDialog(
+                    'Couldn’t save that',
+                    error instanceof Error ? error.message : 'Check your connection and try again.'
+                  );
+                });
+              }}
+              last
+            />
+          </SettingsGroup>
 
-      <SettingsGroup title="Privacy">
-        <SettingsRow
-          title={privacySettingsCopy.hide_macros}
-          subtitle={hideMacros ? 'Hidden on recipe pages' : 'Shown on recipe pages when numbers are ready'}
-          onPress={() => {
-            const next = !hideMacros;
-            setHideMacros(next);
-            saveHideMacros(next).catch((error) => {
-              setHideMacros(!next);
-              showDialog(
-                'Couldn’t save that',
-                error instanceof Error ? error.message : 'Check your connection and try again.'
-              );
-            });
-          }}
-        />
-        <SettingsRow
-          title={privacySettingsCopy.photos}
-          subtitle={
-            photosEnabled
-              ? 'On. Turning this off hides the card. Photos stay until you delete them.'
-              : 'Off. Switch on here if you want a private photo card on Activity.'
-          }
-          onPress={() => {
-            if (photosEnabled) {
-              setPhotosEnabled(false);
-              savePhotosEnabled(false).catch((error) => {
-                setPhotosEnabled(true);
-                showDialog(
-                  'Could not save that',
-                  error instanceof Error ? error.message : 'Check your connection and try again.'
-                );
-              });
-              return;
-            }
-            void hasPhotosConsent().then((ok) => {
-              if (!ok) {
-                router.push('/photos-consent' as Href);
-                return;
+          {reminderPrefs ? (
+            <SettingsGroup title={reminderCopy.settings.title}>
+              <SettingsRow
+                title={reminderCopy.settings.session_reminders}
+                subtitle={
+                  !notificationsAvailable()
+                    ? reminderCopy.settings.system_off
+                    : reminderPrefs.sessionReminders
+                      ? reminderCopy.settings.session_reminders_help
+                      : 'Off'
+                }
+                onPress={() => void toggleSessionReminders()}
+              />
+              <SettingsRow
+                title={reminderCopy.settings.weekly_summary}
+                subtitle={reminderPrefs.weeklySummary ? 'On' : 'Off'}
+                onPress={() => void toggleWeeklySummary()}
+              />
+              <SettingsRow
+                title={reminderCopy.settings.offers}
+                subtitle={
+                  reminderPrefs.marketingOptIn
+                    ? `On. ${reminderCopy.settings.offers_help}`
+                    : reminderCopy.settings.offers_help
+                }
+                onPress={() => void toggleMarketing()}
+              />
+              <View ref={timeRowRef} collapsable={false}>
+                <SettingsRow
+                  title={reminderCopy.settings.default_time}
+                  subtitle={formatReminderClock(defaultTime)}
+                  onPress={openDefaultTimeMenu}
+                  last
+                />
+              </View>
+            </SettingsGroup>
+          ) : null}
+
+          <SettingsGroup title="Coach">
+            <SettingsRow
+              title="Coach preferences"
+              subtitle="Exercises and kit Coach should skip"
+              onPress={() => router.push('/coach-preferences' as Href)}
+              last
+            />
+          </SettingsGroup>
+
+          <SettingsGroup title="Privacy">
+            <SettingsRow
+              title={privacySettingsCopy.hide_macros}
+              subtitle={hideMacros ? 'Hidden on recipe pages' : 'Shown on recipe pages when numbers are ready'}
+              onPress={() => {
+                const next = !hideMacros;
+                setHideMacros(next);
+                saveHideMacros(next).catch((error) => {
+                  setHideMacros(!next);
+                  showDialog(
+                    'Couldn’t save that',
+                    error instanceof Error ? error.message : 'Check your connection and try again.'
+                  );
+                });
+              }}
+            />
+            <SettingsRow
+              title={privacySettingsCopy.photos}
+              subtitle={
+                photosEnabled
+                  ? 'On. Turning this off hides the card. Photos stay until you delete them.'
+                  : 'Off. Switch on here if you want a private photo card on Activity.'
               }
-              setPhotosEnabled(true);
-              savePhotosEnabled(true).catch((error) => {
-                setPhotosEnabled(false);
-                showDialog(
-                  'Could not save that',
-                  error instanceof Error ? error.message : 'Check your connection and try again.'
-                );
-              });
-            });
-          }}
-        />
-        <SettingsRow
-          title={PERIOD_LOG.privacyTitle}
-          subtitle={periodLogOn ? PERIOD_LOG.privacyOn : PERIOD_LOG.privacyOff}
-          onPress={() => {
-            if (periodLogOn) {
-              requestTurnOffPeriodLog();
-              return;
-            }
-            router.push('/period-log-consent' as Href);
-          }}
-        />
-        {periodLogOn && periodNotes.length > 0 ? (
-          <SettingsRow
-            title={PERIOD_LOG.insightsPrivacyTitle}
-            subtitle={PERIOD_LOG.insightsHelper}
-            onPress={() =>
-              showDialog(PERIOD_LOG.insightsTitle, periodNotes.join('\n\n'))
-            }
-          />
-        ) : null}
-        {showLifeStagePrivacy ? (
-          <SettingsRow
-            title={lifeStageRowTitle}
-            subtitle={LIFE_STAGE_CONSENT_SCREEN?.withdraw_button}
-            onPress={() => void handleWithdrawLifeStage()}
-          />
-        ) : null}
-        <SettingsRow
-          title={COACH_UI.delete_all}
-          subtitle="Removes Coach chats kept for 30 days. Delete one chat from Coach, Your chats."
-          onPress={() => {
-            showDialog(COACH_UI.delete_all, COACH_UI.delete_all_body, [
-              {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: () => {
-                  void deleteAllCoachChats()
-                    .then(() => showDialog(COACH_UI.title, 'Your Coach chats have been deleted.'))
-                    .catch((error) =>
-                      showDialog(
-                        COACH_UI.title,
-                        error instanceof Error ? error.message : 'Check your connection and try again.'
-                      )
+              onPress={() => {
+                if (photosEnabled) {
+                  setPhotosEnabled(false);
+                  savePhotosEnabled(false).catch((error) => {
+                    setPhotosEnabled(true);
+                    showDialog(
+                      'Could not save that',
+                      error instanceof Error ? error.message : 'Check your connection and try again.'
                     );
-                },
-              },
-              { text: 'Keep them', style: 'cancel' },
-            ]);
-          }}
-        />
-        <SettingsRow
-          title={isExporting ? 'Preparing file…' : 'Export workout history'}
-          subtitle="Every set from finished sessions, as a spreadsheet."
-          onPress={() => {
-            if (!isExporting) void handleExport();
-          }}
-        />
-        <SettingsRow
-          title={isDeleting ? 'Deleting account…' : 'Delete account'}
-          subtitle="Removes your account and the data stored with it."
-          onPress={() => {
-            if (!isDeleting) requestDeleteAccount();
-          }}
-          last
-        />
-      </SettingsGroup>
-
-      {answers ? (
-        <SettingsGroup title="Your answers">
-          <SettingsRow
-            title={showAnswers ? 'Hide answers' : 'Your answers'}
-            subtitle={showAnswers ? undefined : 'Name, goals, experience and more'}
-            onPress={() => {
-              setShowAnswers((open) => {
-                if (!open && answers) setGoalDraft(answers.main_goals);
-                return !open;
-              });
-            }}
-            last={!showAnswers}
-          />
-          {showAnswers ? (
-            <View style={styles.goalsBlock}>
-              <AppText variant="bodyStrong" style={{ color: colours.ink }}>
-                Goals
-              </AppText>
-              <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
-                {GOAL_HELPER}
-              </AppText>
-              <GoalChipGroup selected={goalDraft} onChange={setGoalDraft} />
-              {goalDraft.length === 0 ? (
-                <AppText variant="bodySm" style={{ color: colours.danger, marginTop: 8 }}>
-                  Pick at least one goal.
-                </AppText>
-              ) : null}
-              {formatGoalsLabel(goalDraft) !== formatGoalsLabel(answers.main_goals) ? (
-                <PrimaryButton
-                  label={isSavingGoals ? 'Saving…' : 'Save goals'}
-                  loading={isSavingGoals}
-                  disabled={isSavingGoals || goalDraft.length === 0}
-                  onPress={() => {
-                    setIsSavingGoals(true);
-                    void saveMainGoals(goalDraft)
-                      .catch((error) => {
-                        showDialog(
-                          'Couldn’t save your goals',
-                          error instanceof Error ? error.message : 'Check your connection and try again.'
+                  });
+                  return;
+                }
+                void hasPhotosConsent().then((ok) => {
+                  if (!ok) {
+                    router.push('/photos-consent' as Href);
+                    return;
+                  }
+                  setPhotosEnabled(true);
+                  savePhotosEnabled(true).catch((error) => {
+                    setPhotosEnabled(false);
+                    showDialog(
+                      'Could not save that',
+                      error instanceof Error ? error.message : 'Check your connection and try again.'
+                    );
+                  });
+                });
+              }}
+            />
+            <SettingsRow
+              title={PERIOD_LOG.privacyTitle}
+              subtitle={periodLogOn ? PERIOD_LOG.privacyOn : PERIOD_LOG.privacyOff}
+              onPress={() => {
+                if (periodLogOn) {
+                  requestTurnOffPeriodLog();
+                  return;
+                }
+                router.push('/period-log-consent' as Href);
+              }}
+            />
+            {periodLogOn && periodNotes.length > 0 ? (
+              <SettingsRow
+                title={PERIOD_LOG.insightsPrivacyTitle}
+                subtitle={PERIOD_LOG.insightsHelper}
+                onPress={() =>
+                  showDialog(PERIOD_LOG.insightsTitle, periodNotes.join('\n\n'))
+                }
+              />
+            ) : null}
+            {showLifeStagePrivacy ? (
+              <SettingsRow
+                title={lifeStageRowTitle}
+                subtitle={LIFE_STAGE_CONSENT_SCREEN?.withdraw_button}
+                onPress={() => void handleWithdrawLifeStage()}
+              />
+            ) : null}
+            <SettingsRow
+              title={COACH_UI.delete_all}
+              subtitle="Removes Coach chats kept for 30 days. Delete one chat from Coach, Your chats."
+              onPress={() => {
+                showDialog(COACH_UI.delete_all, COACH_UI.delete_all_body, [
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: () => {
+                      void deleteAllCoachChats()
+                        .then(() => showDialog(COACH_UI.title, 'Your Coach chats have been deleted.'))
+                        .catch((error) =>
+                          showDialog(
+                            COACH_UI.title,
+                            error instanceof Error ? error.message : 'Check your connection and try again.'
+                          )
                         );
-                      })
-                      .finally(() => setIsSavingGoals(false));
-                  }}
-                  style={{ marginTop: 16 }}
+                    },
+                  },
+                  { text: 'Keep them', style: 'cancel' },
+                ]);
+              }}
+            />
+            <SettingsRow
+              title={isExporting ? 'Preparing file…' : 'Export workout history'}
+              subtitle="Every set from finished sessions, as a spreadsheet."
+              onPress={() => {
+                if (!isExporting) void handleExport();
+              }}
+            />
+            <SettingsRow
+              title={isDeleting ? 'Deleting account…' : 'Delete account'}
+              subtitle="Removes your account and the data stored with it."
+              onPress={() => {
+                if (!isDeleting) requestDeleteAccount();
+              }}
+              last
+            />
+          </SettingsGroup>
+
+          {answers ? (
+            <SettingsGroup title="Your answers">
+              <SettingsRow
+                title={showAnswers ? 'Hide answers' : 'Your answers'}
+                subtitle={showAnswers ? undefined : 'Name, goals, experience and more'}
+                onPress={() => {
+                  setShowAnswers((open) => {
+                    if (!open && answers) setGoalDraft(answers.main_goals);
+                    return !open;
+                  });
+                }}
+                last={!showAnswers}
+              />
+              {showAnswers ? (
+                <View style={styles.goalsBlock}>
+                  <AppText variant="bodyStrong" style={{ color: colours.ink }}>
+                    Goals
+                  </AppText>
+                  <AppText variant="bodySm" style={{ color: colours.inkMuted, marginTop: 4 }}>
+                    {GOAL_HELPER}
+                  </AppText>
+                  <GoalChipGroup selected={goalDraft} onChange={setGoalDraft} />
+                  {goalDraft.length === 0 ? (
+                    <AppText variant="bodySm" style={{ color: colours.danger, marginTop: 8 }}>
+                      Pick at least one goal.
+                    </AppText>
+                  ) : null}
+                  {formatGoalsLabel(goalDraft) !== formatGoalsLabel(answers.main_goals) ? (
+                    <PrimaryButton
+                      label={isSavingGoals ? 'Saving…' : 'Save goals'}
+                      loading={isSavingGoals}
+                      disabled={isSavingGoals || goalDraft.length === 0}
+                      onPress={() => {
+                        setIsSavingGoals(true);
+                        void saveMainGoals(goalDraft)
+                          .catch((error) => {
+                            showDialog(
+                              'Couldn’t save your goals',
+                              error instanceof Error ? error.message : 'Check your connection and try again.'
+                            );
+                          })
+                          .finally(() => setIsSavingGoals(false));
+                      }}
+                      style={{ marginTop: 16 }}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
+              {showAnswers
+                ? answerRows.map((row) => (
+                    <SettingsRow key={row.name} title={row.name} subtitle={row.value} showChevron={false} />
+                  ))
+                : null}
+              {showAnswers ? (
+                <SettingsRow
+                  title={lifeStageRowTitle}
+                  subtitle={lifeStageRowValue}
+                  onPress={() =>
+                    router.push({ pathname: '/onboarding', params: { screen: 'life_stage' } } as Href)
+                  }
                 />
               ) : null}
-            </View>
+              {showAnswers ? (
+                <SettingsRow
+                  title="Change answers"
+                  onPress={() => router.push({ pathname: '/onboarding', params: { edit: '1' } } as Href)}
+                  last
+                />
+              ) : null}
+            </SettingsGroup>
           ) : null}
-          {showAnswers
-            ? answerRows.map((row) => (
-                <SettingsRow key={row.name} title={row.name} subtitle={row.value} showChevron={false} />
-              ))
-            : null}
-          {showAnswers ? (
+
+          <SettingsGroup title="About">
             <SettingsRow
-              title={lifeStageRowTitle}
-              subtitle={lifeStageRowValue}
-              onPress={() =>
-                router.push({ pathname: '/onboarding', params: { screen: 'life_stage' } } as Href)
-              }
+              title={safetySettingsTitle}
+              onPress={() => router.push('/safety' as Href)}
             />
-          ) : null}
-          {showAnswers ? (
-            <SettingsRow
-              title="Change answers"
-              onPress={() => router.push({ pathname: '/onboarding', params: { edit: '1' } } as Href)}
-              last
-            />
-          ) : null}
-        </SettingsGroup>
-      ) : null}
+            <SettingsRow title="Terms" onPress={() => router.push('/terms' as Href)} />
+            <SettingsRow title="Privacy policy" onPress={() => router.push('/privacy' as Href)} />
+            <SettingsRow title="Contact us" subtitle={CONTACT_EMAIL} onPress={() => void handleContact()} />
+            <SettingsRow title="Photo credits" onPress={() => router.push('/photo-credits' as Href)} />
+            <SettingsRow title="App version" subtitle={appVersion} showChevron={false} last />
+          </SettingsGroup>
 
-      <SettingsGroup title="About">
-        <SettingsRow
-          title={safetySettingsTitle}
-          onPress={() => router.push('/safety' as Href)}
-        />
-        <SettingsRow title="Terms" onPress={() => router.push('/terms' as Href)} />
-        <SettingsRow title="Privacy policy" onPress={() => router.push('/privacy' as Href)} />
-        <SettingsRow title="Contact us" subtitle={CONTACT_EMAIL} onPress={() => void handleContact()} />
-        <SettingsRow title="Photo credits" onPress={() => router.push('/photo-credits' as Href)} />
-        <SettingsRow title="App version" subtitle={appVersion} showChevron={false} last />
-      </SettingsGroup>
+          <DestructiveTextButton
+            label={isSigningOut ? 'Signing out…' : 'Sign out'}
+            onPress={() => void handleSignOut()}
+            disabled={isSigningOut || isDeleting}
+            style={styles.signOut}
+          />
 
-      <DestructiveTextButton
-        label={isSigningOut ? 'Signing out…' : 'Sign out'}
-        onPress={() => void handleSignOut()}
-        disabled={isSigningOut || isDeleting}
-        style={styles.signOut}
-      />
+          <Pressable
+            onLongPress={handleVersionLongPress}
+            delayLongPress={500}
+            hitSlop={16}
+            accessibilityRole="text"
+            accessibilityLabel={`App version ${appVersion}`}
+            style={styles.version}>
+            <AppText variant="caption" style={{ color: colours.inkMuted, textAlign: 'center' }}>
+              Version {appVersion}
+            </AppText>
+          </Pressable>
 
-      <Pressable
-        onLongPress={handleVersionLongPress}
-        delayLongPress={500}
-        hitSlop={16}
-        accessibilityRole="text"
-        accessibilityLabel={`App version ${appVersion}`}
-        style={styles.version}>
-        <AppText variant="caption" style={{ color: colours.inkMuted, textAlign: 'center' }}>
-          Version {appVersion}
-        </AppText>
-      </Pressable>
-
-      {showDevTools ? (
-        <SettingsGroup title="Developer">
-          <SettingsRow
-            title="Testing as"
-            subtitle={`${DEV_OVERRIDE_LABELS[subscription.devOverride]} · ${
-              subscription.isPro ? 'can train' : 'sessions locked'
-            }`}
-            onPress={() => {
-              const next =
-                DEV_OVERRIDES[(DEV_OVERRIDES.indexOf(subscription.devOverride) + 1) % DEV_OVERRIDES.length];
-              subscription.setDevOverride(next);
-            }}
-          />
-          <SettingsRow
-            title="Preview welcome-back"
-            subtitle={welcomeBackPreview ? 'On. Home shows the welcome-back card.' : 'Off'}
-            onPress={() => {
-              const next = !welcomeBackPreview;
-              setWelcomeBackPreview(next);
-              saveWelcomeBackPreview(next).catch(() => setWelcomeBackPreview(!next));
-            }}
-          />
-          <SettingsRow
-            title="Preview what’s next"
-            subtitle={handOffPreview ? 'On. Home and your current routine show the next-plan card.' : 'Off'}
-            onPress={() => {
-              const next = !handOffPreview;
-              setHandOffPreview(next);
-              saveHandOffPreview(next).catch(() => setHandOffPreview(!next));
-            }}
-          />
-          <SettingsRow
-            title={recapCopy.preview_row}
-            subtitle={recapPreview ? recapCopy.preview_on : recapCopy.preview_off}
-            onPress={() => {
-              const next = !recapPreview;
-              setRecapPreview(next);
-              saveRecapPreview(next).catch(() => setRecapPreview(!next));
-            }}
-          />
-          <SettingsRow
-            title={aiCopy.dev_unlimited}
-            subtitle={bypassAiLimits ? aiCopy.dev_unlimited_on : aiCopy.dev_unlimited_off}
-            onPress={() => setBypassAiLimits(!bypassAiLimits)}
-          />
-          <SettingsRow
-            title="Send a test reminder"
-            subtitle="A sample in about 8 seconds"
-            onPress={() => {
-              void scheduleTestSessionReminder().then((ok) => {
-                if (ok) {
-                  showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
-                }
-              });
-            }}
-          />
-          <SettingsRow
-            title="Send a test trial-ending reminder"
-            subtitle="Microcopy, in about 8 seconds. Needs notification permission."
-            onPress={() => {
-              void scheduleTestBillingReminder('trial', subscription.priceString).then((ok) => {
-                if (ok) {
-                  showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
-                } else {
+          {showDevTools ? (
+            <SettingsGroup title="Developer">
+              <SettingsRow
+                title="Testing as"
+                subtitle={`${DEV_OVERRIDE_LABELS[subscription.devOverride]} · ${
+                  subscription.isPro ? 'can train' : 'sessions locked'
+                }`}
+                onPress={() => {
+                  const next =
+                    DEV_OVERRIDES[(DEV_OVERRIDES.indexOf(subscription.devOverride) + 1) % DEV_OVERRIDES.length];
+                  subscription.setDevOverride(next);
+                }}
+              />
+              <SettingsRow
+                title="Preview welcome-back"
+                subtitle={welcomeBackPreview ? 'On. Home shows the welcome-back card.' : 'Off'}
+                onPress={() => {
+                  const next = !welcomeBackPreview;
+                  setWelcomeBackPreview(next);
+                  saveWelcomeBackPreview(next).catch(() => setWelcomeBackPreview(!next));
+                }}
+              />
+              <SettingsRow
+                title="Preview what’s next"
+                subtitle={handOffPreview ? 'On. Home and your current routine show the next-plan card.' : 'Off'}
+                onPress={() => {
+                  const next = !handOffPreview;
+                  setHandOffPreview(next);
+                  saveHandOffPreview(next).catch(() => setHandOffPreview(!next));
+                }}
+              />
+              <SettingsRow
+                title={recapCopy.preview_row}
+                subtitle={recapPreview ? recapCopy.preview_on : recapCopy.preview_off}
+                onPress={() => {
+                  const next = !recapPreview;
+                  setRecapPreview(next);
+                  saveRecapPreview(next).catch(() => setRecapPreview(!next));
+                }}
+              />
+              <SettingsRow
+                title={aiCopy.dev_unlimited}
+                subtitle={bypassAiLimits ? aiCopy.dev_unlimited_on : aiCopy.dev_unlimited_off}
+                onPress={() => setBypassAiLimits(!bypassAiLimits)}
+              />
+              <SettingsRow
+                title="Send a test reminder"
+                subtitle="A sample in about 8 seconds"
+                onPress={() => {
+                  void scheduleTestSessionReminder().then((ok) => {
+                    if (ok) {
+                      showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
+                    }
+                  });
+                }}
+              />
+              <SettingsRow
+                title="Send a test trial-ending reminder"
+                subtitle="Microcopy, in about 8 seconds. Needs notification permission."
+                onPress={() => {
+                  void scheduleTestBillingReminder('trial', subscription.priceString).then((ok) => {
+                    if (ok) {
+                      showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
+                    } else {
+                      showDialog(
+                        'Couldn’t set that reminder',
+                        'Reminders need a development build, and notification permission on this phone.'
+                      );
+                    }
+                  });
+                }}
+              />
+              <SettingsRow
+                title="Send a test renewal reminder"
+                subtitle="Annual renews-soon copy, in about 8 seconds."
+                onPress={() => {
+                  void scheduleTestBillingReminder('renewal', subscription.priceString).then((ok) => {
+                    if (ok) {
+                      showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
+                    } else {
+                      showDialog(
+                        'Couldn’t set that reminder',
+                        'Reminders need a development build, and notification permission on this phone.'
+                      );
+                    }
+                  });
+                }}
+              />
+              <SettingsRow
+                title="Send a test analytics event"
+                subtitle={isAnalyticsEnabled() ? 'Shows in PostHog live events' : 'No PostHog key in .env'}
+                onPress={() => {
+                  if (!isAnalyticsEnabled()) {
+                    showDialog(
+                      'PostHog is not set up',
+                      'Add EXPO_PUBLIC_POSTHOG_API_KEY to .env, then restart Expo. The app still works without it.'
+                    );
+                    return;
+                  }
+                  track('dev_test_event');
                   showDialog(
-                    'Couldn’t set that reminder',
-                    'Reminders need a development build, and notification permission on this phone.'
+                    'Test event sent',
+                    'Open PostHog, go to Activity, and look for dev_test_event. It can take a few seconds.'
                   );
-                }
-              });
-            }}
-          />
-          <SettingsRow
-            title="Send a test renewal reminder"
-            subtitle="Annual renews-soon copy, in about 8 seconds."
-            onPress={() => {
-              void scheduleTestBillingReminder('renewal', subscription.priceString).then((ok) => {
-                if (ok) {
-                  showDialog('Test reminder set', 'Lock the phone or leave the app. You should see it in about 8 seconds.');
-                } else {
+                }}
+              />
+              <SettingsRow
+                title="Restart onboarding"
+                subtitle="Run the quiz again on this account"
+                onPress={() =>
                   showDialog(
-                    'Couldn’t set that reminder',
-                    'Reminders need a development build, and notification permission on this phone.'
-                  );
+                    'Restart onboarding?',
+                    'You will go through the questions, plan reveal and paywall again. Your logged sessions stay.',
+                    [
+                      { text: 'Restart', style: 'destructive', onPress: () => void handleDevRestartOnboarding() },
+                      { text: 'Not now', style: 'cancel' },
+                    ]
+                  )
                 }
-              });
-            }}
-          />
-          <SettingsRow
-            title="Send a test analytics event"
-            subtitle={isAnalyticsEnabled() ? 'Shows in PostHog live events' : 'No PostHog key in .env'}
-            onPress={() => {
-              if (!isAnalyticsEnabled()) {
-                showDialog(
-                  'PostHog is not set up',
-                  'Add EXPO_PUBLIC_POSTHOG_API_KEY to .env, then restart Expo. The app still works without it.'
-                );
-                return;
-              }
-              track('dev_test_event');
-              showDialog(
-                'Test event sent',
-                'Open PostHog, go to Activity, and look for dev_test_event. It can take a few seconds.'
-              );
-            }}
-          />
-          <SettingsRow
-            title="Restart onboarding"
-            subtitle="Run the quiz again on this account"
-            onPress={() =>
-              showDialog(
-                'Restart onboarding?',
-                'You will go through the questions, plan reveal and paywall again. Your logged sessions stay.',
-                [
-                  { text: 'Restart', style: 'destructive', onPress: () => void handleDevRestartOnboarding() },
-                  { text: 'Not now', style: 'cancel' },
-                ]
-              )
-            }
-          />
-          <SettingsRow title="Restart 8-week block" onPress={() => void handleDevRestartBlock()} last />
-        </SettingsGroup>
+              />
+              <SettingsRow title="Restart 8-week block" onPress={() => void handleDevRestartBlock()} last />
+            </SettingsGroup>
+          ) : null}
+        </Animated.View>
       ) : null}
     </ScrollView>
     <OverflowMenu visible={timeMenu} anchor={timeAnchor} onClose={() => setTimeMenu(false)}>

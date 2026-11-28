@@ -165,9 +165,28 @@ const PLAN_COLUMNS_W5 = `${PLAN_COLUMNS_REMINDERS}, session_kind, cardio_slug, s
 let planSelect = PLAN_COLUMNS_W5;
 let supportColumnsReady: boolean | null = null;
 
+/** A table or column really doesn't exist (SQL not run), as opposed to any other database error. */
+function isMissingTableOrColumn(error: { message?: string; code?: string }): boolean {
+  const code = error.code ?? '';
+  const message = (error.message ?? '').toLowerCase();
+  return (
+    ['42P01', 'PGRST205', '42703', 'PGRST204'].includes(code) ||
+    /does not exist|could not find the .*(table|column)/.test(message)
+  );
+}
+
+/**
+ * Only when planned_sessions itself is missing. This used to match any error that mentioned
+ * planned_sessions (a foreign key, check or security error), which wrongly told her to run SQL.
+ */
 function isMissingPlanner(error: { message?: string; code?: string }): boolean {
   const detail = `${error.code ?? ''} ${error.message ?? ''}`.toLowerCase();
-  return error.code === '42P01' || error.code === 'PGRST205' || /planned_sessions/.test(detail);
+  return isMissingTableOrColumn(error) && /planned_sessions/.test(detail);
+}
+
+/** A row the database refused (foreign key or check), not a connection or setup problem. */
+function isRejectedRow(error: { message?: string; code?: string }): boolean {
+  return error.code === '23503' || error.code === '23514';
 }
 
 function isMissingReminderTimeColumn(error: { message?: string; code?: string }): boolean {
@@ -175,9 +194,10 @@ function isMissingReminderTimeColumn(error: { message?: string; code?: string })
 }
 
 function isMissingSupportColumn(error: { message?: string; code?: string }): boolean {
-  return /session_kind|cardio_slug|stretch_slug|is_optional|planned_sessions_source_check/i.test(
-    `${error.code ?? ''} ${error.message ?? ''}`
-  );
+  const detail = `${error.code ?? ''} ${error.message ?? ''}`;
+  // The old source check (before complete_week_w5.sql) rejects cardio and recovery rows.
+  if (/planned_sessions_source_check/i.test(detail)) return true;
+  return isMissingTableOrColumn(error) && /session_kind|cardio_slug|stretch_slug|is_optional/i.test(detail);
 }
 
 function parseSessionKind(value: unknown): SessionType | null {
@@ -244,16 +264,21 @@ export function describePlannerError(error: unknown): string {
       : error && typeof error === 'object' && 'message' in error
         ? String((error as { message: unknown }).message)
         : '';
-  if (/session_kind|cardio_slug|stretch_slug|planned_sessions_source_check/i.test(detail)) {
+  const code =
+    error && typeof error === 'object' && 'code' in error ? String((error as { code: unknown }).code ?? '') : '';
+  // Our own setup messages pass through unchanged.
+  if (detail === missingPlannerMessage() || detail === missingCompleteWeekMessage()) return detail;
+  const missing = isMissingTableOrColumn({ message: detail, code });
+  if (missing && /session_kind|cardio_slug|stretch_slug|is_optional/i.test(detail)) {
     return missingCompleteWeekMessage();
   }
-  if (/period_logs/i.test(detail)) {
+  if (missing && /period_logs/i.test(detail)) {
     return 'The period log table is not set up yet. Paste supabase/period_log_l9.sql in the SQL editor.';
   }
-  if (/42P01|PGRST205|planned_sessions/i.test(detail)) {
+  if (missing && /planned_sessions/i.test(detail)) {
     return missingPlannerMessage();
   }
-  return detail || 'Check your connection and try again.';
+  return detail ? `We couldn't load your planner (${detail}).` : 'Check your connection and try again.';
 }
 
 function pad(value: number): string {
@@ -363,7 +388,9 @@ function defaultTrainingOffsets(daysPerWeek: number): number[] {
 
 function throwPlanner(error: { message?: string; code?: string }): never {
   if (isMissingPlanner(error)) throw new Error(missingPlannerMessage());
-  throw new Error(error.message || 'Check your connection and try again.');
+  if (__DEV__) console.warn('[planner]', error.code, error.message);
+  const code = error.code ? ` [${error.code}]` : '';
+  throw new Error(`${error.message || 'Check your connection and try again.'}${code}`);
 }
 
 async function requireUserId(): Promise<string> {
@@ -889,6 +916,21 @@ async function insertWeekPlans(inserts: WeekInsert[]): Promise<void> {
       const strengthOnly = inserts.filter((row) => row.routine_day_id);
       if (strengthOnly.length === 0) return;
       await insertWeekPlans(strengthOnly);
+      return;
+    }
+    // One bad row (say a routine day that no longer exists) must not stop the whole Planner
+    // loading: add the rows one by one and leave out only the ones the database refuses.
+    if (isRejectedRow(error) && inserts.length > 1) {
+      if (__DEV__) console.warn('[planner] a planned row was refused, adding rows one by one', error.code, error.message);
+      for (const row of inserts) {
+        const one = supportColumnsReady === false ? withoutSupportColumns(row) : row;
+        const { error: rowError } = await supabase.from('planned_sessions').insert(one);
+        if (rowError && !isUniqueConflict(rowError) && !isRejectedRow(rowError)) throwPlanner(rowError);
+      }
+      return;
+    }
+    if (isRejectedRow(error)) {
+      if (__DEV__) console.warn('[planner] a planned row was refused', error.code, error.message);
       return;
     }
     throwPlanner(error);

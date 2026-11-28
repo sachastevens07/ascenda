@@ -116,7 +116,7 @@ import {
 } from '@/lib/gettingStarted';
 import { successTap } from '@/lib/haptics';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
-import { formatShortDate } from '@/lib/progress';
+import { formatBillingDate } from '@/lib/progress';
 import {
   WELCOME_BACK_ROUTINE_ID,
   daysInWeek,
@@ -1065,7 +1065,7 @@ export default function HomeScreen() {
                     ? billingReminderCopy.renewal.body
                     : billingReminderCopy.renewal.body.replace(' at {price}', ''),
                   {
-                    date: subscription.expiresAt ? formatShortDate(subscription.expiresAt) : '',
+                    date: subscription.expiresAt ? formatBillingDate(subscription.expiresAt) : '',
                     price: subscription.priceString ?? '',
                   }
                 )}

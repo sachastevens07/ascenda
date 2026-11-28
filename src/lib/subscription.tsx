@@ -20,7 +20,7 @@ import { trackPaidPlan, trackTrialStarted } from '@/lib/analytics';
 import { useAuth } from '@/lib/auth';
 import { billingReminderCopy, fillCopy } from '@/lib/copy';
 import { useDevTools } from '@/lib/devFlags';
-import { formatShortDate } from '@/lib/progress';
+import { formatBillingDate } from '@/lib/progress';
 import { Notifications } from '@/lib/restTimer';
 
 /** The entitlement identifier in the RevenueCat dashboard. */
@@ -268,7 +268,7 @@ function fillDatePrice(template: { title: string; body: string }, date: Date, pr
   const bodyTemplate = price ? template.body : template.body.replace(' at {price}', '');
   return {
     title: template.title,
-    body: fillCopy(bodyTemplate, { date: formatShortDate(date), price: price ?? '' }),
+    body: fillCopy(bodyTemplate, { date: formatBillingDate(date), price: price ?? '' }),
   };
 }
 
