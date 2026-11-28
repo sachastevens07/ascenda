@@ -79,8 +79,8 @@
       },
       "google": {
         "_note": "Google sign-in client IDs from Google Cloud (not secret). Leave empty to hide the Google button. Changing them needs a new build.",
-        "iosClientId": "",
-        "webClientId": ""
+        "iosClientId": "229368776931-sjb0958jc54sedabro7rgfe8rechp24s.apps.googleusercontent.com",
+        "webClientId": "229368776931-ocb6g3b3bdffvih5109enhd9olevb9o6.apps.googleusercontent.com"
       }
     },
     "owner": "sachstev"
