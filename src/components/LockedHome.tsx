@@ -33,7 +33,7 @@ import { openPaywall } from '@/lib/paywall';
 import { getQuizAnswers, useProfile } from '@/lib/profile';
 import { fetchProgressSets, getPersonalBests } from '@/lib/progress';
 import { fetchActiveEnrolment, fetchRoutines } from '@/lib/routines';
-import { fetchProPackages, getFreeTrialDays } from '@/lib/subscription';
+import { fetchIneligibleTrialProducts, fetchProPackages, getFreeTrialDays } from '@/lib/subscription';
 
 type LockedPlan = {
   name: string;
@@ -140,7 +140,10 @@ export function LockedHome() {
             weeksTrained: streak.weeksTrained,
           });
           const annual = packages.find((item) => item.packageType === 'ANNUAL');
-          setTrialDays(annual ? getFreeTrialDays(annual.product) : null);
+          const noTrial = annual
+            ? await fetchIneligibleTrialProducts([annual.product.identifier])
+            : new Set<string>();
+          setTrialDays(annual && !noTrial.has(annual.product.identifier) ? getFreeTrialDays(annual.product) : null);
           setLoadState('ready');
           const nextRecap = await loadMonthlyRecap({ sessions, sets }).catch(() => null);
           if (isCurrent) setRecap(nextRecap);

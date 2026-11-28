@@ -552,6 +552,27 @@ export async function fetchProPackages(): Promise<PurchasesPackage[]> {
     .sort((a, b) => order.indexOf(a.packageType) - order.indexOf(b.packageType));
 }
 
+/**
+ * Products whose free trial this Apple ID can't have (she has already had a trial or
+ * subscription in this group). The paywall must not promise "7 days free" for these: Apple
+ * would charge straight away. Unknown counts as eligible on iOS; empty on error or Android.
+ */
+export async function fetchIneligibleTrialProducts(productIds: string[]): Promise<Set<string>> {
+  const ineligible = new Set<string>();
+  if (Platform.OS !== 'ios' || productIds.length === 0 || !configureOnce()) return ineligible;
+  try {
+    const result = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
+    for (const [id, info] of Object.entries(result)) {
+      if (info.status === Purchases.INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_INELIGIBLE) {
+        ineligible.add(id);
+      }
+    }
+  } catch {
+    /* Keep the store's own trial info. */
+  }
+  return ineligible;
+}
+
 /** Null if she backed out of the store's purchase sheet. */
 export async function purchasePackage(item: PurchasesPackage): Promise<CustomerInfo | null> {
   try {

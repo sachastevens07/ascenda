@@ -38,6 +38,7 @@ import {
   STORE_NAME,
   fetchCustomerInfo,
   fetchProPackages,
+  fetchIneligibleTrialProducts,
   getFreeTrialDays,
   hasProEntitlement,
   openManageSubscription,
@@ -79,6 +80,8 @@ export default function PaywallScreen() {
   const [referred, setReferred] = useState(false);
   const [scrolledPastPhoto, setScrolledPastPhoto] = useState(false);
   const [welcome, setWelcome] = useState<WelcomeInfo | null>(null);
+  /** Products whose free trial this Apple ID has already used. */
+  const [noTrial, setNoTrial] = useState<Set<string>>(() => new Set());
   // From onboarding: her plan, first name and what she told us she worries about.
   const params = useLocalSearchParams<{ plan?: string; name?: string; focus?: string }>();
   const paramPlan = typeof params.plan === 'string' ? params.plan.trim() : '';
@@ -164,6 +167,9 @@ export default function PaywallScreen() {
         setPackages(result);
         setSelectedId(defaultPackageId(result));
         setLoadState(result.length > 0 ? 'ready' : 'unavailable');
+        void fetchIneligibleTrialProducts(result.map((item) => item.product.identifier)).then((ids) => {
+          if (isCurrent) setNoTrial(ids);
+        });
       })
       .catch(() => {
         if (isCurrent) setLoadState('error');
@@ -174,11 +180,14 @@ export default function PaywallScreen() {
   }, [isAvailable, attempt]);
 
   const selected = packages.find((item) => item.identifier === selectedId) ?? null;
+  /** The store's trial length, unless this Apple ID has already had the trial. */
+  const trialDaysFor = (product: PurchasesPackage['product']) =>
+    noTrial.has(product.identifier) ? null : getFreeTrialDays(product);
   const showFriendTrial = referred && Platform.OS === 'ios';
   const trialDays = selected
     ? showFriendTrial && selected.packageType === 'ANNUAL'
       ? FRIEND_TRIAL_DAYS
-      : getFreeTrialDays(selected.product)
+      : trialDaysFor(selected.product)
     : null;
   const annualSaving = getAnnualSaving(packages);
   const showTrialCta = Boolean(trialDays && selected?.packageType === 'ANNUAL');
@@ -354,7 +363,7 @@ export default function PaywallScreen() {
                   const isSelected = item.identifier === selectedId;
                   const isAnnual = item.packageType === 'ANNUAL';
                   const itemTrial =
-                    showFriendTrial && isAnnual ? FRIEND_TRIAL_DAYS : getFreeTrialDays(item.product);
+                    showFriendTrial && isAnnual ? FRIEND_TRIAL_DAYS : trialDaysFor(item.product);
                   const ink = isSelected ? colours.onBrand : colours.ink;
                   const muted = isSelected ? colours.onBrand : colours.inkMuted;
                   const perMonth = isAnnual ? item.product.pricePerMonthString : item.product.priceString;
